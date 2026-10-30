@@ -13,7 +13,7 @@ This index records consequential implementation and workflow choices. D00 decisi
 | DEV-007 | No CWI automatic merge; first result normally held for human review | Exact-source inspection before coordinator-controlled integration | Human explicitly preauthorized coordinator exact integration; AUTH-2026-10-30-001 |
 | DEV-008 | Stable, minimal launch environment | CWI resume requires an exact environment digest | Verified and recorded in ENVIRONMENT.md |
 | DEV-009 | Research data/vaults separated from development state | Prevents product investigations from becoming source-control noise or leaking private data | Confirmed by actual human grant |
-| DEV-010 | Continuous bounded requests after commissioning, with durable authority | Removes routine prompts without discarding verification or recovery | Conditionally authorized; activation pending successful commissioning/integration/checkpoint |
+| DEV-010 | Continuous bounded requests after commissioning, with durable authority | Removes routine prompts without discarding verification or recovery | Activated after successful commissioning integration/validation at AUTH revision 3 checkpoint |
 | DEV-011 | Focused direct backend repair exception, separate from product implementation | A faulty backend may need repair without depending on itself | User requested; apply maintenance policy and audit every attempt |
 | DEV-012 | Requested Astra 6.1, verified identifier; explicit effort at or below xhigh | Preserves requested selection without inventing model availability | Human corrected to gpt-6-astra; explicit medium for foundation; max xhigh |
 | DEV-013 | Session continuation is separate from an external supervisor | Avoids claiming that Markdown automatically restarts Codex | No supervisor implemented by this update |
@@ -32,3 +32,6 @@ Workflow rationale: [ADR-010](development/decisions/ADR-010-continuous-developme
 - DEV-017: Use installed Git 2.40.1 via fixed launch PATH because system 2.34.1 lacks required worktree porcelain -z. No environment installation or live-run change occurred.
 
 - DEV-018: Use explicit workflow-local `Codex Development Coordinator <codex@localhost>` author/committer variables because Git identity is unconfigured. Attribute agent-generated commits honestly; do not copy the human author from old history or change global Git settings.
+
+- DEV-019: Record the human's “create your mock for this example” as authority for a synthetic harmonic/quartic development fixture. Keep mock provenance distinct from expert reference judgments and actual execution. M0 remains incomplete; no mandatory scientific gate is waived.
+- DEV-020: Commissioning used one start with no repairs. Inspected final receipt and exact accepted source, then fast-forwarded before the administrative activation commit. Use the permanent validator for every subsequent request; the original bootstrap exemption is retired.

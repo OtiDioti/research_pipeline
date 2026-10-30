@@ -2,7 +2,7 @@
 
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
-Reconciled 2026-10-30 against local evidence. No product implementation/run exists yet. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
+Reconciled 2026-10-30 against local evidence. Commissioning foundation is accepted/integrated; continuous grant is activated. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
 
 | ID | State | Item | Reason / dependency | Resume or decision condition | Owner |
 | --- | --- | --- | --- | --- | --- |
@@ -12,11 +12,10 @@ Reconciled 2026-10-30 against local evidence. No product implementation/run exis
 | B-004 | DEFERRED | Extra development-status automation | Markdown records and CWI inspection are sufficient initially | Repeated manual reconciliation cost justifies a bounded CWI request | Coordinator |
 | B-005 | DEFERRED | Distributed workers and multi-user operation | Not required to establish a trustworthy single-machine vertical slice | Pilot evidence and exact product requirements justify expansion | Human |
 | B-006 | DEFERRED | Specific symbolic, theorem-proving, or software-development tools in the product | Product tools are optional capabilities, not a fixed supplied set | A concrete research task and tool qualification contract justify integration | Research/product owner |
-| B-007 | RESOLVED FOR COMMISSIONING | Supplied-backend findings and parser/auth readiness | Local 1,010 pass/21 skip; focused bootstrap 21 pass resolves six pytest skips; exact Codex parser/login probes pass | Real CWI commissioning still required; 15 opt-in live tests unrun; ENVIRONMENT.md records limits | Coordinator |
+| B-007 | RESOLVED FOR CURRENT BACKEND | Supplied-backend findings and parser/auth readiness | Local 1,010 pass/21 skip; focused bootstrap 21 pass resolves six pytest skips; exact Codex parser/login probes pass | Actual commissioning accepted/integrated (run 47d6ef06); 15 opt-in live tests unrun; ENVIRONMENT.md records limits | Coordinator |
 | B-008 | RESOLVED | Development model identity | Human explicitly approved gpt-6-astra after catalog ambiguity; AUTH revision 2 | Use explicit model/effort; no silent substitution | Human + coordinator |
 | B-009 | DEFERRED | Automatic restart of outer Codex sessions | Documentation provides continuous execution and manual recovery, not a daemon | Separate CWI request, explicit need/authority, single-owner and bounded-recovery tests | Coordinator + human |
-
-| B-010 | BLOCKED | M0 pilot/scientific contract before D02 (R-001–R-004) | Specification requires pilot choice, expert-audited fixtures and predeclared useful-progress/error standards before scientific implementation; no such human evidence supplied | Complete D01 scientific-contract gate after foundation commissioning; no invented expert signoff | Human scientific owner + coordinator |
+| B-010 | BLOCKED | M0 pilot/scientific contract before D02 (R-001–R-004) | Specification requires pilot choice, expert-audited fixtures and predeclared useful-progress/error standards before scientific implementation; human requests a synthetic harmonic/quartic mock, but supplies no expert audit or approved evaluation thresholds | Create authorized mock in REQ-D01-002; retain required human M0 gate before D02; no invented expert signoff | Human scientific owner + coordinator |
 | B-011 | BLOCKED FOR LIVE WORK | Product provider/data/budget approval and scientific acceptance | Development Codex allowance does not authorize product experiments or pilot data access | Separate explicit service/data/budget and expert review records before live work | Human |
 
 ## Required fields for a new blocked or paused item

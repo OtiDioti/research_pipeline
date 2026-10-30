@@ -1,6 +1,6 @@
 # D00 — Specification and operating readiness
 
-**State:** READY. Administrative reconciliation and local readiness checks completed on 2026-10-30; the launch transaction must repeat the exact committed bootstrap and cleanliness checks and obtain specific execution permission. No product acceptance is claimed.
+**State:** COMPLETE for operating readiness. Administrative reconciliation and local readiness checks completed on 2026-10-30; the launch transaction must repeat the exact committed bootstrap and cleanliness checks and obtain specific execution permission. Commissioning subsequently established actual CWI access and acceptance; see the run record.
 
 **Goal:** Reconcile the exact local product specification and establish an honest, reproducible development environment.
 
@@ -43,7 +43,7 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 
 ## Reconciled v1.3 gate — Readiness reconciliation
 
-**Requirement ownership:** R-001–R-007, R-093–R-094. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+**Requirement ownership:** R-001–R-007, R-093–R-094. All constituent obligations remain assigned; D00 establishes readiness, not scientific satisfaction. R-007 evidence is in the commissioning run.
 
 Preserve the specification identity, actual operating grant, supported backend/model/runtime and exact bootstrap policy. D00 does not supply the human scientific decisions required by M0. Record those as the D01 gate, rather than claiming M0 complete.
 
@@ -51,3 +51,5 @@ Preserve the specification identity, actual operating grant, supported backend/m
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
 
 Local evidence: [ENVIRONMENT.md](../ENVIRONMENT.md), [REQUIREMENTS.md](../REQUIREMENTS.md), and AUTH-2026-10-30-001. The supplied bootstrap was run with the current exact documentation HEAD (exit 0, explicitly no tests) and a nonmatching source identity (exit 1, missing foundation); repeat against the final prelaunch commit. CWI parser/authentication checks pass. Real model transport and final acceptance are commissioning outcomes, not inferred from local probes. M0 scientific human decisions remain a recorded D01 gate.
+
+Final readiness/commissioning evidence: [run 47d6ef06](../runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md). Scientific M0 remains D01 work, not an unsatisfied D00 setup task.

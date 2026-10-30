@@ -27,3 +27,9 @@ An accepted-but-unmerged result belongs in the run record and current status, no
 - Read and preserved specification v1.3; reconciled 94 requirement entries and M0–M7 ownership into D01–D10, including early scientific decisions, bounded context, resource-safe handoffs and D04 minimum closeout.
 - Recorded actual conditional human grant, explicit gpt-6-astra correction, separate commissioning/continuous counters, clean backend identity and stable launch environment.
 - Verified local backend suite and bootstrap follow-up, selected Codex parser/login and existing capable Git. No product source, backend repair, accepted result or integration is claimed.
+
+## Integrated foundation — 2026-10-30
+
+REQ-D01-001 delivered a nested Python 3.11+ package, side-effect-free help/version CLI, candidate-local permanent validator and 19 meaningful CLI/layout/suite-failure tests. CWI `47d6ef06-c251-4a0d-bb2c-da2059d9360f` finally accepted `7d5acab359e404cbb81d94aa3213971468764d01`; coordinator inspected and exactly fast-forwarded main under explicit preauthorization. Target validation passed 19/19. [Evidence](development/runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md). No scientific execution is implemented.
+
+The subsequent administrative checkpoint activates the existing continuous grant and records the human's synthetic-example instruction. Its commit is distinct from the accepted source.

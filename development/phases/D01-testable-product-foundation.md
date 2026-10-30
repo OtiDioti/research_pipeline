@@ -1,6 +1,6 @@
 # D01 — Testable product foundation
 
-**State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
+**State:** IN_PROGRESS. REQ-D01-001 accepted and integrated at 7d5acab; M0 remains incomplete.
 
 **Goal:** Create a minimal, worktree-local Python package and meaningful validation infrastructure through one CWI implementation milestone.
 
@@ -16,9 +16,9 @@
 
 ## Acceptance obligations
 
-- [ ] The exact candidate passes the independent frozen bootstrap check and the permanent validator.
-- [ ] Behavioral tests exercise meaningful CLI and validation failure cases, not just importability or file presence.
-- [ ] Final CWI acceptance, reviewed exact integration, and a post-integration evidence checkpoint are recorded. The accepted source differs from the documentation-only base.
+- [x] The exact candidate passes the independent frozen bootstrap check and the permanent validator.
+- [x] Behavioral tests exercise meaningful CLI and validation failure cases, not just importability or file presence.
+- [x] Final CWI acceptance, reviewed exact integration, and a post-integration evidence checkpoint are recorded. The accepted source differs from the documentation-only base.
 
 ## Important failure cases
 
@@ -34,9 +34,15 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 
 ## Reconciled v1.3 gate — Foundation and subsequent M0 gate
 
-**Requirement ownership:** R-001–R-007, R-088, R-093–R-094. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+**Requirement ownership:** R-001–R-007, R-088, R-093–R-094. All constituent obligations apply; R-007 is integrated, other coverage remains partial or absent.
 
 REQ-D01-001 delivers only R-007 and the development foundation. After accepted integration, complete the M0 gate: human pilot/envelope choice; expert-audited positive/negative development and held-out material; predeclared usefulness/error/resource standards; common schemas/message/eligibility/context/checkpoint/report/tool/vault contracts; one complete paper candidate/failure example. Administrative design may be coordinated directly; executable schemas, tests and runtime prompts require a new CWI request. R-001–R-003 are currently BLOCKED. D01 is not complete until this gate is evidenced; D02 depends on it.
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
+
+## Current evidence and next bounded work
+
+[REQ-D01-001 run](../runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md): 19 meaningful tests, bootstrap and permanent validation, exact fast-forward, target validation. The continuous envelope is activated.
+
+The human requested a mock of the harmonic/quartic example. [REQ-D01-002](../requests/REQ-D01-002.md) creates synthetic initial fixture material and a reviewable paper walkthrough without claiming live calculations or expert audit. It is independent preparatory M0 work. Human pilot/usefulness decisions, audited reference collection and predeclared scientific standards remain required before D02; the mock cannot complete those obligations.

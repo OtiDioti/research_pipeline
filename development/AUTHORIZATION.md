@@ -1,6 +1,6 @@
 # Development operating authorization
 
-**Actual human grant: AUTH-2026-10-30-001, revision 2. State: ACTIVE for commissioning; CONTINUOUS is conditionally preauthorized but NOT ACTIVATED.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection reply. The repetition does not reset any counters.
+**Actual human grant: AUTH-2026-10-30-001, revision 3. State: CONTINUOUS, activated by this post-integration documentation checkpoint.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection and mock-example replies. The repetition does not reset any counters.
 
 ## Effective grant
 
@@ -8,11 +8,11 @@
 | --- | --- |
 | Repository / target | `/home/francesco/Desktop/gits/research_pipeline`, branch `main`; inspected original commit `dce9bedb998c8be4389d42627916911f4c25d336` |
 | Specification | project_description.md v1.3; SHA-256 `13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7`; immutable unless human approves change |
-| Current mode | COMMISSIONING: complete D00, then only REQ-D01-001 when prerequisites pass |
+| Current mode | CONTINUOUS: commissioning completed; proceed through ready D01–D10 work within the original limits and dependency gates |
 | Commissioning starts | At most 3, including failed preflights/replacements; correction must be diagnosed and previous attempt safely resolved; no blind retries |
 | First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/full-diff/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
 | Continuous activation | Only after first final acceptance, complete inspection, exact integration, successful validation and documentation checkpoint; record activation then |
-| Conditional continuous scope | Reconciled mandatory specification across D01–D10, including remaining D01; current target branch; proceed through ready slices without routine confirmation |
+| Active continuous scope | Reconciled mandatory specification across D01–D10, including remaining D01; current target branch; proceed through ready slices without routine confirmation |
 | Continuous starts | At most 50 new starts after activation, including failed preflights/replacements; separate from commissioning; no reset between sessions/request renames |
 | Run bounds | One product CWI run at a time; bootstrap 1 internal milestone; later at most 3; at most 2 repairs per review and 6 per run; 900 seconds per agent invocation and validation |
 | Recovery | At most 2 evidence-based actions for the same blocker; no uncertain replay; read-only inspection is not recovery consumption |
@@ -30,14 +30,24 @@
 
 The human selected **“Authorize GPT-6 Astra (`gpt-6-astra`)”** in response to the catalog mismatch question on 2026-10-30. This resolves MODEL_SELECTION_REQUIRED for future runs using that exact ID. It does not authorize substituting `gpt-6.1-sol`, creating an alias, using a higher reasoning level, or changing frozen settings.
 
-## Consumption before first launch
+## Activation and current consumption
 
-Commissioning starts **0/3**; continuous starts **0/50, inactive**; recovery actions **0**; direct backend repair candidates **0**. No product CWI UUID or acceptance/integration exists. Inspection found no account CWI state directory, target logs, CWI branches/worktrees, or local attempts. These counters describe observed retained evidence and this session, not unrelated account usage. Provider remaining quota/monetary usage is not measured; there is no claimed hard money cap.
+Commissioning REQ-D01-001 finally accepted as CWI run `47d6ef06-c251-4a0d-bb2c-da2059d9360f`. The coordinator inspected the complete diff, exact receipt and validation artifacts, clean branch/base, ancestry, collisions and hooks. Exact fast-forward integrated `7d5acab359e404cbb81d94aa3213971468764d01` on main at 2026-10-30T08:09:00Z. The permanent validator then passed 19 tests with zero skips/failures and left the parent clean. No tracked commit occurred between acceptance and integration. The [run record](runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md) preserves the receipt and source identities.
+
+**This committed post-integration checkpoint activates the previously granted CONTINUOUS envelope.** It is the coordinator exercising actual preauthorization, not a claim of a human first-result review. The continuous start allowance begins at this checkpoint.
+
+Commissioning starts **1/3** (closed successfully); continuous starts **0/50**; recovery actions **0**; direct backend repair candidates **0**; CWI repairs **0**. No live or unresolved implementation owner remains. Historical CWI status remains ACCEPTED_UNMERGED after the external authorized fast-forward; its state is not rewritten.
+
+Observed first-run role usage totals: 909,197 input tokens, including 690,816 cached input; 16,520 output, including 930 reasoning output. These are reported Codex invocation counters, not an invoice, a remaining-quota measurement or a hard monetary cap. Provider remaining quota and any account-level liabilities remain unmeasured. No API spending authority exists.
 
 Live counters and identities belong in ignored `local/attempts/` while the parent is bound. Reconcile into STATUS/run records only at a safe checkpoint. Never commit an approval/status update between acceptance and exact-base integration.
 
+## Actual mock-example instruction
+
+In response to the question identifying M0's human pilot and expert-reference prerequisites and proposing the specification's harmonic/quartic-oscillator example, the human replied **“create your mock for this example”**. This authorizes a synthetic development example for that scenario, implemented through CWI. It does not supply expert-reviewed reference material, approve scientific thresholds, authorize live experiments/data acquisition, or waive the specification's M0 acceptance. Record mock provenance and expected narrative as synthetic, not observed scientific execution or a domain-expert judgment. D01 can prepare this fixture and contract material; dependent D02 remains gated on the missing M0 scientific evidence.
+
 ## Revisions
 
-- Revision 1: human issued commissioning plus conditional continuous envelope and explicitly replaced first-result human checkpoint with coordinator integration preauthorization.
-- Revision 2: human approved `gpt-6-astra` after local/official evidence did not establish “Astra 6.1”; all other limits remain unchanged.
-- Activation: **not yet occurred**. Record exact accepted source, final receipt, integrated source and post-integration checkpoint when it does.
+- Revision 1: commissioning plus conditional continuous envelope and explicit coordinator first-integration preauthorization.
+- Revision 2: human approved `gpt-6-astra` after local/official evidence did not establish “Astra 6.1”; other limits unchanged.
+- Revision 3: records the actual mock-example instruction, successful commissioning evidence and activation at this post-integration checkpoint; no expansion of limits or scientific signoff.

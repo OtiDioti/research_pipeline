@@ -55,3 +55,9 @@ Official [model catalog](https://developers.openai.com/api/docs/models) was chec
 Focused bootstrap log SHA-256: `85e3f178b7fb7746fba9ab399a3213dba7d805be98ffa9502a4c9555d7568dd2`. Original review T-01 crash-recovery and T-02 session cases pass in the full local suite; T-03 pytest bootstrap cases pass in the focused follow-up. No failure was waived or backend source changed. Fifteen real-model integration tests remain unrun; REQ-D01-001 will be the bounded commissioning integration, not a claim that those tests passed.
 
 Git author/committer config was absent. The explicit workflow-local agent identity above supplies Git identity without changing global configuration or attributing generated work to the human. Preserve these four variables on resume.
+
+## Commissioning transport evidence and continuation
+
+Run `47d6ef06-c251-4a0d-bb2c-da2059d9360f` completed successfully with the recorded environment/backend, explicit `gpt-6-astra` / `medium`, and selected Codex. Frozen invocation evidence and successful role responses establish actual access for this run; natural-language self-identification is not used. No independent server-side effective-model attestation is claimed beyond retained invocation configuration/telemetry. No API key transport, installation change or backend patch occurred.
+
+Post-integration validator: 19/19 passing, zero skipped, log SHA-256 `ba3c989d077057b92a336e923eab7a41569e18fec105457d9e69388cd208b978`. Next request REQ-D01-002 uses the same launch map and model with medium effort for a bounded deterministic fixture. All future requests use the permanent validator; no bootstrap baseline exception. Quota remains unknown.

@@ -4,7 +4,7 @@ Reconciled 2026-10-30 against **project_description.md v1.3**, dated 2026-10-29,
 
 ## State, ownership and evidence
 
-Every R-* row is mandatory within the first-version scope except explicitly conditional adapter obligations. **Default state: PLANNED. Request: unassigned. Executed tests/reviews, accepted source and integrated source: NONE.** These defaults apply to every row until replaced by linked exact evidence. R-001–R-003 are BLOCKED on human scientific decisions/evidence. No requirement has an authorized scope reduction. Owner is the accountable phase; dependencies follow the roadmap and explicit row references.
+Every R-* row is mandatory within the first-version scope except explicitly conditional adapter obligations. **Default state: PLANNED. Request: unassigned. Executed tests/reviews, accepted source and integrated source: NONE unless the evidence ledger below overrides them.** These defaults apply to every row until replaced by linked exact evidence. R-001–R-003 are BLOCKED on human scientific decisions/evidence. No requirement has an authorized scope reduction. Owner is the accountable phase; dependencies follow the roadmap and explicit row references.
 
 Requests must cite these IDs in acceptance criteria and retain partial coverage and unsupported behavior. A row is complete only with its exact accepted/integrated source, final receipt, executed checks and required live/human evidence. Deterministic contracts cannot establish scientific performance or live interoperability. The former RG-01–RG-17 conceptual groups are superseded by these specific obligations; their subjects are all retained. Original record names in §5.1 and operation contracts in §10.1 remain controlling.
 
@@ -12,7 +12,7 @@ Requests must cite these IDs in acceptance criteria and retain partial coverage 
 
 | ID | Source | Obligation | Owner / dependencies | Evidence required |
 | --- | --- | --- | --- | --- |
-| R-001 | §§1.3–1.4, 11.2, M0, 14.2 | Human confirms narrow pilot, useful outcomes, research envelope and consequential decisions; quantum spectral problems remain a proposal. | D01 contract gate before D02; human | Versioned human-approved pilot brief |
+| R-001 | §§1.3–1.4, 11.2, M0, 14.2 | Human confirms narrow pilot, useful outcomes, research envelope and consequential decisions; quantum spectral pilot remains unapproved for evaluation; human authorized a mock of the supplied oscillator example. | D01 contract gate before D02; human | Versioned human-approved pilot brief |
 | R-002 | §§11.2–11.3, M0 | Expert-audited positive and negative fixtures, development/held-out separation, reference judgments and review criteria; retain valid unusual solutions. | D01 gate; R-001 | Audited fixture manifest, provenance and access policy |
 | R-003 | §§11.4–11.5, M0 | Predeclare useful-result retention, question-level progress, endorsement-error standards, budgets, uncertainty and unresolved-case handling. | D01 gate; R-001–002 | Versioned evaluation protocol and human approval |
 | R-004 | §§5.1–5.6, 10.1, M0 | Common record/message/revision, eligibility, intake, vault, draft, tool, resource, checkpoint and report contracts; complete candidate/failed-check paper example. | D01 gate then D02–D07 | Reviewed administrative contract; executable schemas/fixtures through CWI |
@@ -148,3 +148,10 @@ No scientific fixtures or live experiments are authorized as expert evidence by 
 ## Completion audit
 
 At phase boundaries reconcile every row to exact evidence and §§11.5/15. Permitted states are PLANNED, IN_PROGRESS, EVIDENCED_NOT_INTEGRATED, INTEGRATED, BLOCKED and DEFERRED_AUTHORIZED. Preserve partial results and unknown liabilities; only human authority can reduce mandatory scope. Apply [AUTONOMY.md](AUTONOMY.md) before any completion claim.
+
+## Evidence ledger — commissioning checkpoint 2026-10-30
+
+- **R-007 INTEGRATED:** [REQ-D01-001 evidence](runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md), accepted/integrated `7d5acab359e404cbb81d94aa3213971468764d01`, exact receipt, strict bootstrap and 19 meaningful tests, post-integration 19/19.
+- **R-006 PARTIAL:** foundation has no provider/tool dependency; wider runtime neutrality remains unimplemented.
+- **R-001–R-003 BLOCKED for scientific acceptance:** human authorized a synthetic example, not expert audit or evaluation standards.
+- **R-004 PLANNED/PREPARING:** REQ-D01-002 will supply a narrow synthetic paper example and fixture contract. Common full runtime contracts remain outstanding. No D01/M0 completion is claimed.
