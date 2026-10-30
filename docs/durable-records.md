@@ -276,7 +276,7 @@ columns, primary/unique keys, foreign keys, state checks and the kind/state trig
 a matching version alone is insufficient. Unsupported/zero versions and malformed
 layouts fail unchanged. Extra schema objects are unsupported too.
 
-This gate relies on the schema/version never changing after initialization and
+This gate relies on a published runtime's schema/version never changing and
 on absence of WAL. It deliberately ignores hot journals and must never be used for
 live data, head/receipt queries, integrity conclusions or recovery. After the gate,
 the operational connection uses a correctly encoded SQLite URI with `mode=rw`,
@@ -307,8 +307,12 @@ names the kind and schema version and explains that migration is required. This
 check precedes batch resolution, artifact synchronization and all metadata writes;
 a mixed old/new batch leaves every table unchanged. Conflicting submission IDs
 still take precedence, and exact retries recover the original receipt even when
-heads have advanced or artifact bytes are damaged. Opening never upgrades a store;
-explicit migration is unavailable in this milestone.
+heads have advanced or artifact bytes are damaged. Opening never upgrades a store.
+Explicit [verified restore-time migration](backups.md#explicit-verified-migration)
+accepts only a v1 backup, ordinary integer `target_schema=2` and caller-supplied
+`CreationProvenance`, into a new absent runtime. Default restore remains exact.
+The private transformation is transactional under `.restore-incomplete`; failures
+retain the marker and files for diagnosis, and retries require a new absent path.
 
 Schema 2 includes a separate `migration_history` administrative table. Fresh
 creation leaves it empty. Its optional singleton row records only transition
@@ -319,9 +323,10 @@ finite values, no duplicate keys and an explicit canonical timestamp. Source
 artifact registrations must still match current registrations; later appends may
 add more. Validation runs on the operational connection after journal recovery,
 closing the handle on failure. History is neither a submission nor a scientific
-event, and it cannot authenticate a hostile owner's coherent rewrite. There is
-no public insertion or migration API yet; [backup inspection](backups.md) also
-checks this format in standalone snapshots.
+event, and it cannot authenticate a hostile owner's coherent rewrite. Only the
+explicit restore transition inserts this row; [backup inspection](backups.md) also
+checks it in standalone snapshots. Original creation attribution and receipt
+identities remain unchanged through migration and subsequent exact backups.
 
 All proposed exact revisions are indexed before resolution. A link may point to an
 old committed revision or any member of the batch, independent of record order.

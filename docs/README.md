@@ -23,7 +23,9 @@ worker isolation and general migrations remain unsupported.
 
 [Verified local backups](backups.md) documents explicit snapshot/inspection/restore
 APIs, strict format and integrity checks, durable completeness markers, independent
-continued use and a runnable synthetic example. This is partial R-019/R-017 evidence;
+continued use, exact restore defaults and explicit attributed v1→v2 migration.
+Runnable synthetic examples include a source-local legacy fixture, historical
+receipt preservation and a subsequent v2 backup. This is partial R-019/R-017 evidence;
 full D02, periodic scheduling and research-run/session/job recovery remain outstanding.
 
 [Typed scientific content](typed-content.md) documents the four pure versioned

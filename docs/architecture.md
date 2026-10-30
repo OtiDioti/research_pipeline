@@ -70,7 +70,9 @@ standard library. It owns no SQLite connections or filesystem work. Schema 1's
 exact five-kind DDL remains supported; schema 2 extends the kind checks and state
 trigger and adds a singleton administrative history table, empty on fresh creation.
 Operational connections validate administrative rows after journal recovery.
-Restore-time migration is not yet exposed. See [version contracts](durable-records.md)
+Explicit restore-time v1→v2 migration lives only in `backup.py`, transforming a
+verified private copy transactionally under the existing incomplete marker.
+Store creation/opening and generic/typed submission do not migrate. See [version contracts](durable-records.md)
 for kind mappings and [backup pairs](backups.md) for exact-copy verification.
 
 Explicit `BEGIN IMMEDIATE` transactions compare relevant expected heads and append
@@ -176,5 +178,11 @@ markers define completeness; restore publishes artifacts before original metadat
 and RecordStore rejects interrupted restores before opening SQLite. See
 [the backup contract](backups.md) for snapshot selection, fixed capture deadline,
 publication uncertainty, local POSIX/trusted-owner assumptions and runnable usage.
-No migration, scientific identity regeneration or submission replay occurs. This
+Default restore preserves exact bytes. Explicit migration requires target 2 and
+caller attribution, temporarily suspends foreign-key enforcement on the private
+copy, replaces changed tables/trigger using registered DDL and inserts separate
+administrative provenance. Exact schema, foreign-key, application and history
+checks precede COMMIT; standalone verification and synchronization precede marker
+removal. Failures retain incomplete paths and journals; publication acknowledgment
+can be uncertain after removal. No scientific identity regeneration or submission replay occurs. This
 is partial R-019/R-017 evidence, not complete D02 or research-run/session/job recovery.

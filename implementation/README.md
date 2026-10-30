@@ -108,8 +108,14 @@ Supported backup format/schema pairs are `(1, 1)` and `(2, 2)`; default restore
 preserves the source version. Schema 2 admits twenty generic kinds while retaining
 claim/task state rules; all fifteen additions require null canonical states.
 Legacy new-kind requests fail with a migration-required error. The separate
-schema-2 administrative history format is validated and preserved, but fresh
-creation invents none and explicit migration is not yet available.
+schema-2 administrative history format is validated and preserved; fresh creation
+invents none. `restore_backup(root, destination, *, target_schema=None,
+migration_provenance=None)` supports only explicit v1→v2 migration with ordinary
+integer target `2` and caller-supplied `CreationProvenance`. Both defaults select
+exact restoration. Migration preserves historical values and original receipts
+and records the verified source identity/digest separately under the existing
+durable incomplete marker. Invalid options fail before reservation; interrupted
+copies remain unusable and retries require a new absent path.
 See [backups](../docs/backups.md) for exact signatures, runnable examples, strict
 manifest verification, retained incomplete directories and uncertain publication
 acknowledgment. This is partial R-019/R-017 evidence; full D02, real research-run/

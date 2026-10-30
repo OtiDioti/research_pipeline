@@ -11,7 +11,7 @@ Parent-traversal components and symlinked ancestors are rejected, not resolved.
 | --- | --- |
 | `create_backup(source: RecordStore, destination) -> BackupInfo` | Capture an open, owning-thread source without an active transaction into an absent destination. |
 | `inspect_backup(root) -> BackupInfo` | Verify a complete backup without recovery, writes, permission changes or sidecars. |
-| `restore_backup(root, destination) -> RecordStore` | Verify before reserving an absent runtime, copy original bytes, and return an independently usable handle after publication barriers. Close it or use a context manager. |
+| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate v1→v2. Return an independent handle after publication barriers. Close it or use a context manager. |
 
 `BackupInfo` is frozen and contains `backup_id: str`, `format_version: int`,
 `schema_version: int`, `metadata: ArtifactReference`, and
@@ -108,8 +108,50 @@ Default restoration is exact: schema 1 yields schema 1 and schema 2 yields
 schema 2, with original metadata bytes, identities and receipts. Restored v1
 stores accept old-kind appends and reject v2-only submitted or declared reference
 kinds with a migration-required `DomainValidationError`. Restored v2 stores accept
-all twenty generic kinds. Neither path changes the backup or source. Explicit
-restore-time migration remains unavailable until the next milestone.
+all twenty generic kinds. Neither path changes the backup or source.
+
+## Explicit verified migration
+
+The sole supported migration is a verified format-1/schema-1 backup restored into
+an absent schema-2 runtime. Supply `target_schema=2` and
+`migration_provenance=CreationProvenance(actor, created_at, details)` explicitly.
+The actor and UTC timestamp are caller supplied; details may be `{}`. Attribution
+is reconstructed and validated at the API boundary and serialized canonically.
+No operator, timestamp, migration request or scientific authority is inferred.
+
+Both options default to `None`, selecting exact restoration. `BackupLayoutError`
+rejects provenance without a target, missing or malformed attribution with a
+target, and targets other than the ordinary integer `2` (including booleans,
+strings and floats). Any explicit target on a schema-2 source is rejected,
+including a downgrade or repeated upgrade. Invalid options and damaged backups
+fail before destination reservation. There is no live in-place migration,
+automatic upgrade on open, public v1 creation option or general conversion API.
+
+After full read-only source verification, restore reserves the destination and
+durably writes `.restore-incomplete`. It independently copies/verifies artifacts,
+copies the snapshot into private metadata, compares its original digest/size and
+verifies the copied v1 database. Only that unpublished copy is opened for migration,
+using the existing bounded SQLite DELETE-journal/EXTRA connection settings.
+The backup is never written, chmodded or attached to a writable connection.
+
+One `BEGIN IMMEDIATE` transaction saves the exact identities and record links in
+connection-local temporary tables, drops/recreates those main tables and the
+state trigger using registered v2 DDL, and copies named SQL columns back. It adds
+the administrative history row and sets `user_version=2`. Historical JSON text,
+NULLs, IDs, ordinals, revisions, events, requests and receipts remain unchanged;
+no submissions are replayed. Foreign-key enforcement is temporarily disabled
+outside the transaction only on this unpublished private connection to replace
+the mutually dependent tables without renaming them. Exact main-schema validation,
+explicit `foreign_key_check`, application checks and strict history validation
+must succeed before COMMIT. Enforcement is restored and checked after COMMIT.
+Exceptions roll back an active transaction and close the connection; failed or
+uncertain commits never permit publication.
+
+After closing the migration connection, restore requires a standalone database
+without sidecars, verifies v2 schema/application/history and exactly the source
+artifact inventory, rechecks object bytes and synchronizes metadata, objects and
+directories. The migrated metadata digest is expected to change; history retains
+the original source digest. Only then may marker removal publish the copy.
 
 Schema 2's separate `migration_history` table is empty on fresh creation. If
 present, its singleton administrative row records `migration_id=1`,
@@ -122,8 +164,11 @@ canonical text, and matching current source-artifact registrations are verified.
 Later registrations are allowed. This is internal consistency, not external
 authentication. Inspection validates it on the standalone snapshot; open validates
 live history after legitimate journal recovery. Exact backup/restoration preserves
-these values without inserting a submission or scientific event. No public
-history insertion or migration operation exists in this milestone.
+these values without inserting a submission or scientific event. Migration writes
+this row separately from original creation attribution; it never relabels old
+records as v2 creations. The source manifest is reconstructed canonically from
+verified `BackupInfo` and checked against its `backup_id`, independently of outer
+manifest whitespace. No public arbitrary history insertion API exists.
 
 ## Completeness, errors and recovery
 
@@ -144,7 +189,9 @@ Backup verifies and synchronizes the captured metadata, manifest and all referen
 objects and directories before removing its marker. Restore verifies the entire
 backup **before** creating its destination, publishes durable artifacts first,
 then copies the original snapshot into mode-0600 `metadata.sqlite3`. It checks the
-copied bytes and database without initialization, replay, VACUUM or migration.
+copied bytes and database without initialization, replay or VACUUM. Explicit
+migration then follows the transaction and re-verification sequence above;
+default restoration preserves exact metadata bytes.
 Restored objects remain read-only. Successful temporary-file removals and directory
 changes are synchronized before completion; failed or older staging content is
 never swept.
@@ -158,10 +205,16 @@ There is no promise to roll publication back. No partial content qualifies as
 complete. Keep the failed path for diagnosis; choose a new absent destination if
 retrying, and never remove a marker to make a failed copy usable.
 
+This applies equally to mid-transformation interruption and a committed v2 copy
+whose publication failed. Keep any journal and other partial files intact; public
+open and inspection refuse the marker before recovery. There is no automatic
+cleanup, repair or retry. If publication succeeded but opening the returned handle
+fails, restore reports that a complete copy was published but opening failed.
+
 | Error | Meaning |
 | --- | --- |
 | `BackupError` | Base for backup failures. |
-| `BackupLayoutError` | Unsafe/incomplete layout, traversal, existing destination or unsupported format. |
+| `BackupLayoutError` | Unsafe/incomplete layout, traversal, existing destination, unsupported format or invalid migration options/transition. |
 | `BackupIntegrityError` | Invalid snapshot/application state, manifest, inventory, hash or size. |
 | `BackupOperationalError` | Capture deadline, I/O, copy, sync or acknowledgment failure. Stages/paths/digests and useful causes are retained. |
 | `StoreClosedError` | The supplied source handle was already closed. |
@@ -227,6 +280,76 @@ uncertain final acknowledgment and abrupt backup/restore interruption. A separat
 end-to-end test recovers a durable submission after pre-acknowledgment process exit,
 backs it up, restores and retries its original identity. Tests and local runs are
 advisory; controller validation and Reviewer verification remain authoritative.
+
+## Runnable synthetic migration example
+
+This demonstration uses `tests.legacy.historical_store` solely as source-local
+support for constructing authentic v1 data. It is not a public v1 creation API
+or evidence of a scientific run. It preserves generic/typed histories and original
+receipts while explicitly attributing the administrative migration. The oscillator
+fixture retains its original v1.3 provenance and is not involved here.
+
+From the candidate repository root, set the two candidate-local import paths:
+
+```bash
+export PYTHONPATH="$PWD/implementation/src:$PWD/implementation"
+export PYTHONDONTWRITEBYTECODE=1
+```
+
+Run the following Python block using `/home/francesco/miniconda3/bin/python3 -B`
+from a working directory outside source. All runtime paths are explicit children
+of a disposable `/tmp` directory. Cleanup is demonstration-owned. The focused
+test extracts and executes this exact block in a bounded subprocess when the
+controller runs validation; the documentation itself is not an execution claim.
+
+```python
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from research_pipeline.backup import create_backup, inspect_backup, restore_backup
+from research_pipeline.domain import CreationProvenance, RecordEnvelope, Submission
+from tests.legacy import historical_store, table_values  # source-local fixture support only
+
+with TemporaryDirectory(prefix="synthetic-migration-", dir="/tmp") as temporary:
+    paths = Path(temporary)
+    source, requests, artifact = historical_store(paths / "legacy")
+    with source:
+        original = table_values(paths / "legacy")
+        histories = {row[0]: source.history(row[0]) for row in original["identities"]}
+        receipts = [source.get_submission(item.submission_id) for item in requests]
+        events = source.audit_events()
+        typed = source.get_typed_revision("evidence", 1)
+        legacy = create_backup(source, paths / "legacy-backup")
+    assert (legacy.format_version, legacy.schema_version) == (1, 1)
+    assert inspect_backup(paths / "legacy-backup") == legacy
+    attribution = CreationProvenance("synthetic-migration-operator", "2026-10-30T14:00:00Z", {})
+    with restore_backup(paths / "legacy-backup", paths / "upgraded",
+                        target_schema=2, migration_provenance=attribution) as upgraded:
+        assert table_values(paths / "upgraded") == original
+        assert upgraded.audit_events() == events
+        for identity, history in histories.items():
+            assert upgraded.history(identity) == history
+        assert upgraded.get_typed_revision("evidence", 1) == typed
+        for item, receipt in zip(requests, receipts):
+            assert upgraded.submit(item) == receipt
+        assert upgraded.submit_typed(requests[2]) == receipts[2]
+        assert upgraded.audit_events() == events
+        p = CreationProvenance("synthetic-author", "2026-10-30T15:00:00Z")
+        project = RecordEnvelope("new-project", 1, "project", {"synthetic": True}, p)
+        upgraded.submit(Submission("new-project-submission", p, [project], {"new-project": 0}))
+        assert upgraded.get_revision("new-project", 1) == project
+        exported = create_backup(upgraded, paths / "v2-backup")
+    assert (exported.format_version, exported.schema_version) == (2, 2)
+    assert inspect_backup(paths / "v2-backup") == exported
+    assert inspect_backup(paths / "legacy-backup") == legacy
+```
+
+Migration tests also compare all seven historical tables, independent inodes and
+unchanged source bytes; exercise real mid-DDL rollback and abrupt exits, committed
+but incomplete copies, metadata/directory synchronization and marker failures;
+and carry a v1 post-COMMIT lost acknowledgment through migration and a v2 exact
+restore. Administrative corruption tests rehash outer snapshots so application
+and history checks must still reject them. These are bounded local integrity
+checks, not authentication of a coherent hostile-owner rewrite.
 
 General migrations, periodic scheduling, complete D02/R-019/R-017 fulfillment,
 research-run/session/job recovery, scientific validation, full scientific schemas,

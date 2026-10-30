@@ -13,11 +13,11 @@ from research_pipeline.artifacts import (
     ArtifactStore, ArtifactError, ArtifactLayoutError, ArtifactIOError,
     _path_directory,
 )
-from research_pipeline.domain import ArtifactReference, AuditEvent, Submission
+from research_pipeline.domain import ArtifactReference, AuditEvent, CreationProvenance, Submission
 from research_pipeline.store import RecordStore, StoreLayoutError, _schema_gate, _connect
 from research_pipeline.schema import (
     _VERSIONS, _json, _canonical, manifest_info, ManifestLayoutError,
-    validate_request_kinds, validate_history,
+    validate_request_kinds, validate_history, validate_schema,
 )
 
 
@@ -49,7 +49,7 @@ class BackupInfo:
 
 
 def _fault(boundary: str) -> None:
-    """Private fault seam at capture steps, copied files and either side of publication.
+    """Private seam at capture/copy, mid-migration, committed migration and publication.
 
     Not a public callback. Tests may fail or terminate after real storage work.
     """
@@ -376,16 +376,100 @@ def inspect_backup(root) -> BackupInfo:
         return _verify(path)
 
 
-def restore_backup(root, destination) -> RecordStore:
-    """Verify then copy into an absent explicit runtime, publishing artifacts before metadata.
+def _migrate_v1(path, info, provenance_json):
+    """Transform only the verified private copy, retaining exact SQL values and source identity.
 
-    The source schema version, original rows/receipts and bytes are preserved. The returned independent store
-    opens only after verification and final barriers; failures retain the destination.
+    The caller owns the durable incomplete marker. Any failure rolls back an
+    active transaction and closes the connection, without publishing or cleaning
+    retained evidence; even a failed/uncertain COMMIT cannot permit publication.
+    """
+    manifest = _manifest(info.metadata, info.artifacts, info.schema_version)
+    if _info(manifest) != info:
+        raise BackupIntegrityError("migration: canonical source manifest identity mismatch")
+    identities, _, _, links, _, _, _, states, history = _VERSIONS[2][0]
+    connection = _connect(path)
+    try:
+        # Only this unpublished private copy suspends enforcement. Dropping and
+        # recreating the tables avoids SQLite renaming dependent FK/trigger SQL.
+        # An explicit foreign_key_check before COMMIT is therefore mandatory.
+        connection.execute("PRAGMA foreign_keys=OFF")
+        if connection.execute("PRAGMA foreign_keys").fetchone() != (0,):
+            raise BackupIntegrityError("migration: cannot suspend foreign keys")
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute("CREATE TEMP TABLE saved_identities AS SELECT record_id,kind,head FROM main.identities")
+        connection.execute("CREATE TEMP TABLE saved_links AS SELECT record_id,revision,ordinal,relationship,target_id,target_revision,target_kind FROM main.record_links")
+        connection.execute("DROP TRIGGER revision_states")
+        connection.execute("DROP TABLE record_links")
+        connection.execute("DROP TABLE identities")
+        _fault("migration_transform")
+        connection.execute(identities)
+        connection.execute(links)
+        # SQL copying retains text, NULLs, ordinals and identities without any
+        # historical JSON decoding, submission replay or receipt regeneration.
+        connection.execute("INSERT INTO identities (record_id,kind,head) SELECT record_id,kind,head FROM temp.saved_identities")
+        connection.execute("INSERT INTO record_links (record_id,revision,ordinal,relationship,target_id,target_revision,target_kind) SELECT record_id,revision,ordinal,relationship,target_id,target_revision,target_kind FROM temp.saved_links")
+        connection.execute(states)
+        connection.execute(history)
+        connection.execute("INSERT INTO migration_history VALUES (1,1,2,?,?,?)",
+                           (info.backup_id, _canonical(manifest).decode(), provenance_json))
+        connection.execute("PRAGMA user_version=2")
+        connection.execute("DROP TABLE temp.saved_links")
+        connection.execute("DROP TABLE temp.saved_identities")
+        validate_schema(connection.execute("PRAGMA user_version").fetchone()[0],
+                        [row[0] for row in connection.execute("SELECT sql FROM main.sqlite_master WHERE sql IS NOT NULL")])
+        if connection.execute("PRAGMA foreign_key_check").fetchall():
+            raise BackupIntegrityError("migration: foreign key violations")
+        _application(connection, 2)
+        validate_history(connection.execute("SELECT * FROM migration_history").fetchall(),
+                         connection.execute("SELECT digest,size FROM artifacts").fetchall())
+        connection.execute("COMMIT")
+        connection.execute("PRAGMA foreign_keys=ON")
+        if connection.execute("PRAGMA foreign_keys").fetchone() != (1,):
+            raise BackupIntegrityError("migration: cannot restore foreign keys")
+        _fault("migration_committed")
+    except BaseException:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
+def restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore:
+    """Verify and restore into an absent runtime, optionally migrating v1 to v2.
+
+    With both options absent, preserve the source schema and metadata bytes.
+    Migration requires ordinary integer target_schema=2, a verified v1 backup,
+    and explicit CreationProvenance; invalid options raise BackupLayoutError
+    before reservation. Original rows/receipts remain unchanged in either mode.
+    The independent store opens after verification and publication barriers.
+    Failures retain the destination; errors after publication report uncertainty.
     """
     path, destination = _path(root), _path(destination)
     with _errors("restore backup", destination):
         _outside(destination, path)
+        provenance_json = None
+        option_error = ("migration permits only format 1/schema 1 to schema 2 with "
+                        "target_schema=2 and explicit CreationProvenance; "
+                        "omit both options for exact restore")
+        if target_schema is None:
+            if migration_provenance is not None:
+                raise BackupLayoutError(option_error)
+        else:
+            if type(target_schema) is not int or target_schema != 2 or not isinstance(migration_provenance, CreationProvenance):
+                raise BackupLayoutError(option_error)
+            try:
+                # Frozen instances can still be forged; reconstruct all fields,
+                # including strict JSON details, rather than trusting to_dict.
+                provenance = CreationProvenance(migration_provenance.actor,
+                                                migration_provenance.created_at,
+                                                _json(migration_provenance._details_json))
+                provenance_json = _canonical(provenance.to_dict()).decode()
+            except (AttributeError, ValueError, TypeError, RecursionError, OverflowError) as error:
+                raise BackupLayoutError(option_error + f": invalid attribution: {error}") from error
         info = _verify(path)
+        if target_schema is not None and (info.format_version, info.schema_version) != (1, 1):
+            raise BackupLayoutError(option_error)
         source = ArtifactStore.open(path)
         target = _reserve(destination, ".restore-incomplete")
         for reference in info.artifacts:
@@ -399,8 +483,16 @@ def restore_backup(root, destination) -> RecordStore:
         copied = _read_file(destination, "metadata.sqlite3", readonly=False)
         if _reference(copied) != info.metadata or _database(destination / "metadata.sqlite3") != (info.schema_version, info.artifacts):
             raise BackupIntegrityError(f"restore {destination}: copied database mismatch")
+        if target_schema is not None:
+            _migrate_v1(destination / "metadata.sqlite3", info, provenance_json)
+        # Check the standalone layout before immutable verification so a retained
+        # SQLite sidecar can never be ignored and mistaken for a complete copy.
         if _layout(target, "metadata.sqlite3", ".restore-incomplete") != {r.digest for r in info.artifacts}:
             raise BackupIntegrityError(f"restore {destination}: object inventory mismatch")
+        if target_schema is not None and _database(destination / "metadata.sqlite3") != (2, info.artifacts):
+            raise BackupIntegrityError(f"restore {destination}: migrated database mismatch")
+        for reference in info.artifacts:
+            target.verify(reference)
         _synchronize(target, "metadata.sqlite3", info.artifacts)
         _complete(destination, ".restore-incomplete")
         try:
