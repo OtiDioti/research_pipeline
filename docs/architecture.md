@@ -56,8 +56,12 @@ retains the original envelope but is untrusted; read-only inspection neither
 authenticates attribution nor certifies edited product bytes. Explicit caller source
 and backup/control exclusions supplement the internally excluded runtime. Failures
 retain incomplete output or report uncertain acknowledgment after marker removal.
-See [checkout](checkout.md) for limits, lifecycle and an executed example. Preparation
-and explicit import remain deferred; no canonical write path is added here.
+See [checkout](checkout.md) for limits, lifecycle and an executed example.
+`research_pipeline.work_product_import` reuses those bindings for bounded edited-file
+capture and compares the descriptor with a caller-pinned canonical base. Its narrow
+store preview helper checks typed admission in a read snapshot without metadata writes.
+Frozen serialized proposals are committed separately through `submit_typed`; its
+original-ID reconciliation order is unchanged. See [preview and explicit import](work-product-import.md).
 `RecordStore.submit_typed` selects the scientific, assessment or work-product codec
 explicitly and decodes every member locally, admitting mixed seven-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized

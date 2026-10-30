@@ -47,5 +47,7 @@ admission alongside scientific/assessment values. The runnable example persists 
 reopens a manifest without executing its bytes. Build/input references grant no
 authority. [Safe durable checkout](checkout.md) adds bounded independent writable
 copies, explicit exclusion roots, untrusted descriptors and durable incomplete-marker
-publication, with an executed example. Preview/import remains the next milestone;
-D02 is partial.
+publication, with an executed example. [Preview and explicit import](work-product-import.md)
+adds canonical base validation,
+bounded capture, change summaries and durable frozen proposals for separate typed
+commit and original-ID recovery, with an executed round-trip example. D02 is partial.

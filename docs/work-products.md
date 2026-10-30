@@ -6,7 +6,8 @@ this submodule; there are no package re-exports, CLI commands, dependencies or
 import-time filesystem effects. Immutable bundles are admitted through the existing
 durable store. [Safe durable checkout](checkout.md) materializes exact committed
 revisions as independent writable copies with bounded capture and local base
-descriptors. Preview, prepared proposals and explicit import remain later work.
+descriptors. [Preview and explicit import](work-product-import.md) captures edits
+and freezes proposals for separate typed commit and original-ID recovery.
 
 A product kind and descriptive build/input links confer no execution authority,
 support, endorsement, task completion, verified exposure or certification of

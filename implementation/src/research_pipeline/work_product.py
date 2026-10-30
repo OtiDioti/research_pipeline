@@ -58,17 +58,12 @@ def _path(value: str, field: str) -> tuple[str, ...]:
     return tuple(keys)
 
 
-def _files(values) -> tuple["WorkProductFile", ...]:
-    """Detach files and reject ambiguous paths, file/directory collisions and conflicting sizes."""
-    result = tuple(_copy(value, WorkProductFile, f"files[{index}]")
-                   for index, value in enumerate(_collection(values, "files")))
-    if not result:
-        raise DomainValidationError("files: expected nonempty collection")
+def _validate_paths(paths) -> None:
+    """Check ordered logical paths for portable aliases and file/directory collisions."""
     prefixes = {}
-    sizes = {}
-    for index, value in enumerate(result):
-        keys = _path(value.path, f"files[{index}].path")
-        original = tuple(value.path.split("/"))
+    for index, path in enumerate(paths):
+        keys = _path(path, f"files[{index}].path")
+        original = tuple(path.split("/"))
         for length in range(1, len(keys) + 1):
             prefix = keys[:length]
             is_file = length == len(keys)
@@ -78,9 +73,20 @@ def _files(values) -> tuple["WorkProductFile", ...]:
                 # Shared directories must retain identical spelling. A file can
                 # never be reused as a directory, in either insertion order.
                 if spelling != original[:length] or was_file or is_file:
-                    raise DomainValidationError(f"files: conflicting paths {prior_path!r} and {value.path!r}")
+                    raise DomainValidationError(f"files: conflicting paths {prior_path!r} and {path!r}")
             else:
-                prefixes[prefix] = (original[:length], is_file, value.path)
+                prefixes[prefix] = (original[:length], is_file, path)
+
+
+def _files(values) -> tuple["WorkProductFile", ...]:
+    """Detach files and reject ambiguous paths, file/directory collisions and conflicting sizes."""
+    result = tuple(_copy(value, WorkProductFile, f"files[{index}]")
+                   for index, value in enumerate(_collection(values, "files")))
+    if not result:
+        raise DomainValidationError("files: expected nonempty collection")
+    _validate_paths([value.path for value in result])
+    sizes = {}
+    for index, value in enumerate(result):
         digest, size = value.artifact.digest, value.artifact.size
         if digest in sizes and sizes[digest] != size:
             raise DomainValidationError(f"files[{index}].artifact: conflicting size for digest {digest}")

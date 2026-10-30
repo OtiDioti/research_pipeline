@@ -146,5 +146,8 @@ is declared, not authenticated. [Safe durable checkout](../docs/checkout.md) pro
 `research_pipeline.checkout`. Explicit exclusion roots and finite byte/count limits
 bound independent writable copies; durable controls distinguish retained incomplete
 output from publication with uncertain acknowledgment. Inspection does not authenticate
-local descriptors or certify edited bytes. Preview/import, full vault/intake, scientific
-sufficiency and research execution remain deferred; D02 is partial.
+local descriptors or certify edited bytes.
+[Preview and explicit import](../docs/work-product-import.md) provides bounded capture,
+detached summaries and strict saved proposals for separate `submit_typed` commit and
+original-ID recovery. Full vault/intake, scientific sufficiency and research execution
+remain deferred; D02 is partial.

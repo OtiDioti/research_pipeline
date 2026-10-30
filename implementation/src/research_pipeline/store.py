@@ -343,6 +343,24 @@ class RecordStore:
         decoded = tuple(_decode_typed_envelope(record) for record in submission.records)
         return self._commit_submission(submission, decoded)
 
+    def _check_prepared_typed(self, submission):
+        """Preview typed admission in one read snapshot without reserving IDs or writing metadata.
+
+        Object verification/synchronization is allowed. This snapshot cannot promise
+        eventual admission: commit must repeat the checks under its write lock. A
+        used ID belongs to reconciliation through submit_typed, never preparation.
+        """
+        submission = self._normalize_submission(submission)
+        decoded = tuple(_decode_typed_envelope(record) for record in submission.records)
+        with self._transaction() as connection:
+            if self._receipt(connection, submission.submission_id) is not None:
+                raise SubmissionConflictError(
+                    f"submission {submission.submission_id}: already used; retry the saved proposal directly")
+            validate_request_kinds(submission, self._schema_version)
+            self._check_batch(connection, submission)
+            self._check_typed_targets(connection, submission, decoded)
+        return submission
+
     def _normalize_submission(self, submission):
         """Detach a request and reject forged nested values before either commit entry point."""
         self._require_open()
@@ -465,7 +483,7 @@ class RecordStore:
 
     def _check_typed_targets(self, connection, submission,
                              decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest, ...]):
-        """Validate exact constrained closure and submitted review routes inside the write lock.
+        """Validate exact constrained closure and review routes within the caller's snapshot.
 
         Resolve batch members before historical metadata, never reading transitive
         artifact bytes. Every incoming edge checks kind, independently of caching.

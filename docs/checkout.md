@@ -132,8 +132,10 @@ Checkout writes no canonical objects, submissions, records, heads, receipts/even
 or views. Editing a checkout changes no canonical data.
 
 Kind labels confer no execution authority or scientific certification. Authors and
-provenance are declared attribution, not authenticated authorship. Preview,
-preparation and explicit import are the next milestone. Full vault/intake, research
+provenance are declared attribution, not authenticated authorship.
+[Preview and explicit import](work-product-import.md) compares the canonical base,
+captures explicit edited selections and returns frozen proposals for separate commit.
+Full vault/intake, research
 execution and scientific sufficiency remain deferred; D02 is partial.
 
 ## Runnable checkout-only example
