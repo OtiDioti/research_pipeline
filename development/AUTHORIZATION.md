@@ -1,6 +1,6 @@
 # Development operating authorization
 
-**Actual human grant: AUTH-2026-10-30-001, revision 3. State: CONTINUOUS, activated by this post-integration documentation checkpoint.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection and mock-example replies. The repetition does not reset any counters.
+**Actual human grant: AUTH-2026-10-30-001, revision 3. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; execution now holds for required M0 scientific judgment.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection and mock-example replies. The repetition does not reset any counters.
 
 ## Effective grant
 
@@ -34,11 +34,11 @@ The human selected **“Authorize GPT-6 Astra (`gpt-6-astra`)”** in response t
 
 Commissioning REQ-D01-001 finally accepted as CWI run `47d6ef06-c251-4a0d-bb2c-da2059d9360f`. The coordinator inspected the complete diff, exact receipt and validation artifacts, clean branch/base, ancestry, collisions and hooks. Exact fast-forward integrated `7d5acab359e404cbb81d94aa3213971468764d01` on main at 2026-10-30T08:09:00Z. The permanent validator then passed 19 tests with zero skips/failures and left the parent clean. No tracked commit occurred between acceptance and integration. The [run record](runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md) preserves the receipt and source identities.
 
-**This committed post-integration checkpoint activates the previously granted CONTINUOUS envelope.** It is the coordinator exercising actual preauthorization, not a claim of a human first-result review. The continuous start allowance begins at this checkpoint.
+**Checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba` activated the previously granted CONTINUOUS envelope.** It is the coordinator exercising actual preauthorization, not a claim of a human first-result review. The continuous start allowance began at af23c313d73edd8c6311e4364f3521605582d0ba.
 
-Commissioning starts **1/3** (closed successfully); continuous starts **0/50**; recovery actions **0**; direct backend repair candidates **0**; CWI repairs **0**. No live or unresolved implementation owner remains. Historical CWI status remains ACCEPTED_UNMERGED after the external authorized fast-forward; its state is not rewritten.
+Commissioning starts **1/3** (closed successfully); continuous starts **1/50**; recovery actions **0**; direct backend repair candidates **0**; CWI repairs **0**. No live or unresolved implementation owner remains. Historical CWI status remains ACCEPTED_UNMERGED after the external authorized fast-forward; its state is not rewritten.
 
-Observed first-run role usage totals: 909,197 input tokens, including 690,816 cached input; 16,520 output, including 930 reasoning output. These are reported Codex invocation counters, not an invoice, a remaining-quota measurement or a hard monetary cap. Provider remaining quota and any account-level liabilities remain unmeasured. No API spending authority exists.
+Observed commissioning role usage totals: 909,197 input tokens, including 690,816 cached input; 16,520 output, including 930 reasoning output. These are reported Codex invocation counters, not an invoice, a remaining-quota measurement or a hard monetary cap. Provider remaining quota and any account-level liabilities remain unmeasured. No API spending authority exists.
 
 Live counters and identities belong in ignored `local/attempts/` while the parent is bound. Reconcile into STATUS/run records only at a safe checkpoint. Never commit an approval/status update between acceptance and exact-base integration.
 
@@ -51,3 +51,11 @@ In response to the question identifying M0's human pilot and expert-reference pr
 - Revision 1: commissioning plus conditional continuous envelope and explicit coordinator first-integration preauthorization.
 - Revision 2: human approved `gpt-6-astra` after local/official evidence did not establish “Astra 6.1”; other limits unchanged.
 - Revision 3: records the actual mock-example instruction, successful commissioning evidence and activation at this post-integration checkpoint; no expansion of limits or scientific signoff.
+
+## Post-mock checkpoint — 2026-10-30
+
+Continuous start 1, REQ-D01-002 / run `34bcb77d-1cbc-4432-ba5e-e419e930ad2f`, finally accepted and exactly integrated as `79a84d2ee9ae7dd19539eede86a19753442eed5d` at 08:42:14Z. Target validation passed 28/28 with no skips/failures. No tracked records changed between final acceptance and integration. No recoveries, CWI repairs, protocol corrections, infrastructure retries or backend candidates were consumed. Both retained CWI runs are finally accepted and externally integrated; neither has live ownership or unresolved effects in inspected state. Their historical ACCEPTED_UNMERGED state is preserved.
+
+Cumulative starts: commissioning **1/3**, continuous **1/50** (49 continuous starts remain). Cumulative observed role tokens for the two runs: **1,989,333 input**, including **1,535,488 cached input**, **47,058 output**, including **2,990 reasoning output**. These nested categories must not be double counted. Quota, invoice totals and account-level liabilities remain unmeasured; no hard monetary cap is implied.
+
+The CONTINUOUS grant remains valid with unchanged limits. Execution is **HOLD — REQUIRED_HUMAN_SCIENTIFIC_JUDGMENT**, not grant revocation or scope completion: the explicit M0→M1 dependency requires the missing pilot/usefulness decisions, audited reference collection and evaluation standards. The authorized mock has been delivered; it supplies no expert certification. The [M0 packet](decisions/M0-contract-and-scientific-review.md) makes the remaining decision concrete. Resume the same grant/counters after that evidence exists and normal reconciliation passes; no automatic supervisor exists.

@@ -52,3 +52,5 @@ D10 requires actual scientific evaluation and any mandated human judgment; it is
 | M7 actual held-out pilot and architecture comparison | D10 |
 
 Continuous authorization permits selecting ready work; it does not waive M0 scientific decisions, live-resource permissions or expert judgments. Foundation acceptance activates the conditional operating grant after integration/checkpoint, while the next scientific slice remains subject to its prerequisites.
+
+Current M0 evidence: the requested synthetic oscillator fixture is integrated (REQ-D01-002), and [the administrative contract packet](development/decisions/M0-contract-and-scientific-review.md) is ready for scientific review. Its synthetic expected assessments do not satisfy the original expert-audit/pilot/protocol gate. D02 remains dependent on that gate; the continuous operating grant remains active with execution held for required human scientific judgment.

@@ -33,3 +33,9 @@ An accepted-but-unmerged result belongs in the run record and current status, no
 REQ-D01-001 delivered a nested Python 3.11+ package, side-effect-free help/version CLI, candidate-local permanent validator and 19 meaningful CLI/layout/suite-failure tests. CWI `47d6ef06-c251-4a0d-bb2c-da2059d9360f` finally accepted `7d5acab359e404cbb81d94aa3213971468764d01`; coordinator inspected and exactly fast-forwarded main under explicit preauthorization. Target validation passed 19/19. [Evidence](development/runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md). No scientific execution is implemented.
 
 The subsequent administrative checkpoint activates the existing continuous grant and records the human's synthetic-example instruction. Its commit is distinct from the accepted source.
+
+## Integrated synthetic oscillator example — 2026-10-30
+
+REQ-D01-002 delivered 26 versioned synthetic records, a source-relative fixture loader and focused validator, nine new behavioral test cases, and the [complete paper walkthrough](docs/synthetic-oscillator.md). It preserves the finite-matrix/full-line distinction, negative-scope challenge, historical evidence and unendorsed positive candidate without claiming actual physics execution or expert assessment.
+
+CWI run `34bcb77d-1cbc-4432-ba5e-e419e930ad2f` finally accepted `79a84d2ee9ae7dd19539eede86a19753442eed5d`; coordinator inspected and exactly fast-forwarded main, then passed 28/28 tests. One continuous start, no repairs/recoveries/backend changes. [Receipt/source evidence](development/runs/34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md). The later documentation checkpoint records the M0 contract proposal and required human scientific hold; it is distinct from the accepted product source.

@@ -2,7 +2,7 @@
 
 An evidence-oriented workbench for theoretical scientific research. The product requirements are in [project_description.md](project_description.md). This repository contains the **software that implements that workbench**; it is not itself a live scientific investigation.
 
-**Current maturity:** development setup only. No research capability is implemented or verified by this starter kit.
+**Current maturity:** a testable Python foundation and the requested synthetic harmonic/quartic development example are accepted and integrated. The suite passes 28 tests. Research execution and expert scientific evaluation remain unimplemented; development is held at the required M0 scientific decision gate. See [the mock walkthrough](docs/synthetic-oscillator.md), [M0 decision packet](development/decisions/M0-contract-and-scientific-review.md), and [current evidence/status](STATUS.md).
 
 ## Start here
 

@@ -35,3 +35,5 @@ Workflow rationale: [ADR-010](development/decisions/ADR-010-continuous-developme
 
 - DEV-019: Record the human's “create your mock for this example” as authority for a synthetic harmonic/quartic development fixture. Keep mock provenance distinct from expert reference judgments and actual execution. M0 remains incomplete; no mandatory scientific gate is waived.
 - DEV-020: Commissioning used one start with no repairs. Inspected final receipt and exact accepted source, then fast-forwarded before the administrative activation commit. Use the permanent validator for every subsequent request; the original bootstrap exemption is retired.
+
+- DEV-021: After REQ-D01-002's inspected exact integration and 28/28 target validation, hold dependent D02 work at the original M0→M1 scientific gate. The human's requested mock is fully delivered as synthetic material; it is not an expert audit or authorization to replace mandatory scientific reference judgments. The M0 packet makes remaining human decisions concrete. This is a defined stopping condition under the still-valid continuous grant, not a routine phase-boundary permission request or a completed project.
