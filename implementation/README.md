@@ -141,5 +141,10 @@ paths, ordered exact references and optional previous-revision supersession. Rep
 bytes can appear at distinct paths. Manifest context/claims/supersession are typed
 edges; build dependencies and Review context-manifest references remain shallow.
 Kind labels certify no detailed TeX/checkpoint/run-report/execution contract; attribution
-is declared, not authenticated. Checkout, preview/import, full vault/intake, scientific
+is declared, not authenticated. [Safe durable checkout](../docs/checkout.md) provides
+`checkout_work_product` and read-only `inspect_checkout` directly from
+`research_pipeline.checkout`. Explicit exclusion roots and finite byte/count limits
+bound independent writable copies; durable controls distinguish retained incomplete
+output from publication with uncertain acknowledgment. Inspection does not authenticate
+local descriptors or certify edited bytes. Preview/import, full vault/intake, scientific
 sufficiency and research execution remain deferred; D02 is partial.

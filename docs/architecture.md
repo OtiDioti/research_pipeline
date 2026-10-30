@@ -48,6 +48,16 @@ portable logical paths, conservative NFKC/casefold alias rejection and explicit
 attribution. It reuses domain/scientific/assessment validation primitives without
 filesystem access. See [work products](work-products.md) for exact wire contracts
 and optional immediate-predecessor supersession.
+`research_pipeline.checkout` owns bounded filesystem materialization of exact
+committed manifests. It closes a metadata-only read transaction before capture,
+keeps directory-relative no-follow bindings, verifies independent private writable
+copies, and publishes through a durable incomplete marker. Its local descriptor
+retains the original envelope but is untrusted; read-only inspection neither
+authenticates attribution nor certifies edited product bytes. Explicit caller source
+and backup/control exclusions supplement the internally excluded runtime. Failures
+retain incomplete output or report uncertain acknowledgment after marker removal.
+See [checkout](checkout.md) for limits, lifecycle and an executed example. Preparation
+and explicit import remain deferred; no canonical write path is added here.
 `RecordStore.submit_typed` selects the scientific, assessment or work-product codec
 explicitly and decodes every member locally, admitting mixed seven-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized

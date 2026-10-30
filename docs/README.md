@@ -45,4 +45,7 @@ Apply disposition and scientific qualification remain future work.
 portable path and alias rules, strict codecs, exact optional supersession and typed
 admission alongside scientific/assessment values. The runnable example persists and
 reopens a manifest without executing its bytes. Build/input references grant no
-authority; checkout and preview/import remain later milestones, and D02 is partial.
+authority. [Safe durable checkout](checkout.md) adds bounded independent writable
+copies, explicit exclusion roots, untrusted descriptors and durable incomplete-marker
+publication, with an executed example. Preview/import remains the next milestone;
+D02 is partial.

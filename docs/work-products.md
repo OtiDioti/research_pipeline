@@ -3,9 +3,10 @@
 `research_pipeline.work_product` supplies pure frozen `WorkProductFile` and
 `WorkProductManifest` values and strict version-1 codecs. Import directly from
 this submodule; there are no package re-exports, CLI commands, dependencies or
-import-time filesystem effects. This milestone describes immutable bundles and
-admits them through the existing durable store. Checkout, draft descriptors,
-preview, bounded capture, prepared proposals and explicit import are later work.
+import-time filesystem effects. Immutable bundles are admitted through the existing
+durable store. [Safe durable checkout](checkout.md) materializes exact committed
+revisions as independent writable copies with bounded capture and local base
+descriptors. Preview, prepared proposals and explicit import remain later work.
 
 A product kind and descriptive build/input links confer no execution authority,
 support, endorsement, task completion, verified exposure or certification of
