@@ -1,6 +1,6 @@
 """Bounded draft previews and pure frozen proposals; explicit typed submission commits."""
 
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack
 from dataclasses import dataclass
 import json
 import os
@@ -9,6 +9,7 @@ import stat
 from research_pipeline.assessment import _copy
 from research_pipeline.checkout import (
     CheckoutInfo, CheckoutIntegrityError, CheckoutLayoutError, _CHUNK, _CONTROL,
+    _capture_regular, _capture_leaf, _read_bytes,
     _DESCRIPTOR, _Directories, _base, _decode, _encode, _inventory, _leaf, _limit,
     _operation, _outside, _path, _signature, _source_bindings, _stat, _stream,
     _unchanged,
@@ -133,49 +134,6 @@ def _file_budget(files, max_files, max_file_bytes, max_total_bytes):
         raise DomainValidationError("base files: exceeds max_file_bytes")
     if sum(entry.artifact.size for entry in files) > max_total_bytes:
         raise DomainValidationError("base files: exceeds max_total_bytes")
-
-
-def _capture_regular(info, path):
-    """Accept owned readable single-link regular draft files, including inert executable bytes."""
-    mode = stat.S_IMODE(info.st_mode)
-    if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or info.st_nlink != 1
-            or not mode & 0o400 or mode & (0o022 | 0o7000)):
-        raise CheckoutLayoutError(
-            f"capture {path}: requires owned readable single-link regular file without shared write/special bits")
-
-
-@contextmanager
-def _capture_leaf(parent, name, path):
-    """Hold a no-follow nonblocking leaf and compare preopen, open and final signatures."""
-    with _operation("capture file", path):
-        before = _stat(parent, name)
-        _capture_regular(before, path)
-        _fault("before_leaf_open")
-        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
-        try:
-            opened = os.fstat(descriptor)
-            _capture_regular(opened, path)
-            if _signature(before) != _signature(opened):
-                raise CheckoutIntegrityError(f"capture {path}: replaced during open")
-            yield descriptor, opened
-            _unchanged(parent, name, descriptor, opened, path)
-        finally:
-            os.close(descriptor)
-
-
-def _read_bytes(descriptor, size, path):
-    """Buffer exactly one size-checked file using bounded reads and one EOF probe."""
-    remaining, chunks = size, []
-    while remaining:
-        data = os.read(descriptor, min(remaining, _CHUNK))
-        if not data:
-            raise CheckoutIntegrityError(f"capture {path}: early EOF")
-        chunks.append(data)
-        remaining -= len(data)
-        _fault("chunk_read")
-    if os.read(descriptor, 1):
-        raise CheckoutIntegrityError(f"capture {path}: grew during read")
-    return b"".join(chunks)
 
 
 def _controls(control, path):
@@ -340,7 +298,7 @@ def prepare_work_product_import(
         descriptor, descriptor_original = stack.enter_context(_leaf(control, _DESCRIPTOR, descriptor_path, mode=0o400))
         if descriptor_original.st_size > max_descriptor_bytes:
             raise CheckoutIntegrityError("descriptor: exceeds max_descriptor_bytes")
-        observed_info = _decode(_read_bytes(descriptor, descriptor_original.st_size, descriptor_path))
+        observed_info = _decode(_read_bytes(descriptor, descriptor_original.st_size, descriptor_path, _fault))
         if _encode(observed_info) != canonical:
             raise CheckoutIntegrityError("descriptor: does not equal caller-pinned canonical base/envelope")
         source_area = directories.traverse(runtime, private=True)
@@ -369,13 +327,13 @@ def prepare_work_product_import(
         for path in selected:
             relative, _, name = path.rpartition("/")
             target = product_dirs[relative]
-            fd, original = stack.enter_context(_capture_leaf(target, name, root / path))
+            fd, original = stack.enter_context(_capture_leaf(target, name, root / path, _fault))
             if original.st_size > max_file_bytes:
                 raise DomainValidationError(f"selected file {path}: exceeds max_file_bytes")
             total += original.st_size
             if total > max_total_bytes:
                 raise DomainValidationError("selected files: exceeds max_total_bytes")
-            data = _read_bytes(fd, original.st_size, root / path)
+            data = _read_bytes(fd, original.st_size, root / path, _fault)
             _unchanged(target, name, fd, original, root / path)
             artifact = source.put_artifact(data)
             del data

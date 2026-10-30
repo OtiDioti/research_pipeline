@@ -56,5 +56,7 @@ commit and original-ID recovery, with an executed round-trip example. D02 is par
 unknown metadata, original/derived lineage and locations, independent capture/upstream/report
 versions, history admission and exact reference projections. Its runnable synthetic
 persistence example appends and reopens captures without parsing or claiming reading.
-Legacy generic sources and shallow source links remain supported. Local-file
-preparation, saved Source proposals and scientific readiness remain separate work.
+Legacy generic sources and shallow source links remain supported.
+[Bounded local Source capture](source-capture.md) adds explicit file selection, strict
+saved proposals, separate commit and original-ID recovery. Scientific readiness and
+D02/D03/M0-S qualifications remain partial/pending.

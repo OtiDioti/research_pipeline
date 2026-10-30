@@ -19,9 +19,10 @@ unauthenticated. Capture/extraction establishes neither reading nor transcriptio
 fidelity, mathematical equivalence, scientific support, approval or readiness.
 Restrictions are explained declarations, not operational grants or a broader
 policy enforcement system. Empty limitations certify nothing. Scientific readiness,
-source acquisition/processing permission enforcement, and bounded local-file
-preparation remain separate work. This API introduces no ingestion, saved source
-proposal format, network acquisition, parser, OCR or execution.
+source acquisition/processing permission enforcement remain separate work.
+[Bounded local capture and saved Source proposals](source-capture.md) are available
+through a separate explicit library boundary; this pure codec introduces no network
+acquisition, parser, OCR or execution.
 
 ## Required constructors
 
@@ -214,7 +215,8 @@ acknowledges that original commit; it is not retroactive typed certification. Ch
 reuse raises `SubmissionConflictError`; stale heads raise `RevisionConflictError`.
 Rejected requests change no application tables. Already published unreferenced
 objects may remain. `_check_prepared_typed` retains its read-only admission contract;
-no Source preparation/proposal API is introduced here.
+[bounded local preparation](source-capture.md) uses that contract before returning
+a detached saved Source proposal. Commit remains an explicit separate operation.
 
 Metadata corrections, new captured bytes and changed upstream declarations append
 Source revisions under new submission IDs. Report revisions append independently via

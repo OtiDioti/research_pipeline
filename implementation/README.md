@@ -158,4 +158,6 @@ reading/statements. Capture, upstream and reading-report revisions remain distin
 Typed history preserves work identity while old exact references and original receipts
 remain pinned. Generic historical source payloads and existing shallow source roles
 remain supported. The runnable synthetic example executes no parser and reads no
-paper. Local-file capture/preparation and saved Source proposals are separate work.
+paper. [Bounded local Source capture](../docs/source-capture.md) adds explicit file
+selection, strict saved proposals, separate commit and original-ID recovery.
+Scientific readiness and D02/D03/M0-S qualifications remain partial/pending.

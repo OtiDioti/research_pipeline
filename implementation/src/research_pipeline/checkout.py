@@ -279,6 +279,49 @@ def _leaf(parent, name, path, *, mode, expected=None):
             os.close(descriptor)
 
 
+def _capture_regular(info, path):
+    """Accept owned readable single-link regular draft files, including inert executable bytes; reject unsafe stat results."""
+    mode = stat.S_IMODE(info.st_mode)
+    if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid() or info.st_nlink != 1
+            or not mode & 0o400 or mode & (0o022 | 0o7000)):
+        raise CheckoutLayoutError(
+            f"capture {path}: requires owned readable single-link regular file without shared write/special bits")
+
+
+@contextmanager
+def _capture_leaf(parent, name, path, fault):
+    """Hold a no-follow leaf through final checks; fault is a private caller mutation seam."""
+    with _operation("capture file", path):
+        before = _stat(parent, name)
+        _capture_regular(before, path)
+        fault("before_leaf_open")
+        descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+        try:
+            opened = os.fstat(descriptor)
+            _capture_regular(opened, path)
+            if _signature(before) != _signature(opened):
+                raise CheckoutIntegrityError(f"capture {path}: replaced during open")
+            yield descriptor, opened
+            _unchanged(parent, name, descriptor, opened, path)
+        finally:
+            os.close(descriptor)
+
+
+def _read_bytes(descriptor, size, path, fault):
+    """Read one size-checked file with bounded chunks/EOF probe and a private fault seam."""
+    remaining, chunks = size, []
+    while remaining:
+        data = os.read(descriptor, min(remaining, _CHUNK))
+        if not data:
+            raise CheckoutIntegrityError(f"capture {path}: early EOF")
+        chunks.append(data)
+        remaining -= len(data)
+        fault("chunk_read")
+    if os.read(descriptor, 1):
+        raise CheckoutIntegrityError(f"capture {path}: grew during read")
+    return b"".join(chunks)
+
+
 def _write_all(descriptor, data):
     """Drain a bounded chunk through short writes; zero progress is an operational failure."""
     remaining = memoryview(data)
