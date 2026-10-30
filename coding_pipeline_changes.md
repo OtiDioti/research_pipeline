@@ -39,3 +39,5 @@ Post-migration checkpoint: 25e5020e accepted/integrated using unchanged clean ba
 REQ-D02-005 timeout 46114120 is an exhausted configured deadline, not a diagnosed backend defect. Human extended future invocation/validation limits via supported flags; no backend source/config mutation. Attempted/adopted/reverted backend repairs remain **0/0/0**. Draft recovery uses supported frozen context and a new run, never hot patch/resume.
 
 Post-attributed-record checkpoint: 8dc45005 accepted/integrated using unchanged clean backend 1f68060. Supported new-run deadlines were explicitly 2700 seconds. Attempted/adopted/reverted backend repairs remain **0/0/0**; no pending maintenance log. The resolved fixture identity collision consumed one CWI product repair only.
+
+Post-work-product checkpoint:2b6ed304 accepted/exact-integrated a56111f3 using unchanged clean backend 1f68060. Attempted/adopted/reverted backend repairs remain **0/0/0**; no pending maintenance log. Writer-local socket/tmp limitations were resolved by authoritative host validation, with no backend/security/acceptance change and no coordinator recovery.

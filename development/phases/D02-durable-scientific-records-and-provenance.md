@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** PARTIAL; latest REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
+**State:** PARTIAL; latest REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -71,3 +71,5 @@ REQ-D02-005 attempt1 timed out after pure-contract edits, with no accepted miles
 [REQ-D02-005-R1 evidence](../runs/8dc45005-5187-4be0-a009-dece7c493f2b.md): accepted/integrated a5bba690a6c7e7113a92f34cc99efffc7a8c5656, 204/204 target tests, two milestones and one resolved test-fixture identity repair. Six typed kinds preserve attributed independent dimensions, disagreements, exact route-conclusion membership and actual transactional/restart/backup behavior. No current eligibility or scientific authority is inferred. Both earlier terminal attempts remain preserved.
 
 Prepared next: [REQ-D02-006](../requests/REQ-D02-006.md), at most three milestones for typed work-product bundles, safe durable checkout and preview/CAS import. This is a concrete R-008/R-019/R-028/R-030 dependency for D03 authoring. Support/eligibility freshness, authority/fencing/resources and remaining core payloads remain owned and pending; independent bundle work does not complete or waive them.
+
+[REQ-D02-006 evidence](../runs/2b6ed304-5044-45b5-adcd-a8be9c3e314d.md): finally accepted/exact-integrated a56111f3e531b392ac997a6689944ec0820f151a,291/291 clean target tests, three milestones/zero repairs. Seven typed kinds now include work-product manifests; real durable checkout, bounded previews and saved explicit CAS proposals have mutation/interruption/backup evidence. D02 remains PARTIAL: eligibility/invalidation, authority/fencing/resources, other payloads and full scientific/operational behavior remain required. Independent REQ-D03-001 source capture consumes this evidenced subset without declaring the mixed phase complete.

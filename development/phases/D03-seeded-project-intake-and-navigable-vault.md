@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
+**State:** PREPARED for REQ-D03-001 local-source-capture subset. D02 work-product authoring predecessor is evidenced; D03 intake/vault outcomes remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -46,6 +46,10 @@ Enforce awaiting_materials/readiness with relevant inspected substantive materia
 
 Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.
 
-## Ready predecessor work, 2026-10-30
+## Historical pre-REQ-D02-006 checkpoint, 2026-10-30
 
 D02 storage/backups, schema evolution and six typed scientific/assessment contracts are evidenced. REQ-D02-006 commissions work-product manifests and safe draft checkout/import as a concrete D03 dependency; it is prepared, not yet implemented. D03 intake, consistent navigable snapshots and human-edit protection are not claimed complete. Independent authoring infrastructure does not require scientific pilot approval, while readiness/qualification still require their specific judgments.
+
+## Current predecessor and bounded request
+
+REQ-D02-006 is now accepted/exact-integrated at a56111f3 with 291/291 tests, closing its manifest/checkout/preview/import subset. Generated-view refresh and direct-edit/rename protection remain unimplemented. [REQ-D03-001](../requests/REQ-D03-001.md) commissions strict versioned sources and bounded explicit local ingestion with immutable originals, exact lineage, attributed coverage and saved CAS proposals. This prepares real intake inputs without claiming readiness, source understanding, faithful extraction, expert audit or live acquisition. At most two CWI milestones; unchanged AUTH revision 5. D02's remaining eligibility/authority work and M0-S do not block this independent storage boundary, and remain owned/pending.

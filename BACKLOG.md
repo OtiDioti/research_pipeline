@@ -2,7 +2,7 @@
 
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
-Reconciled 2026-10-30 against local evidence. Foundation, requested mock, durable storage, verified local backups and typed provisional scientific records, verified schema migration and attributed reviews/issues are accepted/integrated; continuous grant is active; AUTH revision 5 retains independent engineering while M0-S remains pending. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
+Reconciled 2026-10-30 against local evidence. Foundation, requested mock, durable storage, verified local backups and typed provisional scientific records, verified schema migration and attributed reviews/issues plus work-product draft round trips are accepted/integrated; continuous grant is active; AUTH revision 5 retains independent engineering while M0-S remains pending. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
 
 | ID | State | Item | Reason / dependency | Resume or decision condition | Owner |
 | --- | --- | --- | --- | --- | --- |
