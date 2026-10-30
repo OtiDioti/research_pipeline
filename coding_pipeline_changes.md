@@ -25,3 +25,5 @@ Supported clone was clean at `1f68060b5a5a9964c91811a53d3a515e0b01a073`; no pre-
 Commissioning checkpoint: run 47d6ef06 completed and integrated using unchanged backend 1f68060. Attempted/adopted/reverted repairs remain **0/0/0**; no pending local backend log exists.
 
 Post-mock checkpoint: run 34bcb77d completed and integrated using the same clean backend 1f68060. Attempted/adopted/reverted repairs remain **0/0/0** across both runs; no pending maintenance log or unresolved owner.
+
+Post-storage checkpoint: run 77ab31a1-a7c2-4185-a26b-f9ed52da1593 integrated with unchanged clean backend 1f68060. Backend repair candidates attempted/adopted/reverted remain **0/0/0**; no pending local maintenance log. One CWI product repair is not a backend change.

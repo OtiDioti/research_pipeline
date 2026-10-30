@@ -1,6 +1,6 @@
 # D01 — Testable product foundation
 
-**State:** PARTIAL; M0-E storage contract READY FOR CWI IMPLEMENTATION, executable evidence pending; M0-S pending. REQ-D01-001 integrated at 7d5acab and REQ-D01-002 at 79a84d2; M0 remains incomplete.
+**State:** PARTIAL; M0-E initial storage contract accepted/integrated in REQ-D02-001 with 72/72 tests; other engineering contracts pending; M0-S pending. REQ-D01-001 integrated at 7d5acab and REQ-D01-002 at 79a84d2; M0 remains incomplete.
 
 **Goal:** Create a minimal, worktree-local Python package and meaningful validation infrastructure through one CWI implementation milestone.
 
@@ -47,7 +47,7 @@ REQ-D01-001 delivers only R-007 and the development foundation. After accepted i
 
 The human requested a mock of the harmonic/quartic example. [REQ-D01-002](../requests/REQ-D01-002.md) delivered synthetic initial fixture material and a reviewable paper walkthrough without claiming live calculations or expert audit. It is independent preparatory M0 work. Human pilot/usefulness decisions, audited reference collection and predeclared scientific standards remain required before their dependent scientific evaluations/qualification/release; the mock cannot complete those obligations.
 
-REQ-D01-002 [final evidence](../runs/34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md): 26 synthetic records, focused loader and adverse tests, full walkthrough; 28/28 suite after exact integration. [M0 contract/decision packet](../decisions/M0-contract-and-scientific-review.md) now proposes all general contract responsibilities and the evaluation framework. It is administrative design, not runtime implementation or expert approval. Required M0-S evidence remains absent. The human-authorized v1.4 amendment makes REQ-D02-001 engineering ready from the settled storage contract; no overall M0-E/M0-S completion is inferred.
+REQ-D01-002 [final evidence](../runs/34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md): 26 synthetic records, focused loader and adverse tests, full walkthrough; 28/28 suite after exact integration. [M0 contract/decision packet](../decisions/M0-contract-and-scientific-review.md) now proposes all general contract responsibilities and the evaluation framework. It is administrative design, not runtime implementation or expert approval. Required M0-S evidence remains absent. The human-authorized v1.4 amendment enabled REQ-D02-001; its initial storage contract now has accepted/integrated executable evidence at b51e421. See the [run record](../runs/77ab31a1-a7c2-4185-a26b-f9ed52da1593.md). No overall M0-E/M0-S completion is inferred.
 
 ## Engineering and scientific acceptance tracked separately
 

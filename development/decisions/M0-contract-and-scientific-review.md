@@ -133,7 +133,7 @@ The coordinator may prepare administrative contracts and the requested synthetic
 
 ## 10. Settled M0-E storage contract for REQ-D02-001
 
-These are reversible technical decisions by the coordinator under AUTH revision 4, reviewed against §§5.1/5.4/9.1–9.3/10.1. They are not expert judgments. No executable durable-record schema/store exists at this checkpoint; the next CWI request commissions the contract. Overall M0-E is not complete and later context/eligibility/resource contracts still need their own implementation evidence.
+These are reversible technical decisions by the coordinator under AUTH revision 4, reviewed against §§5.1/5.4/9.1–9.3/10.1. They are not expert judgments. REQ-D02-001 has now commissioned the bounded contract: final accepted/integrated b51e421, 72/72 post-integration tests, with receipts in the linked run ledger. Overall M0-E is not complete and later context/eligibility/resource contracts still need their own implementation evidence.
 
 | Concern | Settled next-slice contract and limit |
 | --- | --- |
@@ -156,6 +156,8 @@ The Architect chooses concrete small Python signatures and SQL tables within thi
 ## 11. M0-E/M0-S readiness ledger
 
 - Foundation and synthetic example: accepted/integrated evidence linked above, 28 software tests at 79a84d2. These establish only their bounded contracts.
-- General storage contract: technically settled by this revision and REQ-D02-001; executable schema/artifact/transaction evidence PENDING. No document-only completion claim.
+- Initial storage contract: REQ-D02-001 accepted/integrated b51e421 with 72 tests, exact receipts and crash/restart evidence. This covers five envelopes and local atomic submissions, not full scientific payloads, eligibility, fencing, migrations or backups. No document-only completion claim.
 - Other engineering contracts: responsibilities retained in §§2–7; concrete implementations/signatures settle as their dependent requests become ready.
 - M0-S/R-001–R-003: still PENDING. Oscillator remains provisional engineering material; no approved pilot, expert audit, actual calculation or held-out evidence. Held-out answers must stay outside development-agent context, and standards must precede scored evaluation.
+
+Storage evidence: [actual run 77ab31a1-a7c2-4185-a26b-f9ed52da1593](../runs/77ab31a1-a7c2-4185-a26b-f9ed52da1593.md). Backup/restoration is the next bounded engineering contract; M0-S and all remaining general responsibilities above are unchanged.

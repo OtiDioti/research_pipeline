@@ -43,3 +43,7 @@ CWI run `34bcb77d-1cbc-4432-ba5e-e419e930ad2f` finally accepted `79a84d2ee9ae7dd
 ## Authorized specification dependency amendment — 2026-10-30
 
 Human-authorized specification v1.4 (SHA-256 `fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f`) separates M0-E engineering contracts/evidence from M0-S scientific validation readiness. Scientific release obligations remain intact; old receipts, fixture provenance and accepted source identities are unchanged. AUTH revision 4 retains all existing counters/limits/permissions. Current dependency plans and the M0 packet now permit independent engineering; REQ-D02-001 is prepared for durable records. This administrative amendment is not product implementation or M0 completion.
+
+## Integrated durable records and atomic submissions — 2026-10-30
+
+REQ-D02-001 delivered validated domain-neutral envelopes/exact references, immutable verified artifacts, SQLite append-only revision history and atomic/idempotent batch submissions with receipts/events. Real filesystem, stale-write, rollback, hot-journal and lost-acknowledgment tests accompany the API. CWI 77ab31a1-a7c2-4185-a26b-f9ed52da1593 finally accepted b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; exact main fast-forward and 72/72 target tests are recorded in [run evidence](development/runs/77ab31a1-a7c2-4185-a26b-f9ed52da1593.md). Two milestones, one resolved Unicode-key repair, no backend changes/recovery. Full scientific schemas, support/eligibility, fencing, migrations, backup/restore and research execution remain pending.

@@ -8,3 +8,5 @@ Actual runs are recorded below; templates are not execution evidence.
 Create one Markdown record per actual CWI run using [the run template](../templates/RUN.md). A failed attempt can be important evidence and must not be erased. While an active run binds the original checkout, keep observations in ignored `local/` storage; create or update the tracked summary only at a safe checkpoint.
 
 Store concise sanitized evidence and references, not full private logs. Exact retained controller state and final receipts remain the acceptance authority; these records make that evidence navigable.
+
+- [77ab31a1 — REQ-D02-001](77ab31a1-a7c2-4185-a26b-f9ed52da1593.md): durable records finally accepted, exactly integrated, 72/72 tests; continuous start 2/50; one resolved internal repair, no backend changes.

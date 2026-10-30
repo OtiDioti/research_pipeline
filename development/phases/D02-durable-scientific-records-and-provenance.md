@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** READY for REQ-D02-001; no durable-record implementation evidence yet.
+**State:** PARTIAL; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; READY for REQ-D02-002 backup/restoration.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -17,7 +17,7 @@
 
 ## Acceptance obligations
 
-- [ ] Round trips, rollback on interrupted writes, content integrity, and restart reconstruction are tested.
+- [x] Initial five-kind storage slice: round trips, rollback on interrupted writes, content integrity, and fresh-process restart are tested. Full scientific schemas and product run recovery remain pending.
 - [ ] Withdrawing one justification does not erase an independently supported claim; changed context invalidates only affected uses.
 - [ ] A completed counterexample task can leave the target claim refuted rather than supported.
 
@@ -35,7 +35,7 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 
 ## Current v1.4 gate — Durable record and atomic freshness gates
 
-**Requirement ownership:** R-005, R-008–R-019, R-030. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+**Requirement ownership:** R-005, R-008–R-019, R-030. All constituent obligations in those rows and cited original sections apply; the initial slice below is partial evidence, not blanket completion.
 
 Implement every record kind in §5.1 and narrow operations in §10.1, not just claims. Preserve artifact-before-metadata ordering, submission idempotency, lease fencing, migrations, and separate support/assessment/issue revisions. Assessment changes synchronously invalidate eligibility; alternative support survives only when already assessed sufficient. Foundations for backup and restoration begin here. Dependency: relevant M0-E contracts, accepted/integrated executable subset before downstream reliance. REQ-D02-001 begins envelope/artifact/transaction storage; full scientific records, eligibility, fencing and migration remain subsequent work.
 
@@ -45,3 +45,9 @@ Implement every record kind in §5.1 and narrow operations in §10.1, not just c
 ## Engineering and scientific acceptance tracked separately
 
 Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.
+
+## Integrated initial slice and next request
+
+[REQ-D02-001 evidence](../runs/77ab31a1-a7c2-4185-a26b-f9ed52da1593.md): two milestones, one resolved Unicode serialization repair, final source b51e421626f9fe6ffe8ca76dfe3f7267e689c82d, exact integration and 72/72 post-integration tests. Five common envelopes, immutable artifacts and atomic/idempotent SQLite revisions/links/receipts/events now exist. Stale-write, missing/corrupt artifact, rollback, hot-journal recovery and post-commit lost-acknowledgment cases use real storage/fresh processes.
+
+REQ-D02-002 next commissions consistent local backup and verified restoration. Full §5.1 scientific kinds/fields, support alternatives and assessment/eligibility freshness, attempt fences, resource state, schema migrations and complete interrupted-run recovery remain pending. R-005/R-010–R-015/R-030 are not completed by generic envelopes.

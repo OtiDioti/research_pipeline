@@ -6,4 +6,4 @@ Each request is a bounded, committed implementation assignment. Use [the templat
 
 Before launch, commit the exact request with its referenced materials and validation policy. CWI snapshots supplied request/context inputs. Editing a source file after start does not change the frozen assignment. Use a new request/run to change scope after safely resolving the earlier run. Do not attempt to replace the frozen input in retained controller state.
 
-Current prepared request: [REQ-D02-001 durable submissions](REQ-D02-001.md), specification v1.4, AUTH revision 4. Earlier requests remain historical frozen v1.3 inputs.
+REQ-D02-001 is finally accepted and integrated. Current prepared request: [REQ-D02-002 backup/restoration](REQ-D02-002.md), specification v1.4, AUTH revision 4. Earlier D01 requests remain historical frozen v1.3 inputs; no old request is rewritten.
