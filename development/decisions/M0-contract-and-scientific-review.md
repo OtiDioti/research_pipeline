@@ -1,6 +1,6 @@
-# M0 contract and scientific decision packet — revision 2
+# M0 contract and scientific decision packet — revision 3
 
-**State:** M0-E storage contract SETTLED / EXECUTABLE EVIDENCE PENDING; M0-S PENDING HUMAN SCIENTIFIC REVIEW. Revision 1 was prepared locally during the mock run and transferred after integration. Revision 2 applies the explicit 2026-10-30 M0-E/M0-S amendment; historical run/source evidence remains unchanged. Administrative design only; not a runtime prompt, executable schema, authorization, expert audit or completed M0 gate. Source: unchanged [project_description.md](../../project_description.md) v1.4, especially §§3–10, 11.2–11.5, 12.3 M0 and 13.1. The original specification controls every field and exception. Concrete APIs and persistence are future CWI work.
+**State:** M0-E initial storage and local backup contracts EVIDENCED; broader contracts PARTIAL; M0-S PENDING HUMAN SCIENTIFIC REVIEW. Revision 1 was prepared locally during the mock run and transferred after integration. Revision 2 applied the explicit 2026-10-30 M0-E/M0-S amendment; revision 3 reconciles accepted storage/backup evidence without changing scientific authority. Historical run/source evidence remains unchanged. Administrative design only; not a runtime prompt, executable schema, authorization, expert audit or completed M0 gate. Source: current [project_description.md](../../project_description.md) v1.4, especially §§3–10, 11.2–11.5, 12.3 M0 and 13.1. The original specification controls every field and exception. Initial storage and backup APIs are now integrated; broader contracts still require CWI implementation and evidence.
 
 The human authorized a mock of the supplied harmonic/quartic example. That choice supplies a development scenario, not a held-out collection, reference certification, release standard or live resource allocation. No material in this packet is described as expert reviewed. The explicit human v1.4 amendment removes that blanket engineering dependency. Missing scientific decisions below gate only the corresponding scientific evaluations, qualification claims and release; independent engineering continues.
 
@@ -12,7 +12,7 @@ The human authorized a mock of the supplied harmonic/quartic example. That choic
 | Pilot and useful progress | Proposed spectral family and example only | Scientific owner confirms the pilot, scope and nontrivial useful outcomes |
 | Reference collection | One exposed synthetic case; no audited or held-out set | Supply permitted expert-audited positive/negative references and held-out manifest |
 | Evaluation standards | Definitions below; no approved thresholds or scientific budgets | Approve predeclared usefulness/retention/error standards, uncertainty and resource protocol |
-| Implementation contracts | Administrative proposal below; production behaviors unimplemented | Resolve real scientific ambiguities only where their semantics are needed; the storage contract below is technically settled and implementation remains CWI work |
+| Implementation contracts | Initial storage and verified local backup accepted/integrated; broader production behaviors pending | Consume the evidenced contracts; settle remaining technical semantics in bounded CWI requests, escalating actual scientific judgments only where needed |
 | Live execution | No product service/data/budget grant | Separate approval required when live evaluation becomes ready; no such calls now |
 
 ## 1. Proposed envelope and permitted use
@@ -148,7 +148,7 @@ These are reversible technical decisions by the coordinator under AUTH revision 
 | Duplicate delivery | Stable submission ID and canonical content fingerprint; exact retry returns original receipt even after later head movement; conflicting reuse is rejected without partial records/events |
 | Failure boundary | Objects precede metadata commit; failed transactions may leave harmless unreferenced objects but no committed references to absent objects. Failed/replayed commit acknowledgment is resolved by durable submission identity |
 | Authority | Trusted local controller API only, no worker database write endpoint or caller-asserted scientific endorsement. Actual worker isolation, lease fencing, budget authorization and promotion policy are separate later requirements |
-| Schema/version | Version 1 creation and exact-version reopen; reject unknown/malformed version without mutation. General migrations and verified backups/restoration remain subsequent requirements |
+| Schema/version | Version 1 creation and exact-version reopen; reject unknown/malformed version without mutation. General migrations remain subsequent work; verified local backup/restoration is evidenced below |
 | Evidence | Real round-trip/restart, preserved revisions, relevant stale-write concurrency, missing/corrupt artifact, duplicate/conflicting submission and commit-boundary fault tests, full current suite and independent CWI acceptance |
 
 The Architect chooses concrete small Python signatures and SQL tables within this contract. This bounded request is two independently testable engineering milestones at most: record/artifact primitives, then durable atomic submission and recovery tests. All product changes, including tests and operational docs, remain delegated Writer work. The original oscillator metadata continues to identify v1.3; current product documentation will distinguish that historical example from v1.4 dependencies.
@@ -160,4 +160,6 @@ The Architect chooses concrete small Python signatures and SQL tables within thi
 - Other engineering contracts: responsibilities retained in §§2–7; concrete implementations/signatures settle as their dependent requests become ready.
 - M0-S/R-001–R-003: still PENDING. Oscillator remains provisional engineering material; no approved pilot, expert audit, actual calculation or held-out evidence. Held-out answers must stay outside development-agent context, and standards must precede scored evaluation.
 
-Storage evidence: [actual run 77ab31a1-a7c2-4185-a26b-f9ed52da1593](../runs/77ab31a1-a7c2-4185-a26b-f9ed52da1593.md). Backup/restoration is the next bounded engineering contract; M0-S and all remaining general responsibilities above are unchanged.
+Storage evidence: [actual run 77ab31a1-a7c2-4185-a26b-f9ed52da1593](../runs/77ab31a1-a7c2-4185-a26b-f9ed52da1593.md). Backup/restoration evidence follows; M0-S and all remaining general responsibilities above are unchanged.
+
+REQ-D02-002 [backup evidence](../runs/2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md) at 645c118a9846b23a3c410bc1a9fe7742f58846bc adds consistent snapshots, verified restore and real interruption evidence with 88/88 tests. This closes the local backup subset only; full scientific schemas, assessment/eligibility, other record kinds, authority/fencing, migrations and run lifecycle remain outstanding. M0-E overall and M0-S remain incomplete.

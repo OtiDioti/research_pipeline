@@ -10,3 +10,5 @@ Create one Markdown record per actual CWI run using [the run template](../templa
 Store concise sanitized evidence and references, not full private logs. Exact retained controller state and final receipts remain the acceptance authority; these records make that evidence navigable.
 
 - [77ab31a1 — REQ-D02-001](77ab31a1-a7c2-4185-a26b-f9ed52da1593.md): durable records finally accepted, exactly integrated, 72/72 tests; continuous start 2/50; one resolved internal repair, no backend changes.
+
+- [2d82f186 — REQ-D02-002](2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md): verified local backups finally accepted/exact integrated, 88/88 tests; continuous start 3/50, no repairs.
