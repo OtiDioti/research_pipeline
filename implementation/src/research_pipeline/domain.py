@@ -273,3 +273,149 @@ class RecordEnvelope:
                     raise DomainValidationError(f"{name}: expected serialized JSON list")
                 fields[name] = tuple(reference_type.from_dict(item) for item in fields[name])
         return cls(**fields)
+
+
+@dataclass(frozen=True, init=False)
+class Submission:
+    """An attributed ordered batch with explicit relevant-head expectations."""
+
+    submission_id: str
+    provenance: CreationProvenance
+    records: tuple[RecordEnvelope, ...]
+    _expected_heads_json: str
+
+    def __init__(self, submission_id: str, provenance: CreationProvenance,
+                 records: Sequence[RecordEnvelope], expected_heads: dict):
+        """Snapshot and revalidate the whole request; reject empty or repeated identities."""
+        _identifier(submission_id, "submission_id")
+        if type(provenance) is not CreationProvenance:
+            raise DomainValidationError("provenance: expected CreationProvenance")
+        records = _references(records, RecordEnvelope, "records")
+        try:
+            records = tuple(RecordEnvelope.from_dict(record.to_dict()) for record in records)
+            provenance = CreationProvenance.from_dict(provenance.to_dict())
+        except (AttributeError, TypeError, ValueError, RecursionError) as error:
+            if isinstance(error, DomainValidationError):
+                raise
+            raise DomainValidationError("submission: malformed nested typed value") from error
+        identities = {record.record_id for record in records}
+        if not records or len(identities) != len(records):
+            raise DomainValidationError("records: nonempty batch with one revision per identity required")
+        if type(expected_heads) is not dict:
+            raise DomainValidationError("expected_heads: explicit dictionary required")
+        for identity, revision in expected_heads.items():
+            _identifier(identity, "expected_heads identity")
+            _integer(revision, "expected head", 0)
+        if set(expected_heads) != identities:
+            raise DomainValidationError("expected_heads: must cover exactly the submitted identities")
+        object.__setattr__(self, "submission_id", submission_id)
+        object.__setattr__(self, "provenance", provenance)
+        object.__setattr__(self, "records", records)
+        object.__setattr__(self, "_expected_heads_json", _snapshot(expected_heads, "expected_heads"))
+
+    @property
+    def expected_heads(self) -> dict:
+        """Return detached expectations; zero means the identity must be absent."""
+        return json.loads(self._expected_heads_json)
+
+    def to_dict(self) -> dict:
+        """Return the complete normalized request, preserving all sequence ordering."""
+        return {"submission_id": self.submission_id, "provenance": self.provenance.to_dict(),
+                "records": [record.to_dict() for record in self.records],
+                "expected_heads": self.expected_heads}
+
+    @classmethod
+    def from_dict(cls, value: dict) -> "Submission":
+        """Reconstruct nested request values with strict fields and fresh snapshots."""
+        fields = _fields(value, {"submission_id", "provenance", "records", "expected_heads"}, set(), "submission")
+        if type(fields["records"]) is not list:
+            raise DomainValidationError("records: expected serialized JSON list")
+        fields["provenance"] = CreationProvenance.from_dict(fields["provenance"])
+        fields["records"] = [RecordEnvelope.from_dict(item) for item in fields["records"]]
+        return cls(**fields)
+
+
+def _revision_pairs(values: Sequence) -> tuple[tuple[str, int], ...]:
+    """Detach ordered committed revision pairs and validate their identities and numbers."""
+    if not isinstance(values, (list, tuple)) or not values:
+        raise DomainValidationError("revisions: expected nonempty sequence of pairs")
+    result = []
+    for pair in values:
+        if not isinstance(pair, (list, tuple)) or len(pair) != 2:
+            raise DomainValidationError("revisions: expected identity/revision pairs")
+        _identifier(pair[0], "record_id")
+        _integer(pair[1], "revision", 1)
+        result.append(tuple(pair))
+    if len({pair[0] for pair in result}) != len(result):
+        raise DomainValidationError("revisions: repeated identity")
+    return tuple(result)
+
+
+@dataclass(frozen=True)
+class AuditEvent:
+    """Detached historical metadata commit attribution, not scientific execution proof."""
+
+    event_id: int
+    submission_id: str
+    event_type: str
+    committed_at: str
+    provenance: CreationProvenance
+    revisions: tuple[tuple[str, int], ...]
+
+    def __post_init__(self) -> None:
+        """Validate persisted event fields and isolate provenance and ordered membership."""
+        _integer(self.event_id, "event_id", 1)
+        _identifier(self.submission_id, "submission_id")
+        if type(self.event_type) is not str or self.event_type != "submission_committed":
+            raise DomainValidationError("event_type: expected submission_committed")
+        if type(self.provenance) is not CreationProvenance:
+            raise DomainValidationError("provenance: expected CreationProvenance")
+        object.__setattr__(self, "committed_at", _timestamp(self.committed_at))
+        object.__setattr__(self, "provenance", CreationProvenance.from_dict(self.provenance.to_dict()))
+        object.__setattr__(self, "revisions", _revision_pairs(self.revisions))
+
+    def to_dict(self) -> dict:
+        """Return detached event metadata without querying heads or availability."""
+        return {"event_id": self.event_id, "submission_id": self.submission_id,
+                "event_type": self.event_type, "committed_at": self.committed_at,
+                "provenance": self.provenance.to_dict(), "revisions": [list(pair) for pair in self.revisions]}
+
+    @classmethod
+    def from_dict(cls, value: dict) -> "AuditEvent":
+        """Reconstruct a strict event document without inventing recording metadata."""
+        fields = _fields(value, {"event_id", "submission_id", "event_type", "committed_at", "provenance", "revisions"}, set(), "event")
+        fields["provenance"] = CreationProvenance.from_dict(fields["provenance"])
+        return cls(**fields)
+
+
+@dataclass(frozen=True)
+class SubmissionReceipt:
+    """Persisted commit identity and ordered membership, independent of current heads."""
+
+    submission_id: str
+    fingerprint: str
+    event_id: int
+    committed_at: str
+    provenance: CreationProvenance
+    revisions: tuple[tuple[str, int], ...]
+
+    def __post_init__(self) -> None:
+        """Validate and detach receipt metadata using the corresponding event contract."""
+        ArtifactReference(self.fingerprint, 0)
+        event = AuditEvent(self.event_id, self.submission_id, "submission_committed",
+                           self.committed_at, self.provenance, self.revisions)
+        for name in ("committed_at", "provenance", "revisions"):
+            object.__setattr__(self, name, getattr(event, name))
+
+    def to_dict(self) -> dict:
+        """Return an independent JSON-compatible receipt document."""
+        return {"submission_id": self.submission_id, "fingerprint": self.fingerprint,
+                "event_id": self.event_id, "committed_at": self.committed_at,
+                "provenance": self.provenance.to_dict(), "revisions": [list(pair) for pair in self.revisions]}
+
+    @classmethod
+    def from_dict(cls, value: dict) -> "SubmissionReceipt":
+        """Reconstruct exactly the supplied persisted fields with strict validation."""
+        fields = _fields(value, {"submission_id", "fingerprint", "event_id", "committed_at", "provenance", "revisions"}, set(), "receipt")
+        fields["provenance"] = CreationProvenance.from_dict(fields["provenance"])
+        return cls(**fields)

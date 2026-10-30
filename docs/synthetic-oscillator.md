@@ -10,9 +10,10 @@ independent agents. There are no measurements, authentic tool receipts, scientif
 confidence scores, execution timestamps, or resource-account conclusions.
 
 The source is [project_description.md §13.1](../project_description.md), with the
-supplied specification SHA-256
+historical **v1.3** specification SHA-256
 `13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7`.
-This identifies the source specification, not a calculation receipt. The loader
+This identifies the historical v1.3 source specification, not the current v1.4
+specification or a calculation receipt. The loader
 performs no source hashing. Schema version is `1`; fixture version is `1.0.0`.
 
 ## Read the example
@@ -301,7 +302,9 @@ from local test feedback.
 
 This fixture does not implement intake, research execution, production persistence,
 promotion or recovery. It does not complete M0, choose a pilot, supply expert-audited
-reference judgments, establish held-out performance or waive D02's pilot,
-expert-audit and predeclared protocol prerequisites. The CLI continues to state that
+reference judgments or establish held-out performance. Under specification v1.4,
+M0-S pilot, expert-audit and predeclared protocol requirements gate scientifically
+dependent evaluation, qualification and release, not independent storage engineering.
+This distinction supplies no scientific approval. The CLI continues to state that
 research execution is unavailable. Complete fixture content, this walkthrough and
 substantive adverse cases require final review in addition to test results.

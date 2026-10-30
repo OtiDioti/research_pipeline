@@ -15,6 +15,8 @@ development fixture, its public loading/validation contract, expected outcomes a
 expert-review gaps. It is synthetic local material, not a scientific execution or
 expert-audited evaluation set.
 
-The [validated envelopes and immutable artifacts](durable-records.md) guide gives
-the primitive Python API, an executable graph example, ownership and durability
-rules, and failure limits. SQLite submissions and recovery are not yet implemented.
+The [durable records and atomic submissions](durable-records.md) guide gives the
+local Python API, an executable graph/append/reopen example, fingerprint and ordering
+semantics, ownership and durability rules, SQLite recovery and locking behavior,
+metadata-only receipt reconciliation, and failure limits. Scientific assessment,
+worker isolation, migrations and verified backups remain unsupported.

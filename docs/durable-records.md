@@ -1,7 +1,7 @@
-# Validated envelopes and immutable artifacts
+# Durable revisions, artifacts and atomic submissions
 
-The implemented primitives provide domain-independent record values and durable
-local artifact bytes. They support engineering work under specification v1.4;
+The local durable core provides domain-independent record values, immutable
+artifact bytes and SQLite-backed atomic, idempotent revision submissions. They support engineering work under specification v1.4;
 they do not establish scientific validation or complete M0-E, M0-S, M1 or D02.
 Controller acceptance and integration remain separate from implementation and test
 results. The historical oscillator fixture, including its v1.3 provenance, remains
@@ -9,12 +9,13 @@ an intentionally separate paper example.
 
 `research_pipeline.domain` owns validation and detached JSON serialization.
 `research_pipeline.artifacts` owns filesystem layout, publication and integrity.
+`research_pipeline.store` owns private SQLite metadata, transactions and recovery.
 Imports are inert. Use direct submodule imports; no installation or package-level
 re-exports are needed. The CLI still provides only help/version.
 
 ## Domain API
 
-All four values are frozen and validate their constructors at runtime. Each has
+All domain values are frozen and validate their constructors at runtime. Each has
 `to_dict()` and `from_dict(value)`: dictionaries are detached JSON-compatible data,
 and reconstruction rejects missing required fields, unknown fields and malformed
 nested values. Defaulted constructor fields may also be omitted in serialized
@@ -77,9 +78,8 @@ mutable trees; caller mutations and edits to returned trees cannot change a
 value. Reference sequences are copied to tuples in their original order, without
 sorting or deduplication.
 
-A constructed record reference is syntactically valid only. Resolution, declared
-kind comparison against actual targets, and cross-revision kind stability await
-the transaction store. An artifact reference alone says nothing about current
+A constructed record reference is syntactically valid only. Submission resolves
+exact targets, compares declared target kinds and enforces stable identity kinds. An artifact reference alone says nothing about current
 availability: `read` or `verify` must establish integrity.
 
 ## Artifact API and failure contract
@@ -151,72 +151,227 @@ access, not a hostile storage owner, privileged process, or unsupported filesyst
 Later integrity checks detect mutation; they provide neither scientific validity
 nor backup guarantees.
 
+## Submission values and fingerprint
+
+`Submission(submission_id, provenance, records, expected_heads)` is a frozen,
+defensively detached request. `provenance` is a `CreationProvenance` identifying
+the submitting controller, independently of each record's creator. `records` is
+a nonempty ordered sequence of envelopes with one revision per identity.
+`expected_heads` must be an explicit dictionary covering exactly those identities:
+zero requires absence; a positive integer must equal the current head. The same
+ordinary-integer bound applies, excluding booleans. The next revision must equal
+expected head plus one; exhaustion fails. Typed nested values are revalidated at
+construction and submission. Returned `expected_heads` and JSON trees are detached.
+
+`SubmissionReceipt(submission_id, fingerprint, event_id, committed_at, provenance,
+revisions)` and `AuditEvent(event_id, submission_id, event_type, committed_at,
+provenance, revisions)` are frozen, detached values with strict `to_dict()` and
+`from_dict(value)` operations. `revisions` is an ordered tuple of `(record_id,
+revision)` pairs in request order (JSON serialization uses lists).
+`event_type` is exactly `submission_committed`. The store generates `committed_at`
+as UTC with six fractional digits; it describes local recording, not authenticated
+scientific execution. Receipts are reconstructed from persisted metadata without
+consulting current heads or inventing a new timestamp. One unique event belongs
+to each submission; membership/order lives in revision rows, not another envelope
+or receipt copy.
+
+The fingerprint is lowercase SHA-256 of canonical UTF-8 JSON for:
+`{"fingerprint_version": 1, "submission": submission.to_dict()}`. Canonical JSON
+uses sorted mapping keys, compact separators, ASCII escaping and finite strict
+JSON types. It includes submission identity, complete normalized submission and
+creation attribution/time/details, expectations, all content and canonical states,
+exact relationship fields, and artifact addresses/sizes. Mapping insertion order
+is immaterial. Record, relationship, artifact and nested JSON list order is
+meaningful, including duplicates; `1`, `1.0` and `true` remain distinct. Generated
+commit time, event sequence, current heads and artifact paths are excluded.
+The database retains canonical request text as well as its hash and compares text
+on identity reuse, rather than trusting hash equality alone.
+
+## RecordStore API
+
+Import `RecordStore` and metadata error classes from `research_pipeline.store`.
+No installation or package-level re-exports are needed.
+
+| Signature | Result and effects |
+| --- | --- |
+| `RecordStore.create(root) -> RecordStore` | Create only an absent private root, then exclusively create and initialize its mode-0600 database; sync database and directory before success. |
+| `RecordStore.open(root) -> RecordStore` | Validate an existing layout and schema, then open for normal SQLite recovery; never create missing files or initialize a database. |
+| `store.close() -> None` | Idempotently close; later operations fail with `StoreClosedError`. Context-manager exit closes too. |
+| `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
+| `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
+| `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
+| `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
+| `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
+| `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |
+| `store.get_submission(submission_id: str) -> SubmissionReceipt \| None` | Metadata-only original receipt or absence. |
+| `store.audit_events() -> tuple[AuditEvent, ...]` | Metadata-only events in ascending event-ID order. |
+
+Lookup identifiers and revisions are validated before querying. Compound reads use
+a consistent transaction snapshot, including envelope content and ordered link
+rows. Envelopes are reconstructed from normalized relational rows through domain
+constructors; no separately stored envelope can disagree with its link tables.
+The SQLite connection and SQL operations are private. Each handle uses SQLite's
+ordinary same-thread restriction; open independent handles on their owning threads.
+There is no worker endpoint, generic write operation, policy grant or research CLI.
+
+All metadata failures derive from `StoreError`:
+
+| Exception | Meaning |
+| --- | --- |
+| `StoreLayoutError` | Missing/unsafe layout, unsupported version/journal format, or malformed fixed schema. |
+| `StoreClosedError` | Closed or invalidated handle. |
+| `RecordNotFoundError` | Requested exact revision absent. |
+| `RevisionConflictError` | Stale head, skipped/repeated/exhausted revision, or changed kind. |
+| `ReferenceResolutionError` | Missing exact target or wrong declared kind. |
+| `SubmissionConflictError` | Reused identity with different canonical request. |
+| `StoreBusyError` | Busy/locked SQLite failure after its bounded wait; no spin or automatic replay. |
+| `StoreDatabaseError` | Other database/integrity failure; useful SQLite cause retained. |
+
+Malformed requests continue to raise `DomainValidationError`. Object failures keep
+the existing `ArtifactError` subclasses. Injected exceptions and Python-handled
+interruptions retain their original diagnostics. OS/database causes are chained.
+
+## Runtime layout, schema and locking
+
+The explicit root contains `objects/`, `.staging/`, and `metadata.sqlite3`.
+`create` first creates the artifact area, then exclusively creates the database.
+Any existing root, including a standalone artifact area, is rejected unchanged;
+there is no silent upgrade. Failed creation may leave an incomplete root, never
+erased, repaired or swept. Missing, symlinked, nonregular, foreign-owned or
+group/other-accessible database files are rejected. Runtime data must stay outside
+software source; relative paths use the caller's working directory.
+
+Version 1 (`PRAGMA user_version`) and DDL commit in one explicit transaction.
+Opening checks the SQLite header and fixed schema before any connection that could
+recover journals or change files. A read-only immutable connection reads only the
+main-file version and schema for this gate. Complete DDL matching checks required
+columns, primary/unique keys, foreign keys, state checks and the kind/state trigger;
+a matching version alone is insufficient. Unsupported/zero versions and malformed
+layouts fail unchanged. Extra schema objects are unsupported too.
+
+This gate relies on the schema/version never changing after initialization and
+on absence of WAL. It deliberately ignores hot journals and must never be used for
+live data, head/receipt queries, integrity conclusions or recovery. After the gate,
+the operational connection uses a correctly encoded SQLite URI with `mode=rw`,
+allowing legitimate version-1 hot rollback journal recovery. WAL headers/sidecars
+and unsafe rollback-journal objects are rejected without conversion.
+
+Connections use rollback-journal `DELETE`, `synchronous=EXTRA`, `foreign_keys=ON`
+and a fixed 5000 ms busy timeout, checking the effective values and failing rather
+than weakening them. Autocommit mode (`isolation_level=None`) is paired with
+explicit `BEGIN`, `COMMIT` and `ROLLBACK`; writes use `BEGIN IMMEDIATE`.
+This is single-host local storage. Network filesystems, WAL, distributed storage,
+general migrations and concurrent external mutation are unsupported. Durability
+assumes trusted storage ownership and working filesystem/device synchronization;
+it is not protection from a hostile owner or verified backup/restoration.
+
+## Atomic submission, exact links and recovery
+
+Inside the serialized write transaction, submission identity is checked **before**
+heads, references or current artifact availability. Identical canonical text returns
+the original receipt without any metadata changes or another event, even after a
+later revision advances. Different text conflicts atomically. Only affected
+identities' expected heads are compared; unrelated events never invalidate them.
+
+All proposed exact revisions are indexed before resolution. A link may point to an
+old committed revision or any member of the batch, independent of record order.
+Forward links, self references and cycles are allowed as descriptive relationships;
+there is no topological sorting, scheduling or deductive-support validation. Old
+references never drift to latest heads. Optional declared target kinds must match.
+
+Before any metadata write, every distinct attached digest/size is fully verified
+and file-synchronized, followed by its objects-directory barrier; inconsistent
+sizes for one digest fail. This also closes the gap from a publisher interrupted
+before its directory sync. The operation does not repair or overwrite objects.
+Publication must already have occurred through `put_artifact`; submissions accept
+references, never paths, downloads or bytes to publish implicitly.
+
+Submission registration, new identities/revisions, ordered record/artifact links,
+artifact registrations, relevant head advances and exactly one attributed event
+commit together. All revisions precede link insertion so forward links work.
+Historical revisions are never updated/deleted, and replacement writes are not used.
+Pre-commit failures roll back the entire batch. If rollback cannot restore a usable
+connection, the handle is invalidated. Published orphans and interrupted staging
+entries are retained, with no automatic destructive cleanup.
+
+Successful `COMMIT` ends rollback handling. An error or termination afterward may
+lose acknowledgment while leaving the whole batch committed. Errors around COMMIT
+can also leave the outcome uncertain. **Reopen and query the original submission
+identity**, then retry exactly that request if needed; never invent a new identity
+to reconcile uncertainty. Exact retries do not add events or revisions.
+
+`get_revision`, `history` and `read_artifact` verify actual attached object bytes,
+including type, size and hash, before successful exposure. Missing, corrupt,
+truncated, unsafe or wrong-size objects fail usefully. Exact record links are
+locators only: they do not imply transitive target artifact availability or
+scientific validity. Fetching a target checks its own direct attachments.
+
+`head`, `get_submission`, `audit_events` and exact duplicate responses are explicitly
+**metadata-only**. They remain available if artifacts are later damaged, so callers
+can establish whether a transaction committed. A durable receipt acknowledges a
+historical metadata commit, not continuing evidence availability. No availability
+success flag, automatic repair or new event is created by these reads/retries.
+
 ## Runnable local example
 
-Run from the repository root. The temporary runtime directory is explicitly
-placed under `/tmp`, outside the source checkout. Its removal here is test/example
-lifecycle management; the artifact API itself has no destructive cleanup operation.
+Run from the repository root. The explicitly selected temporary runtime is outside
+source; its removal is example lifecycle management, not a storage cleanup API.
 
 ```bash
 PYTHONPATH="$PWD/implementation/src" /home/francesco/miniconda3/bin/python3 -B - <<'PY'
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from research_pipeline.domain import CreationProvenance, RecordEnvelope, RecordReference
-from research_pipeline.artifacts import ArtifactStore
+from research_pipeline.domain import CreationProvenance, RecordEnvelope, RecordReference, Submission
+from research_pipeline.store import RecordStore
 
-provenance = CreationProvenance(
-    actor="graph-investigator", created_at="2026-10-30T12:00:00Z",
-    details={"classification": "synthetic", "notes": ["engineering example"]},
-)
+creator = CreationProvenance("graph-author", "2026-10-30T12:00:00Z", {"synthetic": True})
+controller = CreationProvenance("local-controller", "2026-10-30T13:00:00Z")
 with TemporaryDirectory(prefix="graph-runtime-", dir="/tmp") as temporary:
-    root = Path(temporary) / "artifacts"
-    artifacts = ArtifactStore.create(root)
-    result = artifacts.put(b"vertices: a,b,c; edges: a-b,b-c\n")
-    context = RecordEnvelope(
-        record_id="graph-context", revision=1, kind="research_context",
-        content={"vertices": ["a", "b", "c"], "edges": [["a", "b"], ["b", "c"]]},
-        provenance=provenance,
-    )
-    claim = RecordEnvelope(
-        record_id="connected", revision=1, kind="claim",
-        content={"statement": "The graph is connected", "quoted_status": "supported"},
-        provenance=provenance, scientific_disposition="provisional",
-        record_references=[RecordReference("graph-context", 1, "uses_context", "research_context")],
-        artifact_references=[result],
-    )
-    task = RecordEnvelope(
-        record_id="inspect-graph", revision=1, kind="task_specification",
-        content={"objective": "Inspect connectivity"}, provenance=provenance,
-        operational_status="completed",
-        record_references=[RecordReference("connected", 1, "investigates", "claim")],
-    )
-    assert RecordEnvelope.from_dict(claim.to_dict()) == claim
-    assert task.operational_status == "completed"
-    assert claim.scientific_disposition == "provisional"
-    assert artifacts.read(result) == b"vertices: a,b,c; edges: a-b,b-c\n"
-    reopened = ArtifactStore.open(root)
-    reopened.verify(result)
-    assert reopened.put(b"vertices: a,b,c; edges: a-b,b-c\n") == result
+    root = Path(temporary) / "records"
+    with RecordStore.create(root) as store:
+        artifact = store.put_artifact(b"vertices: a,b,c; edges: a-b,b-c\n")
+        context = RecordEnvelope("graph", 1, "research_context",
+                                 {"vertices": ["a", "b", "c"]}, creator)
+        claim = RecordEnvelope("connected", 1, "claim",
+                               {"statement": "The graph is connected"}, creator,
+                               [RecordReference("graph", 1, "uses_context", "research_context")],
+                               [artifact], scientific_disposition="provisional")
+        batch = Submission("graph-initial", controller, [claim, context], {"connected": 0, "graph": 0})
+        receipt = store.submit(batch)  # Forward reference resolves regardless of list order.
+        updated = RecordEnvelope("graph", 2, "research_context",
+                                 {"vertices": ["a", "b", "c", "d"]}, creator)
+        store.submit(Submission("graph-append", controller, [updated], {"graph": 1}))
+    with RecordStore.open(root) as store:
+        assert store.history("graph") == (context, updated)
+        assert store.get_revision("connected", 1).record_references[0].revision == 1
+        assert store.head("graph") == 2
+        assert store.get_submission("graph-initial") == receipt
+        assert store.submit(batch) == receipt  # Original identity, even after head advancement.
+        assert len(store.audit_events()) == 2
+        assert store.read_artifact(artifact) == b"vertices: a,b,c; edges: a-b,b-c\n"
 PY
 /home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py
 ```
 
-Only artifact bytes persist in this example. Envelopes remain in-memory values;
-there is no submission operation or durable submission idempotency yet. The
-validator discovers the existing tests together with domain and artifact tests.
-Those tests exercise real bytes, no-clobber races, corruption, and narrowly
-injected publication/synchronization failures. They do not replace transaction
-crash/restart evidence or controller verification.
+The permanent validator discovers existing tests plus real SQLite integration tests.
+Tests use temporary stores, source-local fresh interpreters with `-B` and
+`PYTHONDONTWRITEBYTECODE`, bounded timeouts and checked exit codes. A private no-op
+fault seam identifies `before_metadata` (after artifact verification),
+`after_first_revision` (after real partial writes), and `after_commit` (before
+acknowledgment). Tests inject ordinary failures and abrupt `os._exit` termination,
+including page spill/hot-journal recovery and fresh-process receipt reconciliation.
+They exercise exact/conflicting retries, relevant-head contention, immutable
+history, retained orphans, canonical types/order and later artifact damage.
+These local results are advisory; controller validation and Reviewer verification
+remain authoritative, and implementation submission is separate from acceptance.
 
 ## Remaining scope
 
-The next milestone owns SQLite metadata, schema versioning, atomic submissions,
-fingerprints, expected-head checks, persisted exact-reference resolution,
-receipts/events and subprocess transaction-crash/recovery evidence. No placeholder
-interfaces for these operations are exposed here.
-
 Full scientific payload schemas and remaining record kinds, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
-fencing, resource accounting, general migrations, verified backups/restoration,
-and distributed execution remain unsupported. Engineering progress does not
-certify scientific claims or remove scientific evaluation and release obligations.
+fencing, resource authorization/accounting, general migrations, verified
+backups/restoration, distributed execution and research execution remain unsupported.
+There is no duplicate resource charging guarantee without a ledger. This slice
+completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
+validation. M0-S gates scientifically dependent evaluation, qualification and
+release, not independent storage engineering; all scientific obligations remain.

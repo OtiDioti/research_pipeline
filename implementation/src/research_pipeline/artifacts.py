@@ -261,3 +261,17 @@ class ArtifactStore:
                 _read_object(objects, reference, retain=False)
         except OSError as error:
             raise ArtifactIOError(f"verify object {reference.digest}: {error}") from error
+
+    def _verify_for_commit(self, reference: ArtifactReference) -> None:
+        """Verify and sync existing bytes and their directory before a metadata commit.
+
+        This closes an interrupted publisher's directory-barrier gap without
+        changing bytes, repairing objects, or changing public read semantics.
+        """
+        _typed_reference(reference)
+        try:
+            with self._layout() as (objects, _):
+                _read_object(objects, reference, retain=False, synchronize=True)
+                os.fsync(objects)
+        except OSError as error:
+            raise ArtifactIOError(f"commit verification {reference.digest}: {error}") from error

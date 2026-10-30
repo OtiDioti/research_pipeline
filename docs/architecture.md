@@ -1,13 +1,14 @@
 # Foundation architecture
 
 The current foundation establishes a local Python package and honest development
-feedback, validated domain envelopes and immutable local artifact storage. It
-implements no research execution, models, scientific verification, vault generation
-or provider integration. Scientific record transactions are not yet implemented.
+feedback, validated domain envelopes, immutable local artifacts and atomic
+SQLite revision submissions. It implements no research execution, models, scientific verification, vault generation
+or provider integration. Exact revision history, submission receipts and audit
+events persist locally.
 A separate synthetic development fixture illustrates scoped records as local JSON
 data. Specification v1.4 distinguishes engineering readiness from scientific
-validation; these components complete neither overall gate. Acceptance and integration are controller
-and coordinator decisions, not claims made by the CLI or validator.
+validation; these components complete neither overall gate. Acceptance and
+integration are controller and coordinator decisions, not CLI or validator claims.
 
 ## Package and interface
 
@@ -24,10 +25,11 @@ build tooling, and no installation is needed for the documented source commands.
 Linux is the initially verified platform. See the [implementation guide](../implementation/README.md)
 for exact commands and environment requirements.
 
-## Domain and artifact primitives
+## Durable records and artifacts
 
 `research_pipeline.domain` provides frozen `CreationProvenance`, `RecordReference`,
-`ArtifactReference` and `RecordEnvelope` values with runtime validation and detached
+`ArtifactReference`, `RecordEnvelope`, `Submission`, `SubmissionReceipt` and
+`AuditEvent` values with runtime validation and detached
 serialization. Private canonical JSON snapshots isolate mutable content and details.
 Five common envelope kinds are supported; scientific payload schemas remain later
 work. Task operational state and provisional claim disposition are independent.
@@ -40,14 +42,34 @@ Operation-scoped descriptors, no-follow traversal and nonblocking object opens
 bound unsafe filesystem handling. Failure can retain objects or staging entries;
 the API does not sweep or repair them.
 
-Neither module depends on `fixtures`. Imports remain inert, with no new CLI
-commands or dependencies. The [primitive contract and example](durable-records.md)
-give exact APIs, errors, filesystem assumptions, trust limits and focused failure
-evidence. SQLite metadata, submissions/idempotency, persisted reference resolution,
-expected-head checks and receipts/events belong to the next milestone; artifact
-primitives do not imply those guarantees. Full scientific schemas, assessment and
-promotion, worker isolation, leases/fencing, accounting, migrations, verified
-backups and distributed execution remain unsupported.
+`research_pipeline.store` uses the artifact layout plus a private mode-0600
+`metadata.sqlite3`. It creates only absent roots and gates opening on the fixed
+version-1 schema through a read-only immutable preflight, before allowing normal
+SQLite rollback-journal recovery. This preflight is solely for fixed schema/version,
+never live data or integrity conclusions. Operational connections require DELETE
+journaling, EXTRA synchronization, foreign keys and a 5000 ms busy timeout.
+
+Explicit `BEGIN IMMEDIATE` transactions compare relevant expected heads and append
+revisions, exact ordered links, artifact registrations, submission identity and one
+attributed audit event atomically. Whole-batch indexing resolves forward, self and
+cyclic descriptive references. Historical links always retain their exact targets.
+Canonical request text and a versioned SHA-256 fingerprint implement durable
+idempotency before head checks: exact retries return the original persisted receipt.
+Artifacts are verified and synchronized before metadata writes. Compound reads use
+consistent snapshots; revision/history exposure checks directly attached bytes.
+Receipts, heads, audit events and duplicate responses are metadata-only, remaining
+useful for commit reconciliation even after later object damage.
+
+These modules do not depend on `fixtures`. Imports remain inert, with no new CLI
+commands or dependencies. The [durable contract and runnable example](durable-records.md)
+give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptions,
+retained-orphan behavior and acknowledgment recovery by original submission ID.
+Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
+Full scientific schemas/kinds, support/assessment freshness, eligibility/promotion,
+worker isolation, leases/fencing, resource authorization/accounting, general migrations,
+verified backups/restoration, distributed execution and research execution remain
+unsupported. No ledger means no duplicate charging guarantee. This slice does not
+complete overall M0-E, M0-S, M1, D02 or scientific validation.
 
 ## Development validation
 

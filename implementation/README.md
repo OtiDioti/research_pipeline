@@ -3,11 +3,13 @@
 This directory contains the `theoretical-research-pipeline` distribution and its
 `research_pipeline` import package. It provides package identity, CLI help/version,
 development validation, and a synthetic oscillator development fixture with a
-source-local loader, validated domain envelopes, and immutable local artifacts.
+source-local loader, validated domain envelopes, immutable local artifacts, and
+SQLite-backed atomic revision submissions with durable receipts and audit events.
 It implements no research execution, models, scientific verification, or vault
 generation. Specification v1.4 separates engineering readiness from scientific
-validation; these primitives do not complete either overall gate. Implementation is submitted for review; controller
-acceptance and integration are separate events.
+validation; this durable slice does not complete either overall gate or M1/D02.
+Implementation is submitted for review; controller acceptance and integration are
+separate events.
 
 Use Python 3.11+; Linux is the initially verified development platform. The product
 has no third-party runtime dependencies. Git is required for development validation
@@ -21,7 +23,7 @@ Run these exact commands from the repository root:
 PYTHONPATH="$PWD/implementation/src" python3 -B -m research_pipeline --help
 PYTHONPATH="$PWD/implementation/src" python3 -B -m research_pipeline --version
 PYTHONPATH="$PWD/implementation/src:$PWD/implementation" python3 -B -m unittest discover -s implementation/tests -t implementation -v
-python3 -B implementation/scripts/validate.py
+/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py
 ```
 
 No arguments also prints help. Unknown commands, options, and abbreviated options
@@ -52,13 +54,26 @@ nonempty UTF-8 regular files. Validation never rewrites those documents.
 See [foundation architecture](../docs/architecture.md) for module boundaries and
 future scientific-runtime limits.
 
-The [durable primitive guide](../docs/durable-records.md) documents direct imports
-from `research_pipeline.domain` and `research_pipeline.artifacts`, exact fields,
-errors, and a runnable graph-connectivity example. Artifact runtime directories
-must be explicitly selected outside software source. Envelopes are isolated
-in-memory values; SQLite submissions, record persistence and transaction recovery
-remain the next milestone. Artifact identity and completed task state confer no
-scientific support.
+The [durable records guide](../docs/durable-records.md) documents direct imports
+from `research_pipeline.domain`, `research_pipeline.artifacts` and
+`research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
+graph submission/append/reopen/retry example. Select runtime directories explicitly
+outside software source. Creation rejects existing roots; opening gates fixed
+schema version 1 before normal rollback-journal recovery. SQLite uses DELETE/EXTRA,
+foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
+exact submission retries return original metadata-only receipts even after head
+advancement or later artifact damage. Record/history exposure verifies attached bytes.
+Use the original submission identity to reconcile uncertain commit acknowledgment.
+
+Real disk and fresh-process tests cover ordering/canonical fingerprints, stale and
+conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
+and later artifact integrity failures. Local test results are advisory to controller
+validation. Full scientific schemas/kinds, support/assessment freshness,
+eligibility/promotion, worker isolation, attempt leases/fencing, resource
+authorization/accounting, migrations, verified backups/restoration, distributed
+execution and research execution remain unsupported. There is no duplicate charging
+guarantee without a ledger. Artifact identity and completed task state confer no
+scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
 
 The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
 the versioned fixture, exact-reference contract, loader exceptions, expected scoped
