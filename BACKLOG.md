@@ -2,11 +2,11 @@
 
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
-Reconciled 2026-10-30 against local evidence. Foundation and requested mock are accepted/integrated; continuous grant is active, with execution held at the mandatory M0 human gate. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
+Reconciled 2026-10-30 against local evidence. Foundation and requested mock are accepted/integrated; continuous grant is active; AUTH revision 4 permits independent engineering while M0-S remains pending. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
 
 | ID | State | Item | Reason / dependency | Resume or decision condition | Owner |
 | --- | --- | --- | --- | --- | --- |
-| B-001 | RESOLVED | Exact specification-to-phase reconciliation | Full v1.3 read and R-001–R-094 mapped | Maintain exact evidence as requests integrate | Coordinator |
+| B-001 | RESOLVED | Exact specification-to-phase reconciliation | Full v1.3 read and R-001–R-094 mapped; v1.4 dependency amendment reconciled | Maintain exact evidence as requests integrate | Coordinator |
 | B-002 | RESOLVED | Foundation language/platform/dependencies | Python 3.11+, stdlib unittest, nested implementation and local Linux chosen within proposed specification defaults | Revisit only with concrete need; preserve provider neutrality | Coordinator |
 | B-003 | DEFERRED | Selection of live model/provider adapters | Deterministic fixtures should establish contracts before paid/live integrations | D06 has an approved adapter contract, credentials policy, and budget | Human + coordinator |
 | B-004 | DEFERRED | Extra development-status automation | Markdown records and CWI inspection are sufficient initially | Repeated manual reconciliation cost justifies a bounded CWI request | Coordinator |
@@ -15,7 +15,7 @@ Reconciled 2026-10-30 against local evidence. Foundation and requested mock are 
 | B-007 | RESOLVED FOR CURRENT BACKEND | Supplied-backend findings and parser/auth readiness | Local 1,010 pass/21 skip; focused bootstrap 21 pass resolves six pytest skips; exact Codex parser/login probes pass | Actual commissioning accepted/integrated (run 47d6ef06); 15 opt-in live tests unrun; ENVIRONMENT.md records limits | Coordinator |
 | B-008 | RESOLVED | Development model identity | Human explicitly approved gpt-6-astra after catalog ambiguity; AUTH revision 2 | Use explicit model/effort; no silent substitution | Human + coordinator |
 | B-009 | DEFERRED | Automatic restart of outer Codex sessions | Documentation provides continuous execution and manual recovery, not a daemon | Separate CWI request, explicit need/authority, single-owner and bounded-recovery tests | Coordinator + human |
-| B-010 | BLOCKED — REQUIRED_HUMAN_SCIENTIFIC_JUDGMENT | M0 scientific acceptance before D02 (R-001–R-004) | Human-requested mock delivered as 79a84d2, run 34bcb77d; 28 tests and synthetic walkthrough do not establish expert audit, approved pilot/usefulness or evaluation standards | Human returns scientific decision/evidence using [M0 packet](development/decisions/M0-contract-and-scientific-review.md); preserve M0→M1 gate | Human scientific owner |
+| B-010 | BLOCKED FOR DEPENDENT SCIENTIFIC WORK | M0-S scientific readiness (R-001–R-003 and related domain judgments) | No approved pilot/usefulness, audited references/protected held-out set or predeclared scientific protocol; oscillator remains exposed mock | Human supplies these before corresponding scored evaluations, qualification claims and release; independent M0-E/storage/vault/controller/tool engineering may proceed under v1.4 | Human scientific owner |
 | B-011 | BLOCKED FOR LIVE WORK | Product provider/data/budget approval and scientific acceptance | Development Codex allowance does not authorize product experiments or pilot data access | Separate explicit service/data/budget and expert review records before live work | Human |
 
 ## Required fields for a new blocked or paused item

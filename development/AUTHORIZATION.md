@@ -1,13 +1,13 @@
 # Development operating authorization
 
-**Actual human grant: AUTH-2026-10-30-001, revision 3. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; execution now holds for required M0 scientific judgment.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection and mock-example replies. The repetition does not reset any counters.
+**Actual human grant: AUTH-2026-10-30-001, revision 4. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; independent engineering resumed under the explicit M0-E/M0-S dependency amendment.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies and the explicit M0-E/M0-S amendment. The repetition does not reset any counters.
 
 ## Effective grant
 
 | Field | Recorded authority |
 | --- | --- |
 | Repository / target | `/home/francesco/Desktop/gits/research_pipeline`, branch `main`; inspected original commit `dce9bedb998c8be4389d42627916911f4c25d336` |
-| Specification | project_description.md v1.3; SHA-256 `13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7`; immutable unless human approves change |
+| Current specification | project_description.md v1.4; SHA-256 `fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f`; narrowly amended under actual human authority; historical v1.3 evidence preserved |
 | Current mode | CONTINUOUS: commissioning completed; proceed through ready D01–D10 work within the original limits and dependency gates |
 | Commissioning starts | At most 3, including failed preflights/replacements; correction must be diagnosed and previous attempt safely resolved; no blind retries |
 | First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/full-diff/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
@@ -44,7 +44,7 @@ Live counters and identities belong in ignored `local/attempts/` while the paren
 
 ## Actual mock-example instruction
 
-In response to the question identifying M0's human pilot and expert-reference prerequisites and proposing the specification's harmonic/quartic-oscillator example, the human replied **“create your mock for this example”**. This authorizes a synthetic development example for that scenario, implemented through CWI. It does not supply expert-reviewed reference material, approve scientific thresholds, authorize live experiments/data acquisition, or waive the specification's M0 acceptance. Record mock provenance and expected narrative as synthetic, not observed scientific execution or a domain-expert judgment. D01 can prepare this fixture and contract material; dependent D02 remains gated on the missing M0 scientific evidence.
+In response to the question identifying M0's human pilot and expert-reference prerequisites and proposing the specification's harmonic/quartic-oscillator example, the human replied **“create your mock for this example”**. This authorizes a synthetic development example for that scenario, implemented through CWI. It does not supply expert-reviewed reference material, approve scientific thresholds, authorize live experiments/data acquisition, or waive the specification's M0 acceptance. Record mock provenance and expected narrative as synthetic, not observed scientific execution or a domain-expert judgment. At revision 3, D02 remained gated on missing M0 scientific evidence. Revision 4 below supersedes that implementation dependency; the mock still confers no scientific approval.
 
 ## Revisions
 
@@ -58,4 +58,14 @@ Continuous start 1, REQ-D01-002 / run `34bcb77d-1cbc-4432-ba5e-e419e930ad2f`, fi
 
 Cumulative starts: commissioning **1/3**, continuous **1/50** (49 continuous starts remain). Cumulative observed role tokens for the two runs: **1,989,333 input**, including **1,535,488 cached input**, **47,058 output**, including **2,990 reasoning output**. These nested categories must not be double counted. Quota, invoice totals and account-level liabilities remain unmeasured; no hard monetary cap is implied.
 
-The CONTINUOUS grant remains valid with unchanged limits. Execution is **HOLD — REQUIRED_HUMAN_SCIENTIFIC_JUDGMENT**, not grant revocation or scope completion: the explicit M0→M1 dependency requires the missing pilot/usefulness decisions, audited reference collection and evaluation standards. The authorized mock has been delivered; it supplies no expert certification. The [M0 packet](decisions/M0-contract-and-scientific-review.md) makes the remaining decision concrete. Resume the same grant/counters after that evidence exists and normal reconciliation passes; no automatic supervisor exists.
+At the post-mock checkpoint the CONTINUOUS grant remained valid with unchanged limits. Execution was **HOLD — REQUIRED_HUMAN_SCIENTIFIC_JUDGMENT**, not grant revocation or scope completion: the explicit M0→M1 dependency requires the missing pilot/usefulness decisions, audited reference collection and evaluation standards. The authorized mock has been delivered; it supplies no expert certification. The [M0 packet](decisions/M0-contract-and-scientific-review.md) makes the remaining decision concrete. Resume the same grant/counters after that evidence exists and normal reconciliation passes; no automatic supervisor exists.
+
+## Revision 4 — actual narrowly amended dependency authority
+
+The human explicitly authorized a versioned specification amendment separating **M0-E engineering readiness** from **M0-S scientific validation readiness**, superseding the blanket M0→M1/D02 scientific prerequisite. This actual instruction authorizes changing the specification and affected dependency/administrative records, settling reversible engineering details, and preparing/executing REQ-D02-001 (unused on inspection) through CWI for durable records. Continue subsequent ready engineering under the existing grant without routine request/phase permission pauses.
+
+M0-E is contract-specific and requires executable accepted/integrated evidence; a document alone is insufficient. The first D02 slice may implement/commission the settled storage contracts. M0-S retains all R-001–R-003 and related human scientific judgments: approved pilot/usefulness, expert-audited references, protected held-out material, predeclared scientific evaluation/resource standards and approval. These gate their dependent scientific evaluations, qualification claims and final release, not unrelated engineering. Do not choose standards after viewing scored/held-out outcomes; do not expose held-out answers to development agents or reclassify the exposed oscillator as held-out.
+
+The oscillator remains only a provisional engineering example, without final pilot approval, expert audit or actual scientific execution. Production contracts remain domain-independent. Historical requests, accepted sources, run records, receipts and fixture source hashes retain v1.3 identities. No model/effort/integration/repair/start/time/billing/service/data/purchase/publication authority is expanded. No new product live-provider calls, paid compute or external disclosure is authorized. Existing Codex ChatGPT development allowance only; API calls still require an approved cap.
+
+Reconciled before amendment: clean main at b1e0a2e; both known CWI runs finally accepted and integrated, receipt digests verified, status/diagnose show no owner, provisional source, quarantine or unresolved condition. **Commissioning 1/3; continuous 1/50 (49 remain); recoveries 0; repairs 0; backend candidates 0.** Counters and observed usage above do not reset. Next run selects explicit gpt-6-astra/high for transaction/failure/authority work, frozen across its roles; unchanged ceiling xhigh and unchanged backend/environment.

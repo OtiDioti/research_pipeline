@@ -2,9 +2,9 @@
 
 ## Project Design and Development Plan
 
-**Version:** 1.3  
-**Date:** 29 October 2026  
-**Status:** Consolidated planning proposal; implementation has not started.  
+**Version:** 1.4
+**Date:** 30 October 2026
+**Status:** Versioned specification; engineering implementation is partial. Scientific validation and release acceptance remain pending.
 **Primary domain:** Theoretical physics, with a domain-independent core for other theoretical sciences.
 
 **Main goal:** Help a human researcher obtain scientifically useful, defensible progress by combining LLM-driven exploration with explicit assumptions, reproducible work products, independent verification, and a persistent record of what is supported, disputed, or unresolved.
@@ -22,6 +22,8 @@ The scientific architecture is independent of the particular tools available to 
 **Revision 1.2:** Makes tool selection explicitly project-dependent, generalizes composite-tool integration, and aligns examples, evaluation, and milestones with optional tool availability.
 
 **Revision 1.3:** Specifies dependency-led context selection and compression, resource-reserved session handoffs and recovery from token exhaustion, and a mandatory end-of-run report with a model-independent fallback. Aligns the affected records, interfaces, defaults, and development tests with these contracts.
+
+**Revision 1.4 — explicitly authorized dependency amendment, 30 October 2026:** Separates M0 engineering readiness (M0-E) from M0 scientific validation readiness (M0-S). Settled, tested engineering contracts may support independent storage, vault, controller and tool-interface implementation while scientific judgments remain pending. M0-S still gates the scientific evaluations, qualification claims and release decisions that require it; standards are fixed before their corresponding scored evaluations. No scientific requirement is removed or declared satisfied. The oscillator remains a provisional exposed engineering example, not a confirmed pilot, expert audit, actual calculation or held-out evidence. Prior specification v1.3 has SHA-256 `13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7`; historical fixtures, receipts and accepted sources retain that provenance.
 
 ## Contents
 
@@ -1289,42 +1291,57 @@ These boundaries can become packages when their contents grow. Avoid a single co
 
 ```mermaid
 flowchart TD
-    M0["M0: Scientific contract and evaluation fixtures"] --> M1["M1: Durable records and artifacts"]
+    M0E["M0-E: Engineering contracts and tested foundations"] --> M1["M1: Durable records and artifacts"]
     M1 --> M2["M2: Execution and recovery"]
     M2 --> M3["M3: One complete research loop"]
     M3 --> M4["M4: Independent verification"]
     M4 --> M5["M5: Adaptive branches and reconciliation"]
     M5 --> M6["M6: Integrated scientific reporting"]
     M6 --> M7["M7: Controlled pilot and evaluation"]
+    M0S["M0-S: Scientific decisions, audited references, fixed standards"] -. scientific evaluation .-> M3
+    M0S -. scientific qualification .-> M4
+    M0S -. scientific benefit claims .-> M5
+    M0S -. scientific report assessment .-> M6
+    M0S --> M7
 ```
 
-The progression is deliberately sequential at major reliability boundaries. Independent adapters and evaluation fixtures can be developed in parallel after their shared contracts are settled.
+Engineering progression remains sequential at the relevant reliability boundaries. A request must identify the implemented and evidenced predecessor contracts it needs; empirical acceptance of an unrelated feature need not block independent engineering work. Independent adapters and evaluation fixtures may proceed after their shared engineering contracts are settled. Track engineering implementation and empirical/scientific acceptance separately whenever a milestone combines them; full milestone/project completion still requires both applicable outcomes.
 
-### M0. Scientific contract and evaluation fixtures
+### M0. Engineering and scientific readiness (combined obligations remain open)
 
-**Purpose:** Make the system's scientific obligations testable before agent orchestration drives development.
+**Purpose:** Make the system's engineering and scientific obligations testable without making missing scientific judgments a blanket implementation dependency.
 
-**Inputs:** This document, the researcher's target domain, tool availability, data constraints, and budget preferences.
+**Inputs:** This document, available engineering environment and synthetic development fixtures; for scientific acceptance, the researcher's approved target domain, expert references, data constraints, and budget preferences.
 
-**Produces:** A pilot research envelope, record and message schemas, a promotion-policy specification, initial scientific fixtures, and a versioned evaluation protocol.
+**Produces:** M0-E contracts and their executable evidence, and M0-S pilot/evaluation decisions. The old combined M0 is not complete merely because one track advances.
 
-- [ ] Confirm the pilot problem family and what outcomes count as useful progress.
-- [ ] Define the core record schemas, status dimensions, and exact version semantics.
-- [ ] Specify promotion-eligibility generations, sufficient support routes, assessment-change propagation, and atomic disposition checks.
+#### M0-E. Engineering readiness
+
+- [ ] Define general record identities, exact revisions and relationships, provenance, and separate operational and scientific status dimensions; keep production contracts domain-independent.
+- [ ] Define artifact/evidence references, immutable scientific revisions, persistence/transaction ordering, idempotent submissions, stale-write checks and controller/worker authority boundaries.
+- [ ] Specify promotion-eligibility generations, sufficient support routes, assessment-change propagation, and atomic disposition checks before implementing or relying on those transitions; scientific sufficiency judgments are supplied evidence, not inferred by storage code.
 - [ ] Define task, result, review, decision, tool-execution, and context-manifest contracts, including mandatory-context fields, checkpoint/continuation manifests, and the minimum end-of-run report.
 - [ ] Define nonempty scientific-seed readiness, intake provenance, and corpus-update semantics.
 - [ ] Specify the vault layout, work-product manifests, note/LaTeX conventions, exact source versions, and draft-import rules.
-- [ ] Specify tool releases, independent qualification, execution permissions, and delegated-job/resource contracts.
-- [ ] Define the default human decision boundaries and resource limits, separating context capacity, per-call output, cumulative usage, verification resources, and protected handoff/closeout reservations.
-- [ ] Curate expert-audited positive and negative scientific fixtures and separate development from held-out material.
-- [ ] Set question-level usefulness, valid-result-retention, and acceptable observed endorsement-error standards before evaluating configurations; specify how uncertainty and unresolved cases will be reported.
-- [ ] Review one complete paper example of a candidate, its justification, a failed check, and the resulting status changes.
+- [ ] Specify tool releases, qualification/permission interfaces, and delegated-job/resource contracts; implementing an interface is not qualifying its scientific use.
+- [ ] Define default human decision boundaries and resource-limit mechanisms, separating context capacity, per-call output, cumulative usage, verification resources, and protected handoff/closeout reservations. Actual scientific allocations require M0-S approval and relevant service/data authority.
+- [ ] Review a complete synthetic paper example of a candidate, justification, failed check and resulting status changes; preserve synthetic provenance and expose no held-out answers.
+- [ ] Implement relevant executable schemas/contracts through the development backend and demonstrate deterministic round-trip, revision, reference, authority and meaningful failure tests. A Markdown contract alone is not M0-E completion.
 
-**Acceptance:** The same scenario can be represented without ambiguity by the scientific and operational records; task completion cannot be confused with scientific support; the pilot has reference assessments suitable for evaluating both false acceptance and excessive rejection.
+**Engineering acceptance:** For each consumed contract, the scenario is unambiguous and meaningful tests establish its implemented invariants. Task completion cannot imply scientific support, and artifact identity cannot imply correctness. A bounded first M1 request may implement and commission a settled M0-E storage contract together; downstream work may rely only on the accepted, integrated and tested subset. Record remaining M0-E obligations explicitly rather than calling the entire gate complete from one slice.
+
+#### M0-S. Scientific validation readiness
+
+- [ ] The human approves the pilot problem family, research envelope, useful nontrivial outcomes and consequential scientific decisions.
+- [ ] Curate expert-audited positive and negative scientific fixtures and reference assessments; retain valid unusual solutions and separate exposed development material from protected held-out material.
+- [ ] Before the corresponding scored evaluations, fix task statements, review criteria, question-level usefulness, valid-result retention, acceptable observed endorsement error, resource standards/budgets, uncertainty and unresolved-case reporting.
+- [ ] Obtain required human scientific approval. Protect held-out answers from development agents; never reclassify exposed development examples as held-out evidence or choose standards after viewing held-out results.
+
+**Scientific acceptance:** The approved pilot has audited references suitable for evaluating false acceptance and excessive rejection and a predeclared approved protocol. M0-S gates only scientific evaluations, qualification claims and final release decisions needing these inputs, not unrelated storage/vault/controller/tool-interface development. Domain-specific decisions that genuinely determine an implementation's semantics remain blockers for that affected slice, with independent work allowed elsewhere. The oscillator is provisional engineering material only. Sections 11.2–11.5 and all scientific release obligations remain mandatory, and no live-provider/data/compute permission is implied by this split.
 
 ### M1. Durable records and artifacts
 
-**Depends on:** M0.
+**Depends on:** the relevant settled M0-E contracts and their commissioned executable evidence as described above; M0-S is not a blanket M1 implementation prerequisite.
 
 **Primary modules:** domain, store, artifacts, workspace.
 
@@ -1385,7 +1402,7 @@ The progression is deliberately sequential at major reliability boundaries. Inde
 
 **Meaningful tests:** A summary omits an assumption but the exact claim preserves it; empty or unreadable seed collection; conflicting initial notes; a source is inaccessible or returns the wrong content; extraction alters an equation; an agent introduces a new assumption; a claimed computation lacks an authentic execution receipt; a replacement session must avoid repeating a recorded failed route; stale notebook outputs; unavailable LaTeX dependencies without loss of the derivation source; mandatory context exceeds capacity; a retrieval result is larger than its allowance; a stale summary hides an open objection; several handoffs preserve a derivation's assumptions and unresolved step.
 
-**Acceptance:** One bounded investigation is inspectable, resumable, and computationally reproducible where applicable. Its report makes no unsupported promotion merely because the agent completed its assignment.
+**Acceptance:** One bounded investigation is inspectable, resumable, and computationally reproducible where applicable. Its report makes no unsupported promotion merely because the agent completed its assignment. Engineering acceptance may use explicitly synthetic deterministic investigations; actual scientific reproduction/exploration and usefulness claims require the relevant M0-S decisions and live permissions and remain a separate unperformed outcome until evidenced.
 
 ### M4. Independent verification and promotion
 
@@ -1406,7 +1423,9 @@ The progression is deliberately sequential at major reliability boundaries. Inde
 
 **Meaningful tests:** Candidate answer hidden in a filename or accepted lemma; coordinator hint leaks a result; author attempts self-promotion; checker modifies the candidate; a reviewer is wrong; numerical support is presented as a universal proof; an apparent effect is selected from many noisy trials without valid confirmation; a premise's support is withdrawn after a favorable review but before promotion while its statement revision remains unchanged.
 
-**Acceptance:** Blind-phase visibility is enforced and independence descriptions match actual exposure. Mechanical transitions obey the configured evidence and review policy. On the expert-audited development cases, scientific assessments meet the predeclared endorsement-error and useful-result-retention standards, with residual failures documented.
+**Engineering acceptance:** Blind-phase visibility is enforced and independence descriptions match actual exposure. Mechanical transitions obey the configured evidence and review policy under meaningful deterministic and adversarial tests.
+
+**Scientific acceptance (M0-S required):** On the expert-audited development cases, scientific assessments meet the predeclared endorsement-error and useful-result-retention standards, with residual failures documented. Pending scientific acceptance does not prohibit subsequent engineering that depends only on the evidenced mechanical contracts.
 
 ### M5. Adaptive coordination, branches, and reconciliation
 
@@ -1452,7 +1471,7 @@ The progression is deliberately sequential at major reliability boundaries. Inde
 
 ### M7. Controlled pilot and architecture evaluation
 
-**Depends on:** M6 and the evaluation material maintained since M0.
+**Depends on:** M6 engineering evidence, completed applicable M0-S decisions and protected evaluation material, and separately approved live service/data/resource access.
 
 **Primary modules:** evaluation plus the complete workflow.
 
@@ -1475,7 +1494,7 @@ Tests should target the invariants and failure modes identified above. Use unit 
 
 Do not attempt to prove scientific reliability through ordinary software tests alone. Conversely, successful physics examples do not establish safe concurrent writes, complete recovery, or enforced reviewer isolation.
 
-Pin runtime and tool versions when implementation begins, and run the relevant tests before committing meaningful changes. Avoid redundant checks that merely mirror an implementation. A task-level coding plan should specify exact signatures and test commands after M0 settles the schemas and execution environment.
+Pin runtime and tool versions when implementation begins, and run the relevant tests before committing meaningful changes. Avoid redundant checks that merely mirror an implementation. A task-level coding plan specifies exact signatures and tests after the relevant M0-E contracts and execution environment are settled. Executable evidence is required before downstream reliance. Fix M0-S standards before the corresponding scored scientific evaluations; synthetic tests cannot establish those judgments.
 
 ## 13. Worked research and recovery scenarios
 

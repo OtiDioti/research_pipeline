@@ -130,6 +130,8 @@ Use `NOT_STARTED`, `READY`, `RUNNING`, `BLOCKED`, `PAUSED`, `ACCEPTED_UNMERGED`,
 
 A phase is complete only when all mandatory outcomes assigned to it are integrated and evidenced. Partial completion remains partial even if one request succeeded. An `ACCEPTED_UNMERGED` CWI result can be successful without making the original checkout contain its changes.
 
+Specification v1.4 separates M0-E engineering readiness and M0-S scientific validation. Track engineering implementation and empirical acceptance separately in mixed phases. Downstream independent engineering consumes exact evidenced technical prerequisites; pending scientific acceptance is not a blanket phase barrier. Full phase/project completion still requires every applicable scientific/live/human obligation.
+
 For an implementation outcome, require: exact source identity, final acceptance evidence, relevant tests and criterion assessments, no unresolved blocking findings, authorized integration, updated requirement mapping, and explicit limits. Record documentation-only follow-up commits separately; the acceptance receipt continues to identify the earlier implementation commit.
 
 ## 7. The lifecycle of one development step

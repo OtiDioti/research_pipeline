@@ -1,6 +1,6 @@
 # Development decisions
 
-This index records consequential implementation and workflow choices. D00 decisions recorded 2026-10-30 after full v1.3 reconciliation. Reversible implementation defaults are coordinator choices within the human grant, not invented scientific approvals.
+This index records consequential implementation and workflow choices. D00 decisions recorded after full v1.3 reconciliation; v1.4 dependency amendment explicitly authorized 2026-10-30. Reversible implementation defaults are coordinator choices within the human grant, not invented scientific approvals.
 
 | ID | Proposed choice | Rationale | Confirmation |
 | --- | --- | --- | --- |
@@ -37,3 +37,10 @@ Workflow rationale: [ADR-010](development/decisions/ADR-010-continuous-developme
 - DEV-020: Commissioning used one start with no repairs. Inspected final receipt and exact accepted source, then fast-forwarded before the administrative activation commit. Use the permanent validator for every subsequent request; the original bootstrap exemption is retired.
 
 - DEV-021: After REQ-D01-002's inspected exact integration and 28/28 target validation, hold dependent D02 work at the original M0→M1 scientific gate. The human's requested mock is fully delivered as synthetic material; it is not an expert audit or authorization to replace mandatory scientific reference judgments. The M0 packet makes remaining human decisions concrete. This is a defined stopping condition under the still-valid continuous grant, not a routine phase-boundary permission request or a completed project.
+
+## Version 1.4 dependency amendment — current authority
+
+- DEV-022 supersedes the blanket engineering prerequisite in DEV-014/DEV-021, preserving their historical rationale/evidence. Human explicitly separates M0-E engineering readiness from pending M0-S scientific validation. The old combined M0 and R-001–R-003 stay incomplete. Genuine scientific design dependencies still block their affected slice; no empirical threshold may be set after seeing scored/held-out outcomes.
+- DEV-023: Settle the next M0-E storage contract in the M0 packet and REQ-D02-001: Python stdlib SQLite, content-addressed immutable bytes, typed exact record/artifact references, append-only revisions, explicit expected heads, idempotent transactional submissions and events, controller-only local API. This is a reversible technical choice within the amended specification, not pilot selection. Executable evidence remains pending until CWI acceptance/integration.
+- DEV-024: Preserve all v1.3 historical receipts/requests/fixture hashes. New requests cite v1.4; the oscillator's original source identity remains v1.3. Do not rewrite scientific provenance when dependencies change.
+- DEV-025: Select explicit gpt-6-astra/high for D02-001 because atomicity, corruption and authority boundaries need deeper review. This changes effort only for the new run, never a frozen run; all original limits persist.

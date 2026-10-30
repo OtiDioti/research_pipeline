@@ -1,8 +1,8 @@
-# M0 contract and scientific decision packet — revision 1
+# M0 contract and scientific decision packet — revision 2
 
-**State:** PROPOSED FOR HUMAN SCIENTIFIC REVIEW. Prepared 2026-10-30 after full specification reconciliation; saved locally while CWI was bound, transferred after accepted integration. Administrative design only; not a runtime prompt, executable schema, authorization, expert audit or completed M0 gate. Source: unchanged [project_description.md](../../project_description.md) v1.3, especially §§3–10, 11.2–11.5, 12.3 M0 and 13.1. The original specification controls every field and exception. Concrete APIs and persistence are future CWI work.
+**State:** M0-E storage contract SETTLED / EXECUTABLE EVIDENCE PENDING; M0-S PENDING HUMAN SCIENTIFIC REVIEW. Revision 1 was prepared locally during the mock run and transferred after integration. Revision 2 applies the explicit 2026-10-30 M0-E/M0-S amendment; historical run/source evidence remains unchanged. Administrative design only; not a runtime prompt, executable schema, authorization, expert audit or completed M0 gate. Source: unchanged [project_description.md](../../project_description.md) v1.4, especially §§3–10, 11.2–11.5, 12.3 M0 and 13.1. The original specification controls every field and exception. Concrete APIs and persistence are future CWI work.
 
-The human authorized a mock of the supplied harmonic/quartic example. That choice supplies a development scenario, not a held-out collection, reference certification, release standard or live resource allocation. No material in this packet is described as expert reviewed. The missing scientific decisions below must be supplied before D02/M1 proceeds under the original M0 dependency.
+The human authorized a mock of the supplied harmonic/quartic example. That choice supplies a development scenario, not a held-out collection, reference certification, release standard or live resource allocation. No material in this packet is described as expert reviewed. The explicit human v1.4 amendment removes that blanket engineering dependency. Missing scientific decisions below gate only the corresponding scientific evaluations, qualification claims and release; independent engineering continues.
 
 ## Decision summary
 
@@ -12,7 +12,7 @@ The human authorized a mock of the supplied harmonic/quartic example. That choic
 | Pilot and useful progress | Proposed spectral family and example only | Scientific owner confirms the pilot, scope and nontrivial useful outcomes |
 | Reference collection | One exposed synthetic case; no audited or held-out set | Supply permitted expert-audited positive/negative references and held-out manifest |
 | Evaluation standards | Definitions below; no approved thresholds or scientific budgets | Approve predeclared usefulness/retention/error standards, uncertainty and resource protocol |
-| Implementation contracts | Administrative proposal below; production behaviors unimplemented | Review material scientific ambiguities before D02; technical implementation remains CWI work |
+| Implementation contracts | Administrative proposal below; production behaviors unimplemented | Resolve real scientific ambiguities only where their semantics are needed; the storage contract below is technically settled and implementation remains CWI work |
 | Live execution | No product service/data/budget grant | Separate approval required when live evaluation becomes ready; no such calls now |
 
 ## 1. Proposed envelope and permitted use
@@ -123,10 +123,39 @@ Compare a strong single researcher, independent-checking system and second-metho
 
 ## 9. Human review packet and exact gate
 
-The next required human action is to review this packet together with the delivered mock and return an M0 scientific decision record. That record must identify the accountable scientific reviewer, confirm/correct the pilot and useful nontrivial outcomes, supply permitted expert-audited development/held-out references, and approve the predeclared evaluation/resource standards or identify changes. Correct the mock's scope, argument, expected disposition and limitations explicitly; no response will be inferred from silence.
+Before corresponding scored scientific evaluations, qualification claims or release, the human must review the scientific portion of this packet and return an M0-S scientific decision record. This does not pause independent engineering. That record must identify the accountable scientific reviewer, confirm/correct the pilot and useful nontrivial outcomes, supply permitted expert-audited development/held-out references, and approve the predeclared evaluation/resource standards or identify changes. Correct the mock's scope, argument, expected disposition and limitations explicitly; no response will be inferred from silence.
 
-The coordinator may prepare administrative contracts and the requested synthetic fixture. It cannot certify these scientific inputs. D01/M0 remains incomplete and D02 blocked until the required record/evidence exists. Separate service/data/budget approval is still required before any live product experiment. This is a dependency gate, not a request for routine permission to continue authorized work.
+The coordinator may prepare administrative contracts and the requested synthetic fixture. It cannot certify these scientific inputs. The old combined M0 and M0-S remain incomplete. D02 may commission the settled M0-E storage contract; subsequent work relies only on its accepted/integrated tested subset. Separate service/data/budget approval is still required before any live product experiment. This is a scientific dependency gate, not a global engineering hold or a routine permission checkpoint.
 
 ## Delivered example and evidence
 
 [Complete walkthrough](../../docs/synthetic-oscillator.md), [26-record synthetic fixture](../../implementation/evaluations/harmonic_quartic_v1.json), and [actual CWI run evidence](../runs/34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md). Accepted/integrated source `79a84d2ee9ae7dd19539eede86a19753442eed5d`; 28 deterministic software tests passed after integration. This is a source/evidence link, not a domain-expert judgment. The general contracts in this administrative proposal remain design obligations for future CWI implementation; the fixture implements only its focused data contract.
+
+## 10. Settled M0-E storage contract for REQ-D02-001
+
+These are reversible technical decisions by the coordinator under AUTH revision 4, reviewed against §§5.1/5.4/9.1–9.3/10.1. They are not expert judgments. No executable durable-record schema/store exists at this checkpoint; the next CWI request commissions the contract. Overall M0-E is not complete and later context/eligibility/resource contracts still need their own implementation evidence.
+
+| Concern | Settled next-slice contract and limit |
+| --- | --- |
+| Runtime boundary | Local Python 3.11 stdlib and SQLite; explicit caller-selected runtime directory outside the software source; no model/network/provider/tool execution |
+| Identity/revision | Opaque validated record identity plus positive integer revision, stable kind, immutable JSON content and attributed provenance; exact typed record references, never implicit latest; expected current head is checked on append |
+| Initial kinds | Research context, claim, justification, evidence, task specification use a common storage envelope; scientific field semantics and remaining §5.1 kinds are subsequent work, not falsely completed by generic JSON |
+| Status | Task operational status is separate from scientific disposition; initial claim submissions are provisional only. No endorsement, promotion, eligibility calculation or proof inferred by storage |
+| Relationships | Explicit exact revision links and artifact references are validated against committed records or the same atomic batch. No dangling latest-pointer or arbitrary filesystem-path evidence |
+| Artifacts | SHA-256 addresses over bytes, size metadata, private staging then durable atomic immutable object publication; verify existing bytes on reuse/read/commit. Detect missing/corrupt/nonregular/symlink objects. No destructive garbage collection in this slice |
+| Metadata | SQLite foreign keys, explicit schema version, serialized write transactions and durable settings; append revisions, exact relationships, artifact registrations, submission receipt and audit event atomically |
+| Concurrency | One controller authority, independently opened SQLite connections still enforce relevant per-record expected heads. New revision is the expected head plus one; no historical rewrite or unrelated-global-version conflict |
+| Duplicate delivery | Stable submission ID and canonical content fingerprint; exact retry returns original receipt even after later head movement; conflicting reuse is rejected without partial records/events |
+| Failure boundary | Objects precede metadata commit; failed transactions may leave harmless unreferenced objects but no committed references to absent objects. Failed/replayed commit acknowledgment is resolved by durable submission identity |
+| Authority | Trusted local controller API only, no worker database write endpoint or caller-asserted scientific endorsement. Actual worker isolation, lease fencing, budget authorization and promotion policy are separate later requirements |
+| Schema/version | Version 1 creation and exact-version reopen; reject unknown/malformed version without mutation. General migrations and verified backups/restoration remain subsequent requirements |
+| Evidence | Real round-trip/restart, preserved revisions, relevant stale-write concurrency, missing/corrupt artifact, duplicate/conflicting submission and commit-boundary fault tests, full current suite and independent CWI acceptance |
+
+The Architect chooses concrete small Python signatures and SQL tables within this contract. This bounded request is two independently testable engineering milestones at most: record/artifact primitives, then durable atomic submission and recovery tests. All product changes, including tests and operational docs, remain delegated Writer work. The original oscillator metadata continues to identify v1.3; current product documentation will distinguish that historical example from v1.4 dependencies.
+
+## 11. M0-E/M0-S readiness ledger
+
+- Foundation and synthetic example: accepted/integrated evidence linked above, 28 software tests at 79a84d2. These establish only their bounded contracts.
+- General storage contract: technically settled by this revision and REQ-D02-001; executable schema/artifact/transaction evidence PENDING. No document-only completion claim.
+- Other engineering contracts: responsibilities retained in §§2–7; concrete implementations/signatures settle as their dependent requests become ready.
+- M0-S/R-001–R-003: still PENDING. Oscillator remains provisional engineering material; no approved pilot, expert audit, actual calculation or held-out evidence. Held-out answers must stay outside development-agent context, and standards must precede scored evaluation.

@@ -4,9 +4,9 @@
 
 **Goal:** Execute one bounded research investigation from seeds to a scoped candidate and an explicitly provisional synthesis.
 
-**Dependencies:** D03, D04, D05
+**Dependencies:** D03, D04, D05 engineering contracts actually needed by the next request; empirical acceptance is tracked separately.
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -33,7 +33,7 @@ Before execution, divide these outcomes into the smallest coherent requests with
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
 
-## Reconciled v1.3 gate — Dependency-first context and inspectable research work
+## Current v1.4 gate — Dependency-first context and inspectable research work
 
 **Requirement ownership:** R-005–R-006, R-011, R-023, R-030, R-032–R-039, R-046–R-048, R-054, R-056, R-061–R-069, R-082, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
 
@@ -41,3 +41,7 @@ Implement §6.2 mandatory core, preselection visibility, dependency/reliance tra
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
+
+## Engineering and scientific acceptance tracked separately
+
+Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.

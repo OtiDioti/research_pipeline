@@ -2,13 +2,13 @@
 
 This is the proposed sequence for implementing the product in [project_description.md](project_description.md). Current execution belongs in [STATUS.md](STATUS.md), not in a second independent set of status cells here. Each phase has a coherent outcome and acceptance obligations; each may require several bounded coding-pipeline runs.
 
-**Reconciled 2026-10-30:** the full local specification v1.3 is mapped in [REQUIREMENTS.md](development/REQUIREMENTS.md). Its M0–M7 gates remain controlling. D01 now includes a scientific-contract gate after the explicitly authorized foundation commissioning and before D02; D04 includes minimum deterministic run closeout. No phase is complete merely because its administrative plan exists.
+**Amended 2026-10-30 to specification v1.4:** M0-E contracts and executable evidence gate dependent engineering. M0-S pilot/expert/protocol decisions remain pending and gate their corresponding scientific evaluations, qualification claims and release, not independent implementation. All mandatory requirements remain mapped; documentation is not M0-E completion. Mixed phases track engineering and empirical outcomes separately.
 
 | Phase | Outcome | Depends on |
 | --- | --- | --- |
 | [D00](development/phases/D00-specification-and-operating-readiness.md) | Specification and operating readiness | Initial repository |
-| [D01](development/phases/D01-testable-product-foundation.md) | Testable foundation, then M0 scientific contract | D00 |
-| [D02](development/phases/D02-durable-scientific-records-and-provenance.md) | Durable scientific records and provenance | D01 |
+| [D01](development/phases/D01-testable-product-foundation.md) | Testable foundation; M0-E engineering contracts and separate pending M0-S | D00 |
+| [D02](development/phases/D02-durable-scientific-records-and-provenance.md) | Durable scientific records and provenance | Relevant settled M0-E contract; commissioned executable subset before downstream reliance |
 | [D03](development/phases/D03-seeded-project-intake-and-navigable-vault.md) | Seeded project intake and navigable vault | D02 |
 | [D04](development/phases/D04-controlled-execution-and-recovery.md) | Controlled execution and recovery | D02, D03 |
 | [D05](development/phases/D05-tool-contracts-and-capability-execution.md) | Tool contracts and capability execution | D04 |
@@ -42,7 +42,8 @@ D10 requires actual scientific evaluation and any mandated human judgment; it is
 
 | Specification gate | Development ownership |
 | --- | --- |
-| M0 scientific contract and expert evaluation material | D01 after REQ-D01-001; blocks D02 until approved, not postponed to D10 |
+| M0-E engineering contracts | D01 and commissioning executable contracts in bounded D02–D07 requests; downstream reliance requires actual evidence |
+| M0-S scientific decisions/evaluation material | R-001–R-003 remain pending; fix before dependent scored evaluations, qualification and release; independent engineering may continue |
 | M1 durable records and vault | D02–D03 |
 | M2 controlled execution, adapter contracts, minimum no-model report | D04–D05 |
 | M3 single complete research loop and bounded context | D06 |
@@ -51,6 +52,4 @@ D10 requires actual scientific evaluation and any mandated human judgment; it is
 | M6 synthesis, human decisions, navigation and export | D09 |
 | M7 actual held-out pilot and architecture comparison | D10 |
 
-Continuous authorization permits selecting ready work; it does not waive M0 scientific decisions, live-resource permissions or expert judgments. Foundation acceptance activates the conditional operating grant after integration/checkpoint, while the next scientific slice remains subject to its prerequisites.
-
-Current M0 evidence: the requested synthetic oscillator fixture is integrated (REQ-D01-002), and [the administrative contract packet](development/decisions/M0-contract-and-scientific-review.md) is ready for scientific review. Its synthetic expected assessments do not satisfy the original expert-audit/pilot/protocol gate. D02 remains dependent on that gate; the continuous operating grant remains active with execution held for required human scientific judgment.
+Continuous authority is active under AUTH revision 4. Commissioning and the synthetic example are integrated, but M0-E overall, M0-S and the research product are not complete. Ready next work is REQ-D02-001 durable records. [M0 packet](development/decisions/M0-contract-and-scientific-review.md) separates settled engineering choices from missing scientific decisions. Later requests consume only the evidenced predecessor behaviors they need; they need not wait for unrelated empirical acceptance. No live-product service/data/budget authority has been added.

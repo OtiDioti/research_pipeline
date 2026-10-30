@@ -1,12 +1,12 @@
 # D02 — Durable scientific records and provenance
 
-**State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
+**State:** READY for REQ-D02-001; no durable-record implementation evidence yet.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
-**Dependencies:** D01
+**Dependencies:** D01 foundation plus settled M0-E storage contract; first bounded D02 slice commissions its executable evidence. M0-S is not a blanket engineering prerequisite.
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -33,11 +33,15 @@ Before execution, divide these outcomes into the smallest coherent requests with
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
 
-## Reconciled v1.3 gate — Durable record and atomic freshness gates
+## Current v1.4 gate — Durable record and atomic freshness gates
 
 **Requirement ownership:** R-005, R-008–R-019, R-030. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
 
-Implement every record kind in §5.1 and narrow operations in §10.1, not just claims. Preserve artifact-before-metadata ordering, submission idempotency, lease fencing, migrations, and separate support/assessment/issue revisions. Assessment changes synchronously invalidate eligibility; alternative support survives only when already assessed sufficient. Foundations for backup and restoration begin here. Dependency: completed D01 M0 gate.
+Implement every record kind in §5.1 and narrow operations in §10.1, not just claims. Preserve artifact-before-metadata ordering, submission idempotency, lease fencing, migrations, and separate support/assessment/issue revisions. Assessment changes synchronously invalidate eligibility; alternative support survives only when already assessed sufficient. Foundations for backup and restoration begin here. Dependency: relevant M0-E contracts, accepted/integrated executable subset before downstream reliance. REQ-D02-001 begins envelope/artifact/transaction storage; full scientific records, eligibility, fencing and migration remain subsequent work.
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
+
+## Engineering and scientific acceptance tracked separately
+
+Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.

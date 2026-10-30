@@ -4,9 +4,9 @@
 
 **Goal:** Add multiple approaches only where they improve useful progress, while preserving isolation, budgets, and coherent state.
 
-**Dependencies:** D07
+**Dependencies:** D07 engineering contracts actually needed by the next request; empirical acceptance is tracked separately.
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -16,7 +16,7 @@
 
 ## Acceptance obligations
 
-- [ ] A staged multi-approach fixture improves a specific outcome over its single-researcher path without evading budget limits.
+- [ ] Engineering: a staged multi-approach fixture exercises a specified outcome and accounting relative to its single-researcher path. Scientific benefit over that baseline remains separate M0-S-gated empirical acceptance.
 - [ ] Conflicting assumptions prevent inappropriate branch merging; shared information is reflected in independence labels.
 - [ ] The coordinator cannot promote its own unsupported result by changing status.
 
@@ -32,7 +32,7 @@ Before execution, divide these outcomes into the smallest coherent requests with
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
 
-## Reconciled v1.3 gate — Adaptive work without erased uncertainty
+## Current v1.4 gate — Adaptive work without erased uncertainty
 
 **Requirement ownership:** R-010, R-014–R-015, R-032, R-038, R-044–R-045, R-058–R-061, R-078–R-081, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
 
@@ -40,3 +40,7 @@ Serialize branch reconciliation with explicit equivalence/applicability checks a
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
+
+## Engineering and scientific acceptance tracked separately
+
+Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.

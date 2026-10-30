@@ -4,9 +4,9 @@
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
-**Dependencies:** D02, D03
+**Dependencies:** D02, D03 engineering contracts actually needed by the next request; empirical acceptance is tracked separately.
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -33,7 +33,7 @@ Before execution, divide these outcomes into the smallest coherent requests with
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
 
-## Reconciled v1.3 gate — Resource-safe execution and mandatory minimum closeout
+## Current v1.4 gate — Resource-safe execution and mandatory minimum closeout
 
 **Requirement ownership:** R-009, R-016, R-018, R-020, R-032, R-036, R-038–R-053, R-082, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
 
@@ -41,3 +41,7 @@ Own the M2 minimum deterministic end-of-run report now, not in D09. Every admitt
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
+
+## Engineering and scientific acceptance tracked separately
+
+Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.

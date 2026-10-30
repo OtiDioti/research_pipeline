@@ -6,7 +6,7 @@
 
 **Dependencies:** None; inspect the actual repository first.
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -41,7 +41,7 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 - Inspect prior runs and pending backend-repair records before applying updated policies; do not invalidate an unfinished run by installing the update.
 - Confirm the first-result human checkpoint or its explicit preauthorization. Prepare dependencies and a safe baseline; do not implement the product directly.
 
-## Reconciled v1.3 gate — Readiness reconciliation
+## Current v1.4 gate — Readiness reconciliation
 
 **Requirement ownership:** R-001–R-007, R-093–R-094. All constituent obligations remain assigned; D00 establishes readiness, not scientific satisfaction. R-007 evidence is in the commissioning run.
 

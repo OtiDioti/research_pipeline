@@ -1,12 +1,12 @@
 # D01 — Testable product foundation
 
-**State:** PARTIAL / HOLD — REQUIRED_HUMAN_SCIENTIFIC_JUDGMENT. REQ-D01-001 integrated at 7d5acab and REQ-D01-002 at 79a84d2; M0 remains incomplete.
+**State:** PARTIAL; M0-E storage contract READY FOR CWI IMPLEMENTATION, executable evidence pending; M0-S pending. REQ-D01-001 integrated at 7d5acab and REQ-D01-002 at 79a84d2; M0 remains incomplete.
 
 **Goal:** Create a minimal, worktree-local Python package and meaningful validation infrastructure through one CWI implementation milestone.
 
 **Dependencies:** D00
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -32,11 +32,11 @@ Use [REQ-D01-001](../requests/REQ-D01-001.md) after D00. One internal CWI milest
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
 
-## Reconciled v1.3 gate — Foundation and subsequent M0 gate
+## Current v1.4 gate — Foundation and subsequent M0 gate
 
 **Requirement ownership:** R-001–R-007, R-088, R-093–R-094. All constituent obligations apply; R-007 is integrated, other coverage remains partial or absent.
 
-REQ-D01-001 delivers only R-007 and the development foundation. After accepted integration, complete the M0 gate: human pilot/envelope choice; expert-audited positive/negative development and held-out material; predeclared usefulness/error/resource standards; common schemas/message/eligibility/context/checkpoint/report/tool/vault contracts; one complete paper candidate/failure example. Administrative design may be coordinated directly; executable schemas, tests and runtime prompts require a new CWI request. R-001–R-003 are currently BLOCKED. D01 is not complete until this gate is evidenced; D02 depends on it.
+REQ-D01-001 delivers only R-007 and the development foundation. After accepted integration, complete the M0 gate: human pilot/envelope choice; expert-audited positive/negative development and held-out material; predeclared usefulness/error/resource standards; common schemas/message/eligibility/context/checkpoint/report/tool/vault contracts; one complete paper candidate/failure example. Administrative design may be coordinated directly; executable schemas, tests and runtime prompts require a new CWI request. R-001–R-003 are currently BLOCKED. D01/combined M0 remains incomplete; v1.4 allows D02 engineering from settled M0-E contracts, with executable evidence before downstream reliance.
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
@@ -45,6 +45,10 @@ REQ-D01-001 delivers only R-007 and the development foundation. After accepted i
 
 [REQ-D01-001 run](../runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md): 19 meaningful tests, bootstrap and permanent validation, exact fast-forward, target validation. The continuous envelope is activated.
 
-The human requested a mock of the harmonic/quartic example. [REQ-D01-002](../requests/REQ-D01-002.md) delivered synthetic initial fixture material and a reviewable paper walkthrough without claiming live calculations or expert audit. It is independent preparatory M0 work. Human pilot/usefulness decisions, audited reference collection and predeclared scientific standards remain required before D02; the mock cannot complete those obligations.
+The human requested a mock of the harmonic/quartic example. [REQ-D01-002](../requests/REQ-D01-002.md) delivered synthetic initial fixture material and a reviewable paper walkthrough without claiming live calculations or expert audit. It is independent preparatory M0 work. Human pilot/usefulness decisions, audited reference collection and predeclared scientific standards remain required before their dependent scientific evaluations/qualification/release; the mock cannot complete those obligations.
 
-REQ-D01-002 [final evidence](../runs/34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md): 26 synthetic records, focused loader and adverse tests, full walkthrough; 28/28 suite after exact integration. [M0 contract/decision packet](../decisions/M0-contract-and-scientific-review.md) now proposes all general contract responsibilities and the evaluation framework. It is administrative design, not runtime implementation or expert approval. Required pilot/usefulness, audited references and predeclared standards are absent; no further dependent production request is ready. The next safe action is the human scientific decision described in STATUS.
+REQ-D01-002 [final evidence](../runs/34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md): 26 synthetic records, focused loader and adverse tests, full walkthrough; 28/28 suite after exact integration. [M0 contract/decision packet](../decisions/M0-contract-and-scientific-review.md) now proposes all general contract responsibilities and the evaluation framework. It is administrative design, not runtime implementation or expert approval. Required M0-S evidence remains absent. The human-authorized v1.4 amendment makes REQ-D02-001 engineering ready from the settled storage contract; no overall M0-E/M0-S completion is inferred.
+
+## Engineering and scientific acceptance tracked separately
+
+Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.

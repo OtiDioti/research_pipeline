@@ -4,9 +4,9 @@
 
 **Goal:** Make candidate acceptance depend on appropriately independent, claim-specific evidence and current support.
 
-**Dependencies:** D06
+**Dependencies:** D06 engineering contracts actually needed by the next request; empirical acceptance is tracked separately.
 
-**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
+**Specification:** [project_description.md](../../project_description.md), v1.4, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -17,7 +17,7 @@
 
 ## Acceptance obligations
 
-- [ ] Deliberately flawed derivations are rejected for the right reasons, while valid scoped conclusions can be accepted.
+- [ ] Scientific acceptance (M0-S required): deliberately flawed derivations are rejected for the right reasons, while valid scoped conclusions can be accepted. Mechanical fixture rejection/transition tests are separate engineering evidence.
 - [ ] Candidate information cannot leak through reports, indexes, paths, tool examples, or notebooks supplied to a blind checker.
 - [ ] Support withdrawn between review and promotion prevents stale acceptance; an alternative valid justification is preserved.
 
@@ -33,7 +33,7 @@ Before execution, divide these outcomes into the smallest coherent requests with
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
 
-## Reconciled v1.3 gate — Actual independence and atomic disposition
+## Current v1.4 gate — Actual independence and atomic disposition
 
 **Requirement ownership:** R-005, R-012–R-016, R-034, R-038, R-040, R-057, R-062, R-065, R-070–R-078, R-083, R-088, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
 
@@ -41,3 +41,7 @@ Exercise every §6.6 leakage surface, including inherited checkpoints, context-s
 
 - [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
 - [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.
+
+## Engineering and scientific acceptance tracked separately
+
+Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.

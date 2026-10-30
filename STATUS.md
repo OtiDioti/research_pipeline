@@ -1,39 +1,38 @@
 # Development status
 
-Committed coordination checkpoint. Real CWI state and ignored local evidence supersede this snapshot while a run is live. Never change the parent while live or base-bound.
+Committed checkpoint; actual CWI state and ignored local observations supersede this snapshot while live. Keep the original checkout unchanged while live or base-bound.
 
-## Current checkpoint — 2026-10-30
+## Current checkpoint — 2026-10-30, authorized dependency amendment
 
 | Field | Observed state |
 | --- | --- |
-| Product | Foundation and requested synthetic harmonic/quartic example finally accepted and exactly integrated |
-| Phase | D00 COMPLETE for readiness; D01 PARTIAL, M0 scientific acceptance outstanding; D02–D10 unimplemented |
-| Execution state | HOLD — REQUIRED_HUMAN_SCIENTIFIC_JUDGMENT; no live/base-bound run or unresolved integration |
-| Target | main; latest accepted/integrated product `79a84d2ee9ae7dd19539eede86a19753442eed5d`; this later documentation checkpoint is not a new product receipt |
-| Specification | v1.3 unchanged; SHA-256 `13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7` |
-| Requirement evidence | R-007 integrated; R-004/R-005 narrow mock coverage and proposed general contract; R-006 foundation coverage; R-001–R-003 still lack scientific evidence |
-| Commissioning run | 47d6ef06-c251-4a0d-bb2c-da2059d9360f → 7d5acab; 19/19 post-integration tests |
-| Mock run | 34bcb77d-1cbc-4432-ba5e-e419e930ad2f → 79a84d2; 28/28 post-integration tests, zero skips/failures |
-| Run reconciliation | Both final ACCEPTED_UNMERGED in historical CWI state, coordinator-integrated externally; no findings, obligations, leases, quarantine or integrity gaps |
-| Backend | Clean separate untracked direct-child coding_pipeline at 1f68060b5a5a9964c91811a53d3a515e0b01a073; unchanged |
-| Model | Human-corrected gpt-6-astra, explicit medium for both runs; verified access/configuration; ceiling xhigh |
-| Authorization | AUTH-2026-10-30-001 revision 3, CONTINUOUS activated at af23c313d73edd8c6311e4364f3521605582d0ba; remains valid under required scientific hold |
-| Integration policy | Coordinator-inspected exact fast-forward; CWI --merge off; no first-result human review falsely claimed |
-| Commissioning counters | 1/3 starts, successful; 0 recoveries/repairs/backend candidates |
-| Continuous counters | 1/50 starts, 49 remain; 0 recoveries/repairs/backend candidates; no reset across sessions |
-| Billing/usage | Existing ChatGPT allowance; totals in authorization/run records; remaining quota/account liabilities unmeasured; no API spending or live product grant |
-| Missing scientific gate | B-010: approved pilot/useful progress, expert-audited positive/negative and held-out material, predeclared evaluation/resource standards |
-| Completion | Requested mock and commissioning complete; D01/M0 and full project NOT COMPLETE; no live scientific validation claimed |
-| Outer session | ID not established; actual CWI UUIDs recorded separately |
+| Execution | READY for REQ-D02-001; independent engineering resumed under explicit human amendment |
+| Target | main, inspected checkpoint b1e0a2e7844707519fa8272e52c1ba3490c6ae35; next base is the committed amendment/request checkpoint |
+| Current specification | v1.4, SHA-256 `fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f`; narrow M0-E/M0-S split, scientific §§1–11 and 13–15 unchanged |
+| Historical source | v1.3 remains bound to old requests/receipts/fixtures; their hashes and accepted commits are preserved |
+| Product | Foundation and synthetic oscillator integrated; no durable records implementation yet |
+| M0-E | Storage contract settled in packet §10; executable evidence pending REQ-D02-001; overall engineering readiness not complete |
+| M0-S | R-001–R-003 and related scientific judgments pending; gates affected evaluations/qualification/release, not independent engineering |
+| D02 scope | Typed storage envelopes/exact refs, immutable artifacts, SQLite atomic/idempotent submissions, restart/stale-write/commit-fault tests |
+| Prior CWI evidence | Runs 47d6ef06 and 34bcb77d finally accepted, receipts verified, accepted sources ancestors of main; no owner, provisional state, quarantine, integrity gap or unresolved diagnosis |
+| Latest accepted product | 79a84d2ee9ae7dd19539eede86a19753442eed5d, 28/28 post-integration tests; commissioning 7d5acab had 19/19 |
+| Backend | Clean untracked direct-child coding_pipeline at 1f68060b5a5a9964c91811a53d3a515e0b01a073, unchanged |
+| Model/runtime | Verified unchanged Codex 0.166.0, ChatGPT login and account catalog; gpt-6-astra/high chosen for new storage run, ceiling xhigh; stable launch environment unchanged |
+| Authorization | AUTH-2026-10-30-001 revision 4, original CONTINUOUS activation af23c31 retained |
+| Counters | Commissioning 1/3; continuous 1/50 used, 49 remain; recoveries/repairs/backend candidates 0; no reset |
+| Limits | One CWI run; D02-001 at most two milestones; repairs 2/review and 6/run; deadlines 900 seconds; no CWI --merge |
+| Billing | Existing approved ChatGPT Codex allowance; account quota/monetary liabilities unmeasured; no API cap, product live-provider, paid compute/data disclosure/purchase/publication grant |
+| Scientific provenance | Oscillator remains exposed provisional engineering example, not approved pilot/expert audit/actual calculation/held-out evidence |
+| Completion | Combined M0, M0-S, D02 and research product incomplete; engineering and empirical acceptance tracked separately |
 
 ## Exactly one next safe action
 
-The human scientific owner reviews [the M0 contract and decision packet](development/decisions/M0-contract-and-scientific-review.md), together with the delivered mock, and returns the required scientific decision record with audited reference evidence and predeclared evaluation standards.
+Launch committed [REQ-D02-001](development/requests/REQ-D02-001.md) once after its exact-baseline permanent validation and final identity/cleanliness checks, using the recorded environment and explicit gpt-6-astra/high.
 
 ## Recovery-ready handoff
 
-Start with [AUTHORIZATION.md](development/AUTHORIZATION.md), [REQUIREMENTS.md](development/REQUIREMENTS.md), [BACKLOG.md](BACKLOG.md) and the [two actual run records](development/runs/README.md). Both accepted source commits were exactly integrated before their documentation checkpoints. The permanent validator applies to all future candidates; the bootstrap exception is retired. Preserve existing backend/Codex/environment identity and verify model access before future invocations. All product implementation/repair remains CWI-only.
+Read [authorization](development/AUTHORIZATION.md), [current requirements](development/REQUIREMENTS.md), [settled contract and pending scientific packet](development/decisions/M0-contract-and-scientific-review.md), [environment](development/ENVIRONMENT.md) and [retained run records](development/runs/README.md). The human explicitly superseded the blanket M0→D02 scientific hold. Do not reinstate it from historical records or claim its scientific requirements are complete.
 
-The mock has 26 synthetic records, a focused loader/contract validator, nine new test cases and a complete walkthrough. It is exposed development material, with no real calculations, independent reviews, expert audit, held-out performance or product-provider use. Administrative general contracts are proposed in the M0 packet, not implemented production behavior. The human's mock instruction did not waive the specification's M0→M1 gate. The remaining mandatory work cannot be labeled optional or complete.
+The new request commissions the settled M0-E storage subset through CWI. Only accepted/integrated/tested behavior enables dependent work; a document alone does not complete M0-E. Later independent engineering continues while M0-S decisions remain pending. Real semantic dependencies require a precise affected-slice hold. Fix scientific standards before corresponding scored evaluations; keep held-out answers out of development-agent context.
 
-Local attempt evidence remains under local/attempts/D01-001-attempt-001 and D01-002-attempt-001; account receipts/worktrees and workflow_logs are retained. Git alone does not preserve these excluded/external records. Read-only status/diagnose/reconstruct found no unresolved ownership or effects. No backend repair was attempted, and no raw credentials were copied. There is no installed restart supervisor. A future session can resume the same grant after the scientific prerequisite is supplied, preserving all counters and unknown liabilities.
+All previous attempts, receipts, accepted sources and usage remain retained; no unfinished controller or backend maintenance was found. Cumulative observed role usage for two runs: 1,989,333 input (1,535,488 cached), 47,058 output (2,990 reasoning), with unknown monetary/account liabilities. New live observations stay local until a safe integration/termination checkpoint. No supervisor or unattended restart is installed.
