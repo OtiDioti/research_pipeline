@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** PARTIAL; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; next bounded contract is being prepared.
+**State:** PARTIAL; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission contract is prepared (not yet implemented).
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -53,3 +53,5 @@ Under specification v1.4, relevant implemented predecessor contracts and determi
 REQ-D02-002 has commissioned consistent local backup and verified restoration. Full §5.1 scientific kinds/fields, support alternatives and assessment/eligibility freshness, attempt fences, resource state, schema migrations and complete interrupted-run recovery remain pending. R-005/R-010–R-015/R-030 are not completed by generic envelopes.
 
 [REQ-D02-002 evidence](../runs/2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md): consistent version-1 snapshots, strict manifest/relational/application integrity, independent restore, retained incomplete-copy markers and fresh-process failures are accepted/integrated. Full suite 88/88. The original receipt identity survives lost acknowledgment, backup and restoration. General migrations, periodic scheduling and real run/session/job restoration remain pending. Next engineering focus is typed scientific content and relationship contracts, followed by assessment/eligibility and other §5.1 types; no scientific sufficiency is inferred.
+
+Next prepared request: [REQ-D02-003](../requests/REQ-D02-003.md), at most two internal milestones. It preserves legacy version-1 history/backup and commissions typed contexts/claims/justifications/evidence with exact semantic links and real persistence failures; assessment, eligibility and scientific sufficiency remain separate.

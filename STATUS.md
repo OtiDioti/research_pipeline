@@ -6,7 +6,7 @@ Committed checkpoint; actual CWI evidence and ignored local observations superse
 
 | Field | Observed state |
 | --- | --- |
-| Execution | CONTINUOUS; REQ-D02-001 and REQ-D02-002 accepted/integrated; preparing next bounded D02 contract |
+| Execution | CONTINUOUS; REQ-D02-001 and REQ-D02-002 accepted/integrated; REQ-D02-003 prepared for exact-baseline preflight |
 | Target | main, integrated product 645c118a9846b23a3c410bc1a9fe7742f58846bc; next run base is the committed documentation/request checkpoint |
 | Specification | v1.4, SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f; human-authorized M0-E/M0-S split, scientific obligations preserved |
 | Product | Foundation, synthetic example and durable SQLite/artifact/submission API and verified local backup/restore integrated; 88/88 post-integration tests |
@@ -27,7 +27,7 @@ Committed checkpoint; actual CWI evidence and ignored local observations superse
 
 ## Exactly one next safe action
 
-Prepare and commit the next bounded D02 engineering request (next unused ID REQ-D02-003) for typed scientific record contracts, preserving existing generic-history and backup compatibility.
+Verify the committed REQ-D02-003 baseline and unchanged model/environment/ownership, then execute its bounded CWI request under the existing grant.
 
 ## Recovery-ready handoff
 

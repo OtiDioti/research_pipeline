@@ -48,3 +48,7 @@ Workflow rationale: [ADR-010](development/decisions/ADR-010-continuous-developme
 ## DEV-026 — Consistent backup/restoration next
 
 After REQ-D02-001 accepted/integrated local version-1 SQLite storage, commission a self-contained consistent metadata/artifact backup and verified restore before broader runtime use. This is ready independent R-019/R-017 engineering and tests real recoverability; full scientific record semantics/eligibility remain subsequent D02 obligations. Use one bounded high-effort CWI milestone, stdlib SQLite/filesystem, no new provider/data/service authority. Preserve all source/receipt identities; no migration is invented merely to claim one exists.
+
+## DEV-027 — Typed scientific content without reinterpreting history
+
+After accepted local storage and backup, implement four provisional scientific payloads and exact typed admission using the existing immutable version-1 database. A content discriminator separates typed records from legacy generic envelopes; no silent migration or competing graph is allowed. Required assumptions are local named statements bound to exact revisions, while assessed sufficiency and authentic tool execution remain separate future authority. Preserve provisional cycles and keep alternate routes separate; no scientific judgment is inferred from structural validity. REQ-D02-003 records the concrete contract and failure/compatibility evidence. High effort remains appropriate for provenance, exact references and idempotency.
