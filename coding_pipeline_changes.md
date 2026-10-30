@@ -35,3 +35,5 @@ Post-typed-record checkpoint: run d7e765f5 completed and integrated using unchan
 Migration attempt 9af6f133 stopped on a role/validation-context mismatch, not a diagnosed backend malfunction. No source repair attempted; backend attempted/adopted/reverted remains **0/0/0**. Recovery is an administrative request clarification with original evidence preserved.
 
 Post-migration checkpoint: 25e5020e accepted/integrated using unchanged clean backend 1f68060. Attempted/adopted/reverted backend repairs remain **0/0/0**; no pending maintenance log. The administrative validation-ownership recovery succeeded without backend or security changes.
+
+REQ-D02-005 timeout 46114120 is an exhausted configured deadline, not a diagnosed backend defect. Human extended future invocation/validation limits via supported flags; no backend source/config mutation. Attempted/adopted/reverted backend repairs remain **0/0/0**. Draft recovery uses supported frozen context and a new run, never hot patch/resume.

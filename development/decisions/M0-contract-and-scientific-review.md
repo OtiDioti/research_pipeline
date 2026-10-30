@@ -177,3 +177,5 @@ These reversible software choices require no scientific sufficiency decision. Fu
 ## 14. Settled next contract — attributed reviews and issues
 
 [REQ-D02-005](../requests/REQ-D02-005.md) settles independent assessment dimensions, explicitly attributed per-route outcomes, immutable review/issue revisions, exact semantic references and atomic typed admission. Reviews pin candidate, target context, manifest and policy without certifying their authority or blindness. Structural route-conclusion checks preserve historical/differing contexts; a reported sufficient route is not an approved one. No current eligibility/disposition write is commissioned by this slice. It remains UNEVIDENCED until actual CWI acceptance/integration/tests. Scientific decisions and M0-S remain pending.
+
+REQ-D02-005 first attempt 46114120 has no accepted milestone: timeout at 900seconds after pure-contract edits. Its draft and advisory 184-test check are recovery evidence only. R1 retains the complete contract under AUTH revision 5's explicit2700-second deadlines; no M0-E review/issue completion is inferred.

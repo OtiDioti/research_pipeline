@@ -18,3 +18,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [9af6f133 — REQ-D02-004 first attempt](9af6f133-62d8-4348-b8f2-7d95cbb84928.md): stopped incomplete, no product changes/milestone receipt; passing controller baseline versus restricted Writer /tmp failure; terminal disposition resolved, replacement R1 prepared; continuous start 5/50.
 
 - [25e5020e — REQ-D02-004-R1](25e5020e-e398-4998-b901-5268cd580778.md): versioned schemas/backups and explicit migration accepted/integrated, 169/169; continuous start 6/50; successful bounded recovery, no repairs/backend changes.
+
+- [46114120 — REQ-D02-005](46114120-06d0-47ea-8e16-4a02066a1d0a.md): Writer timed out at 900 seconds after edits; zero accepted milestones; preserved draft passes advisory 184/184. Human extended future deadlines to 2700; R1 prepared, continuous start7 retained.

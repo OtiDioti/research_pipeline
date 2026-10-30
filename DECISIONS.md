@@ -64,3 +64,7 @@ Run 9af6f133 passed the exact 116-test controller baseline but stopped when its 
 ## DEV-030 — Attributed reports before current assessment authority
 
 REQ-D02-005 consumes schema-2 review/issue identities and existing scientific typed admission to persist independent dimensions, disagreements and explicit route judgments. A separate versioned assessment-content discriminator preserves old codecs. Reported sufficiency/independence/execution are declarations, not approval or current disposition. Exact route-conclusion membership is a mechanical admission check; differing contexts remain expressible. Current eligibility generation/invalidation and authorized promotion are subsequent work. This is reversible domain-independent record engineering, not a scientific pilot or sufficiency decision.
+
+## DEV-031 — Human deadline extension and preserved-draft recovery
+
+After run 46114120 timed out at its frozen 900-second Writer deadline, the human explicitly set CWI time limits to 2,700 seconds. AUTH revision 5 applies that per-agent/per-validation ceiling to new runs, without changing model/effort/start/repair/billing or acceptance limits. Preserve the terminal unaccepted draft and freeze its exact files through supported --context for REQ-D02-005-R1; only its delegated Writer may implement them in its new worktree. Full product scope and gates stay unchanged. This is one diagnosed deadline recovery, not a backend repair, silent resume or direct product transplant. Unknown timed-out Writer usage remains a liability.

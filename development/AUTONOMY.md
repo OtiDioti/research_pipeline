@@ -57,6 +57,8 @@ Do not start the next run until the previous integration and checkpoint are reco
 
 ## 5. Proposed limits for the activation prompt
 
+Current grant override: AUTH-2026-10-30-001 revision 5 explicitly raises per-agent and per-validation deadlines to 2,700 seconds for new runs. Historical frozen runs retain their original limits. Other defaults and cumulative allowances below are unchanged.
+
 These are transparent defaults for a grant, not claims that they guarantee completion or limit monetary expenditure. Adjust before activation, not while resuming a frozen run.
 
 | Limit | Proposed value / interpretation |

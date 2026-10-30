@@ -149,8 +149,8 @@ if cwi start \
   --max-milestones 1 \
   --max-repairs-per-review 2 \
   --max-repairs-per-run 6 \
-  --agent-timeout 900 \
-  --validation-timeout 900 \
+  --agent-timeout 2700 \
+  --validation-timeout 2700 \
   > "$ATTEMPT_DIR/start-report.json" \
   2> "$ATTEMPT_DIR/start-stderr.log"
 then
@@ -229,8 +229,8 @@ cwi start \
   --max-milestones 2 \
   --max-repairs-per-review 2 \
   --max-repairs-per-run 6 \
-  --agent-timeout 900 \
-  --validation-timeout 900
+  --agent-timeout 2700 \
+  --validation-timeout 2700
 ```
 
 `REQ-D02-001.md` is a future request, not supplied or ready yet. CWI must not be invoked against a nonexistent request or validator. The validation command resolves `python3` through the deliberately frozen PATH; an explicitly quoted absolute interpreter is also valid.
@@ -277,3 +277,5 @@ For a demonstrated backend failure, use [BACKEND_MAINTENANCE.md](BACKEND_MAINTEN
 The kit supplies no background supervisor. A manual continuation prompt can resume the same grant after session limits. Automated session renewal is a separately implemented/tested feature, not a shell loop that blindly restarts on exit zero.
 
 Finish against the completion gate in [AUTONOMY.md](AUTONOMY.md). Report partial implementation, pending live-provider evidence, and required scientific/human review separately. A declared hold always includes the exact preserved state and one next safe action.
+
+Current deadline authority: AUTH revision 5 explicitly permits 2,700 seconds per agent and per validation for newly frozen runs. Earlier 900-second runs remain unchanged and cannot be silently resumed under new settings. This does not reset attempts or other resource counters.

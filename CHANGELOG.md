@@ -61,3 +61,7 @@ REQ-D02-004 attempt 1 stopped without changes on a documented validation-context
 ## Integrated versioned core schemas and verified migration — 2026-10-30
 
 REQ-D02-004-R1 / CWI 25e5020e-e398-4998-b901-5268cd580778 finally accepted 06fc13396b24933f51d2054bd3e495bf6a7b3845, exactly integrated at 13:04:43Z and validated 169/169. Twenty generic kinds, strict retained v1 operations and backup identity, dual backup formats, explicit attributed restore-time v1→v2 migration and real preservation/interruption evidence are delivered. [Full evidence](development/runs/25e5020e-e398-4998-b901-5268cd580778.md). The first stopped attempt remains preserved; its validation-context mismatch was resolved by one bounded recovery without test/security/backend changes. Full payloads/assessment/eligibility/authority and scientific validation remain pending.
+
+## Administrative deadline amendment and preserved attempt — 2026-10-30
+
+Human explicitly extended future CWI per-agent/per-validation deadlines to 2,700 seconds after REQ-D02-005 Writer timeout. AUTH revision 5 preserves all other limits and consumed/unknown usage. No review/issue implementation is integrated; the draft is retained for fresh CWI acceptance in R1. Latest product remains 06fc133. [Failed-attempt evidence](development/runs/46114120-06d0-47ea-8e16-4a02066a1d0a.md).
