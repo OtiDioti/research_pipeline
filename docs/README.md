@@ -14,3 +14,7 @@ The [synthetic oscillator paper walkthrough](synthetic-oscillator.md) traces the
 development fixture, its public loading/validation contract, expected outcomes and
 expert-review gaps. It is synthetic local material, not a scientific execution or
 expert-audited evaluation set.
+
+The [validated envelopes and immutable artifacts](durable-records.md) guide gives
+the primitive Python API, an executable graph example, ownership and durability
+rules, and failure limits. SQLite submissions and recovery are not yet implemented.

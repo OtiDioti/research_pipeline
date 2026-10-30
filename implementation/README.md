@@ -3,9 +3,10 @@
 This directory contains the `theoretical-research-pipeline` distribution and its
 `research_pipeline` import package. It provides package identity, CLI help/version,
 development validation, and a synthetic oscillator development fixture with a
-source-local loader. It implements no research execution, models,
-scientific verification, or vault generation. It does not complete M0 or the D01
-scientific-contract gate. Implementation is submitted for review; controller
+source-local loader, validated domain envelopes, and immutable local artifacts.
+It implements no research execution, models, scientific verification, or vault
+generation. Specification v1.4 separates engineering readiness from scientific
+validation; these primitives do not complete either overall gate. Implementation is submitted for review; controller
 acceptance and integration are separate events.
 
 Use Python 3.11+; Linux is the initially verified development platform. The product
@@ -50,6 +51,14 @@ nonempty UTF-8 regular files. Validation never rewrites those documents.
 
 See [foundation architecture](../docs/architecture.md) for module boundaries and
 future scientific-runtime limits.
+
+The [durable primitive guide](../docs/durable-records.md) documents direct imports
+from `research_pipeline.domain` and `research_pipeline.artifacts`, exact fields,
+errors, and a runnable graph-connectivity example. Artifact runtime directories
+must be explicitly selected outside software source. Envelopes are isolated
+in-memory values; SQLite submissions, record persistence and transaction recovery
+remain the next milestone. Artifact identity and completed task state confer no
+scientific support.
 
 The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
 the versioned fixture, exact-reference contract, loader exceptions, expected scoped

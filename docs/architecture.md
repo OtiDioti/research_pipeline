@@ -1,10 +1,12 @@
 # Foundation architecture
 
 The current foundation establishes a local Python package and honest development
-feedback. It implements no research execution, models, scientific verification,
-vault generation, provider integration, or production scientific records. A
-synthetic development fixture now illustrates scoped records as local JSON data. It does not complete
-M0 or the D01 scientific-contract gate. Acceptance and integration are controller
+feedback, validated domain envelopes and immutable local artifact storage. It
+implements no research execution, models, scientific verification, vault generation
+or provider integration. Scientific record transactions are not yet implemented.
+A separate synthetic development fixture illustrates scoped records as local JSON
+data. Specification v1.4 distinguishes engineering readiness from scientific
+validation; these components complete neither overall gate. Acceptance and integration are controller
 and coordinator decisions, not claims made by the CLI or validator.
 
 ## Package and interface
@@ -21,6 +23,31 @@ status 2. The package has no third-party runtime dependencies. Setuptools is sol
 build tooling, and no installation is needed for the documented source commands.
 Linux is the initially verified platform. See the [implementation guide](../implementation/README.md)
 for exact commands and environment requirements.
+
+## Domain and artifact primitives
+
+`research_pipeline.domain` provides frozen `CreationProvenance`, `RecordReference`,
+`ArtifactReference` and `RecordEnvelope` values with runtime validation and detached
+serialization. Private canonical JSON snapshots isolate mutable content and details.
+Five common envelope kinds are supported; scientific payload schemas remain later
+work. Task operational state and provisional claim disposition are independent.
+
+`research_pipeline.artifacts` owns an explicitly selected outside-source runtime
+area. It validates private directories, stages bytes, publishes read-only files
+with atomic no-overwrite hard links, and verifies size/hash on reads and reuse.
+File and directory synchronization precede successful publication acknowledgment.
+Operation-scoped descriptors, no-follow traversal and nonblocking object opens
+bound unsafe filesystem handling. Failure can retain objects or staging entries;
+the API does not sweep or repair them.
+
+Neither module depends on `fixtures`. Imports remain inert, with no new CLI
+commands or dependencies. The [primitive contract and example](durable-records.md)
+give exact APIs, errors, filesystem assumptions, trust limits and focused failure
+evidence. SQLite metadata, submissions/idempotency, persisted reference resolution,
+expected-head checks and receipts/events belong to the next milestone; artifact
+primitives do not imply those guarantees. Full scientific schemas, assessment and
+promotion, worker isolation, leases/fencing, accounting, migrations, verified
+backups and distributed execution remain unsupported.
 
 ## Development validation
 
@@ -87,5 +114,7 @@ The [complete walkthrough and interface](synthetic-oscillator.md) document simul
 assessment versus actual execution, finite-matrix versus full-line support,
 historical preservation, positive-branch review gaps, errors and test commands.
 Fixture tests add mutation, reference, snapshot, isolation and guarded-load checks
-to existing unittest discovery. No production controller or persistence mechanism
-is introduced, and M0/D02 scientific prerequisites remain open.
+to existing unittest discovery. The fixture itself introduces no production
+controller or persistence mechanism. Its historical v1.3 provenance is preserved;
+under v1.4, pending scientific validation gates the work that depends on it rather
+than imposing a blanket hold on independent storage engineering.
