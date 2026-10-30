@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** PARTIAL; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
+**State:** PARTIAL; latest REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -67,3 +67,7 @@ REQ-D02-004 attempt 1 stopped with no implementation on a documented validation-
 Prepared next: [REQ-D02-005](../requests/REQ-D02-005.md), typed attributed reviews/issues and durable exact admission, at most two milestones. This supplies the recorded assertions required before current eligibility/invalidation. Pure storage of a favorable review cannot confer endorsement or mark R-013/R-014/R-015 complete.
 
 REQ-D02-005 attempt1 timed out after pure-contract edits, with no accepted milestone; main review/issue behavior remains pending. [Failure record](../runs/46114120-06d0-47ea-8e16-4a02066a1d0a.md) preserves the draft and advisory checks. [R1](../requests/REQ-D02-005-R1.md) retains both milestones under the explicit human 2700-second deadline extension, using frozen unaccepted draft context. No evidence gate is waived.
+
+[REQ-D02-005-R1 evidence](../runs/8dc45005-5187-4be0-a009-dece7c493f2b.md): accepted/integrated a5bba690a6c7e7113a92f34cc99efffc7a8c5656, 204/204 target tests, two milestones and one resolved test-fixture identity repair. Six typed kinds preserve attributed independent dimensions, disagreements, exact route-conclusion membership and actual transactional/restart/backup behavior. No current eligibility or scientific authority is inferred. Both earlier terminal attempts remain preserved.
+
+Prepared next: [REQ-D02-006](../requests/REQ-D02-006.md), at most three milestones for typed work-product bundles, safe durable checkout and preview/CAS import. This is a concrete R-008/R-019/R-028/R-030 dependency for D03 authoring. Support/eligibility freshness, authority/fencing/resources and remaining core payloads remain owned and pending; independent bundle work does not complete or waive them.

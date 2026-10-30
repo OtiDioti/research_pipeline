@@ -65,3 +65,7 @@ REQ-D02-004-R1 / CWI 25e5020e-e398-4998-b901-5268cd580778 finally accepted 06fc1
 ## Administrative deadline amendment and preserved attempt — 2026-10-30
 
 Human explicitly extended future CWI per-agent/per-validation deadlines to 2,700 seconds after REQ-D02-005 Writer timeout. AUTH revision 5 preserves all other limits and consumed/unknown usage. No review/issue implementation is integrated; the draft is retained for fresh CWI acceptance in R1. Latest product remains 06fc133. [Failed-attempt evidence](development/runs/46114120-06d0-47ea-8e16-4a02066a1d0a.md).
+
+## Integrated attributed review/issue records — 2026-10-30
+
+REQ-D02-005-R1 / CWI 8dc45005-5187-4be0-a009-dece7c493f2b finally accepted and exactly integrated a5bba690a6c7e7113a92f34cc99efffc7a8c5656; target 204/204, zero skips/errors and clean source. Strict attributed assessment codecs, constrained durable admission, exact route membership and disagreement/history/restart/backup tests are delivered. [Full evidence](development/runs/8dc45005-5187-4be0-a009-dece7c493f2b.md). One fixture identity repair preserved all assertions; no backend change. The earlier timed-out draft remains unaccepted historical evidence. Current eligibility, authority, scientific approval and live qualification remain pending. REQ-D02-006 prepares independent work-product/draft infrastructure under unchanged AUTH revision 5.
