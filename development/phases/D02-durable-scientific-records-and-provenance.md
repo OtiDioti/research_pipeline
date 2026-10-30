@@ -59,3 +59,5 @@ Integrated request: [REQ-D02-003](../requests/REQ-D02-003.md), at most two inter
 [REQ-D02-003 evidence](../runs/d7e765f5-9c2a-4d83-9703-73102ffb5891.md): four typed provisional payloads, exact coherent links and atomic target admission, 116/116 tests; two accepted milestones, no repairs. Remaining generic kinds/schema evolution and migration are the next bounded prerequisite. Full sufficient-support semantics, freshness and human scientific judgments remain pending.
 
 Prepared next: [REQ-D02-004](../requests/REQ-D02-004.md), versioned generic core identities and explicit verified-backup migration, at most two milestones. Full typed authority/assessment payloads remain subsequent work, not claimed by generic names.
+
+REQ-D02-004 attempt 1 stopped with no implementation on a documented validation-context mismatch; all migration outcomes remain pending. [R1](../requests/REQ-D02-004-R1.md) is the bounded evidence-based replacement after clean terminal disposition, with controller validation unchanged.

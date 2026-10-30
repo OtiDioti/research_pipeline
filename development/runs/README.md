@@ -14,3 +14,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [2d82f186 — REQ-D02-002](2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md): verified local backups finally accepted/exact integrated, 88/88 tests; continuous start 3/50, no repairs.
 
 - [d7e765f5 — REQ-D02-003](d7e765f5-9c2a-4d83-9703-73102ffb5891.md): typed provisional scientific records/admission accepted, exactly integrated and validated 116/116; continuous start 4/50, no repairs.
+
+- [9af6f133 — REQ-D02-004 first attempt](9af6f133-62d8-4348-b8f2-7d95cbb84928.md): stopped incomplete, no product changes/milestone receipt; passing controller baseline versus restricted Writer /tmp failure; terminal disposition resolved, replacement R1 prepared; continuous start 5/50.

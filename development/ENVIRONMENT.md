@@ -79,3 +79,5 @@ Before REQ-D02-003, selected Codex 0.166.0 executable digest and backend clean 1
 REQ-D02-003 used unchanged backend/environment and frozen gpt-6-astra/high. Final/target validation passed 116/116; target log SHA-256 be212248f17fadfc550c154eedd819b6ebd577de193d2dee983a3e23aeb88a26. The actual documented persistence example executed in the suite using a fresh process and explicit /tmp runtime. No installation/dependency/provider changes.
 
 Before REQ-D02-004: same Codex executable digest, clean backend identity and stable launch map rechecked; selected CLI reports ChatGPT login and account catalog advertises gpt-6-astra/high. No installation, dependencies or launch-setting changes. Explicit high is selected for strict dual-version compatibility and migration publication.
+
+Observed in 9af6f133: controller baseline passed 116/116, but Writer sandbox denied literal /tmp in 12 existing typed tests. codex_cli deliberately excludes /tmp/TMPDIR grants. Do not change these frozen/security settings or confuse advisory Writer execution with controller validation. R1 retains the same environment/backend and meaningful frozen check; no permission expansion.

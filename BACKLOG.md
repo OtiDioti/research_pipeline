@@ -27,3 +27,5 @@ Record an ID; state; affected requirement/phase/request; concrete reason; exact 
 An unfinished CWI run is never made safe by calling it paused here. Follow its actual recovery guidance.
 
 In continuous mode, a blocker prevents dependent work and any full-scope completion claim. It need not stop independent authorized work after current run ownership/bindings are safely resolved. Preserve actual local backlog entries; these newly supplied rows are not evidence of your local installation state.
+
+B-012 — Observed development validation-context mismatch (2026-10-30): REQ-D02-004 stopped without changes when Writer-local /tmp denial was treated as an absent controller baseline, despite retained 116/116 controller evidence. Terminal run resolved; one bounded R1 recovery prepared with explicit validation ownership. Tests and security/acceptance gates stay unchanged. Migration remains pending. Owner: coordinator; close only after observed successful replacement or record the precise remaining blocker.

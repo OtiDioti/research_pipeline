@@ -55,3 +55,5 @@ REQ-D02-002 added consistent SQLite snapshots, strict manifest and application-s
 ## Integrated typed provisional scientific records — 2026-10-30
 
 REQ-D02-003 added four strict scientific content codecs and exact envelope relationships, transactional typed admission/read, and meaningful failure/concurrency/restart/backup evidence. CWI d7e765f5-9c2a-4d83-9703-73102ffb5891 accepted 22b863b1aabc5b3681c33800025f539c500462ca; exact integration and 116/116 target tests are recorded in [run evidence](development/runs/d7e765f5-9c2a-4d83-9703-73102ffb5891.md). Two milestones, no repairs/backend changes. Legacy data/backup/fixture provenance preserved. Scientific assessment, promotion and live qualification remain unimplemented.
+
+REQ-D02-004 attempt 1 stopped without changes on a documented validation-context mismatch; controller baseline 116/116 remains genuine. Preserved nonresumable run and prepared R1 with explicit controller-owned checks; no validator, tests, sandbox or backend change and no acceptance waiver. Continuous starts now 5/50; recovery action 1.

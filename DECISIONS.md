@@ -56,3 +56,7 @@ After accepted local storage and backup, implement four provisional scientific p
 ## DEV-028 — Explicit schema evolution with preserved v1 restoration
 
 REQ-D02-004 introduces schema 2 for all twenty generic §5.1 envelope identities and an explicit v1-backup-to-new-v2-runtime migration. Preserve v1 read/old-kind append/retry/backup and exact default restoration; never migrate a live source in place or rewrite original receipt provenance. New generic kinds confer no authority and retain null canonical state until their concrete typed/state contracts are implemented. Use strict version-specific schema/backup gates, separate migration attribution and the existing incomplete-restore publication boundary. This is a reversible technical dependency for remaining records/assessments, not scientific approval; high effort is appropriate.
+
+## DEV-029 — Preserve controller validation ownership after observed sandbox mismatch
+
+Run 9af6f133 passed the exact 116-test controller baseline but stopped when its Writer independently encountered literal-/tmp denial and the Architect treated that as the missing baseline. Preserve the stopped nonresumable run and its actual passing baseline. REQ-D02-004-R1 clarifies that meaningful acceptance checks remain controller-owned, while Writer-local runs must report narrower-sandbox limitations honestly. No tests/validator/security/environment/backend change is authorized as the correction. A new bounded run after clean terminal disposition is recovery action 1, not a blind resume or waived gate.
