@@ -32,3 +32,7 @@
 Before execution, divide these outcomes into the smallest coherent requests with independently testable results. Do not invent every function signature months ahead of its dependencies. The active request fixes its public interfaces, exact changed paths, validation, scope, and stop conditions before CWI starts. A phase may require multiple runs. Record each final receipt/source pair, integration commit, requirement evidence, limitations, and newly deferred items.
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
+
+## Continuous-development boundary
+
+The coordinator can implement evaluation machinery through CWI and run already authorized assessments. It cannot invent expert judgments, treat a mock provider as live evidence, or acquire unapproved external data/services. Missing scientific data, live-resource allowance, or human assessment becomes a precise obligation/hold, not a reason to claim the entire project complete. See [the completion gate](../AUTONOMY.md) and [report template](../templates/COMPLETION.md).

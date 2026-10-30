@@ -1,26 +1,35 @@
 # Development environment contract
 
-Complete this record on the actual machine before starting a run. No local installation is asserted by this starter kit. Do not store credentials or the complete environment here.
+Complete this on the actual machine before model-dependent work. This template establishes no local installation, authentication, approved spending, or completed tests. Preserve an existing environment record during update. Never store credentials or a complete environment dump here.
 
 | Field | Actual value |
 | --- | --- |
-| Operating system | Not yet inspected; Linux is the reviewed backend's verification target |
-| Python version and absolute executable | Not yet inspected; CWI requires Python 3.11+ |
-| Git version | Not yet inspected; must support `git worktree list --porcelain -z` |
-| Target repository branch | Not yet inspected |
-| Target repository absolute path | Record locally if publishing it would disclose private information |
-| Controller remote and commit | Record the credential-free remote and `git -C coding_pipeline rev-parse HEAD`; never publish embedded remote tokens |
-| Controller working tree | Must be clean before a new run |
-| Reviewed archive identity | Archive comment reports `122f86588f829387ea460a1e2a997a87ce325c53`; verify against the clone before treating it as the same revision |
-| Codex executable selected by CWI | Record the actual frozen path/version, not merely the first `codex` on PATH |
-| Model and reasoning choice | Explicitly select or record the resolved default; no model ID is assumed here |
-| Authentication source | Normal Codex login or approved existing CODEX_HOME; do not copy credentials into Git |
-| Stable launch environment | Record the chosen variable names and non-secret values; private paths may remain in `local/` |
-| Product dependencies | Initial proposal: stdlib runtime/test foundation; later dependencies require explicit preparation |
-| Backend verification evidence | Local results to be added; see supplied-snapshot review separately |
-| Permission to launch CWI outside outer sandbox | Not yet established |
-| Phase/merge/spending authorization | See STATUS; first run has no automatic merge |
+| Operating system | Not inspected; Linux is the reviewed backend's verification target |
+| Python version / absolute executable | Not inspected; backend requires Python 3.11+ |
+| Git version | Not inspected; must support worktree porcelain -z |
+| Target branch / specification revision | Inspect locally |
+| Target absolute path | Keep locally when disclosure would be inappropriate |
+| Controller remote / upstream base / active commit | Record credential-free identities; exact local revision matters |
+| Controller working tree | Inspect and preserve existing edits; new runs use a clean committed backend |
+| Reviewed archive identity | Archive comment reports 122f86588f829387ea460a1e2a997a87ce325c53; verify before assuming equivalence |
+| Backend repairs / patch backup | Link coding_pipeline_changes.md and recoverable patch/bundle identities |
+| Codex selected by CWI | Actual frozen path/version/digest, not only the first codex on PATH |
+| Requested model | Astra 6.1 — retained user requirement |
+| Exact supported model ID / provider | UNRESOLVED; do not invent a slug or substitute a model |
+| Resolution/access evidence | Actual local catalog/account evidence or explicit human-approved correction |
+| Effort policy | Explicit supported low/medium/high/xhigh; hard ceiling xhigh |
+| Selected effort for next request | Choose by workload before launch; recorded per-run, frozen on resume |
+| Actual invocation evidence | Retained configuration/argv and available effective-model telemetry; note limitations |
+| Authentication / billing mode | Approved Codex login or existing CODEX_HOME; establish subscription allowance vs API billing |
+| Stable launch environment | Names and non-secret values only; preserve private values/paths locally |
+| Product dependencies | Proposed stdlib foundation; prepare later dependencies between runs |
+| Backend verification | Actual local results; prior snapshot tests are separate evidence |
+| Permission for CWI outside outer sandbox | Not established by this template |
+| Operating grant and usage limits | Actual authorization record; no new purchases implied |
+| Live scientific-provider allowance | Not established by this template |
 
-The reviewed backend hashes every inherited environment name/value for resume, before minimizing the child-agent environment. A different exported variable can therefore prevent continuation. The runbook uses a small explicit environment as a proposed operational mitigation. Corporate certificate paths or other necessary variables must be deliberately included and kept identical; do not silently strip a required setting.
+The backend hashes the inherited environment for resume, before minimizing the child-agent environment. Even an extra exported variable can prevent continuation. The runbook's small explicit environment is the proposed mitigation; deliberately include any necessary fixed certificate/proxy settings and preserve them unchanged.
 
-Record installation/version changes **between** safely completed runs. Updating Codex while a run is unfinished can invalidate its frozen executable digest. Updating the controller itself also changes the reviewed implementation even if its package version remains unchanged.
+CWI isolates its child configuration. Set its model/effort explicitly at start, not only in the outer Codex session or a normal profile. Adapt effort between runs; never change a frozen pair on resume. See [MODEL_POLICY.md](MODEL_POLICY.md) for the unresolved requested-name check and official references.
+
+Record changes only at a safe boundary. Codex updates can invalidate the frozen executable digest. Backend source changes require [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md); they are not made safe merely because the Codex binary is unchanged. Preserve original run identities, regression evidence, and patch provenance.

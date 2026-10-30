@@ -1,5 +1,7 @@
 # Coding-pipeline integration review
 
+> **2026-10-30 policy note:** this remains the original snapshot review, not a re-run of its full test suite. The user now permits necessary focused backend repairs under [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md), with [the root audit](../coding_pipeline_changes.md). The recommendation to leave a functioning backend unchanged still applies; the repair exception does not retroactively alter these findings. Current coordination additions were checked separately in [WORKFLOW_UPDATE_CHECKS.md](review/WORKFLOW_UPDATE_CHECKS.md).
+
 ## 1. Scope, source identity, and conclusion
 
 The supplied repository implements **CWI — Codex Workflow Controller**. Its public source launcher is `coding_pipeline/bin/agentic-flow`.

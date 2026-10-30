@@ -27,7 +27,9 @@ flowchart TD
     U --> O
 ```
 
-The outer coordinator does not become a second implementation engine. It translates the long project description into successive change requests, invokes CWI, and reconciles evidence. CWI owns implementation Git operations, validation, repair, and acceptance within each run. Its Writer is the authorized implementer.
+The outer coordinator does not become a second product implementation engine. It translates the long project description into successive change requests, invokes CWI, and reconciles evidence. CWI owns product implementation Git operations, validation, repair, and acceptance within each run. Its Writer is the authorized implementer. The narrowly authorized exception is direct, necessary maintenance of the separate backend under [BACKEND_MAINTENANCE.md](development/BACKEND_MAINTENANCE.md), with an audit trail; it never permits bypassing CWI for research-product changes.
+
+After the first workflow is inspected and a continuous grant is recorded, the coordinator executes this loop repeatedly across requests and phases. It does not need a new prompt after every successful integration. See [AUTONOMY.md](development/AUTONOMY.md) for commissioning, continuation, bounded recovery, and completion.
 
 Three alternatives were considered. A single huge CWI request makes phase boundaries, context limits, and stopping decisions difficult. Hand-written product changes by the outer agent would bypass the chosen implementation method. A thin outer coordinator with small CWI runs preserves both continuity and the existing backend's acceptance controls; this is the proposed approach.
 
@@ -44,11 +46,17 @@ research-pipeline/
 ├── BACKLOG.md                      # Deliberately deferred, blocked, or paused items
 ├── DECISIONS.md                    # Consequential decision index
 ├── CHANGELOG.md                    # Accepted and integrated development history
+├── coding_pipeline_changes.md     # Necessary backend changes, including failed attempts
 ├── development/
 │   ├── README.md
 │   ├── RUNBOOK.md                  # Installation, start, inspect, integrate, resume
 │   ├── BOOTSTRAP.md                # Safe first run from Markdown-only source
-│   ├── CODEX_START.md              # Initial and continuation prompts
+│   ├── CODEX_START.md              # Commissioning, activation, and continuation prompts
+│   ├── AUTONOMY.md                 # Continuous loop, limits, stopping and completion
+│   ├── AUTHORIZATION.md            # Actual operating grant, not self-issued authority
+│   ├── MODEL_POLICY.md             # Verified requested model; effort ceiling xhigh
+│   ├── BACKEND_MAINTENANCE.md      # Focused repair exception and recovery safeguards
+│   ├── UPDATE_GUIDE.md             # Safe adoption without resetting progress
 │   ├── REQUIREMENTS.md             # Exact specification-to-evidence mapping
 │   ├── ENVIRONMENT.md              # Non-secret version/launch contract
 │   ├── PIPELINE_REVIEW.md          # Findings about the supplied backend snapshot
@@ -56,6 +64,7 @@ research-pipeline/
 │   ├── requests/                  # Committed bounded requests; revision history
 │   ├── runs/                      # Human-readable run/evidence summaries
 │   ├── decisions/                 # Detailed decision records
+│   ├── backend_patches/           # Reviewed, non-secret repair patches when appropriate
 │   ├── review/                    # Supplied-backend inventory and test results
 │   └── templates/                 # Reusable Markdown record formats
 ├── implementation/
@@ -100,6 +109,9 @@ CWI's authoritative state is a fourth storage location controlled by CWI, not by
 | Exact code present | Git source revision | Run record and changelog |
 | Paused/deferred exceptions | `BACKLOG.md` | Links from phase/status records |
 | Consequential decisions | Detailed decision record and `DECISIONS.md` index | Request references |
+| Operating authority | Actual human grant recorded in `development/AUTHORIZATION.md` | STATUS link and mode summary |
+| Backend maintenance | Backend source revision, regression evidence and `coding_pipeline_changes.md` | Environment record and run links |
+| Resource consumption | Reconciled attempt/run records, including failed starts | STATUS cumulative summary |
 | Integrated changes | Git plus verified integration record | `CHANGELOG.md` |
 
 Do not create separate `CURRENT_STEP.md`, `NEXT_STEP.md`, and `HANDOFF.md` files that all independently assert current state. `STATUS.md` contains the current checkpoint and one next action; the run record and optional local handoff carry detail. This reduces contradictions without losing the requested visibility.
@@ -142,7 +154,7 @@ After integration or safe termination, update the run summary, phase evidence, r
 
 ### Continue or pause
 
-Select the next ready request only after reconciliation. A pause record states what is preserved, what remains uncertain, and the condition for continuation. New requests can change scope or validation profiles; `resume` cannot silently adopt such changes.
+Select the next ready request only after reconciliation. Under an active continuous grant, proceed in the same session without pausing at ordinary request or phase boundaries. A genuine pause record states what is preserved, what remains uncertain, and the condition for continuation. New requests can change scope within the approved specification and validation profiles; `resume` cannot silently adopt such changes. Session replacement preserves the same grant, consumption counters, and obligations.
 
 ## 8. Context and memory between sessions
 
@@ -168,7 +180,7 @@ Use the exact nested checkout name supported by the reviewed backend. Keep it ou
 
 The outer Codex sandbox may prevent CWI from writing its account-state directories, managing Git, or starting authenticated child sessions. Use a specifically approved trusted execution of the CWI command, or run that exact command in a normal terminal. Do not solve this by globally disabling safeguards.
 
-CWI's milestone, repair, and timeout limits are not a financial spending cap. Record a separate human operating envelope for the permitted phases, live services, model selection, and expenditure. Do not advertise a nonexistent CWI budget flag.
+CWI's milestone, repair, and timeout limits are not a financial spending cap. Record the actual human operating envelope in [AUTHORIZATION.md](development/AUTHORIZATION.md) for permitted phases, integrations, live services, model selection, and expenditure. Use [MODEL_POLICY.md](development/MODEL_POLICY.md) to resolve the requested Astra 6.1 identifier and enforce a maximum effort of `xhigh`; explicit per-run flags, not prompt wording alone, configure CWI. Do not advertise a nonexistent CWI budget flag.
 
 ## 11. Failure and recovery
 
@@ -194,3 +206,19 @@ Do not build a second orchestration framework just to maintain these documents. 
 6. Use the normal validation profile and the same process for subsequent phases.
 
 Detailed commands are in [RUNBOOK.md](development/RUNBOOK.md), the first-run profile in [BOOTSTRAP.md](development/BOOTSTRAP.md), and copyable instructions in [CODEX_START.md](development/CODEX_START.md).
+
+## 14. Continuous development and necessary backend repair
+
+The commissioning default remains D00 plus one bootstrap request, held for human first-result review. The [activation prompt](development/CODEX_START.md) supplies a one-time bounded grant for continuous progression through the remaining phases. Its optional explicit preauthorization clause can replace that first-result review; it is not selected by default.
+
+After activation, the coordinator integrates each finally accepted commit itself under the existing grant, checks the result, records progress, and immediately selects the next ready task. Keeping CWI `--merge` off preserves an inspection point without requiring the human at every iteration. The phase/request/run/session distinction remains intact.
+
+Necessary backend repairs use a separate maintenance branch/worktree after live owners are resolved. Preserve evidence, demonstrate the cause, make the smallest fix with regression tests, and record every attempted change. Keep pending audit entries local while the parent checkout remains bound, then incorporate them into [coding_pipeline_changes.md](coding_pipeline_changes.md) at a safe checkpoint. Existing runs do not silently resume under changed controller code. Product repair remains a CWI task.
+
+These coordination rules are instructions, not an implemented supervisor or an OS security mechanism. A future automated launcher/watchdog is a separate bounded CWI implementation request, not an executable hidden in these Markdown files.
+
+## 15. Definition of done and operational handover
+
+Use the scope/evidence gate in [AUTONOMY.md](development/AUTONOMY.md). All mandatory in-scope requirements need exact integrated-source evidence, whole-product verification, accurate documentation, and required live/scientific/human assessment. A completed foundation or mock-only research demonstration is not full-project completion.
+
+When implementation can proceed but D10 needs unapproved live resources or expert review, record the exact remaining obligation and report the narrower delivered scope. Do not waive it, impersonate the expert, or keep making unrelated changes merely to avoid reporting a blocker. The [completion report template](development/templates/COMPLETION.md) separates these verdicts.

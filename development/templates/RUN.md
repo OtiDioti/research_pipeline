@@ -34,3 +34,9 @@ Record inspected accepted diff, original-base checks, authorization, exact fast-
 ## Remaining work and next action
 
 Link backlog entries, effects whose termination is uncertain, prerequisite changes, and one next safe action. State whether resume, a new request, or human decision is appropriate. Do not rewrite CWI historical status to match a manual merge.
+
+## Continuation, authorization, and resource accounting
+
+Actual grant ID/revision; mode; outer coordinator session ID (distinct from CWI UUID); start-attempt label; requested and verified model/provider; explicit effort and available effective-invocation evidence; cumulative starts/recovery/maintenance consumption before/after; measured usage vs unknown liabilities; expiry/remaining authority.
+
+Link backend-maintenance incidents and exact backend revisions if any. State why the original run could safely resume under unchanged code, was safely superseded, or requires human recovery. Preserve old receipts. Record whether next ready work should continue automatically under the grant or the exact reason it cannot.

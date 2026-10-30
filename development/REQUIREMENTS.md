@@ -31,3 +31,7 @@ For each actual requirement record: ID; source version and location; requirement
 Permitted states are `UNMAPPED`, `PLANNED`, `IN_PROGRESS`, `EVIDENCED_NOT_INTEGRATED`, `INTEGRATED`, `DEFERRED_AUTHORIZED`, and `BLOCKED`. They describe development obligations, not scientific truth.
 
 A test passing is evidence only for the behavior it actually exercises. Review text, source provenance, and human assessment may also be required. Do not mark a broad scientific feature established by a mock response or a test of a JSON schema alone.
+
+## Whole-scope completion audit
+
+At phase boundaries and before declaring completion, reconcile this map against the actual specification revision and integrated source. Every mandatory obligation needs real evidence or an explicit unresolved state. A coordinator may not redefine a mandatory requirement as optional to satisfy the continuous-development completion gate. Authorized scope reduction must identify the narrower delivered scope without claiming the original project is complete.

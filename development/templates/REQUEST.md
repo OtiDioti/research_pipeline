@@ -29,3 +29,9 @@ Specify limits, required external permissions, milestone ceiling, integration au
 ## Completion reporting
 
 Require truthful changed-path summaries, executed checks, remaining obligations, and evidence references. CWI owns final acceptance and Git source transitions. The outer coordinator owns post-integration administrative records.
+
+## Coordinator execution envelope
+
+Link the actual grant ID/revision and specification/source identity. State exact verified CWI model identifier and chosen supported effort (at most xhigh), why that effort fits, start-attempt/milestone/repair/deadline allowance, existing billing/service/data authority, and integration policy. One model/effort pair is frozen for the run. Describe whether the next normal action after successful integration is another request or a real scoped completion/hold.
+
+Necessary backend maintenance is separate under BACKEND_MAINTENANCE.md; delegated roles do not inherit the coordinator's exception. Do not change this request's frozen contents on resume.
