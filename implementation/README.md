@@ -4,7 +4,8 @@ This directory contains the `theoretical-research-pipeline` distribution and its
 `research_pipeline` import package. It provides package identity, CLI help/version,
 development validation, and a synthetic oscillator development fixture with a
 source-local loader, validated domain envelopes, immutable local artifacts, and
-SQLite-backed atomic revision submissions with durable receipts and audit events.
+SQLite-backed atomic revision submissions with durable receipts and audit events,
+and pure typed scientific content codecs with exact envelope relationships.
 It implements no research execution, models, scientific verification, or vault
 generation. Specification v1.4 separates engineering readiness from scientific
 validation; this durable slice does not complete either overall gate or M1/D02.
@@ -57,8 +58,8 @@ future scientific-runtime limits.
 The [durable records guide](../docs/durable-records.md) documents direct imports
 from `research_pipeline.domain`, `research_pipeline.artifacts` and
 `research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
-graph submission/append/reopen/retry example. Select runtime directories explicitly
-outside software source. Creation rejects existing roots; opening gates fixed
+low-level generic graph submission/append/reopen/retry example. Select runtime
+directories explicitly outside software source. Creation rejects existing roots; opening gates fixed
 schema version 1 before normal rollback-journal recovery. SQLite uses DELETE/EXTRA,
 foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
 exact submission retries return original metadata-only receipts even after head
@@ -68,12 +69,18 @@ Use the original submission identity to reconcile uncertain commit acknowledgmen
 Real disk and fresh-process tests cover ordering/canonical fingerprints, stale and
 conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
 and later artifact integrity failures. Local test results are advisory to controller
-validation. Full scientific schemas/kinds, support/assessment freshness,
-eligibility/promotion, worker isolation, attempt leases/fencing, resource
+validation. Typed durable admission/read, remaining scientific kinds,
+support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, resource
 authorization/accounting, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. There is no duplicate charging
 guarantee without a ledger. Artifact identity and completed task state confer no
 scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
+
+The [typed scientific content contract](../docs/typed-content.md) documents frozen
+contexts, provisional claims, conjunctive justifications and synthetic/unverified
+evidence, strict codecs, exact role projection and a pure runnable example.
+`RecordStore` is a trusted generic persistence API, not a scientific admission gate;
+the typed durable API is not yet implemented.
 
 The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
 the versioned fixture, exact-reference contract, loader exceptions, expected scoped

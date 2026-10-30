@@ -16,8 +16,8 @@ expert-review gaps. It is synthetic local material, not a scientific execution o
 expert-audited evaluation set.
 
 The [durable records and atomic submissions](durable-records.md) guide gives the
-local Python API, an executable graph/append/reopen example, fingerprint and ordering
-semantics, ownership and durability rules, SQLite recovery and locking behavior,
+local Python API, an executable low-level generic graph/append/reopen example,
+fingerprint and ordering semantics, ownership and durability rules, SQLite recovery and locking behavior,
 metadata-only receipt reconciliation, and failure limits. Scientific assessment,
 worker isolation and general migrations remain unsupported.
 
@@ -25,3 +25,8 @@ worker isolation and general migrations remain unsupported.
 APIs, strict format and integrity checks, durable completeness markers, independent
 continued use and a runnable synthetic example. This is partial R-019/R-017 evidence;
 full D02, periodic scheduling and research-run/session/job recovery remain outstanding.
+
+[Typed scientific content](typed-content.md) documents the four pure versioned
+contracts, strict codecs, exact envelope links and structural limits. Its runnable
+example requires no storage or execution. Typed durable admission/read remains
+unimplemented; the trusted generic RecordStore is not a scientific admission gate.

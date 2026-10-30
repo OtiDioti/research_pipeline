@@ -31,8 +31,18 @@ for exact commands and environment requirements.
 `ArtifactReference`, `RecordEnvelope`, `Submission`, `SubmissionReceipt` and
 `AuditEvent` values with runtime validation and detached
 serialization. Private canonical JSON snapshots isolate mutable content and details.
-Five common envelope kinds are supported; scientific payload schemas remain later
-work. Task operational state and provisional claim disposition are independent.
+Five common envelope kinds are supported; generic envelopes retain arbitrary
+strict JSON content. Task operational state and provisional claim disposition
+are independent.
+
+`research_pipeline.scientific` adds pure frozen contexts, claims, justifications
+and evidence with an explicit version-1 format, strict codecs and exact ordered
+envelope-link coherence. It depends on domain validation only, without store,
+backup or fixture imports. See [typed content](typed-content.md) for required
+fields, local assumptions, conjunctive premises and artifact-role boundaries.
+Typed durable submission/read and target resolution are not yet implemented.
+`RecordStore` remains a trusted generic persistence API, not a scientific admission
+gate. Neither structured descriptions nor coherent links establish support.
 
 `research_pipeline.artifacts` owns an explicitly selected outside-source runtime
 area. It validates private directories, stages bytes, publishes read-only files
@@ -65,8 +75,8 @@ commands or dependencies. The [durable contract and runnable example](durable-re
 give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptions,
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
-Full scientific schemas/kinds, support/assessment freshness, eligibility/promotion,
-worker isolation, leases/fencing, resource authorization/accounting, general migrations,
+Typed durable admission/read, remaining scientific kinds, support/assessment
+freshness, eligibility/promotion, worker isolation, leases/fencing, resource authorization/accounting, general migrations,
 periodic scheduling, distributed execution and research execution remain
 unsupported. No ledger means no duplicate charging guarantee. This slice does not
 complete overall M0-E, M0-S, M1, D02 or scientific validation.

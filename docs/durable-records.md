@@ -10,6 +10,12 @@ an intentionally separate paper example.
 `research_pipeline.domain` owns validation and detached JSON serialization.
 `research_pipeline.artifacts` owns filesystem layout, publication and integrity.
 `research_pipeline.store` owns private SQLite metadata, transactions and recovery.
+`research_pipeline.scientific` supplies separate [typed content codecs](typed-content.md)
+and exact envelope-link coherence for four scientific kinds. Its typed durable
+submit/read boundary is not yet implemented. RecordStore is a trusted generic
+persistence API, not a scientific admission gate: generic submission resolves
+locators and declared kinds but does not validate typed target content or semantic
+content/link agreement.
 Imports are inert. Use direct submodule imports; no installation or package-level
 re-exports are needed. The CLI still provides only help/version.
 
@@ -18,8 +24,9 @@ re-exports are needed. The CLI still provides only help/version.
 All domain values are frozen and validate their constructors at runtime. Each has
 `to_dict()` and `from_dict(value)`: dictionaries are detached JSON-compatible data,
 and reconstruction rejects missing required fields, unknown fields and malformed
-nested values. Defaulted constructor fields may also be omitted in serialized
-input; `to_dict()` always includes them. No reconstruction invents a timestamp.
+nested values. For these generic domain APIs, defaulted constructor fields may
+also be omitted in serialized input (typed scientific content requires every wire
+field); `to_dict()` always includes them. No reconstruction invents a timestamp.
 Invalid domain fields and invalid `put` input types raise
 `research_pipeline.domain.DomainValidationError`, a `ValueError` subclass.
 
@@ -45,7 +52,8 @@ not authenticated execution or a database commit timestamp.
 
 The five supported kinds are `research_context`, `claim`, `justification`,
 `evidence`, and `task_specification`. They are common envelopes, not full
-scientific payload schemas or all specification §5.1 records.
+scientific payload schemas or all specification §5.1 records. Four explicit
+content schemas are available separately through [typed codecs](typed-content.md).
 
 | Kind | Required canonical state |
 | --- | --- |
@@ -317,8 +325,9 @@ can establish whether a transaction committed. A durable receipt acknowledges a
 historical metadata commit, not continuing evidence availability. No availability
 success flag, automatic repair or new event is created by these reads/retries.
 
-## Runnable local example
+## Runnable low-level generic example
 
+This example uses arbitrary generic content, not the typed scientific contract.
 Run from the repository root. The explicitly selected temporary runtime is outside
 source; its removal is example lifecycle management, not a storage cleanup API.
 
@@ -372,7 +381,7 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 ## Remaining scope
 
-Full scientific payload schemas and remaining record kinds, assessment/support
+Typed durable admission/read and remaining record kinds, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
 fencing, resource authorization/accounting, general migrations, periodic
 scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.
