@@ -12,3 +12,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [77ab31a1 — REQ-D02-001](77ab31a1-a7c2-4185-a26b-f9ed52da1593.md): durable records finally accepted, exactly integrated, 72/72 tests; continuous start 2/50; one resolved internal repair, no backend changes.
 
 - [2d82f186 — REQ-D02-002](2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md): verified local backups finally accepted/exact integrated, 88/88 tests; continuous start 3/50, no repairs.
+
+- [d7e765f5 — REQ-D02-003](d7e765f5-9c2a-4d83-9703-73102ffb5891.md): typed provisional scientific records/admission accepted, exactly integrated and validated 116/116; continuous start 4/50, no repairs.

@@ -51,3 +51,7 @@ REQ-D02-001 delivered validated domain-neutral envelopes/exact references, immut
 ## Integrated verified local backup and restoration — 2026-10-30
 
 REQ-D02-002 added consistent SQLite snapshots, strict manifest and application-state integrity checks, immutable historical-artifact copies, independent restoration and durable incomplete markers. Real concurrent writes, tampering, short writes, synchronization failures, abrupt process exits and recovered submission retry are tested. CWI 2d82f186-4cf2-4fb7-9f96-f0ea8db10340 accepted 645c118a9846b23a3c410bc1a9fe7742f58846bc; exact integration, the documented example and 88/88 target validation are evidenced in [the run record](development/runs/2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md). No repairs or backend changes. General migrations, periodic scheduling, scientific schemas/assessments and full research-run recovery remain pending.
+
+## Integrated typed provisional scientific records — 2026-10-30
+
+REQ-D02-003 added four strict scientific content codecs and exact envelope relationships, transactional typed admission/read, and meaningful failure/concurrency/restart/backup evidence. CWI d7e765f5-9c2a-4d83-9703-73102ffb5891 accepted 22b863b1aabc5b3681c33800025f539c500462ca; exact integration and 116/116 target tests are recorded in [run evidence](development/runs/d7e765f5-9c2a-4d83-9703-73102ffb5891.md). Two milestones, no repairs/backend changes. Legacy data/backup/fixture provenance preserved. Scientific assessment, promotion and live qualification remain unimplemented.

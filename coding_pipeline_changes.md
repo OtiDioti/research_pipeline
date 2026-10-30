@@ -29,3 +29,5 @@ Post-mock checkpoint: run 34bcb77d completed and integrated using the same clean
 Post-storage checkpoint: run 77ab31a1-a7c2-4185-a26b-f9ed52da1593 integrated with unchanged clean backend 1f68060. Backend repair candidates attempted/adopted/reverted remain **0/0/0**; no pending local maintenance log. One CWI product repair is not a backend change.
 
 Post-backup checkpoint: run 2d82f186-4cf2-4fb7-9f96-f0ea8db10340 accepted/integrated using unchanged clean backend 1f68060. Backend attempted/adopted/reverted repairs remain **0/0/0**; no pending maintenance log or unresolved owner.
+
+Post-typed-record checkpoint: run d7e765f5 completed and integrated using unchanged clean backend 1f68060. Backend attempted/adopted/reverted repairs remain **0/0/0**; no pending maintenance log.
