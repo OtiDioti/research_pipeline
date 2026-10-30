@@ -22,6 +22,11 @@ Complete D00, then prepare and execute only REQ-D01-001 with the documented exac
 For this first run, do not authorize automatic merge. Inspect the real final report, final acceptance evidence, exact accepted source, and diff. Stop at the accepted-unmerged integration checkpoint for human review. If CWI stops, follow its diagnosis and record the issue rather than bypassing checks or restarting blindly.
 
 Before ending, leave an accurate handoff and exactly one next safe action. Update tracked checkpoint files only when doing so cannot interfere with an active or still-bound run. Never claim a phase is complete merely because code exists or a command exited successfully.
+
+# Important
+```coding_pipeline``` may still present issues in its functioning. It may sometimes crash, or otherwise not perform the operations as intended. If ```coding_pipeline``` does not work as intended you are allowed to alter its source code to debug it or alter its internal behavior. In the eventual case this becomes necessary, make sure to keep your edits focused and aimed at addressing the issues at hand to limit the introduction of new code. In the scenario such changes are required, generate a coding_pipeline_changes.md file and log any change you had to make so that I can review all of them at a later date. 
+
+Treat this only as a warning and do not alter your behavior unless necessary: it is possible no issue ever arise. 
 ```
 
 ## Restart or continuation session
@@ -36,6 +41,11 @@ If an unfinished run exists, follow status/diagnose and restore its exact enviro
 Otherwise choose the next ready request within the explicitly recorded phase and integration authorization. Read its original specification requirements. Use coding_pipeline for every implementation and repair. Keep the product tool-agnostic and use explicit worktree-relative validation.
 
 After a safe terminal outcome and authorized integration, update the run record, requirement evidence, phase progress, backlog, changelog where applicable, and STATUS.md together. State what remains unsupported and leave one next safe action. Stop on a material scope change, uncertain side effect, exhausted authorization, or unresolved blocker.
+
+# Important
+```coding_pipeline``` may still present issues in its functioning. It may sometimes crash, or otherwise not perform the operations as intended. If ```coding_pipeline``` does not work as intended you are allowed to alter its source code to debug it or alter its internal behavior. In the eventual case this becomes necessary, make sure to keep your edits focused and aimed at addressing the issues at hand to limit the introduction of new code. In the scenario such changes are required, generate a coding_pipeline_changes.md file and log any change you had to make so that I can review all of them at a later date. 
+
+Treat this only as a warning and do not alter your behavior unless necessary: it is possible no issue ever arise. 
 ```
 
 ## Optional authorization for later bounded autonomy
