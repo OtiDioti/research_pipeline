@@ -65,7 +65,3 @@ Before stopping, reconcile what actually happened. Update tracked records only a
 
 The default initial authorization is one bootstrap run, without automatic merge. Further autonomous phases or integration require an explicit recorded operating envelope.
 
-# Important
-```coding_pipeline``` may still present issues in its functioning. It may sometimes crash, or otherwise not perform the operations as intended. If ```coding_pipeline``` does not work as intended you are allowed to alter its source code to debug it or alter its internal behavior. In the eventual case this becomes necessary, make sure to keep your edits focused and aimed at addressing the issues at hand to limit the introduction of new code. In the scenario such changes are required, generate a coding_pipeline_changes.md file and log any change you had to make so that I can review all of them at a later date. 
-
-Treat this only as a warning and do not alter your behavior unless necessary: it is possible no issue ever arise. 
