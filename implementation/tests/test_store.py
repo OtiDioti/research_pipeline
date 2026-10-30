@@ -507,7 +507,7 @@ with RecordStore.open(sys.argv[1]) as store:
             with self.assertRaises(StoreClosedError): operation()
 
     def test_effective_settings_foreign_keys_and_inert_imports(self):
-        """Check settings/FKs and guard fresh imports of storage and scientific modules."""
+        """Check settings/FKs and guard fresh imports of storage and both typed-content modules."""
         import research_pipeline.store as module
         original = module._connect
         observed = []
@@ -531,7 +531,7 @@ with RecordStore.open(sys.argv[1]) as store:
 import os, sys
 phase = "import"
 def guard(event, args):
-    """Reject mutation/network/process effects during fresh storage/scientific imports."""
+    """Reject mutation/network/process effects during fresh storage and typed-content imports."""
     if phase != "import": return
     forbidden = event.startswith(("socket.", "subprocess.", "os.exec", "os.spawn", "sqlite3.connect"))
     forbidden |= event in {"os.mkdir", "os.link", "os.chmod", "os.remove", "os.rename"}
@@ -541,6 +541,7 @@ sys.addaudithook(guard)
 from research_pipeline.store import RecordStore
 from research_pipeline.backup import create_backup, inspect_backup, restore_backup
 import research_pipeline.scientific
+import research_pipeline.assessment
 phase = "runtime"
 with RecordStore.create("caller-relative") as store:
     assert store.head("absent") is None

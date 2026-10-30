@@ -6,6 +6,12 @@ there are no package re-exports or CLI commands. Imports perform no filesystem,
 storage or scientific work. The implementation uses only the standard library
 and existing domain values.
 
+The separate [attributed assessment contract](attributed-assessments.md) adds pure
+Review/Issue values and exact envelopes with its own discriminator. Its reported
+dimensions are content, separate from canonical state. Durable `submit_typed` and
+`get_typed_revision` still support only the four scientific kinds documented here;
+assessment admission and route membership checks belong to the next milestone.
+
 This contract establishes structural coherence, not scientific completeness,
 truth, implication, sufficiency, execution, approval or support. The pure codecs perform no
 target lookup or artifact availability check. `RecordStore.submit_typed` adds an
@@ -347,13 +353,15 @@ assert record.scientific_disposition == "provisional"
 PY
 ```
 
-Assessment sufficiency, promotion/eligibility, authentic tool receipts, all specification
-§5.1 kinds and scientific validation remain later work. This contract does not
+Verification of assessment sufficiency, promotion/eligibility, Apply disposition,
+authentic tool receipts, remaining typed §5.1 payloads and scientific validation
+remain later work. This contract does not
 complete D02 or authorize a scientific pilot or release.
 
 The unchanged controller check is
 `/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py`.
-The verification handoff still requires controller-owned evidence of 88 passing
-baseline tests at the exact frozen request base, plus all existing and substantive
-new tests passing with zero skips. Local test output is advisory; this document
+The verification handoff requires preservation of all 169 baseline
+executions/assertions at the exact frozen request base, plus controller-owned
+evidence of all existing and substantive new tests passing with zero skips.
+Local test output is advisory; this document
 claims neither those baseline results nor controller acceptance.

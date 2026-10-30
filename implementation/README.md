@@ -6,6 +6,7 @@ development validation, and a synthetic oscillator development fixture with a
 source-local loader, validated domain envelopes, immutable local artifacts, and
 SQLite-backed atomic revision submissions with durable receipts and audit events,
 and typed scientific content with exact envelope relationships and durable admission/read.
+Pure attributed Review/Issue values and exact assessment envelopes are also available.
 It implements no research execution, models, scientific verification, or vault
 generation. Specification v1.4 separates engineering readiness from scientific
 validation; this durable slice does not complete either overall gate or M1/D02.
@@ -80,10 +81,18 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
 evidence, strict codecs, exact role projection and runnable codec/persistence examples.
-`RecordStore.submit_typed` admits coherent exact typed target graphs atomically;
+`RecordStore.submit_typed` admits the four scientific kinds as coherent exact typed target graphs atomically;
 `get_typed_revision` returns the exact envelope and decoded value. `submit` remains
 a trusted generic persistence API, not a scientific admission gate. Typed retries
 and backups preserve original receipts and historical scope without promotion.
+
+The [attributed assessment contract](../docs/attributed-assessments.md) documents
+pure Review/Issue codecs, independent reported dimensions, explicit route judgments
+and exact envelope links. Their dimensions are separate from canonical state;
+reported independence, checks, policy references and provenance confer no authority
+or scientific truth. Durable assessment admission/read is deferred to the next
+milestone. Current eligibility/freshness, Apply disposition and scientific
+qualification remain future work.
 
 The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
 the versioned fixture, exact-reference contract, loader exceptions, expected scoped

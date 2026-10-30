@@ -33,3 +33,8 @@ contracts, strict codecs, exact envelope links, durable typed admission/read and
 structural limits. Runnable codec and synthetic persistence examples demonstrate
 exact historical scope and original-receipt retries. `submit_typed` is the explicit
 structural admission boundary; generic `submit` is not a scientific admission gate.
+
+[Attributed assessments](attributed-assessments.md) documents the available pure
+Review/Issue contracts, independent reported dimensions, route judgments and exact
+envelopes. Durable typed admission/read still supports only the four scientific
+kinds; assessment admission and route membership checks belong to the next milestone.
