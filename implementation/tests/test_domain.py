@@ -123,7 +123,7 @@ class DomainTests(unittest.TestCase):
                 RecordReference("a", value, "uses")
             with self.assertRaises(DomainValidationError):
                 self.envelope(revision=value)
-        for value in ("Claim", "project", "", None, [], True):
+        for value in ("Claim", "unknown_kind", "", None, [], True):
             with self.subTest(kind=value), self.assertRaises(DomainValidationError):
                 self.envelope(kind=value)
             if value is not None:

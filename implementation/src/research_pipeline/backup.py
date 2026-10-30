@@ -3,7 +3,6 @@
 from contextlib import contextmanager
 from dataclasses import dataclass
 import hashlib
-import json
 import os
 from pathlib import Path
 import sqlite3
@@ -14,8 +13,12 @@ from research_pipeline.artifacts import (
     ArtifactStore, ArtifactError, ArtifactLayoutError, ArtifactIOError,
     _path_directory,
 )
-from research_pipeline.domain import ArtifactReference, AuditEvent, Submission, _snapshot
+from research_pipeline.domain import ArtifactReference, AuditEvent, Submission
 from research_pipeline.store import RecordStore, StoreLayoutError, _schema_gate, _connect
+from research_pipeline.schema import (
+    _VERSIONS, _json, _canonical, manifest_info, ManifestLayoutError,
+    validate_request_kinds, validate_history,
+)
 
 
 class BackupError(Exception):
@@ -85,59 +88,23 @@ def _outside(destination, source):
         raise BackupLayoutError(f"destination {destination}: must be outside {source}")
 
 
-def _pairs(pairs):
-    """Decode JSON objects without accepting duplicate keys at any depth."""
-    result = {}
-    for key, value in pairs:
-        if key in result:
-            raise ValueError(f"duplicate JSON key {key!r}")
-        result[key] = value
-    return result
-
-
-def _constant(value):
-    """Reject nonfinite JSON constants rather than Python's permissive decoding."""
-    raise ValueError(f"nonfinite JSON number {value}")
-
-
-def _json(data):
-    """Parse strict UTF-8 JSON, including nested duplicates and nonfinite values."""
-    if isinstance(data, bytes):
-        data = data.decode("utf-8")
-    return json.loads(data, object_pairs_hook=_pairs, parse_constant=_constant)
-
-
-def _canonical(document):
-    """Serialize a document using the existing strict canonical request convention."""
-    return _snapshot(document, "backup document").encode("utf-8")
-
-
 def _reference(data):
     """Compute the content address of actual metadata bytes."""
     return ArtifactReference(hashlib.sha256(data).hexdigest(), len(data))
 
 
-def _manifest(metadata, artifacts):
-    """Construct the only supported manifest representation from validated references."""
-    return {"format_version": 1, "schema_version": 1, "metadata": metadata.to_dict(),
-            "artifacts": [item.to_dict() for item in artifacts]}
+def _manifest(metadata, artifacts, version):
+    """Construct the manifest pair belonging to the actual captured schema version."""
+    return {"format_version": _VERSIONS[version][2], "schema_version": version,
+            "metadata": metadata.to_dict(), "artifacts": [item.to_dict() for item in artifacts]}
 
 
 def _info(document):
-    """Validate exact version-1 fields and sorted unique references; compute canonical identity."""
-    if type(document) is not dict or set(document) != {"format_version", "schema_version", "metadata", "artifacts"}:
-        raise BackupLayoutError("manifest: incorrect fields")
-    for field in ("format_version", "schema_version"):
-        if type(document[field]) is not int or document[field] != 1:
-            raise BackupLayoutError(f"manifest: unsupported {field} {document[field]!r}")
-    metadata = ArtifactReference.from_dict(document["metadata"])
-    if type(document["artifacts"]) is not list:
-        raise BackupLayoutError("manifest artifacts: expected list")
-    artifacts = tuple(ArtifactReference.from_dict(item) for item in document["artifacts"])
-    digests = [item.digest for item in artifacts]
-    if digests != sorted(set(digests)):
-        raise BackupLayoutError("manifest artifacts: require digest-sorted unique entries")
-    return BackupInfo(hashlib.sha256(_canonical(document)).hexdigest(), 1, 1, metadata, artifacts)
+    """Map shared manifest validation to public backup information and layout errors."""
+    try:
+        return BackupInfo(*manifest_info(document))
+    except ManifestLayoutError as error:
+        raise BackupLayoutError(str(error)) from error
 
 
 def _read_file(root, name, *, readonly=True, synchronize=False):
@@ -218,32 +185,36 @@ def _database(path):
 
     Caller must first validate the file, sidecar-free layout and byte hash. The
     trusted parent/owner must not mutate checked pathnames while SQLite opens them.
-    No live source connection or submission replay is used here.
+    Return the validated version and inventory. No live source connection or
+    submission replay is used here.
     """
     header = _read_file(path.parent, path.name, readonly=path.name == "snapshot.sqlite3")[:100]
     if len(header) != 100 or header[:16] != b"SQLite format 3\0" or header[18:20] != b"\x01\x01":
         raise BackupIntegrityError(f"snapshot {path}: invalid SQLite header or unsupported journal format")
-    _schema_gate(path)
+    version = _schema_gate(path)
     connection = sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True, isolation_level=None)
     try:
         if connection.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
             raise BackupIntegrityError(f"snapshot {path}: SQLite integrity_check failed")
         if connection.execute("PRAGMA foreign_key_check").fetchall():
             raise BackupIntegrityError(f"snapshot {path}: foreign key violations")
-        _application(connection)
+        _application(connection, version)
         links = tuple(ArtifactReference(*row) for row in connection.execute(
             "SELECT DISTINCT digest,size FROM artifact_links ORDER BY digest"))
         registrations = tuple(ArtifactReference(*row) for row in connection.execute(
             "SELECT digest,size FROM artifacts ORDER BY digest"))
         if links != registrations:
             raise BackupIntegrityError("snapshot artifact registrations disagree with historical links")
-        return links
+        if version == 2:
+            validate_history(connection.execute("SELECT * FROM migration_history").fetchall(),
+                             [(item.digest, item.size) for item in registrations])
+        return version, links
     finally:
         connection.close()
 
 
-def _application(connection):
-    """Check every canonical request against normalized rows and chronological exact links."""
+def _application(connection, version):
+    """Check schema-specific request kinds, normalized rows and chronological exact links."""
     submissions = {row[0]: row[1:] for row in connection.execute(
         "SELECT submission_id,request_json,fingerprint FROM submissions")}
     heads, kinds, available, visited = {}, {}, set(), set()
@@ -255,6 +226,7 @@ def _application(connection):
                 or type(document["fingerprint_version"]) is not int or document["fingerprint_version"] != 1):
             raise BackupIntegrityError(f"submission {sid}: unsupported canonical request")
         request = Submission.from_dict(document["submission"])
+        validate_request_kinds(request, version)
         canonical = _canonical({"fingerprint_version": 1, "submission": request.to_dict()})
         if (request.submission_id != sid or canonical.decode() != text
                 or hashlib.sha256(canonical).hexdigest() != fingerprint):
@@ -303,8 +275,8 @@ def _verify(root, marker=None):
     data = _read_file(root, "snapshot.sqlite3")
     if _reference(data) != info.metadata:
         raise BackupIntegrityError(f"snapshot {root}: metadata size/SHA-256 mismatch")
-    if _database(root / "snapshot.sqlite3") != info.artifacts:
-        raise BackupIntegrityError(f"snapshot {root}: manifest inventory differs from metadata")
+    if _database(root / "snapshot.sqlite3") != (info.schema_version, info.artifacts):
+        raise BackupIntegrityError(f"snapshot {root}: manifest schema/inventory differs from metadata")
     if names != {item.digest for item in info.artifacts}:
         raise BackupIntegrityError(f"objects {root}: filenames differ from manifest inventory")
     for reference in info.artifacts:
@@ -370,8 +342,8 @@ def _capture(source, root):
 def create_backup(source: RecordStore, destination) -> BackupInfo:
     """Capture an open thread-confined store into an absent explicit outside-source directory.
 
-    Captures/retries have a fixed five-second bound. Artifacts use the largest-object
-    full-byte buffer. Failures retain the destination; no overwrite or cleanup occurs.
+    The captured schema selects the manifest pair. Captures/retries have a fixed
+    five-second bound. Artifacts use the largest-object full-byte buffer. Failures retain the destination; no overwrite or cleanup occurs.
     """
     connection = source._require_open()
     path = _path(destination)
@@ -384,13 +356,13 @@ def create_backup(source: RecordStore, destination) -> BackupInfo:
         _capture(connection, path)
         # All inventory decisions now use the captured database, never the live source.
         _read_file(path, "snapshot.sqlite3")
-        references = _database(path / "snapshot.sqlite3")
+        version, references = _database(path / "snapshot.sqlite3")
         for reference in references:
             if target.put(source._artifacts.read(reference)) != reference:
                 raise BackupIntegrityError(f"copy object {reference.digest}: changed reference")
             target.verify(reference)
         metadata = _reference(_read_file(path, "snapshot.sqlite3", synchronize=True))
-        _write_file(path, "manifest.json", _canonical(_manifest(metadata, references)), readonly=True)
+        _write_file(path, "manifest.json", _canonical(_manifest(metadata, references, version)), readonly=True)
         info = _verify(path, ".backup-incomplete")
         _synchronize(target, "snapshot.sqlite3", references)
         _complete(path, ".backup-incomplete")
@@ -407,7 +379,7 @@ def inspect_backup(root) -> BackupInfo:
 def restore_backup(root, destination) -> RecordStore:
     """Verify then copy into an absent explicit runtime, publishing artifacts before metadata.
 
-    Original rows/receipts and bytes are preserved. The returned independent store
+    The source schema version, original rows/receipts and bytes are preserved. The returned independent store
     opens only after verification and final barriers; failures retain the destination.
     """
     path, destination = _path(root), _path(destination)
@@ -425,7 +397,7 @@ def restore_backup(root, destination) -> RecordStore:
             raise BackupIntegrityError(f"restore {path}: snapshot changed after inspection")
         _write_file(destination, "metadata.sqlite3", data, readonly=False)
         copied = _read_file(destination, "metadata.sqlite3", readonly=False)
-        if _reference(copied) != info.metadata or _database(destination / "metadata.sqlite3") != info.artifacts:
+        if _reference(copied) != info.metadata or _database(destination / "metadata.sqlite3") != (info.schema_version, info.artifacts):
             raise BackupIntegrityError(f"restore {destination}: copied database mismatch")
         if _layout(target, "metadata.sqlite3", ".restore-incomplete") != {r.digest for r in info.artifacts}:
             raise BackupIntegrityError(f"restore {destination}: object inventory mismatch")

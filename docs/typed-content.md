@@ -11,8 +11,19 @@ truth, implication, sufficiency, execution, approval or support. The pure codecs
 target lookup or artifact availability check. `RecordStore.submit_typed` adds an
 explicit structural admission boundary over durable storage; `submit` remains a
 trusted generic persistence API, not a scientific admission gate. Generic
-submission of a typed-looking envelope does not establish typed target validation. SQLite and backup formats remain version 1;
-original generic history and the oscillator fixture's v1.3 provenance are unchanged.
+submission of a typed-looking envelope does not establish typed target validation.
+Scientific wire version 1 and its four codecs remain unchanged. New metadata
+stores use schema 2 and backup format 2; existing schema-1 stores and format-1
+backups remain supported unchanged. Original generic history and the oscillator
+fixture's v1.3 provenance are unchanged.
+
+Evidence `input_records` may name any of the twenty generic kinds, including
+new generic project, run or source records. Generic `submit` must first commit
+those records; typed admission checks exact existence and declared kinds, while
+excluding input edges from scientific closure traversal. New generic kinds cannot
+be scientific submitted members or targets in context, premise, conclusion,
+evidence or target-claim roles. Schema 1 still rejects new-kind declarations with
+a migration-required error. Names and descriptive input content grant no authority.
 
 ## Constructors and exact wire fields
 
@@ -116,7 +127,7 @@ structural inputs, including evidence itself, without endorsing their contents.
 Order within each collection is retained. Contexts, claims and justifications
 have no direct artifact references. Evidence's `artifact_references` is all
 `artifacts` followed by all `input_artifacts`. `ArtifactReference` and the existing
-version-1 `artifact_links` table have no relationship-label field. Named content
+unchanged `artifact_links` table have no relationship-label field. Named content
 roles and this fixed positional projection encode role identity: the length of
 `artifacts` defines the boundary. No schema or reference change is needed.
 Repeated digests within either role fail, even when sizes differ. A digest may

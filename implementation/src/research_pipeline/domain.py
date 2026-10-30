@@ -9,7 +9,12 @@ import re
 from typing import Any
 
 
-_KINDS = frozenset({"research_context", "claim", "justification", "evidence", "task_specification"})
+_LEGACY_KINDS = frozenset({"research_context", "claim", "justification", "evidence", "task_specification"})
+_KINDS = _LEGACY_KINDS | frozenset({
+    "project", "run", "corpus_manifest", "branch", "source", "work_product_manifest",
+    "tool_release", "tool_assessment", "issue", "review", "promotion_eligibility",
+    "decision", "attempt", "tool_execution", "event",
+})
 _TASK_STATES = frozenset({"proposed", "ready", "blocked", "active", "completed", "cancelled", "abandoned"})
 _IDENTIFIER = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}")
 _TIMESTAMP = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?Z", re.ASCII)

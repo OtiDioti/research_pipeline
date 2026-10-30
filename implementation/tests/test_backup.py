@@ -225,7 +225,7 @@ with restore_backup("relative backup", "relative restored") as restored:
             del value[field]
             variants.append(value)
         for field in ("format_version", "schema_version"):
-            for wrong in (True, 1.0, "1", 0, 2, None):
+            for wrong in (True, 1.0, "1", 0, 99, None):
                 variants.append({**base, field: wrong})
         variants.extend([{**base, "extra": 1}, [], {**base, "artifacts": {}},
                          {**base, "artifacts": []}, {**base, "artifacts": base["artifacts"] * 2},
@@ -282,7 +282,7 @@ with restore_backup("relative backup", "relative restored") as restored:
         self.populate()
         create_backup(self.source, self.destination)
         mutations = [
-            "PRAGMA user_version=2;", "CREATE TABLE extra(value);", "DROP TRIGGER revision_states;",
+            "PRAGMA user_version=99;", "CREATE TABLE extra(value);", "DROP TRIGGER revision_states;",
             "UPDATE identities SET head=1 WHERE record_id='context';",
             "UPDATE identities SET kind='evidence' WHERE record_id='context';",
             "UPDATE revisions SET content_json='{\"changed\":true}' WHERE record_id='context';",

@@ -60,7 +60,8 @@ from `research_pipeline.domain`, `research_pipeline.artifacts` and
 `research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
 low-level generic graph submission/append/reopen/retry example. Select runtime
 directories explicitly outside software source. Creation rejects existing roots; opening gates fixed
-schema version 1 before normal rollback-journal recovery. SQLite uses DELETE/EXTRA,
+schema versions 1 and 2 before normal rollback-journal recovery. New stores use
+schema 2; legacy stores retain old-kind operations without rewriting. SQLite uses DELETE/EXTRA,
 foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
 exact submission retries return original metadata-only receipts even after head
 advancement or later artifact damage. Record/history exposure verifies attached bytes.
@@ -69,7 +70,7 @@ Use the original submission identity to reconcile uncertain commit acknowledgmen
 Real disk and fresh-process tests cover ordering/canonical fingerprints, stale and
 conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
 and later artifact integrity failures. Local test results are advisory to controller
-validation. Remaining scientific kinds,
+validation. Remaining typed payloads and state machines,
 support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, resource
 authorization/accounting, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. There is no duplicate charging
@@ -102,7 +103,13 @@ paper fixture adds no research CLI command or runtime/persistence capability.
 ## Verified local backup and restore
 
 The explicit `research_pipeline.backup` API captures consistent SQLite snapshots,
-verifies historical artifact inventories and restores independent version-1 stores.
+verifies historical artifact inventories and restores independent stores exactly.
+Supported backup format/schema pairs are `(1, 1)` and `(2, 2)`; default restore
+preserves the source version. Schema 2 admits twenty generic kinds while retaining
+claim/task state rules; all fifteen additions require null canonical states.
+Legacy new-kind requests fail with a migration-required error. The separate
+schema-2 administrative history format is validated and preserved, but fresh
+creation invents none and explicit migration is not yet available.
 See [backups](../docs/backups.md) for exact signatures, runnable examples, strict
 manifest verification, retained incomplete directories and uncertain publication
 acknowledgment. This is partial R-019/R-017 evidence; full D02, real research-run/

@@ -17,6 +17,7 @@ from research_pipeline.domain import (
     _identifier, _integer, _snapshot, _MAX_INTEGER,
 )
 from research_pipeline.scientific import ScientificContent, decode_envelope
+from research_pipeline.schema import _VERSIONS, validate_schema, validate_request_kinds, validate_history
 
 
 class StoreError(Exception):
@@ -24,7 +25,7 @@ class StoreError(Exception):
 
 
 class StoreLayoutError(StoreError):
-    """The runtime layout or immutable version-1 schema is missing or unsupported."""
+    """The runtime layout or fixed versioned schema is missing or unsupported."""
 
 
 class StoreClosedError(StoreError):
@@ -55,66 +56,6 @@ class StoreDatabaseError(StoreError):
     """SQLite or metadata integrity failed; COMMIT errors may require identity reconciliation."""
 
 
-# This fixed schema is never migrated or modified after initialization. Comparing
-# its complete DDL checks columns, keys, foreign keys, checks and trigger semantics.
-_SCHEMA = (
-    """CREATE TABLE identities (
-        record_id TEXT PRIMARY KEY NOT NULL,
-        kind TEXT NOT NULL CHECK(kind IN ('research_context','claim','justification','evidence','task_specification')),
-        head INTEGER NOT NULL CHECK(head > 0),
-        FOREIGN KEY(record_id, head) REFERENCES revisions(record_id, revision) DEFERRABLE INITIALLY DEFERRED
-    )""",
-    """CREATE TABLE submissions (
-        submission_id TEXT PRIMARY KEY NOT NULL,
-        request_json TEXT NOT NULL,
-        fingerprint TEXT NOT NULL
-    )""",
-    """CREATE TABLE revisions (
-        record_id TEXT NOT NULL REFERENCES identities(record_id),
-        revision INTEGER NOT NULL CHECK(revision > 0),
-        submission_id TEXT NOT NULL REFERENCES submissions(submission_id),
-        ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
-        content_json TEXT NOT NULL,
-        provenance_json TEXT NOT NULL,
-        operational_status TEXT CHECK(operational_status IN ('proposed','ready','blocked','active','completed','cancelled','abandoned')),
-        scientific_disposition TEXT CHECK(scientific_disposition = 'provisional'),
-        PRIMARY KEY(record_id, revision), UNIQUE(submission_id, ordinal)
-    )""",
-    """CREATE TABLE record_links (
-        record_id TEXT NOT NULL, revision INTEGER NOT NULL, ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
-        relationship TEXT NOT NULL, target_id TEXT NOT NULL, target_revision INTEGER NOT NULL,
-        target_kind TEXT CHECK(target_kind IN ('research_context','claim','justification','evidence','task_specification')),
-        PRIMARY KEY(record_id, revision, ordinal),
-        FOREIGN KEY(record_id, revision) REFERENCES revisions(record_id, revision),
-        FOREIGN KEY(target_id, target_revision) REFERENCES revisions(record_id, revision)
-    )""",
-    """CREATE TABLE artifacts (
-        digest TEXT PRIMARY KEY NOT NULL, size INTEGER NOT NULL CHECK(size >= 0), UNIQUE(digest, size)
-    )""",
-    """CREATE TABLE artifact_links (
-        record_id TEXT NOT NULL, revision INTEGER NOT NULL, ordinal INTEGER NOT NULL CHECK(ordinal >= 0),
-        digest TEXT NOT NULL, size INTEGER NOT NULL,
-        PRIMARY KEY(record_id, revision, ordinal),
-        FOREIGN KEY(record_id, revision) REFERENCES revisions(record_id, revision),
-        FOREIGN KEY(digest, size) REFERENCES artifacts(digest, size)
-    )""",
-    """CREATE TABLE audit_events (
-        event_id INTEGER PRIMARY KEY,
-        submission_id TEXT NOT NULL UNIQUE REFERENCES submissions(submission_id),
-        event_type TEXT NOT NULL CHECK(event_type = 'submission_committed'),
-        committed_at TEXT NOT NULL, provenance_json TEXT NOT NULL
-    )""",
-    """CREATE TRIGGER revision_states BEFORE INSERT ON revisions BEGIN
-        SELECT CASE WHEN NOT (
-            ((SELECT kind FROM identities WHERE record_id = NEW.record_id) = 'claim'
-                AND NEW.scientific_disposition IS 'provisional' AND NEW.operational_status IS NULL)
-            OR ((SELECT kind FROM identities WHERE record_id = NEW.record_id) = 'task_specification'
-                AND NEW.operational_status IS NOT NULL AND NEW.scientific_disposition IS NULL)
-            OR ((SELECT kind FROM identities WHERE record_id = NEW.record_id) IN ('research_context','justification','evidence')
-                AND NEW.operational_status IS NULL AND NEW.scientific_disposition IS NULL)
-        ) THEN RAISE(ABORT, 'invalid kind/state combination') END;
-    END""",
-)
 
 
 def _fault(boundary: str) -> None:
@@ -195,13 +136,10 @@ def _schema_gate(path):
     """
     connection = sqlite3.connect(path.as_uri() + "?mode=ro&immutable=1", uri=True, isolation_level=None)
     try:
-        if connection.execute("PRAGMA user_version").fetchone()[0] != 1:
-            raise StoreLayoutError("unsupported or uninitialized schema version (expected 1)")
-        actual = connection.execute("SELECT sql FROM sqlite_master WHERE sql IS NOT NULL").fetchall()
-        expected = {" ".join(sql.split()) for sql in _SCHEMA}
-        if {" ".join(row[0].split()) for row in actual} != expected or len(actual) != len(_SCHEMA):
-            raise StoreLayoutError("incomplete or malformed version-1 schema")
-    except sqlite3.Error as error:
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+        statements = [row[0] for row in connection.execute("SELECT sql FROM sqlite_master WHERE sql IS NOT NULL")]
+        return validate_schema(version, statements)
+    except (sqlite3.Error, ValueError) as error:
         raise StoreLayoutError(f"cannot inspect fixed schema: {error}") from error
     finally:
         connection.close()
@@ -216,14 +154,15 @@ class RecordStore:
     never rewrite exact history. The owner must prevent external file mutation.
     """
 
-    def __init__(self, artifacts, connection):
-        """Retain private resources supplied by create/open; no implicit initialization."""
+    def __init__(self, artifacts, connection, version):
+        """Retain private resources and validated schema version; no implicit initialization."""
         self._artifacts = artifacts
         self._connection = connection
+        self._schema_version = version
 
     @classmethod
     def create(cls, root) -> "RecordStore":
-        """Create an absent store, commit schema/version together, and sync the layout.
+        """Create an absent schema-2 store, commit DDL/version together, and sync the layout.
 
         Existing roots are rejected unchanged. Failed creation may leave an
         incomplete root, which is retained rather than erased or repaired.
@@ -237,9 +176,9 @@ class RecordStore:
                 connection = _connect(path)
                 try:
                     connection.execute("BEGIN IMMEDIATE")
-                    for statement in _SCHEMA:
+                    for statement in _VERSIONS[2][0]:
                         connection.execute(statement)
-                    connection.execute("PRAGMA user_version=1")
+                    connection.execute("PRAGMA user_version=2")
                     connection.execute("COMMIT")
                 finally:
                     connection.close()
@@ -259,13 +198,25 @@ class RecordStore:
 
     @classmethod
     def open(cls, root) -> "RecordStore":
-        """Reject incomplete restores and gate layout/schema before normal journal recovery."""
+        """Gate layout/schema, recover legitimate journals, then validate live administrative history."""
         try:
             artifacts = ArtifactStore.open(root)
             path = artifacts._root / "metadata.sqlite3"
             _check_database_file(artifacts._root)
-            _schema_gate(path)
-            return cls(artifacts, _connect(path))
+            version = _schema_gate(path)
+            connection = _connect(path)
+            try:
+                # Live administrative rows must be read after legitimate journal recovery.
+                if version == 2:
+                    try:
+                        validate_history(connection.execute("SELECT * FROM migration_history").fetchall(),
+                                         connection.execute("SELECT digest,size FROM artifacts").fetchall())
+                    except (ValueError, TypeError, RecursionError, OverflowError) as error:
+                        raise StoreLayoutError(f"invalid migration history: {error}") from error
+                return cls(artifacts, connection, version)
+            except BaseException:
+                connection.close()
+                raise
         except (ArtifactLayoutError, OSError) as error:
             raise StoreLayoutError(f"open store: {error}") from error
         except sqlite3.Error as error:
@@ -381,7 +332,7 @@ class RecordStore:
     def _commit_submission(self, submission, required):
         """Commit a normalized request with immutable typed requirements via one algorithm.
 
-        Reconciliation precedes all availability/CAS checks. Exact revisions and links
+        Reconciliation precedes schema-kind admission and all availability/CAS checks. Exact revisions and links
         are append-only under supported APIs; serialized target inspection and CAS
         share this transaction even when independent handles advance heads. The owner
         must still prevent external database/file mutation.
@@ -395,6 +346,7 @@ class RecordStore:
                 if old[0] != canonical:
                     raise SubmissionConflictError(f"submission {submission.submission_id}: different canonical request")
                 return self._receipt(connection, submission.submission_id)
+            validate_request_kinds(submission, self._schema_version)
             self._check_batch(connection, submission)
             self._check_scientific_targets(connection, submission, required)
             _fault("before_metadata")

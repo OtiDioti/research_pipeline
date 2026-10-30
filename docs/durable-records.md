@@ -51,10 +51,20 @@ must be valid; leap seconds and other timezone spellings are not accepted. Value
 normalize to six fractional digits. This is attributed creation information,
 not authenticated execution or a database commit timestamp.
 
-The five supported kinds are `research_context`, `claim`, `justification`,
-`evidence`, and `task_specification`. They are common envelopes, not full
-scientific payload schemas or all specification §5.1 records. Four explicit
-content schemas are available separately through [typed codecs](typed-content.md).
+Schema 1 supports `research_context`, `claim`, `justification`, `evidence`, and
+`task_specification`. New stores use schema 2, which also supports `project`, `run`,
+`corpus_manifest`, `branch`, `source`, `work_product_manifest`, `tool_release`,
+`tool_assessment`, `issue`, `review`, `promotion_eligibility`, `decision`, `attempt`,
+`tool_execution`, and `event`. All twenty use the same immutable envelope, opaque
+identities, explicit revisions, ordered exact references and creation attribution.
+
+`claim` names an immutable claim revision envelope. `corpus_manifest` covers the
+corpus/seed manifest. A generic scientific `event` envelope is distinct from the
+internal `submission_committed` audit event. These generic names supply neither
+full payload contracts nor state machines, scientific authority or promotion.
+In particular, descriptive review, decision, eligibility or execution assertions
+cannot grant authority. Four explicit scientific content schemas remain available
+separately through [typed codecs](typed-content.md).
 
 | Kind | Required canonical state |
 | --- | --- |
@@ -253,7 +263,9 @@ erased, repaired or swept. Missing, symlinked, nonregular, foreign-owned or
 group/other-accessible database files are rejected. Runtime data must stay outside
 software source; relative paths use the caller's working directory.
 
-Version 1 (`PRAGMA user_version`) and DDL commit in one explicit transaction.
+New creation commits version 2 (`PRAGMA user_version=2`) and its DDL in one
+explicit transaction. There is no public legacy-creation option. Schema 1 remains
+supported for reads, old-kind append, receipts, retries and backups without rewriting.
 Opening first rejects any `.restore-incomplete` entry without repair or removal.
 The [backup/restore API](backups.md) removes this marker only after complete copy
 verification and synchronization. Existing unmarked version-1 stores remain supported.
@@ -268,7 +280,7 @@ This gate relies on the schema/version never changing after initialization and
 on absence of WAL. It deliberately ignores hot journals and must never be used for
 live data, head/receipt queries, integrity conclusions or recovery. After the gate,
 the operational connection uses a correctly encoded SQLite URI with `mode=rw`,
-allowing legitimate version-1 hot rollback journal recovery. WAL headers/sidecars
+allowing legitimate hot rollback journal recovery for either supported version. WAL headers/sidecars
 and unsafe rollback-journal objects are rejected without conversion.
 
 Connections use rollback-journal `DELETE`, `synchronous=EXTRA`, `foreign_keys=ON`
@@ -284,10 +296,32 @@ it is not protection from a hostile owner. The separate
 ## Atomic submission, exact links and recovery
 
 Inside the serialized write transaction, submission identity is checked **before**
-heads, references or current artifact availability. Identical canonical text returns
+schema-kind admission, heads, references or current artifact availability. Identical canonical text returns
 the original receipt without any metadata changes or another event, even after a
 later revision advances. Different text conflicts atomically. Only affected
 identities' expected heads are compared; unrelated events never invalidate them.
+
+For a new request on schema 1, every submitted kind and non-null declared target
+kind must belong to the original five-kind set. Otherwise `DomainValidationError`
+names the kind and schema version and explains that migration is required. This
+check precedes batch resolution, artifact synchronization and all metadata writes;
+a mixed old/new batch leaves every table unchanged. Conflicting submission IDs
+still take precedence, and exact retries recover the original receipt even when
+heads have advanced or artifact bytes are damaged. Opening never upgrades a store;
+explicit migration is unavailable in this milestone.
+
+Schema 2 includes a separate `migration_history` administrative table. Fresh
+creation leaves it empty. Its optional singleton row records only transition
+1→2, the canonical complete format-1/schema-1 source manifest and its SHA-256
+backup identity, and explicit complete `CreationProvenance`. The manifest retains
+the exact source metadata digest/size. Both JSON texts must be canonical, with
+finite values, no duplicate keys and an explicit canonical timestamp. Source
+artifact registrations must still match current registrations; later appends may
+add more. Validation runs on the operational connection after journal recovery,
+closing the handle on failure. History is neither a submission nor a scientific
+event, and it cannot authenticate a hostile owner's coherent rewrite. There is
+no public insertion or migration API yet; [backup inspection](backups.md) also
+checks this format in standalone snapshots.
 
 All proposed exact revisions are indexed before resolution. A link may point to an
 old committed revision or any member of the batch, independent of record order.

@@ -31,7 +31,7 @@ for exact commands and environment requirements.
 `ArtifactReference`, `RecordEnvelope`, `Submission`, `SubmissionReceipt` and
 `AuditEvent` values with runtime validation and detached
 serialization. Private canonical JSON snapshots isolate mutable content and details.
-Five common envelope kinds are supported; generic envelopes retain arbitrary
+Twenty common envelope kinds are supported in schema 2; generic envelopes retain arbitrary
 strict JSON content. Task operational state and provisional claim disposition
 are independent.
 
@@ -58,11 +58,20 @@ bound unsafe filesystem handling. Failure can retain objects or staging entries;
 the API does not sweep or repair them.
 
 `research_pipeline.store` uses the artifact layout plus a private mode-0600
-`metadata.sqlite3`. It creates only absent roots and gates opening on the fixed
-version-1 schema through a read-only immutable preflight, before allowing normal
+`metadata.sqlite3`. It creates schema 2 only in absent roots and gates opening on the fixed
+version-1 or version-2 schema through a read-only immutable preflight, before allowing normal
 SQLite rollback-journal recovery. This preflight is solely for fixed schema/version,
 never live data or integrity conclusions. Operational connections require DELETE
 journaling, EXTRA synchronization, foreign keys and a 5000 ms busy timeout.
+
+`research_pipeline.schema` owns a fixed two-entry DDL/kind/backup-format registry
+and pure manifest/history validation, depending only on domain values and the
+standard library. It owns no SQLite connections or filesystem work. Schema 1's
+exact five-kind DDL remains supported; schema 2 extends the kind checks and state
+trigger and adds a singleton administrative history table, empty on fresh creation.
+Operational connections validate administrative rows after journal recovery.
+Restore-time migration is not yet exposed. See [version contracts](durable-records.md)
+for kind mappings and [backup pairs](backups.md) for exact-copy verification.
 
 Explicit `BEGIN IMMEDIATE` transactions compare relevant expected heads and append
 revisions, exact ordered links, artifact registrations, submission identity and one
@@ -80,7 +89,7 @@ commands or dependencies. The [durable contract and runnable example](durable-re
 give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptions,
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
-Remaining scientific kinds, support/assessment
+Remaining typed payloads and state machines, support/assessment
 freshness, eligibility/promotion, worker isolation, leases/fencing, resource authorization/accounting, general migrations,
 periodic scheduling, distributed execution and research execution remain
 unsupported. No ledger means no duplicate charging guarantee. This slice does not

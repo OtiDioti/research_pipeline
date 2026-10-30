@@ -670,7 +670,7 @@ with RecordStore.create("caller-relative") as store:
         self.assertEqual(observed[-2:], [((root / "metadata.sqlite3").stat().st_ino, True), (root.stat().st_ino, False)])
         self.assertEqual(stat.S_IMODE((root / "metadata.sqlite3").stat().st_mode), 0o600)
         incomplete = self.parent / "incomplete"
-        with patch("research_pipeline.store._SCHEMA", module._SCHEMA[:2] + ("INVALID SQL",)):
+        with patch("research_pipeline.store._VERSIONS", {2: (module._VERSIONS[2][0][:2] + ("INVALID SQL",),)}):
             with self.assertRaises(StoreDatabaseError): RecordStore.create(incomplete)
         self.assertTrue((incomplete / "metadata.sqlite3").exists())
         connection = sqlite3.connect((incomplete / "metadata.sqlite3").as_uri() + "?mode=ro", uri=True)

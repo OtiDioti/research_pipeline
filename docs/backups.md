@@ -1,7 +1,7 @@
 # Verified local backup and restoration
 
 `research_pipeline.backup` provides an explicit trusted-controller boundary for
-version-1 `RecordStore` data. Import directly from this submodule. Imports are
+schema-1 and schema-2 `RecordStore` data. Import directly from this submodule. Imports are
 inert; there is no CLI, dependency, environment-selected location, scheduler,
 worker endpoint or general SQL interface. Callers select paths outside software
 source, relative to their working directory or absolute, under existing parents.
@@ -25,7 +25,7 @@ manifest cannot be detected as an external-authority forgery.
 
 ## Format and verification
 
-A complete version-1 backup contains exactly:
+A complete backup of either supported version contains exactly:
 
 ```text
 backup/
@@ -43,6 +43,13 @@ manifest field set is:
 {"format_version":1,"schema_version":1,"metadata":{"digest":"<64 lowercase hex characters>","size":123},"artifacts":[{"digest":"<64 lowercase hex characters>","size":456}]}
 ```
 
+Only `(format_version, schema_version)` pairs `(1, 1)` and `(2, 2)` are supported.
+The example shows the historical format-1 representation; format 2 has the same
+four exact fields and reference shapes with both version values set to 2.
+Legacy canonical serialization and `backup_id` hashing are unchanged. Crossed
+pairs, unknown versions and disagreement with the actual database are rejected.
+Capture selects its version from the captured snapshot, never from live state.
+
 Versions and sizes must be ordinary integers, excluding booleans. Artifact entries
 are digest-sorted and unique, with exactly `digest` and `size` fields; no entry
 provides a path. Metadata always names `snapshot.sqlite3`. Empty inventory is
@@ -51,7 +58,10 @@ unknown/missing fields, invalid scalar types and unsupported versions. Extra roo
 entries, SQLite sidecars, extra objects and nonempty `.staging` are rejected.
 
 Inspection checks the actual snapshot digest and size, standalone DELETE-journal
-header, fixed version-1 DDL gate, SQLite integrity and foreign keys. It reconstructs
+header, exact version-specific DDL gate, SQLite integrity and foreign keys.
+The manifest schema must equal the actual metadata schema. Canonical request
+kinds and declared reference kinds must be allowed by that schema, so the broader
+domain does not weaken legacy verification. It reconstructs
 strict canonical submission requests and fingerprints and compares every ordered
 normalized revision and link against them, keeping `1`, `1.0` and `true` distinct.
 It checks original event attribution/timestamps, membership, head expectations,
@@ -94,8 +104,26 @@ and original provenance are copied without rewriting. Source orphan objects,
 There is no garbage collector and the source is unchanged. Artifact copying uses
 the accepted full-byte-buffer API, so memory includes the largest artifact (and
 buffered snapshot/manifest bytes). Copies have independent database/object inodes.
-The restored runtime accepts ordinary new artifacts and submissions without changing
-the backup or source.
+Default restoration is exact: schema 1 yields schema 1 and schema 2 yields
+schema 2, with original metadata bytes, identities and receipts. Restored v1
+stores accept old-kind appends and reject v2-only submitted or declared reference
+kinds with a migration-required `DomainValidationError`. Restored v2 stores accept
+all twenty generic kinds. Neither path changes the backup or source. Explicit
+restore-time migration remains unavailable until the next milestone.
+
+Schema 2's separate `migration_history` table is empty on fresh creation. If
+present, its singleton administrative row records `migration_id=1`,
+`source_schema=1`, `target_schema=2`, `source_backup_id`, `source_manifest_json`,
+and `provenance_json`. The complete canonical legacy source manifest retains the
+source metadata digest/size and artifact inventory, and hashes to the recorded
+source backup identity. Attribution requires explicit actor, canonical UTC time
+and details. Strict duplicate-free finite JSON, exact manifest fields/order,
+canonical text, and matching current source-artifact registrations are verified.
+Later registrations are allowed. This is internal consistency, not external
+authentication. Inspection validates it on the standalone snapshot; open validates
+live history after legitimate journal recovery. Exact backup/restoration preserves
+these values without inserting a submission or scientific event. No public
+history insertion or migration operation exists in this milestone.
 
 ## Completeness, errors and recovery
 
