@@ -23,6 +23,7 @@ For this first run, do not authorize automatic merge. Inspect the real final rep
 
 Before ending, leave an accurate handoff and exactly one next safe action. Update tracked checkpoint files only when doing so cannot interfere with an active or still-bound run. Never claim a phase is complete merely because code exists or a command exited successfully.
 
+When using ```coding_pipeline``` ensure that model used is astra 6.1. The thinking effort should then be chosen according to the workload required, but should never go past extra-high.
 # Important
 ```coding_pipeline``` may still present issues in its functioning. It may sometimes crash, or otherwise not perform the operations as intended. If ```coding_pipeline``` does not work as intended you are allowed to alter its source code to debug it or alter its internal behavior. In the eventual case this becomes necessary, make sure to keep your edits focused and aimed at addressing the issues at hand to limit the introduction of new code. In the scenario such changes are required, generate a coding_pipeline_changes.md file and log any change you had to make so that I can review all of them at a later date. 
 
@@ -42,6 +43,7 @@ Otherwise choose the next ready request within the explicitly recorded phase and
 
 After a safe terminal outcome and authorized integration, update the run record, requirement evidence, phase progress, backlog, changelog where applicable, and STATUS.md together. State what remains unsupported and leave one next safe action. Stop on a material scope change, uncertain side effect, exhausted authorization, or unresolved blocker.
 
+When using ```coding_pipeline``` ensure that model used is astra 6.1. The thinking effort should then be chosen according to the workload required, but should never go past extra-high.
 # Important
 ```coding_pipeline``` may still present issues in its functioning. It may sometimes crash, or otherwise not perform the operations as intended. If ```coding_pipeline``` does not work as intended you are allowed to alter its source code to debug it or alter its internal behavior. In the eventual case this becomes necessary, make sure to keep your edits focused and aimed at addressing the issues at hand to limit the introduction of new code. In the scenario such changes are required, generate a coding_pipeline_changes.md file and log any change you had to make so that I can review all of them at a later date. 
 
