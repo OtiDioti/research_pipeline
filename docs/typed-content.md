@@ -10,7 +10,7 @@ The separate [attributed assessment contract](attributed-assessments.md) adds pu
 Review/Issue values and exact envelopes with its own discriminator. Its reported
 dimensions are content, separate from canonical state. Durable `submit_typed` and
 `get_typed_revision` support all four scientific kinds, both assessment kinds and
-[work-product manifests](work-products.md),
+[work-product manifests](work-products.md) and [Source captures](sources.md),
 with constrained traversal and exact review route-conclusion membership checks.
 
 This contract establishes structural coherence, not scientific completeness,
@@ -26,7 +26,7 @@ fixture's v1.3 provenance are unchanged.
 
 Evidence `input_records` may name any of the twenty generic kinds, including
 new generic project, run or source records. Commit generic records separately
-through `submit`; the seven supported typed kinds may share a typed batch with
+through `submit`; the eight supported typed kinds may share a typed batch with
 forward references. Input roles check exact existence and declared kinds without
 extending constrained traversal. Generic project/run/source content cannot serve
 as typed members or targets in context, premise, conclusion, evidence or
@@ -193,11 +193,11 @@ explicit controller attribution, ordered members and an expectation for each
 identity (`0` for creation). The public methods are:
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source]`
 
 A typed batch contains any of the four scientific kinds, the two
 [assessment kinds](attributed-assessments.md) and coherent
-[work-product manifests](work-products.md), in any order. Commit generic tasks,
+[work-product manifests](work-products.md) and [Source captures](sources.md), in any order. Commit generic tasks,
 arbitrary generic manifests, policies and executions separately through `submit`;
 evidence may name them as exact inputs. All supplied members are defensively reconstructed and decoded,
 including complete ordered content/link agreement. No links are repaired from
@@ -212,7 +212,9 @@ rule applies recursively to constrained roles reached through historical targets
 Review candidate/context/reported-Evidence/route and Issue supporting-Evidence
 roles extend this same traversal. Manifest context/linked-claim/supersedes roles
 also require typed targets; task/branch/run/source/build-dependency roles remain
-shallow. Review manifest/policy/reported-ToolExecution
+shallow. Source supersedes/report/reported-Evidence roles are constrained, with
+report product-kind and typed predecessor continuity checks; related sources and
+reported executions stay shallow. Review manifest/policy/reported-ToolExecution
 and Issue affected-record roles remain shallow existence/kind checks; the
 [complete role table](attributed-assessments.md#durable-api-and-exact-traversal)
 specifies both contracts. Every assessed route must conclude its Review's exact
@@ -254,7 +256,7 @@ reading object bytes. It promises structural coherence, not transitive artifact
 availability. New batch attachments undergo full existing commit verification.
 `get_typed_revision` reuses the snapshot-consistent generic exact read, verifies
 its direct attachments, and decodes the detached envelope. It returns both the
-original identity/provenance/state/links and the scientific or assessment value.
+original identity/provenance/state/links and the scientific, assessment, manifest or Source value.
 Missing exact revisions retain `RecordNotFoundError`, direct-artifact errors propagate, and
 closed handles retain `StoreClosedError`. A typed read checks the selected
 revision's content and links; it does not certify historical typed admission or
@@ -272,7 +274,7 @@ ID. `get_submission` retrieves metadata but alone cannot establish request equal
 Never substitute a new ID to resolve uncertainty.
 
 Existing backups preserve typed and generic history, canonical requests, ordered
-links, receipts and events without interpreting scientific or assessment versions.
+links, receipts and events without interpreting typed content versions.
 Unsupported typed versions remain valid generic backup data and fail typed reads. Capture
 a healthy backup before artifact damage: capture/inspection verifies all historical
 objects. Restored stores retain exact-retry reconciliation even if bytes later fail.

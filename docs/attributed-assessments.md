@@ -163,15 +163,16 @@ or decision. `CreationProvenance` is copied caller attribution, not authenticati
 ## Durable API and exact traversal
 
 Import `RecordStore` from `research_pipeline.store` and the shared `Submission`
-from `research_pipeline.domain`. The existing durable methods support seven kinds:
-ResearchContext, Claim, Justification, Evidence, Review, Issue and
-[WorkProductManifest](work-products.md).
+from `research_pipeline.domain`. The existing durable methods support eight kinds:
+ResearchContext, Claim, Justification, Evidence, Review, Issue,
+[WorkProductManifest](work-products.md) and [Source](sources.md).
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source]`
 
 Use the scientific encoder for scientific content and the assessment encoder for
-Review/Issue, and the work-product encoder for coherent manifests. Mixed typed batches permit arbitrary member order and forward
+Review/Issue, the work-product encoder for coherent manifests, and the Source
+encoder for source captures. Mixed typed batches permit arbitrary member order and forward
 references, including Issue affected references to later Review/Issue members.
 Every member must decode independently. Commit arbitrary generic manifests, policies,
 ToolExecutions, tasks and other generic records separately with `submit`.
@@ -192,6 +193,7 @@ from the successfully decoded value, never from arbitrary generic field names.
 | Review | `candidate_claim` → claim; `target_context` → research_context; `reported_evidence` → evidence; `assessed_route` → justification | `context_manifest` → work_product_manifest; `authorization_policy` → decision; `reported_tool_execution` → tool_execution |
 | Issue | `supporting_evidence` → evidence | `affected_record` → any supported kind, including scientific, review and issue |
 | WorkProductManifest | `context` → research_context; `linked_claim` → claim; `supersedes` → work_product_manifest | `task` → task_specification; `branch` → branch; `run` → run; `linked_source` → source; `build_dependency` → any explicitly declared supported kind |
+| Source | `supersedes` → source; `reading_report` → work_product_manifest with product_kind reading_report; `reported_evidence` → evidence | `related_source` → source; `reported_tool_execution` → tool_execution |
 
 Traversed targets require supported typed content and complete coherent ordered
 links. Their constrained outgoing edges follow the same rules; their generic
@@ -205,6 +207,19 @@ its constrained outgoing roles. Envelope-local identity/revision rules apply eve
 to historical targets. Every incoming constrained edge checks its required kind. A finite worklist
 with separate decoded/processed caches terminates descriptive cycles without
 imposing an accepted-deduction cycle policy.
+
+[Source capture history](sources.md) additionally checks the immediately preceding
+capture on new admission and historical constrained closure: an explicitly typed
+Source predecessor must be coherent, have the same `work_id`, and be pinned by
+supersedes. A legacy generic predecessor permits a first typed revision with null
+supersedes without certification. Every incoming Source reading-report edge checks
+`product_kind=reading_report`, including cached targets. These checks are metadata-only.
+Adding Source does not strengthen manifest `linked_source`, Evidence `input_record`,
+Issue `affected_record` or any other shallow role: generic, unsupported or incoherent
+Source payloads and damaged transitive attachments remain eligible shallow targets
+if exact existence/kind checks pass. All independently submitted typed members still
+require coherent typed content. References authenticate neither actors nor exposure,
+execution, approval or scientific support.
 
 For every submitted Review, each assessed Justification's conclusions must contain
 the candidate's exact `(record_id, revision)`. Relationship labels differ between

@@ -51,3 +51,10 @@ publication, with an executed example. [Preview and explicit import](work-produc
 adds canonical base validation,
 bounded capture, change summaries and durable frozen proposals for separate typed
 commit and original-ID recovery, with an executed round-trip example. D02 is partial.
+
+[Versioned Source captures](sources.md) documents bounded typed acquisition declarations,
+unknown metadata, original/derived lineage and locations, independent capture/upstream/report
+versions, history admission and exact reference projections. Its runnable synthetic
+persistence example appends and reopens captures without parsing or claiming reading.
+Legacy generic sources and shallow source links remain supported. Local-file
+preparation, saved Source proposals and scientific readiness remain separate work.

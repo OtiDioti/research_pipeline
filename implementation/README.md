@@ -83,7 +83,7 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
 evidence, strict codecs, exact role projection and runnable codec/persistence examples.
-`RecordStore.submit_typed` admits the four scientific, two assessment and work-product manifest kinds
+`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest and Source kinds
 as coherent exact typed target graphs atomically;
 `get_typed_revision` returns the exact envelope and decoded value. `submit` remains
 a trusted generic persistence API, not a scientific admission gate. Typed retries
@@ -151,3 +151,11 @@ local descriptors or certify edited bytes.
 detached summaries and strict saved proposals for separate `submit_typed` commit and
 original-ID recovery. Full vault/intake, scientific sufficiency and research execution
 remain deferred; D02 is partial.
+
+[Versioned Source captures](../docs/sources.md) add bounded bibliographic declarations,
+explicit unknowns, original/derived artifact lineage, exact locations and attributed
+reading/statements. Capture, upstream and reading-report revisions remain distinct.
+Typed history preserves work identity while old exact references and original receipts
+remain pinned. Generic historical source payloads and existing shallow source roles
+remain supported. The runnable synthetic example executes no parser and reads no
+paper. Local-file capture/preparation and saved Source proposals are separate work.

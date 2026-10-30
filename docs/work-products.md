@@ -249,3 +249,14 @@ with TemporaryDirectory(prefix="work-products-example-", dir="/tmp") as temporar
         assert second.operational_status is None and second.scientific_disposition is None
         assert reopened.submit_typed(initial) == receipt
 ```
+
+## Source reading reports
+
+A [typed Source](sources.md) may pin a separate manifest with
+`product_kind="reading_report"` through its constrained `reading_report` role.
+A different product kind fails Source admission, including historical constrained
+closure. Report revisions append independently: capture revision and descriptive
+upstream version never imply a report revision. Manifest `linked_source` stays
+shallow and can still name legacy generic, unsupported or incoherent Source content
+without traversing its history or checking its attachments. Existing exact uses
+remain pinned when a capture or report advances.

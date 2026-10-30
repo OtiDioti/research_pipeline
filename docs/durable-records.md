@@ -14,7 +14,7 @@ an intentionally separate paper example.
 and exact envelope-link coherence for four scientific kinds.
 `research_pipeline.assessment` adds [attributed Review/Issue contracts](attributed-assessments.md)
 with a distinct format. `submit_typed` provides durable structural admission for
-all seven kinds, including [work-product manifests](work-products.md), and checks
+all eight kinds, including [work-product manifests](work-products.md) and [Source captures](sources.md), and checks
 exact review route-conclusion membership; `get_typed_revision` returns an exact
 envelope and decoded value. `submit` remains a trusted generic persistence API,
 not a scientific admission gate: generic submission resolves
@@ -226,8 +226,8 @@ No installation or package-level re-exports are needed.
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
 | `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
 | `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
-| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all seven supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
-| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment or work-product value. No historical admission certificate. |
+| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all eight supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
+| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product or Source value. No historical admission certificate. |
 | `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
 | `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
 | `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |

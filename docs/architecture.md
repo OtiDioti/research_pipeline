@@ -62,15 +62,19 @@ capture and compares the descriptor with a caller-pinned canonical base. Its nar
 store preview helper checks typed admission in a read snapshot without metadata writes.
 Frozen serialized proposals are committed separately through `submit_typed`; its
 original-ID reconciliation order is unchanged. See [preview and explicit import](work-product-import.md).
-`RecordStore.submit_typed` selects the scientific, assessment or work-product codec
-explicitly and decodes every member locally, admitting mixed seven-kind batches. For a new canonical
+`RecordStore.submit_typed` selects the scientific, assessment, work-product or Source codec
+explicitly and decodes every member locally, admitting mixed eight-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized
 write transaction after submission-ID reconciliation. Historical target checks read metadata; public exact reads verify
 direct artifacts. The traversal follows explicit per-kind constrained roles;
 Review manifest/policy/ToolExecution, Issue affected-record and Evidence input roles
 check only exact existence and declared kind. Manifest context/linked-claim/supersedes
 roles are constrained typed edges; task/branch/run/source/build-dependency roles
-remain shallow. No transitive artifact verification is added. Every submitted Review's assessed route
+remain shallow. [Source](sources.md) adds bounded capture declarations and typed
+predecessor/work identity continuity; its report edges require a reading-report
+manifest on every incoming edge. Related sources and reported executions stay
+shallow. Legacy generic source content remains supported. No transitive artifact
+verification is added. Every submitted Review's assessed route
 must conclude its exact candidate, without equating their contexts. See the
 [complete traversal contract](attributed-assessments.md#durable-api-and-exact-traversal).
 `get_typed_revision` returns the detached envelope and typed value without recursively
