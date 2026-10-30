@@ -27,6 +27,7 @@ continued use and a runnable synthetic example. This is partial R-019/R-017 evid
 full D02, periodic scheduling and research-run/session/job recovery remain outstanding.
 
 [Typed scientific content](typed-content.md) documents the four pure versioned
-contracts, strict codecs, exact envelope links and structural limits. Its runnable
-example requires no storage or execution. Typed durable admission/read remains
-unimplemented; the trusted generic RecordStore is not a scientific admission gate.
+contracts, strict codecs, exact envelope links, durable typed admission/read and
+structural limits. Runnable codec and synthetic persistence examples demonstrate
+exact historical scope and original-receipt retries. `submit_typed` is the explicit
+structural admission boundary; generic `submit` is not a scientific admission gate.

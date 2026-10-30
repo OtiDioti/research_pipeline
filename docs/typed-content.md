@@ -7,11 +7,11 @@ storage or scientific work. The implementation uses only the standard library
 and existing domain values.
 
 This contract establishes structural coherence, not scientific completeness,
-truth, implication, sufficiency, execution, approval or support. It performs no
-target lookup or artifact availability check. **The typed durable submit/read API
-is not yet implemented.** `RecordStore` remains a trusted generic persistence API,
-not a scientific admission gate. Do not treat generic submission of one of these
-envelopes as typed target validation. SQLite and backup formats remain version 1;
+truth, implication, sufficiency, execution, approval or support. The pure codecs perform no
+target lookup or artifact availability check. `RecordStore.submit_typed` adds an
+explicit structural admission boundary over durable storage; `submit` remains a
+trusted generic persistence API, not a scientific admission gate. Generic
+submission of a typed-looking envelope does not establish typed target validation. SQLite and backup formats remain version 1;
 original generic history and the oscillator fixture's v1.3 provenance are unchanged.
 
 ## Constructors and exact wire fields
@@ -165,6 +165,141 @@ rewritten or silently reinterpreted. Descriptive execution/approval/support text
 cannot change canonical provisional claims or grant an authentic evidence origin.
 Completed tasks retain their separate generic operational state.
 
+## Durable admission and exact reads
+
+Import `RecordStore` from `research_pipeline.store`. Construct each member with
+`encode_envelope(record_id, revision, content, provenance)` and construct the
+existing `Submission(submission_id, provenance, records, expected_heads)` with
+explicit controller attribution, ordered members and an expectation for each
+identity (`0` for creation). The public methods are:
+
+- `submit_typed(submission: Submission) -> SubmissionReceipt`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent]`
+
+A typed batch contains only the four supported scientific kinds, in any order.
+Commit generic task records separately through `submit`; evidence may name them
+as exact inputs. All supplied members are defensively reconstructed and decoded,
+including complete ordered content/link agreement. No links are repaired from
+content. Local codec failures remain `DomainValidationError`; absent format
+markers remain its `NotTypedContentError` subtype.
+
+For a new request, `context`, `premise`, `conclusion`, `evidence` and `target_claim`
+roles resolve first against the complete proposed batch and then against exact
+committed revisions, never current target heads. Each target must have the
+required kind and supported typed content with coherent stored links. The same
+rule applies recursively to constrained roles reached through historical targets.
+A finite worklist caches exact identities/revisions, checking every incoming kind
+and visiting before following outgoing edges; repeated roles and provisional
+cycles terminate without imposing an acyclicity rule. No cross-record context
+equality, assumption implication or scientific sufficiency is inferred.
+
+Evidence `input_record` edges require existence and any explicitly declared kind,
+but do not require typed content or extend this scientific traversal, even when
+the declared kind is claim, context or evidence. An input also used in a
+constrained role must meet that role's typed requirements. Missing or wrong-kind
+targets raise `ReferenceResolutionError` naming the role and exact target.
+Invalid/untyped historical target content raises the same error with the codec
+failure chained. Submitted-member errors remain codec/domain errors.
+
+Both submit methods use the same canonical request, SHA-256 fingerprint,
+transaction, receipt/event sequence and fault boundaries. Inside `BEGIN IMMEDIATE`,
+request equality is checked first: exact identity reuse returns the complete
+original receipt; a different canonical request raises `SubmissionConflictError`.
+Only uncommitted requests undergo head/revision/stable-kind checks, exact target
+inspection and direct-artifact verification/synchronization. All checks precede
+metadata insertion. Heads, revisions, ordered links, submission and event commit
+atomically; every revision is inserted before links so forward references work.
+Stale expectations retain `RevisionConflictError`; artifact and database errors
+retain the generic store contract. A rejected request leaves all committed rows
+unchanged (already published orphan bytes may remain).
+
+Target inspection and CAS share the serialized write transaction. Supported APIs
+append revisions/links without rewriting history; independent handles may advance
+heads but cannot mutate exact historical targets. No sampled head or
+out-of-transaction admission cache is trusted. The runtime owner must still
+prevent external database/file mutation. A new claim may deliberately retain an
+older context revision after its head advances.
+
+Historical target admission reconstructs normalized metadata and links without
+reading object bytes. It promises structural coherence, not transitive artifact
+availability. New batch attachments undergo full existing commit verification.
+`get_typed_revision` reuses the snapshot-consistent generic exact read, verifies
+its direct attachments, and decodes the detached envelope. It returns both the
+original identity/provenance/state/links and the scientific value. Missing exact
+revisions retain `RecordNotFoundError`, direct-artifact errors propagate, and
+closed handles retain `StoreClosedError`. A typed read checks the selected
+revision's content and links; it does not certify historical typed admission or
+perform scientific assessment. Generic reads continue exposing original generic,
+unsupported and incoherent scientific documents without rewriting them.
+
+Exact retry remains a historical acknowledgment after heads advance or bytes
+become missing/corrupt. It requires fresh local request decoding but reaches no
+target, head or artifact validation. This includes an identical request originally
+written through trusted generic `submit`; the receipt is not a retroactive typed
+admission certificate. Mapping-key order is immaterial; ordered content,
+attribution and expectations participate in equality. After uncertain COMMIT or
+lost acknowledgment, reopen and resubmit the original request with its original
+ID. `get_submission` retrieves metadata but alone cannot establish request equality.
+Never substitute a new ID to resolve uncertainty.
+
+Existing backups preserve typed and generic history, canonical requests, ordered
+links, receipts and events without interpreting scientific versions. Unsupported
+scientific versions remain valid generic backup data and fail typed reads. Capture
+a healthy backup before artifact damage: capture/inspection verifies all historical
+objects. Restored stores retain exact-retry reconciliation even if bytes later fail.
+
+## Runnable synthetic persistence example
+
+From the repository root, run the following Python block with
+`PYTHONPATH="$PWD/implementation/src" /home/francesco/miniconda3/bin/python3 -B`.
+It creates an explicit disposable runtime under `/tmp`, performs only synthetic
+persistence, and is executed verbatim by the integration tests.
+
+```python
+from dataclasses import replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from research_pipeline.domain import CreationProvenance, RecordReference, Submission
+from research_pipeline.scientific import (
+    ResearchContext, Claim, Justification, Evidence, encode_envelope,
+)
+from research_pipeline.store import RecordStore
+
+creator = CreationProvenance("synthetic-author", "2026-10-30T12:00:00Z")
+controller = CreationProvenance("controller", "2026-10-30T12:01:00Z")
+scope = ResearchContext("Does f(x) = x?", ["f(x) = x"], [], [], [],
+                        ["x ∈ ℝ"], [], [], [], [], [])
+context_ref = RecordReference("scope", 1, "context", "research_context")
+claim = Claim("f(x) = x", "synthetic declaration", ["∀ x ∈ ℝ"],
+              context_ref, [], [], ["No scientific assessment"])
+conclusion = RecordReference("claim", 1, "conclusion", "claim")
+route = Justification(context_ref, [], [], "declared route", [conclusion], [], [])
+alternative = replace(route, method="independent alternative route")
+
+with TemporaryDirectory(prefix="typed-example-", dir="/tmp") as temporary:
+    root = Path(temporary) / "runtime"
+    with RecordStore.create(root) as store:
+        artifact = store.put_artifact(b"synthetic declared observation")
+        evidence = Evidence([artifact], context_ref, "identity property", [],
+                            "synthetic method", [], [], [], "declared result", [], [], "synthetic")
+        members = [encode_envelope(name, 1, value, creator) for name, value in (
+            ("route", route), ("alternative", alternative), ("claim", claim),
+            ("evidence", evidence), ("scope", scope))]  # Forward context references.
+        initial = Submission("initial", controller, members, {m.record_id: 0 for m in members})
+        receipt = store.submit_typed(initial)
+        changed = replace(scope, parameter_regime=("ε > 0",), limit_ordering=("ε → 0",))
+        appended = [encode_envelope("scope", 2, changed, creator),
+                    encode_envelope("claim", 2, replace(claim, statement="Retain original scope"), creator)]
+        store.submit_typed(Submission("append", controller, appended, {"scope": 1, "claim": 1}))
+    with RecordStore.open(root) as store:
+        old_envelope, old_scope = store.get_typed_revision("scope", 1)
+        assert old_scope == scope and old_envelope.provenance == creator
+        assert store.get_typed_revision("scope", 2)[1] == changed
+        assert store.get_typed_revision("claim", 2)[1].context.revision == 1
+        assert store.get_typed_revision("claim", 1)[0].scientific_disposition == "provisional"
+        assert store.submit_typed(initial) == receipt
+```
+
 ## Runnable synthetic codec example
 
 Run from the repository root; this example performs no storage or execution:
@@ -201,9 +336,7 @@ assert record.scientific_disposition == "provisional"
 PY
 ```
 
-Durable typed admission/read, target resolution, transactional integration,
-retry/restart and typed backup evidence remain the next milestone. Assessment
-sufficiency, promotion/eligibility, authentic tool receipts, all specification
+Assessment sufficiency, promotion/eligibility, authentic tool receipts, all specification
 §5.1 kinds and scientific validation remain later work. This contract does not
 complete D02 or authorize a scientific pilot or release.
 

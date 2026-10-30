@@ -5,7 +5,7 @@ This directory contains the `theoretical-research-pipeline` distribution and its
 development validation, and a synthetic oscillator development fixture with a
 source-local loader, validated domain envelopes, immutable local artifacts, and
 SQLite-backed atomic revision submissions with durable receipts and audit events,
-and pure typed scientific content codecs with exact envelope relationships.
+and typed scientific content with exact envelope relationships and durable admission/read.
 It implements no research execution, models, scientific verification, or vault
 generation. Specification v1.4 separates engineering readiness from scientific
 validation; this durable slice does not complete either overall gate or M1/D02.
@@ -69,7 +69,7 @@ Use the original submission identity to reconcile uncertain commit acknowledgmen
 Real disk and fresh-process tests cover ordering/canonical fingerprints, stale and
 conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
 and later artifact integrity failures. Local test results are advisory to controller
-validation. Typed durable admission/read, remaining scientific kinds,
+validation. Remaining scientific kinds,
 support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, resource
 authorization/accounting, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. There is no duplicate charging
@@ -78,9 +78,11 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
-evidence, strict codecs, exact role projection and a pure runnable example.
-`RecordStore` is a trusted generic persistence API, not a scientific admission gate;
-the typed durable API is not yet implemented.
+evidence, strict codecs, exact role projection and runnable codec/persistence examples.
+`RecordStore.submit_typed` admits coherent exact typed target graphs atomically;
+`get_typed_revision` returns the exact envelope and decoded value. `submit` remains
+a trusted generic persistence API, not a scientific admission gate. Typed retries
+and backups preserve original receipts and historical scope without promotion.
 
 The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
 the versioned fixture, exact-reference contract, loader exceptions, expected scoped

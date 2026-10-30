@@ -16,6 +16,7 @@ from research_pipeline.domain import (
     RecordEnvelope, RecordReference, Submission, SubmissionReceipt,
     _identifier, _integer, _snapshot, _MAX_INTEGER,
 )
+from research_pipeline.scientific import ScientificContent, decode_envelope
 
 
 class StoreError(Exception):
@@ -39,7 +40,7 @@ class RevisionConflictError(StoreError):
 
 
 class ReferenceResolutionError(StoreError):
-    """An exact target is absent or differs from a declared target kind."""
+    """An exact target is absent, wrong-kind, or invalid for a constrained typed role."""
 
 
 class SubmissionConflictError(StoreError):
@@ -210,7 +211,9 @@ class RecordStore:
     """Thread-confined local metadata handle; independent handles serialize writes.
 
     Use create/open and close or a context manager. No connection or general SQL
-    operation is exposed. The trusted owner must prevent external file mutation.
+    operation is exposed. submit is trusted generic persistence; submit_typed adds
+    structural scientific admission. Supported APIs append revisions and links,
+    never rewrite exact history. The owner must prevent external file mutation.
     """
 
     def __init__(self, artifacts, connection):
@@ -338,11 +341,32 @@ class RecordStore:
         return SubmissionReceipt(submission_id, row[0], row[1], row[2], CreationProvenance.from_dict(json.loads(row[3])), pairs)
 
     def submit(self, submission: Submission) -> SubmissionReceipt:
-        """Atomically append a validated batch, or return an identical request's old receipt.
+        """Append a trusted generic batch, or return an identical request's old receipt.
 
+        This checks generic storage contracts, not scientific target content.
         Reconcile acknowledgment/COMMIT uncertainty using the original submission_id
         after reopening. Never substitute a new identity to resolve that uncertainty.
         """
+        return self._commit_submission(self._normalize_submission(submission), ())
+
+    def submit_typed(self, submission: Submission) -> SubmissionReceipt:
+        """Atomically admit four-kind scientific members and exact constrained targets.
+
+        Reconstruct and decode every member before reconciliation; malformed members
+        raise domain/codec errors. New requests check typed target closure inside the
+        write transaction, raising ReferenceResolutionError for invalid targets.
+        Exact retries acknowledge the original commit without rechecking targets or
+        bytes, including identical requests originally committed through submit.
+        """
+        submission = self._normalize_submission(submission)
+        for record in submission.records:
+            decode_envelope(record)
+        required = tuple(reference for record in submission.records
+                         for reference in self._scientific_references(record))
+        return self._commit_submission(submission, required)
+
+    def _normalize_submission(self, submission):
+        """Detach a request and reject forged nested values before either commit entry point."""
         self._require_open()
         if type(submission) is not Submission:
             raise DomainValidationError("submission: expected Submission")
@@ -352,6 +376,16 @@ class RecordStore:
             if isinstance(error, DomainValidationError):
                 raise
             raise DomainValidationError("submission: malformed nested typed value") from error
+        return submission
+
+    def _commit_submission(self, submission, required):
+        """Commit a normalized request with immutable typed requirements via one algorithm.
+
+        Reconciliation precedes all availability/CAS checks. Exact revisions and links
+        are append-only under supported APIs; serialized target inspection and CAS
+        share this transaction even when independent handles advance heads. The owner
+        must still prevent external database/file mutation.
+        """
         canonical = _snapshot({"fingerprint_version": 1, "submission": submission.to_dict()}, "request")
         fingerprint = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         with self._transaction(write=True) as connection:
@@ -362,6 +396,7 @@ class RecordStore:
                     raise SubmissionConflictError(f"submission {submission.submission_id}: different canonical request")
                 return self._receipt(connection, submission.submission_id)
             self._check_batch(connection, submission)
+            self._check_scientific_targets(connection, submission, required)
             _fault("before_metadata")
             connection.execute("INSERT INTO submissions VALUES (?, ?, ?)", (submission.submission_id, canonical, fingerprint))
             for ordinal, record in enumerate(submission.records):
@@ -403,13 +438,55 @@ class RecordStore:
                         WHERE r.record_id=? AND r.revision=?""", (reference.record_id, reference.revision)).fetchone()
                     target = found[0] if found else None
                 if target is None or (reference.target_kind is not None and reference.target_kind != target):
-                    raise ReferenceResolutionError(f"target {reference.record_id}@{reference.revision}: absent or wrong kind")
+                    raise ReferenceResolutionError(f"{reference.relationship} target {reference.record_id}@{reference.revision}: absent or wrong kind")
             for reference in record.artifact_references:
                 if reference.digest in objects and objects[reference.digest].size != reference.size:
                     raise ArtifactIntegrityError(f"object {reference.digest}: inconsistent sizes in submission")
                 objects[reference.digest] = reference
         for reference in objects.values():
             self._artifacts._verify_for_commit(reference)
+
+    @staticmethod
+    def _scientific_references(record):
+        """Return constrained roles from an already decoded envelope, excluding input edges."""
+        return tuple(reference for reference in record.record_references
+                     if reference.relationship in ("context", "premise", "conclusion", "evidence", "target_claim"))
+
+    def _check_scientific_targets(self, connection, submission, required):
+        """Resolve exact typed target closure from batch then historical metadata, without bytes.
+
+        Each incoming edge checks kind even for cached targets. Invalid historical
+        codecs are chained as reference errors; generic input_record edges are not
+        traversed. All work stays inside the caller's serialized write transaction.
+        """
+        proposed = {(record.record_id, record.revision): record for record in submission.records}
+        visited = {}
+        worklist = list(required)
+        while worklist:
+            reference = worklist.pop()
+            key = (reference.record_id, reference.revision)
+            diagnostic = f"{reference.relationship} target {reference.record_id}@{reference.revision}"
+            target = visited.get(key)
+            if target is None:
+                target = proposed.get(key)
+                if target is None:
+                    try:
+                        target = self._metadata_envelope(connection, *key)
+                    except RecordNotFoundError as error:
+                        raise ReferenceResolutionError(f"{diagnostic}: absent") from error
+                    except DomainValidationError as error:
+                        raise ReferenceResolutionError(f"{diagnostic}: invalid metadata: {error}") from error
+            if target.kind != reference.target_kind:
+                raise ReferenceResolutionError(f"{diagnostic}: expected {reference.target_kind}, found {target.kind}")
+            if key in visited:
+                continue
+            try:
+                decode_envelope(target)
+            except DomainValidationError as error:
+                raise ReferenceResolutionError(f"{diagnostic}: invalid scientific content: {error}") from error
+            # Mark before enqueueing: repeated roles and provisional cycles terminate.
+            visited[key] = target
+            worklist.extend(self._scientific_references(target))
 
     def _insert_links(self, connection, record):
         """Persist ordered duplicate links without rewriting any historical revision."""
@@ -428,6 +505,17 @@ class RecordStore:
 
     def _envelope(self, connection, record_id, revision):
         """Rebuild from normalized rows and verify direct artifacts in one read snapshot."""
+        envelope = self._metadata_envelope(connection, record_id, revision)
+        for reference in envelope.artifact_references:
+            self._artifacts.verify(reference)
+        return envelope
+
+    def _metadata_envelope(self, connection, record_id, revision):
+        """Reconstruct detached exact metadata/ordered links in a supplied snapshot, without bytes.
+
+        Missing revisions raise RecordNotFoundError. This private reconstruction is
+        used for typed admission; public revision reads additionally verify artifacts.
+        """
         row = connection.execute("""SELECT i.kind,r.content_json,r.provenance_json,r.operational_status,r.scientific_disposition
             FROM revisions r JOIN identities i USING(record_id) WHERE r.record_id=? AND r.revision=?""", (record_id, revision)).fetchone()
         if row is None:
@@ -436,8 +524,6 @@ class RecordStore:
             "SELECT target_id,target_revision,relationship,target_kind FROM record_links WHERE record_id=? AND revision=? ORDER BY ordinal", (record_id, revision)))
         artifacts = tuple(ArtifactReference(*link) for link in connection.execute(
             "SELECT digest,size FROM artifact_links WHERE record_id=? AND revision=? ORDER BY ordinal", (record_id, revision)))
-        for reference in artifacts:
-            self._artifacts.verify(reference)
         return RecordEnvelope(record_id, revision, row[0], json.loads(row[1]), CreationProvenance.from_dict(json.loads(row[2])),
                               references, artifacts, row[3], row[4])
 
@@ -447,6 +533,16 @@ class RecordStore:
         _integer(revision, "revision", 1)
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
+
+    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent]:
+        """Return an exact detached envelope and decoded value, verifying direct artifacts.
+
+        Preserve missing-revision/artifact errors; absent discriminators raise
+        NotTypedContentError and other codec failures raise DomainValidationError.
+        This checks local coherence, not past admission or scientific validity.
+        """
+        envelope = self.get_revision(record_id, revision)
+        return envelope, decode_envelope(envelope)
 
     def history(self, record_id: str) -> tuple[RecordEnvelope, ...]:
         """Return revision-ascending verified history; an absent identity has empty history."""

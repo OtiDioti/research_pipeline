@@ -40,9 +40,14 @@ and evidence with an explicit version-1 format, strict codecs and exact ordered
 envelope-link coherence. It depends on domain validation only, without store,
 backup or fixture imports. See [typed content](typed-content.md) for required
 fields, local assumptions, conjunctive premises and artifact-role boundaries.
-Typed durable submission/read and target resolution are not yet implemented.
-`RecordStore` remains a trusted generic persistence API, not a scientific admission
-gate. Neither structured descriptions nor coherent links establish support.
+`RecordStore.submit_typed` first decodes members locally. For a new canonical
+request, it resolves constrained exact target closure inside the existing serialized
+write transaction after submission-ID reconciliation. Historical target checks read metadata; public exact reads verify
+direct artifacts. `get_typed_revision` returns the detached envelope and typed value.
+Generic `submit` remains a trusted persistence API, not a scientific admission gate.
+Neither structured descriptions nor coherent links establish support. Supported
+APIs append historical revisions/links; other handles may advance heads, never
+rewrite exact targets. External mutation still requires trusted-owner protection.
 
 `research_pipeline.artifacts` owns an explicitly selected outside-source runtime
 area. It validates private directories, stages bytes, publishes read-only files
@@ -75,7 +80,7 @@ commands or dependencies. The [durable contract and runnable example](durable-re
 give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptions,
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
-Typed durable admission/read, remaining scientific kinds, support/assessment
+Remaining scientific kinds, support/assessment
 freshness, eligibility/promotion, worker isolation, leases/fencing, resource authorization/accounting, general migrations,
 periodic scheduling, distributed execution and research execution remain
 unsupported. No ledger means no duplicate charging guarantee. This slice does not

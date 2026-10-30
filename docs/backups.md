@@ -62,6 +62,15 @@ replayed and no receipts regenerated. Historical references, registrations,
 manifest entries and actual object names/sizes must agree exactly; every object's
 actual bytes are verified.
 
+Typed scientific graphs use these unchanged generic backup mechanics: canonical
+requests, ordered links, original provenance, receipts and events survive restore
+without replay or promotion. Inspection does not decode scientific payloads. Legacy
+generic records and unsupported scientific versions remain preserved; explicit
+`get_typed_revision` rejects unsupported versions without rewriting them. Capture
+before intentional artifact damage because all historical objects must be healthy.
+After restore, later byte loss still leaves exact `submit_typed` retry and
+metadata-only receipt reconciliation available.
+
 ## Capture boundary and continued use
 
 Capture uses SQLite `Connection.backup` in finite 64-page steps with a small retry
