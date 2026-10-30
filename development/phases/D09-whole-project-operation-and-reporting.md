@@ -6,7 +6,7 @@
 
 **Dependencies:** D08
 
-**Specification:** [project_description.md](../../project_description.md), with exact references to be reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md) during D00.
+**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -31,3 +31,12 @@
 Before execution, divide these outcomes into the smallest coherent requests with independently testable results. Do not invent every function signature months ahead of its dependencies. The active request fixes its public interfaces, exact changed paths, validation, scope, and stop conditions before CWI starts. A phase may require multiple runs. Record each final receipt/source pair, integration commit, requirement evidence, limitations, and newly deferred items.
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
+
+## Reconciled v1.3 gate — Current scientific synthesis and portable evidence
+
+**Requirement ownership:** R-005, R-019, R-027, R-030–R-031, R-051–R-053, R-069, R-082–R-086, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+
+Build richer synthesis on D04 minimum reports; narrative never grants promotion and falls back to deterministic report when unavailable. Audit exact current claims, conditions, figures/data/generators, citations and objections. Provide all CLI operations, concrete human decisions, reference-aware retention, consistent restore, and reuse-restricted portable exports readable without the live database. Preserve report history and later job/liability revisions.
+
+- [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
+- [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.

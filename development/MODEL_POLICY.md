@@ -1,6 +1,10 @@
 # Development model and reasoning policy
 
-## User requirement and current ambiguity
+## Effective decision — 2026-10-30
+
+The human explicitly approved **GPT-6 Astra (`gpt-6-astra`)** after inspection found no supported identifier for “Astra 6.1.” This is revision 2 of [AUTHORIZATION.md](AUTHORIZATION.md), not a silent substitution. The local account catalog advertises `gpt-6-astra` with low/medium/high/xhigh and the selected Codex adapter recognizes the ChatGPT login. Use `--model gpt-6-astra` and explicit effort at or below xhigh. REQ-D01-001 selects medium. Record actual invocation/frozen evidence; catalog/login checks do not guarantee successful service execution. The original ambiguity below is retained as history and no longer blocks this corrected selection.
+
+## Original user requirement and ambiguity
 
 The requested development model is **“Astra 6.1.”** Do not silently replace it with another model, infer an API identifier from the display label, or fall back to the user's ordinary Codex default.
 

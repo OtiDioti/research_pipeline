@@ -2,12 +2,12 @@
 
 This is the proposed sequence for implementing the product in [project_description.md](project_description.md). Current execution belongs in [STATUS.md](STATUS.md), not in a second independent set of status cells here. Each phase has a coherent outcome and acceptance obligations; each may require several bounded coding-pipeline runs.
 
-**Reconciliation requirement:** this starter kit was prepared from the conversation and the supplied coding-pipeline repository, not from the unavailable full local specification file. D00 must map the exact existing file before implementation. Phase labels below are development labels, not claimed verbatim replacements for any milestones in that file.
+**Reconciled 2026-10-30:** the full local specification v1.3 is mapped in [REQUIREMENTS.md](development/REQUIREMENTS.md). Its M0–M7 gates remain controlling. D01 now includes a scientific-contract gate after the explicitly authorized foundation commissioning and before D02; D04 includes minimum deterministic run closeout. No phase is complete merely because its administrative plan exists.
 
 | Phase | Outcome | Depends on |
 | --- | --- | --- |
 | [D00](development/phases/D00-specification-and-operating-readiness.md) | Specification and operating readiness | Initial repository |
-| [D01](development/phases/D01-testable-product-foundation.md) | Testable product foundation | D00 |
+| [D01](development/phases/D01-testable-product-foundation.md) | Testable foundation, then M0 scientific contract | D00 |
 | [D02](development/phases/D02-durable-scientific-records-and-provenance.md) | Durable scientific records and provenance | D01 |
 | [D03](development/phases/D03-seeded-project-intake-and-navigable-vault.md) | Seeded project intake and navigable vault | D02 |
 | [D04](development/phases/D04-controlled-execution-and-recovery.md) | Controlled execution and recovery | D02, D03 |
@@ -26,7 +26,7 @@ The phases are proposed defaults. Move an outcome if the exact specification or 
 
 ## The first implementation boundary
 
-D00 prepares and verifies the environment. D01 is one complete, testable foundation slice; it must not be split into an accepted empty skeleton followed later by tests. Start with one CWI milestone because the frozen bootstrap candidate check requires the whole foundation. Later runs can use more internal milestones when each intermediate candidate satisfies the frozen checks.
+D00 prepares and verifies the environment. REQ-D01-001 is one complete, testable foundation slice; it must not be split into an accepted empty skeleton followed later by tests. Start with one CWI milestone because the frozen bootstrap candidate check requires the whole foundation. Later runs can use more internal milestones when each intermediate candidate satisfies the frozen checks.
 
 ## Requirement coverage
 
@@ -37,3 +37,18 @@ Use [REQUIREMENTS.md](development/REQUIREMENTS.md) to map each mandatory require
 After commissioning and the actual activation grant, normal completion of a request or phase leads directly to the next ready scoped request. Do not wait for a human merely to move from D02 to D03. Every transition still requires its dependency and evidence gates. Use [AUTONOMY.md](development/AUTONOMY.md) and [AUTHORIZATION.md](development/AUTHORIZATION.md).
 
 D10 requires actual scientific evaluation and any mandated human judgment; it is not automatically completed by implementing the evaluation code. A blocked mandatory requirement remains visible even when other independent development can continue.
+
+## Specification milestone mapping
+
+| Specification gate | Development ownership |
+| --- | --- |
+| M0 scientific contract and expert evaluation material | D01 after REQ-D01-001; blocks D02 until approved, not postponed to D10 |
+| M1 durable records and vault | D02–D03 |
+| M2 controlled execution, adapter contracts, minimum no-model report | D04–D05 |
+| M3 single complete research loop and bounded context | D06 |
+| M4 verification and atomic promotion | D07 |
+| M5 adaptive coordination and optional delegation | D08 |
+| M6 synthesis, human decisions, navigation and export | D09 |
+| M7 actual held-out pilot and architecture comparison | D10 |
+
+Continuous authorization permits selecting ready work; it does not waive M0 scientific decisions, live-resource permissions or expert judgments. Foundation acceptance activates the conditional operating grant after integration/checkpoint, while the next scientific slice remains subject to its prerequisites.

@@ -6,7 +6,7 @@
 
 **Dependencies:** D02
 
-**Specification:** [project_description.md](../../project_description.md), with exact references to be reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md) during D00.
+**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -32,3 +32,12 @@
 Before execution, divide these outcomes into the smallest coherent requests with independently testable results. Do not invent every function signature months ahead of its dependencies. The active request fixes its public interfaces, exact changed paths, validation, scope, and stop conditions before CWI starts. A phase may require multiple runs. Record each final receipt/source pair, integration commit, requirement evidence, limitations, and newly deferred items.
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
+
+## Reconciled v1.3 gate — Nonempty intake and protected snapshot views
+
+**Requirement ownership:** R-020–R-031, R-040, R-082, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+
+Enforce awaiting_materials/readiness with relevant inspected substantive material. Preserve original corpus/path mapping, partial inspection and candidate exposure. Implement the full §9.7 layout and §9.8 README contract; snapshots publish consistently, immutable artifacts have no writable hard links, and direct human edits/renames survive regeneration. Test archive confinement, imported configuration nonactivation, typed-link authority and ordinary Markdown portability.
+
+- [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
+- [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.

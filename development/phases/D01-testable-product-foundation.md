@@ -6,7 +6,7 @@
 
 **Dependencies:** D00
 
-**Specification:** [project_description.md](../../project_description.md), with exact references to be reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md) during D00.
+**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -28,6 +28,15 @@
 
 ## Execution and evidence
 
-Use [REQ-D01-001](../requests/REQ-D01-001.md) after D00. One internal CWI milestone establishes the complete minimal foundation; the coordinator then requests human inspection of the accepted-unmerged result. The phase remains incomplete until authorized integration and evidence recording.
+Use [REQ-D01-001](../requests/REQ-D01-001.md) after D00. One internal CWI milestone establishes the complete minimal foundation; the coordinator inspects the accepted-unmerged result and may integrate it under AUTH-2026-10-30-001; this is not a completed human review. The phase remains incomplete until authorized integration and evidence recording.
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
+
+## Reconciled v1.3 gate — Foundation and subsequent M0 gate
+
+**Requirement ownership:** R-001–R-007, R-088, R-093–R-094. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+
+REQ-D01-001 delivers only R-007 and the development foundation. After accepted integration, complete the M0 gate: human pilot/envelope choice; expert-audited positive/negative development and held-out material; predeclared usefulness/error/resource standards; common schemas/message/eligibility/context/checkpoint/report/tool/vault contracts; one complete paper candidate/failure example. Administrative design may be coordinated directly; executable schemas, tests and runtime prompts require a new CWI request. R-001–R-003 are currently BLOCKED. D01 is not complete until this gate is evidenced; D02 depends on it.
+
+- [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
+- [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.

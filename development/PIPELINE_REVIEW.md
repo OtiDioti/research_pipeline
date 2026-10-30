@@ -135,3 +135,7 @@ These references were checked on 2026-10-29; the installed CLI's own help and CW
 - [Running Codex safely](https://openai.com/index/running-codex-safely/): separation of approval and execution boundaries.
 
 These official sources describe Codex. Claims about CWI above come from the supplied repository, not from the OpenAI documentation.
+
+## Local deployment reconciliation — 2026-10-30
+
+The current clone is `1f68060b5a5a9964c91811a53d3a515e0b01a073`, clean and in the supported untracked direct-child location. Its complete diff from this snapshot changes only common/designer prompt resources (71 additions, 1 deletion); inspected without alteration. Local verification: 1,031 tests in 545.099s, 1,010 passed and 21 skipped; focused bootstrap rerun with an existing pytest interpreter passes all 21 cases, covering the six initially skipped pytest cases. T-01 and T-02 pass locally. Fifteen opt-in live-model tests remain unrun. Exact selected Codex 0.166.0 passes CWI parser probes and recognizes ChatGPT login. These facts do not establish a finally accepted product run. See [ENVIRONMENT.md](ENVIRONMENT.md) for identities, evidence digests, explicit limits and launch map.

@@ -6,7 +6,7 @@
 
 **Dependencies:** D04
 
-**Specification:** [project_description.md](../../project_description.md), with exact references to be reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md) during D00.
+**Specification:** [project_description.md](../../project_description.md), v1.3, reconciled in [REQUIREMENTS.md](../REQUIREMENTS.md).
 
 ## Outcomes
 
@@ -32,3 +32,12 @@
 Before execution, divide these outcomes into the smallest coherent requests with independently testable results. Do not invent every function signature months ahead of its dependencies. The active request fixes its public interfaces, exact changed paths, validation, scope, and stop conditions before CWI starts. A phase may require multiple runs. Record each final receipt/source pair, integration commit, requirement evidence, limitations, and newly deferred items.
 
 Operational details: [runbook](../RUNBOOK.md), [request template](../templates/REQUEST.md), [run record](../templates/RUN.md).
+
+## Reconciled v1.3 gate — Tool releases and bounded adapter boundary
+
+**Requirement ownership:** R-029, R-040, R-043–R-044, R-054–R-060, R-064, R-082, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+
+Complete all release manifest and lifecycle fields in §§10.6–10.8. Distinguish execution permission/qualification/lifecycle, scientific semantics/schema shape and live observed versions/pinned local code. Demonstrate actual isolated local execution and authentic receipts. Register representative fixtures without requiring a user tool. Define optional delegated-job boundaries and descendant accounting; do not claim named compatibility without real qualified execution. Restricted TeX rendering must preserve source on build failure.
+
+- [ ] Link each owned obligation to executed checks/reviews and exact accepted/integrated source.
+- [ ] Preserve any missing live, expert or human evidence as an explicit blocker; do not infer it from fixture success.

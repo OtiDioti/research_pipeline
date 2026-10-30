@@ -21,3 +21,9 @@ An accepted-but-unmerged result belongs in the run record and current status, no
 - Added a focused necessary-backend-repair exception, regression/recovery safeguards, and coding_pipeline_changes.md audit.
 - Extended handoffs, run/request records, stopping/completion criteria, and safe update guidance.
 - No product implementation, live Codex execution, backend repair, acceptance, or integration is claimed by this entry. Merge this documentation history into an existing changelog; preserve actual earlier entries.
+
+## Administrative commissioning checkpoint — 2026-10-30
+
+- Read and preserved specification v1.3; reconciled 94 requirement entries and M0–M7 ownership into D01–D10, including early scientific decisions, bounded context, resource-safe handoffs and D04 minimum closeout.
+- Recorded actual conditional human grant, explicit gpt-6-astra correction, separate commissioning/continuous counters, clean backend identity and stable launch environment.
+- Verified local backend suite and bootstrap follow-up, selected Codex parser/login and existing capable Git. No product source, backend repair, accepted result or integration is claimed.

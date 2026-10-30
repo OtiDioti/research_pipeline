@@ -2,19 +2,22 @@
 
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
-No product implementation is currently paused. The entries below are preparation decisions or deliberately deferred extensions; they are not discovered research-product implementation failures. The backend readiness finding is separately identified below.
+Reconciled 2026-10-30 against local evidence. No product implementation/run exists yet. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
 
 | ID | State | Item | Reason / dependency | Resume or decision condition | Owner |
 | --- | --- | --- | --- | --- | --- |
-| B-001 | DECISION_NEEDED | Exact specification-to-phase reconciliation | The full local `project_description.md` must be read before committing implementation scope | D00 maps every mandatory requirement and resolves material conflicts | Coordinator + human for material changes |
-| B-002 | DECISION_NEEDED | Initial language, platform, and dependency policy | Python 3.11+ and Linux are proposed development defaults, not a quoted product requirement | D00 checks the specification and records the choice | Coordinator within authorized scope |
+| B-001 | RESOLVED | Exact specification-to-phase reconciliation | Full v1.3 read and R-001–R-094 mapped | Maintain exact evidence as requests integrate | Coordinator |
+| B-002 | RESOLVED | Foundation language/platform/dependencies | Python 3.11+, stdlib unittest, nested implementation and local Linux chosen within proposed specification defaults | Revisit only with concrete need; preserve provider neutrality | Coordinator |
 | B-003 | DEFERRED | Selection of live model/provider adapters | Deterministic fixtures should establish contracts before paid/live integrations | D06 has an approved adapter contract, credentials policy, and budget | Human + coordinator |
 | B-004 | DEFERRED | Extra development-status automation | Markdown records and CWI inspection are sufficient initially | Repeated manual reconciliation cost justifies a bounded CWI request | Coordinator |
 | B-005 | DEFERRED | Distributed workers and multi-user operation | Not required to establish a trustworthy single-machine vertical slice | Pilot evidence and exact product requirements justify expansion | Human |
 | B-006 | DEFERRED | Specific symbolic, theorem-proving, or software-development tools in the product | Product tools are optional capabilities, not a fixed supplied set | A concrete research task and tool qualification contract justify integration | Research/product owner |
-| B-007 | INVESTIGATE | Supplied-backend test findings and real CLI readiness | Review found a non-hermetic Codex prerequisite, one-second deadline failures, and a pytest fixture environment mismatch; authenticated CLI execution was unavailable | D00 reproduces relevant cases, records explicit disposition, and verifies local compatibility; necessary focused maintenance follows BACKEND_MAINTENANCE.md and is logged in coding_pipeline_changes.md; no preemptive patching | Coordinator under the user maintenance exception |
-| B-008 | DECISION_NEEDED | Exact development model identity | User requested Astra 6.1; no official identifier for that exact label was verified during the update | Establish actual available identifier/access or obtain explicit user correction; no silent fallback | Human + coordinator |
+| B-007 | RESOLVED FOR COMMISSIONING | Supplied-backend findings and parser/auth readiness | Local 1,010 pass/21 skip; focused bootstrap 21 pass resolves six pytest skips; exact Codex parser/login probes pass | Real CWI commissioning still required; 15 opt-in live tests unrun; ENVIRONMENT.md records limits | Coordinator |
+| B-008 | RESOLVED | Development model identity | Human explicitly approved gpt-6-astra after catalog ambiguity; AUTH revision 2 | Use explicit model/effort; no silent substitution | Human + coordinator |
 | B-009 | DEFERRED | Automatic restart of outer Codex sessions | Documentation provides continuous execution and manual recovery, not a daemon | Separate CWI request, explicit need/authority, single-owner and bounded-recovery tests | Coordinator + human |
+
+| B-010 | BLOCKED | M0 pilot/scientific contract before D02 (R-001–R-004) | Specification requires pilot choice, expert-audited fixtures and predeclared useful-progress/error standards before scientific implementation; no such human evidence supplied | Complete D01 scientific-contract gate after foundation commissioning; no invented expert signoff | Human scientific owner + coordinator |
+| B-011 | BLOCKED FOR LIVE WORK | Product provider/data/budget approval and scientific acceptance | Development Codex allowance does not authorize product experiments or pilot data access | Separate explicit service/data/budget and expert review records before live work | Human |
 
 ## Required fields for a new blocked or paused item
 
