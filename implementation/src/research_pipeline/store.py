@@ -16,7 +16,13 @@ from research_pipeline.domain import (
     RecordEnvelope, RecordReference, Submission, SubmissionReceipt,
     _identifier, _integer, _snapshot, _MAX_INTEGER,
 )
-from research_pipeline.scientific import ScientificContent, decode_envelope
+from research_pipeline.assessment import (
+    AssessmentContent, Issue, Review, decode_envelope as _decode_assessment_envelope,
+)
+from research_pipeline.scientific import (
+    Claim, Evidence, Justification, NotTypedContentError, ResearchContext, ScientificContent,
+    decode_envelope as _decode_scientific_envelope,
+)
 from research_pipeline.schema import _VERSIONS, validate_schema, validate_request_kinds, validate_history
 
 
@@ -64,6 +70,24 @@ def _fault(boundary: str) -> None:
     Tests may inject exceptions or terminate the process here. This is never a
     controller callback, configuration option, or worker capability.
     """
+
+
+def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | AssessmentContent:
+    """Decode a normalized envelope using one explicit format, without inference or fallback.
+
+    Missing markers retain NotTypedContentError; other format/codec failures raise
+    DomainValidationError. The selected codec validates all states and ordered links.
+    """
+    content = envelope.content
+    if "format" not in content:
+        raise NotTypedContentError("typed content: missing format discriminator")
+    discriminator = content["format"]
+    if type(discriminator) is str:
+        if discriminator == "research_pipeline.scientific_content":
+            return _decode_scientific_envelope(envelope)
+        if discriminator == "research_pipeline.assessment_content":
+            return _decode_assessment_envelope(envelope)
+    raise DomainValidationError("format: unsupported typed content format")
 
 
 def _database_error(error: sqlite3.Error, *, committing: bool = False) -> StoreError:
@@ -150,7 +174,7 @@ class RecordStore:
 
     Use create/open and close or a context manager. No connection or general SQL
     operation is exposed. submit is trusted generic persistence; submit_typed adds
-    structural scientific admission. Supported APIs append revisions and links,
+    structural scientific and assessment admission. Supported APIs append revisions and links,
     never rewrite exact history. The owner must prevent external file mutation.
     """
 
@@ -301,7 +325,7 @@ class RecordStore:
         return self._commit_submission(self._normalize_submission(submission), ())
 
     def submit_typed(self, submission: Submission) -> SubmissionReceipt:
-        """Atomically admit four-kind scientific members and exact constrained targets.
+        """Atomically admit six typed kinds, exact target closure and review route membership.
 
         Reconstruct and decode every member before reconciliation; malformed members
         raise domain/codec errors. New requests check typed target closure inside the
@@ -310,11 +334,8 @@ class RecordStore:
         bytes, including identical requests originally committed through submit.
         """
         submission = self._normalize_submission(submission)
-        for record in submission.records:
-            decode_envelope(record)
-        required = tuple(reference for record in submission.records
-                         for reference in self._scientific_references(record))
-        return self._commit_submission(submission, required)
+        decoded = tuple(_decode_typed_envelope(record) for record in submission.records)
+        return self._commit_submission(submission, decoded)
 
     def _normalize_submission(self, submission):
         """Detach a request and reject forged nested values before either commit entry point."""
@@ -329,18 +350,21 @@ class RecordStore:
             raise DomainValidationError("submission: malformed nested typed value") from error
         return submission
 
-    def _commit_submission(self, submission, required):
-        """Commit a normalized request with immutable typed requirements via one algorithm.
+    def _commit_submission(self, submission, decoded: tuple[ScientificContent | AssessmentContent, ...]):
+        """Commit a normalized request and its ordered decoded values via one algorithm.
 
-        Reconciliation precedes schema-kind admission and all availability/CAS checks. Exact revisions and links
-        are append-only under supported APIs; serialized target inspection and CAS
+        Generic requests supply an empty tuple; typed requests supply one immutable
+        value per member. Local decoding precedes this shared reconciliation path.
+
+        Reconciliation precedes schema-kind admission and all availability/CAS checks.
+        Exact revisions and links are append-only; serialized target inspection and CAS
         share this transaction even when independent handles advance heads. The owner
         must still prevent external database/file mutation.
         """
         canonical = _snapshot({"fingerprint_version": 1, "submission": submission.to_dict()}, "request")
         fingerprint = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         with self._transaction(write=True) as connection:
-            # Resolve idempotency before heads, references or artifact availability.
+            # Reconcile before heads, targets, route membership or artifact availability.
             old = connection.execute("SELECT request_json FROM submissions WHERE submission_id=?", (submission.submission_id,)).fetchone()
             if old is not None:
                 if old[0] != canonical:
@@ -348,7 +372,7 @@ class RecordStore:
                 return self._receipt(connection, submission.submission_id)
             validate_request_kinds(submission, self._schema_version)
             self._check_batch(connection, submission)
-            self._check_scientific_targets(connection, submission, required)
+            self._check_typed_targets(connection, submission, decoded)
             _fault("before_metadata")
             connection.execute("INSERT INTO submissions VALUES (?, ?, ?)", (submission.submission_id, canonical, fingerprint))
             for ordinal, record in enumerate(submission.records):
@@ -399,46 +423,103 @@ class RecordStore:
             self._artifacts._verify_for_commit(reference)
 
     @staticmethod
-    def _scientific_references(record):
-        """Return constrained roles from an already decoded envelope, excluding input edges."""
-        return tuple(reference for reference in record.record_references
-                     if reference.relationship in ("context", "premise", "conclusion", "evidence", "target_claim"))
+    def _typed_references(value: ScientificContent | AssessmentContent) -> tuple[
+            tuple[RecordReference, ...], tuple[RecordReference, ...]]:
+        """Partition decoded semantic roles into constrained and shallow generic references.
 
-    def _check_scientific_targets(self, connection, submission, required):
-        """Resolve exact typed target closure from batch then historical metadata, without bytes.
-
-        Each incoming edge checks kind even for cached targets. Invalid historical
-        codecs are chained as reference errors; generic input_record edges are not
-        traversed. All work stays inside the caller's serialized write transaction.
+        Generic declarations confer no typed validity: never inspect their payloads,
+        outgoing edges or attachments, even when they name a supported typed kind.
         """
+        if type(value) is ResearchContext:
+            return (), ()
+        if type(value) is Claim:
+            return (value.context,), ()
+        if type(value) is Justification:
+            return (value.context, *value.premises, *value.conclusions, *value.evidence), ()
+        if type(value) is Evidence:
+            return (value.context, *value.target_claims), value.input_records
+        if type(value) is Review:
+            return ((value.candidate_claim, value.target_context,
+                     *(ref for ref in value.reported_checks if ref.relationship == "reported_evidence"),
+                     *(route.justification for route in value.route_assessments)),
+                    (value.context_manifest, value.authorization_policy,
+                     *(ref for ref in value.reported_checks if ref.relationship == "reported_tool_execution")))
+        if type(value) is Issue:
+            return value.supporting_evidence, value.affected_records
+        raise DomainValidationError("content: expected a decoded scientific or assessment value")
+
+    def _check_typed_targets(self, connection, submission,
+                             decoded: tuple[ScientificContent | AssessmentContent, ...]):
+        """Validate exact constrained closure and submitted review routes inside the write lock.
+
+        Resolve batch members before historical metadata, never reading transitive
+        artifact bytes. Every incoming edge checks kind, independently of caching.
+        Historical decoding/reconstruction failures become chained reference errors;
+        generic edges check only existence and declared kind and are never enqueued.
+        """
+        if not decoded:
+            return
         proposed = {(record.record_id, record.revision): record for record in submission.records}
-        visited = {}
-        worklist = list(required)
+        envelopes = dict(proposed)
+        values = {(record.record_id, record.revision): value
+                  for record, value in zip(submission.records, decoded)}
+        processed = set()
+        worklist = list(proposed)
         while worklist:
-            reference = worklist.pop()
-            key = (reference.record_id, reference.revision)
-            diagnostic = f"{reference.relationship} target {reference.record_id}@{reference.revision}"
-            target = visited.get(key)
-            if target is None:
-                target = proposed.get(key)
+            key = worklist.pop()
+            if key in processed:
+                continue
+            # Decoding and outgoing-edge processing are separate caches. Mark before
+            # following edges so descriptive scientific/self cycles terminate.
+            processed.add(key)
+            constrained, generic = self._typed_references(values[key])
+            for reference in generic:
+                target_key = (reference.record_id, reference.revision)
+                target = proposed.get(target_key)
+                if target is not None:
+                    kind = target.kind
+                else:
+                    row = connection.execute("""SELECT i.kind FROM revisions r JOIN identities i USING(record_id)
+                        WHERE r.record_id=? AND r.revision=?""", target_key).fetchone()
+                    kind = row[0] if row else None
+                if kind is None or (reference.target_kind is not None and reference.target_kind != kind):
+                    raise ReferenceResolutionError(
+                        f"{reference.relationship} target {reference.record_id}@{reference.revision}: absent or wrong kind")
+            for reference in constrained:
+                target_key = (reference.record_id, reference.revision)
+                diagnostic = f"{reference.relationship} target {reference.record_id}@{reference.revision}"
+                target = envelopes.get(target_key)
                 if target is None:
                     try:
-                        target = self._metadata_envelope(connection, *key)
+                        target = self._metadata_envelope(connection, *target_key)
                     except RecordNotFoundError as error:
                         raise ReferenceResolutionError(f"{diagnostic}: absent") from error
-                    except DomainValidationError as error:
+                    except (ValueError, TypeError, RecursionError, OverflowError) as error:
                         raise ReferenceResolutionError(f"{diagnostic}: invalid metadata: {error}") from error
-            if target.kind != reference.target_kind:
-                raise ReferenceResolutionError(f"{diagnostic}: expected {reference.target_kind}, found {target.kind}")
-            if key in visited:
+                    envelopes[target_key] = target
+                if target.kind != reference.target_kind:
+                    raise ReferenceResolutionError(f"{diagnostic}: expected {reference.target_kind}, found {target.kind}")
+                if target_key not in values:
+                    try:
+                        values[target_key] = _decode_typed_envelope(target)
+                    except DomainValidationError as error:
+                        raise ReferenceResolutionError(f"{diagnostic}: invalid typed content: {error}") from error
+                if target_key not in processed:
+                    worklist.append(target_key)
+
+        for record, value in zip(submission.records, decoded):
+            if type(value) is not Review:
                 continue
-            try:
-                decode_envelope(target)
-            except DomainValidationError as error:
-                raise ReferenceResolutionError(f"{diagnostic}: invalid scientific content: {error}") from error
-            # Mark before enqueueing: repeated roles and provisional cycles terminate.
-            visited[key] = target
-            worklist.extend(self._scientific_references(target))
+            candidate = (value.candidate_claim.record_id, value.candidate_claim.revision)
+            for assessment in value.route_assessments:
+                route_key = (assessment.justification.record_id, assessment.justification.revision)
+                route = values[route_key]
+                # Roles differ (candidate_claim versus conclusion); only exact identity
+                # and revision define membership, for every reported route outcome.
+                if not any((ref.record_id, ref.revision) == candidate for ref in route.conclusions):
+                    raise ReferenceResolutionError(
+                        f"review {record.record_id}@{record.revision}: assessed_route target "
+                        f"{route_key[0]}@{route_key[1]} does not conclude candidate {candidate[0]}@{candidate[1]}")
 
     def _insert_links(self, connection, record):
         """Persist ordered duplicate links without rewriting any historical revision."""
@@ -486,15 +567,16 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent]:
+    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent]:
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise
         NotTypedContentError and other codec failures raise DomainValidationError.
-        This checks local coherence, not past admission or scientific validity.
+        This checks selected-envelope coherence, not past admission or scientific
+        validity. It never traverses targets or establishes review route membership.
         """
         envelope = self.get_revision(record_id, revision)
-        return envelope, decode_envelope(envelope)
+        return envelope, _decode_typed_envelope(envelope)
 
     def history(self, record_id: str) -> tuple[RecordEnvelope, ...]:
         """Return revision-ascending verified history; an absent identity has empty history."""

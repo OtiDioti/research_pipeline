@@ -40,10 +40,21 @@ and evidence with an explicit version-1 format, strict codecs and exact ordered
 envelope-link coherence. It depends on domain validation only, without store,
 backup or fixture imports. See [typed content](typed-content.md) for required
 fields, local assumptions, conjunctive premises and artifact-role boundaries.
-`RecordStore.submit_typed` first decodes members locally. For a new canonical
+`research_pipeline.assessment` supplies pure frozen Review/Issue values with a
+distinct version-1 format, independent reported dimensions and exact ordered links.
+Its declarations certify neither independence, execution nor authority.
+`RecordStore.submit_typed` selects the scientific or assessment codec explicitly
+and decodes every member locally, admitting mixed six-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized
 write transaction after submission-ID reconciliation. Historical target checks read metadata; public exact reads verify
-direct artifacts. `get_typed_revision` returns the detached envelope and typed value.
+direct artifacts. The traversal follows explicit per-kind constrained roles;
+manifest/policy/ToolExecution, Issue affected-record and Evidence input roles check
+only exact existence and declared kind. Every submitted Review's assessed route
+must conclude its exact candidate, without equating their contexts. See the
+[complete traversal contract](attributed-assessments.md#durable-api-and-exact-traversal).
+`get_typed_revision` returns the detached envelope and typed value without recursively
+establishing admission. Original-ID reconciliation precedes route membership and
+all current availability/head checks; local decoding still precedes reconciliation.
 Generic `submit` remains a trusted persistence API, not a scientific admission gate.
 Neither structured descriptions nor coherent links establish support. Supported
 APIs append historical revisions/links; other handles may advance heads, never

@@ -9,8 +9,8 @@ and existing domain values.
 The separate [attributed assessment contract](attributed-assessments.md) adds pure
 Review/Issue values and exact envelopes with its own discriminator. Its reported
 dimensions are content, separate from canonical state. Durable `submit_typed` and
-`get_typed_revision` still support only the four scientific kinds documented here;
-assessment admission and route membership checks belong to the next milestone.
+`get_typed_revision` support all four scientific kinds and both assessment kinds,
+with constrained traversal and exact review route-conclusion membership checks.
 
 This contract establishes structural coherence, not scientific completeness,
 truth, implication, sufficiency, execution, approval or support. The pure codecs perform no
@@ -24,11 +24,12 @@ backups remain supported unchanged. Original generic history and the oscillator
 fixture's v1.3 provenance are unchanged.
 
 Evidence `input_records` may name any of the twenty generic kinds, including
-new generic project, run or source records. Generic `submit` must first commit
-those records; typed admission checks exact existence and declared kinds, while
-excluding input edges from scientific closure traversal. New generic kinds cannot
-be scientific submitted members or targets in context, premise, conclusion,
-evidence or target-claim roles. Schema 1 still rejects new-kind declarations with
+new generic project, run or source records. Commit generic records separately
+through `submit`; the six supported typed kinds may share a typed batch with
+forward references. Input roles check exact existence and declared kinds without
+extending constrained traversal. Generic project/run/source content cannot serve
+as typed members or targets in context, premise, conclusion, evidence or
+target-claim roles. Schema 1 still rejects new-kind declarations with
 a migration-required error. Names and descriptive input content grant no authority.
 
 ## Constructors and exact wire fields
@@ -191,11 +192,12 @@ explicit controller attribution, ordered members and an expectation for each
 identity (`0` for creation). The public methods are:
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent]`
 
-A typed batch contains only the four supported scientific kinds, in any order.
-Commit generic task records separately through `submit`; evidence may name them
-as exact inputs. All supplied members are defensively reconstructed and decoded,
+A typed batch contains any of the four scientific kinds and the two
+[assessment kinds](attributed-assessments.md), in any order. Commit generic tasks,
+manifests, policies and executions separately through `submit`; evidence may name
+them as exact inputs. All supplied members are defensively reconstructed and decoded,
 including complete ordered content/link agreement. No links are repaired from
 content. Local codec failures remain `DomainValidationError`; absent format
 markers remain its `NotTypedContentError` subtype.
@@ -205,6 +207,12 @@ roles resolve first against the complete proposed batch and then against exact
 committed revisions, never current target heads. Each target must have the
 required kind and supported typed content with coherent stored links. The same
 rule applies recursively to constrained roles reached through historical targets.
+Review candidate/context/reported-Evidence/route and Issue supporting-Evidence
+roles extend this same traversal. Review manifest/policy/reported-ToolExecution
+and Issue affected-record roles remain shallow existence/kind checks; the
+[complete role table](attributed-assessments.md#durable-api-and-exact-traversal)
+specifies both contracts. Every assessed route must conclude its Review's exact
+candidate, with no equality requirement among their separately pinned contexts.
 A finite worklist caches exact identities/revisions, checking every incoming kind
 and visiting before following outgoing edges; repeated roles and provisional
 cycles terminate without imposing an acyclicity rule. No cross-record context
@@ -242,8 +250,8 @@ reading object bytes. It promises structural coherence, not transitive artifact
 availability. New batch attachments undergo full existing commit verification.
 `get_typed_revision` reuses the snapshot-consistent generic exact read, verifies
 its direct attachments, and decodes the detached envelope. It returns both the
-original identity/provenance/state/links and the scientific value. Missing exact
-revisions retain `RecordNotFoundError`, direct-artifact errors propagate, and
+original identity/provenance/state/links and the scientific or assessment value.
+Missing exact revisions retain `RecordNotFoundError`, direct-artifact errors propagate, and
 closed handles retain `StoreClosedError`. A typed read checks the selected
 revision's content and links; it does not certify historical typed admission or
 perform scientific assessment. Generic reads continue exposing original generic,
@@ -260,8 +268,8 @@ ID. `get_submission` retrieves metadata but alone cannot establish request equal
 Never substitute a new ID to resolve uncertainty.
 
 Existing backups preserve typed and generic history, canonical requests, ordered
-links, receipts and events without interpreting scientific versions. Unsupported
-scientific versions remain valid generic backup data and fail typed reads. Capture
+links, receipts and events without interpreting scientific or assessment versions.
+Unsupported typed versions remain valid generic backup data and fail typed reads. Capture
 a healthy backup before artifact damage: capture/inspection verifies all historical
 objects. Restored stores retain exact-retry reconciliation even if bytes later fail.
 

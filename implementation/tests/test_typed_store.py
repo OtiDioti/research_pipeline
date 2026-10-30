@@ -301,7 +301,7 @@ with RecordStore.open(sys.argv[1]) as s:
             else:
                 path.unlink()
             with patch.object(RecordStore, "_check_batch", side_effect=AssertionError("batch reached")), \
-                    patch.object(RecordStore, "_check_scientific_targets", side_effect=AssertionError("targets reached")), \
+                    patch.object(RecordStore, "_check_typed_targets", side_effect=AssertionError("targets reached")), \
                     patch.object(ArtifactStore, "verify", side_effect=AssertionError("bytes reached")):
                 self.assertEqual(self.store.submit_typed(Submission.from_dict(reordered)).to_dict(), receipt.to_dict())
                 for variant in ("order", "content-order", "attribution", "expectation"):
@@ -338,7 +338,7 @@ with RecordStore.open(sys.argv[1]) as s:
         self.store.submit(request("legacy", [record("legacy")]))
         raw = request("raw-typed", [envelope("raw-claim", claim("legacy"))])
         original = self.store.submit(raw)
-        with patch.object(RecordStore, "_check_scientific_targets", side_effect=AssertionError("admission reached")):
+        with patch.object(RecordStore, "_check_typed_targets", side_effect=AssertionError("admission reached")):
             self.assertEqual(self.store.submit_typed(raw), original)
         self.rejects(request("new-invalid", [envelope("new-invalid", claim("legacy"))]), ReferenceResolutionError)
 
@@ -394,16 +394,16 @@ with RecordStore.open(sys.argv[1]) as s:
         attempted = threading.Event()
         finished = threading.Event()
         failures = []
-        original = RecordStore._check_scientific_targets
+        original = RecordStore._check_typed_targets
 
-        def inspect(store, connection, submission, required):
+        def inspect(store, connection, submission, decoded):
             """Pause only the foreground admission after BEGIN IMMEDIATE, before metadata insertion."""
             if submission.submission_id == "foreground":
                 self.assertTrue(connection.in_transaction)
                 inspecting.set()
                 self.assertTrue(attempted.wait(5))
                 self.assertFalse(finished.is_set())
-            return original(store, connection, submission, required)
+            return original(store, connection, submission, decoded)
 
         def competitor():
             """Attempt an independent head advance precisely when foreground admission is active."""
@@ -419,7 +419,7 @@ with RecordStore.open(sys.argv[1]) as s:
                 finished.set()
 
         thread = threading.Thread(target=competitor)
-        with patch.object(RecordStore, "_check_scientific_targets", inspect):
+        with patch.object(RecordStore, "_check_typed_targets", inspect):
             thread.start()
             try:
                 self.store.submit_typed(request("foreground", [envelope("historical", claim())]))

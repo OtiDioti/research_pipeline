@@ -72,10 +72,10 @@ replayed and no receipts regenerated. Historical references, registrations,
 manifest entries and actual object names/sizes must agree exactly; every object's
 actual bytes are verified.
 
-Typed scientific graphs use these unchanged generic backup mechanics: canonical
+Typed scientific and assessment graphs use these unchanged generic backup mechanics: canonical
 requests, ordered links, original provenance, receipts and events survive restore
-without replay or promotion. Inspection does not decode scientific payloads. Legacy
-generic records and unsupported scientific versions remain preserved; explicit
+without replay or promotion. Inspection does not decode scientific or assessment
+payloads. Legacy generic records and unsupported typed versions remain preserved; explicit
 `get_typed_revision` rejects unsupported versions without rewriting them. Capture
 before intentional artifact damage because all historical objects must be healthy.
 After restore, later byte loss still leaves exact `submit_typed` retry and
@@ -353,5 +353,5 @@ checks, not authentication of a coherent hostile-owner rewrite.
 
 General migrations, periodic scheduling, complete D02/R-019/R-017 fulfillment,
 research-run/session/job recovery, scientific validation, full scientific schemas,
-assessment/eligibility, attempt lifecycle, worker isolation and live-provider work
+assessment freshness/eligibility, attempt lifecycle, worker isolation and live-provider work
 remain outstanding. M0-S and the original historical fixture/provenance are unchanged.

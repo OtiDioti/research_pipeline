@@ -11,8 +11,10 @@ an intentionally separate paper example.
 `research_pipeline.artifacts` owns filesystem layout, publication and integrity.
 `research_pipeline.store` owns private SQLite metadata, transactions and recovery.
 `research_pipeline.scientific` supplies separate [typed content codecs](typed-content.md)
-and exact envelope-link coherence for four scientific kinds. `submit_typed`
-provides durable structural admission; `get_typed_revision` returns an exact
+and exact envelope-link coherence for four scientific kinds.
+`research_pipeline.assessment` adds [attributed Review/Issue contracts](attributed-assessments.md)
+with a distinct format. `submit_typed` provides durable structural admission for
+all six kinds, including exact review route-conclusion membership; `get_typed_revision` returns an exact
 envelope and decoded value. `submit` remains a trusted generic persistence API,
 not a scientific admission gate: generic submission resolves
 locators and declared kinds but does not validate typed target content or semantic
@@ -63,8 +65,9 @@ corpus/seed manifest. A generic scientific `event` envelope is distinct from the
 internal `submission_committed` audit event. These generic names supply neither
 full payload contracts nor state machines, scientific authority or promotion.
 In particular, descriptive review, decision, eligibility or execution assertions
-cannot grant authority. Four explicit scientific content schemas remain available
-separately through [typed codecs](typed-content.md).
+cannot grant authority. Four scientific content schemas and two attributed
+assessment schemas are available through their separate [scientific](typed-content.md)
+and [assessment](attributed-assessments.md) codecs and one durable typed boundary.
 
 | Kind | Required canonical state |
 | --- | --- |
@@ -220,8 +223,8 @@ No installation or package-level re-exports are needed.
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
 | `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
 | `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
-| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all scientific members, then admit exact typed target closure atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
-| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific value. No historical admission certificate. |
+| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all six supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
+| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific or assessment value. No historical admission certificate. |
 | `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
 | `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
 | `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |
@@ -244,7 +247,7 @@ All metadata failures derive from `StoreError`:
 | `StoreClosedError` | Closed or invalidated handle. |
 | `RecordNotFoundError` | Requested exact revision absent. |
 | `RevisionConflictError` | Stale head, skipped/repeated/exhausted revision, or changed kind. |
-| `ReferenceResolutionError` | Missing exact target, wrong declared kind, or invalid/untyped historical target in a constrained scientific role. |
+| `ReferenceResolutionError` | Missing exact target, wrong declared kind, or invalid/untyped historical constrained target, or assessed route not concluding its exact candidate. |
 | `SubmissionConflictError` | Reused identity with different canonical request. |
 | `StoreBusyError` | Busy/locked SQLite failure after its bounded wait; no spin or automatic replay. |
 | `StoreDatabaseError` | Other database/integrity failure; useful SQLite cause retained. |
@@ -423,7 +426,7 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 ## Remaining scope
 
-Remaining record kinds, assessment/support
+Remaining typed payloads, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
 fencing, resource authorization/accounting, general migrations, periodic
 scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.

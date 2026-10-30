@@ -1,4 +1,4 @@
-# Attributed review and issue contracts
+# Durable attributed reviews and issues
 
 `research_pipeline.assessment` supplies pure frozen values, strict version-1
 codecs and exact envelope conversion. Import directly from this submodule; the
@@ -87,7 +87,7 @@ by the domain. Identifiers, exact positive revisions and signed-64-bit integer
 limits follow the [domain contract](durable-records.md); booleans, numeric strings
 and floats are not integers. Supplied roles are checked, never relabeled.
 
-| Field | Required relationship / target_kind | Admission contract for the next milestone |
+| Field | Required relationship / target_kind | Durable admission contract |
 | --- | --- | --- |
 | `Review.candidate_claim` | `candidate_claim / claim` | Constrained typed target |
 | `Review.target_context` | `target_context / research_context` | Constrained typed target |
@@ -98,7 +98,7 @@ and floats are not integers. Supplied roles are checked, never relabeled.
 | `Issue.affected_records` entry | `affected_record / any supported domain kind` | Generic target, even for scientific, review or issue kinds |
 | `Issue.supporting_evidence` entry | `supporting_evidence / evidence` | Constrained typed target |
 
-This distinction specifies future admission requirements; the pure API does not
+Durable typed admission enforces this distinction; the pure API does not
 resolve even constrained targets. Generic manifest, policy, execution and affected
 references preserve declarations without treating payloads as approved contracts.
 Reported checks retain mixed Evidence/ToolExecution order and do not certify execution.
@@ -160,14 +160,221 @@ Both envelope kinds require `operational_status=None` and
 content only: it changes no Claim, canonical disposition, eligibility, permission
 or decision. `CreationProvenance` is copied caller attribution, not authentication.
 
-## Current durable boundary
+## Durable API and exact traversal
 
-The [scientific contract](typed-content.md) and its four wire representations
-remain unchanged. `RecordStore.submit_typed` and `get_typed_revision` currently
-support only ResearchContext, Claim, Justification and Evidence. Review/Issue
-pure conversion is available; durable typed admission, constrained traversal,
-route-conclusion membership checks, recovery coverage and a persistence example
-belong to the next milestone. Schema, backup formats and generic storage remain
-unchanged. Current eligibility/freshness, Apply disposition and scientific
-qualification remain future work. These contracts do not complete D02 or authorize
-a scientific pilot or release.
+Import `RecordStore` from `research_pipeline.store` and the shared `Submission`
+from `research_pipeline.domain`. The existing durable methods now support all six
+kinds: ResearchContext, Claim, Justification, Evidence, Review and Issue.
+
+- `submit_typed(submission: Submission) -> SubmissionReceipt`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent]`
+
+Use the scientific encoder for scientific content and the assessment encoder for
+Review/Issue. Mixed typed batches permit arbitrary member order and forward
+references, including Issue affected references to later Review/Issue members.
+Every member must decode independently. Commit generic manifests, policies,
+ToolExecutions, tasks and other generic records separately with `submit`.
+The store dispatches only on the explicit content format, without inference or
+fallback to a different codec after failure. The four scientific codecs and wire
+bytes remain unchanged. Pure conversion still performs no lookup.
+
+For new requests the complete proposed batch takes precedence over committed
+exact history. The following table is exhaustive; required kinds and roles come
+from the successfully decoded value, never from arbitrary generic field names.
+
+| Decoded kind | Traversed roles → required typed kinds | Shallow roles → declared generic kinds |
+| --- | --- | --- |
+| ResearchContext | None | None |
+| Claim | `context` → research_context | None |
+| Justification | `context` → research_context; `premise`, `conclusion` → claim; `evidence` → evidence | None |
+| Evidence | `context` → research_context; `target_claim` → claim | `input_record` → any supported kind, or explicit null |
+| Review | `candidate_claim` → claim; `target_context` → research_context; `reported_evidence` → evidence; `assessed_route` → justification | `context_manifest` → work_product_manifest; `authorization_policy` → decision; `reported_tool_execution` → tool_execution |
+| Issue | `supporting_evidence` → evidence | `affected_record` → any supported kind, including scientific, review and issue |
+
+Traversed targets require supported typed content and complete coherent ordered
+links. Their constrained outgoing edges follow the same rules; their generic
+outgoing edges receive only shallow existence/kind checks. Generic targets do not
+have their payloads, outgoing links or attachments inspected. A generic occurrence
+does not establish typed validity if the same target also occurs in a constrained
+role. Every incoming constrained edge checks its required kind. A finite worklist
+with separate decoded/processed caches terminates descriptive cycles without
+imposing an accepted-deduction cycle policy.
+
+For every submitted Review, each assessed Justification's conclusions must contain
+the candidate's exact `(record_id, revision)`. Relationship labels differ between
+candidate and conclusion, so whole-reference equality is not used. This membership
+rule applies to every outcome, including invalid, stale and inapplicable, and to
+both proposed and historical routes. A matching later conclusion is sufficient
+for structural membership; it establishes no scientific sufficiency. Reviews
+without routes remain valid. Candidate context, route context and review target
+context may all differ and may name older revisions after their heads advance.
+Conditional favorable judgments retain their obligations. Invalid support does
+not refute the candidate.
+
+## Transactions, retries and failures
+
+Both submission methods use one canonical request/fingerprint and one serialized
+`BEGIN IMMEDIATE` commit algorithm. Local defensive request reconstruction and
+codec checks precede original-ID reconciliation. An identical canonical request
+returns the original receipt before checking current heads, targets, route
+membership or artifact availability. This includes a locally valid request
+originally committed through generic `submit`, even if new typed admission would
+reject its route. The receipt acknowledges history; it is not retroactive typed
+certification. Reordering mapping keys is immaterial; content, attribution,
+expectations and meaningful collection ordering participate in equality.
+
+For new requests the schema-kind gate precedes target inspection. Schema 1 rejects
+Review/Issue with the existing migration-required error and never upgrades
+implicitly. Expected-head CAS, stable kinds, exact references, direct artifact
+verification/synchronization, constrained closure and route membership all precede
+metadata insertion under the same write transaction. Revisions, ordered links,
+heads, receipt and event commit atomically. Rejected batches leave all metadata
+unchanged; previously published orphan bytes may remain.
+
+| Failure | Error contract |
+| --- | --- |
+| Missing format discriminator on submitted content or an exact typed read | `NotTypedContentError`, a `DomainValidationError` subtype |
+| Unknown/malformed format, unsupported version, malformed submitted content, kind/state/link mismatch | `DomainValidationError` |
+| Missing/wrong-kind target, malformed historical constrained target, route not concluding the exact candidate | `ReferenceResolutionError` naming role and exact target; historical reconstruction/codec failure is chained |
+| Different canonical request under a committed ID | `SubmissionConflictError` |
+| Stale expected head, wrong next revision or changed stable kind | `RevisionConflictError` |
+| Missing exact read / closed handle / unavailable direct artifact | Existing `RecordNotFoundError` / `StoreClosedError` / artifact error categories |
+
+Historical constrained admission reconstructs metadata without checking transitive
+artifact bytes. Structurally coherent historical Evidence can remain referencable
+after its bytes disappear, while reading that Evidence itself still fails.
+`get_typed_revision` first performs the snapshot-consistent generic exact read,
+verifies direct attachments and returns detached envelope/content values. It
+validates only that selected envelope; it neither traverses targets nor certifies
+past route membership or admission. Generic reads preserve unsupported typed-looking
+data without granting typed validity.
+
+After interruption or lost acknowledgment, reopen and resubmit the original request
+with its original ID. Exact retries remain available after later assessment revisions
+or artifact damage. Healthy backups preserve generic, scientific and assessment
+histories, ordered links, canonical requests, receipts and events using the unchanged
+[backup formats](backups.md). Capture before byte damage. Exact restoration retains
+retry semantics; explicit `restore_backup(..., target_schema=2,
+migration_provenance=...)` is the existing v1-to-v2 migration boundary.
+
+## Runnable synthetic persistence example
+
+From the repository root, run this Python block with
+`PYTHONPATH="$PWD/implementation/src" /home/francesco/miniconda3/bin/python3 -B`.
+The integration test executes this actual block in a fresh interpreter. Runtime,
+backup and restored paths are explicit and outside source. No scientific
+calculation or provider call occurs.
+
+```python
+from dataclasses import replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from research_pipeline.domain import CreationProvenance, RecordEnvelope, RecordReference, Submission
+from research_pipeline.scientific import (
+    ResearchContext, Claim, Justification, encode_envelope as scientific_envelope,
+)
+from research_pipeline.assessment import (
+    IndependenceDeclaration, SubstantiveAssessment, SupportRouteAssessment, Review, Issue,
+    encode_envelope as assessment_envelope,
+)
+from research_pipeline.store import RecordStore
+from research_pipeline.backup import create_backup, inspect_backup, restore_backup
+
+creator = CreationProvenance("synthetic-author", "2026-10-30T12:00:00Z")
+second_creator = CreationProvenance("synthetic-reviewer-b", "2026-10-30T12:01:00Z")
+controller = CreationProvenance("controller", "2026-10-30T12:02:00Z")
+
+def reference(identity, role, kind):
+    """Pin a synthetic first revision without looking up or rebinding a head."""
+    return RecordReference(identity, 1, role, kind)
+
+def batch(identity, members, expected=None):
+    """Build an attributed request with explicit creation or append expectations."""
+    return Submission(identity, controller, members,
+                      {r.record_id: 0 for r in members} if expected is None else expected)
+
+scope = ResearchContext("Synthetic scope α", [], [], [], [], [], [], [], [], [], [])
+context = reference("scope", "context", "research_context")
+candidate = Claim("Synthetic candidate", "declaration", [], context, [], [], ["Assess premises"])
+route = Justification(context, [], [], "Declared route α",
+                      [reference("candidate", "conclusion", "claim")], [], [])
+independence = IndependenceDeclaration("answer_blind_reconstruction", "candidate_aware_audit",
+                                      [], [], [], [], [], [], ["Exposure not verified"])
+assessment = SubstantiveAssessment("under_review", "supported_within_scope", ["analytical"],
+                                  "requires_reassessment", "unassessed", "Conditional synthetic report",
+                                  ["If premises hold"], ["Existence obligation"], [])
+routes = [SupportRouteAssessment(reference(name, "assessed_route", "justification"),
+                                "sufficient", "Declared route judgment", ["Check premises"], [])
+          for name in ("route-a", "route-b")]
+first = Review(reference("candidate", "candidate_claim", "claim"),
+               reference("scope", "target_context", "research_context"), "Reviewer α", independence,
+               reference("manifest", "context_manifest", "work_product_manifest"),
+               reference("policy", "authorization_policy", "decision"),
+               [reference("execution", "reported_tool_execution", "tool_execution")],
+               assessment, routes, ["Compare scopes"], [], [], "synthetic")
+second = replace(first, reviewer="Reviewer β",
+                 assessment=replace(assessment, scientific_disposition="disputed"),
+                 route_assessments=[replace(r, outcome="invalid") for r in routes])
+objection = Issue("Unverified premises", [reference("review-a", "affected_record", "review")],
+                  "The conditions remain open", "blocking", "Compare assumptions", "open",
+                  "Synthetic objection", [], [], [], "synthetic")
+
+with TemporaryDirectory(prefix="assessment-example-", dir="/tmp") as temporary:
+    runtime = Path(temporary) / "runtime"
+    backup = Path(temporary) / "backup"
+    restored_root = Path(temporary) / "restored"
+    with RecordStore.create(runtime) as store:
+        declarations = [RecordEnvelope(name, 1, kind, {"synthetic": True}, creator,
+                                       operational_status="completed" if kind == "task_specification" else None)
+                        for name, kind in (("manifest", "work_product_manifest"), ("policy", "decision"),
+                                           ("execution", "tool_execution"), ("task", "task_specification"))]
+        declared = batch("declarations", declarations)
+        members = [assessment_envelope("review-a", 1, first, creator),
+                   assessment_envelope("review-b", 1, second, second_creator)]
+        members += [scientific_envelope(name, 1, value, creator) for name, value in (
+            ("route-a", route), ("route-b", replace(route, method="Separate route β")),
+            ("candidate", candidate), ("scope", scope))]
+        initial = batch("initial", members)
+        receipts = [store.submit(declared), store.submit_typed(initial)]
+        original_claim = store.history("candidate")
+        issue_record = assessment_envelope("issue", 1, objection, creator)
+        issue_initial = batch("issue-created", [issue_record])
+        receipts.append(store.submit_typed(issue_initial))
+        issue_next = assessment_envelope("issue", 2, replace(objection, disposition="under_investigation"), creator)
+        issue_revision = batch("issue-revised", [issue_next], {"issue": 1})
+        receipts.append(store.submit_typed(issue_revision))
+        retained = declarations + members + [issue_record, issue_next]
+        events = store.audit_events()
+        assert store.history("candidate") == original_claim
+        assert original_claim[0].scientific_disposition == "provisional"
+        assert store.history("issue") == (issue_record, issue_next)
+        assert len(events) == 4
+    with RecordStore.open(runtime) as reopened:
+        assert reopened.get_typed_revision("review-a", 1)[1] == first
+        assert reopened.get_typed_revision("review-b", 1)[1] == second
+        assert reopened.history("candidate") == original_claim
+        info = create_backup(reopened, backup)
+        assert inspect_backup(backup) == info
+    with restore_backup(backup, restored_root) as restored:
+        for item in retained:
+            assert restored.get_revision(item.record_id, item.revision) == item
+        assert restored.get_typed_revision("issue", 2)[1].disposition == "under_investigation"
+        assert restored.get_typed_revision("review-a", 1)[1].assessment.obligations == ("Existence obligation",)
+        assert restored.get_typed_revision("review-b", 1)[1].route_assessments[0].outcome == "invalid"
+        assert restored.history("candidate") == original_claim
+        assert restored.audit_events() == events
+        assert restored.submit(declared) == receipts[0]
+        for submitted, receipt in zip((initial, issue_initial, issue_revision), receipts[1:]):
+            assert restored.get_submission(submitted.submission_id) == receipt
+            assert restored.submit_typed(submitted) == receipt
+```
+
+Reviewer/provenance attribution, requested/reported blind modes, empty sharing
+declarations, ToolExecution references, completed tasks and policy references
+certify neither independence, execution nor authority. Review dimensions and Issue
+dispositions never update candidate history or create eligibility, permission,
+endorsement or decision records; generic decision references are caller declarations.
+Current eligibility/freshness, Apply disposition, scientific qualification and M0-S
+remain future work. This infrastructure neither completes D02 nor authorizes a
+scientific pilot or release. Local checks are advisory; the unchanged controller
+validator remains `/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py`.
