@@ -67,7 +67,7 @@ retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
 Full scientific schemas/kinds, support/assessment freshness, eligibility/promotion,
 worker isolation, leases/fencing, resource authorization/accounting, general migrations,
-verified backups/restoration, distributed execution and research execution remain
+periodic scheduling, distributed execution and research execution remain
 unsupported. No ledger means no duplicate charging guarantee. This slice does not
 complete overall M0-E, M0-S, M1, D02 or scientific validation.
 
@@ -140,3 +140,17 @@ to existing unittest discovery. The fixture itself introduces no production
 controller or persistence mechanism. Its historical v1.3 provenance is preserved;
 under v1.4, pending scientific validation gates the work that depends on it rather
 than imposing a blanket hold on independent storage engineering.
+
+## Consistent local snapshots
+
+`research_pipeline.backup` reuses the private RecordStore connection for supported
+SQLite incremental backup and ArtifactStore for independent verified object copies.
+All inventory decisions use captured metadata across historical revisions. Strict
+manifest, fixed schema, relational and application consistency checks share one
+read-only verification path for inspection and restoration. Exclusive destination
+markers define completeness; restore publishes artifacts before original metadata
+and RecordStore rejects interrupted restores before opening SQLite. See
+[the backup contract](backups.md) for snapshot selection, fixed capture deadline,
+publication uncertainty, local POSIX/trusted-owner assumptions and runnable usage.
+No migration, scientific identity regeneration or submission replay occurs. This
+is partial R-019/R-017 evidence, not complete D02 or research-run/session/job recovery.

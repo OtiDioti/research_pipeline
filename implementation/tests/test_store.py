@@ -539,6 +539,7 @@ def guard(event, args):
     if forbidden: raise AssertionError(event)
 sys.addaudithook(guard)
 from research_pipeline.store import RecordStore
+from research_pipeline.backup import create_backup, inspect_backup, restore_backup
 phase = "runtime"
 with RecordStore.create("caller-relative") as store:
     assert store.head("absent") is None

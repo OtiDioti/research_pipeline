@@ -151,8 +151,14 @@ def _connect(path):
 
 
 def _check_database_file(root):
-    """Inspect an owned private regular database and reject unsupported journal layouts."""
+    """Reject interrupted restores before inspecting private metadata or journal layouts."""
     with _path_directory(root) as area:
+        try:
+            os.stat(".restore-incomplete", dir_fd=area, follow_symlinks=False)
+        except FileNotFoundError:
+            pass
+        else:
+            raise StoreLayoutError("incomplete restore: .restore-incomplete exists; no recovery attempted")
         for suffix in ("-wal", "-shm"):
             try:
                 os.stat("metadata.sqlite3" + suffix, dir_fd=area, follow_symlinks=False)
@@ -250,7 +256,7 @@ class RecordStore:
 
     @classmethod
     def open(cls, root) -> "RecordStore":
-        """Gate existing layout/schema without mutation, then permit normal journal recovery."""
+        """Reject incomplete restores and gate layout/schema before normal journal recovery."""
         try:
             artifacts = ArtifactStore.open(root)
             path = artifacts._root / "metadata.sqlite3"

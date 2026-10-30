@@ -70,7 +70,7 @@ conflicting writes, retained orphans, hot-journal recovery, post-commit interrup
 and later artifact integrity failures. Local test results are advisory to controller
 validation. Full scientific schemas/kinds, support/assessment freshness,
 eligibility/promotion, worker isolation, attempt leases/fencing, resource
-authorization/accounting, migrations, verified backups/restoration, distributed
+authorization/accounting, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. There is no duplicate charging
 guarantee without a ledger. Artifact identity and completed task state confer no
 scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
@@ -89,3 +89,12 @@ The default data path follows the resolved source module, independently of cwd.
 Explicit relative inputs are caller-relative; missing inputs fail with ordinary
 file errors and are never acquired. Each load returns fresh mutable data. This
 paper fixture adds no research CLI command or runtime/persistence capability.
+
+## Verified local backup and restore
+
+The explicit `research_pipeline.backup` API captures consistent SQLite snapshots,
+verifies historical artifact inventories and restores independent version-1 stores.
+See [backups](../docs/backups.md) for exact signatures, runnable examples, strict
+manifest verification, retained incomplete directories and uncertain publication
+acknowledgment. This is partial R-019/R-017 evidence; full D02, real research-run/
+session/job recovery, scientific validation and live-provider work remain outstanding.

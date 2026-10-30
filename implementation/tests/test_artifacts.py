@@ -419,6 +419,7 @@ def guard(event, arguments):
 sys.addaudithook(guard)
 from research_pipeline.domain import ArtifactReference
 from research_pipeline.artifacts import ArtifactStore
+from research_pipeline.backup import create_backup, inspect_backup, restore_backup
 phase = "runtime"
 store = ArtifactStore.create("relative-runtime")
 reference = store.put(b"caller relative")

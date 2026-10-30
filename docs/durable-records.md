@@ -148,8 +148,9 @@ directory `fsync`, `O_DIRECTORY`, `O_NOFOLLOW`, and atomic hard links on the sam
 filesystem for staging and objects. Unsupported operations fail rather than
 weakening the protocol. Directory privacy and read-only files constrain ordinary
 access, not a hostile storage owner, privileged process, or unsupported filesystem.
-Later integrity checks detect mutation; they provide neither scientific validity
-nor backup guarantees.
+Later artifact integrity checks detect mutation; they provide no scientific
+validity or independent copy. Use the separate [backup boundary](backups.md) for
+verified local snapshots and restoration.
 
 ## Submission values and fingerprint
 
@@ -242,6 +243,9 @@ group/other-accessible database files are rejected. Runtime data must stay outsi
 software source; relative paths use the caller's working directory.
 
 Version 1 (`PRAGMA user_version`) and DDL commit in one explicit transaction.
+Opening first rejects any `.restore-incomplete` entry without repair or removal.
+The [backup/restore API](backups.md) removes this marker only after complete copy
+verification and synchronization. Existing unmarked version-1 stores remain supported.
 Opening checks the SQLite header and fixed schema before any connection that could
 recover journals or change files. A read-only immutable connection reads only the
 main-file version and schema for this gate. Complete DDL matching checks required
@@ -263,7 +267,8 @@ explicit `BEGIN`, `COMMIT` and `ROLLBACK`; writes use `BEGIN IMMEDIATE`.
 This is single-host local storage. Network filesystems, WAL, distributed storage,
 general migrations and concurrent external mutation are unsupported. Durability
 assumes trusted storage ownership and working filesystem/device synchronization;
-it is not protection from a hostile owner or verified backup/restoration.
+it is not protection from a hostile owner. The separate
+[verified local backup API](backups.md) supplies consistent capture and restoration.
 
 ## Atomic submission, exact links and recovery
 
@@ -369,8 +374,8 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 Full scientific payload schemas and remaining record kinds, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
-fencing, resource authorization/accounting, general migrations, verified
-backups/restoration, distributed execution and research execution remain unsupported.
+fencing, resource authorization/accounting, general migrations, periodic
+scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.
 There is no duplicate resource charging guarantee without a ledger. This slice
 completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
 validation. M0-S gates scientifically dependent evaluation, qualification and
