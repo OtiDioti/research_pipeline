@@ -23,6 +23,9 @@ from research_pipeline.scientific import (
     Claim, Evidence, Justification, NotTypedContentError, ResearchContext, ScientificContent,
     decode_envelope as _decode_scientific_envelope,
 )
+from research_pipeline.work_product import (
+    WorkProductManifest, decode_envelope as _decode_work_product_envelope,
+)
 from research_pipeline.schema import _VERSIONS, validate_schema, validate_request_kinds, validate_history
 
 
@@ -72,11 +75,12 @@ def _fault(boundary: str) -> None:
     """
 
 
-def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | AssessmentContent:
+def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | AssessmentContent | WorkProductManifest:
     """Decode a normalized envelope using one explicit format, without inference or fallback.
 
     Missing markers retain NotTypedContentError; other format/codec failures raise
-    DomainValidationError. The selected codec validates all states and ordered links.
+    DomainValidationError. Scientific, assessment and work-product codecs validate
+    states and ordered links.
     """
     content = envelope.content
     if "format" not in content:
@@ -87,6 +91,8 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | Asse
             return _decode_scientific_envelope(envelope)
         if discriminator == "research_pipeline.assessment_content":
             return _decode_assessment_envelope(envelope)
+        if discriminator == "research_pipeline.work_product_content":
+            return _decode_work_product_envelope(envelope)
     raise DomainValidationError("format: unsupported typed content format")
 
 
@@ -325,7 +331,7 @@ class RecordStore:
         return self._commit_submission(self._normalize_submission(submission), ())
 
     def submit_typed(self, submission: Submission) -> SubmissionReceipt:
-        """Atomically admit six typed kinds, exact target closure and review route membership.
+        """Atomically admit scientific, assessment and manifest content with exact target checks.
 
         Reconstruct and decode every member before reconciliation; malformed members
         raise domain/codec errors. New requests check typed target closure inside the
@@ -350,7 +356,7 @@ class RecordStore:
             raise DomainValidationError("submission: malformed nested typed value") from error
         return submission
 
-    def _commit_submission(self, submission, decoded: tuple[ScientificContent | AssessmentContent, ...]):
+    def _commit_submission(self, submission, decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest, ...]):
         """Commit a normalized request and its ordered decoded values via one algorithm.
 
         Generic requests supply an empty tuple; typed requests supply one immutable
@@ -423,12 +429,14 @@ class RecordStore:
             self._artifacts._verify_for_commit(reference)
 
     @staticmethod
-    def _typed_references(value: ScientificContent | AssessmentContent) -> tuple[
+    def _typed_references(value: ScientificContent | AssessmentContent | WorkProductManifest) -> tuple[
             tuple[RecordReference, ...], tuple[RecordReference, ...]]:
         """Partition decoded semantic roles into constrained and shallow generic references.
 
         Generic declarations confer no typed validity: never inspect their payloads,
         outgoing edges or attachments, even when they name a supported typed kind.
+        Manifest context/claims/supersedes are constrained; its other roles are shallow.
+        Review context_manifest stays shallow even for a typed manifest target.
         """
         if type(value) is ResearchContext:
             return (), ()
@@ -446,16 +454,24 @@ class RecordStore:
                      *(ref for ref in value.reported_checks if ref.relationship == "reported_tool_execution")))
         if type(value) is Issue:
             return value.supporting_evidence, value.affected_records
-        raise DomainValidationError("content: expected a decoded scientific or assessment value")
+        if type(value) is WorkProductManifest:
+            constrained = tuple(ref for ref in (value.context, *value.linked_claims, value.supersedes)
+                                if ref is not None)
+            shallow = tuple(ref for ref in (value.task, value.branch, value.run,
+                                           *value.linked_sources, *value.build_dependencies)
+                            if ref is not None)
+            return constrained, shallow
+        raise DomainValidationError("content: expected a decoded scientific, assessment or work-product value")
 
     def _check_typed_targets(self, connection, submission,
-                             decoded: tuple[ScientificContent | AssessmentContent, ...]):
+                             decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest, ...]):
         """Validate exact constrained closure and submitted review routes inside the write lock.
 
         Resolve batch members before historical metadata, never reading transitive
         artifact bytes. Every incoming edge checks kind, independently of caching.
         Historical decoding/reconstruction failures become chained reference errors;
         generic edges check only existence and declared kind and are never enqueued.
+        Historical manifest supersession receives the same local and recursive checks.
         """
         if not decoded:
             return
@@ -567,13 +583,14 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent]:
+    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest]:
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise
         NotTypedContentError and other codec failures raise DomainValidationError.
         This checks selected-envelope coherence, not past admission or scientific
-        validity. It never traverses targets or establishes review route membership.
+        validity. Manifest supersession is checked locally against identity/revision.
+        It never traverses targets or establishes review route membership.
         """
         envelope = self.get_revision(record_id, revision)
         return envelope, _decode_typed_envelope(envelope)

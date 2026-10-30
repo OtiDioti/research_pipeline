@@ -40,3 +40,9 @@ admission/read alongside the four scientific kinds. Its executed synthetic examp
 retains disagreeing reviewers and separate Issue revisions through reopen and exact
 restore. Exact route membership is structural; current eligibility/freshness,
 Apply disposition and scientific qualification remain future work.
+
+[Work-product manifests](work-products.md) documents immutable multi-file bundles,
+portable path and alias rules, strict codecs, exact optional supersession and typed
+admission alongside scientific/assessment values. The runnable example persists and
+reopens a manifest without executing its bytes. Build/input references grant no
+authority; checkout and preview/import remain later milestones, and D02 is partial.

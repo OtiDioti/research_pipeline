@@ -9,7 +9,8 @@ and existing domain values.
 The separate [attributed assessment contract](attributed-assessments.md) adds pure
 Review/Issue values and exact envelopes with its own discriminator. Its reported
 dimensions are content, separate from canonical state. Durable `submit_typed` and
-`get_typed_revision` support all four scientific kinds and both assessment kinds,
+`get_typed_revision` support all four scientific kinds, both assessment kinds and
+[work-product manifests](work-products.md),
 with constrained traversal and exact review route-conclusion membership checks.
 
 This contract establishes structural coherence, not scientific completeness,
@@ -25,7 +26,7 @@ fixture's v1.3 provenance are unchanged.
 
 Evidence `input_records` may name any of the twenty generic kinds, including
 new generic project, run or source records. Commit generic records separately
-through `submit`; the six supported typed kinds may share a typed batch with
+through `submit`; the seven supported typed kinds may share a typed batch with
 forward references. Input roles check exact existence and declared kinds without
 extending constrained traversal. Generic project/run/source content cannot serve
 as typed members or targets in context, premise, conclusion, evidence or
@@ -192,12 +193,13 @@ explicit controller attribution, ordered members and an expectation for each
 identity (`0` for creation). The public methods are:
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest]`
 
-A typed batch contains any of the four scientific kinds and the two
-[assessment kinds](attributed-assessments.md), in any order. Commit generic tasks,
-manifests, policies and executions separately through `submit`; evidence may name
-them as exact inputs. All supplied members are defensively reconstructed and decoded,
+A typed batch contains any of the four scientific kinds, the two
+[assessment kinds](attributed-assessments.md) and coherent
+[work-product manifests](work-products.md), in any order. Commit generic tasks,
+arbitrary generic manifests, policies and executions separately through `submit`;
+evidence may name them as exact inputs. All supplied members are defensively reconstructed and decoded,
 including complete ordered content/link agreement. No links are repaired from
 content. Local codec failures remain `DomainValidationError`; absent format
 markers remain its `NotTypedContentError` subtype.
@@ -208,7 +210,9 @@ committed revisions, never current target heads. Each target must have the
 required kind and supported typed content with coherent stored links. The same
 rule applies recursively to constrained roles reached through historical targets.
 Review candidate/context/reported-Evidence/route and Issue supporting-Evidence
-roles extend this same traversal. Review manifest/policy/reported-ToolExecution
+roles extend this same traversal. Manifest context/linked-claim/supersedes roles
+also require typed targets; task/branch/run/source/build-dependency roles remain
+shallow. Review manifest/policy/reported-ToolExecution
 and Issue affected-record roles remain shallow existence/kind checks; the
 [complete role table](attributed-assessments.md#durable-api-and-exact-traversal)
 specifies both contracts. Every assessed route must conclude its Review's exact

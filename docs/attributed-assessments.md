@@ -163,16 +163,17 @@ or decision. `CreationProvenance` is copied caller attribution, not authenticati
 ## Durable API and exact traversal
 
 Import `RecordStore` from `research_pipeline.store` and the shared `Submission`
-from `research_pipeline.domain`. The existing durable methods now support all six
-kinds: ResearchContext, Claim, Justification, Evidence, Review and Issue.
+from `research_pipeline.domain`. The existing durable methods support seven kinds:
+ResearchContext, Claim, Justification, Evidence, Review, Issue and
+[WorkProductManifest](work-products.md).
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest]`
 
 Use the scientific encoder for scientific content and the assessment encoder for
-Review/Issue. Mixed typed batches permit arbitrary member order and forward
+Review/Issue, and the work-product encoder for coherent manifests. Mixed typed batches permit arbitrary member order and forward
 references, including Issue affected references to later Review/Issue members.
-Every member must decode independently. Commit generic manifests, policies,
+Every member must decode independently. Commit arbitrary generic manifests, policies,
 ToolExecutions, tasks and other generic records separately with `submit`.
 The store dispatches only on the explicit content format, without inference or
 fallback to a different codec after failure. The four scientific codecs and wire
@@ -190,13 +191,18 @@ from the successfully decoded value, never from arbitrary generic field names.
 | Evidence | `context` → research_context; `target_claim` → claim | `input_record` → any supported kind, or explicit null |
 | Review | `candidate_claim` → claim; `target_context` → research_context; `reported_evidence` → evidence; `assessed_route` → justification | `context_manifest` → work_product_manifest; `authorization_policy` → decision; `reported_tool_execution` → tool_execution |
 | Issue | `supporting_evidence` → evidence | `affected_record` → any supported kind, including scientific, review and issue |
+| WorkProductManifest | `context` → research_context; `linked_claim` → claim; `supersedes` → work_product_manifest | `task` → task_specification; `branch` → branch; `run` → run; `linked_source` → source; `build_dependency` → any explicitly declared supported kind |
 
 Traversed targets require supported typed content and complete coherent ordered
 links. Their constrained outgoing edges follow the same rules; their generic
 outgoing edges receive only shallow existence/kind checks. Generic targets do not
 have their payloads, outgoing links or attachments inspected. A generic occurrence
 does not establish typed validity if the same target also occurs in a constrained
-role. Every incoming constrained edge checks its required kind. A finite worklist
+role. Review `context_manifest` remains shallow even when a manifest has a supported
+codec: generic, unsupported or incoherent content still does not establish verified
+exposure. Manifest supersession requires a coherent typed predecessor and follows
+its constrained outgoing roles. Envelope-local identity/revision rules apply even
+to historical targets. Every incoming constrained edge checks its required kind. A finite worklist
 with separate decoded/processed caches terminates descriptive cycles without
 imposing an accepted-deduction cycle policy.
 

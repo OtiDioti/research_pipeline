@@ -43,13 +43,20 @@ fields, local assumptions, conjunctive premises and artifact-role boundaries.
 `research_pipeline.assessment` supplies pure frozen Review/Issue values with a
 distinct version-1 format, independent reported dimensions and exact ordered links.
 Its declarations certify neither independence, execution nor authority.
-`RecordStore.submit_typed` selects the scientific or assessment codec explicitly
-and decodes every member locally, admitting mixed six-kind batches. For a new canonical
+`research_pipeline.work_product` supplies pure immutable multi-file manifests with
+portable logical paths, conservative NFKC/casefold alias rejection and explicit
+attribution. It reuses domain/scientific/assessment validation primitives without
+filesystem access. See [work products](work-products.md) for exact wire contracts
+and optional immediate-predecessor supersession.
+`RecordStore.submit_typed` selects the scientific, assessment or work-product codec
+explicitly and decodes every member locally, admitting mixed seven-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized
 write transaction after submission-ID reconciliation. Historical target checks read metadata; public exact reads verify
 direct artifacts. The traversal follows explicit per-kind constrained roles;
-manifest/policy/ToolExecution, Issue affected-record and Evidence input roles check
-only exact existence and declared kind. Every submitted Review's assessed route
+Review manifest/policy/ToolExecution, Issue affected-record and Evidence input roles
+check only exact existence and declared kind. Manifest context/linked-claim/supersedes
+roles are constrained typed edges; task/branch/run/source/build-dependency roles
+remain shallow. No transitive artifact verification is added. Every submitted Review's assessed route
 must conclude its exact candidate, without equating their contexts. See the
 [complete traversal contract](attributed-assessments.md#durable-api-and-exact-traversal).
 `get_typed_revision` returns the detached envelope and typed value without recursively

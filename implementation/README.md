@@ -7,7 +7,8 @@ source-local loader, validated domain envelopes, immutable local artifacts, and
 SQLite-backed atomic revision submissions with durable receipts and audit events,
 and typed scientific content with exact envelope relationships and durable admission/read.
 Attributed Review/Issue values, exact assessment envelopes and durable typed
-admission/read are also available.
+admission/read are also available. Immutable multi-file WorkProductManifest values
+join the same typed boundary; see [work products](../docs/work-products.md).
 It implements no research execution, models, scientific verification, or vault
 generation. Specification v1.4 separates engineering readiness from scientific
 validation; this durable slice does not complete either overall gate or M1/D02.
@@ -82,7 +83,7 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
 evidence, strict codecs, exact role projection and runnable codec/persistence examples.
-`RecordStore.submit_typed` admits the four scientific and two assessment kinds
+`RecordStore.submit_typed` admits the four scientific, two assessment and work-product manifest kinds
 as coherent exact typed target graphs atomically;
 `get_typed_revision` returns the exact envelope and decoded value. `submit` remains
 a trusted generic persistence API, not a scientific admission gate. Typed retries
@@ -134,3 +135,11 @@ See [backups](../docs/backups.md) for exact signatures, runnable examples, stric
 manifest verification, retained incomplete directories and uncertain publication
 acknowledgment. This is partial R-019/R-017 evidence; full D02, real research-run/
 session/job recovery, scientific validation and live-provider work remain outstanding.
+
+[Work-product manifests](../docs/work-products.md) provide explicit authors, portable logical
+paths, ordered exact references and optional previous-revision supersession. Repeated
+bytes can appear at distinct paths. Manifest context/claims/supersession are typed
+edges; build dependencies and Review context-manifest references remain shallow.
+Kind labels certify no detailed TeX/checkpoint/run-report/execution contract; attribution
+is declared, not authenticated. Checkout, preview/import, full vault/intake, scientific
+sufficiency and research execution remain deferred; D02 is partial.
