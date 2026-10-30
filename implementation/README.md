@@ -2,7 +2,8 @@
 
 This directory contains the `theoretical-research-pipeline` distribution and its
 `research_pipeline` import package. It provides package identity, CLI help/version,
-and development validation. It implements no research execution, models,
+development validation, and a synthetic oscillator development fixture with a
+source-local loader. It implements no research execution, models,
 scientific verification, or vault generation. It does not complete M0 or the D01
 scientific-contract gate. Implementation is submitted for review; controller
 acceptance and integration are separate events.
@@ -49,3 +50,18 @@ nonempty UTF-8 regular files. Validation never rewrites those documents.
 
 See [foundation architecture](../docs/architecture.md) for module boundaries and
 future scientific-runtime limits.
+
+The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
+the versioned fixture, exact-reference contract, loader exceptions, expected scoped
+assessments, and focused test commands. It is neither expert-audited nor held-out
+material. Load it from the repository root without installation:
+
+```bash
+PYTHONPATH="$PWD/implementation/src" /home/francesco/miniconda3/bin/python3 -B -c 'from research_pipeline.fixtures import load_oscillator_fixture; data = load_oscillator_fixture()'
+/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py
+```
+
+The default data path follows the resolved source module, independently of cwd.
+Explicit relative inputs are caller-relative; missing inputs fail with ordinary
+file errors and are never acquired. Each load returns fresh mutable data. This
+paper fixture adds no research CLI command or runtime/persistence capability.

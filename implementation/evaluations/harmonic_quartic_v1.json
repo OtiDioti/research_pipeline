@@ -1,0 +1,1236 @@
+{
+  "schema_version": 1,
+  "fixture_version": "1.0.0",
+  "metadata": {
+    "source": "project_description.md",
+    "section": "13.1",
+    "specification_sha256": "13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7",
+    "origin": "synthetic_local",
+    "visibility": "development",
+    "synthetic": true,
+    "classification": "synthetic-development",
+    "expert_audited": false,
+    "held_out": false,
+    "simulation": true,
+    "execution": "not_performed",
+    "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment."
+  },
+  "records": [
+    {
+      "id": "seed",
+      "revision": 1,
+      "kind": "seed",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_requester",
+      "question": "For H=p²/(2m)+mω²x²/2+λx⁴ on the full real line, does a minimum-energy ground state exist for small quartic coefficients of either sign, and when can its energy be interpreted using a first-order harmonic perturbation expression?",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "readiness": "simulated_ready"
+    },
+    {
+      "id": "context-both",
+      "revision": 1,
+      "kind": "context",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "scope": "both_signs",
+      "domain": "full_real_line",
+      "observable": "minimum_energy_ground_state",
+      "hamiltonian": "H=p²/(2m)+mω²x²/2+λx⁴; Hilbert space L²(R), p=-iℏ d/dx.",
+      "parameters": "m>0, ω>0, ℏ>0; real λ; λ=0 is the harmonic baseline, with small positive and negative λ explored.",
+      "units": "Use consistent units: x is length, p momentum, ℏ action, ω inverse time, λ energy/length⁴.",
+      "small_parameter": "g=λℏ/(m²ω³) is dimensionless; formal small coupling means |g|≪1, with no numerical threshold or error guarantee.",
+      "boundary_assumptions": "Full-line square-integrable states, normalization and sufficient weak differentiability/finite kinetic and potential expectations on a suitable operator or quadratic-form domain; smooth compactly supported trial functions are available. Decay/regularity are assumptions on admissible states, not a postulate that a ground state exists.",
+      "projection": "Project H onto the first N harmonic oscillator states |n>, n=0,...,N-1, with symbolic positive integer N. Construct P_N H P_N as a finite Hermitian matrix. N-convergence and error control are unresolved; finite truncation need not preserve full-line stability. No matrix was constructed or diagonalized here.",
+      "existence_is_obligation": true,
+      "coefficient_signs": [
+        "positive",
+        "negative"
+      ]
+    },
+    {
+      "id": "both-existence_domain",
+      "revision": 1,
+      "kind": "obligation",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "category": "existence_domain",
+      "status": "unresolved",
+      "requirement": "Establish an appropriate Hamiltonian domain, lower boundedness and a normalizable minimum-energy ground state within the stated coefficient regime; do not assume existence from admissible boundary conditions."
+    },
+    {
+      "id": "both-approximation",
+      "revision": 1,
+      "kind": "obligation",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "category": "approximation",
+      "status": "unresolved",
+      "requirement": "Justify interpretation of the formal first-order expression, its asymptotic/remainder behavior and applicability to an existing ground state; harmonic moments alone do not discharge this obligation."
+    },
+    {
+      "id": "both-convergence",
+      "revision": 1,
+      "kind": "obligation",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "category": "convergence",
+      "status": "unresolved",
+      "requirement": "Control N→∞ convergence and truncation errors in the finite harmonic-basis projection before interpreting finite-matrix results as full-line support."
+    },
+    {
+      "id": "harmonic-check",
+      "revision": 1,
+      "kind": "evidence",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_checker",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "purpose": "harmonic_limit",
+      "scope": "harmonic_baseline",
+      "expected_outcome": "pass",
+      "target": null,
+      "argument": null,
+      "explanation": "Expected simulated check: at λ=0 the harmonic ground-state energy is ℏω/2 and normalized Gaussian moments give <x²>=ℏ/(2mω), <x⁴>=3<x²>². This baseline is not evidence of ground-state existence at negative λ. No calculation was executed."
+    },
+    {
+      "id": "basis-check",
+      "revision": 1,
+      "kind": "evidence",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_checker",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "purpose": "basis_construction",
+      "scope": "finite_projection",
+      "expected_outcome": "pass",
+      "target": null,
+      "argument": null,
+      "explanation": "Expected simulated check: the first N orthonormal harmonic states give Hermitian projected p², x² and x⁴ matrix elements for real λ. Project x⁴ itself: (P_N x P_N)^4 need not equal P_N x⁴ P_N. Boundary truncation and N-convergence require review. No numerical matrix or benchmark was produced."
+    },
+    {
+      "id": "harmonic-algebra",
+      "revision": 1,
+      "kind": "justification",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_explorer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "method": "analytical",
+      "scope": "formal_harmonic_moments",
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        }
+      ],
+      "explanation": "The normalized harmonic ground state has density proportional to exp(-mωx²/ℏ). Its Gaussian variance is <x²>=ℏ/(2mω), and its fourth moment is <x⁴>=3<x²>². Thus E0^(0)=ℏω/2 and the formal first-order correction is ΔE0=λ<x⁴>=3λ(ℏ/(2mω))². The formal expression E0≈ℏω/2+3λ(ℏ/(2mω))² leaves remainder/asymptotic and applicability obligations unresolved and cannot establish existence of the state being interpreted."
+    },
+    {
+      "id": "finite-matrix",
+      "revision": 1,
+      "kind": "justification",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_explorer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "method": "finite_matrix",
+      "scope": "finite_projection",
+      "evidence": [
+        {
+          "id": "basis-check",
+          "revision": 1
+        }
+      ],
+      "explanation": "A finite Hermitian matrix P_N H P_N has a lowest eigenvalue for each finite positive integer N and real λ. Expected operational completion concerns that finite problem only. It does not establish a lower-bounded full-line Hamiltonian, convergence or an actual ground state. No diagonalization occurred in this fixture."
+    },
+    {
+      "id": "matrix-task",
+      "revision": 1,
+      "kind": "task",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_executor",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "justification": {
+        "id": "finite-matrix",
+        "revision": 1
+      },
+      "evidence": [
+        {
+          "id": "basis-check",
+          "revision": 1
+        }
+      ],
+      "expected_outcome": "completed",
+      "scope": "finite_projection",
+      "completion_condition": "Expected oracle: the finite projected matrix construction and lowest-eigenvalue task is operationally completed in the paper scenario. Actual execution is not performed; full-line interpretation is a separate scientific obligation."
+    },
+    {
+      "id": "baseline",
+      "revision": 1,
+      "kind": "snapshot",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_coordinator",
+      "stage": "baseline",
+      "task": {
+        "id": "matrix-task",
+        "revision": 1
+      },
+      "candidate": null,
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "review": null,
+      "issue": null,
+      "historical_candidate": null,
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        }
+      ],
+      "retained_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "outstanding_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "operational_status": "completed",
+      "work_stage": "exploring",
+      "scientific_disposition": "provisional",
+      "applicability": "unresolved",
+      "novelty": "unassessed",
+      "endorsement": "none",
+      "support": [
+        {
+          "type": "analytical",
+          "scope": "formal_harmonic_moments",
+          "applicability": "limited_scope_only"
+        },
+        {
+          "type": "numerical",
+          "scope": "finite_projection",
+          "applicability": "limited_scope_only"
+        }
+      ],
+      "rationale": "Expected exploration retains harmonic algebra and the finite-projection task outcome, with no inference of full-line applicability or scientific endorsement."
+    },
+    {
+      "id": "candidate-both",
+      "revision": 1,
+      "kind": "candidate",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_explorer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "derived_from": null,
+      "statement": "Provisional overbroad claim: a normalizable minimum-energy ground state exists for all sufficiently small nonzero real λ of either sign on the full line, with first-order relation E0≈ℏω/2+3λ(ℏ/(2mω))². This frozen historical assertion is challenged later, not silently edited.",
+      "disposition": "provisional",
+      "review_status": "awaiting_challenge",
+      "endorsement": "none",
+      "justifications": [
+        {
+          "id": "harmonic-algebra",
+          "revision": 1
+        },
+        {
+          "id": "finite-matrix",
+          "revision": 1
+        }
+      ],
+      "support_use": "incomplete",
+      "obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "frozen": true
+    },
+    {
+      "id": "before-challenge",
+      "revision": 1,
+      "kind": "snapshot",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_coordinator",
+      "stage": "frozen",
+      "task": {
+        "id": "matrix-task",
+        "revision": 1
+      },
+      "candidate": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "review": null,
+      "issue": null,
+      "historical_candidate": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        }
+      ],
+      "retained_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "outstanding_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "operational_status": "completed",
+      "work_stage": "frozen_candidate",
+      "scientific_disposition": "provisional",
+      "applicability": "requires_reassessment",
+      "novelty": "unassessed",
+      "endorsement": "none",
+      "support": [
+        {
+          "type": "analytical",
+          "scope": "formal_harmonic_moments",
+          "applicability": "limited_scope_only"
+        },
+        {
+          "type": "numerical",
+          "scope": "finite_projection",
+          "applicability": "limited_scope_only"
+        }
+      ],
+      "rationale": "Expected freeze preserves the exact both-signs candidate and its incomplete support. Completed finite-matrix work does not discharge full-line existence or approximation obligations."
+    },
+    {
+      "id": "translated-state",
+      "revision": 1,
+      "kind": "justification",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_explorer",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "method": "translated_trial_state",
+      "scope": "negative_full_line",
+      "evidence": [
+        {
+          "id": "negative-check",
+          "revision": 1
+        }
+      ],
+      "explanation": "Choose a normalized smooth compactly supported fixed-width trial function φ∈C_c^∞(R) and ψ_a(x)=φ(x-a). These states remain normalized and admissible in the test-function domain. Their kinetic expectation is translation invariant. Writing x=a+y, the harmonic expectation grows O(a²), while the quartic contribution is λa⁴+O(a³) for fixed λ<0. As a→+∞, the negative quartic term dominates and <ψ_a,Hψ_a>→−∞. Thus no lower bound or minimum-energy full-line ground state exists in that negative regime. The argument does not refute finite-matrix diagonalization or the formal Gaussian moment algebra. Domain details still require expert inspection; this is a supplied paper argument, not an executed review."
+    },
+    {
+      "id": "negative-check",
+      "revision": 1,
+      "kind": "evidence",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_checker",
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "purpose": "negative_existence",
+      "scope": "negative_full_line",
+      "expected_outcome": "fail",
+      "target": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "argument": {
+        "id": "translated-state",
+        "revision": 1
+      },
+      "explanation": "Expected existence check fails for the exact frozen candidate-both@1 in context-both@1 at fixed λ<0. The translated fixed-width states have energy tending to minus infinity. The universal both-signs interpretation fails via its negative branch; retained harmonic algebra and finite-projection evidence remain limited useful results."
+    },
+    {
+      "id": "negative-review",
+      "revision": 1,
+      "kind": "review",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_reviewer",
+      "target": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        },
+        {
+          "id": "negative-check",
+          "revision": 1
+        }
+      ],
+      "argument": {
+        "id": "translated-state",
+        "revision": 1
+      },
+      "expected_outcome": "refuted_within_scope",
+      "refuted_scope": "negative_full_line",
+      "preserved_scopes": [
+        "formal_harmonic_moments",
+        "finite_projection"
+      ],
+      "independence": "none_no_blind_or_independent_review",
+      "all_authored_together": true,
+      "assessment": "Simulated review authored together with all candidate and evidence content: no blind or independent review and no expert judgment occurred. Expected disposition refutes only the negative full-line interpretation of the frozen both-signs claim, preserving finite-matrix and formal-algebra scopes. No review authority transfers to a new positive candidate."
+    },
+    {
+      "id": "negative-issue",
+      "revision": 1,
+      "kind": "issue",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_reviewer",
+      "target": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "review": {
+        "id": "negative-review",
+        "revision": 1
+      },
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        },
+        {
+          "id": "negative-check",
+          "revision": 1
+        }
+      ],
+      "argument": {
+        "id": "translated-state",
+        "revision": 1
+      },
+      "disposition": "negative_interpretation_refuted",
+      "explanation": "The overbroad candidate asserts a full-line minimum at negative λ despite unbounded variational energy. Retain the exact historical candidate, context, analytical derivation, finite-matrix result and challenge. The next action is scoped expert examination, not deletion or blanket invalidation."
+    },
+    {
+      "id": "after-challenge",
+      "revision": 1,
+      "kind": "snapshot",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_coordinator",
+      "stage": "challenged",
+      "task": {
+        "id": "matrix-task",
+        "revision": 1
+      },
+      "candidate": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "context": {
+        "id": "context-both",
+        "revision": 1
+      },
+      "review": {
+        "id": "negative-review",
+        "revision": 1
+      },
+      "issue": {
+        "id": "negative-issue",
+        "revision": 1
+      },
+      "historical_candidate": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        },
+        {
+          "id": "negative-check",
+          "revision": 1
+        }
+      ],
+      "retained_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "outstanding_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        }
+      ],
+      "operational_status": "completed",
+      "work_stage": "reconciled",
+      "scientific_disposition": "refuted_within_negative_scope",
+      "applicability": "negative_full_line_inapplicable",
+      "novelty": "unassessed",
+      "endorsement": "none",
+      "support": [
+        {
+          "type": "analytical",
+          "scope": "formal_harmonic_moments",
+          "applicability": "limited_scope_only"
+        },
+        {
+          "type": "numerical",
+          "scope": "finite_projection",
+          "applicability": "limited_scope_only"
+        }
+      ],
+      "rationale": "Expected reconciliation leaves matrix-task@1 completed while withdrawing negative full-line applicability. The unchanged original candidate and formal/matrix evidence survive; the universal both-signs interpretation is refuted through its negative branch, not every artifact."
+    },
+    {
+      "id": "context-positive",
+      "revision": 1,
+      "kind": "context",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "scope": "positive",
+      "domain": "full_real_line",
+      "observable": "minimum_energy_ground_state",
+      "hamiltonian": "H=p²/(2m)+mω²x²/2+λx⁴; Hilbert space L²(R), p=-iℏ d/dx.",
+      "parameters": "m>0, ω>0, ℏ>0; restrict the candidate regime to real λ>0 with g≪1. The harmonic λ=0 case is a reference limit, not part of the positive candidate scope.",
+      "units": "Use consistent units: x is length, p momentum, ℏ action, ω inverse time, λ energy/length⁴.",
+      "small_parameter": "g=λℏ/(m²ω³) is dimensionless; formal small coupling means |g|≪1, with no numerical threshold or error guarantee.",
+      "boundary_assumptions": "Full-line square-integrable states, normalization and sufficient weak differentiability/finite kinetic and potential expectations on a suitable operator or quadratic-form domain; smooth compactly supported trial functions are available. Decay/regularity are assumptions on admissible states, not a postulate that a ground state exists.",
+      "projection": "Project H onto the first N harmonic oscillator states |n>, n=0,...,N-1, with symbolic positive integer N. Construct P_N H P_N as a finite Hermitian matrix. N-convergence and error control are unresolved; finite truncation need not preserve full-line stability. No matrix was constructed or diagonalized here.",
+      "existence_is_obligation": true,
+      "coefficient_signs": [
+        "positive"
+      ]
+    },
+    {
+      "id": "positive-existence_domain",
+      "revision": 1,
+      "kind": "obligation",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "context": {
+        "id": "context-positive",
+        "revision": 1
+      },
+      "category": "existence_domain",
+      "status": "unresolved",
+      "requirement": "Establish an appropriate Hamiltonian domain, lower boundedness and a normalizable minimum-energy ground state within the stated coefficient regime; do not assume existence from admissible boundary conditions."
+    },
+    {
+      "id": "positive-approximation",
+      "revision": 1,
+      "kind": "obligation",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "context": {
+        "id": "context-positive",
+        "revision": 1
+      },
+      "category": "approximation",
+      "status": "unresolved",
+      "requirement": "Justify interpretation of the formal first-order expression, its asymptotic/remainder behavior and applicability to an existing ground state; harmonic moments alone do not discharge this obligation."
+    },
+    {
+      "id": "positive-convergence",
+      "revision": 1,
+      "kind": "obligation",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_framer",
+      "context": {
+        "id": "context-positive",
+        "revision": 1
+      },
+      "category": "convergence",
+      "status": "unresolved",
+      "requirement": "Control N→∞ convergence and truncation errors in the finite harmonic-basis projection before interpreting finite-matrix results as full-line support."
+    },
+    {
+      "id": "candidate-positive",
+      "revision": 1,
+      "kind": "candidate",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_explorer",
+      "context": {
+        "id": "context-positive",
+        "revision": 1
+      },
+      "derived_from": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "statement": "New provisional positive-coefficient question/claim: for small λ>0 on the full line, establish ground-state existence and justify the formal first-order energy relation E0≈ℏω/2+3λ(ℏ/(2mω))². This distinct identity is not endorsed; existence/domain, asymptotic approximation and N-convergence remain unresolved.",
+      "disposition": "provisional",
+      "review_status": "pending_review",
+      "endorsement": "none",
+      "justifications": [
+        {
+          "id": "harmonic-algebra",
+          "revision": 1
+        },
+        {
+          "id": "finite-matrix",
+          "revision": 1
+        }
+      ],
+      "support_use": "requires_applicability_review",
+      "obligations": [
+        {
+          "id": "positive-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "positive-approximation",
+          "revision": 1
+        },
+        {
+          "id": "positive-convergence",
+          "revision": 1
+        }
+      ],
+      "frozen": true
+    },
+    {
+      "id": "resonance-question",
+      "revision": 1,
+      "kind": "proposed_question",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_explorer",
+      "derived_from": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "status": "proposed_requires_new_specification",
+      "observable": "A proposed resonance position/width or metastable lifetime would be a new observable, not minimum ground-state energy.",
+      "boundary_conditions": "Specify appropriate resonance/outgoing or other newly justified boundary conditions before posing this different problem.",
+      "context_requirement": "Create a new versioned context defining the observable, coefficient regime, domain and interpretation; no such approved context exists here.",
+      "task_requirement": "Specify a new task and its validation obligations before any resonance or metastability calculation; none is executed or completed here.",
+      "question": "Could a separately specified metastability/resonance problem be meaningful for negative λ? This is only a proposed question, never a substituted answer to the ground-state question."
+    },
+    {
+      "id": "partial-stop",
+      "revision": 1,
+      "kind": "snapshot",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_coordinator",
+      "stage": "partial_stop",
+      "task": {
+        "id": "matrix-task",
+        "revision": 1
+      },
+      "candidate": {
+        "id": "candidate-positive",
+        "revision": 1
+      },
+      "context": {
+        "id": "context-positive",
+        "revision": 1
+      },
+      "review": null,
+      "issue": {
+        "id": "negative-issue",
+        "revision": 1
+      },
+      "historical_candidate": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        },
+        {
+          "id": "negative-check",
+          "revision": 1
+        }
+      ],
+      "retained_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        },
+        {
+          "id": "positive-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "positive-approximation",
+          "revision": 1
+        },
+        {
+          "id": "positive-convergence",
+          "revision": 1
+        }
+      ],
+      "outstanding_obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        },
+        {
+          "id": "positive-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "positive-approximation",
+          "revision": 1
+        },
+        {
+          "id": "positive-convergence",
+          "revision": 1
+        }
+      ],
+      "operational_status": "completed",
+      "work_stage": "partial_stop",
+      "scientific_disposition": "provisional_pending_review",
+      "applicability": "requires_applicability_review",
+      "novelty": "unassessed",
+      "endorsement": "none",
+      "support": [
+        {
+          "type": "analytical",
+          "scope": "formal_harmonic_moments",
+          "applicability": "limited_scope_only"
+        },
+        {
+          "type": "numerical",
+          "scope": "finite_projection",
+          "applicability": "limited_scope_only"
+        }
+      ],
+      "rationale": "Expected partial stop preserves the historical negative-scope refutation through its issue without attaching the old review to the new candidate. The positive candidate awaits separate review and applicability checks for reused material; no endorsement or novelty assessment follows."
+    },
+    {
+      "id": "partial-report",
+      "revision": 1,
+      "kind": "partial_report",
+      "synthetic": true,
+      "classification": "synthetic-development",
+      "expert_audited": false,
+      "held_out": false,
+      "simulation": true,
+      "execution": "not_performed",
+      "oracle_statement": "Expected fixture oracle, not observed execution or expert judgment.",
+      "simulated_role": "simulated_reporter",
+      "snapshot": {
+        "id": "partial-stop",
+        "revision": 1
+      },
+      "historical_candidate": {
+        "id": "candidate-both",
+        "revision": 1
+      },
+      "contexts": [
+        {
+          "id": "context-both",
+          "revision": 1
+        },
+        {
+          "id": "context-positive",
+          "revision": 1
+        }
+      ],
+      "evidence": [
+        {
+          "id": "harmonic-check",
+          "revision": 1
+        },
+        {
+          "id": "basis-check",
+          "revision": 1
+        },
+        {
+          "id": "negative-check",
+          "revision": 1
+        }
+      ],
+      "justifications": [
+        {
+          "id": "harmonic-algebra",
+          "revision": 1
+        },
+        {
+          "id": "finite-matrix",
+          "revision": 1
+        },
+        {
+          "id": "translated-state",
+          "revision": 1
+        }
+      ],
+      "review": {
+        "id": "negative-review",
+        "revision": 1
+      },
+      "issue": {
+        "id": "negative-issue",
+        "revision": 1
+      },
+      "task": {
+        "id": "matrix-task",
+        "revision": 1
+      },
+      "pending_candidate": {
+        "id": "candidate-positive",
+        "revision": 1
+      },
+      "followup": {
+        "id": "resonance-question",
+        "revision": 1
+      },
+      "obligations": [
+        {
+          "id": "both-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "both-approximation",
+          "revision": 1
+        },
+        {
+          "id": "both-convergence",
+          "revision": 1
+        },
+        {
+          "id": "positive-existence_domain",
+          "revision": 1
+        },
+        {
+          "id": "positive-approximation",
+          "revision": 1
+        },
+        {
+          "id": "positive-convergence",
+          "revision": 1
+        }
+      ],
+      "stop_reason": "paper walkthrough stops pending review",
+      "retained_results": "Retain harmonic-limit Gaussian algebra, the formal first-order expression and finite-Hermitian-matrix scope. The matrix task remains operationally completed in the oracle only. Exact original context/candidate, evidence, challenge and unresolved obligations remain accessible.",
+      "failed_interpretation": "The original universal both-signs ground-state interpretation fails through the negative full-line branch, where translated trial states drive energy to minus infinity; not every algebraic or finite-matrix artifact is false.",
+      "pending_review": true,
+      "next_action": "Expert examination of the scoped translated-state argument and its domain, followed by separate positive-branch existence/domain, approximation/remainder and convergence requirements. No independent or expert assessment has been supplied.",
+      "resources": {
+        "execution": {
+          "status": "not_applicable",
+          "value": null
+        },
+        "usage": {
+          "status": "not_measured",
+          "value": null
+        },
+        "cost": {
+          "status": "not_measured",
+          "value": null
+        },
+        "liability": {
+          "status": "not_measured",
+          "value": null
+        },
+        "statement": "No real account/resource conclusion follows from this fixture."
+      }
+    }
+  ],
+  "walkthrough": [
+    {
+      "id": "seed",
+      "revision": 1
+    },
+    {
+      "id": "context-both",
+      "revision": 1
+    },
+    {
+      "id": "both-existence_domain",
+      "revision": 1
+    },
+    {
+      "id": "both-approximation",
+      "revision": 1
+    },
+    {
+      "id": "both-convergence",
+      "revision": 1
+    },
+    {
+      "id": "harmonic-check",
+      "revision": 1
+    },
+    {
+      "id": "basis-check",
+      "revision": 1
+    },
+    {
+      "id": "harmonic-algebra",
+      "revision": 1
+    },
+    {
+      "id": "finite-matrix",
+      "revision": 1
+    },
+    {
+      "id": "matrix-task",
+      "revision": 1
+    },
+    {
+      "id": "baseline",
+      "revision": 1
+    },
+    {
+      "id": "candidate-both",
+      "revision": 1
+    },
+    {
+      "id": "before-challenge",
+      "revision": 1
+    },
+    {
+      "id": "translated-state",
+      "revision": 1
+    },
+    {
+      "id": "negative-check",
+      "revision": 1
+    },
+    {
+      "id": "negative-review",
+      "revision": 1
+    },
+    {
+      "id": "negative-issue",
+      "revision": 1
+    },
+    {
+      "id": "after-challenge",
+      "revision": 1
+    },
+    {
+      "id": "context-positive",
+      "revision": 1
+    },
+    {
+      "id": "positive-existence_domain",
+      "revision": 1
+    },
+    {
+      "id": "positive-approximation",
+      "revision": 1
+    },
+    {
+      "id": "positive-convergence",
+      "revision": 1
+    },
+    {
+      "id": "candidate-positive",
+      "revision": 1
+    },
+    {
+      "id": "resonance-question",
+      "revision": 1
+    },
+    {
+      "id": "partial-stop",
+      "revision": 1
+    },
+    {
+      "id": "partial-report",
+      "revision": 1
+    }
+  ]
+}

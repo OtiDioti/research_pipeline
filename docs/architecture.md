@@ -2,7 +2,8 @@
 
 The current foundation establishes a local Python package and honest development
 feedback. It implements no research execution, models, scientific verification,
-vault generation, provider integration, or scientific records. It does not complete
+vault generation, provider integration, or production scientific records. A
+synthetic development fixture now illustrates scoped records as local JSON data. It does not complete
 M0 or the D01 scientific-contract gate. Acceptance and integration are controller
 and coordinator decisions, not claims made by the CLI or validator.
 
@@ -71,3 +72,20 @@ The controller separately owns the frozen bootstrap check, exact-candidate valid
 and review. Unit results alone do not establish integration or scientific capability.
 Future research runtime components remain defined by the preserved
 [project specification](../project_description.md), outside this foundation.
+
+## Synthetic development fixture
+
+`research_pipeline.fixtures` reads source-relative
+`implementation/evaluations/harmonic_quartic_v1.json` only when explicitly called.
+It validates a narrow, versioned paper contract: provenance, exact typed references,
+obligations and expected scenario relationships. It does not assess scientific
+truth or execute the scenario. Import is inert; loading returns independent mutable
+trees without writes, downloads, installed metadata or a cache. The package
+initializer and CLI remain unchanged.
+
+The [complete walkthrough and interface](synthetic-oscillator.md) document simulated
+assessment versus actual execution, finite-matrix versus full-line support,
+historical preservation, positive-branch review gaps, errors and test commands.
+Fixture tests add mutation, reference, snapshot, isolation and guarded-load checks
+to existing unittest discovery. No production controller or persistence mechanism
+is introduced, and M0/D02 scientific prerequisites remain open.
