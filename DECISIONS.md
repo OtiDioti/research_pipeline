@@ -60,3 +60,7 @@ REQ-D02-004 introduces schema 2 for all twenty generic §5.1 envelope identities
 ## DEV-029 — Preserve controller validation ownership after observed sandbox mismatch
 
 Run 9af6f133 passed the exact 116-test controller baseline but stopped when its Writer independently encountered literal-/tmp denial and the Architect treated that as the missing baseline. Preserve the stopped nonresumable run and its actual passing baseline. REQ-D02-004-R1 clarifies that meaningful acceptance checks remain controller-owned, while Writer-local runs must report narrower-sandbox limitations honestly. No tests/validator/security/environment/backend change is authorized as the correction. A new bounded run after clean terminal disposition is recovery action 1, not a blind resume or waived gate.
+
+## DEV-030 — Attributed reports before current assessment authority
+
+REQ-D02-005 consumes schema-2 review/issue identities and existing scientific typed admission to persist independent dimensions, disagreements and explicit route judgments. A separate versioned assessment-content discriminator preserves old codecs. Reported sufficiency/independence/execution are declarations, not approval or current disposition. Exact route-conclusion membership is a mechanical admission check; differing contexts remain expressible. Current eligibility generation/invalidation and authorized promotion are subsequent work. This is reversible domain-independent record engineering, not a scientific pilot or sufficiency decision.

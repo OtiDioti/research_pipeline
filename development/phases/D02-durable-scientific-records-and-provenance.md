@@ -61,3 +61,7 @@ Integrated request: [REQ-D02-003](../requests/REQ-D02-003.md), at most two inter
 Prepared next: [REQ-D02-004](../requests/REQ-D02-004.md), versioned generic core identities and explicit verified-backup migration, at most two milestones. Full typed authority/assessment payloads remain subsequent work, not claimed by generic names.
 
 REQ-D02-004 attempt 1 stopped with no implementation on a documented validation-context mismatch; all migration outcomes remain pending. [R1](../requests/REQ-D02-004-R1.md) is the bounded evidence-based replacement after clean terminal disposition, with controller validation unchanged.
+
+[REQ-D02-004-R1 evidence](../runs/25e5020e-e398-4998-b901-5268cd580778.md): finally accepted/integrated 06fc133, 169/169 target tests, two milestones/no repairs. Twenty generic core identities, dual exact backup formats and explicit verified v1→v2 restore preserve original records/receipts and refuse interrupted output. The earlier failed attempt is preserved; one validation-ownership recovery succeeded. This closes only the requested version-evolution subset. Full typed operational/review payloads, support/eligibility freshness, fences/resources and full run recovery remain required.
+
+Prepared next: [REQ-D02-005](../requests/REQ-D02-005.md), typed attributed reviews/issues and durable exact admission, at most two milestones. This supplies the recorded assertions required before current eligibility/invalidation. Pure storage of a favorable review cannot confer endorsement or mark R-013/R-014/R-015 complete.

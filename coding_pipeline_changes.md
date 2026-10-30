@@ -33,3 +33,5 @@ Post-backup checkpoint: run 2d82f186-4cf2-4fb7-9f96-f0ea8db10340 accepted/integr
 Post-typed-record checkpoint: run d7e765f5 completed and integrated using unchanged clean backend 1f68060. Backend attempted/adopted/reverted repairs remain **0/0/0**; no pending maintenance log.
 
 Migration attempt 9af6f133 stopped on a role/validation-context mismatch, not a diagnosed backend malfunction. No source repair attempted; backend attempted/adopted/reverted remains **0/0/0**. Recovery is an administrative request clarification with original evidence preserved.
+
+Post-migration checkpoint: 25e5020e accepted/integrated using unchanged clean backend 1f68060. Attempted/adopted/reverted backend repairs remain **0/0/0**; no pending maintenance log. The administrative validation-ownership recovery succeeded without backend or security changes.

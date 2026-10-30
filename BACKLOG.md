@@ -2,7 +2,7 @@
 
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
-Reconciled 2026-10-30 against local evidence. Foundation, requested mock, durable storage, verified local backups and typed provisional scientific records are accepted/integrated; continuous grant is active; AUTH revision 4 permits independent engineering while M0-S remains pending. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
+Reconciled 2026-10-30 against local evidence. Foundation, requested mock, durable storage, verified local backups and typed provisional scientific records and verified schema migration are accepted/integrated; continuous grant is active; AUTH revision 4 permits independent engineering while M0-S remains pending. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
 
 | ID | State | Item | Reason / dependency | Resume or decision condition | Owner |
 | --- | --- | --- | --- | --- | --- |
@@ -28,4 +28,4 @@ An unfinished CWI run is never made safe by calling it paused here. Follow its a
 
 In continuous mode, a blocker prevents dependent work and any full-scope completion claim. It need not stop independent authorized work after current run ownership/bindings are safely resolved. Preserve actual local backlog entries; these newly supplied rows are not evidence of your local installation state.
 
-B-012 — Observed development validation-context mismatch (2026-10-30): REQ-D02-004 stopped without changes when Writer-local /tmp denial was treated as an absent controller baseline, despite retained 116/116 controller evidence. Terminal run resolved; one bounded R1 recovery prepared with explicit validation ownership. Tests and security/acceptance gates stay unchanged. Migration remains pending. Owner: coordinator; close only after observed successful replacement or record the precise remaining blocker.
+B-012 — Observed development validation-context mismatch (2026-10-30): REQ-D02-004 stopped without changes when Writer-local /tmp denial was treated as an absent controller baseline, despite retained 116/116 controller evidence. RESOLVED by R1 run 25e5020e, finally accepted/exactly integrated 06fc133 with 169/169 tests. Tests and security/acceptance gates stayed unchanged. First failed run retained; one recovery consumed, no backend changes. Owner: coordinator; preserve count if this same blocker recurs.
