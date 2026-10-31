@@ -5,9 +5,9 @@ plan, materialize independently verified protected copies, and inspect that gene
 offline. Snapshot capture and snapshot planning never read artifact bytes;
 materialization and inspection report separate local observations. There is no new
 CLI command or automatic import of displayed edits.
-[Read-only divergence capture and preservation planning](readable-refresh.md) now
-observe edits and renames against an independent canonical plan. Durable preservation
-and successor publication remain a later milestone.
+[Preserved readable refresh](readable-refresh.md) compares edits and renames against
+an independent canonical plan, preserves proposed work and atomically publishes an
+associated successor package with read-only offline inspection.
 
 A plan is a private local reading snapshot, not a backup, redistributable export,
 independently filtered worker/reviewer workspace, or new source of scientific
@@ -510,8 +510,10 @@ pins and exact original metadata for stronger external comparison.
 
 The first three derive from `ViewError`; underlying checkout/OS causes remain
 chained. Displayed edits have no canonical effect and require separate supported
-checkout/import or new record submission. Refresh, edit import, mutable latest
-pointers and independently filtered workspaces remain future obligations.
+checkout/import or new record submission. The separate [refresh API](readable-refresh.md) preserves displayed edits; explicit
+checkout/preview/import remains separate. Mutable latest pointers and independently
+filtered workspaces remain future obligations. Legacy version-1 generated availability
+wording describes its original projection and is retained for historical reconstruction.
 
 ## Runnable local example
 

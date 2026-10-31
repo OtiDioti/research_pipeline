@@ -118,10 +118,11 @@ def _present(fd, name):
 def _not_layout(fd, path):
     """Reject storage/control roots and even empty interrupted evidence or payload reservations."""
     markers = ("metadata.sqlite3", "snapshot.sqlite3", ".backup-incomplete", ".restore-incomplete",
-               ".work-product", "manifest.json", "intent.json", "ready.json", "published.json")
+               ".work-product", "manifest.json", "intent.json", "ready.json", "published.json", "refresh.json")
     if (any(_present(fd, name) for name in markers)
             or (_present(fd, "objects") and _present(fd, ".staging"))
-            or path.name.startswith((".readable-view-", ".readable-generation-"))):
+            or path.name.startswith((".readable-view-", ".readable-generation-",
+                                       ".readable-refresh-attempt-", ".readable-refresh-package-"))):
         raise ViewLayoutError(f"destination ancestor {path}: recognizable storage/control/view layout")
 
 
@@ -268,6 +269,56 @@ def _generation_check(directories, tree, files, inventory, observations, source_
     _guards(directories, tree.values())
 
 
+def _prepare_generation(stack, directories, generation, generation_path, plan, objects, runtime,
+                        max_entries):
+    """Construct and verify a complete generation in a caller-owned new directory.
+
+    The caller owns publication and all retained source/output pins. This helper
+    preserves the materializer's file seams, independent copies and sync order.
+    """
+    files, inventory = _inventory(plan, max_entries)
+    tree = {"": generation}
+    for entry in plan.directories:
+        if entry.relative_path:
+            relative = entry.relative_path
+            tree[relative] = _create(directories, tree[posixpath.dirname(relative)],
+                                     posixpath.basename(relative), generation_path / relative)
+    observations, sources = {}, {}
+    for entry in (*plan.generated_files, *plan.artifact_copies):
+        relative = entry.relative_path
+        target_parent, name = tree[posixpath.dirname(relative)], posixpath.basename(relative)
+        with _new_leaf(target_parent, name, relative, 0o400) as target:
+            if hasattr(entry, "data"):
+                for offset in range(0, len(entry.data), 65536):
+                    _write_all(target, entry.data[offset:offset + 65536])
+            else:
+                with _leaf(objects, entry.digest, runtime / "objects" / entry.digest, mode=None,
+                           expected=sources.get(entry.digest)) as (original, info):
+                    if entry.digest not in sources:
+                        # Pin each observed source inode through publication and all closes,
+                        # so unlink/recreate cannot exploit inode reuse between observations.
+                        stack.enter_context(_leaf(objects, entry.digest, runtime / "objects" / entry.digest,
+                                                  mode=None, expected=info))
+                        sources[entry.digest] = info
+                    _stream(original, ArtifactReference(entry.digest, entry.size), entry.digest, target)
+            os.fsync(target)
+            observations[relative] = os.fstat(target)
+            # Acquire the read pin while the exclusive writer still holds the inode.
+            # Guarded read-back and final context exits refer to this same allocation.
+            stack.enter_context(_leaf(target_parent, name, relative, mode=0o400,
+                                      expected=observations[relative]))
+        _fault("after_file")
+    # All writable preparation ends before the protected complete generation is read back.
+    for fd in reversed(tuple(tree.values())):
+        os.fchmod(fd, 0o500)
+    source_ids = {_identity(info) for info in sources.values()}
+    _generation_check(directories, tree, files, inventory, observations, source_ids, max_entries, read=True)
+    _source_check(objects, runtime, sources)
+    for fd in reversed(tuple(tree.values())):
+        os.fsync(fd)
+    return tree, files, inventory, observations, sources, source_ids
+
+
 def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destination, *,
                               source_root, protected_roots, max_entries: int) -> MaterializedView:
     """Verify independent protected copies and publish once to an explicitly absent destination.
@@ -340,45 +391,8 @@ def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destinati
             _fault("after_intent")
             _guards(directories)
             publish = _rename_noreplace()
-            tree = {"": generation}
-            for entry in plan.directories:
-                if entry.relative_path:
-                    relative = entry.relative_path
-                    tree[relative] = _create(directories, tree[posixpath.dirname(relative)],
-                                             posixpath.basename(relative), generation_path / relative)
-            observations, sources = {}, {}
-            for entry in (*plan.generated_files, *plan.artifact_copies):
-                relative = entry.relative_path
-                target_parent, name = tree[posixpath.dirname(relative)], posixpath.basename(relative)
-                with _new_leaf(target_parent, name, relative, 0o400) as target:
-                    if hasattr(entry, "data"):
-                        for offset in range(0, len(entry.data), 65536):
-                            _write_all(target, entry.data[offset:offset + 65536])
-                    else:
-                        with _leaf(objects, entry.digest, runtime / "objects" / entry.digest, mode=None,
-                                   expected=sources.get(entry.digest)) as (original, info):
-                            if entry.digest not in sources:
-                                # Pin each observed source inode through publication and all closes,
-                                # so unlink/recreate cannot exploit inode reuse between observations.
-                                stack.enter_context(_leaf(objects, entry.digest, runtime / "objects" / entry.digest,
-                                                          mode=None, expected=info))
-                                sources[entry.digest] = info
-                            _stream(original, ArtifactReference(entry.digest, entry.size), entry.digest, target)
-                    os.fsync(target)
-                    observations[relative] = os.fstat(target)
-                    # Acquire the read pin while the exclusive writer still holds the inode.
-                    # Guarded read-back and final context exits refer to this same allocation.
-                    stack.enter_context(_leaf(target_parent, name, relative, mode=0o400,
-                                              expected=observations[relative]))
-                _fault("after_file")
-            # All writable preparation ends before the protected complete generation is read back.
-            for fd in reversed(tuple(tree.values())):
-                os.fchmod(fd, 0o500)
-            source_ids = {_identity(info) for info in sources.values()}
-            _generation_check(directories, tree, files, inventory, observations, source_ids, max_entries, read=True)
-            _source_check(objects, runtime, sources)
-            for fd in reversed(tuple(tree.values())):
-                os.fsync(fd)
+            tree, files, inventory, observations, sources, source_ids = _prepare_generation(
+                stack, directories, generation, generation_path, plan, objects, runtime, max_entries)
             identity = {name: intent[name] for name in ("generation", "snapshot_id", "plan_id", "manifest_sha256")}
             evidence["ready.json"] = _evidence(attempt, "ready.json", identity, attempt_path, 2048)
             os.fsync(attempt)

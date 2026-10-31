@@ -317,3 +317,7 @@ with TemporaryDirectory(prefix="work-product-import-example-") as temporary:
     with RecordStore.open(runtime) as reopened:
         assert reopened.submit_typed(loads_prepared_submission(proposal_path.read_bytes())) == receipt
 ```
+
+Preserved direct view edits can enter this explicit route using the exact historical
+record/revision and logical path in the [readable refresh continuation](readable-refresh.md).
+Refresh itself never previews or imports; stale expected bases conflict without rebasing.

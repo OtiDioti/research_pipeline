@@ -247,21 +247,23 @@ def _not_storage(fd, path, root=False):
     if (any(_present(fd, name) for name in markers)
             or (not root and _present(fd, "manifest.json"))
             or (_present(fd, "objects") and _present(fd, ".staging"))
-            or path.name.startswith((".readable-view-", ".readable-generation-"))):
+            or path.name.startswith((".readable-view-", ".readable-generation-",
+                                       ".readable-refresh-attempt-", ".readable-refresh-package-"))):
         raise ViewLayoutError(f"capture ancestor {path}: recognizable storage/control layout")
 
 
 class _Observation:
     """One operation's retained no-follow descriptors, inventories and final consistency gate."""
 
-    def __init__(self, stack, limits, budget, document, aliases):
-        """Use ExitStack for all closes; count retained and temporary enumeration descriptors."""
+    def __init__(self, stack, limits, budget, document, aliases, admission=None):
+        """Retain one observation; optional refresh admission bounds prospective output copies."""
         self.stack, self.limits, self.budget = stack, limits, budget
         self.document, self.aliases = document, aliases
         self.bindings, self.tree, self.payloads = [], {}, []
         self.directory_ids = set()
         self.entries, self.total = 0, 0
         self.device = None
+        self.admission = admission
 
     def capacity(self):
         """Check before acquiring even the temporary descriptor duplicated by scandir(fd)."""
@@ -312,6 +314,10 @@ class _Observation:
                 raise ViewLayoutError(f"missing prior root/ancestor: {current}") from error
             fd = self.open(parent, name, current, info, ancestor=not root)
             _not_storage(fd, current, root)
+            # A completed package permits only its explicitly selected generation
+            # as a future prior, not arbitrary traversal through preservation.
+            if not root and _present(fd, "refresh.json") and path != current / "generation":
+                raise ViewLayoutError("capture ancestor is a refresh package outside its selected generation")
             if not root:
                 row = dict(path=str(current), device=info.st_dev, inode=info.st_ino,
                            mode=stat.S_IMODE(info.st_mode), uid=info.st_uid, gid=info.st_gid)
@@ -369,7 +375,9 @@ class _Observation:
         return digest.hexdigest(), b"".join(chunks)
 
     def walk(self, fd, info):
-        """Iteratively visit every safe subtree and retain every file, including unchanged bytes."""
+        """Bound nested reads and admit known output obligations before acquiring/retaining payloads."""
+        if self.admission is not None:
+            self.admission("", info)
         pending = [("", fd, info)]
         while pending:
             relative, directory, original = pending.pop()
@@ -383,6 +391,8 @@ class _Observation:
                 before = _binding_stat(directory, name)
                 is_directory = stat.S_ISDIR(before.st_mode)
                 if is_directory:
+                    if not _safe_directory(before):
+                        raise ViewLayoutError(f"unsafe directory {path}")
                     if len(self.tree) + len(pending) >= self.limits.max_directories:
                         raise SnapshotLimitError("max_directories exceeded")
                 else:
@@ -393,11 +403,16 @@ class _Observation:
                     if before.st_size > self.limits.max_file_bytes or self.total + before.st_size > self.limits.max_total_bytes:
                         raise SnapshotLimitError("observed byte allowance exceeded")
                     self.total += before.st_size
+                if self.admission is not None:
+                    self.admission(path, before)
                 child = self.open(directory, name, path, before)
                 if is_directory:
                     pending.append((path, child, before))
                 else:
                     digest, data = self.read(child, before, path)
+                    if self.admission is not None:
+                        self.admission(path, before, digest)
+                        self.capacity()
                     self.budget.append(self.document["files"], dict(path=path, sha256=digest,
                         size=before.st_size, mode=stat.S_IMODE(before.st_mode), signature=_stat_document(before)))
                     self.payloads.append((path, data))
@@ -458,32 +473,36 @@ def _signature_value(value, kind, mode):
         raise ViewIntegrityError("unsafe retained entry type")
 
 
-def _validated_capture(capture):
-    """Validate offline schema, authority and payloads; return document, plan and limits.
+def _validated_metadata(state, limits):
+    """Validate captured metadata under independent limits without inventing absent payloads.
 
-    Bound required ancestor depth before expanding prefixes, rejecting inconsistent
-    retained chains or descriptor overruns before traversing their rows.
+    Stored budgets are checked for schema only; the caller's limits govern every
+    reconstruction and inventory check. No retained path is opened by this helper.
     """
-    if type(capture) is not CapturedReadableView:
-        raise DomainValidationError("capture: expected CapturedReadableView")
-    limits = _limits(capture._limits)
-    if type(capture._state) is not str or len(capture._state) > limits.max_metadata_bytes:
+    limits = _limits(limits)
+    if type(state) is not str:
         raise ViewIntegrityError("invalid retained capture state")
+    if len(state) > limits.max_metadata_bytes:
+        raise SnapshotLimitError("capture text exceeds max_metadata_bytes")
     try:
-        document = _strict_json(capture._state, maximum_depth=72)
+        document = _strict_json(state, maximum_depth=72)
     except SnapshotIntegrityError as error:
         raise ViewIntegrityError("invalid canonical capture JSON") from error
     _fields(document, ("format", "version", "capture_id", "prior_view", "expected_plan_id", "expected_snapshot_id",
                       "expected_manifest_sha256", "expected_manifest", "limits", "ancestors", "directories", "files",
                       "limitations"), "capture")
     if (document["format"] != _FORMAT or type(document["version"]) is not int or document["version"] != 1
-            or _canonical(document["limits"]) != _canonical(limits.to_dict())
             or document["limitations"] != list(_LIMITATIONS)):
         raise ViewIntegrityError("unsupported capture schema/limits/limitations")
+    stored = document["limits"]
+    _fields(stored, (f.name for f in fields(CaptureLimits)), "capture limits")
+    if type(stored["plan_limits"]) is not dict:
+        raise ViewIntegrityError("invalid retained snapshot limits")
+    CaptureLimits(**{**stored, "plan_limits": SnapshotLimits(**stored["plan_limits"])})
     manifest = document["expected_manifest"]
     if type(manifest) is not str or not manifest.isascii():
         raise ViewIntegrityError("expected canonical ASCII manifest")
-    if len(capture._state) + len(manifest) > limits.max_metadata_bytes:
+    if len(state) + len(manifest) > limits.max_metadata_bytes:
         raise SnapshotLimitError("aggregate capture metadata exceeds max_metadata_bytes")
     plan = readable_plan_from_manifest(manifest.encode("ascii"), limits=limits.plan_limits)
     if (document["expected_plan_id"] != plan.plan_id or document["expected_snapshot_id"] != plan.snapshot_id
@@ -571,6 +590,17 @@ def _validated_capture(capture):
         if row["entries"] != sorted(children[row["path"]]):
             raise ViewIntegrityError("directory membership disagrees with inventory")
     _inventory_limits(document["files"], document["directories"], limits)
+    return document, plan, limits
+
+
+def _validated_capture(capture):
+    """Validate the public detached capture, including every immutable retained payload."""
+    if type(capture) is not CapturedReadableView:
+        raise DomainValidationError("capture: expected CapturedReadableView")
+    limits = _limits(capture._limits)
+    document, plan, limits = _validated_metadata(capture._state, limits)
+    if _canonical(document["limits"]) != _canonical(limits.to_dict()):
+        raise ViewIntegrityError("inconsistent capture limits")
     payloads = capture._payloads
     if type(payloads) is not tuple or len(payloads) != len(document["files"]):
         raise ViewIntegrityError("invalid immutable payload inventory")
@@ -638,40 +668,61 @@ def capture_readable_view(prior_view, *, expected_plan: ReadablePlan, source_roo
     A later publisher must recheck this observation; no indefinite editor lock or
     authentication against coherent hostile-owner rewrites is supplied.
     """
+    with _boundary(prior_view), ExitStack() as stack:
+        result, observation = _capture_observation(stack, prior_view, expected_plan=expected_plan,
+            source_root=source_root, protected_roots=protected_roots, limits=limits)
+    # Close failures remain operational failures; no live descriptor escapes.
+    return result
+
+
+def _capture_observation(stack, prior_view, *, expected_plan, source_root, protected_roots,
+                         limits, capacity=None, metadata_maximum=None, admission=None):
+    """Capture once using a caller-owned stack, retaining the original consistency gate.
+
+    Refresh keeps these descriptors until publication; the public capture wrapper
+    still closes them before returning. Optional capacity reserves sibling work;
+    metadata_maximum adds an outer ceiling without altering retained capture limits.
+    A private refresh admission hook charges prospective copies independently of
+    nested comparison reads, before open and again when a hash establishes change.
+    """
     limits = _limits(limits)
     plan = _canonical_plan(expected_plan, limits)
     if type(protected_roots) not in (list, tuple):
         raise DomainValidationError("protected_roots: explicit list/tuple required")
     if len(protected_roots) + 1 > limits.max_entries:
         raise SnapshotLimitError("source/protected input entries exceed max_entries")
-    with _boundary(prior_view):
-        path = _path(prior_view)
-        inputs = _Metadata(limits.max_metadata_bytes)
-        inputs.reserve(inputs.size(str(path)))
-        excluded = []
-        for root in (source_root, *protected_roots, Path(__file__).resolve(strict=True).parents[2]):
-            candidate = _path(root)
-            inputs.reserve(inputs.size(str(candidate)))
-            excluded.append(candidate)
-        _outside(path, excluded)
-        document = dict(format=_FORMAT, version=1, capture_id="0" * 64, prior_view=str(path),
-            expected_plan_id=plan.plan_id, expected_snapshot_id=plan.snapshot_id,
-            expected_manifest_sha256=_digest(plan.manifest_bytes), expected_manifest=plan.manifest_bytes.decode("ascii"),
-            limits=limits.to_dict(), ancestors=[], directories=[], files=[], limitations=list(_LIMITATIONS))
-        budget = _Metadata(limits.max_metadata_bytes, len(plan.manifest_bytes))
-        budget.reserve(budget.size(document))
-        aliases = {}
-        files, directories = _expected(plan, limits)
-        for item in (*files, *directories):
-            _alias(item["path"], aliases, limits)
-        with ExitStack() as stack:
-            observation = _Observation(stack, limits, budget, document, aliases)
-            fd, info = observation.ancestors(path)
-            observation.walk(fd, info)
-            document["capture_id"] = _identified(document, "capture_id")
-            result = CapturedReadableView(document, observation.payloads, limits)
-            _fault("before_final_gate", "")
-            observation.check()
-        # Close failures are operational errors through _boundary, never partial
-        # success. No descriptor or scandir iterator survives this return.
-        return result
+    path = _path(prior_view)
+    maximum = limits.max_metadata_bytes if metadata_maximum is None else min(limits.max_metadata_bytes, metadata_maximum)
+    inputs = _Metadata(maximum)
+    inputs.reserve(inputs.size(str(path)))
+    excluded = []
+    for root in (source_root, *protected_roots, Path(__file__).resolve(strict=True).parents[2]):
+        candidate = _path(root)
+        inputs.reserve(inputs.size(str(candidate)))
+        excluded.append(candidate)
+    _outside(path, excluded)
+    document = dict(format=_FORMAT, version=1, capture_id="0" * 64, prior_view=str(path),
+        expected_plan_id=plan.plan_id, expected_snapshot_id=plan.snapshot_id,
+        expected_manifest_sha256=_digest(plan.manifest_bytes), expected_manifest=plan.manifest_bytes.decode("ascii"),
+        limits=limits.to_dict(), ancestors=[], directories=[], files=[], limitations=list(_LIMITATIONS))
+    budget = _Metadata(maximum, len(plan.manifest_bytes))
+    budget.reserve(budget.size(document))
+    aliases = {}
+    files, directories = _expected(plan, limits)
+    for item in (*files, *directories):
+        _alias(item["path"], aliases, limits)
+    observation = _Observation(stack, limits, budget, document, aliases, admission)
+    if capacity is not None:
+        original_capacity = observation.capacity
+        def shared_capacity():
+            """Reserve prior and output descriptor requirements together before acquisition."""
+            original_capacity()
+            capacity(len(observation.bindings) + 1)
+        observation.capacity = shared_capacity
+    fd, info = observation.ancestors(path)
+    observation.walk(fd, info)
+    document["capture_id"] = _identified(document, "capture_id")
+    result = CapturedReadableView(document, observation.payloads, limits)
+    _fault("before_final_gate", "")
+    observation.check()
+    return result, observation

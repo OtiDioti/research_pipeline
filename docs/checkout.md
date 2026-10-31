@@ -194,3 +194,7 @@ with TemporaryDirectory(prefix="checkout-example-") as temporary:
     assert observed.base == base and observed.envelope == envelope
     # This is original local base information, not certification of edited bytes.
 ```
+
+Preserved direct view edits can enter this explicit route using the exact historical
+record/revision and logical path in the [readable refresh continuation](readable-refresh.md).
+Refresh itself never previews or imports; stale expected bases conflict without rebasing.

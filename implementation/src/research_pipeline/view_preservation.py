@@ -66,9 +66,9 @@ def _group(basis, expected, observed, ambiguous):
 class _Planning:
     """One bounded pure comparison; canonical path references preserve original manifest associations."""
 
-    def __init__(self, capture, document, plan, limits):
+    def __init__(self, state_size, document, plan, limits):
         """Reserve retained capture/control metadata and prepare exact independent inventories."""
-        self.capture, self.document, self.plan, self.limits = capture, document, plan, limits
+        self.state_size, self.document, self.plan, self.limits = state_size, document, plan, limits
         files, directories = _expected(plan, limits)
         self.expected = _entries(files, directories)
         self.observed = _entries(document["files"], document["directories"])
@@ -76,7 +76,7 @@ class _Planning:
             capture_id=document["capture_id"], expected_plan_id=plan.plan_id, status="planned_only",
             files=[], directories=[], comparisons=[], rename_groups=[], missing=[], target_diagnostics=[],
             explanation="", limitations=list(_LIMITATIONS))
-        self.budget = _Metadata(limits.max_metadata_bytes, len(capture._state) + len(plan.manifest_bytes))
+        self.budget = _Metadata(limits.max_metadata_bytes, state_size + len(plan.manifest_bytes))
         self.budget.reserve(self.budget.size(self.result))
         self.diagnostics = 0
         self.matches, self.groups, self.matched_observed = {}, {}, set()
@@ -316,7 +316,7 @@ class _Planning:
         self.explain()
         self.result["rename_groups"].sort(key=lambda row: row["group_id"])
         self.result["preservation_plan_id"] = _identified(self.result, "preservation_plan_id")
-        maximum = self.limits.max_metadata_bytes - len(self.capture._state) - len(self.plan.manifest_bytes)
+        maximum = self.limits.max_metadata_bytes - self.state_size - len(self.plan.manifest_bytes)
         maximum -= len(self.result["explanation"].encode("utf-8"))
         _bounded_json(self.result, maximum, "aggregate preservation metadata")
         return self.result
@@ -325,7 +325,12 @@ class _Planning:
 def _build(capture):
     """Validate detached inputs and derive one complete plan with no filesystem or store reads."""
     document, plan, limits = _validated_capture(capture)
-    return _Planning(capture, document, plan, limits).finish()
+    return _plan_metadata(document, plan, limits, len(capture._state))
+
+
+def _plan_metadata(document, plan, limits, state_size):
+    """Derive exact preservation from validated metadata and its independent canonical plan."""
+    return _Planning(state_size, document, plan, limits).finish()
 
 
 @dataclass(frozen=True, init=False)

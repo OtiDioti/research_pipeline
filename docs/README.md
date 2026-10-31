@@ -82,7 +82,7 @@ navigation. Protected independent copies publish through an exclusive atomic ren
 read-only offline inspection compares current bytes with the canonical plan. Plans
 retain expectations separately from observed materialization/inspection results.
 
-[Read-only readable-view capture and preservation planning](readable-refresh.md)
-compares an independently pinned generation with bounded observed edits and renames.
-It retains exact in-memory bytes and plans unsubmitted preservation; durable successor
-publication and recovery remain a later milestone.
+[Preserved readable refresh](readable-refresh.md) compares an independently pinned
+generation with bounded observed edits and renames, preserves unsubmitted proposed
+work and atomically publishes an associated successor. Read-only offline inspection
+diagnoses retained interruptions; the separate capture/planning APIs remain available.
