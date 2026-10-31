@@ -56,10 +56,16 @@ Continuous authority is active under AUTH revision 5 (explicit 2700-second new-r
 
 REQ-D03-002 is now accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251f0ac with 369/369 target tests. Its immutable inventory and exact Source/history contracts enable the next bounded project/intake dossier in REQ-D03-003, followed by protected readable views and actual authorized research admission. The ordinary remaining D03/D04 requirements and scientific holds remain open; no phase completion follows from this recording subset.
 
-## Current project-intake checkpoint — 2026-10-31
+## Historical project-intake checkpoint — 2026-10-31
 
 REQ-D03-003 is finally accepted/exact-integrated at9373860 with396/396 target tests; [run evidence](development/runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md). Exact project history, attributed inspected subsets and coherent brief/report/context pins support readiness proposals only. D02/D03 and M0-E remain partial; M0-S remains pending. Next [REQ-D03-004](development/requests/REQ-D03-004.md) prepares consistent immutable readable snapshots with bounded private generation/exclusive publication. Refresh/direct-edit preservation and all scientific/operational obligations remain required. Continuous12/50 starts consumed,38 remain; deadlines2700 seconds, unchanged model/grant.
 
-## Current snapshot recovery checkpoint — 2026-10-31
+## Historical snapshot recovery checkpoint — 2026-10-31
 
 REQ-D03-004 stopped terminally without acceptance: first-milestone candidate81ec2f3 passed432/432 but lacked required controller-recorded complete-diff evidence. Main remains accepted project/intake9373860 (396 tests); no snapshot feature is integrated. [Run evidence](development/runs/32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md). [REQ-D03-004-R1](development/requests/REQ-D03-004-R1.md) is the next bounded replacement, using preserved CWI draft context and two frozen checks. Protected publication/inspection is still unimplemented. Continuous13/50used,37remain; repairs7,recoveries4,backend0. No scientific or phase completion is inferred.
+
+## Current snapshot integration checkpoint — 2026-10-31
+
+REQ-D03-004-R1 is finally accepted and exact-integrated at c57a621c3e3f7806030de13b75b4fe2890b81cc7, with 489/489 controller/target tests and both bound checks passing. [Run evidence](development/runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md). Consistent detached metadata, deterministic linked Markdown/manifests, verified independent copies, private complete publication and bounded offline inspection now have implementation evidence. B-016's missing-check recovery is resolved; its terminal predecessor remains preserved. No backend change.
+
+D03 and M0-E remain partial; M0-S remains pending. Generated-view refresh with preservation of direct edits and renames is the next ready engineering boundary under §§9.7–9.11/R-026/R-028. Full branch/runtime/report workspaces, intake interpretation/authorized readiness and lifecycle/authority/tool/research obligations remain required. The authoritative next action and handoff are in STATUS; continuous 14/50 starts used, 36 remain, unchanged grant and 2700-second deadlines.

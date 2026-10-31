@@ -89,3 +89,9 @@ REQ-D03-003 accepted/exact-integrated9373860,396/396 target tests. Adds strict P
 ## 2026-10-31 — Snapshot draft preserved; validation-profile recovery prepared
 
 REQ-D03-004 stopped before milestone acceptance after432/432 tests passed on repaired provisional81ec2f3. The reviewer required missing controller-owned complete-diff evidence. Main product remains9373860; no unaccepted source was merged. Preserve the eleven-file CWI draft and terminal evidence, prepare REQ-D03-004-R1 with frozen context and an explicit second formatting check. No backend or validator change; DEV-039 records the bounded recovery.
+
+## 2026-10-31 — Protected offline readable snapshots integrated
+
+REQ-D03-004-R1 finally accepted and exact-integrated c57a621c3e3f7806030de13b75b4fe2890b81cc7; 489/489 target tests, zero skips/errors/failures, clean source and bound full-diff check. Adds consistent detached record capture, deterministic ordinary Markdown navigation/companions/manifests, independent artifact copies, private complete exclusive publication and bounded offline inspection. Two CWI repairs resolved four findings; all 396 baseline tests remain unchanged with 93 new tests. [Run evidence](development/runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md).
+
+The earlier missing-check run remains terminal/unaccepted; its preserved draft was reused only by the new CWI Writer. B-016 is resolved without backend changes or evidence waivers. Continuous 14/50 starts used, 36 remain. Safe session/context handoff after four integrations; refresh/direct-edit-and-rename preservation is next. Full D03/M0-E/M0-S/product and live/scientific qualification remain incomplete.

@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** PARTIAL; REQ-D03-001 Source/capture,REQ-D03-002 corpus history andREQ-D03-003 project/intake dossiers accepted/exact-integrated; latest9373860 with396/396 target tests. REQ-D03-004 immutable readable snapshots prepared. Actual authorized readiness, full vault and scientific outcomes remain incomplete.
+**State:** PARTIAL; REQ-D03-001 Source/capture, REQ-D03-002 corpus history, REQ-D03-003 project/intake dossiers and REQ-D03-004-R1 protected offline readable snapshots are accepted and exact-integrated. Latest c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests. Refresh/direct-edit-and-rename preservation, actual authorized readiness, full runtime/branch/report views and scientific outcomes remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -50,7 +50,7 @@ Under specification v1.4, relevant implemented predecessor contracts and determi
 
 D02 storage/backups, schema evolution and six typed scientific/assessment contracts are evidenced. REQ-D02-006 commissions work-product manifests and safe draft checkout/import as a concrete D03 dependency; it is prepared, not yet implemented. D03 intake, consistent navigable snapshots and human-edit protection are not claimed complete. Independent authoring infrastructure does not require scientific pilot approval, while readiness/qualification still require their specific judgments.
 
-## Current predecessor and bounded request
+## Historical predecessor and bounded request
 
 REQ-D02-006 is now accepted/exact-integrated at a56111f3 with 291/291 tests, closing its manifest/checkout/preview/import subset. Generated-view refresh and direct-edit/rename protection remain unimplemented. [REQ-D03-001](../requests/REQ-D03-001.md) commissions strict versioned sources and bounded explicit local ingestion with immutable originals, exact lineage, attributed coverage and saved CAS proposals. This prepares real intake inputs without claiming readiness, source understanding, faithful extraction, expert audit or live acquisition. At most two CWI milestones; unchanged AUTH revision 5. D02's remaining eligibility/authority work and M0-S do not block this independent storage boundary, and remain owned/pending.
 
@@ -68,6 +68,12 @@ REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251
 
 [REQ-D03-003 evidence](../runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md) establishes accepted/exact-integrated9373860 and396/396 target tests. ProjectSetup is the tenth typed contract: stable project/corpus history, attributed declarations and exact report/brief/context/location checks, with real recovery/backup/CAS evidence. Proposed readiness remains inert attributed data, not actual ready state or admission. One fixture/example provenance/mode repair and the authorized EOF cleanup are complete; no old assertion or production guard changed. Phase remains PARTIAL. Next [REQ-D03-004](../requests/REQ-D03-004.md) prepares consistent immutable readable views; full refresh/edit protection, remaining lifecycle/authority/resource enforcement and scientific obligations remain pending.
 
-## Active recovery request — 2026-10-31
+## Historical recovery request — 2026-10-31
 
 REQ-D03-004 /32b61b7f is terminal STOPPED_INCOMPLETE, zero accepted milestones; candidate81ec2f3 passes432/432 but missing controller-recorded formatting evidence prevents acceptance. No phase progress is promoted from this draft. Latest integrated predecessor remains9373860/396tests. Active prepared request is [REQ-D03-004-R1](../requests/REQ-D03-004-R1.md): reuse the exact preserved first-milestone CWI draft, obtain both frozen checks and independent acceptance, then implement protected publication/inspection. The original run/worktree/evidence remain untouched; no resume or unaccepted-source merge. D03/M0-E remain partial and M0-S pending.
+
+## Current snapshot integration evidence — 2026-10-31
+
+[REQ-D03-004-R1 evidence](../runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md) establishes final acceptance/exact integration at c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 controller/target tests and both bound checks. Consistent detached metadata and exact artifact copies produce a protected offline Markdown generation with meaningful-folder READMEs, literal attributed projections, complete relative navigation and bounded inventory inspection. Two CWI repairs resolved provenance/depth and real publication/inspection failures. No old test, authority, backend or security policy changed; original failed-run evidence remains preserved.
+
+This closes only the requested immutable-generation/inspection subset. The phase acceptance boxes remain open: tests provide a synthetic navigation path, not a human scientific/navigation signoff or a full mixed-intake workflow. Refresh preserving direct edits and renames is the next ready bounded boundary; existing views are currently refused intact. Actual intake interpretation/readiness authority, full branch/runtime/report/filtering behavior and scientific judgments remain mandatory. STATUS contains the single next safe action and the safe session/context handoff.

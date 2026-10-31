@@ -1,6 +1,6 @@
 # Development environment contract
 
-Observed 2026-10-30; this is local evidence, not the starter-kit template. Product live/scientific execution remains separately gated. Private raw outputs are under ignored `local/readiness-2026-10-30/`.
+Historical commissioning observations from 2026-10-30 appear in the first table; later dated evidence supersedes its initial specification/run/effort observations. The stable launch map remains operative and unchanged. This is local evidence, not the starter-kit template. Product live/scientific execution remains separately gated. Private commissioning outputs are under ignored `local/readiness-2026-10-30/`.
 
 | Field | Observation / launch contract |
 | --- | --- |
@@ -113,3 +113,9 @@ New synthetic capture fixtures/example must explicitly declare available supplie
 ## Required check-profile correction — 2026-10-31
 
 REQ-D03-004 ended STOPPED_INCOMPLETE because its frozen single `python3 -B implementation/scripts/validate.py` check did not record the separately required complete-range formatting check. Supported CWI CLI repeated --check creates ordered check-1/check-2 and runs both at baseline/candidate/final. New REQ-D03-004-R1 explicitly adds `git diff --check ACTUAL_NEW_LAUNCH_BASE HEAD --` with a literal committed SHA, never shell expansion; preserve permanent validator and all prior environment values. Already ignored frozen context carries exact CWI-authored candidate files,296,842UTF-8bytes including SALVAGE.md, within existing bounds. No backend mutation, global configuration or security change. Host process namespace inspection confirms terminal owners gone; sandbox PID invisibility alone is not shutdown evidence.
+
+## Readable-snapshot integration checkpoint — 2026-10-31
+
+Run 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e used the unchanged stable map, clean backend 1f68060, Codex 0.166.0/executable SHA b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8, explicit gpt-6-astra/high, 2700-second agent/validation deadlines and soft/hard descriptor limits 4096/1048576. Both meaningful full-suite and literal-base full-diff checks were frozen and passed. Current specification remains v1.4, SHA fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f.
+
+Actual Linux publication/race/process/fault tests passed after a CWI product-layout repair kept private payload and destination within the same held parent. No host permission elevation, global setting, dependency or backend change was needed for publication. Writer-local restrictions remained advisory; real controller failures required product repair. Host owners exited before integration. Target on exact c57a621c3e3f7806030de13b75b4fe2890b81cc7: 489/489, zero skips/failures/errors, 340.412 test seconds; clean unchanged accepted source; completed 2026-10-31T17:12:46.950703+00:00; stdout SHA-256 781599a6858d5e2b51cb3c96c6d6317a4196af9f617c1a702407be7a5300fd32. Full validation inherited recorded limits and left source clean. All 15 retained runs reconcile; no live operation remains. No product-live or scientific evidence is claimed.
