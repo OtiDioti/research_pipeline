@@ -458,3 +458,15 @@ roles and inspected locations remain coherent through complete project history.
 Project has no direct artifacts or separate persistence path. Historical local
 reads and original-ID retries never certify prior admission or current transitive
 byte availability. Readiness remains an attributed proposal without authority.
+
+## Bounded detached metadata reading
+
+`RecordStore.capture_snapshot(selection, *, limits)` captures explicit project/root
+requests and their entire outgoing exact navigation closure in one existing SQLite
+read transaction, including one local audit watermark and schema identity. It does
+not call public per-record read transactions or artifact verification. DELETE-journal
+locking remains unchanged: concurrent writers cannot complete a commit while the
+capture retains its read snapshot. Existing revision/history/admission contracts are
+unchanged. See [readable snapshot plans](readable-snapshots.md) for constructors,
+preflight accounting, integrity errors, classification and pure planning. Expected
+artifact registrations are not evidence of physical availability or scientific support.

@@ -36,6 +36,11 @@ from research_pipeline.project import (
     _validate_dossier, _validate_successor as _validate_project_successor,
 )
 from research_pipeline.schema import _VERSIONS, validate_schema, validate_request_kinds, validate_history
+from research_pipeline.snapshot import (
+    SnapshotSelection, SnapshotLimits, DetachedSnapshot, SnapshotLimitError,
+    SnapshotIntegrityError, _bounded_json, _canonical, _strict_json, _classification,
+    _scope, _schema_identity, _commit,
+)
 
 
 class StoreError(Exception):
@@ -77,10 +82,12 @@ class StoreDatabaseError(StoreError):
 
 
 def _fault(boundary: str) -> None:
-    """Private test seam: before_metadata, after_first_revision, or after_commit.
+    """Private submission and capture observation seam, never a caller callback.
 
-    Tests may inject exceptions or terminate the process here. This is never a
-    controller callback, configuration option, or worker capability.
+    Submission boundaries are before_metadata, after_first_revision and after_commit.
+    Capture boundaries are snapshot_after_first_read and snapshot_after_head_resolution.
+    Tests may coordinate independent handles or inject failures at these points;
+    no operational setting or worker capability exposes this seam.
     """
 
 
@@ -706,6 +713,212 @@ class RecordStore:
             "SELECT digest,size FROM artifact_links WHERE record_id=? AND revision=? ORDER BY ordinal", (record_id, revision)))
         return RecordEnvelope(record_id, revision, row[0], json.loads(row[1]), CreationProvenance.from_dict(json.loads(row[2])),
                               references, artifacts, row[3], row[4])
+
+    def _snapshot_record(self, connection, key, limits, remaining_metadata, remaining_references):
+        """Preflight one exact revision before fetching JSON/links; return bounded detached metadata.
+
+        Counts include repeated record/artifact links. BLOB lengths count UTF-8
+        bytes, including variable-width links and commit metadata. This private
+        capture path leaves admission and existing public read semantics unchanged.
+        """
+        row = connection.execute("""SELECT
+            length(CAST(i.kind AS BLOB)), length(CAST(r.content_json AS BLOB)),
+            length(CAST(r.provenance_json AS BLOB)),
+            length(CAST(coalesce(r.operational_status,'') AS BLOB)),
+            length(CAST(coalesce(r.scientific_disposition,'') AS BLOB)),
+            length(CAST(r.submission_id AS BLOB)), length(CAST(a.committed_at AS BLOB)),
+            length(CAST(s.fingerprint AS BLOB))
+            FROM revisions r LEFT JOIN identities i USING(record_id)
+            LEFT JOIN submissions s USING(submission_id)
+            LEFT JOIN audit_events a USING(submission_id)
+            WHERE r.record_id=? AND r.revision=?""", key).fetchone()
+        if row is None:
+            raise RecordNotFoundError(f"record {key[0]}@{key[1]}: absent")
+        if any(type(n) is not int or n < 0 for n in row):
+            raise SnapshotIntegrityError(f"{key[0]}@{key[1]}: missing or invalid commit/record metadata")
+        # Account repeated JSON reads by the unchanged envelope helper as well.
+        fetched = 2 * (sum(row) + len(key[0]) + len(str(key[1])))
+        if fetched > limits.max_record_bytes or fetched > remaining_metadata:
+            raise SnapshotLimitError(f"{key[0]}@{key[1]}: record/metadata byte preflight exceeded")
+        reference_count = 0
+        for table, columns in (("record_links", ("relationship", "target_id", "target_revision", "target_kind")),
+                               ("artifact_links", ("digest", "size"))):
+            count = connection.execute(
+                f"SELECT count(*) FROM {table} WHERE record_id=? AND revision=?", key).fetchone()[0]
+            reference_count += count
+            if reference_count > remaining_references:
+                raise SnapshotLimitError("max_references exceeded before fetching links")
+            lengths = ",".join(f"length(CAST(coalesce({column},'') AS BLOB))" for column in columns)
+            cursor = connection.execute(
+                f"SELECT CASE WHEN typeof(ordinal)='integer' THEN ordinal ELSE NULL END,{lengths} FROM {table} WHERE record_id=? AND revision=? ORDER BY ordinal", key)
+            for expected in range(count):
+                link = cursor.fetchone()
+                if link is None or type(link[0]) is not int or link[0] != expected:
+                    raise SnapshotIntegrityError(f"{key[0]}@{key[1]}: noncontiguous {table} ordinals")
+                fetched += sum(link[1:]) + len(str(link[0]))
+                if fetched > limits.max_record_bytes or fetched > remaining_metadata:
+                    raise SnapshotLimitError(f"{key[0]}@{key[1]}: link metadata bytes exceeded")
+            if cursor.fetchone() is not None:
+                raise SnapshotIntegrityError("link count changed inside snapshot")
+        raw = connection.execute("""SELECT r.content_json,r.provenance_json,
+            r.submission_id,a.committed_at,s.fingerprint FROM revisions r
+            JOIN submissions s USING(submission_id) JOIN audit_events a USING(submission_id)
+            WHERE r.record_id=? AND r.revision=?""", key).fetchone()
+        try:
+            _strict_json(raw[0])
+            _strict_json(raw[1])
+            envelope = self._metadata_envelope(connection, *key)
+            commit = dict(zip(("submission_id", "committed_at", "fingerprint"), raw[2:]))
+            _commit(commit)
+            if _canonical(envelope.content) != raw[0] or _canonical(envelope.provenance.to_dict()) != raw[1]:
+                raise SnapshotIntegrityError("noncanonical content/provenance structure")
+            envelope_json = _bounded_json(envelope.to_dict(), limits.max_record_bytes, "envelope")
+            entry = {"record_id": key[0], "revision": key[1], "content_json": raw[0],
+                     "provenance_json": raw[1], "envelope_json": envelope_json,
+                     "classification": _classification(envelope, _decode_typed_envelope),
+                     "commit": commit, "fetched_bytes": fetched}
+            _bounded_json(entry, min(limits.max_record_bytes, remaining_metadata - fetched), "record metadata")
+            return envelope, entry, fetched, reference_count
+        except (DomainValidationError, TypeError, KeyError, RecursionError) as error:
+            raise SnapshotIntegrityError(f"{key[0]}@{key[1]}: {str(error)[:240]}") from error
+
+    def capture_snapshot(self, selection: SnapshotSelection, *, limits: SnapshotLimits) -> DetachedSnapshot:
+        """Capture one bounded exact outgoing closure under a single SQLite read transaction.
+
+        Current roots resolve in caller order after the watermark establishes the
+        snapshot. Missing selected roots retain RecordNotFoundError; missing edges
+        and malformed metadata raise SnapshotIntegrityError. No artifact bytes are
+        opened or verified, and navigation never invokes typed target admission.
+        """
+        if type(selection) is not SnapshotSelection or type(limits) is not SnapshotLimits:
+            raise DomainValidationError("capture requires SnapshotSelection and SnapshotLimits")
+        try:
+            selection = SnapshotSelection(selection.project, selection.roots)
+            limits = SnapshotLimits(**limits.to_dict())
+        except (AttributeError, TypeError) as error:
+            raise DomainValidationError("capture: malformed selection or limits") from error
+        requests = (selection.project, *selection.roots)
+        if len(requests) > limits.max_roots:
+            raise SnapshotLimitError("max_roots exceeded (including project)")
+        with self._transaction(write=False) as connection:
+            # This first SELECT establishes the rollback-journal read snapshot.
+            # A competing writer may prepare but cannot finish COMMIT until it ends.
+            top = connection.execute("""SELECT a.event_id,
+                length(CAST(a.submission_id AS BLOB)),length(CAST(a.committed_at AS BLOB)),
+                length(CAST(s.fingerprint AS BLOB)) FROM audit_events a
+                LEFT JOIN submissions s USING(submission_id) ORDER BY a.event_id DESC LIMIT 1""").fetchone()
+            _fault("snapshot_after_first_read")
+            fetched = 0
+            watermark = dict.fromkeys(("event_id", "submission_id", "committed_at", "fingerprint"))
+            if top is not None:
+                if any(type(n) is not int or n < 0 for n in top):
+                    raise SnapshotIntegrityError("invalid watermark metadata")
+                fetched = sum(top[1:]) + len(str(top[0]))
+                if fetched > limits.max_metadata_bytes:
+                    raise SnapshotLimitError("watermark metadata bytes exceeded")
+                row = connection.execute("""SELECT a.event_id,a.submission_id,a.committed_at,s.fingerprint
+                    FROM audit_events a JOIN submissions s USING(submission_id) WHERE a.event_id=?""", (top[0],)).fetchone()
+                watermark = dict(zip(watermark, row))
+            try:
+                _commit(watermark, watermark=True)
+            except DomainValidationError as error:
+                raise SnapshotIntegrityError(f"watermark: {error}") from error
+            resolutions = []
+            for index, selector in enumerate(requests):
+                if selector.revision is None:
+                    row = connection.execute("SELECT CASE WHEN typeof(head)='integer' THEN head ELSE NULL END FROM identities WHERE record_id=?", (selector.record_id,)).fetchone()
+                else:
+                    row = connection.execute("SELECT revision FROM revisions WHERE record_id=? AND revision=?",
+                                             (selector.record_id, selector.revision)).fetchone()
+                if row is None:
+                    raise RecordNotFoundError(f"selected root {selector.record_id}@{selector.revision}: absent")
+                try:
+                    _integer(row[0], "resolved revision", 1)
+                except DomainValidationError as error:
+                    raise SnapshotIntegrityError(str(error)) from error
+                fetched += len(str(row[0]))
+                if fetched > limits.max_metadata_bytes:
+                    raise SnapshotLimitError("root resolution metadata exceeded")
+                resolutions.append({"record_id": selector.record_id, "revision": row[0]})
+                if index == 0:
+                    _fault("snapshot_after_head_resolution")
+            from collections import deque
+            queue = deque()
+            enqueued = set()
+            for pin in resolutions:
+                key = (pin["record_id"], pin["revision"])
+                if key not in enqueued:
+                    if len(enqueued) >= limits.max_records:
+                        raise SnapshotLimitError("max_records exceeded")
+                    enqueued.add(key)
+                    queue.append((key, None))
+            records, envelopes, artifacts = {}, {}, {}
+            references = 0
+            expected_bytes = 0
+            retained = 0
+            while queue:
+                key, origin = queue.popleft()
+                try:
+                    envelope, entry, size, count = self._snapshot_record(
+                        connection, key, limits, limits.max_metadata_bytes - fetched - retained,
+                        limits.max_references - references)
+                except RecordNotFoundError as error:
+                    if origin is None:
+                        raise
+                    raise SnapshotIntegrityError(f"{origin}: missing {key[0]}@{key[1]}") from error
+                records[key], envelopes[key] = entry, envelope
+                fetched += size
+                retained += len(_canonical(entry))
+                references += count
+                for ordinal, edge in enumerate(envelope.record_references):
+                    target = (edge.record_id, edge.revision)
+                    if target not in enqueued:
+                        if len(enqueued) >= limits.max_records:
+                            raise SnapshotLimitError("max_records exceeded during closure traversal")
+                        enqueued.add(target)
+                        queue.append((target, f"{key[0]}@{key[1]} edge {ordinal}"))
+                for ordinal, artifact in enumerate(envelope.artifact_references):
+                    registered = connection.execute("SELECT CASE WHEN typeof(size)='integer' THEN size ELSE NULL END FROM artifacts WHERE digest=?", (artifact.digest,)).fetchone()
+                    if registered is None or type(registered[0]) is not int or registered[0] != artifact.size:
+                        raise SnapshotIntegrityError(f"{key[0]}@{key[1]} artifact {ordinal}: registration mismatch")
+                    fetched += len(str(registered[0]))
+                    if fetched + retained > limits.max_metadata_bytes:
+                        raise SnapshotLimitError("artifact registration metadata exceeded")
+                    if artifact.digest not in artifacts:
+                        if len(artifacts) >= limits.max_artifacts:
+                            raise SnapshotLimitError("max_artifacts exceeded")
+                        expected_bytes += artifact.size
+                        if artifact.size > limits.max_file_bytes or expected_bytes > limits.max_total_bytes:
+                            raise SnapshotLimitError("expected artifact bytes exceeded")
+                        artifacts[artifact.digest] = {"digest": artifact.digest, "size": artifact.size,
+                            "availability": "expected_unverified", "occurrences": []}
+                    if artifacts[artifact.digest]["size"] != artifact.size:
+                        raise SnapshotIntegrityError("conflicting sizes for digest")
+                    artifacts[artifact.digest]["occurrences"].append(
+                        {"record_id": key[0], "revision": key[1], "ordinal": ordinal})
+            first = resolutions[0]
+            if envelopes[(first["record_id"], first["revision"])].kind != "project":
+                raise DomainValidationError("project selector must resolve to envelope kind project")
+            # Check every occurrence, including edges whose target was already cached.
+            for key, envelope in envelopes.items():
+                for ordinal, edge in enumerate(envelope.record_references):
+                    if edge.target_kind not in (None, envelopes[(edge.record_id, edge.revision)].kind):
+                        raise SnapshotIntegrityError(f"{key[0]}@{key[1]} edge {ordinal}: declared target kind mismatch")
+            ordered_records = [records[key] for key in sorted(records)]
+            ordered_artifacts = [artifacts[key] for key in sorted(artifacts)]
+            for artifact in ordered_artifacts:
+                artifact["occurrences"].sort(key=lambda item: (item["record_id"], item["revision"], item["ordinal"]))
+            schema = _schema_identity(connection.execute("PRAGMA user_version").fetchone()[0])
+            fetched += len(str(schema["version"]))
+            document = {"format": "research_pipeline.snapshot.v1", "selection": selection.to_dict(),
+                "resolutions": resolutions, "schema": schema,
+                "watermark": watermark, "records": ordered_records, "artifacts": ordered_artifacts,
+                "limits": limits.to_dict(), "metadata_fetched_bytes": fetched,
+                "scope": _scope(selection.to_dict(), resolutions, ordered_records, ordered_artifacts)}
+            body = _bounded_json(document, limits.max_metadata_bytes - fetched, "detached metadata")
+            document["snapshot_id"] = hashlib.sha256(body.encode("ascii")).hexdigest()
+            _bounded_json(document, limits.max_metadata_bytes - fetched, "detached metadata")
+            return DetachedSnapshot(document)
 
     def get_revision(self, record_id: str, revision: int) -> RecordEnvelope:
         """Return an exact revision with verified direct artifacts, or raise if absent."""

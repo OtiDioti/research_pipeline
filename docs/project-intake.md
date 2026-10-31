@@ -413,3 +413,17 @@ with TemporaryDirectory(prefix="project-intake-example-", dir="/tmp") as tempora
         assert reopened.submit_typed(saved_request) == original_receipt
         assert reopened.read_artifact(original.artifact) == note.read_bytes()
 ```
+
+## Detached reading projection
+
+The [readable snapshot planner](readable-snapshots.md) accepts a detached capture of
+an explicit project and additional roots. It displays exact initial/current corpus,
+context, authored brief/intake reports, remaining requirements and setup presentation
+when their actual supported targets permit it. Null and partial setup stay visible.
+Opaque targets retain raw envelopes and navigation; local dossier/corpus mapping
+failures become explicit projection limitations rather than silently established
+mappings. The captured outgoing closure includes every attachment of a reached
+Source, which is distinct from corpus original selection and inspection coverage.
+This reader does not certify historical typed admission, research readiness or
+operating authority. Artifact bytes remain expected/unverified until the later
+materializer verifies and publishes a complete private generation.
