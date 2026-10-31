@@ -224,3 +224,7 @@ REQ-D03-001 / [run 7b46536e-42ac-4537-a720-beaaa5a34490](runs/7b46536e-42ac-4537
 - R-031: plugin-free offline Markdown and exact inert copied artifact manifests; source restrictions remain declarations. Filtered workspaces, qualified synchronization and redistributable export remain separate obligations.
 
 All listed requirements remain PARTIAL. This evidence does not close D03, broad M0-E, actual readiness/admission, current eligibility/authority/fences/resources, tools/orchestration/verification or scientific M0-S/R-001–R-003. The terminal predecessor 32b61b7f remains unaccepted; its missing-check recovery now has fresh independent acceptance rather than a retroactive waiver.
+
+## Refresh request prepared — 2026-10-31
+
+[REQ-D03-005](requests/REQ-D03-005.md) targets the remaining R-026/R-028 direct-edit/rename preservation and refresh subset, with R-004/R-019/R-027/R-031/R-092 identity, recovery, links and offline evidence. It consumes exact accepted c57a621 snapshot/publication and a56111f3 draft/import contracts. Preparation supplies no new implementation evidence. Old generations and canonical revisions stay fixed; the API publishes an explicitly associated successor after preserving observed divergent content, with unresolved rename/link identities diagnosed. Full CLI/current-pointer/runtime layouts and all other mandatory requirements remain owned and pending.

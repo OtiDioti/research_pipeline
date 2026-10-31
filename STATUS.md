@@ -2,11 +2,11 @@
 
 Committed checkpoint; actual CWI evidence and ignored local observations supersede it while live. Keep the original checkout unchanged while a run is active or awaiting exact-base integration.
 
-## Current checkpoint — 2026-10-31, readable snapshots integrated
+## Current checkpoint — 2026-10-31, view-refresh request prepared
 
 | Field | Observed state |
 | --- | --- |
-| Execution | CONTINUOUS authorization; safe session/context handoff after four integrations; no active operation or pending integration |
+| Execution | CONTINUOUS authorization; REQ-D03-005 prepared after fresh reconciliation; no active operation or pending integration before launch |
 | Target | main; exact accepted product c57a621c3e3f7806030de13b75b4fe2890b81cc7; this administrative checkpoint follows it |
 | Specification | v1.4 SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f; all scientific obligations preserved |
 | Product | Durable records/artifacts/backups/migration, ten typed kinds, work-product drafts, Source/local capture, corpus/project/intake history and protected offline readable snapshots |
@@ -26,11 +26,11 @@ Committed checkpoint; actual CWI evidence and ignored local observations superse
 
 ## Exactly one next safe action
 
-Prepare a bounded CWI request for generated-view refresh that preserves direct edits and renames, consuming the accepted snapshot/inspection and existing draft/import contracts under the unchanged grant.
+Launch the committed REQ-D03-005 once through CWI with both required checks and the recorded limits, after confirming clean exact base; record the actual run identity locally.
 
 ## Verified handoff
 
-Read [authorization](development/AUTHORIZATION.md), [requirements](development/REQUIREMENTS.md), [latest run](development/runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md), [environment](development/ENVIRONMENT.md) and local/live.md. A fresh coordinator must reconcile actual Git/process/CWI evidence before executing the next action. No prepared new request or implementation start is outstanding; no supervisor or automatic restart is installed.
+Read [authorization](development/AUTHORIZATION.md), [requirements](development/REQUIREMENTS.md), [latest run](development/runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md), [environment](development/ENVIRONMENT.md) and local/live.md. A fresh coordinator must reconcile actual Git/process/CWI evidence before executing the next action. REQ-D03-005 is prepared but not yet launched at this checkpoint; ignored local/live.md and attempts supersede this statement after launch. No supervisor or automatic restart is installed.
 
 The originally pending REQ-D03-001 exact integration completed at d8dffdd, with 343/343 target tests after the recorded process-local descriptor recovery. This session then integrated REQ-D03-002 at 7d6dd624 (369/369), REQ-D03-003 at 9373860 (396/396), and REQ-D03-004-R1 at c57a621c3e3f7806030de13b75b4fe2890b81cc7. Latest exact fast-forward: 2026-10-31T17:06:53.465641Z from 6b1059a20015c6e5ee9023f6d4e368250bb517ea, using scoped automatic approval with no intervening tracked commit. Target: 489/489, zero skips/failures/errors, 340.412 test seconds; clean unchanged accepted source; completed 2026-10-31T17:12:46.950703+00:00; stdout SHA-256 781599a6858d5e2b51cb3c96c6d6317a4196af9f617c1a702407be7a5300fd32.
 
@@ -43,3 +43,5 @@ Four coordinator recoveries remain counted: validation context, Writer deadline,
 Cumulative reported lower bound: 86,268,253 input (76,711,296 cached), 1,022,856 output (253,866 reasoning), plus unknown timed-out 46114120 Writer usage. Nested categories are not extra charges. Quota/invoice/account liabilities remain unknown.
 
 Snapshots are private offline views of exact committed records and copied artifacts. They grant no scientific support, authorized readiness, permission to disclose or canonical effect from edits. Refresh/edit preservation and independent engineering can proceed; M0-S scientific judgments and product-live approvals remain human-dependent gates. This handoff is for practical session/context limits after successive requests, not a declaration of completion or a new authorization requirement.
+
+Fresh reconciliation confirmed c57a621 is already integrated as the direct parent of 7f3f081; no duplicate integration was performed. Both final validation artifacts/reviewer and historical target log digests match retained evidence. All fifteen runs were inspected through status/diagnose and host ownership checked; no active owner or pending integration was found. DEV-041 selects immutable successor refresh with preserved edit/rename evidence and an explicit existing import route. Next start consumes continuous 15/50, leaving 35.
