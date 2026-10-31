@@ -95,6 +95,16 @@ def _boundary(path):
         raise ViewOperationalError(f"view {path}: {error}") from error
 
 
+def _attach_recovery(error, recovery):
+    """Attach established publication facts privately without changing exception type or chaining.
+
+    Callers may report these facts after an ordinary failure or KeyboardInterrupt;
+    absence of metadata does not prove rollback. Placeholder identities are never facts.
+    """
+    error._readable_recovery = dict(recovery)
+    return error
+
+
 def _entries(fd, maximum):
     """Enumerate incrementally with a hard allowance, including directory entries."""
     names = set()
@@ -156,7 +166,9 @@ def _absent(parent, name, maximum):
         except DomainValidationError as error:
             raise ViewLayoutError(f"destination {name}: nonportable sibling {sibling!r}; ambiguous parent") from error
         if sibling == name or alias == key:
-            raise ViewLayoutError(f"destination {name}: existing exact or portable-alias sibling {sibling!r}")
+            error = ViewLayoutError(f"destination {name}: existing exact or portable-alias sibling {sibling!r}")
+            error._readable_collision = sibling == name
+            raise error
 
 
 def _create(directories, parent, name, path):
@@ -327,6 +339,8 @@ def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destinati
     Explicit additional backup/control/external Git exclusions are required. The
     parent must exist, be owned and exactly 0700. Token-paired sibling directories
     hold the payload and retained intent/ready/published evidence separately.
+    Private recovery metadata retains established paths/identities on exceptions and
+    KeyboardInterrupt, without changing the public result or lifecycle.
     Errors before publication identify both reservations. Errors after attempted rename
     identify uncertain acknowledgment; never roll back or automatically replay.
     """
@@ -366,6 +380,8 @@ def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destinati
     bounded_intent = {**intent, "parent": [2**64 - 1] * 2, "generation": [2**64 - 1] * 2}
     if len(_canonical(bounded_intent).encode("ascii")) > 16384:
         raise SnapshotLimitError("intent.json exceeds control allowance before reservation")
+    recovery = dict(destination=str(path), snapshot_id=plan.snapshot_id, plan_id=plan.plan_id,
+                    manifest_sha256=manifest_hash, rename_entered=False, collision=False)
     try:
         with _boundary(path), ExitStack() as stack:
             directories = _Directories(stack)
@@ -378,6 +394,9 @@ def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destinati
             staging = directories.open(".staging", source_area, private=True, path=runtime / ".staging")
             if len({os.fstat(fd).st_dev for fd in (source_area, objects, staging)}) != 1:
                 raise ViewLayoutError(f"source {runtime}: runtime/objects/staging filesystems differ")
+            # Retain exact token association before mkdir: a successful allocation
+            # followed by an open/check failure must not lose its recovery path.
+            recovery.update(attempt_path=str(attempt_path), preparation_path=str(generation_path))
             attempt = _create(directories, parent, attempt_path.name, attempt_path)
             _fault("after_attempt_reservation")
             _absent(parent, generation_path.name, max_entries)
@@ -408,7 +427,13 @@ def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destinati
             # Same-parent rename leaves '..' unchanged, so the 0500 root needs no write bit.
             # The kernel independently refuses even a just-created empty destination.
             attempted = True
-            publish(parent, generation_path.name, parent, path.name)
+            recovery["rename_entered"] = True
+            try:
+                publish(parent, generation_path.name, parent, path.name)
+            except FileExistsError:
+                # Only a definite kernel no-replace rejection excludes publication.
+                recovery["collision"] = True
+                raise
             # Only the moved root's binding changes; every descendant descriptor stays pinned.
             for index, binding in enumerate(directories.bindings):
                 if binding[2] == generation:
@@ -433,14 +458,20 @@ def materialize_readable_view(source: RecordStore, plan: ReadablePlan, destinati
             _attempt_check(attempt, attempt_path, evidence, max_entries)
         # ExitStack closes are part of success. After rename any failure is lost acknowledgment,
         # not rollback: both the destination and evidence must remain for explicit diagnosis.
+    except KeyboardInterrupt as error:
+        _attach_recovery(error, recovery)
+        raise
     except Exception as error:
+        recovery["collision"] = recovery["collision"] or getattr(error, "_readable_collision", False)
         if attempted:
-            raise ViewOperationalError(f"destination {path}; attempt_path {attempt_path}: uncertain publication acknowledgment; "
-                                       f"inspect explicit destination and retained evidence; no rollback/replay: {error}") from error
-        if isinstance(error, (ViewError, SnapshotLimitError, DomainValidationError, ViewPlanError)):
-            raise type(error)(f"destination {path}; attempt_path {attempt_path}; payload_path {generation_path}: {error}") from error
-        raise ViewOperationalError(f"destination {path}; attempt_path {attempt_path}; payload_path {generation_path}: "
-                                   f"preparation failed; retained: {error}") from error
+            reported = ViewOperationalError(f"destination {path}; attempt_path {attempt_path}: uncertain publication acknowledgment; "
+                                           f"inspect explicit destination and retained evidence; no rollback/replay: {error}")
+        elif isinstance(error, (ViewError, SnapshotLimitError, DomainValidationError, ViewPlanError)):
+            reported = type(error)(f"destination {path}; attempt_path {attempt_path}; payload_path {generation_path}: {error}")
+        else:
+            reported = ViewOperationalError(f"destination {path}; attempt_path {attempt_path}; payload_path {generation_path}: "
+                                            f"preparation failed; retained: {error}")
+        raise _attach_recovery(reported, recovery) from error
     return MaterializedView(plan.snapshot_id, plan.plan_id, manifest_hash, str(path), str(attempt_path))
 
 
@@ -512,6 +543,16 @@ def inspect_readable_view(root, *, limits: SnapshotLimits, max_entries: int,
     nor proves historical publication/fsync acknowledgment. Resource/I/O failures
     during final binding verification raise ViewOperationalError even after differences.
     """
+    return _inspect_readable_view(root, limits=limits, max_entries=max_entries,
+                                  expected_plan_id=expected_plan_id)
+
+
+def _inspect_readable_view(root, *, limits, max_entries, expected_plan_id=None, manifest_maximum=None):
+    """Share the established inspector with CLI admission, optionally capping its manifest read.
+
+    The separate cap bounds the second manifest pass without lowering independent
+    plan allowances or rewriting embedded budgets. Public API behavior is unchanged.
+    """
     _integer(max_entries, "max_entries", 1)
     if type(limits) is not SnapshotLimits:
         raise DomainValidationError("limits: expected SnapshotLimits")
@@ -530,7 +571,10 @@ def inspect_readable_view(root, *, limits: SnapshotLimits, max_entries: int,
             raise ViewLayoutError(f"inspection root {path}: requires owned private readable/searchable directory")
         try:
             descriptor_info = os.stat("manifest.json", dir_fd=area, follow_symlinks=False)
-            if descriptor_info.st_size > min(limits.max_file_bytes, limits.max_total_bytes):
+            maximum = min(limits.max_file_bytes, limits.max_total_bytes)
+            if manifest_maximum is not None:
+                maximum = min(maximum, manifest_maximum)
+            if descriptor_info.st_size > maximum:
                 raise SnapshotLimitError("manifest exceeds caller descriptor byte allowance")
             descriptor = _inspect_open(stack, area, "manifest.json", descriptor_info, path / "manifest.json")
             manifest_hash, data = _inspect_bytes(descriptor, descriptor_info, "manifest.json", retain=True)

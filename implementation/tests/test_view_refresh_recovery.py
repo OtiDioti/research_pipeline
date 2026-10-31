@@ -247,3 +247,26 @@ class RefreshRecoveryTests(RefreshFixture):
         inspected = self.inspect(result)
         self.assertEqual(inspected.status, "inconsistent")
         self.assertIsNone(inspected.successor_path)
+
+    def test_private_recovery_metadata_retains_only_established_identities(self):
+        """Interrupts before and after rename retain exact independent plan and capture associations."""
+        for index, boundary in enumerate(("after_attempt_reservation", "after_ready", "after_rename")):
+            destination = self.parent / ("structured-" + str(index))
+            def interrupt(point):
+                """Raise KeyboardInterrupt only at the selected actual publication seam."""
+                if point == boundary:
+                    raise KeyboardInterrupt()
+            with patch("research_pipeline.view_refresh._fault", interrupt), self.assertRaises(KeyboardInterrupt) as caught:
+                self.refresh(destination)
+            facts = caught.exception._readable_recovery
+            self.assertEqual(facts["destination"], str(destination))
+            self.assertEqual(facts["prior_plan_id"], self.plan.plan_id)
+            self.assertEqual(facts["successor_plan_id"], self.plan.plan_id)
+            self.assertEqual(facts["rename_entered"], boundary == "after_rename")
+            self.assertFalse(facts["collision"])
+            for name in ("capture_id", "preservation_plan_id", "refresh_id", "manifest_sha256"):
+                self.assertRegex(facts[name], r"^[0-9a-f]{64}$")
+                self.assertNotEqual(facts[name], "0" * 64)
+            attempt = Path(facts["attempt_path"])
+            expected = attempt.with_name(attempt.name.replace(".readable-refresh-attempt-", ".readable-refresh-package-"))
+            self.assertEqual(facts["preparation_path"], str(expected))

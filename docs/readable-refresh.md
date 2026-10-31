@@ -7,10 +7,12 @@ planned-only APIs below retain their original contracts.
 
 This is local preservation plus a reading generation, not backup, export, a filtered
 reviewer workspace, scientific qualification or runtime authorization. No current
-pointer, CLI, automatic importer or recovery writer is supplied.
+pointer, automatic importer or recovery writer is supplied. The
+[readable-view CLI](readable-view-cli.md) provides explicit preserved refresh and
+offline inspection with an independently retained and pinned baseline.
 
 Import directly from `research_pipeline.view_capture` and
-`research_pipeline.view_preservation`; there are no package re-exports or CLI changes.
+`research_pipeline.view_preservation`; there are no package re-exports.
 
 ```text
 CaptureLimits(

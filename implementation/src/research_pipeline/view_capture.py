@@ -7,6 +7,7 @@ import hashlib
 import os
 from pathlib import Path
 import posixpath
+import re
 import stat
 
 from research_pipeline.checkout import _path, _outside, _identity, _signature
@@ -240,15 +241,21 @@ def _ancestor_binding(info):
     return _identity(info), info.st_mode, info.st_uid, info.st_gid
 
 
-def _not_storage(fd, path, root=False):
-    """Check only fixed layout markers, allowing the intended root's opaque manifest entry."""
+def _not_storage(fd, path, root=False, *, initial_preparation=False):
+    """Probe fixed markers; only explicit CLI inspection may select an initial preparation root.
+
+    Capture retains its existing prefix prohibition. Offline initial recovery can
+    inspect the exact token-paired generation itself, never traverse through it.
+    """
     markers = ("metadata.sqlite3", "snapshot.sqlite3", ".backup-incomplete", ".restore-incomplete",
                ".work-product", "intent.json", "ready.json", "published.json")
     if (any(_present(fd, name) for name in markers)
             or (not root and _present(fd, "manifest.json"))
             or (_present(fd, "objects") and _present(fd, ".staging"))
-            or path.name.startswith((".readable-view-", ".readable-generation-",
-                                       ".readable-refresh-attempt-", ".readable-refresh-package-"))):
+            or (path.name.startswith((".readable-view-", ".readable-generation-",
+                                     ".readable-refresh-attempt-", ".readable-refresh-package-"))
+                and not (initial_preparation and root
+                         and re.fullmatch(r"\.readable-generation-[0-9a-f]{32}", path.name)))):
         raise ViewLayoutError(f"capture ancestor {path}: recognizable storage/control layout")
 
 

@@ -3,8 +3,9 @@
 Capture a bounded consistent committed metadata selection, derive one deterministic
 plan, materialize independently verified protected copies, and inspect that generation
 offline. Snapshot capture and snapshot planning never read artifact bytes;
-materialization and inspection report separate local observations. There is no new
-CLI command or automatic import of displayed edits.
+materialization and inspection report separate local observations. The
+[readable-view CLI](readable-view-cli.md) exposes these operations with explicit
+selection and independent limits; displayed edits are never automatically imported.
 [Preserved readable refresh](readable-refresh.md) compares edits and renames against
 an independent canonical plan, preserves proposed work and atomically publishes an
 associated successor package with read-only offline inspection.

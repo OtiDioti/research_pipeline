@@ -1,9 +1,9 @@
 # Local inspection and explicit work-product round trips
 
-The source-local foundation provides seven bounded operations. Research execution
+The source-local foundation provides eleven bounded operations. Research execution
 is unavailable. Declared provenance and author names are attribution, not
 authenticated authorship, scientific support or permission. Full R-082, creation
-and intake, other draft kinds, snapshot/refresh commands, runtime administration
+and intake, other draft kinds, runtime administration
 and research execution remain incomplete. The explicit saved-proposal route uses the
 existing [preview and import APIs](work-product-import.md). Only the separate
 `submit-work-product` command submits metadata; no inspection, checkout or preparation does.
@@ -25,12 +25,20 @@ python3 -B -m research_pipeline submit-work-product --config /private/cli/config
 ```
 
 No arguments prints help. Every command has `--help`, including units and defaults.
-Identifiers and exact revisions are mandatory; there is no current-head default,
+Identifiers and exact revisions are mandatory for exact record operations. Readable-view
+selection controls alone permit explicit null for current head; omission never selects it. There is no
 positional shortcut, environment-selected store, stdin control, response-file
 expansion, generic execution command, plugin or user-selected module. Unknown or
 abbreviated options, missing arguments, repeated singleton options and malformed
 numeric option syntax are usage errors. Numeric options use ASCII decimal digits.
 All options are validated before opening controls, stores or destinations.
+
+The four [immutable readable-view commands](readable-view-cli.md) add generation,
+preserved refresh from an independently retained baseline, and offline view/refresh
+inspection. That guide specifies their complete selection/limits schemas, result and
+recovery field sets, conservative descriptor admission and executable continuation.
+All four require config and limits, even when the configured runtime is unavailable.
+Existing commands retain the controls and limits below.
 
 ## Trusted local configuration and filesystem assumptions
 

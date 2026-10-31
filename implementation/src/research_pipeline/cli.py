@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import sys
 
-from research_pipeline import __version__, checkout, cli_proposals, work_product_import
+from research_pipeline import __version__, checkout, cli_proposals, cli_views, work_product_import
 from research_pipeline.artifacts import ArtifactError
 from research_pipeline.cli_controls import CliError, causes, path_value, read_config, read_request, source_root
 from research_pipeline.cli_inspection import exact_record, exact_receipt, local_checkout
@@ -23,6 +23,8 @@ from research_pipeline.vault import _not_layout, ViewLayoutError
 
 
 _LIMITS = {
+    "max_selection_bytes": (65536, 1, 1048576, "UTF-8 selection bytes"),
+    "max_manifest_bytes": (16777216, 1, 67108864, "external historical manifest bytes per pass"),
     "max_request_bytes": (1048576, 1, 16777216, "UTF-8 preparation request bytes"),
     "max_proposal_bytes": (2097152, 1, 16777216, "exact saved ASCII proposal bytes"),
     "max_summary_bytes": (4194304, 1, 16777216, "exact saved ASCII summary bytes"),
@@ -59,7 +61,7 @@ class _Parser(argparse.ArgumentParser):
     def error(self, message):
         """Emit safe bounded usage text; no input, store or destination has been opened yet."""
         self.print_usage(sys.stderr)
-        escaped = json.dumps(message[:6000], ensure_ascii=True)[1:-1]
+        escaped = json.dumps(message[:6000], ensure_ascii=True)[1:-1][:60000]
         self.exit(2, f"{self.prog}: error: {escaped}\n")
 
 
@@ -100,10 +102,37 @@ def _parser():
         "inspect-proposal": "Inspect a saved proposal and recomputed changes offline; never repair or submit.",
         "submit-work-product": "Submit exactly a published saved package; reconcile retries under the original ID.",
     })
+    descriptions.update({
+        "generate-readable-view": "Publish a new immutable readable view from one explicit selection.",
+        "refresh-readable-view": "Preserve prior edits against an independent baseline and publish a new package.",
+        "inspect-readable-view": "Observe an explicit readable view offline without historical acknowledgment.",
+        "inspect-readable-refresh": "Observe exact retained refresh evidence offline; never replay or repair.",
+    })
     for command, description in descriptions.items():
         sub = subparsers.add_parser(command, description=description, help=description, allow_abbrev=False)
         limits = ["max_output_bytes"]
-        if command in ("prepare-work-product", "inspect-proposal", "submit-work-product"):
+        if command in cli_views.COMMANDS:
+            for option in ("config", "limits"):
+                sub.add_argument("--" + option, required=True, action=_Once, metavar="FILE")
+            limits += ["max_control_bytes"]
+            if command in cli_views.WRITERS:
+                sub.add_argument("--selection", required=True, action=_Once, metavar="FILE")
+                sub.add_argument("--destination", required=True, action=_Once, metavar="PATH")
+                limits += ["max_selection_bytes"]
+            if command == "refresh-readable-view":
+                for option in ("prior-view", "baseline-manifest", "expected-base-plan-id",
+                               "expected-base-manifest-sha256"):
+                    sub.add_argument("--" + option, required=True, action=_Once)
+                limits += ["max_manifest_bytes"]
+            if command == "inspect-readable-view":
+                sub.add_argument("--view", required=True, action=_Once, metavar="PATH")
+                sub.add_argument("--expected-plan-id", action=_Once, metavar="SHA256")
+                limits += ["max_manifest_bytes"]
+            if command == "inspect-readable-refresh":
+                for option in ("attempt", "destination"):
+                    sub.add_argument("--" + option, required=True, action=_Once, metavar="PATH")
+                sub.add_argument("--expected-refresh-id", action=_Once, metavar="SHA256")
+        elif command in ("prepare-work-product", "inspect-proposal", "submit-work-product"):
             limits += ["max_control_bytes", "max_proposal_bytes", "max_summary_bytes"]
             if command != "inspect-proposal":
                 sub.add_argument("--config", required=True, action=_Once, metavar="FILE")
@@ -165,7 +194,12 @@ def _validate(arguments):
     if hasattr(arguments, "revision"):
         arguments.revision = _number(arguments.revision, 1, 2**63 - 1)
         _integer(arguments.revision, "revision", 1)
-    for name in ("config", "destination", "checkout", "request", "proposal"):
+    for name in ("expected_base_plan_id", "expected_base_manifest_sha256", "expected_plan_id", "expected_refresh_id"):
+        value = getattr(arguments, name, None)
+        if value is not None and re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            raise DomainValidationError("identity requires lowercase SHA-256")
+    for name in ("config", "destination", "checkout", "request", "proposal", "limits", "selection",
+                 "prior_view", "baseline_manifest", "view", "attempt"):
         if hasattr(arguments, name):
             setattr(arguments, name, path_value(getattr(arguments, name)))
 
@@ -208,6 +242,8 @@ def _checkout_preflight(arguments, envelope):
 def _execute(arguments, context, effects):
     """Dispatch one operation and close inputs/store/held paths before returning bounded output."""
     command = arguments.command
+    if command in cli_views.COMMANDS:
+        return cli_views.execute(arguments, context, effects)
     if command in ("prepare-work-product", "inspect-proposal", "submit-work-product"):
         return _execute_proposal(arguments, context, effects)
     if command == "inspect-checkout":
@@ -422,6 +458,8 @@ def _emit(data):
 def _classify(error, effects):
     """Map failures using types and chained errno, never parsing publication-message wording."""
     operation = effects.get("operation")
+    if operation in cli_views.COMMANDS:
+        return cli_views.classify(error, effects)
     if operation in ("prepare-work-product", "submit-work-product"):
         if effects.get("returned") or effects.get("published"):
             if isinstance(error, CliError) and error.status == 7:
@@ -474,10 +512,16 @@ def _diagnostic(command, error, context):
     """Emit one bounded ASCII diagnostic, reserving exact recovery identities before explanatory text."""
     # Two 4096-byte paths need at most 49152 ASCII bytes after escaping. Fixed
     # identity/guidance fields and this message cap fit in the remaining allowance.
+    message = str(error)[:1000]
+    if command in cli_views.COMMANDS:
+        # Bound explanatory text by escaped ASCII bytes, keeping exact recovery
+        # paths/identities intact even when each path expands sixfold in JSON.
+        while len(json.dumps(message, ensure_ascii=True).encode("ascii")) > 1024:
+            message = message[:len(message) // 2]
     value = dict(format="research_pipeline.cli_diagnostic", version=1, command=command,
-                 code=error.code, message=str(error)[:1000], context=context)
-    data = (_bounded_json(value, 65535, "diagnostic") + "\n").encode("ascii")
+                 code=error.code, message=message, context=context)
     try:
+        data = (_bounded_json(value, 65535, "diagnostic") + "\n").encode("ascii")
         checkout._write_all(sys.stderr.fileno(), data)
     except (OSError, ValueError, AttributeError):
         # An unusable stderr cannot turn a failed operation into success.
@@ -493,11 +537,18 @@ def main(argv=None):
         return 0
     context = dict(store=None, destination=None, record_id=None, revision=None,
                    submission_id=None, next_action=None)
+    if arguments.command in cli_views.COMMANDS:
+        context = dict.fromkeys(cli_views.CONTEXT_FIELDS)
     effects = {"begun": False, "operation": arguments.command}
     try:
         _validate(arguments)
-        for name in ("record_id", "revision", "submission_id"):
-            context[name] = getattr(arguments, name, None)
+        if arguments.command not in cli_views.COMMANDS:
+            for name in ("record_id", "revision", "submission_id"):
+                context[name] = getattr(arguments, name, None)
+        if hasattr(arguments, "view"):
+            context["destination"] = str(arguments.view)
+        if hasattr(arguments, "attempt"):
+            context["attempt_path"] = str(arguments.attempt)
         if hasattr(arguments, "destination"):
             context["destination"] = str(arguments.destination)
         if hasattr(arguments, "proposal"):
@@ -513,7 +564,9 @@ def main(argv=None):
         failure = _classify(error, effects)
         if effects.get("verified") is not None:
             _proposal_identity(effects["verified"], context, effects)
-        if arguments.command in ("prepare-work-product", "submit-work-product"):
+        if arguments.command in cli_views.COMMANDS:
+            context["next_action"] = cli_views.guidance(arguments.command, failure)
+        elif arguments.command in ("prepare-work-product", "submit-work-product"):
             identity = effects.get("proposal_sha256")
             if arguments.command == "prepare-work-product":
                 action = ("Use inspect-proposal --proposal PATH at the retained destination. "

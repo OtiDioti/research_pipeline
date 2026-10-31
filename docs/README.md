@@ -10,7 +10,10 @@ The implemented [foundation architecture](architecture.md) describes the package
 CLI, validator, test isolation, and current limits. See the
 [implementation guide](../implementation/README.md) for exact local commands, and the
 [local CLI guide](local-cli.md) for bounded exact inspection, editable checkout, saved proposal review and separate
-explicit submission with original-ID receipt recovery.
+explicit submission with original-ID receipt recovery. The
+[readable-view CLI guide](readable-view-cli.md) specifies bounded generation, pinned
+baselines, preserved refresh and offline inspection, with an executable synthetic
+preservation-to-submission continuation.
 
 The [synthetic oscillator paper walkthrough](synthetic-oscillator.md) traces the
 development fixture, its public loading/validation contract, expected outcomes and

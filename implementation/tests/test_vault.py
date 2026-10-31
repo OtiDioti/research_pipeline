@@ -842,3 +842,42 @@ class PublicationPrimitiveTests(unittest.TestCase):
                     _absent(fd, "reading", 1)
             finally:
                 os.close(fd)
+
+
+class PublicationRecoveryMetadataTests(VaultFixture):
+    """Structured recovery facts supplement existing exceptions without changing public signatures."""
+
+    def test_normal_failure_and_interrupt_retain_established_facts(self):
+        """Normal errors retain chaining, while KeyboardInterrupt is re-raised with exact token association."""
+        for index, (boundary, kind) in enumerate((("after_attempt_reservation", KeyboardInterrupt),
+                                                 ("after_ready", OSError), ("after_rename", KeyboardInterrupt))):
+            destination = self.parent / ("reporting-" + str(index))
+            def fail(point):
+                """Raise the selected failure only after a real publication lifecycle boundary."""
+                if point == boundary:
+                    raise kind("injected")
+            expected = KeyboardInterrupt if kind is KeyboardInterrupt else ViewOperationalError
+            with patch("research_pipeline.vault._fault", fail), self.assertRaises(expected) as caught:
+                self.publish(destination)
+            facts = caught.exception._readable_recovery
+            self.assertEqual(facts["destination"], str(destination))
+            self.assertEqual(facts["plan_id"], self.plan.plan_id)
+            self.assertEqual(facts["snapshot_id"], self.plan.snapshot_id)
+            self.assertEqual(facts["manifest_sha256"], hashlib.sha256(self.plan.manifest_bytes).hexdigest())
+            self.assertEqual(facts["rename_entered"], boundary == "after_rename")
+            self.assertFalse(facts["collision"])
+            self.assertEqual(Path(facts["preparation_path"]), paired_payload(Path(facts["attempt_path"])))
+            self.assertTrue(Path(facts["attempt_path"]).is_dir())
+            if kind is OSError:
+                self.assertIsNotNone(caught.exception.__cause__)
+
+    def test_system_exit_is_not_wrapped_or_reported(self):
+        """Abrupt explicit termination remains outside the compatible reporting extraction."""
+        def exit_at_reservation(point):
+            """Terminate after reservation without pretending the caller received an acknowledgment."""
+            if point == "after_attempt_reservation":
+                raise SystemExit(73)
+        with patch("research_pipeline.vault._fault", exit_at_reservation), self.assertRaises(SystemExit) as caught:
+            self.publish()
+        self.assertEqual(caught.exception.code, 73)
+        self.assertFalse(hasattr(caught.exception, "_readable_recovery"))

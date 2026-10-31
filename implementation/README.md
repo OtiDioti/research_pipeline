@@ -11,7 +11,9 @@ Attributed Review/Issue values, exact assessment envelopes and durable typed
 admission/read are also available. Immutable multi-file WorkProductManifest values
 join the same typed boundary; see [work products](../docs/work-products.md).
 It also provides private immutable reading generations with bounded independent
-copies, exclusive publication and offline inspection. It implements no research
+copies, exclusive publication and offline inspection. The
+[readable-view CLI guide](../docs/readable-view-cli.md) documents generation, preserved
+refresh, independently retained historical baselines and offline recovery inspection. It implements no research
 execution, models or scientific verification. Specification v1.4 separates
 engineering readiness from scientific validation; this durable slice does not complete either overall gate or M1/D02.
 Implementation is submitted for review; controller acceptance and integration are

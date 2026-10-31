@@ -253,3 +253,59 @@ class RefreshBudgetRepairTests(RefreshFixture):
             _validated_metadata("x" * 101, replace(limits.capture_limits, max_metadata_bytes=100))
         with self.assertRaises(ViewIntegrityError):
             _validated_metadata(b"x", limits.capture_limits)
+
+    def test_public_refresh_signature_and_complete_private_path_inventory(self):
+        """Public refresh retains its signature and passes complete physical inventory without a new ceiling."""
+        import inspect
+        from research_pipeline import view_refresh
+        self.assertEqual(tuple(inspect.signature(view_refresh.refresh_readable_view).parameters),
+            ("source", "prior_view", "destination", "expected_plan", "new_plan", "source_root", "protected_roots", "limits"))
+        self.write("manifest.json", b"opaque authored control")
+        self.write("native.txt", b"native draft")
+        (self.view / "empty").mkdir(mode=0o700)
+        original, observed = view_refresh._absolute_paths, []
+        def admit(files, directories, destination, package_path, attempt_path, maximum):
+            """Observe the real final inventory at the shared gate, then retain its normal admission behavior."""
+            observed.append((files, directories, maximum))
+            self.assertFalse(destination.exists())
+            self.assertFalse(package_path.exists())
+            self.assertFalse(attempt_path.exists())
+            return original(files, directories, destination, package_path, attempt_path, maximum)
+        with patch.object(view_refresh, "_absolute_paths", admit):
+            result = self.refresh()
+        self.assertEqual(self.inspect(result).status, "published")
+        self.assertEqual(len(observed), 1)
+        files, directories, maximum = observed[0]
+        self.assertIsNone(maximum)
+        paths = {row["path"] for row in files}
+        self.assertTrue({"capture.json", "preservation-plan.json", "README.md", "refresh.json",
+            "preservation/controls/expected-manifest.json", "preservation/controls/observed-manifest.bin",
+            "preservation/tree/native.txt", "attempt/intent.json", "attempt/ready.json",
+            "attempt/published.json"} <= paths)
+        self.assertTrue({"generation/" + entry.relative_path for entry in self.plan.generated_files} <= paths)
+        self.assertTrue({"generation/" + entry.relative_path for entry in self.plan.artifact_copies} <= paths)
+        self.assertTrue({"", "attempt", "preservation/controls", "preservation/tree/empty", "generation"}
+                        <= {row["path"] for row in directories})
+        # Every actual inventory row is checked under each possible physical root.
+        for row in (*files, *directories):
+            relative = row["path"]
+            for target in (("attempt",) if relative == "attempt" or relative.startswith("attempt/")
+                           else ("destination", "package")):
+                with self.subTest(path=relative, target=target):
+                    suffix = relative.partition("/")[2] if target == "attempt" else relative
+                    # Include multibyte scalar values; character counts would miss one-over.
+                    root_size = 4096 - (len(suffix.encode("utf-8")) + 1 if suffix else 0)
+                    root = Path("/" + "é" * ((root_size - 1) // 2) + "x" * ((root_size - 1) % 2))
+                    roots = dict(destination=Path("/d"), package=Path("/p"), attempt=Path("/a"))
+                    roots[target] = root
+                    original([row] if row in files else [], [row] if row in directories else [],
+                             roots["destination"], roots["package"], roots["attempt"], 4096)
+                    roots[target] = Path(str(root) + "x")
+                    with self.assertRaises(SnapshotLimitError):
+                        original([row] if row in files else [], [row] if row in directories else [],
+                                 roots["destination"], roots["package"], roots["attempt"], 4096)
+        # No synthetic package/attempt path may consume the package-root allowance.
+        original([dict(path="attempt/published.json")], [dict(path="attempt")],
+                 Path("/" + "d" * 4095), Path("/" + "p" * 4095), Path("/a"), 4096)
+        with self.assertRaises(SnapshotLimitError):
+            original([], [], Path("/\ud800"), Path("/p"), Path("/a"), 4096)

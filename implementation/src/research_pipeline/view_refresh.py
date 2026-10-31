@@ -21,7 +21,7 @@ from research_pipeline.store import RecordStore
 from research_pipeline.vault import (
     ViewError, ViewLayoutError, ViewIntegrityError, ViewOperationalError, _boundary,
     _parent, _create, _present, _guards, _source_check, _not_layout,
-    _prepare_generation, _rename_noreplace,
+    _prepare_generation, _rename_noreplace, _attach_recovery,
 )
 from research_pipeline.view_capture import (
     _canonical_plan, _capture_observation, _digest, _Metadata, _binding_stat, _expected,
@@ -113,7 +113,9 @@ def _sibling_aliases(parent, names, maximum, *, absent=()):
             except DomainValidationError as error:
                 raise ViewLayoutError("ambiguous parent sibling") from error
             if name in absent:
-                raise ViewLayoutError("occupied reserved destination: " + name)
+                error = ViewLayoutError("occupied reserved destination: " + name)
+                error._readable_collision = True
+                raise error
             if key in keys and keys[key] != name:
                 raise ViewLayoutError("portable alias for reserved sibling")
 
@@ -131,6 +133,36 @@ def _physical_rows(manifest, controls, evidence):
     files.extend(dict(path="attempt/" + name, size=len(_canonical(value).encode("ascii")))
                  for name, value in evidence.items())
     return files, [*manifest["directories"], dict(path="attempt", mode=0o700)]
+
+
+def _absolute_paths(files, directories, destination, package_path, attempt_path, maximum):
+    """Admit all physical paths beneath both package roots using strict UTF-8 byte lengths.
+
+    Called after complete inventory admission and before any output reservation.
+    The optional private ceiling leaves public API path behavior unchanged.
+    """
+    if maximum is None:
+        return
+
+    def check(path):
+        """Reject paths above the byte ceiling, including invalid Unicode scalar values."""
+        try:
+            size = len(str(path).encode("utf-8", errors="strict"))
+        except UnicodeError as error:
+            raise SnapshotLimitError("absolute output path requires strict UTF-8") from error
+        if size > maximum:
+            raise SnapshotLimitError("absolute output path byte allowance exceeded")
+
+    for root in (destination, package_path, attempt_path):
+        check(root)
+    for row in (*files, *directories):
+        relative = row["path"]
+        # Synthetic attempt rows account for sibling evidence, not package children.
+        if relative == "attempt" or relative.startswith("attempt/"):
+            check(attempt_path / relative.removeprefix("attempt").lstrip("/"))
+        else:
+            for root in (destination, package_path):
+                check(root / relative)
 
 
 class _PreservationAdmission:
@@ -300,10 +332,24 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
 
     Both canonical plans are independently reconstructed before prior reads. Every
     same-plan call still captures, preserves and publishes at an absent destination.
-    Failures retain all work; after attempted rename acknowledgment is uncertain.
+    Failures retain all work; private exception metadata records established recovery
+    facts, including on KeyboardInterrupt. After attempted rename acknowledgment is uncertain.
     Each verification rereads bounded bytes with one EOF probe per file, not one
     lifetime I/O allowance. Coherent hostile-owner changes and the interval after
     final observation remain outside the local mutation guarantee.
+    """
+    return _refresh_readable_view(source, prior_view, destination, expected_plan=expected_plan,
+        new_plan=new_plan, source_root=source_root, protected_roots=protected_roots, limits=limits)
+
+
+def _refresh_readable_view(source: RecordStore, prior_view, destination, *, expected_plan: ReadablePlan,
+                           new_plan: ReadablePlan, source_root, protected_roots, limits: RefreshLimits,
+                           absolute_path_maximum=None) -> RefreshedReadableView:
+    """Run the single capture/publication lifecycle with an optional private absolute output ceiling.
+
+    CLI callers bound the complete derived inventory before reservation; public
+    callers retain the existing independent relative-path and resource limits.
+    Failures preserve the same established recovery facts as the public entry point.
     """
     limits = _limits_value(limits)
     if type(source) is not RecordStore:
@@ -357,6 +403,9 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
         if fixed_descriptors + prior_count + admission.descriptors() > limits.max_open_descriptors:
             raise SnapshotLimitError("max_open_descriptors exceeded across refresh")
     capacity(len(prior_path.parts) + len(prior.generated_files) + len(prior.artifact_copies) + len(prior.directories))
+    recovery = dict(destination=str(path), prior_snapshot_id=prior.snapshot_id, prior_plan_id=prior.plan_id,
+                    successor_snapshot_id=successor.snapshot_id, successor_plan_id=successor.plan_id,
+                    rename_entered=False, collision=False)
     try:
         with _boundary(path), ExitStack() as stack:
             captured, observation = _capture_observation(stack, prior_path, expected_plan=prior,
@@ -364,16 +413,20 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
                 limits=limits.capture_limits, capacity=capacity, metadata_maximum=limits.max_metadata_bytes,
                 admission=admission.observe)
             capture = captured.to_dict()
+            recovery["capture_id"] = capture["capture_id"]
             admission.reserve("capture.json", len(captured._state), control=True)
             planning_limits = replace(limits.capture_limits,
                 max_metadata_bytes=min(limits.capture_limits.max_metadata_bytes, limits.max_metadata_bytes),
                 max_diagnostics=min(limits.capture_limits.max_diagnostics, diagnostic_allowance))
             preservation = _plan_metadata(capture, prior, planning_limits, len(captured._state))
+            recovery["preservation_plan_id"] = preservation["preservation_plan_id"]
             admission.reconcile(preservation)
             admission.reserve("preservation-plan.json", len(_canonical(preservation)), control=True)
             capacity(len(observation.bindings))
             manifest, controls, metadata_size = _package_metadata(capture, preservation, prior, successor, limits)
+            recovery["refresh_id"] = manifest["refresh_id"]
             manifest_hash = _digest(controls["refresh.json"])
+            recovery["manifest_sha256"] = manifest_hash
             intent.update(capture_id=capture["capture_id"],
                 preservation_plan_id=preservation["preservation_plan_id"], refresh_id=manifest["refresh_id"],
                 manifest_sha256=manifest_hash)
@@ -384,6 +437,7 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
             _inventory_bounds(rows, dirs, limits)
             if metadata_size + sum(len(_canonical(v)) for v in evidence.values()) > limits.max_metadata_bytes:
                 raise SnapshotLimitError("evidence exceeds aggregate max_metadata_bytes")
+            _absolute_paths(rows, dirs, path, package_path, attempt_path, absolute_path_maximum)
             directories = _Directories(stack)
             parent = _parent(directories, path.parent)
             ancestors = tuple((b[2], Path(b[6])) for b in directories.bindings)
@@ -393,6 +447,9 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
             staging = directories.open(".staging", source_area, private=True, path=runtime / ".staging")
             if len({os.fstat(fd).st_dev for fd in (source_area, objects, staging)}) != 1:
                 raise ViewLayoutError("source runtime/objects/staging filesystems differ")
+            # Retain exact token association before mkdir: a successful allocation
+            # followed by an open/check failure must not lose its recovery path.
+            recovery.update(attempt_path=str(attempt_path), preparation_path=str(package_path))
             attempt = _create(directories, parent, attempt_path.name, attempt_path)
             _fault("after_attempt_reservation")
             _sibling_aliases(parent, names, limits.max_entries, absent=(package_path.name,))
@@ -477,7 +534,12 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
             _sibling_aliases(parent, names, limits.max_entries, absent=(path.name,))
             # One no-follow, same-parent kernel no-replace publication; no retry.
             attempted = True
-            publish(parent, package_path.name, parent, path.name)
+            recovery["rename_entered"] = True
+            try:
+                publish(parent, package_path.name, parent, path.name)
+            except FileExistsError:
+                recovery["collision"] = True
+                raise
             for index, binding in enumerate(directories.bindings):
                 if binding[2] == package:
                     directories.bindings[index] = (parent, path.name, *binding[2:6], str(path))
@@ -494,13 +556,19 @@ def refresh_readable_view(source: RecordStore, prior_view, destination, *, expec
             _fault("after_published")
             check()
         # Successful closes are part of acknowledgment, after all final checks.
+    except KeyboardInterrupt as error:
+        _attach_recovery(error, recovery)
+        raise
     except Exception as error:
+        recovery["collision"] = recovery["collision"] or getattr(error, "_readable_collision", False)
         context = f"destination {path}; attempt_path {attempt_path}; package_path {package_path}"
         if attempted:
-            raise ViewOperationalError(context + f": uncertain publication acknowledgment; retained, no rollback/replay: {error}") from error
-        if isinstance(error, (ViewError, SnapshotLimitError, DomainValidationError, ViewPlanError)):
-            raise type(error)(context + f": {error}") from error
-        raise ViewOperationalError(context + f": preparation failed; retained: {error}") from error
+            reported = ViewOperationalError(context + f": uncertain publication acknowledgment; retained, no rollback/replay: {error}")
+        elif isinstance(error, (ViewError, SnapshotLimitError, DomainValidationError, ViewPlanError)):
+            reported = type(error)(context + f": {error}")
+        else:
+            reported = ViewOperationalError(context + f": preparation failed; retained: {error}")
+        raise _attach_recovery(reported, recovery) from error
     return RefreshedReadableView(manifest["refresh_id"], str(prior_path), prior.snapshot_id, prior.plan_id,
         capture["capture_id"], preservation["preservation_plan_id"], successor.snapshot_id, successor.plan_id,
         str(path), str(path / "generation"), str(path / "preservation"), str(attempt_path), prior.plan_id == successor.plan_id)
