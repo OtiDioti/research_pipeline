@@ -28,8 +28,9 @@ _HEADINGS = ("Purpose and scope", "Contents", "Current work", "Provenance", "Use
 _LIMITATIONS = (
     "Private local reading snapshot; not a backup, redistributable export, independently filtered "
     "worker/reviewer workspace or new source of scientific truth.",
-    "Artifacts are expected_unverified. Milestone 2 must verify bytes and publish a complete generation "
-    "before availability can be asserted. Modes 0500/0400 are planned expectations only.",
+    "Manifest artifacts remain expected_unverified: planning does not establish byte availability. "
+    "Successful materialization verifies the complete copied generation with modes 0500/0400; "
+    "offline inspection checks its current local contents against these expectations.",
     "Restrictions are retained declarations, not disclosure permission.",
     "Local decoding and outgoing navigation do not prove original submit_typed admission, transitive "
     "admission, scientific validity, authenticated authorship or effective authority. Shallow admission "
@@ -43,8 +44,8 @@ _LIMITATIONS = (
     "management and optional workspace hierarchies are unavailable.",
     "Authored internal links are preserved bytes, not certified or rewritten. No attachments are read, "
     "rendered, extracted, imported, compiled or executed by this planner.",
-    "manifest.json is the reserved descriptor, excluded from its own hashed file list. Inspection in "
-    "milestone 2 must separately verify the descriptor and plan identity.",
+    "manifest.json is the reserved descriptor, excluded from its own hashed file list. Offline inspection "
+    "reconstructs the canonical plan and checks the descriptor and all expected bytes separately.",
 )
 _EDITING = ("Displayed edits have no canonical effect. Changes require a separate supported checkout/import "
             "or new record submission. There is no view-refresh/import service.")
@@ -73,7 +74,7 @@ class GeneratedFile:
 
 @dataclass(frozen=True)
 class ArtifactCopy:
-    """One physical copy expectation; digest/size have not been observed in this milestone."""
+    """One physical copy expectation; digest/size describe metadata expectations, separate from observed byte verification."""
 
     relative_path: str
     digest: str
@@ -502,7 +503,7 @@ def _root_body(document, paths, decoded, notices, mappings, envelopes, directori
     yield "Snapshot: " + document["snapshot_id"] + ".\n\n"
     yield "Commit watermark (local commit history only):\n\n"
     yield from _values(document["watermark"])
-    yield "Partial explicit-root plus outgoing navigation closure. Expected artifacts are unverified; this plan does not assert availability.\n\n"
+    yield "Partial explicit-root plus outgoing navigation closure. Manifest artifacts are expected_unverified; planning does not assert availability. Successful materialization verifies the complete copied generation; offline inspection checks current local contents.\n\n"
     yield "## Purpose and scope\n\n"
     yield from _values(document["scope"])
     yield "## Contents\n\n"
@@ -560,7 +561,7 @@ def _root_body(document, paths, decoded, notices, mappings, envelopes, directori
         yield "Typed remaining requirements unavailable; consult the opaque project envelope.\n\n"
     yield "## Provenance\n\nSnapshot: " + document["snapshot_id"] + ".\n\n"
     yield "Exact revisions and their commit history are retained in record companions and manifest.json.\n\n"
-    yield "## Use\n\nFollow ordinary relative links to generated companions and expected inert originals. No database, plugin or LLM is required to read a later complete generation.\n\n"
+    yield "## Use\n\nFollow ordinary relative links to generated companions and expected inert originals. No database, plugin or LLM is required to read a materialized complete generation.\n\n"
     yield "## Dependencies and limitations\n\n"
     for limitation in _LIMITATIONS:
         yield limitation + "\n\n"
@@ -584,7 +585,7 @@ def _index_body(directory, file_paths, directories, branches, paths, snapshot_id
         yield "Captured exact branch revisions; generic payloads provide no inferred purpose, method, context differences or continuation policy.\n\n"
         for key in sorted(branches[branch_token]):
             yield _link(page, paths[key], f'{key[0]}@{key[1]}') + "\n\n"
-    yield "## Provenance\n\nDerived solely from captured exact record metadata; originals are expected_unverified.\n\n"
+    yield "## Provenance\n\nDerived solely from captured exact record metadata; manifest originals remain expected_unverified. Materialization verifies copied bytes; inspection checks current local contents.\n\n"
     yield "Snapshot: " + snapshot_id + ".\n\n"
     yield "Record/context/task attribution is available in linked exact companions; this index supplies no additional attribution.\n\n"
     yield "## Use\n\n"
@@ -804,6 +805,57 @@ def _markdown_navigation(data):
     return headings, links
 
 
+def _snapshot_from_manifest(manifest):
+    """Extract retained capture fields, stripping only defined presentation fields.
+
+    Unknown nested fields survive extraction so DetachedSnapshot's strict schema
+    rejects them. The top-level manifest schema is exact as well.
+    """
+    required = {"format", "snapshot_id", "plan_id", "schema", "watermark", "selection", "resolutions", "scope",
+                "limitations", "limits", "metadata_fetched_bytes", "records", "artifacts", "mappings", "directories", "files", "descriptor"}
+    if type(manifest) is not dict or set(manifest) != required or manifest["format"] != "research_pipeline.readable_plan.v1":
+        raise ViewPlanError("unsupported manifest structure")
+    names = ("snapshot_id", "schema", "watermark", "selection", "resolutions", "scope", "limits", "metadata_fetched_bytes")
+    document = {name: manifest[name] for name in names}
+    document["format"] = "research_pipeline.snapshot.v1"
+    document["records"] = [{k: v for k, v in record.items()
+                            if k not in ("page_path", "relationships", "projection_limitation")}
+                           for record in manifest["records"]]
+    document["artifacts"] = [{k: v for k, v in artifact.items() if k != "mappings"}
+                             for artifact in manifest["artifacts"]]
+    return document
+
+
+def readable_plan_from_manifest(data: bytes, *, limits: SnapshotLimits) -> ReadablePlan:
+    """Reconstruct the one deterministic plan from a bounded untrusted descriptor.
+
+    Every embedded allowance must fit the corresponding caller allowance before
+    reconstructing or rendering. This conservative rule prevents the descriptor
+    from selecting its own processing budgets. Exact canonical bytes, including
+    the self-excluded descriptor identity, must match the existing planner.
+    """
+    if type(data) is not bytes or type(limits) is not SnapshotLimits:
+        raise DomainValidationError("expected immutable manifest bytes and SnapshotLimits")
+    limits = SnapshotLimits(**limits.to_dict())
+    if len(data) > min(limits.max_file_bytes, limits.max_total_bytes):
+        raise SnapshotLimitError("manifest exceeds caller byte allowance")
+    try:
+        manifest = _strict_json(data.decode("ascii"), maximum_depth=69)
+        embedded = SnapshotLimits(**manifest["limits"])
+        allowances = limits.to_dict()
+        if any(value > allowances[name] for name, value in embedded.to_dict().items()):
+            raise SnapshotLimitError("embedded allowance exceeds caller inspection allowance")
+        document = _snapshot_from_manifest(manifest)
+        plan = plan_readable_snapshot(DetachedSnapshot(document))
+        if plan.manifest_bytes != data:
+            raise ViewPlanError("manifest differs from deterministic canonical plan")
+        return plan
+    except (AttributeError, KeyError, TypeError, ValueError, RecursionError) as error:
+        if isinstance(error, (ViewPlanError, SnapshotLimitError, DomainValidationError)):
+            raise
+        raise ViewPlanError(f"invalid manifest: {str(error)[:240]}") from error
+
+
 def verify_plan_links(plan: ReadablePlan) -> None:
     """Validate immutable plan values, full inventory/manifest and every rendered generated link.
 
@@ -838,10 +890,7 @@ def verify_plan_links(plan: ReadablePlan) -> None:
         manifest_v1_maximum_depth = 69
         manifest = _strict_json(plan.manifest_bytes.decode("ascii"),
                                 maximum_depth=manifest_v1_maximum_depth)
-        required = {"format", "snapshot_id", "plan_id", "schema", "watermark", "selection", "resolutions", "scope",
-                    "limitations", "limits", "metadata_fetched_bytes", "records", "artifacts", "mappings", "directories", "files", "descriptor"}
-        if set(manifest) != required or manifest["format"] != "research_pipeline.readable_plan.v1":
-            raise ViewPlanError("unsupported manifest structure")
+        snapshot_document = _snapshot_from_manifest(manifest)
         ArtifactReference(plan.snapshot_id, 0)
         ArtifactReference(plan.plan_id, 0)
         if manifest["snapshot_id"] != plan.snapshot_id or manifest["plan_id"] != plan.plan_id:
@@ -871,22 +920,14 @@ def verify_plan_links(plan: ReadablePlan) -> None:
             raise ViewPlanError("manifest directories disagree")
         if _canonical(manifest["descriptor"]) != _canonical({"path": "manifest.json", "mode": 0o400, "self_excluded": True}):
             raise ViewPlanError("invalid self-excluded descriptor")
-        snapshot_fields = ("snapshot_id", "schema", "watermark", "selection", "resolutions", "scope", "limits", "metadata_fetched_bytes")
-        snapshot_document = {field: manifest[field] for field in snapshot_fields}
-        snapshot_document["format"] = "research_pipeline.snapshot.v1"
-        snapshot_document["records"] = []
         for record in manifest["records"]:
-            core = {k: v for k, v in record.items() if k not in ("page_path", "relationships", "projection_limitation")}
-            snapshot_document["records"].append(core)
             page = record["page_path"]
             raw_path = posixpath.dirname(page) + "/envelope.json"
             if (page not in generated or raw_path not in generated
                     or generated[raw_path].data != record["envelope_json"].encode("ascii")
                     or _canonical(record["relationships"]) != _canonical(json.loads(record["envelope_json"])["record_references"])):
                 raise ViewPlanError("record companion or exact envelope disagreement")
-        snapshot_document["artifacts"] = []
         for artifact in manifest["artifacts"]:
-            snapshot_document["artifacts"].append({k: v for k, v in artifact.items() if k != "mappings"})
             if _canonical(artifact["mappings"]) != _canonical([m for m in manifest["mappings"] if m["digest"] == artifact["digest"]]):
                 raise ViewPlanError("artifact inclusion mappings disagree")
         DetachedSnapshot(snapshot_document)

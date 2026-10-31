@@ -75,8 +75,9 @@ strict codecs, corpus/document/location history and readiness proposals without
 authority. It contains the complete canonical ten-kind traversal/projection
 tables and a self-contained runnable synthetic setup example.
 
-[Detached readable snapshot plans](readable-snapshots.md) capture an explicit bounded
+[Immutable private readable snapshots](readable-snapshots.md) capture an explicit bounded
 project/outgoing metadata closure in one read transaction and produce deterministic
 companions, inert artifact-copy expectations, canonical manifests and verified relative
-navigation. Artifact verification/copying, publication and offline inspection remain
-reserved for the next milestone; a plan does not assert byte availability.
+navigation. Protected independent copies publish through an exclusive atomic rename;
+read-only offline inspection compares current bytes with the canonical plan. Plans
+retain expectations separately from observed materialization/inspection results.

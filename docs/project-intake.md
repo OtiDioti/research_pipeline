@@ -103,7 +103,7 @@ Project inspection covers its explicit subset and remainder. It neither copies
 nor upgrades Source reading or corpus-entry inspection observations. Actual
 admission must later enforce authorized operating policy, permissions, budgets and
 scientific prerequisites. Full interpretation/acquisition, exposure enforcement,
-task/run lifecycle, vault publication, providers/tools and scientific evaluation
+task/run lifecycle, providers/tools and scientific evaluation
 remain subsequent work.
 
 ## Exact target and history semantics
@@ -259,9 +259,9 @@ healthy schema-2 backups/exact restore preserve all history, bytes and receipts.
 ProjectSetup adds no path or attachment fields. Source locations use existing
 original mappings and portable logical paths. Document files retain existing
 portable path, alias and collision rules without an extension whitelist. The
-specification's future readable-view destinations are `reports/intake/<intake-id>/`
-and `brief/`. This milestone stores bundles; it does not materialize a vault or
-infer document roles from those paths.
+specification's readable-view areas include `reports/intake/` and `brief/`. These
+intake contracts store bundles without inferring roles from paths. The separate [readable snapshot API](readable-snapshots.md) captures, plans, materializes
+and inspects private reading generations using the recorded roles.
 
 ## Runnable local example
 
@@ -425,5 +425,6 @@ failures become explicit projection limitations rather than silently established
 mappings. The captured outgoing closure includes every attachment of a reached
 Source, which is distinct from corpus original selection and inspection coverage.
 This reader does not certify historical typed admission, research readiness or
-operating authority. Artifact bytes remain expected/unverified until the later
-materializer verifies and publishes a complete private generation.
+operating authority. Manifest artifact entries retain expected/unverified declarations
+even after publication. Materialization separately verifies the complete private
+generation; offline inspection checks its current local contents.

@@ -470,3 +470,6 @@ capture retains its read snapshot. Existing revision/history/admission contracts
 unchanged. See [readable snapshot plans](readable-snapshots.md) for constructors,
 preflight accounting, integrity errors, classification and pure planning. Expected
 artifact registrations are not evidence of physical availability or scientific support.
+The separate `research_pipeline.vault` materializer consumes only the detached plan
+and guarded artifact area, without metadata reads; offline inspection needs no live
+store. Publication and inspection observations do not change admission or history.
