@@ -75,7 +75,11 @@ class CliTests(unittest.TestCase):
                     self.assertEqual(result.returncode, 2)
                     self.assertEqual(result.stdout, "")
                     self.assertIn("usage:", result.stderr)
-                    self.assertIn("unrecognized arguments: " + argument, result.stderr)
+                    if argument == "run":
+                        self.assertIn("invalid choice", result.stderr)
+                        self.assertIn(argument, result.stderr)
+                    else:
+                        self.assertIn("unrecognized arguments: " + argument, result.stderr)
 
     def test_competing_package(self):
         """A fake package later on PYTHONPATH cannot mask the candidate source."""

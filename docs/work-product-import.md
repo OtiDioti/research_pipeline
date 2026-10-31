@@ -1,8 +1,10 @@
 # Work-product preview and explicit import
 
 Import directly from `research_pipeline.work_product_import`. This is a trusted
-controller/library boundary, with no CLI, package re-exports or authenticated worker
-endpoint. Preview verifies the canonical base, captures explicit inert draft bytes,
+controller/library boundary: preview and import remain library-only, with no
+package re-exports or authenticated worker endpoint. The [local CLI](local-cli.md)
+currently exposes only exact inspection and checkout. Preview verifies the
+canonical base, captures explicit inert draft bytes,
 publishes immutable artifacts and checks typed admission in a read snapshot. It
 returns a frozen proposal and explanatory summary. It writes no application metadata:
 records, heads, submissions, receipts and events remain unchanged.

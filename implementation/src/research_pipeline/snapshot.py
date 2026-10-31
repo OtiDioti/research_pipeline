@@ -137,8 +137,8 @@ def _bounded_json(value, maximum, label):
     return "".join(chunks)
 
 
-def _strict_json(text, *, maximum_depth=64):
-    """Bound nesting before decoding and require canonical JSON; envelope wrappers allow one extra level."""
+def _check_json_depth(text, maximum_depth=64):
+    """Scan containers outside strings before decoding, rejecting excessive JSON nesting."""
     if type(text) is not str:
         raise SnapshotIntegrityError("stored JSON must be text")
     depth, quoted, escaped = 0, False, False
@@ -158,6 +158,11 @@ def _strict_json(text, *, maximum_depth=64):
                 raise SnapshotIntegrityError(f"JSON nesting exceeds {maximum_depth}")
         elif character in "]}":
             depth -= 1
+
+
+def _strict_json(text, *, maximum_depth=64):
+    """Bound nesting before decoding and require canonical JSON; envelope wrappers allow one extra level."""
+    _check_json_depth(text, maximum_depth)
     try:
         value = _json(text)
         if _canonical(value) != text:

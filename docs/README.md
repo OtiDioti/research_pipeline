@@ -8,7 +8,8 @@ Document implemented behavior and limitations explicitly. Do not present a plann
 
 The implemented [foundation architecture](architecture.md) describes the package,
 CLI, validator, test isolation, and current limits. See the
-[implementation guide](../implementation/README.md) for exact local commands.
+[implementation guide](../implementation/README.md) for exact local commands, and the
+[local CLI guide](local-cli.md) for bounded exact inspection and editable checkout.
 
 The [synthetic oscillator paper walkthrough](synthetic-oscillator.md) traces the
 development fixture, its public loading/validation contract, expected outcomes and

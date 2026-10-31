@@ -235,8 +235,15 @@ class _Directories:
 
 
 def _not_storage(descriptor, path):
-    """Recognize storage/control names without reading databases or imported content."""
-    names = set(os.listdir(descriptor))
+    """Probe fixed storage/control names without enumerating arbitrary ancestor directories."""
+    names = set()
+    for name in (".backup-incomplete", ".restore-incomplete", _CONTROL,
+                 "objects", ".staging", "metadata.sqlite3", "snapshot.sqlite3"):
+        try:
+            _stat(descriptor, name)
+        except FileNotFoundError:
+            continue
+        names.add(name)
     if (names & {".backup-incomplete", ".restore-incomplete", _CONTROL}
             or {"objects", ".staging"} <= names
             or "metadata.sqlite3" in names or "snapshot.sqlite3" in names):
@@ -399,10 +406,21 @@ def _read_descriptor(control, path, maximum, expected=None):
         return b"".join(chunks)
 
 
+def _bounded_entries(descriptor, expected_count):
+    """Collect at most the expected count plus one entry for exact inventory comparison."""
+    names = set()
+    with os.scandir(descriptor) as entries:
+        for entry in entries:
+            names.add(entry.name)
+            if len(names) > expected_count:
+                break
+    return names
+
+
 def _control_inventory(control, path, incomplete):
     """Require exact control entries; any marker entry makes public inspection unusable."""
-    names = set(os.listdir(control))
     expected = {_DESCRIPTOR, _MARKER} if incomplete else {_DESCRIPTOR}
+    names = _bounded_entries(control, len(expected))
     if names != expected:
         raise CheckoutLayoutError(f"inspect controls {path}: incomplete or unexpected/missing entries")
 
@@ -443,10 +461,10 @@ def _source_bindings(objects, runtime, captured):
 
 def _verify_tree(directories, product_dirs, files, inventory, control, path,
                  marker, descriptor, encoded, max_descriptor_bytes):
-    """Verify exact constructed inventory, independent copies and controls before publication."""
+    """Verify bounded exact inventories, independent copies and controls before publication."""
     directories.check()
     for relative, (directory, _) in product_dirs.items():
-        if set(os.listdir(directory)) != inventory[relative]:
+        if _bounded_entries(directory, len(inventory[relative])) != inventory[relative]:
             raise CheckoutIntegrityError(f"verify inventory {path / relative}: unexpected/missing entries")
     identities = set()
     for entry, parent, name, original in files:

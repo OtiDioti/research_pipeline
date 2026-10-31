@@ -1,7 +1,8 @@
 # Safe durable work-product checkout
 
-Import directly from `research_pipeline.checkout`; there are no package re-exports
-or CLI commands. Checkout materializes an **exact committed revision**, never an
+Import directly from `research_pipeline.checkout`; there are no package re-exports.
+The [local CLI](local-cli.md) also exposes exact historical checkout and offline
+original-descriptor inspection with explicit trusted configuration and limits. Checkout materializes an **exact committed revision**, never an
 implicit current head or caller-supplied manifest. It checks the selected envelope's
 typed structural coherence and directly referenced artifact bytes. It does not
 traverse semantic targets, establish past typed admission, or read/execute build

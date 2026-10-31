@@ -1,7 +1,8 @@
 # Research workbench foundation
 
 This directory contains the `theoretical-research-pipeline` distribution and its
-`research_pipeline` import package. It provides package identity, CLI help/version,
+`research_pipeline` import package. It provides package identity, bounded exact
+CLI inspection/checkout,
 development validation, and a synthetic oscillator development fixture with a
 source-local loader, validated domain envelopes, immutable local artifacts, and
 SQLite-backed atomic revision submissions with durable receipts and audit events,
@@ -34,7 +35,9 @@ PYTHONPATH="$PWD/implementation/src:$PWD/implementation" python3 -B -m unittest 
 No arguments also prints help. Unknown commands, options, and abbreviated options
 produce a usage error (status 2). There is no research command or console-script
 interface. Explicit candidate-source paths avoid relying on an editable install
-from another checkout.
+from another checkout. See the [local CLI guide](../docs/local-cli.md) for exact
+record/receipt inspection, historical writable checkout, strict trusted controls,
+limits and retained-output recovery. Preparation and submission remain library-only.
 
 The full validation process must inherit `RLIMIT_NOFILE` soft=4096 within its
 existing hard limit. In the launching shell, after confirming the hard limit is

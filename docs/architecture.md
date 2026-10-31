@@ -18,9 +18,14 @@ distribution for Python 3.11+, with explicit `src` discovery restricted to
 and a literal version. Tests compare that version against TOML metadata; importing
 the package does not read installed distribution or repository metadata.
 
-`research_pipeline.__main__` uses standard-library argparse to expose help and
-version. No arguments prints help; unknown or abbreviated arguments exit with
-status 2. The package has no third-party runtime dependencies. Setuptools is solely
+`research_pipeline.__main__` delegates to a focused argparse CLI for help/version,
+exact record and original-receipt inspection, historical work-product checkout and
+offline original-descriptor inspection. `cli_controls` enforces strict bounded local
+configuration reads; `cli_inspection` reuses bounded metadata and checkout codecs.
+No arguments prints help; unknown or abbreviated arguments exit with status 2.
+The [local CLI guide](local-cli.md) defines paths, limits, output and recovery.
+Preparation/import remain library-only; research execution is unavailable. The
+package has no third-party runtime dependencies. Setuptools is solely
 build tooling, and no installation is needed for the documented source commands.
 Linux is the initially verified platform. See the [implementation guide](../implementation/README.md)
 for exact commands and environment requirements.
@@ -128,8 +133,8 @@ consistent snapshots; revision/history exposure checks directly attached bytes.
 Receipts, heads, audit events and duplicate responses are metadata-only, remaining
 useful for commit reconciliation even after later object damage.
 
-These modules do not depend on `fixtures`. Imports remain inert, with no new CLI
-commands or dependencies. The [durable contract and runnable example](durable-records.md)
+These modules do not depend on `fixtures`. Imports remain inert, with no new dependencies. The local CLI delegates to these
+existing contracts without adding a generic submission or execution endpoint. The [durable contract and runnable example](durable-records.md)
 give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptions,
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
@@ -198,7 +203,8 @@ It validates a narrow, versioned paper contract: provenance, exact typed referen
 obligations and expected scenario relationships. It does not assess scientific
 truth or execute the scenario. Import is inert; loading returns independent mutable
 trees without writes, downloads, installed metadata or a cache. The package
-initializer and CLI remain unchanged.
+initializer remains unchanged; the local CLI exposes only the documented
+exact inspection and checkout slice.
 
 The [complete walkthrough and interface](synthetic-oscillator.md) document simulated
 assessment versus actual execution, finite-matrix versus full-line support,
