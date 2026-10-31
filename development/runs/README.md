@@ -20,3 +20,7 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [25e5020e — REQ-D02-004-R1](25e5020e-e398-4998-b901-5268cd580778.md): versioned schemas/backups and explicit migration accepted/integrated, 169/169; continuous start 6/50; successful bounded recovery, no repairs/backend changes.
 
 - [46114120 — REQ-D02-005](46114120-06d0-47ea-8e16-4a02066a1d0a.md): Writer timed out at 900 seconds after edits; zero accepted milestones; preserved draft passes advisory 184/184. Human extended future deadlines to 2700; R1 prepared, continuous start7 retained.
+
+- [8dc45005 — REQ-D02-005-R1](8dc45005-5187-4be0-a009-dece7c493f2b.md): attributed reviews/issues accepted/exact-integrated, 204/204; retained failed predecessor and one deadline recovery.
+- [2b6ed304 — REQ-D02-006](2b6ed304-5044-45b5-adcd-a8be9c3e314d.md): work-product bundles and safe draft round trips accepted/exact-integrated, 291/291.
+- [7b46536e — REQ-D03-001](7b46536e-42ac-4537-a720-beaaa5a34490.md): Source history/local capture accepted/exact-integrated d8dffdd, target 343/343 after documented descriptor-limit recovery; continuous start 10/50, two CWI repairs.

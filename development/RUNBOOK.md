@@ -279,3 +279,7 @@ The kit supplies no background supervisor. A manual continuation prompt can resu
 Finish against the completion gate in [AUTONOMY.md](AUTONOMY.md). Report partial implementation, pending live-provider evidence, and required scientific/human review separately. A declared hold always includes the exact preserved state and one next safe action.
 
 Current deadline authority: AUTH revision 5 explicitly permits 2,700 seconds per agent and per validation for newly frozen runs. Earlier 900-second runs remain unchanged and cannot be silently resumed under new settings. This does not reset attempts or other resource counters.
+
+## Recorded descriptor prerequisite for current product validation
+
+From the REQ-D03-001 integration checkpoint, launch new CWI and validation processes with `RLIMIT_NOFILE` soft=4096 within the existing hard limit (observed 1048576). Inspect the limits first; in the launch-only shell, `ulimit -Sn 4096` sets the process soft limit and its children inherit it. Do not change system configuration, an existing live process or frozen-run launch conditions. If the hard limit cannot support this prerequisite, record the resource blocker instead of skipping the 1024-file test. Retain the resource setting alongside the stable non-secret environment map. The request still uses the unchanged `python3 -B implementation/scripts/validate.py` check; all tests execute. Historical runs without a recorded descriptor limit retain that uncertainty.

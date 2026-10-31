@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** PREPARED for REQ-D03-001 local-source-capture subset. D02 work-product authoring predecessor is evidenced; D03 intake/vault outcomes remain incomplete.
+**State:** PARTIAL; REQ-D03-001 Source/local capture accepted/exact-integrated at d8dffdd248495fb18627f3740e77111cbe13a438 with 343/343 target tests; REQ-D03-002 inventory prepared. Full intake/readiness/vault outcomes remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -35,7 +35,7 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 
 ## Current v1.4 gate — Nonempty intake and protected snapshot views
 
-**Requirement ownership:** R-020–R-031, R-040, R-082, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+**Requirement ownership:** R-020–R-031, R-040, R-082, R-092. All constituent obligations in those rows and cited original sections apply; source-capture and draft subsets below have partial evidence only.
 
 Enforce awaiting_materials/readiness with relevant inspected substantive material. Preserve original corpus/path mapping, partial inspection and candidate exposure. Implement the full §9.7 layout and §9.8 README contract; snapshots publish consistently, immutable artifacts have no writable hard links, and direct human edits/renames survive regeneration. Test archive confinement, imported configuration nonactivation, typed-link authority and ordinary Markdown portability.
 
@@ -53,3 +53,9 @@ D02 storage/backups, schema evolution and six typed scientific/assessment contra
 ## Current predecessor and bounded request
 
 REQ-D02-006 is now accepted/exact-integrated at a56111f3 with 291/291 tests, closing its manifest/checkout/preview/import subset. Generated-view refresh and direct-edit/rename protection remain unimplemented. [REQ-D03-001](../requests/REQ-D03-001.md) commissions strict versioned sources and bounded explicit local ingestion with immutable originals, exact lineage, attributed coverage and saved CAS proposals. This prepares real intake inputs without claiming readiness, source understanding, faithful extraction, expert audit or live acquisition. At most two CWI milestones; unchanged AUTH revision 5. D02's remaining eligibility/authority work and M0-S do not block this independent storage boundary, and remain owned/pending.
+
+## Integrated Source boundary and next corpus request — 2026-10-31
+
+[REQ-D03-001 evidence](../runs/7b46536e-42ac-4537-a720-beaaa5a34490.md) establishes exact Source history/lineage and bounded inert local capture, saved proposals, CAS/retry, real mutation/fault/backup cases and 343/343 target tests at d8dffdd. Two reviewed repairs resolved; one coordinator descriptor-limit recovery is recorded separately. Full original corpus/readiness, archives, faithful parsing, actual visibility/permission enforcement and protected navigable snapshots remain required.
+
+[REQ-D03-002](../requests/REQ-D03-002.md) is the next one-milestone immutable corpus-inventory/history feature. It consumes accepted Source/storage contracts, preserving exact original mappings, partial/unavailable material and attributed relationships. Project setup/readiness authority and vault publication are subsequent bounded slices; an empty or populated inventory grants neither research readiness nor scientific support.
