@@ -51,3 +51,7 @@ Runf746e33a-7475-44dc-b8bf-4613130fba79 accepted/exact-integrated 7d6dd6246e47ac
 ## 2026-10-31 — REQ-D03-003 checkpoint
 
 Rundb2829bc-fca9-48d7-b2c1-b9e99348c197 accepted/exact-integrated9373860,396/396 target tests. Backend remains clean unchanged1f68060b5a5a9964c91811a53d3a515e0b01a073; no backend attempt, patch or reverted candidate. Actual controller failure was diagnosed as new product fixture provenance/file-mode setup and repaired by its Writer, not a backend defect. Frozen model/high effort,2700-second limits and process-local descriptor4096 retained. Backend candidate count0; prior evidence preserved.
+
+## 2026-10-31 — REQ-D03-004 terminal validation-profile omission
+
+Run32b61b7f stopped after432/432 because the frozen controller profile lacked required complete-diff evidence. Existing repeated --check and frozen --context capabilities support a bounded replacement without backend edits. Clean backend remains1f68060b5a5a9964c91811a53d3a515e0b01a073. Attempted/adopted/reverted backend repairs remain0/0/0; no failed/reverted backend change is hidden. Source/test syntax repair belonged to CWI Writer. Coordinator recovery corrects new-run validation configuration only, preserving the old run/candidate/evidence and all security/acceptance rules.

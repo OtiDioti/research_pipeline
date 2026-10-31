@@ -59,3 +59,7 @@ REQ-D03-002 is now accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c9
 ## Current project-intake checkpoint — 2026-10-31
 
 REQ-D03-003 is finally accepted/exact-integrated at9373860 with396/396 target tests; [run evidence](development/runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md). Exact project history, attributed inspected subsets and coherent brief/report/context pins support readiness proposals only. D02/D03 and M0-E remain partial; M0-S remains pending. Next [REQ-D03-004](development/requests/REQ-D03-004.md) prepares consistent immutable readable snapshots with bounded private generation/exclusive publication. Refresh/direct-edit preservation and all scientific/operational obligations remain required. Continuous12/50 starts consumed,38 remain; deadlines2700 seconds, unchanged model/grant.
+
+## Current snapshot recovery checkpoint — 2026-10-31
+
+REQ-D03-004 stopped terminally without acceptance: first-milestone candidate81ec2f3 passed432/432 but lacked required controller-recorded complete-diff evidence. Main remains accepted project/intake9373860 (396 tests); no snapshot feature is integrated. [Run evidence](development/runs/32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md). [REQ-D03-004-R1](development/requests/REQ-D03-004-R1.md) is the next bounded replacement, using preserved CWI draft context and two frozen checks. Protected publication/inspection is still unimplemented. Continuous13/50used,37remain; repairs7,recoveries4,backend0. No scientific or phase completion is inferred.

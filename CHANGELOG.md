@@ -85,3 +85,7 @@ REQ-D03-002 accepted/exact-integrated 7d6dd6246e47ace09ff44a1decef14c93251f0ac: 
 ## 2026-10-31 — Project setup and attributed intake integrated
 
 REQ-D03-003 accepted/exact-integrated9373860,396/396 target tests. Adds strict ProjectSetup history, exact initial/current corpus, attributed intake locations/remainder, authored brief/report roles and readiness proposals without authorization. One CWI fixture/example provenance/mode repair preserved all guards/assertions. Resolves the recorded cosmetic EOF debt. [Run evidence](development/runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md); next REQ-D03-004 prepares immutable readable snapshots. Full scientific/operational completion remains pending.
+
+## 2026-10-31 — Snapshot draft preserved; validation-profile recovery prepared
+
+REQ-D03-004 stopped before milestone acceptance after432/432 tests passed on repaired provisional81ec2f3. The reviewer required missing controller-owned complete-diff evidence. Main product remains9373860; no unaccepted source was merged. Preserve the eleven-file CWI draft and terminal evidence, prepare REQ-D03-004-R1 with frozen context and an explicit second formatting check. No backend or validator change; DEV-039 records the bounded recovery.

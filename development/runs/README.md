@@ -28,3 +28,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [f746e33a — REQ-D03-002](f746e33a-7475-44dc-b8bf-4613130fba79.md): immutable corpus inventory accepted/exact-integrated 7d6dd624, 369/369 target tests; one directory-fixture repair; continuous start 11/50.
 
 - [db2829bc — REQ-D03-003](db2829bc-fca9-48d7-b2c1-b9e99348c197.md): project/intake dossiers accepted/exact-integrated9373860,396/396 target tests; one provenance/file-mode fixture repair resolving two findings; continuous start12/50.
+
+- [32b61b7f — REQ-D03-004](32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md): terminal STOPPED_INCOMPLETE, zero accepted milestones; provisional81ec2f3 passes432/432 after one syntax repair, but missing controller-bound diff-check evidence prevents acceptance. Continuous start13/50; exact draft preserved for bounded R1 recovery.

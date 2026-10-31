@@ -17,3 +17,7 @@ REQ-D02-001 is finally accepted and integrated. [REQ-D02-002 backup/restoration]
 ## Current request checkpoint — 2026-10-31
 
 REQ-D03-003 is accepted/exact-integrated9373860,396/396 target tests. [REQ-D03-004](REQ-D03-004.md) is the next prepared bounded request: consistent immutable readable snapshots, at most2 milestones, gpt-6-astra/high and2700-second agent/validation limits. Preparation is not implementation or acceptance; verify exact clean committed base and existing run state before launch.
+
+## Current prepared recovery
+
+[REQ-D03-004](REQ-D03-004.md) stopped without acceptance because controller-bound formatting evidence was omitted. [REQ-D03-004-R1](REQ-D03-004-R1.md) supersedes it for execution, preserves the same two-milestone outcome, freezes exact unaccepted candidate context and adds both required validation commands. No replacement has started at this checkpoint; only its Writer may reuse product files.
