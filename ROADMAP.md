@@ -64,7 +64,7 @@ REQ-D03-003 is finally accepted/exact-integrated at9373860 with396/396 target te
 
 REQ-D03-004 stopped terminally without acceptance: first-milestone candidate81ec2f3 passed432/432 but lacked required controller-recorded complete-diff evidence. Main remains accepted project/intake9373860 (396 tests); no snapshot feature is integrated. [Run evidence](development/runs/32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md). [REQ-D03-004-R1](development/requests/REQ-D03-004-R1.md) is the next bounded replacement, using preserved CWI draft context and two frozen checks. Protected publication/inspection is still unimplemented. Continuous13/50used,37remain; repairs7,recoveries4,backend0. No scientific or phase completion is inferred.
 
-## Current snapshot integration checkpoint — 2026-10-31
+## Historical snapshot integration checkpoint — 2026-10-31
 
 REQ-D03-004-R1 is finally accepted and exact-integrated at c57a621c3e3f7806030de13b75b4fe2890b81cc7, with 489/489 controller/target tests and both bound checks passing. [Run evidence](development/runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md). Consistent detached metadata, deterministic linked Markdown/manifests, verified independent copies, private complete publication and bounded offline inspection now have implementation evidence. B-016's missing-check recovery is resolved; its terminal predecessor remains preserved. No backend change.
 
@@ -74,8 +74,14 @@ D03 and M0-E remain partial; M0-S remains pending. Generated-view refresh with p
 
 Fresh Git and retained CWI reconciliation confirms c57a621 is already integrated beneath administrative 7f3f081; twelve accepted results and three terminal failures are preserved, with no active owner or pending integration. [REQ-D03-005](development/requests/REQ-D03-005.md) is the next ready two-milestone request for bounded divergence/rename capture and immutable successor refresh with preservation and recovery. Existing view and draft APIs provide its prerequisites. No product implementation is added by this preparation. Continuous starts remain 14/50 until launch; next start is 15/50. Full D03, remaining M0-E and scientific/live obligations remain open.
 
-## Current refresh integration and CLI progression — 2026-10-31
+## Historical refresh integration and CLI progression — 2026-10-31
 
 REQ-D03-005 is finally accepted/exact-integrated at 8cfb0357ccccff1f079c419eb1ca4b7f4d3b135c, with 579/579 controller/target tests and both bound checks. [Run evidence](development/runs/c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md). Direct edits, renames and ambiguous identities are preserved/diagnosed in an immutable successor package, with verified generated links and real interrupted/conflicting publication evidence. All prior scientific artifacts and canonical history remain fixed. Three CWI repairs resolved the review findings; no backend or authority change.
 
 Next ready [REQ-D03-006](development/requests/REQ-D03-006.md) exposes exact inspection and explicit work-product checkout/preview/saved-proposal/submission through the local CLI. This is a bounded R-082 subset consuming evidenced contracts, before broader execution/authority work. D03/M0-E remain partial; M0-S and all remaining scientific/runtime obligations persist. Continuous 15/50 used, 35 remain before next start 16; unchanged model/high effort and2700-second deadlines. STATUS contains the single current next safe action.
+
+## Current local CLI integration and view-command progression — 2026-10-31
+
+REQ-D03-006 is finally accepted/exact-integrated at0a875dd4c822465a297ff3e6757f69962823aea0, controller/target657/657 and both bound checks passed; [run evidence](development/runs/63f0416b-b04a-4a2a-9173-d59716ec6741.md). Seven commands expose bounded exact inspection and explicit work-product checkout/preparation/saved-proposal inspection/submission with original-ID recovery. Two product repairs resolved directory/leaf observation races and a fixture mode;78 new tests preserve earlier behavior. No backend/authority change.
+
+Next ready [REQ-D03-007](development/requests/REQ-D03-007.md) exposes existing immutable-view generation, independent-baseline preserved refresh and offline inspection. This makes the requested view workflow usable through the CLI before D04 admission, whose resource/authority/minimum-closeout dependencies remain required. D03/M0-E remain partial; M0-S and remaining scientific/runtime duties persist. Continuous16/50 used,34 remain before start17. STATUS contains the single current next safe action.

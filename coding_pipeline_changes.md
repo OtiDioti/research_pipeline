@@ -63,3 +63,7 @@ Run 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e accepted/exact-integrated c57a621c3e3f7
 ## 2026-10-31 — REQ-D03-005 integration audit
 
 Run c62af399-bf8c-4b25-8ef7-ec1947fad6ae accepted/exact-integrated 8cfb035,579/579 target tests. Backend remains clean 1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted changes 0/0/0. Three product-review repairs belonged to CWI Writer: stable bounded capture, independent preservation limits/control checks and post-hash final binding checks. Local test-fixture corrections and coordinator read-only diagnose-output parsing did not require backend repairs or constitute new starts/recoveries. No controller state, environment, executable, security or acceptance rule changed; all historical evidence retained.
+
+## 2026-10-31 — REQ-D03-006 integration audit
+
+Run63f0416b accepted/exact-integrated0a875dd,657/657 target tests. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted0/0/0 with no pending maintenance candidate. Two CWI product repairs fixed an explicit fixture mode and observed directory/leaf disappearance classification. Read-only coordinator audit assertion corrections required no source/configuration/state edits and consumed no recovery. Stable model/executable/environment/checks remain unchanged; historical evidence and failed candidates are preserved.

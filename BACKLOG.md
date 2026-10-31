@@ -41,3 +41,7 @@ B-016 — RESOLVED, missing controller formatting evidence: terminal REQ-D03-004
 ## 2026-10-31 refresh reconciliation
 
 REQ-D03-005 accepted/exact-integrated 8cfb035 with 579/579 target tests resolves the ordinary refresh/edit-and-rename preservation boundary previously pending after B-016. No new blocking exception was found; three internal CWI repairs are accounted separately from coordinator recoveries. B-016's recovery consumption and all old failed runs remain preserved. Full current-view/CLI/runtime/report/filtered workspaces and scientific/authority duties remain normal mandatory roadmap work, not silently deferred exceptions. Next ready REQ-D03-006 commissions the narrow CLI authoring route under unchanged continuous authority.
+
+## 2026-10-31 local CLI reconciliation
+
+REQ-D03-006 accepted/exact-integrated0a875dd with657/657 target tests adds exact-inspection and explicit saved work-product CLI commands; [evidence](development/runs/63f0416b-b04a-4a2a-9173-d59716ec6741.md). Both CWI repairs resolved all three findings, with no new operational blocker or coordinator recovery. Existing recovery counts/terminal failed runs remain preserved. Full R-082 and lifecycle/resource/authority/scientific obligations are ordinary mandatory roadmap work. Next ready REQ-D03-007 exposes the accepted view/refresh APIs with independently pinned historical manifests; no product-live or expert approval is inferred.

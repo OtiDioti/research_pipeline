@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** PARTIAL; REQ-D03-001 Source/capture, REQ-D03-002 corpus history, REQ-D03-003 project/intake dossiers and REQ-D03-004-R1 protected offline readable snapshots are accepted and exact-integrated. Latest c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests. Refresh/direct-edit-and-rename preservation, actual authorized readiness, full runtime/branch/report views and scientific outcomes remain incomplete.
+**State:** PARTIAL; Source/capture, corpus history, project/intake dossiers, protected offline snapshots, preserved successor refresh and exact-inspection/explicit work-product CLI are accepted and exact-integrated. Latest0a875dd4c822465a297ff3e6757f69962823aea0,657/657 target tests. View CLI, actual authorized readiness, full current-view/runtime/branch/report/filtering behavior and scientific outcomes remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -72,7 +72,7 @@ REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251
 
 REQ-D03-004 /32b61b7f is terminal STOPPED_INCOMPLETE, zero accepted milestones; candidate81ec2f3 passes432/432 but missing controller-recorded formatting evidence prevents acceptance. No phase progress is promoted from this draft. Latest integrated predecessor remains9373860/396tests. Active prepared request is [REQ-D03-004-R1](../requests/REQ-D03-004-R1.md): reuse the exact preserved first-milestone CWI draft, obtain both frozen checks and independent acceptance, then implement protected publication/inspection. The original run/worktree/evidence remain untouched; no resume or unaccepted-source merge. D03/M0-E remain partial and M0-S pending.
 
-## Current snapshot integration evidence — 2026-10-31
+## Historical snapshot integration evidence — 2026-10-31
 
 [REQ-D03-004-R1 evidence](../runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md) establishes final acceptance/exact integration at c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 controller/target tests and both bound checks. Consistent detached metadata and exact artifact copies produce a protected offline Markdown generation with meaningful-folder READMEs, literal attributed projections, complete relative navigation and bounded inventory inspection. Two CWI repairs resolved provenance/depth and real publication/inspection failures. No old test, authority, backend or security policy changed; original failed-run evidence remains preserved.
 
@@ -82,8 +82,14 @@ This closes only the requested immutable-generation/inspection subset. The phase
 
 [REQ-D03-005](../requests/REQ-D03-005.md) is prepared for a bounded prior-view comparison and immutable-successor refresh with direct edit/rename preservation. At most two independently acceptable milestones; prior 489 tests, source authority and scientific limitations preserved. Existing snapshot and draft/import interfaces provide the exact dependencies. DEV-041 selects successor publication rather than in-place rewriting; explicit retained preservation and import/recovery evidence distinguish refresh from another unconnected export. Implementation/acceptance/integration are pending. Phase remains partial.
 
-## Current refresh integration and next CLI boundary — 2026-10-31
+## Historical refresh integration and next CLI boundary — 2026-10-31
 
 [REQ-D03-005 evidence](../runs/c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md) establishes final acceptance/exact integration at 8cfb035 and579/579 controller/target tests. Direct human edits and renames are preserved with exact identities or honest ambiguity; unchanged canonical views refresh into a protected complete successor with generated links verified. Prior generations/artifacts remain untouched. Three CWI repairs completed observation/budget/recovery gates; old tests, backend and authority remain unchanged.
 
 This closes the requested refresh/preservation subset, including real interruptions/conflicts and explicit saved-proposal import. Phase acceptance remains PARTIAL: full workspace layout/filtering/current-view management, actual intake understanding/authorized readiness and scientific/human navigation acceptance are still required. Next ready [REQ-D03-006](../requests/REQ-D03-006.md) exposes exact record/receipt inspection and explicit work-product checkout/preview/save/submit through the local CLI. Other R-082 command families and D04 operational authority remain subsequent owned work. No routine approval or phase-completion claim follows from this checkpoint.
+
+## Current local CLI integration and next view boundary — 2026-10-31
+
+[REQ-D03-006 evidence](../runs/63f0416b-b04a-4a2a-9173-d59716ec6741.md) establishes final acceptance/exact integration0a875dd and657/657 target tests. Exact-inspection and explicit work-product draft/preparation/review/submit commands now expose accepted authoring contracts, including original-ID recovery and offline inspection. Two repairs resolved all findings; no backend/authority change. Full phase acceptance remains PARTIAL: actual intake interpretation/authorized readiness, full workspace/current-view/runtime/branch/report/filtering behavior and human/scientific navigation acceptance are still required.
+
+Next ready [REQ-D03-007](../requests/REQ-D03-007.md) exposes existing immutable generation, independently pinned preserved refresh and offline inspection through the CLI. Prior view controls cannot redefine historical baseline; committed artifacts and drafts stay independent. Full R-082 and D04 resource/authority/minimum-closeout contracts remain owned. No phase-completion or scientific-qualification claim.
