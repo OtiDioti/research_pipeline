@@ -1,11 +1,12 @@
-# Local exact inspection and work-product checkout
+# Local inspection and explicit work-product round trips
 
-The source-local foundation provides four bounded operations. Research execution
+The source-local foundation provides seven bounded operations. Research execution
 is unavailable. Declared provenance and author names are attribution, not
 authenticated authorship, scientific support or permission. Full R-082, creation
 and intake, other draft kinds, snapshot/refresh commands, runtime administration
-and research execution remain incomplete. Preview and explicit import are still
-[library-only](work-product-import.md); this command slice does not submit metadata.
+and research execution remain incomplete. The explicit saved-proposal route uses the
+existing [preview and import APIs](work-product-import.md). Only the separate
+`submit-work-product` command submits metadata; no inspection, checkout or preparation does.
 
 Put the executing candidate's `implementation/src` first on `PYTHONPATH`, using an
 absolute path when changing working directories. No installation is required:
@@ -18,6 +19,9 @@ python3 -B -m research_pipeline inspect-record --config /private/cli/config.json
 python3 -B -m research_pipeline inspect-receipt --config /private/cli/config.json --submission-id initial
 python3 -B -m research_pipeline checkout-work-product --config /private/cli/config.json --record-id bundle --revision 1 --destination /private/drafts/note
 python3 -B -m research_pipeline inspect-checkout --checkout /private/drafts/note
+python3 -B -m research_pipeline prepare-work-product --config /private/cli/config.json --checkout /private/drafts/note --request /private/cli/edit.json --destination /private/proposals/edit-1
+python3 -B -m research_pipeline inspect-proposal --proposal /private/proposals/edit-1
+python3 -B -m research_pipeline submit-work-product --config /private/cli/config.json --proposal /private/proposals/edit-1
 ```
 
 No arguments prints help. Every command has `--help`, including units and defaults.
@@ -95,15 +99,19 @@ Limits do not authorize writes or certify content.
 
 | Option | Applicable commands | Default | Range and units |
 | --- | --- | ---: | --- |
-| `--max-control-bytes` | Config commands | 65536 | 1..1048576 UTF-8 config bytes |
+| `--max-control-bytes` | Config and saved-package commands | 65536 | 1..1048576 bytes per config or package manifest; manifest also capped at 16384 |
 | `--max-output-bytes` | All operations | 2097152 | 1..16777216 ASCII bytes, including LF |
-| `--max-metadata-bytes` | Store commands | 2097152 | 1..16777216 selected metadata bytes |
-| `--max-links` | Record inspection, checkout | 4096 | 0..65536 record/artifact link occurrences together |
-| `--max-receipt-records` | Receipt inspection | 1024 | 1..65536 ordered membership occurrences |
-| `--max-descriptor-bytes` | Checkout, checkout inspection | 1048576 | 1..16777216 descriptor bytes |
-| `--max-files` | Checkout | 128 | 1..1024 logical files |
-| `--max-file-bytes` | Checkout | 16777216 | 0..1073741824 bytes per file |
-| `--max-total-bytes` | Checkout | 67108864 | 0..4294967296 logical file bytes |
+| `--max-metadata-bytes` | Record/receipt inspection, checkout, preparation | 2097152 | 1..16777216 selected metadata bytes |
+| `--max-links` | Record inspection, checkout, preparation | 4096 | 0..65536 record/artifact link occurrences together |
+| `--max-receipt-records` | Receipt inspection, preparation | 1024 | 1..65536 ordered membership occurrences |
+| `--max-descriptor-bytes` | Checkout, checkout inspection, preparation | 1048576 | 1..16777216 descriptor bytes |
+| `--max-files` | Checkout, preparation, submission | 128 | 1..1024 logical files |
+| `--max-file-bytes` | Checkout, preparation, submission | 16777216 | 0..1073741824 bytes per file |
+| `--max-total-bytes` | Checkout, preparation, submission | 67108864 | 0..4294967296 logical file bytes |
+| `--max-request-bytes` | Preparation | 1048576 | 1..16777216 UTF-8 authored request bytes |
+| `--max-proposal-bytes` | Preparation, proposal inspection, submission | 2097152 | 1..16777216 exact ASCII proposal bytes |
+| `--max-summary-bytes` | Preparation, proposal inspection, submission | 4194304 | 1..16777216 exact ASCII summary bytes |
+| `--max-inventory-entries` | Preparation | 4096 | 1..65536 entries across visited draft directories |
 
 Metadata limits cover preflight fetched-byte accounting and detached encoded
 metadata, including repeated reads by the existing reconstruction helpers. Record
@@ -115,6 +123,16 @@ joined metadata, field byte lengths, membership count and contiguous ordered
 ordinals in the same read transaction as original receipt reconstruction. It
 returns original provenance even after head advancement or artifact loss.
 Corrupt metadata is an error, not absence or a scientific validity judgment.
+Preparation preflights the exact base envelope and its original receipt through
+these same bounded readers before the preview API reconstructs them. Its file
+budgets apply independently to both the original inventory and selected files;
+its entry budget includes controls and unselected entries in visited directories.
+Submission bounds the declared proposed inventory without opening artifacts ahead
+of the store's original-ID reconciliation. Package encoding bounds include ASCII
+escape expansion; reads count actual bytes and probe EOF. Stored declarations can
+never raise caller limits. These are selected-data bounds, not total database-work
+or wall-clock bounds: opening, schema checks, journal recovery and typed admission
+retain their established work and semantics.
 
 ## Machine output and exit statuses
 
@@ -129,6 +147,9 @@ have exactly `format: "research_pipeline.cli_result"`, `version: 1`, `command`,
 | `inspect-receipt` | `submission_id`, original complete `receipt` (`null` when absent) |
 | `checkout-work-product` | normalized absolute `destination`, complete exact `base`, `descriptor: ".work-product/checkout.json"` |
 | `inspect-checkout` | normalized absolute `checkout`, original complete `base` and `envelope`, `observation: "published_descriptor"`, `historical_durability: "unknown"` |
+| `prepare-work-product` | normalized absolute `destination`, `proposal_sha256`, `submission_id`, complete exact `base`, `proposed_revision` |
+| `inspect-proposal` | normalized absolute `destination`, `state`, `proposal_sha256`, `submission_id`, complete `base`, `proposed_revision`, complete decoded `proposal` and `summary`, `historical_durability: "unknown"` |
+| `submit-work-product` | normalized absolute `destination`, `proposal_sha256`, `submission_id`, exact returned complete `receipt` |
 
 There are no inferred dates, current heads, artifact bytes or mutable status
 summaries. Both presence and absence obey output limits. Serialization is bounded
@@ -140,11 +161,11 @@ cannot create a draft. Output is never intentionally truncated.
 | ---: | --- |
 | 0 | Complete acknowledged result, help or version |
 | 2 | CLI usage error |
-| 3 | Absent store root, exact record revision or original submission |
-| 4 | Destination collision/conflict, including an exclusive-creation race |
+| 3 | Absent store root, exact base/record revision, original submission or selected package |
+| 4 | Destination collision, stale expected head, used/different submission ID or conflicting saved evidence |
 | 5 | Unsafe/invalid controls or layouts, malformed requested values or exceeded limits |
 | 6 | Operational failure, corrupt canonical metadata/artifacts, or read-only output failure |
-| 7 | Uncertain checkout effects or output acknowledgment |
+| 7 | Uncertain checkout/preparation/submission effects or output acknowledgment |
 
 A missing store and a missing checkout base produce a diagnostic, without a
 fabricated command result. Missing canonical artifact bytes during checkout are
@@ -195,6 +216,157 @@ scientific support. Review retained evidence before a new checkout attempt, whic
 must use a new absent destination. After read-only output failure, safely repeat
 the same inspection and discard any partial output.
 
+## Authored preparation request
+
+`--request FILE` requires an owned single-link regular `0600` or `0400` file in an
+owned `0700` parent, under the same strict UTF-8, depth-64, numeric-token, Unicode,
+no-follow/nonblocking, stable-read and close rules as configuration. Exactly these
+fields are required; no runtime, source root, destination, limits or protected roots
+belong in this authored document:
+
+```json
+{
+  "format": "research_pipeline.cli_work_product_preparation",
+  "version": 1,
+  "base": {"record_id": "bundle", "revision": 1, "relationship": "checkout_base", "target_kind": "work_product_manifest"},
+  "expected_head": 1,
+  "metadata": {
+    "product_kind": "note", "title": "Edited note", "purpose": "Explicit local revision",
+    "authors": ["Declared editor"], "task": null, "branch": null, "context": null, "run": null,
+    "linked_claims": [], "linked_sources": [], "build_dependencies": [],
+    "entry_file": "note.txt", "limitations": ["No scientific validation"]
+  },
+  "selected_paths": ["note.txt"],
+  "submission_id": "explicit-edit-1",
+  "record_provenance": {"actor": "editor", "created_at": "2026-10-30T13:00:00.000000Z", "details": {}},
+  "submission_provenance": {"actor": "submitter", "created_at": "2026-10-30T13:00:00.000000Z", "details": {}}
+}
+```
+
+`base` is complete and exact. `expected_head` must be an ordinary positive integer
+equal to its revision, which must be incrementable within the domain revision
+range. Metadata uses exactly the existing [manifest fields](work-product-import.md),
+with explicit nulls and complete nested references. Both provenance values contain
+all serialized fields, including details and the normalized six-fractional-digit
+UTC timestamp. Omitted defaults and coercive equivalents are refused. The ordered,
+nonempty `selected_paths` array retains exact portable relative paths, alias and
+prefix restrictions, and reserved control namespaces. Omitted old paths are removed
+from the proposed manifest, even if still present in the draft. No field is inferred
+from an editor, the OS or a current head. The entire request is validated before
+reading draft content or publishing objects.
+
+Checkout and saved destination must not overlap each other, runtime, executing
+source, explicit protected roots, config or request in either direction. The CLI
+also rejects `.work-product-proposal` ancestors, including for new checkout
+destinations. A saved package cannot become another operation's writable parent.
+No automatic rebase, cleanup, submit, repair or resume option exists. Preview can
+leave immutable unreferenced objects on failure; it preserves the edited draft.
+
+## Saved package, inspection and separate submit
+
+A published package has exactly `proposal.json`, `summary.json`, and the directory
+`.work-product-proposal`, whose sole entry is `manifest.json`. Directories are owned
+`0700`; leaves are owned single-link regular `0400`. Each leaf is accessed relative
+to held no-follow parents, with type/mode/link checks before nonblocking open,
+actual byte bounds and an EOF probe. Earlier leaf signatures are rechecked after
+later reads, detecting observed cross-file substitutions, even with equal bytes.
+The trusted-ancestor and same-owner limitations above continue to apply.
+
+All three documents are compact sorted-key ASCII JSON with no trailing newline:
+
+* `proposal.json` is exactly the existing `dumps_prepared_submission` encoding.
+  Strict CLI gates precede the existing codec, and canonical re-encoding must equal
+  the exact saved bytes. It contains one typed work-product append with immediate
+  predecessor CAS. Generic Submission JSON, arbitrary records and generated status
+  edits are refused. The CLI selects the whole package, never an arbitrary file.
+* `summary.json` has exactly `format: "research_pipeline.cli_work_product_summary"`,
+  `version: 1`, `proposal_sha256`, `base_checkout`, `base_submission_provenance`, and
+  `changes`. The baseline is the complete original checkout descriptor and the
+  base's original submission provenance. `changes` is the existing preview summary:
+  additions/removals/changed references, ordered old/new files, metadata, both
+  provenance comparisons, revision/supersession and unselected material. Inspection
+  recomputes the comparison from these saved values and rejects disagreement.
+  Unselected entries have exactly `path`, `path_escaped`, `kind`, `opaque`, sorted by
+  path/escaped flag; only directories are opaque. They describe visited directories
+  and opaque subtrees, not authenticated evidence of a current draft.
+* `manifest.json` has exactly `format: "research_pipeline.cli_saved_work_product"`,
+  `version: 1`, `proposal`, `summary`, `submission_id`, `record_id`, `base_revision`,
+  and `proposed_revision`. Each file binding has exactly `sha256` (64 lowercase hex
+  digits) and `bytes` (ordinary positive integer). Every identity must agree with
+  the complete proposal and summary. The SHA-256 of exact `proposal.json` bytes is
+  the proposal identity; no additional submission ID or timestamp is generated.
+
+Digests bind internal evidence; they do not authenticate its owner or certify
+scientific content. The saved summary is explanatory; the exact proposal alone is
+passed to typed admission after the package has been verified.
+
+Preparation exclusively reserves the absent destination as its private preparation
+area. It creates and synchronizes an empty
+`.work-product-proposal/incomplete` marker and parent directories before writing
+payloads. Proposal/summary are written and synchronized first, manifest last. Full
+content, inventory and binding gates run before and after synchronization barriers,
+immediately before marker removal. **Removing the marker is logical publication.**
+The entire directory does not become atomically visible. Collisions preserve the
+competitor and all retained material. After publication the command never recreates
+the marker, removes the package or claims rollback. Final synchronization, bindings,
+resource closes and output acknowledgment must all succeed for status 0.
+
+Offline `inspect-proposal` uses no configuration, store or artifacts and never
+synchronizes, repairs, chmods, finishes or cleans evidence. It reports:
+
+| State | Observation |
+| --- | --- |
+| `absent` | Initial missing-path observation with stable previously held ancestors; outer `status: "absent"`, exit 3 |
+| `incomplete` | Early reservation or missing required members before complete evidence exists |
+| `complete_unpublished` | Complete verified coherent package with an empty valid marker |
+| `published` | Complete verified coherent package without a marker |
+
+Absence and incomplete observations have null proposal, summary and unestablished
+identity fields. Loss or substitution of an already observed directory binding is
+a conflict, including when an ancestor changes before a missing child is observed.
+An observed saved leaf disappearing before opening or during reading is also a
+conflict, for both inspection and submission.
+Complete states expose verified documents. Malformed available
+JSON or unsafe leaves are errors, not ordinary incomplete work. Contradictory
+hashes, identities, comparisons, substitutions or impossible inventories are explicit
+conflicts. `historical_durability` is always `"unknown"`: present files cannot prove
+a past fsync, successful close or stdout acknowledgment.
+
+`submit-work-product` refuses incomplete/unpublished packages and never finishes
+them. It synchronizes the verified saved files, control/package/parent directories,
+rechecks the entire observation, and successfully closes input resources before
+opening the explicit existing store and submitting the detached exact request.
+That establishes this invocation's saved-input durability, without certifying a
+historical acknowledgment. Declared inventory limits are checked without touching
+artifacts. Original-ID reconciliation stays ahead of head/object availability in
+the store: identical retries return the original receipt after later head advances,
+draft edits/deletion or object loss/damage. New requests still undergo all normal
+typed CAS, reference and object admission. Unavailable required objects do not
+commit new metadata. Different requests under the same ID conflict.
+
+Preparation and submission reserve predictable bounded success output before
+mutations. Submit reserves the full SQLite event-ID width, fingerprint and timestamp
+representation without fabricating a receipt. It emits only the exact returned
+receipt. Unclassified errors after entering submit, reportable interruptions, and
+postcommit resource/output failures retain acknowledgment uncertainty. Read-only
+output failures are status 6 and permit repeating inspection.
+
+After preparation uncertainty, run `inspect-proposal` at the exact retained
+`destination` in the diagnostic. A preparation retry requires a new absent
+destination and recaptures the draft; it is **not original-ID reconciliation**.
+After submit uncertainty, use the diagnostic's original `submission_id`:
+
+```bash
+python3 -B -m research_pipeline inspect-receipt --config /private/cli/config.json --submission-id explicit-edit-1
+python3 -B -m research_pipeline submit-work-product --config /private/cli/config.json --proposal /exact/retained/package
+```
+
+When retry is appropriate, use the identical saved package/config. An absent receipt
+does not authorize regenerating the request or changing its ID. Stale preparation
+and stale saved submission have distinct diagnostics and preserve both drafts.
+Neither inspection nor engineering tests confer scientific endorsement. Broader
+R-082, scientific/M0-S and runtime/authority obligations remain incomplete.
+
 ## Executable synthetic example
 
 The suite executes this block verbatim in a fresh candidate-source interpreter.
@@ -232,11 +404,14 @@ with TemporaryDirectory(prefix="local-cli-example-") as temporary:
                                  "store": str(runtime), "protected_roots": []}), encoding="utf-8")
     config.chmod(0o600)
 
-    def cli(*arguments):
-        """Run a real CLI operation, requiring complete acknowledgment before parsing its result."""
+    def cli(*arguments, expected=0):
+        """Run a real CLI operation, checking its status before parsing acknowledged results or conflicts."""
         process = subprocess.run([sys.executable, "-B", "-m", "research_pipeline", *arguments],
                                  cwd=parent, env=os.environ.copy(), capture_output=True, timeout=30)
-        assert process.returncode == 0, process.stderr
+        assert process.returncode == expected, process.stderr
+        if expected:
+            assert process.stdout == b""
+            return json.loads(process.stderr)
         assert process.stderr == b""
         return json.loads(process.stdout)["result"]
 
@@ -253,4 +428,58 @@ with TemporaryDirectory(prefix="local-cli-example-") as temporary:
     assert observed["historical_durability"] == "unknown"
     assert cli("inspect-record", "--config", str(config), "--record-id", "bundle", "--revision", "1") == original
     # This local descriptor is not certification of the edited note or its scientific content.
+    competing = parent / "competing-draft"
+    cli("checkout-work-product", "--config", str(config), "--record-id", "bundle",
+        "--revision", "1", "--destination", str(competing))
+    (competing / "note.txt").write_text("An independently edited competing note.\n", encoding="utf-8")
+    metadata = dict(product_kind="note", title="Edited synthetic note", purpose="Demonstrate editing",
+                    authors=["Declared editor"], task=None, branch=None, context=None, run=None,
+                    linked_claims=[], linked_sources=[], build_dependencies=[], entry_file="note.txt",
+                    limitations=["No scientific validation"])
+
+    def prepare(identity, checkout, destination):
+        """Write a complete authored request and save it with the CLI; never infer identity or submit."""
+        request_path = parent / (identity + ".json")
+        request_path.write_text(json.dumps(dict(
+            format="research_pipeline.cli_work_product_preparation", version=1,
+            base=checked["base"], expected_head=1, metadata=metadata, selected_paths=["note.txt"],
+            submission_id=identity,
+            record_provenance={"actor": "editor", "created_at": "2026-10-30T13:00:00.000000Z", "details": {}},
+            submission_provenance={"actor": "submitter", "created_at": "2026-10-30T14:00:00.000000Z", "details": {}}
+        )), encoding="utf-8")
+        request_path.chmod(0o600)
+        return cli("prepare-work-product", "--config", str(config), "--checkout", str(checkout),
+                   "--request", str(request_path), "--destination", str(destination))
+
+    package, other = parent / "saved-edit", parent / "saved-competing"
+    prepared = prepare("edit-one", draft, package)
+    prepare("edit-two", competing, other)
+    reviewed = cli("inspect-proposal", "--proposal", str(package))
+    assert reviewed["state"] == "published"
+    assert reviewed["historical_durability"] == "unknown"
+    assert reviewed["proposal_sha256"] == prepared["proposal_sha256"]
+    assert reviewed["summary"]["changes"]["paths"][0]["status"] == "changed"
+    assert reviewed["summary"]["changes"]["metadata_changes"]["title"]["after"] == metadata["title"]
+    assert set(reviewed["summary"]["changes"]["provenance_changes"]) == {"record", "submission"}
+    assert json.loads((package / "proposal.json").read_bytes()) == reviewed["proposal"]
+    assert cli("inspect-record", "--config", str(config), "--record-id", "bundle", "--revision", "1") == original
+
+    committed = cli("submit-work-product", "--config", str(config), "--proposal", str(package))
+    assert committed["submission_id"] == "edit-one"
+    historical_two = cli("inspect-record", "--config", str(config), "--record-id", "bundle", "--revision", "2")
+    assert historical_two["envelope"] == reviewed["proposal"]["submission"]["records"][0]
+    conflict = cli("submit-work-product", "--config", str(config), "--proposal", str(other), expected=4)
+    assert conflict["code"] == "conflict"
+    assert (competing / "note.txt").read_text() == "An independently edited competing note.\n"
+    stale = cli("prepare-work-product", "--config", str(config), "--checkout", str(competing),
+                "--request", str(parent / "edit-two.json"), "--destination", str(parent / "stale"), expected=4)
+    assert "Preparation conflicts" in stale["message"]
+    assert not (parent / "stale").exists()
+    # Reconcile the original ID after an imagined lost stdout acknowledgment; do not prepare again.
+    original_receipt = cli("inspect-receipt", "--config", str(config), "--submission-id", "edit-one")
+    assert original_receipt["receipt"] == committed["receipt"]
+    (draft / "note.txt").unlink()
+    assert cli("submit-work-product", "--config", str(config), "--proposal", str(package)) == committed
+    assert cli("inspect-record", "--config", str(config), "--record-id", "bundle", "--revision", "1") == original
+    assert cli("inspect-receipt", "--config", str(config), "--submission-id", "initial")["receipt"] == receipt.to_dict()
 ```

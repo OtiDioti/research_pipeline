@@ -1,4 +1,4 @@
-"""Source-local exact inspection and checkout commands with bounded acknowledgment semantics."""
+"""Source-local inspection and explicit work-product round trips with bounded acknowledgment semantics."""
 
 import argparse
 from contextlib import ExitStack
@@ -9,17 +9,24 @@ from pathlib import Path
 import re
 import sys
 
-from research_pipeline import __version__, checkout
+from research_pipeline import __version__, checkout, cli_proposals, work_product_import
 from research_pipeline.artifacts import ArtifactError
-from research_pipeline.cli_controls import CliError, causes, path_value, read_config, source_root
+from research_pipeline.cli_controls import CliError, causes, path_value, read_config, read_request, source_root
 from research_pipeline.cli_inspection import exact_record, exact_receipt, local_checkout
 from research_pipeline.domain import DomainValidationError, RecordReference, _identifier, _integer
 from research_pipeline.snapshot import SnapshotIntegrityError, SnapshotLimitError, _bounded_json
-from research_pipeline.store import RecordNotFoundError, RecordStore, StoreError, StoreLayoutError
+from research_pipeline.store import (
+    RecordNotFoundError, RecordStore, StoreError, StoreLayoutError, RevisionConflictError,
+    SubmissionConflictError, ReferenceResolutionError,
+)
 from research_pipeline.vault import _not_layout, ViewLayoutError
 
 
 _LIMITS = {
+    "max_request_bytes": (1048576, 1, 16777216, "UTF-8 preparation request bytes"),
+    "max_proposal_bytes": (2097152, 1, 16777216, "exact saved ASCII proposal bytes"),
+    "max_summary_bytes": (4194304, 1, 16777216, "exact saved ASCII summary bytes"),
+    "max_inventory_entries": (4096, 1, 65536, "visited draft directory entries"),
     "max_control_bytes": (65536, 1, 1048576, "UTF-8 bytes"),
     "max_output_bytes": (2097152, 1, 16777216, "ASCII bytes including LF"),
     "max_metadata_bytes": (2097152, 1, 16777216, "selected metadata bytes"),
@@ -77,7 +84,7 @@ def _decimal(value):
 
 
 def _parser():
-    """Build the four explicit operations; every parser disables option abbreviation."""
+    """Build the explicit operations; every parser disables option abbreviation."""
     parser = _Parser(prog="python -m research_pipeline", allow_abbrev=False,
                      description="Research workbench foundation: research execution is unavailable.")
     parser.add_argument("--version", action="version", version=__version__)
@@ -88,10 +95,27 @@ def _parser():
         "checkout-work-product": "Copy an exact historical bundle into a new writable draft.",
         "inspect-checkout": "Read original published checkout controls offline, without checking edited files.",
     }
+    descriptions.update({
+        "prepare-work-product": "Preview explicit edited files and durably save a new package without submitting.",
+        "inspect-proposal": "Inspect a saved proposal and recomputed changes offline; never repair or submit.",
+        "submit-work-product": "Submit exactly a published saved package; reconcile retries under the original ID.",
+    })
     for command, description in descriptions.items():
         sub = subparsers.add_parser(command, description=description, help=description, allow_abbrev=False)
         limits = ["max_output_bytes"]
-        if command == "inspect-checkout":
+        if command in ("prepare-work-product", "inspect-proposal", "submit-work-product"):
+            limits += ["max_control_bytes", "max_proposal_bytes", "max_summary_bytes"]
+            if command != "inspect-proposal":
+                sub.add_argument("--config", required=True, action=_Once, metavar="FILE")
+                limits += ["max_files", "max_file_bytes", "max_total_bytes"]
+            if command == "prepare-work-product":
+                for option in ("checkout", "request", "destination"):
+                    sub.add_argument("--" + option, required=True, action=_Once, metavar="PATH")
+                limits += ["max_request_bytes", "max_metadata_bytes", "max_links", "max_receipt_records",
+                           "max_descriptor_bytes", "max_inventory_entries"]
+            else:
+                sub.add_argument("--proposal", required=True, action=_Once, metavar="DIRECTORY")
+        elif command == "inspect-checkout":
             sub.add_argument("--checkout", required=True, action=_Once, metavar="PATH")
             limits += ["max_descriptor_bytes"]
         else:
@@ -109,6 +133,9 @@ def _parser():
                 limits += ["max_descriptor_bytes", "max_files", "max_file_bytes", "max_total_bytes"]
         for name in limits:
             default, minimum, maximum, unit = _LIMITS[name]
+            if name == "max_control_bytes" and command in (
+                    "prepare-work-product", "inspect-proposal", "submit-work-product"):
+                unit = "bytes per config/package manifest (manifest also capped at 16384 bytes)"
             sub.add_argument("--" + name.replace("_", "-"), action=_Once, type=_decimal,
                              default=default, metavar="N",
                              help=f"{unit}; default {default}; range {minimum}..{maximum}")
@@ -138,7 +165,7 @@ def _validate(arguments):
     if hasattr(arguments, "revision"):
         arguments.revision = _number(arguments.revision, 1, 2**63 - 1)
         _integer(arguments.revision, "revision", 1)
-    for name in ("config", "destination", "checkout"):
+    for name in ("config", "destination", "checkout", "request", "proposal"):
         if hasattr(arguments, name):
             setattr(arguments, name, path_value(getattr(arguments, name)))
 
@@ -156,6 +183,7 @@ def _destination(directories, path, roots):
     parent = directories.traverse(path.parent, private=True, exact=True)
     for _, _, fd, _, _, _, location in directories.bindings:
         _not_layout(fd, Path(location))
+        cli_proposals.not_proposal(fd, Path(location))
     try:
         checkout._stat(parent, path.name)
     except FileNotFoundError:
@@ -178,8 +206,10 @@ def _checkout_preflight(arguments, envelope):
 
 
 def _execute(arguments, context, effects):
-    """Close inputs/store/held paths before returning prepared output; preserve all retained checkout effects."""
+    """Dispatch one operation and close inputs/store/held paths before returning bounded output."""
     command = arguments.command
+    if command in ("prepare-work-product", "inspect-proposal", "submit-work-product"):
+        return _execute_proposal(arguments, context, effects)
     if command == "inspect-checkout":
         info = local_checkout(arguments.checkout, arguments.max_descriptor_bytes)
         return _result(command, dict(checkout=str(arguments.checkout), base=info.base.to_dict(),
@@ -193,17 +223,7 @@ def _execute(arguments, context, effects):
         directories = checkout._Directories(stack)
         if command == "checkout-work-product":
             _destination(directories, arguments.destination, (source, runtime, arguments.config, *roots))
-        # Only failure to find the selected root (not missing internal store files)
-        # is absence. Chained errno survives all existing layout translations.
-        try:
-            area = directories.traverse(runtime, private=True)
-        except checkout.CheckoutOperationalError as error:
-            if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
-                raise CliError(3, "missing", "Store root is absent; no store was created.") from error
-            raise
-        directories.open("objects", area, private=True, path=runtime / "objects")
-        directories.open(".staging", area, private=True, path=runtime / ".staging")
-        store = stack.enter_context(RecordStore.open(runtime))
+        store = _open_store(stack, directories, runtime)
         if command == "inspect-receipt":
             receipt = exact_receipt(store, arguments.submission_id, arguments.max_metadata_bytes,
                                     arguments.max_receipt_records)
@@ -241,6 +261,118 @@ def _execute(arguments, context, effects):
                     raise CliError(7, "effects_uncertain", "Checkout returned inconsistent historical information.")
         directories.check()
     return output, 3 if absent else 0
+
+
+def _open_store(stack, directories, runtime):
+    """Open only an explicit existing runtime, distinguishing missing roots from damaged internal files."""
+    try:
+        area = directories.traverse(runtime, private=True)
+    except checkout.CheckoutOperationalError as error:
+        if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
+            raise CliError(3, "missing", "Store root is absent; no store was created.") from error
+        raise
+    directories.open("objects", area, private=True, path=runtime / "objects")
+    directories.open(".staging", area, private=True, path=runtime / ".staging")
+    return stack.enter_context(RecordStore.open(runtime))
+
+
+def _proposal_identity(observation, context, effects):
+    """Retain established package identities for bounded recovery diagnostics on later failure."""
+    context.update(submission_id=observation["submission_id"],
+                   record_id=observation["base"]["record_id"], revision=observation["proposed_revision"])
+    effects["proposal_sha256"] = observation["proposal_sha256"]
+
+
+def _declared_files(submission, arguments):
+    """Bound declared inventory without artifact availability checks ahead of original-ID reconciliation."""
+    files = work_product_import.decode_envelope(submission.records[0]).files
+    if (len(files) > arguments.max_files
+            or any(entry.artifact.size > arguments.max_file_bytes for entry in files)
+            or sum(entry.artifact.size for entry in files) > arguments.max_total_bytes):
+        raise SnapshotLimitError("declared inventory budget exceeded")
+
+
+def _execute_proposal(arguments, context, effects):
+    """Prepare, inspect or submit exact saved evidence with operation-specific lifecycle tracking."""
+    command = arguments.command
+    if command == "inspect-proposal":
+        observation, _ = cli_proposals.observe(arguments.proposal, arguments, recovery=effects)
+        absent = observation["state"] == "absent"
+        if observation["base"] is not None:
+            _proposal_identity(observation, context, effects)
+        return _result(command, observation, arguments.max_output_bytes, absent=absent), 3 if absent else 0
+    runtime, roots = read_config(arguments.config, arguments.max_control_bytes)
+    context["store"] = str(runtime)
+    source = source_root()
+    checkout._outside(runtime, (source, *roots))
+    if command == "submit-work-product":
+        observation, submission = cli_proposals.observe(arguments.proposal, arguments, durable=True, recovery=effects)
+        _proposal_identity(observation, context, effects)
+        _declared_files(submission, arguments)
+        result = dict(destination=str(arguments.proposal), proposal_sha256=observation["proposal_sha256"],
+                      submission_id=submission.submission_id)
+        # This is an output-size reservation, never an invented committed receipt.
+        reservation = dict(submission_id=submission.submission_id, fingerprint="0" * 64,
+                           event_id=2**63 - 1, committed_at="9999-12-31T23:59:59.999999Z",
+                           provenance=submission.provenance.to_dict(),
+                           revisions=[[submission.records[0].record_id, submission.records[0].revision]])
+        _result(command, dict(**result, receipt=reservation), arguments.max_output_bytes)
+        with ExitStack() as stack:
+            directories = checkout._Directories(stack)
+            store = _open_store(stack, directories, runtime)
+            directories.check()
+            # The store must reconcile the original ID before availability/head checks.
+            effects["begun"] = effects["submit_entered"] = True
+            receipt = store.submit_typed(submission)
+            effects["returned"] = True
+            output = _result(command, dict(**result, receipt=receipt.to_dict()), arguments.max_output_bytes)
+            directories.check()
+        return output, 0
+    request = read_request(arguments.request, arguments.max_request_bytes, arguments.max_files)
+    base = request["base"]
+    context.update(record_id=base.record_id, revision=base.revision + 1, submission_id=request["submission_id"])
+    result = dict(destination=str(arguments.destination), proposal_sha256="0" * 64,
+                  submission_id=request["submission_id"], base=base.to_dict(), proposed_revision=base.revision + 1)
+    _result(command, result, arguments.max_output_bytes)
+    exclusions = (source, runtime, arguments.config, arguments.request, *roots)
+    checkout._outside(arguments.checkout, (*exclusions, arguments.destination))
+    with ExitStack() as stack:
+        directories = checkout._Directories(stack)
+        _destination(directories, arguments.destination, (*exclusions, arguments.checkout))
+        draft_parent = directories.traverse(arguments.checkout.parent)
+        for _, _, fd, _, _, _, location in directories.bindings:
+            _not_layout(fd, Path(location))
+            cli_proposals.not_proposal(fd, Path(location))
+        draft = directories.open(arguments.checkout.name, draft_parent, private=True, exact=True,
+                                 path=arguments.checkout)
+        cli_proposals.not_proposal(draft, arguments.checkout)
+        store = _open_store(stack, directories, runtime)
+        envelope, commit = exact_record(store, base.record_id, base.revision,
+                                        arguments.max_metadata_bytes, arguments.max_links)
+        info = checkout.CheckoutInfo(base, envelope)
+        receipt = exact_receipt(store, commit["submission_id"], arguments.max_metadata_bytes,
+                                arguments.max_receipt_records)
+        if receipt is None:
+            raise SnapshotIntegrityError("missing base receipt")
+        observed = local_checkout(arguments.checkout, arguments.max_descriptor_bytes)
+        if checkout._encode(observed) != checkout._encode(info):
+            raise checkout.CheckoutIntegrityError("checkout differs from exact base")
+        directories.check()
+        effects["begun"] = True
+        prepared = work_product_import.prepare_work_product_import(
+            store, checkout_directory=arguments.checkout, **request, source_root=source,
+            protected_roots=(*roots, arguments.config, arguments.request, arguments.destination),
+            **{name: getattr(arguments, name) for name in ("max_files", "max_file_bytes", "max_total_bytes",
+                                                         "max_descriptor_bytes", "max_inventory_entries")})
+        documents = cli_proposals.documents(prepared, info, receipt.provenance, arguments)
+        result["proposal_sha256"] = cli_proposals._digest(documents["proposal.json"])["sha256"]
+        effects["proposal_sha256"] = result["proposal_sha256"]
+        output = _result(command, result, arguments.max_output_bytes)
+        directories.check()
+        cli_proposals.publish(arguments.destination, documents, arguments, effects)
+        effects["returned"] = True
+        directories.check()
+    return output, 0
 
 
 def _silence_stdout(stream):
@@ -289,6 +421,23 @@ def _emit(data):
 
 def _classify(error, effects):
     """Map failures using types and chained errno, never parsing publication-message wording."""
+    operation = effects.get("operation")
+    if operation in ("prepare-work-product", "submit-work-product"):
+        if effects.get("returned") or effects.get("published"):
+            if isinstance(error, CliError) and error.status == 7:
+                return error
+            return CliError(7, "effects_uncertain", "Saved publication or submission acknowledgment is uncertain.")
+        if isinstance(error, (RevisionConflictError, SubmissionConflictError)):
+            message = ("Preparation conflicts with the current head or a used submission ID."
+                       if operation == "prepare-work-product" else
+                       "Saved submission conflicts with the current head or a different request under its ID.")
+            return CliError(4, "conflict", message)
+        if isinstance(error, (ArtifactError, ReferenceResolutionError)):
+            return CliError(6, "integrity_error", "Required canonical objects or references are unavailable or invalid.")
+        if isinstance(error, RecordNotFoundError) and operation == "prepare-work-product":
+            return CliError(3, "missing", "Exact preparation base is absent.")
+        if effects.get("submit_entered"):
+            return CliError(7, "effects_uncertain", "Submission effects or acknowledgment are uncertain.")
     if isinstance(error, CliError):
         return error
     chain = tuple(causes(error))
@@ -305,6 +454,9 @@ def _classify(error, effects):
     if any(isinstance(cause, FileNotFoundError) and cause.filename in effects.get("artifacts", ())
            for cause in chain):
         return CliError(6, "integrity_error", "Required canonical artifact bytes are unavailable.")
+    if begun and operation == "prepare-work-product" and isinstance(
+            error, (checkout.CheckoutOperationalError, OSError, KeyboardInterrupt, StoreError)):
+        return CliError(7, "effects_uncertain", "Preparation effects or acknowledgment are uncertain; output is retained.")
     if begun and isinstance(error, (checkout.CheckoutOperationalError, OSError, KeyboardInterrupt, StoreError)):
         return CliError(7, "effects_uncertain", "Checkout effects or acknowledgment are uncertain; output is retained.")
     if isinstance(error, (checkout.CheckoutIntegrityError, SnapshotIntegrityError, ArtifactError)):
@@ -341,13 +493,15 @@ def main(argv=None):
         return 0
     context = dict(store=None, destination=None, record_id=None, revision=None,
                    submission_id=None, next_action=None)
-    effects = {"begun": False}
+    effects = {"begun": False, "operation": arguments.command}
     try:
         _validate(arguments)
         for name in ("record_id", "revision", "submission_id"):
             context[name] = getattr(arguments, name, None)
         if hasattr(arguments, "destination"):
             context["destination"] = str(arguments.destination)
+        if hasattr(arguments, "proposal"):
+            context["destination"] = str(arguments.proposal)
         output, status = _execute(arguments, context, effects)
         try:
             _emit(output)
@@ -357,12 +511,27 @@ def main(argv=None):
         return status
     except (Exception, KeyboardInterrupt) as error:
         failure = _classify(error, effects)
-        if failure.status == 7:
+        if effects.get("verified") is not None:
+            _proposal_identity(effects["verified"], context, effects)
+        if arguments.command in ("prepare-work-product", "submit-work-product"):
+            identity = effects.get("proposal_sha256")
+            if arguments.command == "prepare-work-product":
+                action = ("Use inspect-proposal --proposal PATH at the retained destination. "
+                          "Preparation retry needs a new absent destination and recaptures the draft; "
+                          "it does not reconcile the original ID.")
+            else:
+                action = ("Use inspect-receipt --config FILE --submission-id ID with the original ID, then "
+                          "retry submit-work-product with the identical saved package/config when appropriate. "
+                          "An absent receipt does not authorize regenerating the request.")
+            context["next_action"] = action + (" Proposal SHA-256: " + identity + "." if identity else "")
+        elif failure.status == 7:
             context["next_action"] = (
                 "Inspect retained evidence with python -m research_pipeline inspect-checkout --checkout PATH "
                 "using the exact destination in this diagnostic. Current presence does not prove historical durability. "
                 "Review before using a new absent destination.")
         elif failure.code == "output_failed":
             context["next_action"] = "Repeat the same read-only inspection; discard any partial output."
+            if effects.get("proposal_sha256"):
+                context["next_action"] += " Proposal SHA-256: " + effects["proposal_sha256"] + "."
         _diagnostic(arguments.command, failure, context)
         return failure.status

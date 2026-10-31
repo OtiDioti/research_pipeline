@@ -2,7 +2,7 @@
 
 This directory contains the `theoretical-research-pipeline` distribution and its
 `research_pipeline` import package. It provides package identity, bounded exact
-CLI inspection/checkout,
+CLI inspection/checkout and saved-proposal preparation, review and separate submission,
 development validation, and a synthetic oscillator development fixture with a
 source-local loader, validated domain envelopes, immutable local artifacts, and
 SQLite-backed atomic revision submissions with durable receipts and audit events,
@@ -37,7 +37,12 @@ produce a usage error (status 2). There is no research command or console-script
 interface. Explicit candidate-source paths avoid relying on an editable install
 from another checkout. See the [local CLI guide](../docs/local-cli.md) for exact
 record/receipt inspection, historical writable checkout, strict trusted controls,
-limits and retained-output recovery. Preparation and submission remain library-only.
+limits and retained-output recovery. Preparation saves a complete private package
+without metadata submission; offline inspection recomputes its summary. Separate
+submission requires that exact published package and preserves original-ID receipt
+reconciliation after acknowledgment uncertainty. Existing library APIs remain valid.
+Publication removes an incomplete marker; current presence never proves historical
+durability. Broader R-082, scientific/M0-S and runtime obligations remain incomplete.
 
 The full validation process must inherit `RLIMIT_NOFILE` soft=4096 within its
 existing hard limit. In the launching shell, after confirming the hard limit is

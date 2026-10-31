@@ -199,3 +199,13 @@ with TemporaryDirectory(prefix="checkout-example-") as temporary:
 Preserved direct view edits can enter this explicit route using the exact historical
 record/revision and logical path in the [readable refresh continuation](readable-refresh.md).
 Refresh itself never previews or imports; stale expected bases conflict without rebasing.
+
+The [local CLI round trip](local-cli.md) continues from an edited checkout with an
+explicit complete request file and `prepare-work-product`. It saves a new absent
+private proposal package without committing metadata or changing the draft.
+`inspect-proposal` reviews exact saved changes offline; a separate
+`submit-work-product` commits the identical request through typed CAS. Preparation
+retry recaptures into a new destination; original-ID reconciliation instead retries
+the same saved package after inspecting its receipt. The CLI additionally rejects
+`.work-product-proposal` ancestors as writable parents and excludes config/request
+paths. These CLI controls do not change existing library signatures or guards.

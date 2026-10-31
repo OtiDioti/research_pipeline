@@ -20,11 +20,18 @@ the package does not read installed distribution or repository metadata.
 
 `research_pipeline.__main__` delegates to a focused argparse CLI for help/version,
 exact record and original-receipt inspection, historical work-product checkout and
-offline original-descriptor inspection. `cli_controls` enforces strict bounded local
-configuration reads; `cli_inspection` reuses bounded metadata and checkout codecs.
+offline original-descriptor inspection, bounded saved preparation, offline proposal
+review and separate explicit submission. `cli_controls` enforces strict bounded
+configuration and authored request reads; `cli_inspection` reuses bounded metadata
+and checkout codecs. `cli_proposals` binds exact proposal/summary bytes to a strict
+fixed package inventory, verifies saved comparisons and reuses checkout's exclusive
+private-destination/incomplete-marker protocol. Marker removal is logical publication,
+not atomic visibility of the directory. Saved inputs are synchronized, reverified
+and closed before the unchanged typed submission/reconciliation boundary.
 No arguments prints help; unknown or abbreviated arguments exit with status 2.
 The [local CLI guide](local-cli.md) defines paths, limits, output and recovery.
-Preparation/import remain library-only; research execution is unavailable. The
+Library preview/import APIs remain valid; CLI submission requires the coherent saved
+package. Research execution is unavailable. The
 package has no third-party runtime dependencies. Setuptools is solely
 build tooling, and no installation is needed for the documented source commands.
 Linux is the initially verified platform. See the [implementation guide](../implementation/README.md)
@@ -66,7 +73,12 @@ See [checkout](checkout.md) for limits, lifecycle and an executed example.
 capture and compares the descriptor with a caller-pinned canonical base. Its narrow
 store preview helper checks typed admission in a read snapshot without metadata writes.
 Frozen serialized proposals are committed separately through `submit_typed`; its
-original-ID reconciliation order is unchanged. See [preview and explicit import](work-product-import.md).
+original-ID reconciliation order is unchanged, including after head advancement or
+object loss. CLI summary recomputation uses the original checkout and original
+submission provenance saved with the exact proposal; digests are internal bindings,
+not authentication. Offline inspection makes no historical durability claim and
+never repairs retained evidence. Postpublication/postcommit close/output failures
+retain uncertainty with original-ID receipt/retry guidance. See [preview and explicit import](work-product-import.md).
 `RecordStore.submit_typed` selects the scientific, assessment, work-product, Source, corpus or project codec
 explicitly and decodes every member locally, admitting mixed ten-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized
@@ -204,7 +216,7 @@ obligations and expected scenario relationships. It does not assess scientific
 truth or execute the scenario. Import is inert; loading returns independent mutable
 trees without writes, downloads, installed metadata or a cache. The package
 initializer remains unchanged; the local CLI exposes only the documented
-exact inspection and checkout slice.
+exact inspection and explicit saved work-product round-trip slice.
 
 The [complete walkthrough and interface](synthetic-oscillator.md) document simulated
 assessment versus actual execution, finite-matrix versus full-line support,

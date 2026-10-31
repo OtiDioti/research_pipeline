@@ -8,6 +8,7 @@ import stat
 
 from research_pipeline import checkout
 from research_pipeline.domain import DomainValidationError, _fields, _validate_json
+from research_pipeline.domain import ArtifactReference, CreationProvenance, RecordReference, Submission, _snapshot
 from research_pipeline.snapshot import _check_json_depth, SnapshotLimitError
 from research_pipeline.work_product import _unique_object, _reject_constant
 
@@ -138,3 +139,58 @@ def causes(error):
     while error is not None:
         yield error
         error = error.__cause__
+
+
+def complete_codec(value, codec):
+    """Decode a complete nested declaration, refusing defaults and coercive normalized equivalents."""
+    result = codec.from_dict(value)
+    if _snapshot(value, "declaration") != _snapshot(result.to_dict(), "declaration"):
+        raise DomainValidationError("incomplete or noncanonical nested declaration")
+    return result
+
+
+def read_request(path, maximum, max_files):
+    """Validate an authored preparation request before any draft read or object publication.
+
+    Require private stable controls and complete nested values. Inert artifact
+    placeholders exercise existing manifest/proposal codecs and never escape this
+    structural gate. The returned dictionary contains detached API arguments.
+    """
+    from research_pipeline import work_product_import as importer
+    from research_pipeline.work_product import WorkProductFile, _path, _validate_paths, encode_envelope
+
+    with ExitStack() as stack:
+        directories = checkout._Directories(stack)
+        parent = directories.traverse(path.parent, private=True, exact=True)
+        value = strict_json(read_control(parent, path.name, path, maximum, modes=(0o600, 0o400)))
+        directories.check()
+    _fields(value, {"format", "version", "base", "expected_head", "metadata", "selected_paths",
+                    "submission_id", "record_provenance", "submission_provenance"}, set(), "preparation")
+    if (value["format"] != "research_pipeline.cli_work_product_preparation"
+            or type(value["version"]) is not int or value["version"] != 1):
+        raise DomainValidationError("unsupported preparation format/version")
+    base = checkout._base(complete_codec(value["base"], RecordReference))
+    if (type(value["expected_head"]) is not int or value["expected_head"] != base.revision
+            or base.revision == 2**63 - 1):
+        raise DomainValidationError("expected_head must equal an incrementable exact base")
+    record = complete_codec(value["record_provenance"], CreationProvenance)
+    submission = complete_codec(value["submission_provenance"], CreationProvenance)
+    paths = value["selected_paths"]
+    if type(paths) is not list or not paths:
+        raise DomainValidationError("selected_paths requires a nonempty ordered array")
+    if len(paths) > max_files:
+        raise SnapshotLimitError("selected path count exceeded")
+    _validate_paths(paths)
+    if any(_path(path, "selected path")[0] in (checkout._CONTROL, ".work-product-proposal") for path in paths):
+        raise DomainValidationError("reserved control namespace")
+    _fields(value["metadata"], set(importer._METADATA), set(), "metadata")
+    supersedes = RecordReference(base.record_id, base.revision, "supersedes", "work_product_manifest")
+    template = importer._manifest(value["metadata"],
+                                  [WorkProductFile(path, ArtifactReference("0" * 64, 0)) for path in paths],
+                                  supersedes)
+    importer._proposal(Submission(value["submission_id"], submission,
+                       [encode_envelope(base.record_id, base.revision + 1, template, record)],
+                       {base.record_id: value["expected_head"]}))
+    return dict(base=base, expected_head=value["expected_head"], metadata=value["metadata"],
+                selected_paths=paths, submission_id=value["submission_id"],
+                record_provenance=record, submission_provenance=submission)

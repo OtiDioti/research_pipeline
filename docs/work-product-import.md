@@ -1,9 +1,12 @@
 # Work-product preview and explicit import
 
 Import directly from `research_pipeline.work_product_import`. This is a trusted
-controller/library boundary: preview and import remain library-only, with no
-package re-exports or authenticated worker endpoint. The [local CLI](local-cli.md)
-currently exposes only exact inspection and checkout. Preview verifies the
+controller/library boundary, with no package re-exports or authenticated worker
+endpoint. The [local CLI](local-cli.md) exposes exact inspection, checkout,
+`prepare-work-product`, offline `inspect-proposal`, and separate
+`submit-work-product`. The library signatures and examples below remain valid;
+the CLI requires a complete coherent saved package, not an arbitrary proposal file.
+Preview verifies the
 canonical base, captures explicit inert draft bytes,
 publishes immutable artifacts and checks typed admission in a read snapshot. It
 returns a frozen proposal and explanatory summary. It writes no application metadata:
@@ -323,3 +326,16 @@ with TemporaryDirectory(prefix="work-product-import-example-") as temporary:
 Preserved direct view edits can enter this explicit route using the exact historical
 record/revision and logical path in the [readable refresh continuation](readable-refresh.md).
 Refresh itself never previews or imports; stale expected bases conflict without rebasing.
+
+The CLI adds strict complete authored request controls and caller-visible bounds,
+preflights the exact canonical baseline and original receipt, and saves the exact
+proposal plus a recomputable change summary. It exclusively reserves a private
+package, writes under an empty incomplete marker, verifies before/after barriers,
+and logically publishes by removing that marker. Offline inspection distinguishes
+incomplete, complete-unpublished and published evidence without repairs or store
+access; historical durability remains unknown. Submit establishes current saved-input
+durability and closes inputs before typed submission. Original-ID retries preserve
+the store's reconciliation-before-availability order. See the [complete schemas,
+limits and recovery commands](local-cli.md). Orphan immutable objects may remain
+from preview failure; no scientific or operating authority is added. Full R-082,
+other draft kinds, scientific/M0-S and runtime obligations remain incomplete.
