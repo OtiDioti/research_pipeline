@@ -19,7 +19,8 @@ from research_pipeline.assessment import (
 
 _FORMAT = "research_pipeline.work_product_content"
 _PRODUCT_KINDS = ("note", "derivation", "calculation", "notebook", "checkpoint",
-                  "reading_report", "end_of_run_report", "figure", "program", "context_packet")
+                  "reading_report", "end_of_run_report", "figure", "program", "context_packet",
+                  "intake_report", "research_brief")
 _OPTIONAL_ROLES = (("task", "task_specification"), ("branch", "branch"),
                    ("context", "research_context"), ("run", "run"),
                    ("supersedes", "work_product_manifest"))

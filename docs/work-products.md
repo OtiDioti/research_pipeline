@@ -46,7 +46,7 @@ WorkProductManifest(
 
 | Field | Contract |
 | --- | --- |
-| `product_kind` | Exactly `note`, `derivation`, `calculation`, `notebook`, `checkpoint`, `reading_report`, `end_of_run_report`, `figure`, `program` or `context_packet`. A label only. |
+| `product_kind` | Exactly `note`, `derivation`, `calculation`, `notebook`, `checkpoint`, `reading_report`, `end_of_run_report`, `figure`, `program`, `context_packet`, `intake_report` or `research_brief`. A label only. |
 | `title`, `purpose` | Separate nonblank scalar-Unicode strings. The display title is independent of paths. |
 | `authors` | Nonempty ordered attribution strings, each nonblank scalar Unicode. Repetitions are retained. |
 | `task`, `branch`, `context`, `run`, `supersedes` | Explicit null or exact reference with the role/kind below. |
@@ -152,9 +152,9 @@ The local check consults no storage, preserving original-ID retry ordering.
 ## Durable admission, history and guarantees
 
 `RecordStore.submit_typed(Submission(...))` accepts coherent manifests alongside
-the four scientific, two assessment, Source and corpus kinds, including forward references in a
+the four scientific, two assessment, Source, corpus and project kinds, including forward references in a
 mixed batch. `get_typed_revision(record_id, revision)` returns the detached exact
-envelope and `ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest` value.
+envelope and `ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup` value.
 No new store API, transaction path, schema version or fingerprint version is added.
 
 The [exhaustive traversal table](attributed-assessments.md#durable-api-and-exact-traversal)
@@ -270,3 +270,13 @@ remains shallow even when its declared target kind is corpus_manifest: generic,
 unsupported or incoherent corpus payloads and damaged target attachments do not
 become constrained merely because a corpus codec exists. Corpus entry identities,
 inspection declarations and replacements are not work-product lifecycle changes.
+
+## Project intake document roles
+
+[ProjectSetup](project-intake.md) adds the version-1 labels `intake_report` and
+`research_brief` without changing old labels or wire bytes. Incoming project
+document roles require the respective label and exact project context, corpus
+dependencies and inspected/captured Source coherence. Titles and paths do not
+establish a role. These conditional dossier checks do not globally constrain
+manifest linked_source/build_dependency edges. Source reading_report still
+requires `reading_report` and rejects both new labels.

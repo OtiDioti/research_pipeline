@@ -91,7 +91,7 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
 evidence, strict codecs, exact role projection and runnable codec/persistence examples.
-`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest, Source and corpus-manifest kinds
+`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest, Source, corpus-manifest and project kinds
 as coherent exact typed target graphs atomically;
 `get_typed_revision` returns the exact envelope and decoded value. `submit` remains
 a trusted generic persistence API, not a scientific admission gate. Typed retries
@@ -175,5 +175,14 @@ Scientific readiness and D02/D03/M0-S qualifications remain partial/pending.
 values and exact durable selection/history checks over Source captures. The ninth
 typed kind keeps original baselines, attributed declarations, inert locators and
 explicit replacement identities through restart and backup. Direct selected
-originals are verified; transitive closure remains metadata-only. There is no
-project readiness, scientific support, operating grant or new proposal format.
+originals are verified; transitive closure remains metadata-only. Corpus inventory
+alone establishes no project readiness, scientific support or operating grant.
+
+
+[Versioned project intake](../docs/project-intake.md) adds the tenth typed kind,
+ProjectSetup, with exact original/current corpus pins, attributed declarations,
+conditional document/location coherence and complete immutable history. Readiness
+is an attributed proposal presented as awaiting materials, incomplete setup or
+awaiting authorization; actual research admission remains subsequent work. The
+self-contained documented example records an empty shell, captures a short note
+and appends a dossier using ordinary saved Submission requests.

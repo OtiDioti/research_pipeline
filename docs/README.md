@@ -66,5 +66,11 @@ D02/D03/M0-S qualifications remain partial/pending.
 exact original Source selection/location checks, attributed inspection and unresolved
 links, immutable baseline/replacement history, complete traversal/projection tables,
 recovery semantics and a runnable two-capture example. Empty/partial inventories
-are recorded setup data; readiness, authority and scientific interpretation remain
-separate later work.
+are recorded setup data; attributed readiness proposals are recorded by project
+intake, while actual admission, authority and scientific interpretation remain later work.
+
+
+[Versioned project intake](project-intake.md) specifies ProjectSetup constructors,
+strict codecs, corpus/document/location history and readiness proposals without
+authority. It contains the complete canonical ten-kind traversal/projection
+tables and a self-contained runnable synthetic setup example.

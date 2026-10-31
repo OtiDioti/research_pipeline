@@ -163,16 +163,16 @@ or decision. `CreationProvenance` is copied caller attribution, not authenticati
 ## Durable API and exact traversal
 
 Import `RecordStore` from `research_pipeline.store` and the shared `Submission`
-from `research_pipeline.domain`. The existing durable methods support nine kinds:
+from `research_pipeline.domain`. The existing durable methods support ten kinds:
 ResearchContext, Claim, Justification, Evidence, Review, Issue,
-[WorkProductManifest](work-products.md), [Source](sources.md) and [CorpusManifest](corpus.md).
+[WorkProductManifest](work-products.md), [Source](sources.md), [CorpusManifest](corpus.md) and [ProjectSetup](project-intake.md).
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup]`
 
 Use the scientific encoder for scientific content and the assessment encoder for
 Review/Issue, the work-product encoder for coherent manifests, the Source
-encoder for source captures, and the corpus encoder for inventories. Mixed typed batches permit arbitrary member order and forward
+encoder for source captures, the corpus encoder for inventories, and the project encoder for intake snapshots. Mixed typed batches permit arbitrary member order and forward
 references, including Issue affected references to later Review/Issue members.
 Every member must decode independently. Commit arbitrary generic manifests, policies,
 ToolExecutions, tasks and other generic records separately with `submit`.
@@ -181,20 +181,12 @@ fallback to a different codec after failure. The four scientific codecs and wire
 bytes remain unchanged. Pure conversion still performs no lookup.
 
 For new requests the complete proposed batch takes precedence over committed
-exact history. The following table is exhaustive; required kinds and roles come
+exact history. Required kinds and roles come
 from the successfully decoded value, never from arbitrary generic field names.
 
-| Decoded kind | Traversed roles → required typed kinds | Shallow roles → declared generic kinds |
-| --- | --- | --- |
-| ResearchContext | None | None |
-| Claim | `context` → research_context | None |
-| Justification | `context` → research_context; `premise`, `conclusion` → claim; `evidence` → evidence | None |
-| Evidence | `context` → research_context; `target_claim` → claim | `input_record` → any supported kind, or explicit null |
-| Review | `candidate_claim` → claim; `target_context` → research_context; `reported_evidence` → evidence; `assessed_route` → justification | `context_manifest` → work_product_manifest; `authorization_policy` → decision; `reported_tool_execution` → tool_execution |
-| Issue | `supporting_evidence` → evidence | `affected_record` → any supported kind, including scientific, review and issue |
-| WorkProductManifest | `context` → research_context; `linked_claim` → claim; `supersedes` → work_product_manifest | `task` → task_specification; `branch` → branch; `run` → run; `linked_source` → source; `build_dependency` → any explicitly declared supported kind |
-| Source | `supersedes` → source; `reading_report` → work_product_manifest with product_kind reading_report; `reported_evidence` → evidence | `related_source` → source; `reported_tool_execution` → tool_execution |
-| CorpusManifest | `supersedes` → corpus_manifest; `inventory_source`, `source_location` → source, with complete history, exact original selection and per-entry location checks | None |
+The complete canonical [semantic traversal and ordered projection tables](project-intake.md#complete-semantic-traversal-and-ordered-projections)
+cover all ten kinds, including every retained shallow role and target kind.
+
 
 CorpusManifest additionally validates every exact original mapping and location
 occurrence against its own entry selection, and every historical snapshot/diff

@@ -52,7 +52,8 @@ state exists. The three explicit open obligations are:
 The projection uses the first \(N\) harmonic states \(|n\rangle\),
 \(n=0,\ldots,N-1\), for symbolic positive integer \(N\), forming
 \(P_NHP_N\). A finite truncation need not preserve full-line stability.
-Readiness is only `simulated_ready`; no product intake is implemented.
+Fixture readiness is only `simulated_ready`; the separate [project intake](project-intake.md)
+contract records attributed proposals without authorizing research.
 
 ### Expected baseline checks and formal exploration
 

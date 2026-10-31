@@ -334,20 +334,9 @@ originals: no extraction outputs, unselected Source artifacts or predecessor-onl
 artifacts are projected. Both envelope directions require complete ordered
 equality; extra, missing, reordered or substituted projections fail without repair.
 
-This is the complete traversal table (also canonical in
-[attributed assessments](attributed-assessments.md#durable-api-and-exact-traversal)).
+The complete canonical [semantic traversal and ordered projection tables](project-intake.md#complete-semantic-traversal-and-ordered-projections)
+cover all ten kinds, including every retained shallow role and target kind.
 
-| Decoded kind | Traversed roles → required typed kinds | Shallow roles → declared generic kinds |
-| --- | --- | --- |
-| ResearchContext | None | None |
-| Claim | `context` → research_context | None |
-| Justification | `context` → research_context; `premise`, `conclusion` → claim; `evidence` → evidence | None |
-| Evidence | `context` → research_context; `target_claim` → claim | `input_record` → any supported kind, or explicit null |
-| Review | `candidate_claim` → claim; `target_context` → research_context; `reported_evidence` → evidence; `assessed_route` → justification | `context_manifest` → work_product_manifest; `authorization_policy` → decision; `reported_tool_execution` → tool_execution |
-| Issue | `supporting_evidence` → evidence | `affected_record` → any supported kind, including scientific, review and issue |
-| WorkProductManifest | `context` → research_context; `linked_claim` → claim; `supersedes` → work_product_manifest | `task` → task_specification; `branch` → branch; `run` → run; `linked_source` → source; `build_dependency` → any explicitly declared supported kind |
-| Source | `supersedes` → source; `reading_report` → work_product_manifest with product_kind reading_report; `reported_evidence` → evidence | `related_source` → source; `reported_tool_execution` → tool_execution |
-| CorpusManifest | `supersedes` → corpus_manifest; `inventory_source`, `source_location` → source, with complete history, exact original selection and per-entry location checks | None |
 
 Local entry IDs, changes, relationship endpoints, strings, provenance details and
 exposure declarations are not additional graph traversal inputs. Shallow edges
@@ -358,8 +347,8 @@ cannot excuse a separate constrained occurrence of the same target.
 
 ## Durable checks, artifacts and recovery
 
-The existing typed store supports nine kinds and returns
-`ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest`
+The existing typed store supports ten kinds and returns
+`ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup`
 from `get_typed_revision`. New target/history checks remain in the same serialized
 transaction, before metadata insertion, after original-ID reconciliation,
 schema-kind checks and ordinary expected-head CAS/batch checks. Resolution uses
@@ -559,8 +548,9 @@ with TemporaryDirectory(prefix="corpus-example-", dir="/tmp") as temporary:
 
 ## Deferred boundaries
 
-This feature records a prerequisite for later intake and readable views. Project
-setup/readiness decisions and authorized operating envelopes, full scientific
+This feature records a prerequisite for [versioned project setup](project-intake.md)
+and later readable views. Project readiness proposals are recorded separately;
+actual admission decisions and authorized operating envelopes, full scientific
 intake/interpretation, archive extraction, link discovery/parsing/OCR/network
 acquisition, vault generation/edit protection, CLI lifecycle, tool execution,
 exposure enforcement and scientific evaluation remain deferred. Stored instructions

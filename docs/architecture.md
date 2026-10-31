@@ -62,8 +62,8 @@ capture and compares the descriptor with a caller-pinned canonical base. Its nar
 store preview helper checks typed admission in a read snapshot without metadata writes.
 Frozen serialized proposals are committed separately through `submit_typed`; its
 original-ID reconciliation order is unchanged. See [preview and explicit import](work-product-import.md).
-`RecordStore.submit_typed` selects the scientific, assessment, work-product, Source or corpus codec
-explicitly and decodes every member locally, admitting mixed nine-kind batches. For a new canonical
+`RecordStore.submit_typed` selects the scientific, assessment, work-product, Source, corpus or project codec
+explicitly and decodes every member locally, admitting mixed ten-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized
 write transaction after submission-ID reconciliation. Historical target checks read metadata; public exact reads verify
 direct artifacts. The traversal follows explicit per-kind constrained roles;
@@ -77,7 +77,9 @@ shallow. Legacy generic source content remains supported. [Corpus inventories](c
 constrain all projected predecessor/Source/location edges, validate each selected
 original and location occurrence, and check full snapshot history to baseline.
 Corpus history has no generic baseline transition; local IDs and attributed
-narrative declarations add no traversal edges. No transitive artifact
+narrative declarations add no traversal edges. [Project intake](project-intake.md) constrains
+all project pins, validates each historical dossier against its own current corpus,
+and checks each incoming document role independently of cached target resolution. No transitive artifact
 verification is added. Every submitted Review's assessed route
 must conclude its exact candidate, without equating their contexts. See the
 [complete traversal contract](attributed-assessments.md#durable-api-and-exact-traversal).

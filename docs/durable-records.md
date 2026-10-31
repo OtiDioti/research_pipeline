@@ -14,7 +14,7 @@ an intentionally separate paper example.
 and exact envelope-link coherence for four scientific kinds.
 `research_pipeline.assessment` adds [attributed Review/Issue contracts](attributed-assessments.md)
 with a distinct format. `submit_typed` provides durable structural admission for
-all nine kinds, including [work-product manifests](work-products.md), [Source captures](sources.md) and [corpus inventories](corpus.md), and checks
+all ten kinds, including [work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md) and [project intake](project-intake.md), and checks
 exact review route-conclusion membership; `get_typed_revision` returns an exact
 envelope and decoded value. `submit` remains a trusted generic persistence API,
 not a scientific admission gate: generic submission resolves
@@ -226,8 +226,8 @@ No installation or package-level re-exports are needed.
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
 | `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
 | `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
-| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all nine supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
-| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source or corpus value. No historical admission certificate. |
+| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all ten supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
+| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest \| ProjectSetup]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source, corpus or project value. No historical admission certificate. |
 | `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
 | `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
 | `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |
@@ -450,3 +450,11 @@ inside the existing transaction. Selected originals are direct attachments;
 transitive closure is metadata-only. Generic submission, original-ID reconciliation,
 CAS, migration and backup formats/algorithms remain unchanged. Inventory storage
 confers neither readiness nor scientific authority.
+
+
+[ProjectSetup](project-intake.md) uses the existing schema-2 project kind and
+transactional cached closure. Its original/current corpus pins, exact document
+roles and inspected locations remain coherent through complete project history.
+Project has no direct artifacts or separate persistence path. Historical local
+reads and original-ID retries never certify prior admission or current transitive
+byte availability. Readiness remains an attributed proposal without authority.

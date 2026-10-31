@@ -468,4 +468,3 @@ assert decode_envelope(e) == v
         result = subprocess.run([sys.executable, "-B", "-c", program], capture_output=True, text=True, timeout=60,
                                 env={**os.environ, "PYTHONPATH": os.pathsep.join((str(root / "src"), str(root)))})
         self.assertEqual(result.returncode, 0, result.stderr)
-

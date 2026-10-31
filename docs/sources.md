@@ -180,7 +180,7 @@ source documents, unsupported formats and versions unchanged.
 
 ## Durable admission and history
 
-The [exhaustive nine-kind traversal table](attributed-assessments.md#durable-api-and-exact-traversal)
+The [exhaustive ten-kind traversal table](attributed-assessments.md#durable-api-and-exact-traversal)
 defines constrained versus shallow edges. Source supersedes, reading report and each
 reported Evidence occurrence are constrained. Related sources and reported ToolExecution
 are shallow. A report target must be a coherent typed WorkProductManifest with
