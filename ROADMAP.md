@@ -73,3 +73,9 @@ D03 and M0-E remain partial; M0-S remains pending. Generated-view refresh with p
 ## Refresh preparation — 2026-10-31
 
 Fresh Git and retained CWI reconciliation confirms c57a621 is already integrated beneath administrative 7f3f081; twelve accepted results and three terminal failures are preserved, with no active owner or pending integration. [REQ-D03-005](development/requests/REQ-D03-005.md) is the next ready two-milestone request for bounded divergence/rename capture and immutable successor refresh with preservation and recovery. Existing view and draft APIs provide its prerequisites. No product implementation is added by this preparation. Continuous starts remain 14/50 until launch; next start is 15/50. Full D03, remaining M0-E and scientific/live obligations remain open.
+
+## Current refresh integration and CLI progression — 2026-10-31
+
+REQ-D03-005 is finally accepted/exact-integrated at 8cfb0357ccccff1f079c419eb1ca4b7f4d3b135c, with 579/579 controller/target tests and both bound checks. [Run evidence](development/runs/c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md). Direct edits, renames and ambiguous identities are preserved/diagnosed in an immutable successor package, with verified generated links and real interrupted/conflicting publication evidence. All prior scientific artifacts and canonical history remain fixed. Three CWI repairs resolved the review findings; no backend or authority change.
+
+Next ready [REQ-D03-006](development/requests/REQ-D03-006.md) exposes exact inspection and explicit work-product checkout/preview/saved-proposal/submission through the local CLI. This is a bounded R-082 subset consuming evidenced contracts, before broader execution/authority work. D03/M0-E remain partial; M0-S and all remaining scientific/runtime obligations persist. Continuous 15/50 used, 35 remain before next start 16; unchanged model/high effort and2700-second deadlines. STATUS contains the single current next safe action.
