@@ -2,9 +2,12 @@
 
 Capture a bounded consistent committed metadata selection, derive one deterministic
 plan, materialize independently verified protected copies, and inspect that generation
-offline. Capture and planning never read artifact bytes; materialization and inspection
-report separate local observations. There is no new CLI command, refresh service or
-import of displayed edits.
+offline. Snapshot capture and snapshot planning never read artifact bytes;
+materialization and inspection report separate local observations. There is no new
+CLI command or automatic import of displayed edits.
+[Read-only divergence capture and preservation planning](readable-refresh.md) now
+observe edits and renames against an independent canonical plan. Durable preservation
+and successor publication remain a later milestone.
 
 A plan is a private local reading snapshot, not a backup, redistributable export,
 independently filtered worker/reviewer workspace, or new source of scientific

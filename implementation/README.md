@@ -197,7 +197,20 @@ copies. `research_pipeline.vault.materialize_readable_view` verifies independent
 protected copies and publishes one complete generation to an absent destination
 using Linux no-replace rename. `inspect_readable_view` reconstructs and checks the
 current generation offline. Retained attempts make interruption and uncertain
-acknowledgment explicit; refresh/edit import and mutable latest pointers remain
-future work. Capture/output limits are retained in plan identity; `max_entries`
+acknowledgment explicit; durable refresh publication and mutable latest pointers remain
+future work. Direct edits can be captured and preservation planned as described below.
+Capture/output limits are retained in plan identity; `max_entries`
 bounds each operation's enumeration separately. See the guide for the required private 0700 parent, exclusions, 0500/0400 output modes and runnable
 capture-to-inspection example.
+
+## Read-only divergence capture
+
+Import `CaptureLimits` and `capture_readable_view` directly from
+`research_pipeline.view_capture`, and `plan_readable_preservation` from
+`research_pipeline.view_preservation`. These bounded APIs retain exact inert bytes
+and plan preservation against an independently retained canonical readable plan.
+They require explicit source/protected roots, perform no canonical access or writes,
+and remain usable offline. See [formats, limits and identity rules](../docs/readable-refresh.md).
+Durable preservation, immutable successor publication and recovery are not supplied
+by this first milestone; existing materialization, inspection, checkout and explicit
+import contracts remain distinct.

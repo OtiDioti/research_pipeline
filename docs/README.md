@@ -81,3 +81,8 @@ companions, inert artifact-copy expectations, canonical manifests and verified r
 navigation. Protected independent copies publish through an exclusive atomic rename;
 read-only offline inspection compares current bytes with the canonical plan. Plans
 retain expectations separately from observed materialization/inspection results.
+
+[Read-only readable-view capture and preservation planning](readable-refresh.md)
+compares an independently pinned generation with bounded observed edits and renames.
+It retains exact in-memory bytes and plans unsubmitted preservation; durable successor
+publication and recovery remain a later milestone.
