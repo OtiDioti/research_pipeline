@@ -26,3 +26,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [7b46536e — REQ-D03-001](7b46536e-42ac-4537-a720-beaaa5a34490.md): Source history/local capture accepted/exact-integrated d8dffdd, target 343/343 after documented descriptor-limit recovery; continuous start 10/50, two CWI repairs.
 
 - [f746e33a — REQ-D03-002](f746e33a-7475-44dc-b8bf-4613130fba79.md): immutable corpus inventory accepted/exact-integrated 7d6dd624, 369/369 target tests; one directory-fixture repair; continuous start 11/50.
+
+- [db2829bc — REQ-D03-003](db2829bc-fca9-48d7-b2c1-b9e99348c197.md): project/intake dossiers accepted/exact-integrated9373860,396/396 target tests; one provenance/file-mode fixture repair resolving two findings; continuous start12/50.

@@ -47,3 +47,7 @@ Post-source-capture checkpoint, 2026-10-31: 7b46536e accepted/exact-integrated d
 ## REQ-D03-002 backend audit — 2026-10-31
 
 Runf746e33a-7475-44dc-b8bf-4613130fba79 accepted/exact-integrated 7d6dd6246e47ace09ff44a1decef14c93251f0ac, 369/369 target tests. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted backend changes0. The single CWI repair corrected new product test/example directory modes through its Writer; capture safeguards and launch environment stayed intact. The cosmetic EOF disposition changed no backend/source/configuration. Existing permission approvals were scoped to authorized CWI/Git/validation operations. No live/frozen execution or receipt was edited.
+
+## 2026-10-31 — REQ-D03-003 checkpoint
+
+Rundb2829bc-fca9-48d7-b2c1-b9e99348c197 accepted/exact-integrated9373860,396/396 target tests. Backend remains clean unchanged1f68060b5a5a9964c91811a53d3a515e0b01a073; no backend attempt, patch or reverted candidate. Actual controller failure was diagnosed as new product fixture provenance/file-mode setup and repaired by its Writer, not a backend defect. Frozen model/high effort,2700-second limits and process-local descriptor4096 retained. Backend candidate count0; prior evidence preserved.

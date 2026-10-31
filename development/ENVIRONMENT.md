@@ -103,3 +103,9 @@ Local evidence: local/attempts/D03-001-attempt-001/integration-recheck-20261031T
 ## Corpus checkpoint
 
 REQ-D03-002 retained the same backend/executable/model/high-effort/environment and inherited soft descriptor limit 4096; both controller validations and target 369/369 passed. The initial candidate's new capture directories used default mkdir modes and failed the existing safety guard under inherited umask. CWI fixed only its synthetic fixture/example directories to0o700; no launch or host setting changed. Continue explicit private input-directory modes in fixtures, stable environment and 2700-second new-run bounds.
+
+## Project-intake execution checkpoint — 2026-10-31
+
+Rundb2829bc-fca9-48d7-b2c1-b9e99348c197 used the unchanged non-secret environment, backend/Codex executable, gpt-6-astra/high and2700-second agent/validation deadlines, inheriting soft RLIMIT_NOFILE4096. Milestone/final/target396/396 passed. Target: 396/396, zero skips/failures/errors, 307.310 test seconds; clean unchanged accepted source; completed 2026-10-31T14:18:19.406823+00:00, stdout SHA-256 21c4d84ae8fe38d38050697a52bbcd88c1fc977900ea40982b633a56065348d4
+
+New synthetic capture fixtures/example must explicitly declare available supplied_local provenance with exact file locators and create directories0700/files0600. Default file creation can inherit shared-write bits; never weaken capture guards or change global umask to compensate. One CWI repair corrected these new inputs. Writer sandbox/tmp/socket restrictions remain separate advisory limitations; full controller acceptance and host target validation are mandatory.

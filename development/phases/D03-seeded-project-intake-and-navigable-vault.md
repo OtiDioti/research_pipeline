@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** PARTIAL; REQ-D03-001 Source/local capture accepted/exact-integrated at d8dffdd248495fb18627f3740e77111cbe13a438 with 343/343 target tests; REQ-D03-002 immutable corpus inventory accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251f0ac with 369/369 target tests; REQ-D03-003 project/intake dossier prepared. Full intake/readiness/vault outcomes remain incomplete.
+**State:** PARTIAL; REQ-D03-001 Source/capture,REQ-D03-002 corpus history andREQ-D03-003 project/intake dossiers accepted/exact-integrated; latest9373860 with396/396 target tests. REQ-D03-004 immutable readable snapshots prepared. Actual authorized readiness, full vault and scientific outcomes remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -63,3 +63,7 @@ REQ-D02-006 is now accepted/exact-integrated at a56111f3 with 291/291 tests, clo
 ## Corpus integration checkpoint — 2026-10-31
 
 REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251f0ac, final receipt 47a10bdb59044535aba14572e86164abb22ed56c8704e6be7ea58146c6d53785, 369/369 target tests; [run evidence](../runs/f746e33a-7475-44dc-b8bf-4613130fba79.md). The ninth typed contract preserves exact seed inventories, original baseline and replacement history, per-entry Source locations, unresolved links and attributed partial observations with actual restart/recovery/backup evidence. One safe-directory fixture/example repair preserved production safeguards. Overall phase remains PARTIAL: project/intake/readiness, authorized admission, full vault layout/generation/edit protection, remaining core/authority/resource contracts and scientific evaluation are not completed. Next bounded [REQ-D03-003](../requests/REQ-D03-003.md) prepares versioned project/intake dossiers; proposed readiness is not an operational grant.
+
+## Project-intake integration checkpoint — 2026-10-31
+
+[REQ-D03-003 evidence](../runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md) establishes accepted/exact-integrated9373860 and396/396 target tests. ProjectSetup is the tenth typed contract: stable project/corpus history, attributed declarations and exact report/brief/context/location checks, with real recovery/backup/CAS evidence. Proposed readiness remains inert attributed data, not actual ready state or admission. One fixture/example provenance/mode repair and the authorized EOF cleanup are complete; no old assertion or production guard changed. Phase remains PARTIAL. Next [REQ-D03-004](../requests/REQ-D03-004.md) prepares consistent immutable readable views; full refresh/edit protection, remaining lifecycle/authority/resource enforcement and scientific obligations remain pending.

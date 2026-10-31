@@ -81,3 +81,7 @@ REQ-D03-001 / CWI 7b46536e-42ac-4537-a720-beaaa5a34490 finally accepted d8dffdd2
 ## 2026-10-31 — Immutable corpus inventories
 
 REQ-D03-002 accepted/exact-integrated 7d6dd6246e47ace09ff44a1decef14c93251f0ac: ninth typed kind, exact Source original/location mappings, attributed partial inspection and unresolved links, preserved baseline/replacement history, metadata-only closure and existing shallow semantics.26 new methods; 369/369 target tests. One CWI repair fixed private directory modes in new fixtures/example. No product readiness, scientific endorsement or operating authority. DEV-036 preserves exact acceptance with one documented cosmetic EOF observation; next REQ-D03-003 delegates cleanup and project/intake records.
+
+## 2026-10-31 — Project setup and attributed intake integrated
+
+REQ-D03-003 accepted/exact-integrated9373860,396/396 target tests. Adds strict ProjectSetup history, exact initial/current corpus, attributed intake locations/remainder, authored brief/report roles and readiness proposals without authorization. One CWI fixture/example provenance/mode repair preserved all guards/assertions. Resolves the recorded cosmetic EOF debt. [Run evidence](development/runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md); next REQ-D03-004 prepares immutable readable snapshots. Full scientific/operational completion remains pending.

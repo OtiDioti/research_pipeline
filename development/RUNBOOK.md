@@ -287,3 +287,9 @@ From the REQ-D03-001 integration checkpoint, launch new CWI and validation proce
 ## REQ-D03-002 formatting observation
 
 The coordinator recorded one exact nonsemantic terminal empty line in a new test as nonblocking cosmetic debt while preserving the finally accepted source; DEV-036 and its run evidence bind the specific diagnostic/hash and AST check. This does not authorize ignoring other failed checks. REQ-D03-003 delegates removal to its Writer. Future requests must inspect git diff --check against the complete committed request-base-to-candidate range, including newly added files; working-tree-only checks can miss new-file formatting. Capture test/example input directories must explicitly satisfy existing owner-only safety requirements without changing launch umask or production guards.
+
+## Project-intake checkpoint and explicit synthetic input permissions
+
+REQ-D03-003's Writer removed the exact earlier test_corpus.py terminal empty line; its complete base-to-candidate diff check passes. DEV-036/B-015 is resolved, with no general formatting exception. Continue complete-diff checks including new files.
+
+For synthetic capture tests/examples, explicitly use private directories0700 and files0600, plus available supplied_local provenance/exact locator for each selected file, including supplied extraction outputs. Do not rely on inherited umask or copied partial provenance. Existing security guards and original-versus-derived distinctions stay intact. Writer sandbox failures do not excuse actual controller fixture defects; retain both evidence layers.

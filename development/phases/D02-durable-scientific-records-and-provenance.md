@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** PARTIAL; downstream Source/corpus contracts are integrated at d8dffdd/7d6dd624 with nine typed kinds and 369/369 target tests; latest phase-specific REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
+**State:** PARTIAL; downstream Source/corpus/project-intake contracts are integrated at d8dffdd/7d6dd624/9373860 with ten typed kinds and396/396 target tests; latest phase-specific REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -79,3 +79,7 @@ Cross-phase evidence, 2026-10-31: [REQ-D03-001](../runs/7b46536e-42ac-4537-a720-
 ## Corpus integration checkpoint — 2026-10-31
 
 REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251f0ac, final receipt 47a10bdb59044535aba14572e86164abb22ed56c8704e6be7ea58146c6d53785, 369/369 target tests; [run evidence](../runs/f746e33a-7475-44dc-b8bf-4613130fba79.md). The ninth typed contract preserves exact seed inventories, original baseline and replacement history, per-entry Source locations, unresolved links and attributed partial observations with actual restart/recovery/backup evidence. One safe-directory fixture/example repair preserved production safeguards. Overall phase remains PARTIAL: project/intake/readiness, authorized admission, full vault layout/generation/edit protection, remaining core/authority/resource contracts and scientific evaluation are not completed. Next bounded [REQ-D03-003](../requests/REQ-D03-003.md) prepares versioned project/intake dossiers; proposed readiness is not an operational grant.
+
+## Project/intake engineering checkpoint — 2026-10-31
+
+[REQ-D03-003 evidence](../runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md) records exact project history, corpus/document/location coherence and proposal-only readiness at9373860,396/396 target tests. Existing storage/reconciliation/CAS/backup/migration contracts remain intact; meaningful process-fault and retry cases cover the new kind. D02 stays PARTIAL: current eligibility, authority/fencing/resources and full core lifecycle remain required. Next REQ-D03-004 consumes consistent read/storage contracts for local readable snapshots; scientific holds remain unchanged.
