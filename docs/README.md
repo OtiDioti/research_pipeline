@@ -60,3 +60,11 @@ Legacy generic sources and shallow source links remain supported.
 [Bounded local Source capture](source-capture.md) adds explicit file selection, strict
 saved proposals, separate commit and original-ID recovery. Scientific readiness and
 D02/D03/M0-S qualifications remain partial/pending.
+
+
+[Immutable seed inventories](corpus.md) documents strict CorpusManifest values,
+exact original Source selection/location checks, attributed inspection and unresolved
+links, immutable baseline/replacement history, complete traversal/projection tables,
+recovery semantics and a runnable two-capture example. Empty/partial inventories
+are recorded setup data; readiness, authority and scientific interpretation remain
+separate later work.

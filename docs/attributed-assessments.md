@@ -163,16 +163,16 @@ or decision. `CreationProvenance` is copied caller attribution, not authenticati
 ## Durable API and exact traversal
 
 Import `RecordStore` from `research_pipeline.store` and the shared `Submission`
-from `research_pipeline.domain`. The existing durable methods support eight kinds:
+from `research_pipeline.domain`. The existing durable methods support nine kinds:
 ResearchContext, Claim, Justification, Evidence, Review, Issue,
-[WorkProductManifest](work-products.md) and [Source](sources.md).
+[WorkProductManifest](work-products.md), [Source](sources.md) and [CorpusManifest](corpus.md).
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest]`
 
 Use the scientific encoder for scientific content and the assessment encoder for
-Review/Issue, the work-product encoder for coherent manifests, and the Source
-encoder for source captures. Mixed typed batches permit arbitrary member order and forward
+Review/Issue, the work-product encoder for coherent manifests, the Source
+encoder for source captures, and the corpus encoder for inventories. Mixed typed batches permit arbitrary member order and forward
 references, including Issue affected references to later Review/Issue members.
 Every member must decode independently. Commit arbitrary generic manifests, policies,
 ToolExecutions, tasks and other generic records separately with `submit`.
@@ -194,6 +194,13 @@ from the successfully decoded value, never from arbitrary generic field names.
 | Issue | `supporting_evidence` → evidence | `affected_record` → any supported kind, including scientific, review and issue |
 | WorkProductManifest | `context` → research_context; `linked_claim` → claim; `supersedes` → work_product_manifest | `task` → task_specification; `branch` → branch; `run` → run; `linked_source` → source; `build_dependency` → any explicitly declared supported kind |
 | Source | `supersedes` → source; `reading_report` → work_product_manifest with product_kind reading_report; `reported_evidence` → evidence | `related_source` → source; `reported_tool_execution` → tool_execution |
+| CorpusManifest | `supersedes` → corpus_manifest; `inventory_source`, `source_location` → source, with complete history, exact original selection and per-entry location checks | None |
+
+CorpusManifest additionally validates every exact original mapping and location
+occurrence against its own entry selection, and every historical snapshot/diff
+through revision 1. No generic corpus baseline transition is permitted. Entry IDs,
+changes, relationship endpoints, strings, provenance details and exposure
+declarations add no traversal edges. See [corpus projections and history](corpus.md).
 
 Traversed targets require supported typed content and complete coherent ordered
 links. Their constrained outgoing edges follow the same rules; their generic

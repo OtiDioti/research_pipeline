@@ -152,9 +152,9 @@ The local check consults no storage, preserving original-ID retry ordering.
 ## Durable admission, history and guarantees
 
 `RecordStore.submit_typed(Submission(...))` accepts coherent manifests alongside
-the four scientific and two assessment kinds, including forward references in a
+the four scientific, two assessment, Source and corpus kinds, including forward references in a
 mixed batch. `get_typed_revision(record_id, revision)` returns the detached exact
-envelope and `ScientificContent | AssessmentContent | WorkProductManifest` value.
+envelope and `ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest` value.
 No new store API, transaction path, schema version or fingerprint version is added.
 
 The [exhaustive traversal table](attributed-assessments.md#durable-api-and-exact-traversal)
@@ -260,3 +260,13 @@ upstream version never imply a report revision. Manifest `linked_source` stays
 shallow and can still name legacy generic, unsupported or incoherent Source content
 without traversing its history or checking its attachments. Existing exact uses
 remain pinned when a capture or report advances.
+
+
+## Corpus inventory references
+
+[Corpus manifests](corpus.md) select exact Source originals and keep complete seed
+history separately from work-product supersession. Work-product `build_dependency`
+remains shallow even when its declared target kind is corpus_manifest: generic,
+unsupported or incoherent corpus payloads and damaged target attachments do not
+become constrained merely because a corpus codec exists. Corpus entry identities,
+inspection declarations and replacements are not work-product lifecycle changes.

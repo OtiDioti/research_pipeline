@@ -180,7 +180,7 @@ source documents, unsupported formats and versions unchanged.
 
 ## Durable admission and history
 
-The [exhaustive eight-kind traversal table](attributed-assessments.md#durable-api-and-exact-traversal)
+The [exhaustive nine-kind traversal table](attributed-assessments.md#durable-api-and-exact-traversal)
 defines constrained versus shallow edges. Source supersedes, reading report and each
 reported Evidence occurrence are constrained. Related sources and reported ToolExecution
 are shallow. A report target must be a coherent typed WorkProductManifest with
@@ -304,3 +304,20 @@ with TemporaryDirectory(prefix="source-example-") as temporary:
         assert reopened.read_artifact(supplied) == b"Synthetic supplied text: x squared\n"
         assert reopened.submit_typed(initial) == receipt
 ```
+
+
+## Seed inventories over captures
+
+[Corpus manifests](corpus.md) pin exact Source revisions and select original
+artifacts by exact ID/path/supplied-locator/digest/size. Their constrained
+inventory_source and source_location edges check supported coherent Sources,
+including existing Source history/reading-report rules. Each corpus location must
+anchor to an original selected by that specific entry; repeated uses of one Source
+never waive this check. Corpus direct selected artifacts receive ordinary byte
+verification, while constrained closure continues to read metadata only.
+
+Corpus intake inspection is independent of Source reading. Corpus declarations
+cannot override Source restrictions or grant operational permission. Source's
+legacy generic-to-typed transition remains unchanged; corpus history instead
+requires a fully typed coherent chain through its original baseline. See the
+complete [traversal table](attributed-assessments.md#durable-api-and-exact-traversal).

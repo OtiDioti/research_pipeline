@@ -26,6 +26,17 @@ as canonical JSON snapshots, so caller mutations cannot change the prepared resu
 The public constructor rejects an inconsistent mapping. Mapping is explanatory,
 not authority to commit.
 
+## Process descriptor prerequisite
+
+The full validation/CWI process must inherit `RLIMIT_NOFILE` soft=4096, within the
+existing hard limit. With a hard limit of at least 4096, the launching shell can
+set `ulimit -S -n 4096` before `python3 -B implementation/scripts/validate.py`.
+This changes only that process and its descendants, not persistent host settings.
+Selected descriptors are held through the integrity gate so original-file identity
+can be checked without reopening paths; the 1,024-selected-file case needs this
+capacity. Descriptor exhaustion raises ordinary `CheckoutOperationalError`.
+It does not authorize partial capture, weaker checks or omitted tests.
+
 ## Complete capture template and selection
 
 `metadata` is an ordinary dictionary with exactly the existing Source constructor

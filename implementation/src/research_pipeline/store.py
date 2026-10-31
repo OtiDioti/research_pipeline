@@ -27,6 +27,10 @@ from research_pipeline.work_product import (
     WorkProductManifest, decode_envelope as _decode_work_product_envelope,
 )
 from research_pipeline.source import Source, decode_envelope as _decode_source_envelope
+from research_pipeline.corpus import (
+    CorpusManifest, decode_envelope as _decode_corpus_envelope, _links as _corpus_links,
+    _validate_selection, _validate_successor,
+)
 from research_pipeline.schema import _VERSIONS, validate_schema, validate_request_kinds, validate_history
 
 
@@ -76,11 +80,11 @@ def _fault(boundary: str) -> None:
     """
 
 
-def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | AssessmentContent | WorkProductManifest | Source:
+def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest:
     """Decode a normalized envelope using one explicit format, without inference or fallback.
 
     Missing markers retain NotTypedContentError; other format/codec failures raise
-    DomainValidationError. Scientific, assessment, work-product and Source codecs
+    DomainValidationError. Scientific, assessment, work-product, Source and corpus codecs
     validate states and ordered links.
     """
     content = envelope.content
@@ -96,6 +100,8 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | Asse
             return _decode_work_product_envelope(envelope)
         if discriminator == "research_pipeline.source_content":
             return _decode_source_envelope(envelope)
+        if discriminator == "research_pipeline.corpus_content":
+            return _decode_corpus_envelope(envelope)
     raise DomainValidationError("format: unsupported typed content format")
 
 
@@ -334,7 +340,7 @@ class RecordStore:
         return self._commit_submission(self._normalize_submission(submission), ())
 
     def submit_typed(self, submission: Submission) -> SubmissionReceipt:
-        """Atomically admit scientific, assessment, manifest and Source content with exact target checks.
+        """Atomically admit scientific, assessment, work-product, Source and corpus content with exact target checks.
 
         Reconstruct and decode every member before reconciliation; malformed members
         raise domain/codec errors. New requests check typed target closure inside the
@@ -377,7 +383,7 @@ class RecordStore:
             raise DomainValidationError("submission: malformed nested typed value") from error
         return submission
 
-    def _commit_submission(self, submission, decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source, ...]):
+    def _commit_submission(self, submission, decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest, ...]):
         """Commit a normalized request and its ordered decoded values via one algorithm.
 
         Generic requests supply an empty tuple; typed requests supply one immutable
@@ -450,7 +456,7 @@ class RecordStore:
             self._artifacts._verify_for_commit(reference)
 
     @staticmethod
-    def _typed_references(value: ScientificContent | AssessmentContent | WorkProductManifest | Source) -> tuple[
+    def _typed_references(value: ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest) -> tuple[
             tuple[RecordReference, ...], tuple[RecordReference, ...]]:
         """Partition decoded semantic roles into constrained and shallow generic references.
 
@@ -459,7 +465,7 @@ class RecordStore:
         Manifest context/claims/supersedes are constrained; its other roles are shallow.
         Review context_manifest stays shallow even for a typed manifest target.
         Source predecessors/reports/evidence are constrained; related sources and
-        reported executions stay shallow.
+        reported executions stay shallow. All corpus projected record roles are constrained.
         """
         if type(value) is ResearchContext:
             return (), ()
@@ -492,10 +498,12 @@ class RecordStore:
             shallow = (*(item.reference for item in value.related_sources),
                        *(ref for ref in checks if ref.relationship == "reported_tool_execution"))
             return constrained, shallow
-        raise DomainValidationError("content: expected a decoded scientific, assessment, work-product or Source value")
+        if type(value) is CorpusManifest:
+            return _corpus_links(value)[0], ()
+        raise DomainValidationError("content: expected a decoded scientific, assessment, work-product, Source or corpus value")
 
     def _check_typed_targets(self, connection, submission,
-                             decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source, ...]):
+                             decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest, ...]):
         """Validate exact constrained closure and review routes within the caller's snapshot.
 
         Resolve batch members before historical metadata, never reading transitive
@@ -504,7 +512,8 @@ class RecordStore:
         generic edges check only existence and declared kind and are never enqueued.
         Historical manifest supersession receives the same local and recursive checks.
         Sources additionally require stable work identity and explicit typed predecessors;
-        reading-report edges check product kind even when a target is cached.
+        reading-report edges check product kind even when a target is cached. Corpus
+        selections are checked per occurrence; complete histories are checked in order.
         """
         if not decoded:
             return
@@ -564,6 +573,8 @@ class RecordStore:
             for reference in constrained:
                 target_key = (reference.record_id, reference.revision)
                 diagnostic = f"{reference.relationship} target {reference.record_id}@{reference.revision}"
+                if type(value) is CorpusManifest:
+                    diagnostic = f"corpus {key[0]}@{key[1]} {diagnostic}"
                 target = envelopes.get(target_key)
                 if target is None:
                     try:
@@ -587,6 +598,30 @@ class RecordStore:
                     raise ReferenceResolutionError(f"{diagnostic}: expected manifest product_kind reading_report")
                 if target_key not in processed:
                     worklist.append(target_key)
+
+        # Metadata-only closure includes every mandatory corpus predecessor. Validate
+        # every reachable snapshot, including generic-admitted typed payloads, without
+        # turning either a prior receipt or a shallow occurrence into certification.
+        corpora = {}
+        for key, value in values.items():
+            if type(value) is CorpusManifest:
+                corpora.setdefault(key[0], {})[key[1]] = value
+        for identity, revisions in corpora.items():
+            used_ids = set()
+            previous = None
+            for revision in sorted(revisions):
+                value = revisions[revision]
+                diagnostic = f"corpus {identity}@{revision}"
+                try:
+                    _validate_selection(value, values)
+                    if revision > 1 and revision - 1 not in revisions:
+                        raise DomainValidationError("supersedes: incomplete corpus history")
+                    _validate_successor(value, previous, used_ids)
+                except DomainValidationError as error:
+                    predecessor = (f" supersedes target {identity}@{revision - 1}"
+                                   if revision > 1 else " baseline")
+                    raise ReferenceResolutionError(f"{diagnostic}{predecessor}: {error}") from error
+                previous = value
 
         for record, value in zip(submission.records, decoded):
             if type(value) is not Review:
@@ -648,13 +683,14 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source]:
+    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest]:
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise
         NotTypedContentError and other codec failures raise DomainValidationError.
         This checks selected-envelope coherence, not past admission or scientific
-        validity. Manifest/Source supersession is checked locally against identity/revision.
+        validity. Work-product/Source/corpus supersession is checked locally against identity/revision;
+        corpus reads do not traverse or certify historical admission.
         It never traverses targets or establishes review route membership.
         """
         envelope = self.get_revision(record_id, revision)

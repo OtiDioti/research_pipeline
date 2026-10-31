@@ -14,7 +14,7 @@ an intentionally separate paper example.
 and exact envelope-link coherence for four scientific kinds.
 `research_pipeline.assessment` adds [attributed Review/Issue contracts](attributed-assessments.md)
 with a distinct format. `submit_typed` provides durable structural admission for
-all eight kinds, including [work-product manifests](work-products.md) and [Source captures](sources.md), and checks
+all nine kinds, including [work-product manifests](work-products.md), [Source captures](sources.md) and [corpus inventories](corpus.md), and checks
 exact review route-conclusion membership; `get_typed_revision` returns an exact
 envelope and decoded value. `submit` remains a trusted generic persistence API,
 not a scientific admission gate: generic submission resolves
@@ -226,8 +226,8 @@ No installation or package-level re-exports are needed.
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
 | `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
 | `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
-| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all eight supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
-| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product or Source value. No historical admission certificate. |
+| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all nine supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
+| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source or corpus value. No historical admission certificate. |
 | `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
 | `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
 | `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |
@@ -437,3 +437,16 @@ There is no duplicate resource charging guarantee without a ledger. This slice
 completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
 validation. M0-S gates scientifically dependent evaluation, qualification and
 release, not independent storage engineering; all scientific obligations remain.
+
+
+## Immutable seed inventories
+
+[Corpus manifests](corpus.md) use the existing schema-2 corpus_manifest kind and
+submission/read boundaries. They preserve complete attributed snapshots, exact
+Source selections, original-path mappings and unresolved declarations, with a
+mandatory immediate-predecessor chain to baseline. Admission validates original
+and location membership per occurrence and every historical entry diff/binding
+inside the existing transaction. Selected originals are direct attachments;
+transitive closure is metadata-only. Generic submission, original-ID reconciliation,
+CAS, migration and backup formats/algorithms remain unchanged. Inventory storage
+confers neither readiness nor scientific authority.

@@ -35,6 +35,14 @@ produce a usage error (status 2). There is no research command or console-script
 interface. Explicit candidate-source paths avoid relying on an editable install
 from another checkout.
 
+The full validation process must inherit `RLIMIT_NOFILE` soft=4096 within its
+existing hard limit. In the launching shell, after confirming the hard limit is
+at least 4096, set `ulimit -S -n 4096` before running the unchanged validator.
+This is a per-process prerequisite, not a persistent host setting. Source capture
+holds selected file descriptors through the integrity gate; the 1,024-selected-file
+case needs that capacity. Descriptor exhaustion is an ordinary
+`CheckoutOperationalError`, not a reason to relax capture checks or skip tests.
+
 Direct unittest discovery provides useful development feedback. The validator also
 checks root layout, required documents, candidate import origin, clean nonempty
 discovery, and at least one executed successful case. Skipped and expected-failure
@@ -83,7 +91,7 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
 evidence, strict codecs, exact role projection and runnable codec/persistence examples.
-`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest and Source kinds
+`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest, Source and corpus-manifest kinds
 as coherent exact typed target graphs atomically;
 `get_typed_revision` returns the exact envelope and decoded value. `submit` remains
 a trusted generic persistence API, not a scientific admission gate. Typed retries
@@ -161,3 +169,11 @@ remain supported. The runnable synthetic example executes no parser and reads no
 paper. [Bounded local Source capture](../docs/source-capture.md) adds explicit file
 selection, strict saved proposals, separate commit and original-ID recovery.
 Scientific readiness and D02/D03/M0-S qualifications remain partial/pending.
+
+
+[Immutable seed inventories](../docs/corpus.md) add pure bounded CorpusManifest
+values and exact durable selection/history checks over Source captures. The ninth
+typed kind keeps original baselines, attributed declarations, inert locators and
+explicit replacement identities through restart and backup. Direct selected
+originals are verified; transitive closure remains metadata-only. There is no
+project readiness, scientific support, operating grant or new proposal format.
