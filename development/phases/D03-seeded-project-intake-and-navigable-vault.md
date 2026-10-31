@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** PARTIAL; REQ-D03-001 Source/local capture accepted/exact-integrated at d8dffdd248495fb18627f3740e77111cbe13a438 with 343/343 target tests; REQ-D03-002 inventory prepared. Full intake/readiness/vault outcomes remain incomplete.
+**State:** PARTIAL; REQ-D03-001 Source/local capture accepted/exact-integrated at d8dffdd248495fb18627f3740e77111cbe13a438 with 343/343 target tests; REQ-D03-002 immutable corpus inventory accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251f0ac with 369/369 target tests; REQ-D03-003 project/intake dossier prepared. Full intake/readiness/vault outcomes remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -59,3 +59,7 @@ REQ-D02-006 is now accepted/exact-integrated at a56111f3 with 291/291 tests, clo
 [REQ-D03-001 evidence](../runs/7b46536e-42ac-4537-a720-beaaa5a34490.md) establishes exact Source history/lineage and bounded inert local capture, saved proposals, CAS/retry, real mutation/fault/backup cases and 343/343 target tests at d8dffdd. Two reviewed repairs resolved; one coordinator descriptor-limit recovery is recorded separately. Full original corpus/readiness, archives, faithful parsing, actual visibility/permission enforcement and protected navigable snapshots remain required.
 
 [REQ-D03-002](../requests/REQ-D03-002.md) is the next one-milestone immutable corpus-inventory/history feature. It consumes accepted Source/storage contracts, preserving exact original mappings, partial/unavailable material and attributed relationships. Project setup/readiness authority and vault publication are subsequent bounded slices; an empty or populated inventory grants neither research readiness nor scientific support.
+
+## Corpus integration checkpoint — 2026-10-31
+
+REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251f0ac, final receipt 47a10bdb59044535aba14572e86164abb22ed56c8704e6be7ea58146c6d53785, 369/369 target tests; [run evidence](../runs/f746e33a-7475-44dc-b8bf-4613130fba79.md). The ninth typed contract preserves exact seed inventories, original baseline and replacement history, per-entry Source locations, unresolved links and attributed partial observations with actual restart/recovery/backup evidence. One safe-directory fixture/example repair preserved production safeguards. Overall phase remains PARTIAL: project/intake/readiness, authorized admission, full vault layout/generation/edit protection, remaining core/authority/resource contracts and scientific evaluation are not completed. Next bounded [REQ-D03-003](../requests/REQ-D03-003.md) prepares versioned project/intake dossiers; proposed readiness is not an operational grant.

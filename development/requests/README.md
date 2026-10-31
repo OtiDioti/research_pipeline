@@ -6,4 +6,10 @@ Each request is a bounded, committed implementation assignment. Use [the templat
 
 Before launch, commit the exact request with its referenced materials and validation policy. CWI snapshots supplied request/context inputs. Editing a source file after start does not change the frozen assignment. Use a new request/run to change scope after safely resolving the earlier run. Do not attempt to replace the frozen input in retained controller state.
 
+## Historical checkpoint before REQ-D02-004-R1
+
 REQ-D02-001 is finally accepted and integrated. [REQ-D02-002 backup/restoration](REQ-D02-002.md) is also accepted/integrated, under specification v1.4 and AUTH revision 4. [REQ-D02-003 typed provisional records](REQ-D02-003.md) is accepted/integrated. REQ-D02-004 attempt 1 stopped without product changes on a diagnosed Writer/controller validation-context mismatch. Current corrected replacement: [REQ-D02-004-R1](REQ-D02-004-R1.md); all product acceptance remains intact. Preserve the original request/run; commit the correction and verify exact-baseline readiness before launch. Earlier D01 requests remain historical frozen v1.3 inputs; no old request is rewritten.
+
+## Current prepared request — 2026-10-31
+
+[REQ-D03-001](REQ-D03-001.md) and [REQ-D03-002](REQ-D03-002.md) are accepted, exactly integrated and target-validated at d8dffdd/7d6dd624. [REQ-D03-003](REQ-D03-003.md) prepares the next bounded project/intake dossier. Its launch must follow the committed checkpoint and existing grant; all original request files retain their frozen history.

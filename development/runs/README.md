@@ -24,3 +24,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [8dc45005 — REQ-D02-005-R1](8dc45005-5187-4be0-a009-dece7c493f2b.md): attributed reviews/issues accepted/exact-integrated, 204/204; retained failed predecessor and one deadline recovery.
 - [2b6ed304 — REQ-D02-006](2b6ed304-5044-45b5-adcd-a8be9c3e314d.md): work-product bundles and safe draft round trips accepted/exact-integrated, 291/291.
 - [7b46536e — REQ-D03-001](7b46536e-42ac-4537-a720-beaaa5a34490.md): Source history/local capture accepted/exact-integrated d8dffdd, target 343/343 after documented descriptor-limit recovery; continuous start 10/50, two CWI repairs.
+
+- [f746e33a — REQ-D03-002](f746e33a-7475-44dc-b8bf-4613130fba79.md): immutable corpus inventory accepted/exact-integrated 7d6dd624, 369/369 target tests; one directory-fixture repair; continuous start 11/50.
