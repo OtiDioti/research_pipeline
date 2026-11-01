@@ -125,3 +125,8 @@ REQ-D04-001 / CWI 6eaf6f92-ec81-4d73-b83d-9b97a30cfb02 is finally accepted and e
 Strict opt-in schema 3, verified 2→3 backup migration, protected hierarchical reservations, attributed partial/complete usage, conservative/authoritative settlement, exact retries, sticky breach gates, coherent snapshot 2 and crash/reopen/backup recovery are evidenced. Default schema 2, old DDL/migrations and scientific records/artifacts remain intact. Resource declarations do not authenticate grants, admit research or establish service-enforced caps. Actual authority/readiness, lifecycle/fencing, dispatch, model/tool/context, mandatory reporting hooks and scientific qualification remain required.
 
 Two CWI repairs resolved handoff prescription and provable unsampled invocation excess. Seventy-one added test methods preserve 707 predecessor tests/permanent validator. No backend/grant/scientific change.
+
+
+## 2026-11-01 — Human-requested graceful shutdown
+
+Stopped REQ-D04-002 during first-milestone review through the existing controller signal handler; all owned processes exited. Preserved unaccepted candidate2e4343890e51 and its806/806 evidence, with publication unimplemented. Last accepted/integrated product remainsb13fff0. Reconciled20/50 starts,30remaining and unknown cancelled-reviewer usage; no product/backend change, integration or new run. Saved complete handoff in local/live.md.

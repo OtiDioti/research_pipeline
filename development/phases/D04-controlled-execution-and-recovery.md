@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. REQ-D04-001 resource accounting is accepted, exact-integrated and target-validated. REQ-D04-002 deterministic reporting is prepared; controlled research execution is not yet implemented.
+**State:** PARTIAL. REQ-D04-001 resource accounting is accepted, exact-integrated and target-validated. REQ-D04-002 deterministic reporting has an unaccepted capture candidate preserved after human-requested shutdown; controlled research execution is not yet implemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -55,3 +55,10 @@ Under specification v1.4, relevant implemented predecessor contracts and determi
 REQ-D04-001 / CWI 6eaf6f92-ec81-4d73-b83d-9b97a30cfb02 is finally accepted and exact-integrated at b13fff0a2e26acba9b4b9bad3dde430207e4eaab, tree 202546e8128e7c7f31b7e6f5be86f4028656764f, final receipt f37a74adf475689ab0110ccc7e37095c2fe5c48fea996f322457c4c55d2f58ce. Final controller 778/778 in 496.704s; integrated target 778/778 in 495.886s, zero skips/failures/errors and unchanged clean source. Target completed 2026-11-01T03:34:59.250932+00:00, stdout SHA-256 ef9b8636d8d14e4414e348652585f6c6ef551c1d211127ee92fe3feebd426c4f, empty stderr. [Run evidence](../runs/6eaf6f92-ec81-4d73-b83d-9b97a30cfb02.md). Strict opt-in schema 3, verified 2→3 backup migration, protected hierarchical reservations, attributed partial/complete usage, conservative/authoritative settlement, exact retries, sticky breach gates, coherent snapshot 2 and crash/reopen/backup recovery are evidenced. Default schema 2, old DDL/migrations and scientific records/artifacts remain intact. Resource declarations do not authenticate grants, admit research or establish service-enforced caps. Actual authority/readiness, lifecycle/fencing, dispatch, model/tool/context, mandatory reporting hooks and scientific qualification remain required.
 
 [REQ-D04-002](../requests/REQ-D04-002.md) next provides persisted report inputs/coherent capture, seven content groups, deterministic rendering and immutable publication/recovery. It does not supply automatic per-admitted-run guarantees before lifecycle integration; phase boxes remain unchecked.
+
+
+## Human-requested shutdown — 2026-11-01
+
+REQ-D04-002 / CWI 6ae8ca11-0df2-48e2-abc8-65d51adaa187 was stopped at the human’s explicit resource-conservation request. Provisional 2e4343890e519075915e2d25b4bf18875d2ef8a9 passed 806/806 controller tests and the complete-base diff check; first-milestone Reviewer was cancelled, zero milestones/final receipts exist, and nothing from this request was integrated. STOPPED_INCOMPLETE, no lease/quarantine/live execution; retained pending_authoritative_operation is a recovery record, not a running process. CWI says resume_allowed=false and new_run_after_manual_salvage. Preserve the candidate and all old work; do not replay/resume or start another workflow in this session.
+
+Phase remains PARTIAL. Preserve the capture draft for future CWI-only salvage and review; immutable report publication/navigation has not begun. Current session must stop; future execution grant remains subject to reconciliation and resources. See [run record](../runs/6ae8ca11-0df2-48e2-abc8-65d51adaa187.md) and local/live.md.

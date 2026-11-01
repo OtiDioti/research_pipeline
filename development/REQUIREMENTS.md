@@ -279,3 +279,8 @@ REQ-D04-001 / CWI 6eaf6f92-ec81-4d73-b83d-9b97a30cfb02 is finally accepted and e
 - R-017–R-019/R-092 support: explicit schema 3/verified2→3 migration, exact historical scientific/artifact closure, shared strict replay, coherent snapshots, real interruption/hot-journal/commit/close/race/backup/tamper evidence; old schema/migrations intact.
 
 All 94 mandatory rows preserved. These rows/full D02/D03/D04/M0-E remain PARTIAL. Next [REQ-D04-002](requests/REQ-D04-002.md) commissions bounded R-051–R-053 with supporting R-017–R-019/R-025–R-027/R-031/R-092. Automatic lifecycle/report/restart hooks, actual readiness/grants/fencing/dispatch/context/tools/verification and M0-S R-001–R-003 remain mandatory. Synthetic tests do not establish scientific performance.
+
+
+## Report candidate interrupted before acceptance — 2026-11-01
+
+REQ-D04-002 / [stopped run 6ae8ca11-0df2-48e2-abc8-65d51adaa187](runs/6ae8ca11-0df2-48e2-abc8-65d51adaa187.md) preserves candidate2e4343890e51 with806/806 controller validation. No Reviewer acceptance, milestone/final receipt or integration exists. R-051–R-053 and supporting storage/vault/recovery obligations are not promoted by these tests; immutable publication/navigation and lifecycle gates remain unimplemented. Existing b13fff0 resource evidence remains accepted/integrated. Human shutdown changes no specification or scientific acceptance requirement.

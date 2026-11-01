@@ -59,3 +59,10 @@ REQ-D04-001 / CWI 6eaf6f92-ec81-4d73-b83d-9b97a30cfb02 is finally accepted and e
 Strict opt-in schema 3, verified 2→3 backup migration, protected hierarchical reservations, attributed partial/complete usage, conservative/authoritative settlement, exact retries, sticky breach gates, coherent snapshot 2 and crash/reopen/backup recovery are evidenced. Default schema 2, old DDL/migrations and scientific records/artifacts remain intact. Resource declarations do not authenticate grants, admit research or establish service-enforced caps. Actual authority/readiness, lifecycle/fencing, dispatch, model/tool/context, mandatory reporting hooks and scientific qualification remain required.
 
 Both internal CWI repairs are resolved: handoff-bound prescription clarification and final-review F-001 unsampled invocation excess. Historical failed advisory/terminal attempts and recovery counts remain preserved. No new unresolved defect, coordinator recovery or backend blocker. All remaining grant/readiness/lifecycle/fencing/context/tool/report/scientific duties stay mandatory.
+
+
+## Human-requested stop; report candidate retained — 2026-11-01
+
+REQ-D04-002 / CWI 6ae8ca11-0df2-48e2-abc8-65d51adaa187 was stopped at the human’s explicit resource-conservation request. Provisional 2e4343890e519075915e2d25b4bf18875d2ef8a9 passed 806/806 controller tests and the complete-base diff check; first-milestone Reviewer was cancelled, zero milestones/final receipts exist, and nothing from this request was integrated. STOPPED_INCOMPLETE, no lease/quarantine/live execution; retained pending_authoritative_operation is a recovery record, not a running process. CWI says resume_allowed=false and new_run_after_manual_salvage. Preserve the candidate and all old work; do not replay/resume or start another workflow in this session.
+
+This is an explicit operational stop, not a new product defect or resource-budget reset. Persistent report late-usage coverage still needs assessment; independent exact-candidate late-usage validation passed. No scientific requirement is relaxed. See development/runs/6ae8ca11-0df2-48e2-abc8-65d51adaa187.md and local/live.md.

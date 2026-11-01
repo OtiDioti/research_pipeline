@@ -150,3 +150,8 @@ Final review of REQ-D04-001 found cumulative receipts can prove excess without p
 ## DEV-050 — Minimum reporting before admitted execution — 2026-11-01
 
 Reuse scientific SQLite/artifact/work-product and protected-view mechanisms for deterministic reports. Capture exact scientific/resource state coherently once, persist attributed interpretation and saved continuation, then render/publish immutable dated revisions without a model, tool or new inference. Preserve old formats and original retry identities. No new schema is presumed; Architect fixes minimal compatible contracts. Generic run records/readiness proposals/resource accounts cannot authenticate admission/termination. Automatic initial/checkpoint/stop and pending-report-before-restart hooks remain mandatory before admitted research. Two milestones/high effort address capture, commits and filesystem recovery; no scientific/authority change.
+
+
+## DEV-051 — Preserve cancelled report candidate without implying acceptance — 2026-11-01
+
+The human explicitly requested immediate resource-conserving shutdown. Existing controller SIGTERM handling safely cancelled the read-only Reviewer; independent host checks establish process exit. CWI retains STOPPED_INCOMPLETE and pending_authoritative_operation, with resume disallowed. Preserve2e4343890e51, its passing validation and all frozen artifacts; do not manufacture a review verdict or replay the turn. A future CWI-only replacement may salvage the exact draft after reconciliation. Terminal owner-free state permits an administrative shutdown checkpoint, while product refs, controller state and old worktrees stay untouched. Future CONTINUOUS authorization is not revoked; this session must not restart.

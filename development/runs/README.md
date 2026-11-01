@@ -34,3 +34,6 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [7ee32819 — REQ-D03-004-R1](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md): protected offline readable snapshots finally accepted/exact-integrated c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests; two milestone repairs, both frozen checks passed, continuous start 14/50. Resolves the missing-check recovery while preserving its terminal predecessor; no backend change. Current safe session/context checkpoint has twelve integrated results and three terminal failures, no active run.
 
 - [6eaf6f92 — REQ-D04-001](6eaf6f92-ec81-4d73-b83d-9b97a30cfb02.md): resource accounting finally accepted/exact-integrated b13fff0; controller/target 778/778, continuousstart19/50, twointernalrepairs, no coordinator recovery/backend change.
+
+
+- [6ae8ca11 — REQ-D04-002 shutdown](6ae8ca11-0df2-48e2-abc8-65d51adaa187.md): human-requested cancellation during first-milestone review; provisional2e4343890e51,806/806 validation,zero acceptance/integration; nonresumable terminal state preserved; continuousstart20/50,30remaining.

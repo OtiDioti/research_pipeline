@@ -107,3 +107,10 @@ REQ-D04-001 / CWI 6eaf6f92-ec81-4d73-b83d-9b97a30cfb02 is finally accepted and e
 Strict opt-in schema 3, verified 2→3 backup migration, protected hierarchical reservations, attributed partial/complete usage, conservative/authoritative settlement, exact retries, sticky breach gates, coherent snapshot 2 and crash/reopen/backup recovery are evidenced. Default schema 2, old DDL/migrations and scientific records/artifacts remain intact. Resource declarations do not authenticate grants, admit research or establish service-enforced caps. Actual authority/readiness, lifecycle/fencing, dispatch, model/tool/context, mandatory reporting hooks and scientific qualification remain required.
 
 Next ready [REQ-D04-002](development/requests/REQ-D04-002.md) provides committed report capture and protected publication before actual admission. Automatic lifecycle hooks and full D04/M0-E remain required; scientific holds gate dependent work only. STATUS owns the single next safe action.
+
+
+## Human-requested resource-conservation stop — 2026-11-01
+
+REQ-D04-002 / CWI 6ae8ca11-0df2-48e2-abc8-65d51adaa187 was stopped at the human’s explicit resource-conservation request. Provisional 2e4343890e519075915e2d25b4bf18875d2ef8a9 passed 806/806 controller tests and the complete-base diff check; first-milestone Reviewer was cancelled, zero milestones/final receipts exist, and nothing from this request was integrated. STOPPED_INCOMPLETE, no lease/quarantine/live execution; retained pending_authoritative_operation is a recovery record, not a running process. CWI says resume_allowed=false and new_run_after_manual_salvage. Preserve the candidate and all old work; do not replay/resume or start another workflow in this session.
+
+D04 remains at the report primitive boundary; next engineering work requires preserved-draft salvage/review and the unimplemented publication milestone before broader admission/lifecycle work. STATUS and local/live.md supersede earlier “next ready” launch statements. Future authority remains; current session is stopped.
