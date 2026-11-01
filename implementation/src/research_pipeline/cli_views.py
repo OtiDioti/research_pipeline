@@ -9,7 +9,7 @@ from pathlib import Path
 from research_pipeline import checkout, cli_proposals, vault, view_refresh
 from research_pipeline.artifacts import ArtifactIntegrityError, ArtifactNotFoundError, ArtifactLayoutError
 from research_pipeline.cli_controls import (
-    CliError, _ControlDirectories, causes, path_value, read_config, read_observed_control,
+    CliError, _ObservedDirectories, causes, path_value, read_config, read_observed_control,
     read_selection, read_readable_limits, source_root,
 )
 from research_pipeline.domain import DomainValidationError
@@ -87,7 +87,7 @@ def _baseline(arguments, limits, exclusions):
     path = arguments.baseline_manifest
     checkout._outside(path, (*exclusions, arguments.prior_view, arguments.destination))
     with ExitStack() as stack:
-        directories = _ControlDirectories(stack)
+        directories = _ObservedDirectories(stack)
         try:
             parent = directories.traverse(path.parent, private=True, exact=True)
             before = checkout._stat(parent, path.name)
@@ -145,55 +145,96 @@ def _reservation(arguments, snapshot, plan, prior=None, baseline_hash=None):
                 same_plan=False, verification="verified_at_refresh", baseline_manifest_sha256=baseline_hash)
 
 
+def _check_admission_failure(directories, error):
+    """Recheck live adapter pins when missing/layout admission errors could conceal their loss.
+
+    Definite collisions and actual I/O/resource errors keep their original diagnosis.
+    Call only before the admission stack closes; unchanged pins preserve the error.
+    """
+    chain = tuple(causes(error))
+    if (not any(isinstance(cause, OSError) and cause.errno not in
+                (errno.ENOENT, errno.ENOTDIR, errno.ELOOP, errno.ESTALE) for cause in chain)
+            and (isinstance(error, (checkout.CheckoutLayoutError, vault.ViewLayoutError,
+                                   StoreLayoutError, ArtifactLayoutError))
+                 or isinstance(error, CliError) and error.code in ("missing", "unsafe_layout")
+                 or any(isinstance(cause, FileNotFoundError) for cause in chain))):
+        directories.check()
+
+
 def _inspect_view(arguments, view, exclusions, context):
-    """Pin a bounded manifest admission pass and require the subsequent inspection to match that observation."""
+    """Pin manifest and ancestor observations through inspection, rejecting mutation even on failed passes."""
     path = arguments.view
     checkout._outside(path, exclusions)
     _admit(view, (path,))
     with ExitStack() as stack:
-        directories = checkout._Directories(stack)
+        directories = _ObservedDirectories(stack)
         try:
             area = directories.traverse(path, private=True)
+        except checkout.CheckoutIntegrityError:
+            raise
         except Exception as error:
             if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
+                # Verify earlier pins before treating ENOENT as initial absence.
+                directories.check()
                 raise CliError(3, "missing", "Explicit view root or ancestor is missing.") from error
             raise
-        _ancestors(directories, path, initial_preparation=True)
-        data, before = read_observed_control(area, "manifest.json", path / "manifest.json",
-                            min(arguments.max_manifest_bytes, view["plan_limits"].max_file_bytes,
-                                view["plan_limits"].max_total_bytes), modes=(0o400, 0o600))
-        # Keep the original observation pinned across the second, independently
-        # bounded API pass; equal hashes alone do not conceal a replaced inode.
-        stack.enter_context(checkout._leaf(area, "manifest.json", path / "manifest.json",
-                            mode=before.st_mode & 0o777, expected=before))
+        try:
+            _ancestors(directories, path, initial_preparation=True)
+            data, before = read_observed_control(area, "manifest.json", path / "manifest.json",
+                                min(arguments.max_manifest_bytes, view["plan_limits"].max_file_bytes,
+                                    view["plan_limits"].max_total_bytes), modes=(0o400, 0o600))
+            # Keep the original observation pinned across the second, independently
+            # bounded API pass; equal hashes alone do not conceal a replaced inode.
+            stack.enter_context(checkout._leaf(area, "manifest.json", path / "manifest.json",
+                                mode=before.st_mode & 0o777, expected=before))
+        except Exception as error:
+            _check_admission_failure(directories, error)
+            raise
         plan = _historical(data, view["plan_limits"])
         digest = hashlib.sha256(data).hexdigest()
         context.update(snapshot_id=plan.snapshot_id, plan_id=plan.plan_id, manifest_sha256=digest)
         if arguments.expected_plan_id is not None and arguments.expected_plan_id != plan.plan_id:
             raise vault.ViewIntegrityError("expected plan identity disagrees")
         _admit(view, (path,), plan)
+        inspection_error = None
         try:
             observed = vault._inspect_readable_view(path, limits=view["plan_limits"], max_entries=view["max_entries"],
                 expected_plan_id=plan.plan_id, manifest_maximum=arguments.max_manifest_bytes)
+        except (Exception, KeyboardInterrupt) as error:
+            inspection_error = error
+            raise
         finally:
-            # Mutation remains an integrity failure even if the second pass
-            # rejects its enlarged descriptor before reading the extra bytes.
             try:
-                current = checkout._stat(area, "manifest.json")
-            except FileNotFoundError as error:
-                raise vault.ViewIntegrityError("admitted manifest disappeared") from error
-            if checkout._signature(current) != checkout._signature(before):
-                raise vault.ViewIntegrityError("manifest changed between admission and inspection")
+                # Mutation remains an integrity failure even if the second pass
+                # rejects its enlarged descriptor before reading the extra bytes.
+                try:
+                    current = checkout._stat(area, "manifest.json")
+                except FileNotFoundError as error:
+                    raise vault.ViewIntegrityError("admitted manifest disappeared") from error
+                if checkout._signature(current) != checkout._signature(before):
+                    raise vault.ViewIntegrityError("manifest changed between admission and inspection")
+                directories.check()
+            except (checkout.CheckoutIntegrityError, checkout.CheckoutLayoutError,
+                    vault.ViewIntegrityError) as error:
+                if inspection_error is not None:
+                    # Retain inspector I/O when final verification diagnoses mutation;
+                    # operational verification failures keep their own I/O causes.
+                    raise error from inspection_error
+                raise
         if ((observed.snapshot_id, observed.plan_id, observed.manifest_sha256)
                 != (plan.snapshot_id, plan.plan_id, digest)):
             raise vault.ViewIntegrityError("manifest identity changed between admission and inspection")
-        directories.check()
-        _ancestors(directories, path, initial_preparation=True)
+        try:
+            directories.check()
+            _ancestors(directories, path, initial_preparation=True)
+        except Exception as error:
+            _check_admission_failure(directories, error)
+            raise
     return dict(view=str(path), **asdict(observed), historical_acknowledgment="not_established")
 
 
 def execute(arguments, context, effects):
-    """Validate independent controls and boundaries, delegate once, and close all inputs before acknowledgment."""
+    """Verify live admission pins on missing/layout failures, then delegate once and close before acknowledgment."""
     from research_pipeline.cli import _destination, _open_store, _result
     command = arguments.command
     source = source_root()
@@ -221,10 +262,14 @@ def execute(arguments, context, effects):
         if len(arguments.destination.parent.parts) + 1 > limits["refresh_limits"].max_open_descriptors:
             raise SnapshotLimitError("ancestor descriptor allowance exceeded")
         with ExitStack() as stack:
-            directories = checkout._Directories(stack)
-            directories.traverse(arguments.destination.parent, private=True, exact=True)
-            _ancestors(directories)
-            directories.check()
+            directories = _ObservedDirectories(stack)
+            try:
+                directories.traverse(arguments.destination.parent, private=True, exact=True)
+                _ancestors(directories)
+                directories.check()
+            except Exception as error:
+                _check_admission_failure(directories, error)
+                raise
         result = dict(attempt_path=str(arguments.attempt), destination=str(arguments.destination),
             **asdict(view_refresh.inspect_readable_refresh(arguments.attempt, arguments.destination,
                 source_root=source, protected_roots=(runtime, *roots, *controls),
@@ -245,37 +290,49 @@ def execute(arguments, context, effects):
         _admit(limits["view_limits"], (arguments.destination.parent, runtime))
     with ExitStack() as stack:
         guard_stack = stack.enter_context(ExitStack())
-        directories = checkout._Directories(guard_stack)
-        _destination(directories, arguments.destination,
-                     (*exclusions, *((arguments.prior_view,) if prior else ())))
-        _ancestors(directories)
-        if prior is not None:
-            # Close this admission chain before refresh performs its own nested
-            # descriptor accounting; no extra prior pins escape this block.
-            with ExitStack() as prior_stack:
-                prior_dirs = checkout._Directories(prior_stack)
-                try:
-                    prior_dirs.traverse(arguments.prior_view, private=True)
-                except Exception as error:
-                    if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
-                        raise CliError(3, "missing", "Explicit prior root or ancestor is missing.") from error
-                    raise
-                _ancestors(prior_dirs, arguments.prior_view)
-                prior_dirs.check()
-        store = _open_store(stack, directories, runtime)
-        captured = store.capture_snapshot(selected, limits=limits["snapshot_limits"])
-        plan = plan_readable_snapshot(captured)
-        snapshot = captured.to_dict()
-        if prior is None:
-            _historical(plan.manifest_bytes, limits["view_limits"]["plan_limits"])
-            _admit(limits["view_limits"], (arguments.destination.parent, runtime), plan, copying=True)
-            context.update(snapshot_id=plan.snapshot_id, plan_id=plan.plan_id,
-                           manifest_sha256=hashlib.sha256(plan.manifest_bytes).hexdigest())
-        else:
-            context.update(successor_snapshot_id=plan.snapshot_id, successor_plan_id=plan.plan_id)
-        reserved = _reservation(arguments, snapshot, plan, prior, baseline_hash)
-        _result(command, reserved, arguments.max_output_bytes)
-        directories.check()
+        directories = _ObservedDirectories(guard_stack)
+        try:
+            _destination(directories, arguments.destination,
+                         (*exclusions, *((arguments.prior_view,) if prior else ())))
+            _ancestors(directories)
+            if prior is not None:
+                # Close this admission chain before refresh performs its own nested
+                # descriptor accounting; no extra prior pins escape this block.
+                with ExitStack() as prior_stack:
+                    prior_dirs = _ObservedDirectories(prior_stack)
+                    try:
+                        prior_dirs.traverse(arguments.prior_view, private=True)
+                    except checkout.CheckoutIntegrityError:
+                        raise
+                    except Exception as error:
+                        if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
+                            # The prior chain is still live here; ENOENT may hide its loss.
+                            prior_dirs.check()
+                            raise CliError(3, "missing", "Explicit prior root or ancestor is missing.") from error
+                        raise
+                    try:
+                        _ancestors(prior_dirs, arguments.prior_view)
+                        prior_dirs.check()
+                    except Exception as error:
+                        _check_admission_failure(prior_dirs, error)
+                        raise
+            store = _open_store(stack, directories, runtime)
+            captured = store.capture_snapshot(selected, limits=limits["snapshot_limits"])
+            plan = plan_readable_snapshot(captured)
+            snapshot = captured.to_dict()
+            if prior is None:
+                _historical(plan.manifest_bytes, limits["view_limits"]["plan_limits"])
+                _admit(limits["view_limits"], (arguments.destination.parent, runtime), plan, copying=True)
+                context.update(snapshot_id=plan.snapshot_id, plan_id=plan.plan_id,
+                               manifest_sha256=hashlib.sha256(plan.manifest_bytes).hexdigest())
+            else:
+                context.update(successor_snapshot_id=plan.snapshot_id, successor_plan_id=plan.plan_id)
+            reserved = _reservation(arguments, snapshot, plan, prior, baseline_hash)
+            _result(command, reserved, arguments.max_output_bytes)
+            directories.check()
+        except Exception as error:
+            _check_admission_failure(directories, error)
+            raise
         # The refresh API accounts for its own held chains. Release adapter
         # admission pins before entry rather than adding hidden descriptors.
         guard_stack.close()

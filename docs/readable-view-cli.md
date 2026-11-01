@@ -95,8 +95,24 @@ actual content is small. Embedded limits are never rewritten to force admission.
 Controls are owned single-link regular leaves, mode `0400` or `0600`, in existing
 owned `0700` parents. Held no-follow directories and bounded reads with EOF probes,
 binding comparisons and checked closes reject observed replacement, growth,
-truncation and disappearance of held ancestors as integrity failures. Initially
-absent explicit inputs remain missing-input failures. Parents are never created.
+truncation and disappearance of held ancestors as integrity failures. Readable
+admission retains the first no-follow directory observation through acquisition:
+loss or replacement after that observation is an integrity failure, including a
+safe-directory replacement or a non-directory/symlink substitution. Selected-view
+pins remain live through the real inspector and its final verification. Prior-view,
+writer destination/runtime and refresh-inspection parent pins are checked before
+their admission guards close; these guards do not extend across publication or
+the separately budgeted refresh inspector.
+
+A missing next traversal component does not erase an earlier observation: held
+ancestors are rechecked before classifying absence. With stable ancestors, initially
+missing selected/prior view roots or parents, explicit authored inputs, and writer
+runtime roots remain `3/missing`. Missing writer destination parents and
+refresh-inspection preflight parents remain `5/unsafe_layout`, as do missing
+required runtime internals or selected-view manifests. Missing trusted configuration
+or its parent remains `5/invalid_input`. Initially unsafe types, symlinks, ownership,
+modes and excluded layouts remain unsafe; genuine I/O/resource and checked-close
+failures remain operational. Parents are never created.
 Paths are normalized lexically and limited to 4096 UTF-8 bytes, including derived
 output paths. Refresh admits its complete successor and preservation inventory
 (including native/authored descendants, empty directories and controls) beneath
@@ -196,12 +212,12 @@ Exit/code mapping uses the existing diagnostic envelope:
 | Exit | Meaning |
 | --- | --- |
 | 2 | bounded argparse usage error |
-| 3 / `missing` | explicit selection/limits/baseline/view or selected root absent; writer runtime absent |
+| 3 / `missing` | initially absent selection/limits/baseline or selected/prior view root/ancestor; writer runtime root/ancestor absent |
 | 4 / `conflict` | occupied destination or definite kernel no-replace collision |
 | 5 / `invalid_input` | malformed arguments/authored controls or noncanonical historical manifest; missing config retains this existing classification |
-| 5 / `unsafe_layout` | exclusions, ownership/mode/link/type/ancestor or portable-name ambiguity; missing internal required control |
+| 5 / `unsafe_layout` | exclusions, ownership/mode/link/type/ancestor or portable-name ambiguity; initially missing destination/refresh-inspection parent, runtime internal or selected-view manifest |
 | 5 / `limit_exceeded` | explicit count, byte, depth, descriptor or output allowance exceeded |
-| 6 / `integrity_error` | independent pins/expected identities disagree, mutation, corrupt metadata/artifacts or missing committed edge/artifact before publication |
+| 6 / `integrity_error` | independent pins/expected identities disagree; observed directory/held-ancestor loss or replacement (including before a missing next component); other mutation, corrupt metadata/artifacts or missing committed edge/artifact before publication |
 | 6 / `operational_error` | actual I/O/resource/open/close failure before publication |
 | 6 / `output_failed` | read-only output failure; repeat the same inspection and discard partial output |
 | 7 / `effects_uncertain` | rename may have executed, or writer returned and subsequent verification/sync/close/output failed; interruption without evidence excluding publication |

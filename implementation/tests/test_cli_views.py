@@ -1,10 +1,12 @@
 """Candidate-local subprocess coverage of immutable readable view CLI controls and recovery."""
 
+from contextlib import contextmanager
 from dataclasses import asdict
 import hashlib
 import json
 import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 import unittest
@@ -14,8 +16,10 @@ from unittest.mock import patch
 
 from research_pipeline import cli_views
 from research_pipeline.snapshot import RootSelector, SnapshotSelection
-from research_pipeline.view_plan import plan_readable_snapshot
+from research_pipeline.view_plan import plan_readable_snapshot, readable_plan_from_manifest
 from tests.view_refresh_fixtures import RefreshFixture, refresh_limits
+from tests.view_capture_fixtures import tree_state
+from research_pipeline.store import RecordStore
 from tests.snapshot_fixtures import limits
 from tests.test_store import record, request
 
@@ -109,6 +113,489 @@ class CliViewTests(RefreshFixture, unittest.TestCase):
         self.assertEqual(value["code"], code)
         self.assertEqual(set(value["context"]), set(cli_views.CONTEXT_FIELDS))
         return value["context"]
+
+    @contextmanager
+    def directory_case(self, boundary, *, missing=False, child=False, manifest=None):
+        """Nest real inputs, restoring permissions and completed moves even if setup or the body fails.
+
+        Yield CLI arguments and the acquired chain's leaf. Missing children and
+        manifest faults are deliberate fixture state established before snapshots.
+        Cross-parent moves temporarily enable owner writes, restored before CLI
+        execution. Refresh inspection uses a real publication and its actual attempt.
+        """
+        history = self.store.history("project")
+        high = self.parent / ("case-" + str(len(list(self.parent.iterdir()))))
+        middle, leaf = high / "middle", high / "middle" / "leaf"
+        original = None
+        manifest_changed = child_moved = store_closed = False
+        root_info = root_mode = manifest_mode = None
+        command = ("inspect-readable-view" if boundary == "selected" else
+                   "inspect-readable-refresh" if boundary == "refresh-inspection" else
+                   "refresh-readable-view" if boundary in ("prior", "refresh-destination", "refresh-runtime") else
+                   "generate-readable-view")
+        options = {}
+        try:
+            for path in (high, middle, leaf):
+                path.mkdir(mode=0o700)
+            if boundary in ("selected", "prior"):
+                leaf.rmdir()
+                root_info = self.view.stat()
+                root_mode = stat.S_IMODE(root_info.st_mode)
+                try:
+                    # Cross-parent directory moves need owner write on the moved root.
+                    self.view.chmod(root_mode | stat.S_IWUSR)
+                    self.view.rename(leaf)
+                    original = self.view
+                finally:
+                    (leaf if original is not None else self.view).chmod(root_mode)
+                options["view" if boundary == "selected" else "prior_view"] = leaf / "absent" if missing else leaf
+                if manifest == "missing":
+                    try:
+                        leaf.chmod(root_mode | stat.S_IWUSR)
+                        (leaf / "manifest.json").rename(leaf / "retained-manifest")
+                        manifest_changed = True
+                    finally:
+                        leaf.chmod(root_mode)
+                elif manifest is not None:
+                    manifest_mode = stat.S_IMODE((leaf / "manifest.json").stat().st_mode)
+                    (leaf / "manifest.json").chmod(0o644)
+                    manifest_changed = True
+            elif boundary.endswith("runtime"):
+                self.store.close()
+                store_closed = True
+                leaf.rmdir()
+                self.runtime.rename(leaf)
+                original = self.runtime
+                runtime = leaf / "absent" if missing and not child else leaf
+                if child and missing:
+                    (leaf / "objects").rename(leaf / "retained-objects")
+                    child_moved = True
+                options["config"] = self.control("nested-runtime-config", dict(
+                    format="research_pipeline.cli_config", version=1, store=str(runtime), protected_roots=[]))
+            elif boundary == "refresh-inspection":
+                result = self.refresh(destination=leaf / "published")
+                options.update(destination=leaf / "absent" / "output" if missing else result.destination,
+                               attempt=result.attempt_path)
+            else:
+                options["destination"] = leaf / "absent" / "output" if missing else leaf / "output"
+            arguments = self.arguments(command, **options)
+            if not store_closed:
+                self.store.close()
+                store_closed = True
+            if root_info is not None:
+                relocated = leaf.stat()
+                self.assertEqual((relocated.st_dev, relocated.st_ino, relocated.st_mode),
+                                 (root_info.st_dev, root_info.st_ino, root_info.st_mode))
+            yield arguments, leaf, history
+        finally:
+            # Each completed operation is unwound even if an earlier cleanup fails.
+            try:
+                if manifest_changed:
+                    if manifest == "missing":
+                        try:
+                            leaf.chmod(root_mode | stat.S_IWUSR)
+                            (leaf / "retained-manifest").rename(leaf / "manifest.json")
+                        finally:
+                            leaf.chmod(root_mode)
+                    else:
+                        (leaf / "manifest.json").chmod(manifest_mode)
+            finally:
+                try:
+                    if child_moved:
+                        (leaf / "retained-objects").rename(leaf / "objects")
+                finally:
+                    try:
+                        if original is not None:
+                            if root_info is not None:
+                                try:
+                                    leaf.chmod(root_mode | stat.S_IWUSR)
+                                    leaf.rename(original)
+                                    original = None
+                                finally:
+                                    (leaf if original is not None else self.view).chmod(root_mode)
+                                restored = self.view.stat()
+                                self.assertEqual((restored.st_dev, restored.st_ino, restored.st_mode),
+                                                 (root_info.st_dev, root_info.st_ino, root_info.st_mode))
+                            else:
+                                leaf.rename(original)
+                                original = None
+                    finally:
+                        # Never reopen a runtime whose reverse relocation failed.
+                        if store_closed and original != self.runtime:
+                            self.store = RecordStore.open(self.runtime)
+                            self.addCleanup(self.store.close)
+
+    def test_directory_case_restores_after_body_failure(self):
+        """Body failures restore exact view modes/inodes, manifest faults, runtime children and store access."""
+        for boundary in ("selected", "prior", "generate-runtime", "refresh-runtime"):
+            for manifest in (None, "missing", "unsafe") if boundary in ("selected", "prior") else (None,):
+                with self.subTest(boundary=boundary, manifest=manifest):
+                    # A valid alternate mode detects cleanup that assumes the original was 0400.
+                    (self.view / "manifest.json").chmod(0o600)
+                    view_before = tree_state(self.view)
+                    objects_before = tree_state(self.runtime / "objects")
+                    history = self.store.history("project")
+                    runtime_case = boundary.endswith("runtime")
+                    with self.assertRaisesRegex(RuntimeError, "context body failed"):
+                        with self.directory_case(boundary, manifest=manifest,
+                                                 missing=runtime_case, child=runtime_case) as (_, leaf, _):
+                            if not runtime_case:
+                                self.assertEqual(tree_state(leaf)["."], view_before["."])
+                                if manifest == "missing":
+                                    self.assertFalse((leaf / "manifest.json").exists())
+                                    self.assertEqual((leaf / "retained-manifest").read_bytes(), self.plan.manifest_bytes)
+                                elif manifest == "unsafe":
+                                    self.assertEqual(stat.S_IMODE((leaf / "manifest.json").stat().st_mode), 0o644)
+                            raise RuntimeError("context body failed")
+                    self.assertEqual(tree_state(self.view), view_before)
+                    self.assertEqual(tree_state(self.runtime / "objects"), objects_before)
+                    self.assertEqual(self.store.history("project"), history)
+
+    def test_directory_case_restores_after_argument_failure(self):
+        """Failures before yield unwind completed manifest/runtime moves and reopen only restored stores."""
+        for boundary, manifest in (("selected", "missing"), ("prior", "unsafe"),
+                                   ("generate-runtime", None), ("refresh-runtime", None)):
+            with self.subTest(boundary=boundary, manifest=manifest):
+                view_before = tree_state(self.view)
+                objects_before = tree_state(self.runtime / "objects")
+                history = self.store.history("project")
+                runtime_case = boundary.endswith("runtime")
+                with patch.object(self, "arguments", side_effect=RuntimeError("arguments failed")):
+                    with self.assertRaisesRegex(RuntimeError, "arguments failed"):
+                        with self.directory_case(boundary, manifest=manifest,
+                                                 missing=runtime_case, child=runtime_case):
+                            self.fail("argument construction should fail before yield")
+                self.assertEqual(tree_state(self.view), view_before)
+                self.assertEqual(tree_state(self.runtime / "objects"), objects_before)
+                self.assertEqual(self.store.history("project"), history)
+
+    def test_directory_case_restores_after_setup_rename_failure(self):
+        """Failed fixture root or manifest renames restore temporary modes and preserve the original tree."""
+        for failed_name in (self.view.name, "manifest.json"):
+            with self.subTest(failed_name=failed_name):
+                view_before = tree_state(self.view)
+                history = self.store.history("project")
+                real_rename = Path.rename
+
+                def rename(source, destination):
+                    """Fail the selected setup move while leaving reverse fixture relocation real."""
+                    if source.name == failed_name:
+                        raise PermissionError("fixture rename failed")
+                    return real_rename(source, destination)
+
+                with patch.object(Path, "rename", rename):
+                    with self.assertRaisesRegex(PermissionError, "fixture rename failed"):
+                        with self.directory_case("selected", manifest="missing"):
+                            self.fail("fixture rename should fail before yield")
+                self.assertEqual(tree_state(self.view), view_before)
+                self.assertEqual(self.store.history("project"), history)
+
+    def directory_mutation(self, boundary, seam, *, depth=0, replacement="absent",
+                           missing=False, child=False, manifest=None):
+        """Run one scoped real mutation and require exact retained trees, canonical history and no allocation.
+
+        Wrappers delegate actual stats, opens and inspectors. Only the selected
+        adapter chain is armed, once; restoration permits an exact whole-fixture
+        comparison as well as an independent comparison at the renamed location.
+        Combined I/O faults require operational precedence over the deliberate loss.
+        """
+        with self.directory_case(boundary, missing=missing, child=child, manifest=manifest) as (arguments, leaf, history):
+            target = leaf.parents[depth - 1] if depth else leaf
+            acquisition = leaf / ("objects" if child else "absent") if missing or child else target
+            if child and not missing:
+                target = acquisition
+            retained = target.with_name(target.name + "-retained")
+            before = tree_state(self.parent)
+            retained_before = tree_state(target)
+            runtime = leaf if boundary.endswith("runtime") else self.runtime
+            objects = runtime / ("retained-objects" if child and missing else "objects")
+            canonical = tree_state(objects)
+            prelude = '''
+import atexit, errno, os
+from pathlib import Path
+from research_pipeline import checkout, cli_controls, cli_views, vault
+from research_pipeline.store import RecordStore
+target, retained, acquisition, leaf = map(Path, %r)
+seam, replacement = %r, %r
+fired = False
+manifest_checked = False
+active = False
+selected_fd = None
+def mutate():
+    """Rename the real observed directory once, optionally substituting a competing binding."""
+    global fired
+    assert not fired
+    fired = True
+    target.rename(retained)
+    if replacement == "directory": target.mkdir(mode=0o700)
+    elif replacement == "file":
+        target.write_bytes(b"competing entry")
+        target.chmod(0o600)
+    elif replacement == "symlink": target.symlink_to(retained, target_is_directory=True)
+def require_fired():
+    """Make a missed private seam fail the subprocess diagnostic assertion."""
+    assert fired, "directory seam did not fire"
+    if seam == "post-inspector": assert manifest_checked, "manifest pin was not verified"
+atexit.register(require_fired)
+real_acquire = cli_controls._ObservedDirectories.open
+real_stat, real_open = checkout._stat, os.open
+real_fstat, real_close = os.fstat, os.close
+def acquire(self, name, parent=None, **kwargs):
+    """Arm only the selected adapter acquisition, leaving configuration and library paths real."""
+    global active, selected_fd
+    selected = Path(kwargs.get("path", name)) == acquisition
+    if selected and seam == "missing-next" and not fired: mutate()
+    previous, active = active, selected
+    try:
+        descriptor = real_acquire(self, name, parent, **kwargs)
+        if selected: selected_fd = descriptor
+        return descriptor
+    finally: active = previous
+def observed_stat(parent, name):
+    """Return the actual first successful no-follow stat before detaching its observed directory."""
+    global manifest_checked
+    result = real_stat(parent, name)
+    if fired and seam == "post-inspector" and name == "manifest.json": manifest_checked = True
+    if active and seam == "after-stat" and not fired: mutate()
+    return result
+def opened(name, flags, *args, **kwargs):
+    """Mutate immediately before the real selected directory open, after successful stats."""
+    if active and flags & os.O_DIRECTORY and seam == "before-open" and not fired: mutate()
+    return real_open(name, flags, *args, **kwargs)
+def fstat(fd):
+    """Observe a real acquired descriptor before reporting I/O failure alongside directory loss."""
+    result = real_fstat(fd)
+    if active and seam == "acquisition-io" and not fired:
+        mutate()
+        raise OSError(errno.EIO, "directory acquisition failed")
+    return result
+def close(fd):
+    """Close the actual pin before detaching its binding and losing close acknowledgment."""
+    real_close(fd)
+    if fd == selected_fd and seam == "close-io" and not fired:
+        mutate()
+        raise OSError(errno.EIO, "directory close acknowledgment failed")
+cli_controls._ObservedDirectories.open = acquire
+checkout._stat, os.open = observed_stat, opened
+os.fstat, os.close = fstat, close
+real_traverse = cli_controls._ObservedDirectories.traverse
+def traverse(self, path, **kwargs):
+    """Detach a fully acquired prior or inspection-parent chain before its final preflight check."""
+    result = real_traverse(self, path, **kwargs)
+    if path == leaf and seam == "after-traverse" and not fired: mutate()
+    return result
+cli_controls._ObservedDirectories.traverse = traverse
+real_inspect = vault._inspect_readable_view
+def inspect(path, **kwargs):
+    """Call the real inspector; rename before its failure or immediately after its actual return."""
+    if path == leaf and seam == "inspector-failure" and not fired: mutate()
+    result = real_inspect(path, **kwargs)
+    if path == leaf and seam in ("post-inspector", "inspector-io") and not fired:
+        mutate()
+        if seam == "inspector-io": raise OSError(errno.EIO, "inspector acknowledgment failed")
+    return result
+vault._inspect_readable_view = inspect
+real_read = cli_views.read_observed_control
+def read(parent, name, path, maximum, **kwargs):
+    """Detach the admitted root just before the real manifest admission failure."""
+    if path == leaf / "manifest.json" and seam == "manifest" and not fired: mutate()
+    return real_read(parent, name, path, maximum, **kwargs)
+cli_views.read_observed_control = read
+real_capture = RecordStore.capture_snapshot
+def capture(self, *args, **kwargs):
+    """Capture actual metadata before detaching a writer pin, ahead of publication admission."""
+    result = real_capture(self, *args, **kwargs)
+    if seam == "after-capture" and not fired: mutate()
+    return result
+RecordStore.capture_snapshot = capture
+''' % ([str(path) for path in (target, retained, acquisition, leaf)], seam, replacement)
+            try:
+                code = "operational_error" if seam.endswith("-io") else "integrity_error"
+                context = self.diagnostic(self.invoke(arguments, prelude=prelude, expected=6), code)
+                self.assertTrue(retained.is_dir(), "mutation seam did not fire")
+                self.assertEqual(tree_state(retained), retained_before)
+                if boundary != "refresh-inspection":
+                    self.assertIsNone(context["attempt_path"])
+                if replacement == "directory":
+                    self.assertEqual(list(target.iterdir()), [])
+                elif replacement == "file":
+                    self.assertEqual(target.read_bytes(), b"competing entry")
+                elif replacement == "symlink":
+                    self.assertEqual(os.readlink(target), str(retained))
+                else:
+                    self.assertFalse(target.exists())
+            finally:
+                if retained.exists():
+                    if target.is_symlink() or target.is_file(): target.unlink()
+                    elif target.exists(): target.rmdir()
+                    retained.rename(target)
+            # Restoring only the deliberate mutation makes every other allocation,
+            # byte, mode, ownership, link or inode change visible in this comparison.
+            self.assertEqual(tree_state(self.parent), before)
+            self.assertEqual(tree_state(objects), canonical)
+            if child and missing:
+                objects.rename(runtime / "objects")
+            try:
+                with RecordStore.open(runtime) as store:
+                    self.assertEqual(store.history("project"), history)
+            finally:
+                if child and missing:
+                    (runtime / "objects").rename(objects)
+
+    def test_selected_root_rename_after_real_inspector_return(self):
+        """The reported post-inspector rename preserves manifest bytes but invalidates the root pin."""
+        self.directory_mutation("selected", "post-inspector")
+
+    def test_directory_first_observation_and_actual_open_races(self):
+        """Every adapter rejects disappeared, safely replaced and substituted observed directories."""
+        for boundary in ("selected", "prior", "generate-destination", "refresh-destination",
+                         "generate-runtime", "refresh-runtime", "refresh-inspection"):
+            for seam in ("after-stat", "before-open"):
+                for replacement in ("absent", "directory", "file", "symlink"):
+                    with self.subTest(boundary=boundary, seam=seam, replacement=replacement):
+                        self.directory_mutation(boundary, seam, replacement=replacement)
+            with self.subTest(boundary=boundary, ancestor=True):
+                self.directory_mutation(boundary, "after-stat", depth=2)
+
+    def test_missing_next_component_after_held_ancestor_loss(self):
+        """A real absent next component cannot hide lost or replaced pins at any traversal boundary."""
+        for boundary in ("selected", "prior", "generate-destination", "refresh-destination",
+                         "generate-runtime", "refresh-runtime", "refresh-inspection"):
+            for replacement in ("absent", "directory"):
+                for depth in (0, 2):
+                    with self.subTest(boundary=boundary, replacement=replacement, depth=depth):
+                        self.directory_mutation(boundary, "missing-next", replacement=replacement,
+                                                depth=depth, missing=True)
+
+    def test_final_directory_admission_and_inspection_checks(self):
+        """Root, parent and higher-ancestor pins survive until each adapter's final observation check."""
+        for boundary, seam in (("selected", "post-inspector"), ("prior", "after-traverse"),
+                               ("generate-destination", "after-capture"), ("refresh-destination", "after-capture"),
+                               ("generate-runtime", "after-capture"), ("refresh-runtime", "after-capture"),
+                               ("refresh-inspection", "after-traverse")):
+            for depth in (0, 1, 2):
+                for replacement in ("absent", "directory"):
+                    with self.subTest(boundary=boundary, depth=depth, replacement=replacement):
+                        self.directory_mutation(boundary, seam, depth=depth, replacement=replacement)
+        self.directory_mutation("selected", "inspector-failure")
+
+    def test_runtime_child_and_manifest_admission_mutations(self):
+        """Required runtime children and failed selected-manifest admission retain earlier directory observations."""
+        for boundary in ("generate-runtime", "refresh-runtime"):
+            for seam in ("after-stat", "before-open"):
+                with self.subTest(boundary=boundary, seam=seam):
+                    self.directory_mutation(boundary, seam, child=True)
+            for replacement in ("absent", "directory"):
+                with self.subTest(boundary=boundary, replacement=replacement):
+                    self.directory_mutation(boundary, "missing-next", child=True, missing=True,
+                                            replacement=replacement)
+        for manifest in ("missing", "unsafe"):
+            with self.subTest(manifest=manifest):
+                self.directory_mutation("selected", "manifest", manifest=manifest)
+
+    def test_directory_mutation_preserves_actual_io_precedence(self):
+        """Observed loss never conceals actual acquisition, inspector or checked-close I/O failure."""
+        for boundary in ("selected", "generate-runtime", "refresh-destination"):
+            for seam in ("acquisition-io", "close-io"):
+                with self.subTest(boundary=boundary, seam=seam):
+                    self.directory_mutation(boundary, seam)
+        self.directory_mutation("selected", "inspector-io")
+
+    def test_stable_directory_absence_and_unsafe_controls(self):
+        """Stable initial absence keeps each boundary's contract; unsafe private directories stay layout errors."""
+        for boundary in ("selected", "prior", "generate-destination", "refresh-destination",
+                         "generate-runtime", "refresh-runtime", "refresh-inspection"):
+            expected = 3 if boundary in ("selected", "prior", "generate-runtime", "refresh-runtime") else 5
+            for parent_missing in (False, True):
+                with self.subTest(boundary=boundary, parent_missing=parent_missing):
+                    with self.directory_case(boundary, missing=True) as (arguments, leaf, history):
+                        if parent_missing:
+                            if boundary.endswith("runtime"):
+                                self.control("nested-runtime-config", dict(format="research_pipeline.cli_config",
+                                    version=1, store=str(leaf / "absent" / "root"), protected_roots=[]))
+                            else:
+                                option = "--view" if boundary == "selected" else "--prior-view" if boundary == "prior" else "--destination"
+                                index = arguments.index(option) + 1
+                                arguments[index] = str(Path(arguments[index]) / "deeper")
+                        before = tree_state(self.parent)
+                        self.diagnostic(self.invoke(arguments, expected=expected), "missing" if expected == 3 else "unsafe_layout")
+                        self.assertEqual(tree_state(self.parent), before)
+            with self.subTest(boundary=boundary, unsafe=True):
+                with self.directory_case(boundary) as (arguments, leaf, history):
+                    mode = leaf.stat().st_mode & 0o777
+                    leaf.chmod(0o755)
+                    before = tree_state(self.parent)
+                    try:
+                        self.diagnostic(self.invoke(arguments, expected=5), "unsafe_layout")
+                        self.assertEqual(tree_state(self.parent), before)
+                    finally:
+                        leaf.chmod(mode)
+        for boundary in ("generate-runtime", "refresh-runtime"):
+            with self.subTest(boundary=boundary, internal=True):
+                with self.directory_case(boundary, missing=True, child=True) as (arguments, leaf, history):
+                    before = tree_state(self.parent)
+                    self.diagnostic(self.invoke(arguments, expected=5), "unsafe_layout")
+                    self.assertEqual(tree_state(self.parent), before)
+        for manifest in ("missing", "unsafe"):
+            with self.subTest(manifest=manifest):
+                with self.directory_case("selected", manifest=manifest) as (arguments, leaf, history):
+                    before = tree_state(self.parent)
+                    self.diagnostic(self.invoke(arguments, expected=5), "unsafe_layout")
+                    self.assertEqual(tree_state(self.parent), before)
+        for config in (self.controls / "missing", self.parent / "missing-config-parent" / "config"):
+            self.diagnostic(self.invoke(self.arguments("inspect-readable-view", config=config), expected=5), "invalid_input")
+
+    def test_directory_acquisition_and_checked_close_operational_errors(self):
+        """Real acquisitions and closes with scoped OS faults remain operational on stable adapter chains."""
+        for boundary in ("selected", "prior", "generate-destination", "refresh-destination",
+                         "generate-runtime", "refresh-runtime", "refresh-inspection"):
+            for fault in ("fstat", "close"):
+                with self.subTest(boundary=boundary, fault=fault):
+                    with self.directory_case(boundary) as (arguments, leaf, history):
+                        before = tree_state(self.parent)
+                        prelude = '''
+import atexit, errno, os
+from pathlib import Path
+from research_pipeline import cli_controls
+real_acquire = cli_controls._ObservedDirectories.open
+real_fstat, real_close = os.fstat, os.close
+active = fired = False
+selected_fd = None
+def acquire(self, name, parent=None, **kwargs):
+    """Scope an OS failure to the selected adapter's real directory descriptor."""
+    global active, selected_fd
+    active = Path(kwargs.get("path", name)) == Path(%r)
+    try:
+        descriptor = real_acquire(self, name, parent, **kwargs)
+        if active: selected_fd = descriptor
+        return descriptor
+    finally: active = False
+def fstat(fd):
+    """Perform the actual descriptor observation before injecting one acquisition I/O failure."""
+    global fired
+    result = real_fstat(fd)
+    if active and %r == "fstat" and not fired:
+        fired = True
+        raise OSError(errno.EIO, "directory observation failed")
+    return result
+def close(fd):
+    """Close the actual selected descriptor before losing its acknowledgment exactly once."""
+    global fired
+    real_close(fd)
+    if fd == selected_fd and %r == "close" and not fired:
+        fired = True
+        raise OSError(errno.EIO, "directory close acknowledgment failed")
+def require_fired():
+    """A missed fault must fail diagnostic parsing instead of masquerading as successful coverage."""
+    assert fired, "OS fault did not fire"
+atexit.register(require_fired)
+cli_controls._ObservedDirectories.open = acquire
+os.fstat, os.close = fstat, close
+''' % (str(leaf), fault, fault)
+                        self.diagnostic(self.invoke(arguments, prelude=prelude, expected=6), "operational_error")
+                        self.assertEqual(tree_state(self.parent), before)
+                        with RecordStore.open(leaf if boundary.endswith("runtime") else self.runtime) as store:
+                            self.assertEqual(store.history("project"), history)
 
     def test_initial_exact_current_and_once_without_admission(self):
         """Capture exactly once without artifact access during planning or metadata submission."""
@@ -280,7 +767,7 @@ cli_views.plan_readable_snapshot = plan
         self.diagnostic(self.invoke(self.arguments("inspect-readable-view", expected_plan_id="0" * 64), expected=6), "integrity_error")
 
     def test_interruption_metadata_before_and_after_rename(self):
-        """Real KeyboardInterrupt at lifecycle seams retains exact paths and honest publication uncertainty."""
+        """Verify interrupted identities from retained manifests and, only after publication, the view CLI."""
         for index, boundary in enumerate(("after_attempt_reservation", "after_intent", "after_complete_package", "after_ready", "after_rename")):
             prelude = '''
 from research_pipeline import view_refresh
@@ -299,6 +786,29 @@ view_refresh._fault = fault
                 attempt=context["attempt_path"])))
             self.assertEqual(observed["status"], "published" if boundary == "after_rename" else
                              "complete_unpublished" if boundary in ("after_complete_package", "after_ready") else "incomplete_preparation")
+            self.assertEqual(context["prior_snapshot_id"], self.plan.snapshot_id)
+            self.assertEqual(context["prior_plan_id"], self.plan.plan_id)
+            self.assertIn("No replay, cleanup or rollback", context["next_action"])
+            if boundary != "after_attempt_reservation":
+                attempt = Path(context["attempt_path"])
+                intent = json.loads((attempt / "intent.json").read_bytes())
+                self.assertEqual(attempt.name, ".readable-refresh-attempt-" + intent["token"])
+                self.assertEqual(destination.name, intent["destination"])
+                for field in ("prior_plan_id", "successor_plan_id", "capture_id",
+                              "preservation_plan_id", "refresh_id", "manifest_sha256"):
+                    self.assertEqual(context[field], intent[field])
+            if boundary in ("after_complete_package", "after_ready", "after_rename"):
+                self.assertEqual(context["refresh_id"], observed["refresh_id"])
+                retained_plan = readable_plan_from_manifest(
+                    (Path(observed["successor_path"]) / "manifest.json").read_bytes(), limits=limits())
+                self.assertEqual(context["successor_snapshot_id"], retained_plan.snapshot_id)
+                self.assertEqual(context["successor_plan_id"], retained_plan.plan_id)
+            if boundary == "after_rename":
+                successor = self.result(self.invoke(self.arguments("inspect-readable-view", view=observed["successor_path"])))
+                self.assertEqual(context["successor_snapshot_id"], successor["snapshot_id"])
+                self.assertEqual(context["successor_plan_id"], successor["plan_id"])
+                self.assertEqual(successor["snapshot_id"], retained_plan.snapshot_id)
+                self.assertEqual(successor["plan_id"], retained_plan.plan_id)
 
     def test_stdout_failure_preserves_recovery_and_offline_repeat(self):
         """Writer output failure reports effects uncertainty; read-only output failure allows repeating inspection."""
@@ -548,8 +1058,21 @@ vault._fault = seam
 os.%s = fail
 ''' % (operation, boundary, operation, operation)
             expected = 6 if boundary == "after_intent" else 7
-            self.diagnostic(self.invoke(self.arguments(destination=self.parent / ("os-failure-" + str(index))),
+            destination = self.parent / ("os-failure-" + str(index))
+            context = self.diagnostic(self.invoke(self.arguments(destination=destination),
                 prelude=prelude, expected=expected), "operational_error" if expected == 6 else "effects_uncertain")
+            self.assertEqual(context["destination"], str(destination))
+            attempt = Path(context["attempt_path"])
+            intent = json.loads((attempt / "intent.json").read_bytes())
+            self.assertEqual(attempt.name, ".readable-view-" + intent["token"])
+            self.assertEqual(destination.name, intent["destination"])
+            for field in ("snapshot_id", "plan_id", "manifest_sha256"):
+                self.assertEqual(context[field], intent[field])
+            self.assertIn("No automatic retry or rollback", context["next_action"])
+            if expected == 7:
+                observed = self.result(self.invoke(self.arguments("inspect-readable-view", view=destination)))
+                for field in ("snapshot_id", "plan_id", "manifest_sha256"):
+                    self.assertEqual(context[field], observed[field])
 
     def test_real_hot_journal_recovery_does_not_admit_interrupted_record(self):
         """Writer opening recovers a hot rollback journal before its sole detached capture."""

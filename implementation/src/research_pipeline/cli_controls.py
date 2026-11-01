@@ -3,6 +3,7 @@
 from contextlib import ExitStack
 import json
 import math
+import os
 from pathlib import Path
 import stat
 
@@ -207,8 +208,48 @@ _READABLE_SCALARS = frozenset(("max_entries", "max_files", "max_directories", "m
     "max_file_bytes", "max_total_bytes", "max_metadata_bytes", "max_diagnostics", "max_open_descriptors"))
 
 
-class _ControlDirectories(checkout._Directories):
-    """Retain control ancestry so disappearance of an acquired binding is mutation."""
+class _ObservedDirectories(checkout._Directories):
+    """Retain CLI directory observations while sharing checkout traversal and descriptor ownership."""
+
+    def open(self, name, parent=None, *, private=False, exact=False, path=None):
+        """Acquire a directory without adopting replacement after its first no-follow observation.
+
+        Initial absence retains checkout's operational wrapper for boundary-specific
+        diagnostics. Once observed, disappearance/type/identity changes are integrity
+        failures; stable bindings preserve acquisition errors and their I/O causes.
+        """
+        with checkout._operation("open directory", path if path is not None else name):
+            try:
+                before = checkout._stat(parent, name)
+            except FileNotFoundError:
+                # A missing next component must not conceal a detached earlier pin.
+                self.check()
+                raise
+        if not stat.S_ISDIR(before.st_mode):
+            self.check()
+            raise checkout.CheckoutLayoutError(f"open directory {path or name}: symlink or non-directory")
+        try:
+            descriptor = super().open(name, parent, private=private, exact=exact, path=path)
+        except (checkout.CheckoutError, OSError) as error:
+            try:
+                current = checkout._stat(parent, name)
+            except FileNotFoundError:
+                raise checkout.CheckoutIntegrityError("observed directory disappeared") from error
+            if (not stat.S_ISDIR(current.st_mode)
+                    or checkout._identity(current) != checkout._identity(before)):
+                raise checkout.CheckoutIntegrityError("observed directory replaced") from error
+            try:
+                self.check()
+            except (checkout.CheckoutIntegrityError, checkout.CheckoutLayoutError) as observation_error:
+                # Keep acquisition I/O causes when rechecking diagnoses mutation/layout.
+                # Operational recheck errors retain their own actual I/O causes.
+                raise observation_error from error
+            raise
+        # The inherited stat/open pair must agree with the first observation too.
+        opened = os.fstat(descriptor)
+        if not stat.S_ISDIR(opened.st_mode) or checkout._identity(opened) != checkout._identity(before):
+            raise checkout.CheckoutIntegrityError("observed directory replaced during acquisition")
+        return descriptor
 
     def check(self):
         """Verify held bindings, translating missing observed ancestors into integrity failure."""
@@ -219,7 +260,7 @@ class _ControlDirectories(checkout._Directories):
         except Exception as error:
             # Inherited open() also checks all earlier pins during traversal.
             if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
-                raise checkout.CheckoutIntegrityError("observed control ancestor disappeared") from error
+                raise checkout.CheckoutIntegrityError("observed directory binding disappeared") from error
             raise
 
 
@@ -248,7 +289,7 @@ def read_observed_control(parent, name, path, maximum, *, modes, before=None):
 def read_authored(path, maximum):
     """Read one private control; only initial acquisition/observation can mean missing input."""
     with ExitStack() as stack:
-        directories = _ControlDirectories(stack)
+        directories = _ObservedDirectories(stack)
         try:
             parent = directories.traverse(path.parent, private=True, exact=True)
             before = checkout._stat(parent, path.name)
