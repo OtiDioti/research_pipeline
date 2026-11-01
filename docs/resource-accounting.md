@@ -224,9 +224,31 @@ add charges. `call_observation` is null or exactly `call_id`, `input_tokens`,
 `output_tokens`; token values are integers `0..B`. It requires explicit numeric
 model calls >=1 and input/output totals containing the sample. One sample describes
 one call; repeated samples remain evidence without adding usage. Samples permit
-exact reservation input/output, run output and input+output context checks;
-aggregate averages cannot establish per-call peaks. Non-receipt observations require
-both telemetry values and `call_observation` null.
+exact reservation input/output, run output and input+output context checks.
+Compliant aggregate totals cannot rule out an individual peak; totals exceeding
+the observed call count times a bound conclusively prove an invocation violation.
+Non-receipt observations require both telemetry values and `call_observation` null.
+
+For either partial usage or authoritative completion, a controller receipt with
+an explicitly numeric, positive current `model_calls` count `N` also supports
+cumulative proofs. With retained numeric input/output totals `I`/`O`, reservation
+per-call bounds `i`/`o`, inherited run output bound `P` and context capacity `C`,
+the violations are independently `I > N*i`, `O > N*o`, `O > N*P`, and
+`I+O > N*C`. Absent reservation call bounds give zero reservation invocation
+allowances. These are necessary conditions for compliant calls, not measured
+peaks or renewable budgets. A numeric count alone does not finalize execution or
+release liability.
+
+A null current count cannot use an earlier receipt's count or the reservation's
+maximum: neither bounds the call population underlying newer tokens. Retained
+token totals are lower bounds; unknown token quantities skip their individual
+checks. For context only, a missing token quantity contributes zero as a mathematical
+lower bound without becoming measured zero in usage. Known input alone exceeding
+`N*C` therefore proves a context breach; two unknown token quantities prove none.
+Status, uncertainty and narrative observations establish no new invocation facts.
+All derived products and sums use exact Python integers, even above the input
+quantity bound `B`; they never pass through the bounded-input validator and add
+no charges.
 
 Reconciliation echoes the original `account_id`, `owner_id`, `reservation_id`;
 purpose, dimensions and ancestry always come from that original declaration.
@@ -278,9 +300,14 @@ Replay appends the first fact per account/purpose/dimension/reason. Each fact ha
 exactly `trigger_operation_id`, `account_id`, `purpose`, `dimension_id`, `reason`,
 `observed`, `limit`; numbers are decimal strings. Reasons are `reservation_maximum`,
 `per_call_bound`, `run_output_bound`, `context_bound`, `ceiling_excess`,
-`aggregate_known_overflow`, `post_settlement_usage`. `context_bound` uses the model
-input dimension but its observed value is **input plus output tokens for one call**.
-Facts retain their first chronological trigger; later evidence remains in operations.
+`aggregate_known_overflow`, `post_settlement_usage`. Sampled invocation facts keep
+individual-call values and limits. Cumulative invocation facts store the exact
+observed total (or context lower-bound sum) and the exact `N`-times-bound limit;
+the triggering request supplies `N`. `context_bound` always uses the model input
+dimension. Sample facts are processed before cumulative proofs within an observation,
+preserving the sample's diagnostics when both prove the same reason. Facts retain
+their first chronological trigger; later evidence remains in operations, and
+settlement never clears them.
 
 A breach commits together with its observation and **blocks all new allocations
 and reservations under that project**, including sibling runs and protected purposes.

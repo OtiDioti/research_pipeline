@@ -6,7 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
 
-from research_pipeline.backup import create_backup, restore_backup
+from research_pipeline.backup import create_backup, inspect_backup, restore_backup
 from research_pipeline.resources import (
     MAX_QUANTITY, UNCERTAINTY_EVENTS, ResourceCapacityError, ResourceConflictError,
     ResourceInspectionLimits, ResourceInspectionLimitError,
@@ -15,7 +15,7 @@ from research_pipeline.resources import (
 )
 from research_pipeline.store import RecordStore
 from tests.resource_fixtures import (
-    LIMITS, allocation, changed, observation, populate,
+    LIMITS, allocation, changed, observation, policy, populate,
     reconciliation, reservation, root_request, scope, vector,
 )
 from tests.test_store import record, request
@@ -204,7 +204,7 @@ class ResourceUsageTests(unittest.TestCase):
         self.assertTrue(self.balance()[0]["admission_blocked"])
 
     def test_call_samples_and_nested_telemetry_are_evidence_not_added_usage(self):
-        """Only individual samples establish call/context breaches; telemetry and repeats add no charges."""
+        """Samples prove individual peaks even when aggregates fit; telemetry and repeats add no charges."""
         self.store.reserve_resources(reservation("model", maxima=vector(model_calls=2, model_input_tokens=6, model_output_tokens=10),
             call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
         item = observation("sample", "reservation_model", usage=vector(model_calls=2, model_input_tokens=6, model_output_tokens=10),
@@ -218,6 +218,165 @@ class ResourceUsageTests(unittest.TestCase):
         context = next(f for f in facts if f["reason"] == "context_bound")
         self.assertEqual((context["dimension_id"], context["observed"], context["limit"]), ("dim_model_input_tokens", "10", "8"))
         self.assertTrue(all(f["trigger_operation_id"] == "op_sample" for f in facts))
+
+    def test_unsampled_single_call_breach_survives_settlement_and_exact_restore(self):
+        """Surplus allowances cannot hide invocation violations or clear their project gate on recovery."""
+        self.store.reserve_resources(reservation("model", maxima=vector(
+            model_calls=1, model_input_tokens=10, model_output_tokens=10),
+            call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+        item = observation("complete", "reservation_model", event="authoritative_completion",
+            usage=vector(model_calls=1, model_input_tokens=4, model_output_tokens=6))
+        receipt = self.store.observe_resource_usage(item)
+        self.assertEqual(self.store.observe_resource_usage(item), receipt)
+        self.assertEqual(self.store.get_resource_operation(item.operation_id), receipt)
+        self.assertEqual(self.snapshot()["operations"][-1],
+                         {"request": item.to_dict(), "receipt": receipt.to_dict()})
+        facts = self.snapshot()["breaches"]
+        self.assertEqual([(f["dimension_id"], f["reason"], f["observed"], f["limit"]) for f in facts], [
+            ("dim_model_input_tokens", "per_call_bound", "4", "3"),
+            ("dim_model_output_tokens", "per_call_bound", "6", "5"),
+            ("dim_model_output_tokens", "run_output_bound", "6", "5"),
+            ("dim_model_input_tokens", "context_bound", "10", "8")])
+        self.assertTrue(all(f["trigger_operation_id"] == item.operation_id for f in facts))
+        for kind in ("model_calls", "model_input_tokens", "model_output_tokens"):
+            self.assertGreater(int(self.balance(kind=kind)[1]["available_for_local_use"]), 0)
+        self.assertEqual(self.usage("reservation_model", "model_input_tokens")[1]["remaining_reserved"], "6")
+        self.store.reconcile_resource_usage(reconciliation(reservation_id="reservation_model"))
+        self.assertEqual(self.snapshot()["breaches"], facts)
+        self.assertEqual(self.usage("reservation_model", "model_output_tokens")[1]["actual_usage"], "6")
+        snapshot = self.store.inspect_resources(limits=LIMITS)
+
+        def assert_preserved(store):
+            """Check the full history, original receipt and otherwise funded project admissions."""
+            self.assertEqual(store.inspect_resources(limits=LIMITS), snapshot)
+            self.assertEqual(store.get_resource_operation(item.operation_id), receipt)
+            self.assertEqual(store.observe_resource_usage(item), receipt)
+            with self.assertRaisesRegex(ResourceCapacityError, "sticky resource breach"):
+                store.allocate_resources(allocation("run", "sibling", "project"))
+            for account, purpose in (("attempt", "ordinary"), ("attempt2", "ordinary"),
+                                     ("attempt2", "verification"), ("attempt2", "handoff"),
+                                     ("run", "closeout")):
+                with self.subTest(account=account, purpose=purpose):
+                    with self.assertRaisesRegex(ResourceCapacityError, "sticky resource breach"):
+                        store.reserve_resources(reservation("blocked", account=account, purpose=purpose))
+            self.assertEqual(store.inspect_resources(limits=LIMITS), snapshot)
+
+        assert_preserved(self.store)
+        self.store.close()
+        exported = self.parent / "invocation_backup"
+        with RecordStore.open(self.root) as reopened:
+            assert_preserved(reopened)
+            backup = create_backup(reopened, exported)
+        self.assertEqual(inspect_backup(exported), backup)
+        with restore_backup(exported, self.parent / "restored") as restored:
+            assert_preserved(restored)
+            self.assertEqual((self.parent / "restored/metadata.sqlite3").read_bytes(),
+                             (exported / "snapshot.sqlite3").read_bytes())
+
+    def test_multiple_call_cumulative_limits_and_equality(self):
+        """Two-call proofs multiply bounds; equality preserves admission and partial liability."""
+        self.store.reserve_resources(reservation("model", maxima=vector(
+            model_calls=2, model_input_tokens=10, model_output_tokens=15),
+            call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+        self.store.observe_resource_usage(observation("equal", "reservation_model",
+            usage=vector(None, model_calls=2, model_input_tokens=6, model_output_tokens=10)))
+        self.assertEqual(self.snapshot()["breaches"], [])
+        self.assertEqual(self.usage("reservation_model", "model_output_tokens")[1]["remaining_reserved"], "5")
+        self.store.reserve_resources(reservation("still_admitted", account="attempt2"))
+        self.store.observe_resource_usage(observation("excess", "reservation_model",
+            usage=vector(None, model_calls=2, model_input_tokens=7, model_output_tokens=11)))
+        facts = self.snapshot()["breaches"]
+        self.assertEqual([(f["reason"], f["observed"], f["limit"]) for f in facts], [
+            ("per_call_bound", "7", "6"), ("per_call_bound", "11", "10"),
+            ("run_output_bound", "11", "10"), ("context_bound", "18", "16")])
+        self.assertTrue(all(f["trigger_operation_id"] == "op_excess" for f in facts))
+        row, unknown = self.usage("reservation_model", "local_storage")
+        self.assertEqual(row["status"], "unresolved")
+        self.assertIsNone(unknown["observed_quantity"])
+        self.assertIsNone(unknown["actual_usage"])
+        self.assertIsNone(self.usage("reservation_model", "model_output_tokens")[1]["actual_usage"])
+
+    def test_partial_context_lower_bound_preserves_missing_output(self):
+        """Known input alone proves context excess; missing output stays unknown across count-only receipts."""
+        self.store.reserve_resources(reservation("model", maxima=vector(
+            model_calls=1, model_input_tokens=10, model_output_tokens=10),
+            call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+        self.store.observe_resource_usage(observation("tokens", "reservation_model",
+            usage=vector(None, model_input_tokens=9)))
+        self.assertEqual(self.snapshot()["breaches"], [])
+        self.store.observe_resource_usage(observation("count", "reservation_model",
+            usage=vector(None, model_calls=1)))
+        facts = self.snapshot()["breaches"]
+        self.assertEqual([(f["reason"], f["observed"], f["limit"]) for f in facts], [
+            ("per_call_bound", "9", "3"), ("context_bound", "9", "8")])
+        self.assertTrue(all(f["trigger_operation_id"] == "op_count" for f in facts))
+        row, missing = self.usage("reservation_model", "model_output_tokens")
+        self.assertEqual(row["status"], "unresolved")
+        self.assertIsNone(missing["observed_quantity"])
+        self.assertIsNone(missing["actual_usage"])
+        self.assertEqual(missing["remaining_reserved"], "10")
+        self.assertIsNone(self.usage("reservation_model", "model_input_tokens")[1]["actual_usage"])
+
+    def test_unknown_current_call_count_never_reuses_stale_count(self):
+        """Unknown counts and non-receipt events cannot align newer totals to an earlier call population."""
+        self.store.reserve_resources(reservation("model", maxima=vector(
+            model_calls=2, model_input_tokens=6, model_output_tokens=10),
+            call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+        self.store.observe_resource_usage(observation("count_only", "reservation_model",
+            usage=vector(None, model_calls=1)))
+        self.assertEqual(self.snapshot()["breaches"], [])
+        self.assertIsNone(self.usage("reservation_model", "model_input_tokens")[1]["observed_quantity"])
+        self.store.observe_resource_usage(observation("first", "reservation_model",
+            usage=vector(None, model_calls=1, model_input_tokens=3, model_output_tokens=5)))
+        self.store.observe_resource_usage(observation("new_tokens", "reservation_model",
+            usage=vector(None, model_input_tokens=6, model_output_tokens=10)))
+        for event in (*UNCERTAINTY_EVENTS, "worker_narrative"):
+            self.store.observe_resource_usage(observation(event, "reservation_model", event=event))
+            self.assertEqual(self.snapshot()["breaches"], [])
+        self.store.observe_resource_usage(observation("updated_count", "reservation_model",
+            usage=vector(None, model_calls=2)))
+        self.assertEqual(self.snapshot()["breaches"], [])
+        self.assertEqual(self.usage("reservation_model", "model_input_tokens")[1]["observed_quantity"], "6")
+        self.assertEqual(self.usage("reservation_model")[0]["status"], "unresolved")
+        self.store.reserve_resources(reservation("admitted", account="attempt2"))
+
+    def test_samples_precede_cumulative_proofs_and_missing_bounds_mean_zero(self):
+        """First sampled diagnostics survive aggregate proofs and later unsampled evidence."""
+        item = observation("sampled", usage=vector(model_calls=2, model_input_tokens=9, model_output_tokens=13),
+            call_observation={"call_id": "peak", "input_tokens": 5, "output_tokens": 7})
+        self.store.observe_resource_usage(item)
+        invocation = [f for f in self.snapshot()["breaches"] if f["reason"] in (
+            "per_call_bound", "run_output_bound", "context_bound")]
+        self.assertEqual([(f["reason"], f["observed"], f["limit"]) for f in invocation], [
+            ("per_call_bound", "5", "0"), ("per_call_bound", "7", "0"),
+            ("run_output_bound", "7", "5"), ("context_bound", "12", "8")])
+        self.store.observe_resource_usage(observation("later", usage=vector(
+            model_calls=2, model_input_tokens=10, model_output_tokens=14)))
+        self.assertEqual([f for f in self.snapshot()["breaches"] if f["reason"] in (
+            "per_call_bound", "run_output_bound", "context_bound")], invocation)
+
+    def test_unsampled_missing_reservation_bounds_have_zero_allowance(self):
+        """An unsampled receipt still proves invocation excess when the reservation declared no calls."""
+        self.store.observe_resource_usage(observation("unexpected_model",
+            usage=vector(None, model_calls=1, model_input_tokens=1, model_output_tokens=1)))
+        facts = [f for f in self.snapshot()["breaches"] if f["reason"] == "per_call_bound"]
+        self.assertEqual([(f["dimension_id"], f["observed"], f["limit"]) for f in facts], [
+            ("dim_model_input_tokens", "1", "0"), ("dim_model_output_tokens", "1", "0")])
+
+    def test_derived_policy_products_above_input_bound_remain_exact(self):
+        """N-times-policy proofs can exceed B without rejecting a bounded receipt or inventing excess."""
+        self.store.allocate_resources(allocation("run", "wide", "project", run_policy=policy(
+            context_capacity_tokens=MAX_QUANTITY, per_call_output_tokens=MAX_QUANTITY)))
+        self.store.reserve_resources(reservation("wide_model", account="wide", purpose="closeout", maxima=vector(
+            model_calls=2, model_input_tokens=6, model_output_tokens=10),
+            call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+        item = observation("wide_complete", "reservation_wide_model", account_id="wide",
+            event="authoritative_completion", usage=vector(model_calls=2, model_input_tokens=6, model_output_tokens=10))
+        receipt = self.store.observe_resource_usage(item)
+        self.assertEqual(self.store.get_resource_operation(item.operation_id), receipt)
+        self.assertEqual(self.snapshot()["breaches"], [])
+        self.assertEqual(self.usage("reservation_wide_model", "model_output_tokens")[1]["observed_quantity"], "10")
+        self.store.reserve_resources(reservation("still_funded", account="wide", purpose="closeout"))
 
     def test_aggregate_overflow_receipts_reopen_and_exact_restore(self):
         """Pre-admitted work retains individually bounded bills whose measured sum exceeds B."""
@@ -391,19 +550,23 @@ class ResourceUsageTests(unittest.TestCase):
         self.assertEqual(self.store.capture_snapshot(selected, limits=limits()), before)
 
     def test_multiple_settled_handoffs_and_closeout_spending_still_protect_minima(self):
-        """Settlement cannot reset spent handoff/closeout capacity or borrow another attempt's pool."""
-        for identity, account, output in (("first_handoff", "attempt", 11), ("second_handoff", "attempt2", 10)):
-            maximum = vector(model_calls=2, model_input_tokens=6, model_output_tokens=output)
+        """Valid handoffs retain spent capacity; settlement cannot borrow another attempt's protected pool."""
+        for identity, account, calls, output, input_bound, output_bound in (
+                ("first_handoff", "attempt", 3, 11, 2, 4),
+                ("second_handoff", "attempt2", 2, 10, 3, 5)):
+            maximum = vector(model_calls=calls, model_input_tokens=6, model_output_tokens=calls * output_bound)
             self.store.reserve_resources(reservation(identity, account=account, purpose="handoff", maxima=maximum,
-                call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+                call_bounds={"max_input_tokens_per_call": input_bound, "max_output_tokens_per_call": output_bound}))
             item = observation(identity, "reservation_" + identity, account_id=account,
-                               event="authoritative_completion", usage=maximum)
+                               event="authoritative_completion", usage=vector(
+                                   model_calls=calls, model_input_tokens=6, model_output_tokens=output))
             # Reservation and observation identities are distinct even with the same original work label.
             doc = item.to_dict()
             doc.update(operation_id="observed_" + identity, receipt_id="observed_receipt_" + identity)
             self.store.observe_resource_usage(ResourceRequest.from_dict(doc))
             self.store.reconcile_resource_usage(reconciliation("settled_" + identity, "reservation_" + identity,
                 account_id=account, observation_operation_id="observed_" + identity))
+        self.assertEqual(self.balance("attempt", "handoff", "model_output_tokens")[1]["available_for_local_use"], "9")
         for purpose in ("ordinary", "verification"):
             with self.assertRaisesRegex(ResourceCapacityError, "handoff"):
                 self.store.reserve_resources(reservation("blocked_" + purpose, purpose=purpose))

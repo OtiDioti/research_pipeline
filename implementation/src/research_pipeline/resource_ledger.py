@@ -178,7 +178,11 @@ def _usage_target(state, payload):
 
 
 def _observe(state, request):
-    """Append cumulative evidence, retain late liabilities, and derive sticky breaches without rollback."""
+    """Merge validated receipts and derive sticky sampled/cumulative breaches without releasing liability.
+
+    Current positive receipt counts align retained token lower bounds with an
+    observed call population; unknown counts cannot establish invocation facts.
+    """
     p, op = request["payload"], request["operation_id"]
     reservation, account, usage = _usage_target(state, p)
     values = amounts(p["usage"], account["dimensions"])
@@ -221,9 +225,9 @@ def _observe(state, request):
     for key, maximum in amounts(reservation["maxima"], account["dimensions"]).items():
         _breach(state, op, account["account_id"], purpose, key, "reservation_maximum",
                 usage["known"][key] or 0, maximum)
+    ids = {d["kind"]: d["dimension_id"] for d in account["dimensions"]}
+    bounds = reservation["call_bounds"]
     if sample is not None:
-        ids = {d["kind"]: d["dimension_id"] for d in account["dimensions"]}
-        bounds = reservation["call_bounds"]
         # A receipt may establish a call even where the original declaration had none.
         for field, kind, bound in (("input_tokens", "model_input_tokens", "max_input_tokens_per_call"),
                                    ("output_tokens", "model_output_tokens", "max_output_tokens_per_call")):
@@ -234,6 +238,26 @@ def _observe(state, request):
         # Context is a sum of input and output tokens, represented under the input dimension.
         _breach(state, op, account["account_id"], purpose, ids["model_input_tokens"], "context_bound",
                 sample["input_tokens"] + sample["output_tokens"], account["policy"]["context_capacity_tokens"])
+    calls = kinds["model_calls"]
+    # An older count is not an upper bound on the population behind newer tokens.
+    # Only this receipt's positive count aligns the retained cumulative lower bounds.
+    if p["evidence"]["source_kind"] == "controller_receipt" and calls is not None and calls > 0:
+        inputs = usage["known"][ids["model_input_tokens"]]
+        outputs = usage["known"][ids["model_output_tokens"]]
+        # These exact products are proofs, not charges or bounded input quantities.
+        # Samples run first so their individual-call diagnostics retain priority.
+        for number, kind, bound in ((inputs, "model_input_tokens", "max_input_tokens_per_call"),
+                                    (outputs, "model_output_tokens", "max_output_tokens_per_call")):
+            if number is not None:
+                _breach(state, op, account["account_id"], purpose, ids[kind], "per_call_bound",
+                        number, calls * (0 if bounds is None else bounds[bound]))
+        if outputs is not None:
+            _breach(state, op, account["account_id"], purpose, ids["model_output_tokens"], "run_output_bound",
+                    outputs, calls * account["policy"]["per_call_output_tokens"])
+        if inputs is not None or outputs is not None:
+            # Unknown tokens contribute only a mathematical lower bound, never measured zero.
+            _breach(state, op, account["account_id"], purpose, ids["model_input_tokens"], "context_bound",
+                    (inputs or 0) + (outputs or 0), calls * account["policy"]["context_capacity_tokens"])
     for (account_id, pool), rows in sorted(_accounting(state).items()):
         for key, row in sorted(rows.items()):
             _breach(state, op, account_id, pool, key, "ceiling_excess", row["commitment"], row["ceiling"])

@@ -9,7 +9,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from research_pipeline.backup import BackupError, create_backup, inspect_backup, restore_backup
-from research_pipeline.resources import ResourceRequest, canonical
+from research_pipeline.resources import ResourceRequest, ResourceSnapshot, ResourceValidationError, canonical
 from research_pipeline.store import RecordStore, StoreLayoutError
 from tests.resource_fixtures import LIMITS, observation, populate, reconciliation, reservation, vector
 from tests.test_resource_schema import rehash_backup
@@ -30,6 +30,79 @@ def rewrite_operation(connection, operation_id, edit):
 
 class UsageIntegrityTests(unittest.TestCase):
     """Validate closed replay invariants independently of a writable owner's recomputed byte hashes."""
+
+    def test_rehashed_unsampled_breach_rejects_later_admission_and_omitted_facts(self):
+        """Shared replay rejects concealed invocation facts and admissions after a rehashed receipt breach."""
+        with TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            self.addCleanup(restore_directories, parent)
+            root, exported = parent / "runtime", parent / "backup"
+            with RecordStore.create(root, schema_version=3) as store:
+                populate(store, attempts=2)
+                store.reserve_resources(reservation(maxima=vector(
+                    model_calls=1, model_input_tokens=10, model_output_tokens=10),
+                    call_bounds={"max_input_tokens_per_call": 3, "max_output_tokens_per_call": 5}))
+                store.observe_resource_usage(observation("complete", event="authoritative_completion",
+                    usage=vector(model_calls=1, model_input_tokens=3, model_output_tokens=5)))
+                create_backup(store, parent / "before_admission")
+                store.reserve_resources(reservation("later", account="attempt2"))
+                self.assertEqual(store.inspect_resources(limits=LIMITS).to_dict()["breaches"], [])
+                create_backup(store, exported)
+
+            def exceed_invocation(doc):
+                """Keep cumulative maxima intact while making the unsampled completion prove all call bounds."""
+                for dimension in doc["payload"]["usage"]:
+                    if dimension["dimension_id"] == "dim_model_input_tokens":
+                        dimension["quantity"] = 4
+                    elif dimension["dimension_id"] == "dim_model_output_tokens":
+                        dimension["quantity"] = 6
+
+            # Recomputed outer hashes must not bypass chronological admission checks.
+            with sqlite3.connect(root / "metadata.sqlite3") as connection:
+                rewrite_operation(connection, "op_complete", exceed_invocation)
+            with self.assertRaisesRegex(StoreLayoutError, "sticky resource breach"):
+                RecordStore.open(root)
+            damaged = parent / "damaged"
+            shutil.copytree(exported, damaged)
+            database = damaged / "snapshot.sqlite3"
+            database.chmod(0o600)
+            database.write_bytes((root / "metadata.sqlite3").read_bytes())
+            database.chmod(0o400)
+            rehash_backup(damaged)
+            with self.assertRaisesRegex(BackupError, "sticky resource breach"):
+                inspect_backup(damaged)
+            destination = parent / "refused"
+            with self.assertRaisesRegex(BackupError, "sticky resource breach"):
+                restore_backup(damaged, destination)
+            self.assertFalse(destination.exists())
+
+            # A breach itself is valid durable history when no subsequent work was admitted.
+            breached = parent / "breached"
+            shutil.copytree(parent / "before_admission", breached)
+            database = breached / "snapshot.sqlite3"
+            database.chmod(0o600)
+            with sqlite3.connect(database) as connection:
+                rewrite_operation(connection, "op_complete", exceed_invocation)
+            database.chmod(0o400)
+            rehash_backup(breached)
+            inspect_backup(breached)
+            restored_root = parent / "restored_breach"
+            with restore_backup(breached, restored_root) as restored:
+                snapshot = restored.inspect_resources(limits=LIMITS)
+                self.assertEqual(len(snapshot.to_dict()["breaches"]), 4)
+                self.assertEqual({f["reason"] for f in snapshot.to_dict()["breaches"]},
+                                 {"per_call_bound", "run_output_bound", "context_bound"})
+                self.assertEqual((restored_root / "metadata.sqlite3").read_bytes(), database.read_bytes())
+                altered = snapshot.to_dict()
+                altered["breaches"] = []
+                for balance in altered["balances"]:
+                    balance.update(breach=False, admission_blocked=False)
+                altered["snapshot_id"] = hashlib.sha256(canonical(
+                    {k: v for k, v in altered.items() if k != "snapshot_id"}).encode()).hexdigest()
+                with self.assertRaises(ResourceValidationError):
+                    ResourceSnapshot.from_dict(altered)
+            with RecordStore.open(restored_root) as reopened:
+                self.assertEqual(reopened.inspect_resources(limits=LIMITS), snapshot)
 
     def test_rehashed_usage_settlement_and_historical_breach_tampering(self):
         """Live open and immutable inspection reject contradictory evidence and admissions after a past breach."""
