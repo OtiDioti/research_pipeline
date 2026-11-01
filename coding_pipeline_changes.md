@@ -75,3 +75,7 @@ Runc9055f4c-f63c-4815-ab5e-670116ce1333 finally accepted/exact-integrated2643673
 ## 2026-11-01 — Diagnostic repair acceptance/integration audit
 
 CWI4c1833ef-8ef9-4b07-9f33-79acb6f7e8b0 finally accepted/exact-integrated3f4564c. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted0/0/0, no pending maintenance. One CWI product test repair corrected disposable fixture permissions/recovery and unpublished-generation identity assertions. Production diagnostic changes belonged solely to its CWI Writer. A coordinator read-only diagnose-output parser mistake changed no backend/state and consumed no recovery. No automatic-approval rejection, security or frozen configuration change. Preserve failed controller and Writer advisory results; no waived test or receipt edit.
+
+## Resource-accounting checkpoint — 2026-11-01
+
+REQ-D04-001/6eaf6f92-ec81-4d73-b83d-9b97a30cfb02: backend attempts/adoptions/reversions0/0/0 cumulative. Separate excluded backend 1f68060b remains clean. Both repairs were ordinary CWI product/prescription work. Read-only backend inspection established final-repair receipt binds repair-delta and whole-base digests separately; adapting the coordinator audit changed no controller source/state. Failed Writer advisory evidence retained, no isolation weakening or new grant.

@@ -32,3 +32,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [32b61b7f — REQ-D03-004](32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md): terminal STOPPED_INCOMPLETE, zero accepted milestones; provisional81ec2f3 passes432/432 after one syntax repair, but missing controller-bound diff-check evidence prevents acceptance. Continuous start13/50; exact draft preserved for bounded R1 recovery.
 
 - [7ee32819 — REQ-D03-004-R1](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md): protected offline readable snapshots finally accepted/exact-integrated c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests; two milestone repairs, both frozen checks passed, continuous start 14/50. Resolves the missing-check recovery while preserving its terminal predecessor; no backend change. Current safe session/context checkpoint has twelve integrated results and three terminal failures, no active run.
+
+- [6eaf6f92 — REQ-D04-001](6eaf6f92-ec81-4d73-b83d-9b97a30cfb02.md): resource accounting finally accepted/exact-integrated b13fff0; controller/target 778/778, continuousstart19/50, twointernalrepairs, no coordinator recovery/backend change.
