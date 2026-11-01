@@ -117,19 +117,19 @@ bound unsafe filesystem handling. Failure can retain objects or staging entries;
 the API does not sweep or repair them.
 
 `research_pipeline.store` uses the artifact layout plus a private mode-0600
-`metadata.sqlite3`. It creates schema 2 only in absent roots and gates opening on the fixed
-version-1 or version-2 schema through a read-only immutable preflight, before allowing normal
+`metadata.sqlite3`. It creates schema2 by default or explicit schema3 in absent roots and gates opening on the fixed
+version-1, version-2 or version-3 schema through a read-only immutable preflight, before allowing normal
 SQLite rollback-journal recovery. This preflight is solely for fixed schema/version,
 never live data or integrity conclusions. Operational connections require DELETE
 journaling, EXTRA synchronization, foreign keys and a 5000 ms busy timeout.
 
-`research_pipeline.schema` owns a fixed two-entry DDL/kind/backup-format registry
+`research_pipeline.schema` owns a fixed three-entry DDL/kind/backup-format registry
 and pure manifest/history validation, depending only on domain values and the
 standard library. It owns no SQLite connections or filesystem work. Schema 1's
 exact five-kind DDL remains supported; schema 2 extends the kind checks and state
 trigger and adds a singleton administrative history table, empty on fresh creation.
 Operational connections validate administrative rows after journal recovery.
-Explicit restore-time v1→v2 migration lives only in `backup.py`, transforming a
+Explicit restore-time v1→v2 and v2→v3 migration lives only in `backup.py`, transforming a
 verified private copy transactionally under the existing incomplete marker.
 Store creation/opening and generic/typed submission do not migrate. See [version contracts](durable-records.md)
 for kind mappings and [backup pairs](backups.md) for exact-copy verification.
@@ -151,9 +151,10 @@ give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptio
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
 Remaining typed payloads and state machines, support/assessment
-freshness, eligibility/promotion, worker isolation, leases/fencing, resource authorization/accounting, general migrations,
+freshness, eligibility/promotion, worker isolation, leases/fencing, operating-grant authentication, resource usage settlement, general migrations,
 periodic scheduling, distributed execution and research execution remain
-unsupported. No ledger means no duplicate charging guarantee. This slice does not
+unsupported. Schema3 adds controller-private immutable allocation and reservation accounting
+with exact operation retries; it does not implement execution or settlement. This slice does not
 complete overall M0-E, M0-S, M1, D02 or scientific validation.
 
 ## Development validation
@@ -238,11 +239,33 @@ markers define completeness; restore publishes artifacts before original metadat
 and RecordStore rejects interrupted restores before opening SQLite. See
 [the backup contract](backups.md) for snapshot selection, fixed capture deadline,
 publication uncertainty, local POSIX/trusted-owner assumptions and runnable usage.
-Default restore preserves exact bytes. Explicit migration requires target 2 and
-caller attribution, temporarily suspends foreign-key enforcement on the private
-copy, replaces changed tables/trigger using registered DDL and inserts separate
-administrative provenance. Exact schema, foreign-key, application and history
+Default restore preserves exact bytes, including schema3 resource history and
+outstanding liabilities. Explicit migration requires the next target (1→2 or 2→3)
+and caller attribution. The 1→2 transform temporarily suspends foreign-key enforcement
+on the private copy and replaces changed tables/trigger. The 2→3 transform preserves
+scientific tables unchanged, replaces only administrative history with an ordered
+form, retains every original row and appends the attributed source identity. Both
+use registered DDL and operate only on the verified unpublished private copy. Exact schema, foreign-key, application and history
 checks precede COMMIT; standalone verification and synchronization precede marker
 removal. Failures retain incomplete paths and journals; publication acknowledgment
 can be uncertain after removal. No scientific identity regeneration or submission replay occurs. This
 is partial R-019/R-017 evidence, not complete D02 or research-run/session/job recovery.
+
+
+## Controller resource ledger
+
+`resources.py` owns complete strict detached declarations and shared bounded call
+envelope validation. `resource_ledger.py` uses the existing RecordStore transaction
+boundary for operation identity, hierarchy, protected capacity and normalized
+account/allocation/reservation/reference projections. No second database, scientific
+audit-event charge, new artifact subsystem or worker SQL endpoint is introduced.
+
+The run's explicit `handoff_call_bounds` provisions its complete minimum; actual
+reservations supply independent invocation bounds. Ancestors charge delegated
+capacity once, and descendant reservations consume that delegation. Live open
+validates history only after journal recovery. A shared chronological validator
+also checks ledger inspection and immutable backup inspection. The schema3 history
+is empty for fresh creation, 2→3 for migrated fresh2, or preserved 1→2 followed by
+2→3. Scientific outgoing closure remains unchanged by resource mutations.
+See [the resource contract](resource-accounting.md) for exact fields, arithmetic,
+unknown-usage reporting, original-ID recovery, and unavailable settlement APIs.

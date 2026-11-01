@@ -111,9 +111,74 @@ _SCHEMA_V2 = (
     )""",
 )
 
-# A fixed two-entry registry: DDL, allowed kinds, corresponding backup format.
+# Scientific DDL remains byte-for-byte identical to schema2. Only ordered
+# administrative history and the controller-private resource tables are new.
+_HISTORY_V3 = """CREATE TABLE migration_history (
+        migration_id INTEGER PRIMARY KEY CHECK(typeof(migration_id) = 'integer' AND migration_id > 0),
+        source_schema INTEGER NOT NULL,
+        target_schema INTEGER NOT NULL,
+        source_backup_id TEXT NOT NULL,
+        source_manifest_json TEXT NOT NULL,
+        provenance_json TEXT NOT NULL,
+        CHECK(typeof(source_schema) = 'integer' AND typeof(target_schema) = 'integer'
+              AND ((source_schema = 1 AND target_schema = 2) OR (source_schema = 2 AND target_schema = 3)))
+    )"""
+_RESOURCE_DDL = (
+    """CREATE TABLE resource_operations (
+        sequence INTEGER PRIMARY KEY CHECK(typeof(sequence) = 'integer' AND sequence > 0),
+        operation_id TEXT NOT NULL UNIQUE,
+        receipt_id TEXT NOT NULL UNIQUE,
+        request_json TEXT NOT NULL,
+        fingerprint TEXT NOT NULL,
+        result_json TEXT NOT NULL,
+        committed_at TEXT NOT NULL
+    )""",
+    """CREATE TABLE resource_accounts (
+        account_id TEXT PRIMARY KEY NOT NULL,
+        operation_id TEXT NOT NULL UNIQUE REFERENCES resource_operations(operation_id),
+        owner_id TEXT NOT NULL,
+        scope_kind TEXT NOT NULL CHECK(scope_kind IN ('project','run','branch','task','attempt')),
+        stable_identity TEXT NOT NULL,
+        scope_json TEXT NOT NULL,
+        parent_account_id TEXT REFERENCES resource_accounts(account_id),
+        dimensions_json TEXT NOT NULL,
+        limits_json TEXT NOT NULL,
+        policy_json TEXT NOT NULL,
+        UNIQUE(scope_kind, stable_identity)
+    )""",
+    """CREATE TABLE resource_allocations (
+        allocation_id TEXT PRIMARY KEY NOT NULL,
+        operation_id TEXT NOT NULL UNIQUE REFERENCES resource_operations(operation_id),
+        parent_account_id TEXT NOT NULL REFERENCES resource_accounts(account_id),
+        account_id TEXT NOT NULL UNIQUE REFERENCES resource_accounts(account_id),
+        purpose_limits_json TEXT NOT NULL
+    )""",
+    """CREATE TABLE resource_reservations (
+        reservation_id TEXT PRIMARY KEY NOT NULL,
+        operation_id TEXT NOT NULL UNIQUE REFERENCES resource_operations(operation_id),
+        account_id TEXT NOT NULL REFERENCES resource_accounts(account_id),
+        purpose TEXT NOT NULL CHECK(purpose IN ('ordinary','verification','handoff','closeout')),
+        maxima_json TEXT NOT NULL,
+        call_bounds_json TEXT NOT NULL
+    )""",
+    """CREATE TABLE resource_record_links (
+        operation_id TEXT NOT NULL REFERENCES resource_operations(operation_id),
+        ordinal INTEGER NOT NULL CHECK(typeof(ordinal) = 'integer' AND ordinal >= 0),
+        target_id TEXT NOT NULL,
+        target_revision INTEGER NOT NULL CHECK(typeof(target_revision) = 'integer' AND target_revision > 0),
+        relationship TEXT NOT NULL,
+        target_kind TEXT NOT NULL,
+        PRIMARY KEY(operation_id, ordinal),
+        FOREIGN KEY(target_id, target_revision) REFERENCES revisions(record_id, revision)
+    )""",
+    "CREATE INDEX resource_account_parent ON resource_accounts(parent_account_id)",
+    "CREATE INDEX resource_allocation_parent ON resource_allocations(parent_account_id)",
+    "CREATE INDEX resource_reservation_account ON resource_reservations(account_id)",
+)
+_SCHEMA_V3 = (*_SCHEMA_V2[:-1], _HISTORY_V3, *_RESOURCE_DDL)
 _VERSIONS = MappingProxyType({1: (_SCHEMA_V1, _LEGACY_KINDS, 1),
-                              2: (_SCHEMA_V2, _KINDS, 2)})
+                              2: (_SCHEMA_V2, _KINDS, 2),
+                              3: (_SCHEMA_V3, _KINDS, 3)})
 
 
 class ManifestLayoutError(ValueError):
@@ -189,21 +254,23 @@ def manifest_info(document):
     return hashlib.sha256(_canonical(document)).hexdigest(), format_version, version, metadata, artifacts
 
 
-def validate_history(rows, registrations):
-    """Validate zero/one administrative transition against canonical source and current artifacts.
+def validate_history(rows, registrations, version=2):
+    """Validate ordered version-specific transitions against canonical sources and artifacts.
 
     This establishes internal consistency, not authentication of a hostile owner.
     Inputs are detached SQLite rows and artifact registrations; no data is rewritten.
     """
-    if len(rows) > 1:
-        raise ValueError("migration history: expected zero or one row")
+    transitions = [tuple(row[:3]) for row in rows]
+    allowed = ([], [(1, 1, 2)]) if version == 2 else ([], [(1, 2, 3)], [(1, 1, 2), (2, 2, 3)])
+    if type(version) is not int or version not in (2, 3) or transitions not in allowed:
+        raise ValueError("migration history: invalid ordered schema transitions")
     for migration_id, source, target, backup_id, manifest_text, provenance_text in rows:
-        if any(type(value) is not int for value in (migration_id, source, target)) or (migration_id, source, target) != (1, 1, 2):
-            raise ValueError("migration history: invalid singleton or schema transition")
+        if any(type(value) is not int for value in (migration_id, source, target)):
+            raise ValueError("migration history: invalid schema transition types")
         ArtifactReference(backup_id, 0)
         manifest = _json(manifest_text)
         identity, format_version, schema_version, _, artifacts = manifest_info(manifest)
-        if ((format_version, schema_version) != (1, 1) or identity != backup_id
+        if ((format_version, schema_version) != (source, source) or identity != backup_id
                 or _canonical(manifest).decode() != manifest_text):
             raise ValueError("migration history: noncanonical legacy manifest or source identity mismatch")
         provenance = _json(provenance_text)

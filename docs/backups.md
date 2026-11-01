@@ -1,7 +1,7 @@
 # Verified local backup and restoration
 
 `research_pipeline.backup` provides an explicit trusted-controller boundary for
-schema-1 and schema-2 `RecordStore` data. Import directly from this submodule. Imports are
+schema-1, schema-2 and schema-3 `RecordStore` data. Import directly from this submodule. Imports are
 inert; there is no CLI, dependency, environment-selected location, scheduler,
 worker endpoint or general SQL interface. Callers select paths outside software
 source, relative to their working directory or absolute, under existing parents.
@@ -11,7 +11,7 @@ Parent-traversal components and symlinked ancestors are rejected, not resolved.
 | --- | --- |
 | `create_backup(source: RecordStore, destination) -> BackupInfo` | Capture an open, owning-thread source without an active transaction into an absent destination. |
 | `inspect_backup(root) -> BackupInfo` | Verify a complete backup without recovery, writes, permission changes or sidecars. |
-| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate v1→v2. Return an independent handle after publication barriers. Close it or use a context manager. |
+| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate v1→v2 or v2→v3. Return an independent handle after publication barriers. Close it or use a context manager. |
 
 `BackupInfo` is frozen and contains `backup_id: str`, `format_version: int`,
 `schema_version: int`, `metadata: ArtifactReference`, and
@@ -43,9 +43,10 @@ manifest field set is:
 {"format_version":1,"schema_version":1,"metadata":{"digest":"<64 lowercase hex characters>","size":123},"artifacts":[{"digest":"<64 lowercase hex characters>","size":456}]}
 ```
 
-Only `(format_version, schema_version)` pairs `(1, 1)` and `(2, 2)` are supported.
+Only `(format_version, schema_version)` pairs `(1, 1)`, `(2, 2)` and `(3, 3)` are supported.
 The example shows the historical format-1 representation; format 2 has the same
 four exact fields and reference shapes with both version values set to 2.
+Schema3 uses the same shape with both versions set to 3 and includes its entire ledger.
 Legacy canonical serialization and `backup_id` hashing are unchanged. Crossed
 pairs, unknown versions and disagreement with the actual database are rejected.
 Capture selects its version from the captured snapshot, never from live state.
@@ -104,16 +105,18 @@ and original provenance are copied without rewriting. Source orphan objects,
 There is no garbage collector and the source is unchanged. Artifact copying uses
 the accepted full-byte-buffer API, so memory includes the largest artifact (and
 buffered snapshot/manifest bytes). Copies have independent database/object inodes.
-Default restoration is exact: schema 1 yields schema 1 and schema 2 yields
-schema 2, with original metadata bytes, identities and receipts. Restored v1
+Default restoration is exact: each supported schema yields the same schema,
+with original metadata bytes, identities and receipts. Schema3 also retains all
+resource operations, allocations, reservations, policies and outstanding liabilities. Restored v1
 stores accept old-kind appends and reject v2-only submitted or declared reference
 kinds with a migration-required `DomainValidationError`. Restored v2 stores accept
 all twenty generic kinds. Neither path changes the backup or source.
 
 ## Explicit verified migration
 
-The sole supported migration is a verified format-1/schema-1 backup restored into
-an absent schema-2 runtime. Supply `target_schema=2` and
+Supported migrations are verified format-1/schema-1 backups into absent schema2
+runtimes and verified format-2/schema-2 backups into absent schema3 runtimes.
+Supply the next `target_schema` (`2` or `3`) and
 `migration_provenance=CreationProvenance(actor, created_at, details)` explicitly.
 The actor and UTC timestamp are caller supplied; details may be `{}`. Attribution
 is reconstructed and validated at the API boundary and serialized canonically.
@@ -121,20 +124,20 @@ No operator, timestamp, migration request or scientific authority is inferred.
 
 Both options default to `None`, selecting exact restoration. `BackupLayoutError`
 rejects provenance without a target, missing or malformed attribution with a
-target, and targets other than the ordinary integer `2` (including booleans,
-strings and floats). Any explicit target on a schema-2 source is rejected,
-including a downgrade or repeated upgrade. Invalid options and damaged backups
+target, and targets other than ordinary integers `2` and `3` (including booleans,
+strings and floats). Direct 1→3, same-version migrations, downgrades and every
+explicit target on a schema3 source are rejected. Invalid options and damaged backups
 fail before destination reservation. There is no live in-place migration,
 automatic upgrade on open, public v1 creation option or general conversion API.
 
 After full read-only source verification, restore reserves the destination and
 durably writes `.restore-incomplete`. It independently copies/verifies artifacts,
 copies the snapshot into private metadata, compares its original digest/size and
-verifies the copied v1 database. Only that unpublished copy is opened for migration,
+verifies the copied source database. Only that unpublished copy is opened for migration,
 using the existing bounded SQLite DELETE-journal/EXTRA connection settings.
 The backup is never written, chmodded or attached to a writable connection.
 
-One `BEGIN IMMEDIATE` transaction saves the exact identities and record links in
+For 1→2, one `BEGIN IMMEDIATE` transaction saves the exact identities and record links in
 connection-local temporary tables, drops/recreates those main tables and the
 state trigger using registered v2 DDL, and copies named SQL columns back. It adds
 the administrative history row and sets `user_version=2`. Historical JSON text,
@@ -148,7 +151,7 @@ Exceptions roll back an active transaction and close the connection; failed or
 uncertain commits never permit publication.
 
 After closing the migration connection, restore requires a standalone database
-without sidecars, verifies v2 schema/application/history and exactly the source
+without sidecars, verifies the target schema/application/history (and schema3 ledger) and exactly the source
 artifact inventory, rechecks object bytes and synchronizes metadata, objects and
 directories. The migrated metadata digest is expected to change; history retains
 the original source digest. Only then may marker removal publish the copy.
@@ -169,6 +172,29 @@ this row separately from original creation attribution; it never relabels old
 records as v2 creations. The source manifest is reconstructed canonically from
 verified `BackupInfo` and checked against its `backup_id`, independently of outer
 manifest whitespace. No public arbitrary history insertion API exists.
+
+For 2→3, one `BEGIN IMMEDIATE` transaction copies the six original history columns
+through a temporary SQL table, replaces only `migration_history`, restores every
+original value, appends an attributed 2→3 row, creates the resource tables/indexes
+empty and sets `user_version=3`. No scientific table is rewritten. Foreign keys
+remain enabled. Exact schema, scientific application, foreign-key, ordered history
+and ledger checks precede COMMIT and are repeated before publication.
+
+Schema3 permits exactly these ordered histories: empty (fresh3), `(1,2,3)` for
+fresh2→3, or `(1,1,2)` followed by `(2,2,3)` for historical1→2→3, where each tuple
+is migration ID/source/target. Every row retains its exact source backup identity,
+canonical complete manifest (including original metadata digest/size) and explicit
+provenance. Exact schema3 restore copies metadata unchanged; it does not reconstruct
+a ledger or insert another administrative row.
+
+Live schema3 open validates the ledger after legitimate journal recovery. Immutable
+backup inspection validates strict canonical resource requests/results, fingerprints,
+normalized projections, ordered reference watermarks, hierarchy, inherited policies
+including mandatory handoff provisioning bounds, and historical admission capacity.
+The same shared validator is used for ledger inspection. Resource references do not
+register artifacts; exact registration-versus-historical-scientific-links closure
+remains mandatory, with no orphan exception. See [resource accounting](resource-accounting.md)
+for a runnable explicit 2→3 and outstanding-liability restore example.
 
 ## Completeness, errors and recovery
 

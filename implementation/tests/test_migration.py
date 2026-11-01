@@ -206,12 +206,16 @@ assert inspect_backup(sys.argv[3]) == info
             object.__setattr__(forged, name, value)
             invalid_provenances.append(forged)
         invalid_provenances.append(object.__new__(CreationProvenance))
-        cases = [(target, provenance) for target in (True, False, "2", 2.0, 0, 1, 3, -1, [], {})
+        cases = [(target, provenance) for target in (True, False, "2", 2.0, 0, 1, 3, 4, -1, [], {})
                  for provenance in (None, ATTRIBUTION)]
         cases += [(None, provenance) for provenance in invalid_provenances[1:] + [ATTRIBUTION]]
         cases += [(2, provenance) for provenance in invalid_provenances]
         for source_index, source in enumerate(sources):
-            source_cases = cases + ([(2, ATTRIBUTION)] if source_index else [])
+            # Genuine attributed 2→3 transitions now have positive schema3 coverage.
+            source_cases = [(target, provenance) for target, provenance in cases
+                            if not (source_index and target == 3 and provenance is ATTRIBUTION)]
+            source_cases += ([(2, ATTRIBUTION)] if source_index else [])
+            source_cases += [(3, provenance) for provenance in invalid_provenances]
             for index, (target, provenance) in enumerate(source_cases):
                 destination = self.parent / f"invalid-{source_index}-{index}"
                 with self.subTest(source=source_index, case=index), self.assertRaisesRegex(BackupLayoutError, "schema 1 to schema 2"):

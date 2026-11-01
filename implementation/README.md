@@ -82,8 +82,8 @@ from `research_pipeline.domain`, `research_pipeline.artifacts` and
 `research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
 low-level generic graph submission/append/reopen/retry example. Select runtime
 directories explicitly outside software source. Creation rejects existing roots; opening gates fixed
-schema versions 1 and 2 before normal rollback-journal recovery. New stores use
-schema 2; legacy stores retain old-kind operations without rewriting. SQLite uses DELETE/EXTRA,
+schema versions 1, 2 and 3 before normal rollback-journal recovery. Creation defaults to
+schema 2; `RecordStore.create(root, schema_version=3)` explicitly enables the resource ledger; legacy stores retain old-kind operations without rewriting. SQLite uses DELETE/EXTRA,
 foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
 exact submission retries return original metadata-only receipts even after head
 advancement or later artifact damage. Record/history exposure verifies attached bytes.
@@ -93,10 +93,10 @@ Real disk and fresh-process tests cover ordering/canonical fingerprints, stale a
 conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
 and later artifact integrity failures. Local test results are advisory to controller
 validation. Remaining typed payloads and state machines,
-support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, resource
-authorization/accounting, general migrations, periodic scheduling, distributed
-execution and research execution remain unsupported. There is no duplicate charging
-guarantee without a ledger. Artifact identity and completed task state confer no
+support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, operating-grant
+authentication, resource usage settlement, general migrations, periodic scheduling, distributed
+execution and research execution remain unsupported. Schema3 provides immutable allocations and atomic conservative reservations with exact retries;
+[resource accounting](../docs/resource-accounting.md) documents retained liabilities and recovery. Artifact identity and completed task state confer no
 scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
 
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
@@ -138,14 +138,15 @@ paper fixture adds no research CLI command or runtime/persistence capability.
 
 The explicit `research_pipeline.backup` API captures consistent SQLite snapshots,
 verifies historical artifact inventories and restores independent stores exactly.
-Supported backup format/schema pairs are `(1, 1)` and `(2, 2)`; default restore
+Supported backup format/schema pairs are `(1, 1)`, `(2, 2)` and `(3, 3)`; default restore
 preserves the source version. Schema 2 admits twenty generic kinds while retaining
 claim/task state rules; all fifteen additions require null canonical states.
 Legacy new-kind requests fail with a migration-required error. The separate
 schema-2 administrative history format is validated and preserved; fresh creation
 invents none. `restore_backup(root, destination, *, target_schema=None,
-migration_provenance=None)` supports only explicit v1→v2 migration with ordinary
-integer target `2` and caller-supplied `CreationProvenance`. Both defaults select
+migration_provenance=None)` supports explicit v1→v2 or v2→v3 migration with ordinary
+integer next target `2` or `3` and caller-supplied `CreationProvenance`. Schema3 retains
+ordered administrative history and includes all outstanding resource liabilities in exact backups. Both defaults select
 exact restoration. Migration preserves historical values and original receipts
 and records the verified source identity/digest separately under the existing
 durable incomplete marker. Invalid options fail before reservation; interrupted

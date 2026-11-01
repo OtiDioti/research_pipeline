@@ -28,7 +28,7 @@ verification, worker isolation and general migrations remain unsupported.
 
 [Verified local backups](backups.md) documents explicit snapshot/inspection/restore
 APIs, strict format and integrity checks, durable completeness markers, independent
-continued use, exact restore defaults and explicit attributed v1→v2 migration.
+continued use, exact restore defaults and explicit attributed v1→v2 and v2→v3 migration.
 Runnable synthetic examples include a source-local legacy fixture, historical
 receipt preservation and a subsequent v2 backup. This is partial R-019/R-017 evidence;
 full D02, periodic scheduling and research-run/session/job recovery remain outstanding.
@@ -91,3 +91,10 @@ retain expectations separately from observed materialization/inspection results.
 generation with bounded observed edits and renames, preserves unsubmitted proposed
 work and atomically publishes an associated successor. Read-only offline inspection
 diagnoses retained interruptions; the separate capture/planning APIs remain available.
+
+[Controller resource accounting](resource-accounting.md) documents explicit schema3
+creation, strict dimensioned ceilings, protected allocations, atomic reservations,
+original-operation recovery and complete exact backups. The runnable synthetic
+example exercises reservation/retry/reopen/restore and explicit 2→3 migration.
+Usage observations, settlement and liability release remain unavailable; these
+controller declarations do not admit research or authenticate operating grants.

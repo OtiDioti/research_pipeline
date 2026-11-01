@@ -118,11 +118,11 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | Asse
     raise DomainValidationError("format: unsupported typed content format")
 
 
-def _database_error(error: sqlite3.Error, *, committing: bool = False) -> StoreError:
-    """Translate lock versus database errors while explaining uncertain commit outcomes."""
+def _database_error(error: sqlite3.Error, *, committing: bool = False, reconciliation_id="submission_id") -> StoreError:
+    """Translate SQLite errors, naming the original scientific or resource reconciliation identity."""
     code = getattr(error, "sqlite_errorcode", 0) & 0xff
     kind = StoreBusyError if code in (sqlite3.SQLITE_BUSY, sqlite3.SQLITE_LOCKED) else StoreDatabaseError
-    suffix = "; reopen and reconcile the original submission_id before retrying" if committing else ""
+    suffix = f"; reopen and reconcile the original {reconciliation_id} before retrying" if committing else ""
     return kind(f"SQLite metadata failure: {error}{suffix}")
 
 
@@ -213,12 +213,15 @@ class RecordStore:
         self._schema_version = version
 
     @classmethod
-    def create(cls, root) -> "RecordStore":
-        """Create an absent schema-2 store, commit DDL/version together, and sync the layout.
+    def create(cls, root, *, schema_version=2) -> "RecordStore":
+        """Create an absent schema2 (default) or explicit schema3 store and sync its layout.
 
+        Only ordinary integer versions 2 and 3 are accepted, before root reservation.
         Existing roots are rejected unchanged. Failed creation may leave an
         incomplete root, which is retained rather than erased or repaired.
         """
+        if type(schema_version) is not int or schema_version not in (2, 3):
+            raise StoreLayoutError("creation requires ordinary integer schema_version 2 or 3")
         try:
             artifacts = ArtifactStore.create(root)
             path = artifacts._root / "metadata.sqlite3"
@@ -228,9 +231,9 @@ class RecordStore:
                 connection = _connect(path)
                 try:
                     connection.execute("BEGIN IMMEDIATE")
-                    for statement in _VERSIONS[2][0]:
+                    for statement in _VERSIONS[schema_version][0]:
                         connection.execute(statement)
-                    connection.execute("PRAGMA user_version=2")
+                    connection.execute(f"PRAGMA user_version={schema_version}")
                     connection.execute("COMMIT")
                 finally:
                     connection.close()
@@ -250,7 +253,7 @@ class RecordStore:
 
     @classmethod
     def open(cls, root) -> "RecordStore":
-        """Gate layout/schema, recover legitimate journals, then validate live administrative history."""
+        """Gate fixed schema, recover legitimate journals, then validate history and schema3 ledger."""
         try:
             artifacts = ArtifactStore.open(root)
             path = artifacts._root / "metadata.sqlite3"
@@ -265,6 +268,16 @@ class RecordStore:
                                          connection.execute("SELECT digest,size FROM artifacts").fetchall())
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
                         raise StoreLayoutError(f"invalid migration history: {error}") from error
+                if version == 3:
+                    from research_pipeline.resource_ledger import validate_ledger
+                    try:
+                        # Read all live invariants in one snapshot only after the
+                        # operational connection has recovered legitimate journals.
+                        connection.execute("BEGIN")
+                        validate_ledger(connection)
+                        connection.execute("COMMIT")
+                    except (ValueError, TypeError, RecursionError, OverflowError) as error:
+                        raise StoreLayoutError(f"invalid resource ledger: {error}") from error
                 return cls(artifacts, connection, version)
             except BaseException:
                 connection.close()
@@ -296,10 +309,11 @@ class RecordStore:
         self.close()
 
     @contextmanager
-    def _transaction(self, *, write=False):
+    def _transaction(self, *, write=False, reconciliation_id="submission_id"):
         """Bound a snapshot or serialized write; rollback failures invalidate the handle.
 
-        COMMIT errors can be ambiguous. A successful COMMIT exits rollback handling
+        reconciliation_id selects the original submission or resource operation
+        named in an uncertain COMMIT diagnostic. A successful COMMIT exits rollback handling
         before the caller's acknowledgment seam, so it is never reported as undone.
         """
         connection = self._require_open()
@@ -321,8 +335,33 @@ class RecordStore:
                 except BaseException:
                     pass
             if isinstance(error, sqlite3.Error):
-                raise _database_error(error, committing=committing) from error
+                raise _database_error(error, committing=committing, reconciliation_id=reconciliation_id) from error
             raise
+
+    def create_resource_account(self, request):
+        """Declare a project ceiling atomically; return its original ResourceReceipt on exact retry."""
+        from research_pipeline.resource_ledger import mutate
+        return mutate(self, request, "create_account")
+
+    def allocate_resources(self, request):
+        """Create a child and its immutable purpose allocation without double charging descendants."""
+        from research_pipeline.resource_ledger import mutate
+        return mutate(self, request, "allocate")
+
+    def reserve_resources(self, request):
+        """Commit conservative maxima before work; no execution, usage settlement or release occurs."""
+        from research_pipeline.resource_ledger import mutate
+        return mutate(self, request, "reserve")
+
+    def get_resource_operation(self, operation_id):
+        """Inspect an original accounting outcome after uncertainty, returning its receipt or None."""
+        from research_pipeline.resource_ledger import get_operation
+        return get_operation(self, operation_id)
+
+    def inspect_resources(self, *, limits):
+        """Return one complete detached ledger snapshot or fail explicit inspection limits."""
+        from research_pipeline.resource_ledger import inspect
+        return inspect(self, limits)
 
     def put_artifact(self, data: bytes) -> ArtifactReference:
         """Publish verified bytes without registering metadata; failed batches retain orphans."""

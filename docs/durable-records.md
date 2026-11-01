@@ -55,7 +55,7 @@ normalize to six fractional digits. This is attributed creation information,
 not authenticated execution or a database commit timestamp.
 
 Schema 1 supports `research_context`, `claim`, `justification`, `evidence`, and
-`task_specification`. New stores use schema 2, which also supports `project`, `run`,
+`task_specification`. New stores default to schema2; explicit schema3 supports the same kinds. Schema2 also supports `project`, `run`,
 `corpus_manifest`, `branch`, `source`, `work_product_manifest`, `tool_release`,
 `tool_assessment`, `issue`, `review`, `promotion_eligibility`, `decision`, `attempt`,
 `tool_execution`, and `event`. All twenty use the same immutable envelope, opaque
@@ -220,7 +220,7 @@ No installation or package-level re-exports are needed.
 
 | Signature | Result and effects |
 | --- | --- |
-| `RecordStore.create(root) -> RecordStore` | Create only an absent private root, then exclusively create and initialize its mode-0600 database; sync database and directory before success. |
+| `RecordStore.create(root, *, schema_version=2) -> RecordStore` | Create only an absent private root, then exclusively create and initialize its mode-0600 database; sync database and directory before success. |
 | `RecordStore.open(root) -> RecordStore` | Validate an existing layout and schema, then open for normal SQLite recovery; never create missing files or initialize a database. |
 | `store.close() -> None` | Idempotently close; later operations fail with `StoreClosedError`. Context-manager exit closes too. |
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
@@ -269,8 +269,9 @@ erased, repaired or swept. Missing, symlinked, nonregular, foreign-owned or
 group/other-accessible database files are rejected. Runtime data must stay outside
 software source; relative paths use the caller's working directory.
 
-New creation commits version 2 (`PRAGMA user_version=2`) and its DDL in one
-explicit transaction. There is no public legacy-creation option. Schema 1 remains
+Creation defaults to version2; `RecordStore.create(root, schema_version=3)` opts
+into version3. Either commits its fixed DDL and version in one explicit transaction.
+Invalid types or unsupported versions fail before destination reservation. There is no public legacy-creation option. Schema 1 remains
 supported for reads, old-kind append, receipts, retries and backups without rewriting.
 Opening first rejects any `.restore-incomplete` entry without repair or removal.
 The [backup/restore API](backups.md) removes this marker only after complete copy
@@ -286,7 +287,7 @@ This gate relies on a published runtime's schema/version never changing and
 on absence of WAL. It deliberately ignores hot journals and must never be used for
 live data, head/receipt queries, integrity conclusions or recovery. After the gate,
 the operational connection uses a correctly encoded SQLite URI with `mode=rw`,
-allowing legitimate hot rollback journal recovery for either supported version. WAL headers/sidecars
+allowing legitimate hot rollback journal recovery for every supported version. WAL headers/sidecars
 and unsafe rollback-journal objects are rejected without conversion.
 
 Connections use rollback-journal `DELETE`, `synchronous=EXTRA`, `foreign_keys=ON`
@@ -315,8 +316,9 @@ a mixed old/new batch leaves every table unchanged. Conflicting submission IDs
 still take precedence, and exact retries recover the original receipt even when
 heads have advanced or artifact bytes are damaged. Opening never upgrades a store.
 Explicit [verified restore-time migration](backups.md#explicit-verified-migration)
-accepts only a v1 backup, ordinary integer `target_schema=2` and caller-supplied
-`CreationProvenance`, into a new absent runtime. Default restore remains exact.
+accepts a v1 backup with ordinary integer `target_schema=2`, or a v2 backup
+with `target_schema=3`, and caller-supplied `CreationProvenance`, into a new absent runtime.
+Direct 1→3, same-version migration and in-place migration remain rejected. Default restore remains exact.
 The private transformation is transactional under `.restore-incomplete`; failures
 retain the marker and files for diagnosis, and retries require a new absent path.
 
@@ -431,10 +433,11 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 Remaining typed payloads, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
-fencing, resource authorization/accounting, general migrations, periodic
+fencing, operating-grant authentication, resource usage settlement, general migrations, periodic
 scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.
-There is no duplicate resource charging guarantee without a ledger. This slice
-completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
+Schema3 supplies [controller resource reservations](resource-accounting.md), with
+immutable protected allocations, no double charge for descendant commitments,
+original-operation retries and retained outstanding liabilities. This slice completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
 validation. M0-S gates scientifically dependent evaluation, qualification and
 release, not independent storage engineering; all scientific obligations remain.
 
@@ -473,3 +476,22 @@ artifact registrations are not evidence of physical availability or scientific s
 The separate `research_pipeline.vault` materializer consumes only the detached plan
 and guarded artifact area, without metadata reads; offline inspection needs no live
 store. Publication and inspection observations do not change admission or history.
+
+
+## Schema3 resource boundary
+
+The fixed schema3 extends the unchanged schema2 scientific DDL with resource
+operations, accounts, allocations, reservations and exact resource record links,
+and an ordered administrative history. Fresh3 has no history; fresh2→3 has one
+row; historical1→2→3 preserves the original row and appends a second. Full schema
+identity includes every explicit index and constraint. Resource APIs reject older
+schemas explicitly without implicit migration.
+
+Operational mutations neither insert scientific audit events nor change scientific
+record links. Consistent scientific snapshots retain their watermark, outgoing
+closure and identity across resource-only mutations. They are not full runtime
+backups. Exact schema3 backups preserve all resource declarations and liabilities.
+Live schema3 history is validated in one operational read transaction after journal
+recovery, with the same chronological invariants used by ledger and backup inspection.
+See [resource accounting](resource-accounting.md) for public constructors, mandatory
+handoff provisioning bounds, exact purpose arithmetic and COMMIT recovery.
