@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
+**State:** PREPARED. REQ-D04-001 is the next bounded engineering request; no D04 implementation evidence exists yet.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -45,3 +45,7 @@ Own the M2 minimum deterministic end-of-run report now, not in D09. Every admitt
 ## Engineering and scientific acceptance tracked separately
 
 Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.
+
+## First ready boundary — durable resource accounting
+
+[REQ-D04-001](../requests/REQ-D04-001.md) consumes accepted durable SQLite/history/artifact/backup/migration and project/task reference contracts through integrated3f4564c. Two meaningful milestones cover strict opt-in schema3 with preserved historical migration/backup, atomic protected hierarchy reservations, then attributed usage/uncertainty/settlement/breach and recovery. Preserve defaultschema2. Existing scientific records and view contracts remain intact. Request preparation does not authenticate operating authority, admit research, implement lease fencing/dispatch/context, or satisfy mandatory model-independent initial/checkpoint/stop reports. Those are subsequent mandatory engineering boundaries. Scientific/live-provider approvals still gate their dependent work only.

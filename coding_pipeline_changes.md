@@ -71,3 +71,7 @@ Run63f0416b accepted/exact-integrated0a875dd,657/657 target tests. Backend remai
 ## 2026-11-01 — View CLI acceptance/integration audit
 
 Runc9055f4c-f63c-4815-ab5e-670116ce1333 finally accepted/exact-integrated2643673. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073, attempted/adopted/reverted0/0/0. Two CWI product repairs addressed authored-control/descriptor/path-budget findings and a fixture mode; the independent remaining B-017 diagnostic is also product work and will use CWI. No backend patch, controller-state edit, security/configuration waiver or automatic-approval rejection. Historical failed validations and Writer-local advisory limitations remain recorded.
+
+## 2026-11-01 — Diagnostic repair acceptance/integration audit
+
+CWI4c1833ef-8ef9-4b07-9f33-79acb6f7e8b0 finally accepted/exact-integrated3f4564c. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted0/0/0, no pending maintenance. One CWI product test repair corrected disposable fixture permissions/recovery and unpublished-generation identity assertions. Production diagnostic changes belonged solely to its CWI Writer. A coordinator read-only diagnose-output parser mistake changed no backend/state and consumed no recovery. No automatic-approval rejection, security or frozen configuration change. Preserve failed controller and Writer advisory results; no waived test or receipt edit.
