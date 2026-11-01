@@ -353,6 +353,16 @@ class RecordStore:
         from research_pipeline.resource_ledger import mutate
         return mutate(self, request, "reserve")
 
+    def observe_resource_usage(self, request):
+        """Append trusted cumulative usage or uncertainty; observations never release liability."""
+        from research_pipeline.resource_ledger import mutate
+        return mutate(self, request, "observe")
+
+    def reconcile_resource_usage(self, request):
+        """Settle an original reservation with explicit evidence and its latest settlement predecessor."""
+        from research_pipeline.resource_ledger import mutate
+        return mutate(self, request, "reconcile")
+
     def get_resource_operation(self, operation_id):
         """Inspect an original accounting outcome after uncertainty, returning its receipt or None."""
         from research_pipeline.resource_ledger import get_operation

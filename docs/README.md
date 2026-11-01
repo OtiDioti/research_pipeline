@@ -95,6 +95,10 @@ diagnoses retained interruptions; the separate capture/planning APIs remain avai
 [Controller resource accounting](resource-accounting.md) documents explicit schema3
 creation, strict dimensioned ceilings, protected allocations, atomic reservations,
 original-operation recovery and complete exact backups. The runnable synthetic
-example exercises reservation/retry/reopen/restore and explicit 2→3 migration.
-Usage observations, settlement and liability release remain unavailable; these
+example executes reservation, partial usage, retained timeout liability, original-ID
+recovery, settlement, conservative uncertainty, durable breach, reopen/exact restore
+and explicit 2→3 migration.
+Cumulative usage, explicit authoritative/conservative settlement, late receipts,
+exact aggregate overflow, sticky project-wide admission blocking and version-2
+inspection preserve original identities and uncertainty. These
 controller declarations do not admit research or authenticate operating grants.

@@ -15,7 +15,7 @@ from research_pipeline.resources import (
 from research_pipeline.store import RecordStore, StoreClosedError
 from tests.resource_fixtures import (
     LIMITS, allocation, changed, policy, pools, populate, reservation,
-    root_request, scope, vector,
+    root_request, scope, vector, observation, reconciliation,
 )
 from tests.test_store import record, request
 
@@ -244,7 +244,7 @@ class ResourceLedgerTests(unittest.TestCase):
             self.assertEqual(self.store.allocate_resources(item), result)
 
     def test_monitored_money_and_branch_delegation_share_root_units(self):
-        """Additional scaled currency budgets and a real branch path obey the same capacity rules."""
+        """Scaled monetary usage settles through a real branch without refunding permanent delegations."""
         root = self.parent / "monetary"
         money = {"dimension_id": "usd", "kind": "monetary", "unit": "currency_quantum", "currency": "USD", "scale": 1000}
 
@@ -263,6 +263,8 @@ class ResourceLedgerTests(unittest.TestCase):
                         p["run_policy"][purpose + "_minimum"].append({"dimension_id": "usd", "quantity": 0})
                     p["run_policy"]["monetary_services"] = [{"dimension_id": "usd", "service_id": "declared_service",
                         "mode": "monitored_target", "statement": "No external hard bound is asserted"}]
+            elif doc["kind"] == "observe":
+                vectors.append(p["usage"])
             else:
                 vectors.append(p["maxima"])
             for value in vectors:
@@ -295,6 +297,19 @@ class ResourceLedgerTests(unittest.TestCase):
             observed = store.inspect_resources(limits=LIMITS).to_dict()
             ordinary = next(b for b in observed["balances"] if b["account_id"] == "attempt" and b["purpose"] == "ordinary")
             self.assertEqual(next(d for d in ordinary["dimensions"] if d["dimension_id"] == "usd")["available_for_local_use"], "0")
+            store.observe_resource_usage(monetary(observation(usage=vector(None, tool_calls=1)), 40))
+            store.observe_resource_usage(monetary(observation("complete", event="authoritative_completion"), 60))
+            store.reconcile_resource_usage(reconciliation())
+            observed = store.inspect_resources(limits=LIMITS).to_dict()
+            for account, purpose in (("attempt", "ordinary"), ("task", "ordinary"), ("branch", "ordinary"),
+                                     ("run", "ordinary"), ("project", "total")):
+                balance = next(b for b in observed["balances"] if b["account_id"] == account and b["purpose"] == purpose)
+                money_row = next(d for d in balance["dimensions"] if d["dimension_id"] == "usd")
+                self.assertEqual(money_row["known_spent"], "60")
+                self.assertEqual(money_row["actual_usage"], "60")
+                self.assertEqual(money_row["subtree_reserved"], "0")
+                self.assertEqual(money_row["available_for_local_use"], "40" if account == "attempt" else "700" if account == "project" else "0")
+            store.reserve_resources(monetary(reservation("replacement"), 40))
 
     def test_aggregate_overflow_rejects_and_exact_integer_capacity_is_admissible(self):
         """Valid maximum operands retain exact products, while overflowing allocation expressions fail."""

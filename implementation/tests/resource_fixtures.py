@@ -88,3 +88,25 @@ def changed(request_value, **payload_updates):
     doc = request_value.to_dict()
     doc["payload"].update(payload_updates)
     return ResourceRequest.from_dict(doc)
+
+
+def observation(identity="partial", reservation_id="reservation_work", *, event="partial_usage", **updates):
+    """Declare synthetic cumulative receipt or explicitly unavailable operational evidence."""
+    source = ("controller_receipt" if event in ("partial_usage", "authoritative_completion")
+              else "worker_narrative" if event == "worker_narrative" else "controller_status")
+    return declaration("observe", identity, {"account_id": "attempt", "owner_id": "owner",
+        "reservation_id": reservation_id, "event": event,
+        "evidence": {"source_kind": source, "source_id": "synthetic_source",
+                     "source_receipt_id": "external_" + identity if source == "controller_receipt" else None,
+                     "statement": "Synthetic execution and billing evidence"},
+        "usage": vector(tool_calls=1) if source == "controller_receipt" else vector(None),
+        "telemetry": {"cached_input_tokens": None, "reasoning_output_tokens": None},
+        "call_observation": None, **updates})
+
+
+def reconciliation(identity="settlement", reservation_id="reservation_work", *, mode="authoritative",
+                   observation_operation_id="op_complete", previous=None, **updates):
+    """Name original evidence and predecessor explicitly, without caller-selected charges."""
+    return declaration("reconcile", identity, {"account_id": "attempt", "owner_id": "owner",
+        "reservation_id": reservation_id, "mode": mode, "observation_operation_id": observation_operation_id,
+        "previous_reconciliation_operation_id": previous, "reason": "Synthetic explicit settlement", **updates})

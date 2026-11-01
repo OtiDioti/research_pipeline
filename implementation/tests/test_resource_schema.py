@@ -16,7 +16,7 @@ from research_pipeline.backup import BackupError, BackupIntegrityError, BackupOp
 from research_pipeline.resources import ResourceRequest, ResourceIntegrityError, canonical
 from research_pipeline.store import RecordStore, StoreLayoutError
 from tests.legacy import create_legacy, table_values, historical_store
-from tests.resource_fixtures import PROVENANCE, LIMITS, populate, reservation, root_request, allocation
+from tests.resource_fixtures import PROVENANCE, LIMITS, populate, reservation, root_request, allocation, observation, reconciliation, vector
 from tests.test_store import record, request
 from tests.test_vault import child_environment, restore_directories
 
@@ -59,14 +59,15 @@ class ResourceSchemaTests(unittest.TestCase):
                     continue
                 before = (root / "metadata.sqlite3").read_bytes()
                 for operation in (lambda: store.create_resource_account(root_request()), lambda: store.allocate_resources(allocation("run", "run", "project")),
-                                  lambda: store.reserve_resources(reservation()), lambda: store.get_resource_operation("missing"),
+                                  lambda: store.reserve_resources(reservation()), lambda: store.observe_resource_usage(observation()),
+                                  lambda: store.reconcile_resource_usage(reconciliation()), lambda: store.get_resource_operation("missing"),
                                   lambda: store.inspect_resources(limits=LIMITS)):
                     with self.assertRaisesRegex(StoreLayoutError, "migration"):
                         operation()
                 self.assertEqual((root / "metadata.sqlite3").read_bytes(), before)
 
     def test_fresh_and_historical_v2_to_v3_preserve_all_scientific_rows(self):
-        """Both allowed 2→3 paths preserve exact SQL/artifacts/receipts and ordered original history."""
+        """Both 2→3 paths preserve SQL/artifacts/history while completing usage and retaining uncertainty."""
         for historical in (False, True):
             root = self.parent / f"source-{historical}"
             if historical:
@@ -106,6 +107,13 @@ class ResourceSchemaTests(unittest.TestCase):
                 populate(store)
                 item = reservation()
                 result = store.reserve_resources(item)
+                store.observe_resource_usage(observation("partial"))
+                store.observe_resource_usage(observation("timeout", event="timeout"))
+                store.reconcile_resource_usage(reconciliation("conservative", mode="conservative", observation_operation_id="op_timeout"))
+                store.observe_resource_usage(observation("complete", event="authoritative_completion"))
+                store.reconcile_resource_usage(reconciliation(previous="op_conservative"))
+                store.reserve_resources(reservation("unknown"))
+                store.observe_resource_usage(observation("lost", "reservation_unknown", event="acknowledgment_loss"))
                 snapshot = store.inspect_resources(limits=LIMITS)
                 complete = self.parent / f"v3-backup-{historical}"
                 create_backup(store, complete)
@@ -266,7 +274,7 @@ backup.restore_backup(sys.argv[1], sys.argv[2], target_schema=3,
                 store.inspect_resources(limits=LIMITS)
 
     def test_schema3_typed_dossier_capture_generation_refresh_and_scientific_closure(self):
-        """Real Source/Corpus/Project/WorkProduct/scientific paths and readable APIs work on schema3."""
+        """Usage, settlement and breaches preserve scientific outgoing closure and all readable smoke paths."""
         from tests.snapshot_fixtures import populated, limits
         from tests.view_capture_fixtures import capture_limits
         from tests.view_refresh_fixtures import refresh_limits
@@ -292,6 +300,13 @@ backup.restore_backup(sys.argv[1], sys.argv[2], target_schema=3,
             doc = root_request().to_dict()
             doc["payload"]["scope"]["reference"]["record_id"] = project_id
             store.create_resource_account(ResourceRequest.from_dict(doc))
+            store.allocate_resources(allocation("run", "run", "project"))
+            store.reserve_resources(reservation("close", account="run", purpose="closeout", maxima=vector(local_time=2)))
+            store.observe_resource_usage(observation("complete", "reservation_close", account_id="run",
+                event="authoritative_completion", usage=vector(local_time=1)))
+            store.reconcile_resource_usage(reconciliation(reservation_id="reservation_close", account_id="run"))
+            store.observe_resource_usage(observation("late", "reservation_close", account_id="run", usage=vector(local_time=11)))
+            self.assertTrue(store.inspect_resources(limits=LIMITS).to_dict()["breaches"])
             after = store.capture_snapshot(chosen, limits=limits())
             self.assertEqual(after, before)
             view = self.parent / "view"
@@ -324,7 +339,7 @@ backup.restore_backup(sys.argv[1], sys.argv[2], target_schema=3,
         self.assertFalse(destination.exists())
 
     def test_nonconsecutive_historical_receipts_survive_both_migrations_and_resource_restore(self):
-        """Carry the independent historical fixture's exact values and event IDs through 1→2→3."""
+        """Carry nonconsecutive receipts through 1→2→3 and retain measured and uncertain settlements."""
         original, batches, artifact = historical_store(self.parent / "historical-v1")
         with original:
             receipts = [original.get_submission(batch.submission_id) for batch in batches]
@@ -357,10 +372,15 @@ backup.restore_backup(sys.argv[1], sys.argv[2], target_schema=3,
                 store.allocate_resources(item)
             work = reservation("retained")
             committed = store.reserve_resources(work)
-            observation = store.inspect_resources(limits=LIMITS)
+            store.observe_resource_usage(observation("partial", "reservation_retained"))
+            store.observe_resource_usage(observation("complete", "reservation_retained", event="authoritative_completion"))
+            store.reconcile_resource_usage(reconciliation(reservation_id="reservation_retained"))
+            store.reserve_resources(reservation("unknown"))
+            store.observe_resource_usage(observation("lost", "reservation_unknown", event="process_loss"))
+            captured = store.inspect_resources(limits=LIMITS)
             create_backup(store, self.parent / "historical-complete")
         with restore_backup(self.parent / "historical-complete", self.parent / "historical-exact") as restored:
-            self.assertEqual(restored.inspect_resources(limits=LIMITS), observation)
+            self.assertEqual(restored.inspect_resources(limits=LIMITS), captured)
             self.assertEqual(restored.reserve_resources(work), committed)
             self.assertEqual([restored.get_submission(batch.submission_id) for batch in batches], receipts)
             self.assertEqual((self.parent / "historical-exact/metadata.sqlite3").read_bytes(),

@@ -151,10 +151,11 @@ give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptio
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
 Remaining typed payloads and state machines, support/assessment
-freshness, eligibility/promotion, worker isolation, leases/fencing, operating-grant authentication, resource usage settlement, general migrations,
+freshness, eligibility/promotion, worker isolation, leases/fencing, operating-grant authentication, general migrations,
 periodic scheduling, distributed execution and research execution remain
 unsupported. Schema3 adds controller-private immutable allocation and reservation accounting
-with exact operation retries; it does not implement execution or settlement. This slice does not
+with cumulative usage, explicit settlement, sticky breaches and exact operation retries;
+it does not implement execution. This slice does not
 complete overall M0-E, M0-S, M1, D02 or scientific validation.
 
 ## Development validation
@@ -257,15 +258,18 @@ is partial R-019/R-017 evidence, not complete D02 or research-run/session/job re
 `resources.py` owns complete strict detached declarations and shared bounded call
 envelope validation. `resource_ledger.py` uses the existing RecordStore transaction
 boundary for operation identity, hierarchy, protected capacity and normalized
-account/allocation/reservation/reference projections. No second database, scientific
+account/allocation/reservation/reference projections. Usage and reconciliation append
+to the same operation history, retaining original reservation declarations. No second database, scientific
 audit-event charge, new artifact subsystem or worker SQL endpoint is introduced.
 
 The run's explicit `handoff_call_bounds` provisions its complete minimum; actual
-reservations supply independent invocation bounds. Ancestors charge delegated
-capacity once, and descendant reservations consume that delegation. Live open
+reservations supply independent invocation bounds. Ancestors retain each allocation
+and propagate child commitment above it without double charging contained usage.
+Shared replay derives cumulative spending, remaining liability, conservative charges,
+authoritative final usage and sticky project-wide admission blocking. Live open
 validates history only after journal recovery. A shared chronological validator
 also checks ledger inspection and immutable backup inspection. The schema3 history
 is empty for fresh creation, 2→3 for migrated fresh2, or preserved 1→2 followed by
 2→3. Scientific outgoing closure remains unchanged by resource mutations.
 See [the resource contract](resource-accounting.md) for exact fields, arithmetic,
-unknown-usage reporting, original-ID recovery, and unavailable settlement APIs.
+version-2 detached inspection, original-ID recovery, and explicit settlement evidence.

@@ -10,6 +10,8 @@ from research_pipeline.domain import (
     _integer, _timestamp, _validate_json_string, _MAX_INTEGER as MAX_QUANTITY,
 )
 PURPOSES = ("ordinary", "verification", "handoff", "closeout")
+UNCERTAINTY_EVENTS = ("process_loss", "acknowledgment_loss", "timeout", "cancellation",
+                      "lease_expiry", "provider_error")
 UNITS = {"model_input_tokens": "token", "model_output_tokens": "token",
          "model_calls": "call", "tool_calls": "call", "local_time": "nanosecond",
          "local_compute": "cpu_nanosecond", "local_storage": "byte"}
@@ -26,7 +28,7 @@ class ResourceConflictError(ValueError):
 
 
 class ResourceCapacityError(ValueError):
-    """A declaration exceeds available or protected purpose capacity."""
+    """Admission exceeds capacity or is blocked by a sticky breach beneath its project."""
 
 
 class ResourceIntegrityError(ValueError):
@@ -215,15 +217,15 @@ def dimensions(value):
     return sorted(result, key=lambda d: d["dimension_id"])
 
 
-def vector(value):
-    """Normalize a finite vector; the ledger additionally requires the root's exact dimensions."""
+def vector(value, *, nullable=False):
+    """Normalize quantities, optionally retaining unavailable usage as null; require units in replay."""
     if type(value) is not list or not 1 <= len(value) <= 16:
         raise ResourceValidationError("vector: require 1–16 explicit quantities")
     result = []
     for item in value:
         fields(item, "dimension_id quantity", "quantity")
         result.append({"dimension_id": identifier(item["dimension_id"], "dimension_id"),
-                       "quantity": quantity(item["quantity"], "quantity")})
+                       "quantity": None if nullable and item["quantity"] is None else quantity(item["quantity"], "quantity")})
     if len({item["dimension_id"] for item in result}) != len(result):
         raise ResourceValidationError("duplicate vector dimension")
     return sorted(result, key=lambda item: item["dimension_id"])
@@ -366,18 +368,78 @@ def validate_run_policy(value, declared):
         raise ResourceValidationError("require one monitored service policy per monetary dimension")
 
 
+def _observation(value):
+    """Validate finite evidence and nullable cumulative usage without granting transport authority.
+
+    Authoritative completion declares execution and billing complete for every
+    tracked dimension. Dimension-dependent telemetry checks belong to replay.
+    """
+    evidence = fields(value["evidence"], "source_kind source_id source_receipt_id statement", "evidence")
+    identifier(evidence["source_id"], "source_id")
+    statement(evidence["statement"])
+    source, event = evidence["source_kind"], value["event"]
+    receipt = source == "controller_receipt"
+    if receipt:
+        identifier(evidence["source_receipt_id"], "source_receipt_id")
+        if event not in ("partial_usage", "authoritative_completion"):
+            raise ResourceValidationError("controller receipt requires usage or complete execution/billing")
+    elif (source == "controller_status" and event in UNCERTAINTY_EVENTS
+          or source == "worker_narrative" and event == "worker_narrative"):
+        if evidence["source_receipt_id"] is not None:
+            raise ResourceValidationError("non-receipt evidence requires null source_receipt_id")
+    else:
+        raise ResourceValidationError("incompatible evidence source/event")
+    usage = vector(value["usage"], nullable=True)
+    known = [entry["quantity"] is not None for entry in usage]
+    if ((not receipt and any(known)) or (event == "partial_usage" and not any(known))
+            or (event == "authoritative_completion" and not all(known))):
+        raise ResourceValidationError("event requires unavailable, partial, or complete usage")
+    telemetry = fields(value["telemetry"], "cached_input_tokens reasoning_output_tokens", "telemetry")
+    for number in telemetry.values():
+        if number is not None:
+            quantity(number, "telemetry quantity")
+            if not receipt:
+                raise ResourceValidationError("non-receipt telemetry must be null")
+    sample = value["call_observation"]
+    if sample is not None:
+        fields(sample, "call_id input_tokens output_tokens", "call observation")
+        identifier(sample["call_id"], "call_id")
+        quantity(sample["input_tokens"], "call input")
+        quantity(sample["output_tokens"], "call output")
+        if not receipt:
+            raise ResourceValidationError("non-receipt call observation must be null")
+    return {**value, "usage": usage}
+
+
+def _reconciliation(value):
+    """Validate an explicit settlement reference and predecessor; replay verifies their authority."""
+    if value["mode"] not in ("authoritative", "conservative"):
+        raise ResourceValidationError("unsupported reconciliation mode; refunds/amendments unavailable")
+    for key in ("observation_operation_id", "previous_reconciliation_operation_id"):
+        if value[key] is not None:
+            identifier(value[key], key)
+    statement(value["reason"])
+    return value
+
+
 def _payload(kind, value):
-    """Normalize the finite request variants; amendments and later usage kinds are unavailable."""
+    """Normalize the closed declaration, observation and settlement unions; reject amendments."""
     names = {"create_account": "account_id owner_id scope dimensions ceiling policy",
              "allocate": "allocation_id parent_account_id account_id owner_id scope purpose_limits run_policy",
-             "reserve": "reservation_id account_id owner_id purpose maxima call_bounds"}
+             "reserve": "reservation_id account_id owner_id purpose maxima call_bounds",
+             "observe": "account_id owner_id reservation_id event evidence usage telemetry call_observation",
+             "reconcile": "account_id owner_id reservation_id mode observation_operation_id previous_reconciliation_operation_id reason"}
     if type(kind) is not str or kind not in names:
-        raise ResourceValidationError("unsupported resource kind; amendments/usage/release unavailable")
+        raise ResourceValidationError("unsupported resource kind; amendments/refunds unavailable")
     fields(value, names[kind], kind)
     result = dict(value)
     for key in ("account_id", "owner_id", "allocation_id", "parent_account_id", "reservation_id"):
         if key in value:
             result[key] = identifier(value[key], key)
+    if kind == "observe":
+        return _observation(result)
+    if kind == "reconcile":
+        return _reconciliation(result)
     if kind == "reserve":
         if value["purpose"] not in PURPOSES:
             raise ResourceValidationError("unsupported reservation purpose")
@@ -497,11 +559,11 @@ class ResourceReceipt:
         if value["format"] != "research_pipeline.resource_receipt" or type(value["version"]) is not int or value["version"] != 1:
             raise ResourceValidationError("unsupported resource receipt format/version")
         kind = value["kind"]
-        if kind not in ("create_account", "allocate", "reserve"):
+        if kind not in ("create_account", "allocate", "reserve", "observe", "reconcile"):
             raise ResourceValidationError("unsupported receipt kind")
         for key in ("operation_id", "receipt_id", "account_id"):
             identifier(value[key], key)
-        for key, required in (("allocation_id", kind == "allocate"), ("reservation_id", kind == "reserve")):
+        for key, required in (("allocation_id", kind == "allocate"), ("reservation_id", kind in ("reserve", "observe", "reconcile"))):
             if required:
                 identifier(value[key], key)
             elif value[key] is not None:

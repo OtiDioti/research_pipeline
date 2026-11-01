@@ -94,9 +94,9 @@ conflicting writes, retained orphans, hot-journal recovery, post-commit interrup
 and later artifact integrity failures. Local test results are advisory to controller
 validation. Remaining typed payloads and state machines,
 support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, operating-grant
-authentication, resource usage settlement, general migrations, periodic scheduling, distributed
+authentication, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. Schema3 provides immutable allocations and atomic conservative reservations with exact retries;
-[resource accounting](../docs/resource-accounting.md) documents retained liabilities and recovery. Artifact identity and completed task state confer no
+[resource accounting](../docs/resource-accounting.md) documents cumulative usage, explicit authoritative/conservative settlement, sticky project-wide breaches, version-2 inspection and original-ID recovery. Artifact identity and completed task state confer no
 scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
 
 The [typed scientific content contract](../docs/typed-content.md) documents frozen

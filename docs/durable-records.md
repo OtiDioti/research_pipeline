@@ -433,11 +433,12 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 Remaining typed payloads, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
-fencing, operating-grant authentication, resource usage settlement, general migrations, periodic
+fencing, operating-grant authentication, general migrations, periodic
 scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.
-Schema3 supplies [controller resource reservations](resource-accounting.md), with
+Schema3 supplies [controller resource accounting](resource-accounting.md), with
 immutable protected allocations, no double charge for descendant commitments,
-original-operation retries and retained outstanding liabilities. This slice completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
+cumulative usage, explicit authoritative/conservative settlement, sticky project-wide
+breaches, original-operation retries and retained uncertainty. This slice completes neither overall M0-E, M0-S, M1, D02, the full product nor scientific
 validation. M0-S gates scientifically dependent evaluation, qualification and
 release, not independent storage engineering; all scientific obligations remain.
 

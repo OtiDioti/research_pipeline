@@ -107,7 +107,8 @@ the accepted full-byte-buffer API, so memory includes the largest artifact (and
 buffered snapshot/manifest bytes). Copies have independent database/object inodes.
 Default restoration is exact: each supported schema yields the same schema,
 with original metadata bytes, identities and receipts. Schema3 also retains all
-resource operations, allocations, reservations, policies and outstanding liabilities. Restored v1
+resource operations, allocations, original reservations, cumulative observations,
+reconciliations, policies, sticky breaches and outstanding liabilities. Restored v1
 stores accept old-kind appends and reject v2-only submitted or declared reference
 kinds with a migration-required `DomainValidationError`. Restored v2 stores accept
 all twenty generic kinds. Neither path changes the backup or source.
@@ -194,7 +195,18 @@ including mandatory handoff provisioning bounds, and historical admission capaci
 The same shared validator is used for ledger inspection. Resource references do not
 register artifacts; exact registration-versus-historical-scientific-links closure
 remains mandatory, with no orphan exception. See [resource accounting](resource-accounting.md)
-for a runnable explicit 2→3 and outstanding-liability restore example.
+for a runnable usage, settlement, breach, explicit 2→3 and exact-restore example.
+
+Schema3 usage and reconciliation append to the existing operation log without a DDL
+or schema-identity change. Live open recovers legitimate hot journals before replay;
+immutable backup inspection performs no recovery. The shared validator reconstructs
+cumulative lower bounds, settlement predecessors/evidence, external receipt identity,
+remaining liability, exact decimal aggregate totals and sticky project-wide breach
+gates at each historical sequence. Valid breached ledgers and totals above `2**63-1`
+remain inspectable, exportable and exactly restorable; later breaches do not invalidate
+earlier valid admissions. Rehashed bytes cannot conceal impossible history. These
+checks establish internal consistency, not hostile-owner authentication. Scientific
+outgoing-closure snapshots remain observations, not full runtime backups.
 
 ## Completeness, errors and recovery
 
