@@ -67,3 +67,7 @@ Run c62af399-bf8c-4b25-8ef7-ec1947fad6ae accepted/exact-integrated 8cfb035,579/5
 ## 2026-10-31 — REQ-D03-006 integration audit
 
 Run63f0416b accepted/exact-integrated0a875dd,657/657 target tests. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted0/0/0 with no pending maintenance candidate. Two CWI product repairs fixed an explicit fixture mode and observed directory/leaf disappearance classification. Read-only coordinator audit assertion corrections required no source/configuration/state edits and consumed no recovery. Stable model/executable/environment/checks remain unchanged; historical evidence and failed candidates are preserved.
+
+## 2026-11-01 — View CLI acceptance/integration audit
+
+Runc9055f4c-f63c-4815-ab5e-670116ce1333 finally accepted/exact-integrated2643673. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073, attempted/adopted/reverted0/0/0. Two CWI product repairs addressed authored-control/descriptor/path-budget findings and a fixture mode; the independent remaining B-017 diagnostic is also product work and will use CWI. No backend patch, controller-state edit, security/configuration waiver or automatic-approval rejection. Historical failed validations and Writer-local advisory limitations remain recorded.
