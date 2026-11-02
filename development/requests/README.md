@@ -29,3 +29,7 @@ REQ-D03-003 is accepted/exact-integrated9373860,396/396 target tests. [REQ-D03-0
 ## Current prepared recovery — 2026-11-02
 
 [REQ-D04-002-R1](REQ-D04-002-R1.md) replaces human-cancelled REQ-D04-002 for execution after verified terminal ownership and Git reconciliation. Its exact draft context preserves completed capture work; fresh acceptance and pending publication/navigation remain required. The human resumed continuous development with unchanged budgets and scientific boundaries. STATUS contains the current next action.
+
+## Control-foundation interrupted workflow recovery
+
+[REQ-D04-004-R2](REQ-D04-004-R2.md) freezes the completed but unaccepted R1/d838a2c8 draft, complete compatible contract and retained prescription for fresh validation/review. R1 is terminal/noresume; no source has been adopted. All original foundation and mandatory report/restart follow-ons remain. Root STATUS owns launch readiness.

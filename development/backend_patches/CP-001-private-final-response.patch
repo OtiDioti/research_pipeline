@@ -1,0 +1,117 @@
+diff --git a/README.md b/README.md
+index 725cadc..2faa826 100644
+--- a/README.md
++++ b/README.md
+@@ -399,0 +400,7 @@ old controller has exited.
++The adapter prepares its final-response file with owner-only permissions before
++launching Codex, so an orphaned child cannot leave that output dependent on the
++supervisor's final permission cleanup. An empty prepared file is not a completed
++response. Existing interrupted-agent recovery nevertheless treats its presence
++conservatively and stops for explicit adoption rather than automatically retrying
++the call, including when interruption occurs before any response is written.
++
+diff --git a/cwi/codex_cli.py b/cwi/codex_cli.py
+index 1a03152..05c52cc 100644
+--- a/cwi/codex_cli.py
++++ b/cwi/codex_cli.py
+@@ -423,0 +424,8 @@ class CodexCliAdapter:
++                # Secure this child-written path before launch: an orphan may
++                # finish after its supervisor can no longer chmod the result.
++                response_descriptor = os.open(
++                    artifacts.final_response,
++                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_CLOEXEC", 0),
++                    0o600,
++                )
++                os.close(response_descriptor)
+@@ -526 +534 @@ class CodexCliAdapter:
+-            else _read_utf8(artifacts.final_response)
++            else (_read_utf8(artifacts.final_response) or None)
+diff --git a/tests/test_codex_cli.py b/tests/test_codex_cli.py
+index c9f377b..65266c3 100644
+--- a/tests/test_codex_cli.py
++++ b/tests/test_codex_cli.py
+@@ -520,0 +521,84 @@ class CodexCliAdapterTests(unittest.TestCase):
++    @unittest.skipUnless(os.name == "posix", "requires POSIX process and file modes")
++    def test_final_response_is_private_after_supervisor_disappears(self) -> None:
++        """Loss of post-exit cleanup must not leave an unreadable recovery artifact."""
++        from cwi.state_store import _read_regular_file
++
++        for mask in (0o002, 0o022):
++            with self.subTest(umask=oct(mask)):
++                artifacts = self.root / f"orphan-artifacts-{mask}"
++                runtime_home = self.root / f"orphan-runtime-{mask}"
++                runtime_home.mkdir()
++                final = artifacts / "final-response.txt"
++                child_identity = self.root / f"orphan-child-{mask}"
++                prompt, _ = self.request("success", final="OK")
++                program = textwrap.dedent(f"""
++                    import os, time
++                    from pathlib import Path
++                    from cwi.codex_cli import CodexCliAdapter, SandboxRole
++                    from cwi.state import AgentRole
++                    os.umask({mask})
++                    final = Path({str(final)!r})
++                    def lose_supervisor(pid, group):
++                        Path({str(child_identity)!r}).write_text(str(group))
++                        deadline = time.monotonic() + 5
++                        while time.monotonic() < deadline:
++                            if final.exists() and final.read_bytes() == b'OK':
++                                os._exit(86)
++                            time.sleep(0.01)
++                        raise RuntimeError('child did not save its final response')
++                    adapter = CodexCliAdapter(
++                        executable=Path({str(self.fake_cli)!r}),
++                        runtime_home=Path({str(runtime_home)!r}),
++                        account_home=Path({str(self.account_home)!r}),
++                        source_environment={{'HOME': {str(self.user_home)!r},
++                                            'PATH': '/usr/bin:/bin'}},
++                    )
++                    adapter.invoke(
++                        role=AgentRole.WRITER, prompt={prompt!r},
++                        cwd=Path({str(self.repository.resolve())!r}),
++                        sandbox=SandboxRole.WORKSPACE_WRITE, timeout_seconds=10,
++                        artifact_dir=Path({str(artifacts)!r}),
++                        on_process_started=lose_supervisor,
++                    )
++                """)
++                try:
++                    completed = subprocess.run(
++                        [sys.executable, "-B", "-c", program],
++                        cwd=REPOSITORY_ROOT,
++                        env={**os.environ, "PYTHONPATH": str(REPOSITORY_ROOT)},
++                        capture_output=True, text=True, timeout=10, check=False,
++                    )
++                    self.assertEqual(completed.returncode, 86, completed.stderr)
++                    self.assertEqual(final.stat().st_mode & 0o777, 0o600)
++                    self.assertEqual(_read_regular_file(final), b"OK")
++                finally:
++                    if child_identity.exists():
++                        try:
++                            os.killpg(int(child_identity.read_text()), 15)
++                        except ProcessLookupError:
++                            pass
++
++    def test_final_response_preparation_failure_prevents_process_start(self) -> None:
++        """A response path that cannot be secured must fail before a model starts."""
++        prompt, capture = self.request("success")
++        original_open = os.open
++
++        def fail_response_creation(path, flags, *args, **kwargs):
++            """Fail only the response-file creation, preserving real runtime setup."""
++            if Path(path).name == "final-response.txt" and flags & os.O_CREAT:
++                raise OSError("cannot prepare private final response")
++            return original_open(path, flags, *args, **kwargs)
++
++        with patch("cwi.codex_cli.os.open", side_effect=fail_response_creation):
++            result = self.adapter().invoke(
++                role=AgentRole.WRITER, prompt=prompt,
++                cwd=self.repository.resolve(), sandbox=SandboxRole.WORKSPACE_WRITE,
++                timeout_seconds=5, artifact_dir=self.root / "response-creation-failure",
++            )
++        self.assertEqual(result.status, InvocationStatus.RUNTIME_FAILURE)
++        self.assertIsNone(result.returncode)
++        self.assertIsNone(result.final_response)
++        self.assertTrue(result.process_quiescent)
++        self.assertFalse(capture.exists())
++        self.assertIn("cannot prepare private final response", result.artifacts.stderr.read_text())
++

@@ -152,3 +152,9 @@ REQ-D04-004 next scopes durable run control and automatic initial/checkpoint/sto
 REQ-D04-004/e83c7165 stopped before any candidate after prescription blockers consumed2repair slots:missing run_revision type,addendum-only context,then actor/provenance incompatibility. Baseline883/883 passed but no implementation/acceptance/integration exists. Parent/childed010210 and backend1f68060 clean;terminal owners resolved. [Evidence](development/runs/e83c7165-ab29-48f5-8942-581617895c2a.md).
 
 [REQ-D04-004-R1](development/requests/REQ-D04-004-R1.md) freezes a full self-contained contract with existingASCII128 actor semantics and one bounded prepared-control/ordered-obligation milestone. Automatic reporting/restart recovery remains mandatory nextREQ-D04-005,with original13criteria retained;no scope-completion/admission claim. Prescriptions corrected rather than widening old provenance or changing backend/limits. STATUS remains authoritative for resources and the single next action.
+
+## Interrupted control draft preserved — 2026-11-02
+
+[Run d838a2c8](development/runs/d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md) is terminal without candidate validation, review, final acceptance or integration. The orphan Writer completed16files/32newtests; exact source is preserved for [REQ-D04-004-R2](development/requests/REQ-D04-004-R2.md) through supported frozen context. The human authorized one exact final-response permission correction; the original controller then terminated without replay. This is recovery evidence, not delivery of the control foundation.
+
+R2 preserves every original foundation criterion and all13mandatory subsequent REQ-D04-005 report/restart criteria. Automatic reports, pending gates, queue/attempt/fencing/admission, worker/model/tool/context enforcement and scientific/live obligations remain mandatory. D02/D03/D04/M0-E remain partial, M0-S pending. STATUS owns the single next safe action.

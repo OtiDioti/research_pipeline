@@ -97,3 +97,9 @@ REQ-D04-004 scopes at most2safe milestones for typed run/report obligations then
 ## Compatible control foundation recovery — 2026-11-02
 
 Original rune83c7165 stopped at Writer-blocker repair limit,no source candidate/milestone/final acceptance. Full31960byte prescription missed run_revision type;addendum5109bytes lacked priorcontext;complete37075byte replacement conflicted with existing provenance actor grammar. Actual source clean,all owners resolved. REQ-D04-004-R1 freezes corrected complete contract and one safe first milestone. NextREQ-D04-005 must deliver original automatic-report/restart13criteria;all phaseboxes stay unchanged. This is prescription recovery1/2,cumulative9,notanotherdeadline recovery or backend change. No lifecycle/admission/scientific completion claim.
+
+## Interrupted foundation recovery — 2026-11-02
+
+R1/d838a2c8 is terminal without candidate/final acceptance or integration. The orphan Writer completed16files/32newtests while the parent remained frozen. One exact human-authorized response-mode correction allowed the original controller to reconcile without replay. [Run record](../runs/d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md). R2 freezes the byte-exact draft and complete contract/prescription for fresh CWI-only validation/review; it does not restart accepted work or install source manually.
+
+Every phase box remains unchanged. REQ-D04-005 automatic reporting/restart recovery retains all13criteria after actual foundation integration/target validation. Broader queue/attempt/fencing, transactional reservations/admission, isolation, model/tool/context, live and M0-S duties remain required. No phase or scientific completion is claimed.

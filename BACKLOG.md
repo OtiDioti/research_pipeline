@@ -100,3 +100,9 @@ R1/f14139d7 finally accepted/exact-integrated27638a93,final receiptc58ce255;fina
 ## B-020 — Prescription completeness and provenance compatibility — 2026-11-02
 
 Owner:coordinator/CWI. Original lifecycle rune83c7165 stopped with no candidate after2internal repair slots and three blocked Writers. Full ActorUnicode4096 instruction conflicts with unchanged CreationProvenance ASCII128;read-only probe confirms. Role guards prevented unsupported implementation;no backend repair needed. R1freezes completecorrectedcontract and narrower firstfoundation,with automatic reporting/restart recovery mandatory subsequently. Coordinator prescription recovery1/2,cumulative9;starts26used24remain,CWIrepairs25;old limits persist. No oldstate/source/receipt rewrite or failedmodel/deadline/permission claim. Exactly one next safe action is in STATUS.
+
+## B-021 — Orphan response permission recovery — 2026-11-02
+
+RESOLVED for the specific retained artifact; owner coordinator/backend maintenance. Controller loss left completed Writer response0664, blocking original recovery. The human explicitly authorized only that591-byte file0664→0600; its bytes/inode/owner remained fixed. Original-backend resume then safely terminated d838a2c8 with no acceptance/replay and directs fresh-workflow salvage. [Run evidence](development/runs/d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md). Two supported permission-recovery actions2/2 remain counted; no allowance reset or general evidence-edit permission.
+
+Separate CP-001 backend repair (tested and exact-adopted at c74df0b) and its test-environment failures are audited in coding_pipeline_changes.md. It addresses output-file permissions, not controller survival. R2 fresh acceptance of the saved draft is ordinary required roadmap work; it is the final interrupted-workflow salvage2/2, with all original gates. No scientific or phase completion follows. STATUS owns the next safe action.
