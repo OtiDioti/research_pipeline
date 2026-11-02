@@ -121,3 +121,5 @@ explicit host-only credentials, exact bounded dossier preparation/current eligib
 metadata-only original-ID recovery, credential withdrawal and restore limitations,
 with a self-contained executable synthetic guide. Detached results require rechecking
 inside the later admitting transaction and provide no reservation or dispatch guarantee.
+
+- [Durable run control](run-control.md): authenticated preparation, atomic pending report intent, bounded historical recovery and an always-closed ordinary-work gate.

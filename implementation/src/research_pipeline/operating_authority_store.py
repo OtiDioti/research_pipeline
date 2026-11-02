@@ -4,6 +4,7 @@ The caller supplies current external trust and time. No policy or key is retaine
 on RecordStore or sent to persistence, artifact storage, projections or backups.
 """
 
+from contextlib import contextmanager
 import hashlib
 
 from research_pipeline import operating_authority as authority
@@ -96,11 +97,16 @@ def _commit_result_bytes(key, operation_id, receipt_size):
         envelope_digest=66, receipt=receipt_size)
 
 
-def _receipt_result_bytes(key, operation_id, event_size, timestamp_size, provenance_size):
-    """Plan standalone receipt and result retention from validated or bounded audit fields."""
-    receipt_size = _object_bytes(submission_id=_fragment_bytes(operation_id), fingerprint=66,
+def _receipt_bytes(key, operation_id, event_size, timestamp_size, provenance_size):
+    """Measure one authority receipt from preflighted immutable audit fragments."""
+    return _object_bytes(submission_id=_fragment_bytes(operation_id), fingerprint=66,
         event_id=event_size, committed_at=timestamp_size, provenance=provenance_size,
         revisions=_array_bytes([_array_bytes([_fragment_bytes(key[0]), len(str(key[1]))])]))
+
+
+def _receipt_result_bytes(key, operation_id, event_size, timestamp_size, provenance_size):
+    """Plan standalone receipt and result retention from validated or bounded audit fields."""
+    receipt_size = _receipt_bytes(key, operation_id, event_size, timestamp_size, provenance_size)
     return receipt_size + _commit_result_bytes(key, operation_id, receipt_size)
 
 
@@ -148,6 +154,32 @@ class _Reader:
         if self.metadata_bytes + size > self.limits.max_metadata_bytes:
             raise AuthorityLimitError("authority aggregate metadata byte limit exceeded")
         self.metadata_bytes += size
+
+    @contextmanager
+    def temporary(self, size):
+        """Reserve codec scratch until scope exit, without refunding retained representations."""
+        self.reserve(size)
+        try:
+            yield
+        finally:
+            self.metadata_bytes -= size
+
+    def decode_authority(self, envelope):
+        """Reserve and reconstruct a signed value and detached decision, even for cached envelopes.
+
+        Both retained content-sized copies remain charged for this reader's lifetime;
+        budget failures occur outside codecs that translate broad validation errors.
+        """
+        content_size = len(envelope._content_json)
+        self.reserve(content_size)
+        # Six envelope-sized scratch copies cover the decoder's detached input,
+        # re-encoded envelope/tree and canonical text, plus nested validation and
+        # to_dict's parse/normalize copies. Neither retained copy is refunded.
+        with self.temporary(self.envelope_sizes[_key(envelope)] * 6):
+            signed = authority.decode_envelope(envelope)
+            self.reserve(content_size)
+            decision = signed.to_dict()["decision"]
+        return signed, decision
 
     def record(self, key):
         """Count distinct metadata records, including shallow existence reads, before fetching."""
@@ -269,8 +301,22 @@ class _Reader:
         self.preflighted[key] = retained
         return retained
 
+    def check_result_size(self, size):
+        """Allow connection-owned readers to preflight nested detached authority results."""
+
+    def _before_envelope(self, key, row, content, provenance, links, artifacts):
+        """Allow a bounded connection owner to reserve reconstruction from validated fragments."""
+
+    def _stored_json(self, raw):
+        """Decode preflighted stored JSON using this reader's authority wire restrictions."""
+        return _canonical_json(raw, self.limits.max_record_bytes)
+
+    def _envelope_size(self, envelope):
+        """Measure an authority envelope under its independent canonical hard ceiling."""
+        return len(authority.bounded(envelope.to_dict(), authority.ENVELOPE_BYTES))
+
     def read(self, key):
-        """Reconstruct a preflighted envelope, reconcile retention and cache its exact size for later copies."""
+        """Reconstruct once through bounded codec hooks, reconcile retention and cache exact copy sizes."""
         retained = self.preflight(key)
         if key in self.envelopes:
             return self.envelopes[key]
@@ -278,20 +324,21 @@ class _Reader:
             r.scientific_disposition,r.submission_id,s.fingerprint,a.committed_at FROM revisions r
             JOIN identities i USING(record_id) JOIN submissions s USING(submission_id)
             JOIN audit_events a USING(submission_id) WHERE r.record_id=? AND r.revision=?""", key).fetchone()
-        content = _canonical_json(row[1], self.limits.max_record_bytes)
-        provenance = _canonical_json(row[2], self.limits.max_record_bytes)
+        content = self._stored_json(row[1])
+        provenance = self._stored_json(row[2])
         try:
             _commit({"submission_id": row[5], "fingerprint": row[6], "committed_at": row[7]})
             links = tuple(RecordReference(*item) for item in self.connection.execute("""SELECT target_id,
                 target_revision,relationship,target_kind FROM record_links WHERE record_id=? AND revision=? ORDER BY ordinal""", key))
             artifacts = tuple(ArtifactReference(*item) for item in self.connection.execute("""SELECT digest,size
                 FROM artifact_links WHERE record_id=? AND revision=? ORDER BY ordinal""", key))
+            self._before_envelope(key, row, content, provenance, links, artifacts)
             envelope = RecordEnvelope(*key, row[0], content, CreationProvenance.from_dict(provenance),
                                       links, artifacts, row[3], row[4])
-            encoded = authority.bounded(envelope.to_dict(), authority.ENVELOPE_BYTES)
-            if len(encoded) > self.limits.max_record_bytes:
+            encoded_size = self._envelope_size(envelope)
+            if encoded_size > self.limits.max_record_bytes:
                 raise AuthorityLimitError("authority canonical record byte limit exceeded")
-            self.metadata_bytes -= retained - len(encoded)
+            self.metadata_bytes -= retained - encoded_size
             if envelope.provenance.to_dict() != provenance:
                 raise ValueError
         except (ValueError, TypeError, AttributeError, RecursionError, OverflowError) as error:
@@ -299,7 +346,7 @@ class _Reader:
                 raise
             raise AuthorityIntegrityError("invalid authority record metadata") from None
         self.envelopes[key] = envelope
-        self.envelope_sizes[key] = len(encoded)
+        self.envelope_sizes[key] = encoded_size
         self.submission_ids[key] = row[5]
         return envelope
 
@@ -482,6 +529,8 @@ def _operation(reader, operation_id):
     # Reserve the standalone receipt and the complete detached result separately.
     # Numeric lengths and canonical provenance come from independent audit preflight.
     retained = _receipt_result_bytes(key, operation_id, lengths[0], _text_bound(lengths[1]), lengths[2])
+    reader.check_result_size(_commit_result_bytes(key, operation_id,
+        _receipt_bytes(key, operation_id, lengths[0], _fragment_bytes(committed_at), lengths[2])))
     reader.reserve(retained)
     try:
         receipt = SubmissionReceipt(operation_id, fingerprint, event_id, committed_at,
@@ -500,7 +549,7 @@ def _operation(reader, operation_id):
 
 
 def _history(reader, authority_domain, project_id, policy):
-    """Validate the complete actual stream and reserve each annotated entry before copying it."""
+    """Validate the complete stream, reserving each signed/tree reconstruction and annotated entry."""
     from research_pipeline.store import SubmissionConflictError
     identity = authority.stream_id(authority_domain, project_id)
     head = reader.head(identity)
@@ -519,8 +568,7 @@ def _history(reader, authority_domain, project_id, policy):
         reader.history_count(key)
         envelope = reader.read(key)
         try:
-            signed = authority.decode_envelope(envelope)
-            decision = signed.to_dict()["decision"]
+            signed, decision = reader.decode_authority(envelope)
             found = _operation(reader, reader.submission_ids[key])
             if found is None or found[1] != signed:
                 raise ValueError
@@ -553,7 +601,7 @@ def _history(reader, authority_domain, project_id, policy):
 
 
 def _resolve(reader, project, scope):
-    """Resolve bounded typed roles and reserve the detached dossier before constructing its binding."""
+    """Reserve the copied resolver seed and detached binding before resolving bounded typed roles."""
     from research_pipeline.store import _decode_typed_envelope, ReferenceResolutionError
     root = reader.read(_key(project))
     if root.kind != "project":
@@ -565,7 +613,15 @@ def _resolve(reader, project, scope):
             raise ValueError
         # This is a resolver seed, never a submitted operation. All data are stored
         # roots already read by the bounded reader in the same transaction.
-        seed = Submission("authority_resolution", root.provenance, (root,), {root.record_id: root.revision - 1})
+        provenance_size = _object_bytes(actor=_fragment_bytes(root.provenance.actor),
+            created_at=_fragment_bytes(root.provenance.created_at), details=len(root.provenance._details_json))
+        seed_size = _object_bytes(submission_id=_fragment_bytes("authority_resolution"),
+            provenance=provenance_size, records=_array_bytes((reader.envelope_sizes[_key(root)],)),
+            expected_heads=2 + _fragment_bytes(root.record_id) + 1 + len(str(root.revision - 1)))
+        # The resolver maps retain the copied root after constructor scratch ends.
+        reader.reserve(seed_size)
+        with reader.temporary(seed_size * 2):
+            seed = Submission("authority_resolution", root.provenance, (root,), {root.record_id: root.revision - 1})
         envelopes, values = reader.store._check_typed_targets(reader.connection, seed, (value,), authority_reader=reader)
     except (DomainValidationError, ReferenceResolutionError, TypeError, KeyError, AttributeError):
         raise AuthorityIntegrityError("incoherent selected dossier metadata or history") from None
@@ -670,14 +726,16 @@ def _resolve(reader, project, scope):
                for name in ("initial_corpus", "current_corpus", "context", "brief", "intake_report")}
     # Cached envelopes and typed content remain retained; neither pays for this
     # independent snapshot, including reference wrappers, null pins and framing.
-    reader.reserve(_object_bytes(format=len('"research_pipeline.operating_binding"'), version=1,
+    binding_size = _object_bytes(format=len('"research_pipeline.operating_binding"'), version=1,
         project=_reference_bytes(project.record_id, project.revision, project.relationship, project.target_kind),
         dossier=_fragment_bytes(dossier),
         record_evidence=_array_bytes(_object_bytes(
             reference=_reference_bytes(envelope.record_id, envelope.revision, "authority_evidence", envelope.kind),
             envelope_digest=66) for envelope in envelopes.values()),
         artifact_evidence=_array_bytes(_fragment_bytes(item) for item in artifacts.values()),
-        head_expectations=_array_bytes(_fragment_bytes(item) for item in watched.values())))
+        head_expectations=_array_bytes(_fragment_bytes(item) for item in watched.values()))
+    reader.check_result_size(binding_size)
+    reader.reserve(binding_size)
     try:
         binding = OperatingBinding({"format": "research_pipeline.operating_binding", "version": 1,
             "project": project.to_dict(), "dossier": dossier,
@@ -813,6 +871,7 @@ def commit_operating_decision(store, signed, *, policy, evaluated_at, limits):
     No path updates resource tables or implies process termination.
     Lost post-COMMIT acknowledgment must be recovered by this same operation ID.
     Fresh receipt/result retention is reserved before insertion constructs a receipt.
+    Fresh writes also preserve lifecycle/report reservations after original reconciliation.
     """
     from research_pipeline.store import SubmissionConflictError, RevisionConflictError, _fault as store_fault
     limits = authority.checked_limits(limits)
@@ -836,6 +895,8 @@ def commit_operating_decision(store, signed, *, policy, evaluated_at, limits):
             if old[2].to_dict() != submitted.to_dict():
                 raise SubmissionConflictError("operation identity already has a different authority request")
             return reader.output(old[0])
+        from research_pipeline.run_control_store import guard_fresh
+        guard_fresh(connection, submitted.submission_id, submitted.records)
         if policy_error or authority.verify_signature(signed, policy=policy) != "verified" or authority.policy_status(signed, policy=policy) != "permitted":
             raise AuthorityAuthenticationError("new authority operation lacks current configured authorization")
         authority.timestamp(evaluated_at)
@@ -942,74 +1003,87 @@ def inspect_operating_eligibility(store, authority_domain, project_id, *, purpos
     _require_store(store)
     with store._transaction() as connection:
         reader = _Reader(store, connection, limits)
-        watermark = reader.watermark()
-        _fault("snapshot_established")
-        history = _history(reader, authority_domain, project_id, policy)
-        status = "no_decision"
-        signature_status = policy_status = binding = decision_reference = None
-        observed_heads, history_signatures = [], []
-        policy_fingerprint = authority.policy_fingerprint(policy)
-        for item in history:
-            stored = item["envelope"]
-            envelope = reader.envelopes[(stored["record_id"], stored["revision"])]
-            reader.reserve(_object_bytes(
-                reference=_reference_bytes(envelope.record_id, envelope.revision, "operating_decision", envelope.kind),
-                envelope_digest=66, signature_status=_fragment_bytes(item["signature_status"])))
-            history_signatures.append({"reference": _ref(envelope, "operating_decision"),
-                "envelope_digest": authority.envelope_digest(envelope), "signature_status": item["signature_status"]})
-        if history:
-            latest = history[-1]
-            decision = latest["envelope"]["content"]["decision"]
-            binding = decision["binding"]
-            decision_reference = history_signatures[-1]["reference"]
-            signature_status, policy_status = latest["signature_status"], latest["policy_status"]
-            if latest["signature_status"] == "unavailable":
-                status = "missing_trust"
-            elif latest["signature_status"] == "invalid":
-                status = "unauthenticated"
-            elif latest["policy_status"] != "permitted":
-                status = "policy_denied"
-            elif decision["outcome"] in ("deny", "revoke"):
-                # Reductions never expire into an older approval, including after
-                # credential withdrawal; no earlier state is selected as fallback.
-                status = "denied" if decision["outcome"] == "deny" else "revoked"
-            elif any(item["signature_status"] == "invalid" for item in history):
-                status = "unauthenticated"
-            elif evaluated_at < decision["valid_from"]:
-                status = "not_yet_valid"
-            elif evaluated_at >= decision["valid_until"]:
-                status = "expired"
-            elif decision["scope"]["purpose"] != purpose:
-                status = "scope_mismatch"
+        return _evaluate_eligibility(reader, authority_domain, project_id,
+            purpose=purpose, policy=policy, evaluated_at=evaluated_at)
+
+
+def _evaluate_eligibility(reader, authority_domain, project_id, *, purpose, policy, evaluated_at):
+    """Evaluate current authority using an owned transaction, snapshot policy and explicit time.
+
+    The public inspector and lifecycle writer share this algorithm and aggregate
+    reader allowances. Reserve the independent result before detached construction.
+    """
+    watermark = reader.watermark()
+    _fault("snapshot_established")
+    history = _history(reader, authority_domain, project_id, policy)
+    status = "no_decision"
+    signature_status = policy_status = binding = decision_reference = None
+    observed_heads, history_signatures = [], []
+    policy_fingerprint = authority.policy_fingerprint(policy)
+    for item in history:
+        stored = item["envelope"]
+        envelope = reader.envelopes[(stored["record_id"], stored["revision"])]
+        reader.reserve(_object_bytes(
+            reference=_reference_bytes(envelope.record_id, envelope.revision, "operating_decision", envelope.kind),
+            envelope_digest=66, signature_status=_fragment_bytes(item["signature_status"])))
+        history_signatures.append({"reference": _ref(envelope, "operating_decision"),
+            "envelope_digest": authority.envelope_digest(envelope), "signature_status": item["signature_status"]})
+    if history:
+        latest = history[-1]
+        decision = latest["envelope"]["content"]["decision"]
+        binding = decision["binding"]
+        decision_reference = history_signatures[-1]["reference"]
+        signature_status, policy_status = latest["signature_status"], latest["policy_status"]
+        if latest["signature_status"] == "unavailable":
+            status = "missing_trust"
+        elif latest["signature_status"] == "invalid":
+            status = "unauthenticated"
+        elif latest["policy_status"] != "permitted":
+            status = "policy_denied"
+        elif decision["outcome"] in ("deny", "revoke"):
+            # Reductions never expire into an older approval, including after
+            # credential withdrawal; no earlier state is selected as fallback.
+            status = "denied" if decision["outcome"] == "deny" else "revoked"
+        elif any(item["signature_status"] == "invalid" for item in history):
+            status = "unauthenticated"
+        elif evaluated_at < decision["valid_from"]:
+            status = "not_yet_valid"
+        elif evaluated_at >= decision["valid_until"]:
+            status = "expired"
+        elif decision["scope"]["purpose"] != purpose:
+            status = "scope_mismatch"
+        else:
+            observed_heads = _observed(reader, binding)
+            if observed_heads != binding["head_expectations"]:
+                status = "stale"
             else:
-                observed_heads = _observed(reader, binding)
-                if observed_heads != binding["head_expectations"]:
-                    status = "stale"
-                else:
-                    try:
-                        _fresh(reader, decision)
-                        status = "eligible_" + purpose
-                    except AuthorityReadinessError:
-                        status = "incomplete"
-                    except ArtifactError:
-                        status = "artifact_unavailable"
-        eligible = status in ("eligible_setup", "eligible_main_research")
-        # Every branch, including an empty stream, owns a complete detached
-        # snapshot. Existing history/binding/signature allowances stay charged.
-        reader.reserve(_object_bytes(format=len('"research_pipeline.operating_eligibility"'), version=1,
-            authority_domain=_fragment_bytes(authority_domain), project_id=_fragment_bytes(project_id),
-            purpose=_fragment_bytes(purpose), evaluated_at=_fragment_bytes(evaluated_at),
-            status=_fragment_bytes(status), eligible=_fragment_bytes(eligible),
-            decision=_fragment_bytes(decision_reference), signature_status=_fragment_bytes(signature_status),
-            policy_status=_fragment_bytes(policy_status), binding=_fragment_bytes(binding),
-            observed_heads=_fragment_bytes(observed_heads), history_signatures=_fragment_bytes(history_signatures),
-            verified_artifacts=_array_bytes(_object_bytes(digest=66, size=len(str(artifact.size)))
-                for artifact in reader.verified.values()), watermark=_fragment_bytes(watermark),
-            policy_fingerprint=_fragment_bytes(policy_fingerprint), recheck_required=4))
-        return reader.output(EligibilityResult({"format": "research_pipeline.operating_eligibility", "version": 1,
-            "authority_domain": authority_domain, "project_id": project_id, "purpose": purpose,
-            "evaluated_at": evaluated_at, "status": status, "eligible": eligible, "decision": decision_reference,
-            "signature_status": signature_status, "policy_status": policy_status, "binding": binding,
-            "observed_heads": observed_heads, "history_signatures": history_signatures,
-            "verified_artifacts": [artifact.to_dict() for _, artifact in sorted(reader.verified.items())],
-            "watermark": watermark, "policy_fingerprint": policy_fingerprint, "recheck_required": True}))
+                try:
+                    _fresh(reader, decision)
+                    status = "eligible_" + purpose
+                except AuthorityReadinessError:
+                    status = "incomplete"
+                except ArtifactError:
+                    status = "artifact_unavailable"
+    eligible = status in ("eligible_setup", "eligible_main_research")
+    # Every branch, including an empty stream, owns a complete detached
+    # snapshot. Existing history/binding/signature allowances stay charged.
+    result_size = _object_bytes(format=len('"research_pipeline.operating_eligibility"'), version=1,
+        authority_domain=_fragment_bytes(authority_domain), project_id=_fragment_bytes(project_id),
+        purpose=_fragment_bytes(purpose), evaluated_at=_fragment_bytes(evaluated_at),
+        status=_fragment_bytes(status), eligible=_fragment_bytes(eligible),
+        decision=_fragment_bytes(decision_reference), signature_status=_fragment_bytes(signature_status),
+        policy_status=_fragment_bytes(policy_status), binding=_fragment_bytes(binding),
+        observed_heads=_fragment_bytes(observed_heads), history_signatures=_fragment_bytes(history_signatures),
+        verified_artifacts=_array_bytes(_object_bytes(digest=66, size=len(str(artifact.size)))
+            for artifact in reader.verified.values()), watermark=_fragment_bytes(watermark),
+        policy_fingerprint=_fragment_bytes(policy_fingerprint), recheck_required=4)
+    if result_size > reader.limits.max_result_bytes:
+        raise AuthorityLimitError("authority detached result byte limit exceeded")
+    reader.reserve(result_size)
+    return reader.output(EligibilityResult({"format": "research_pipeline.operating_eligibility", "version": 1,
+        "authority_domain": authority_domain, "project_id": project_id, "purpose": purpose,
+        "evaluated_at": evaluated_at, "status": status, "eligible": eligible, "decision": decision_reference,
+        "signature_status": signature_status, "policy_status": policy_status, "binding": binding,
+        "observed_heads": observed_heads, "history_signatures": history_signatures,
+        "verified_artifacts": [artifact.to_dict() for _, artifact in sorted(reader.verified.items())],
+        "watermark": watermark, "policy_fingerprint": policy_fingerprint, "recheck_required": True}))

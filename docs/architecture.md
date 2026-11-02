@@ -298,7 +298,8 @@ association and independent plan pins, establish current durability with checked
 closes, and never claim lost historical acknowledgment. Refresh recovery reuses
 its strict package reader and frozen preservation payload, without rereading prior
 edits or source artifacts. There is no schema, mutable ledger, CLI or service addition.
-Lifecycle hooks and pending-report admission gates remain mandatory future controller obligations.
+Prepared lifecycle facts and durable pending obligations are implemented by [run control](run-control.md).
+Automatic reporting hooks and admission enforcement remain mandatory subsequent controller work.
 
 ## Authenticated operating readiness
 
@@ -310,3 +311,10 @@ do not authenticate permission. Current eligibility must be recomputed with trus
 time and current external policy inside the later admitting write transaction.
 No admission, dispatch, worker isolation, lifecycle enforcement, tool qualification
 or M0-S validation is added. Resource usage and uncertain liabilities remain unchanged.
+
+## Durable control foundation
+
+[Run control](run-control.md) uses separate event histories and one atomic two-member
+submission per transition. The same connection-owned authority evaluator checks fresh
+preparation/continuation; metadata-only reductions do not require current external
+bytes or trust. No schema, worker, task admission or reporting engine is added.

@@ -272,10 +272,11 @@ and use existing manifest checkout for ordinary files. Explicit readable publica
 `continuation.json`, and `source.json`. Existing readable formats/identities are
 not reinterpreted.
 
-Automatic initial/milestone/stop lifecycle hooks and pending-report admission/
-restart gates remain **mandatory future controller obligations**. Authenticated
-operating authority, real jobs/providers, synthesis/export and scientific
-acceptance remain unimplemented. Reading a report or plan never authorizes
+Prepared control history and durable report obligations are implemented through
+[run control](run-control.md), using authenticated operating authority. Automatic
+initial/milestone/stop reporting, admission enforcement and restart readiness remain
+**mandatory subsequent controller obligations**. Real jobs/providers, synthesis/export
+and scientific acceptance remain unimplemented. Reading a report or plan never authorizes
 continuation. D04, D03 and M0-E remain partial; M0-S remains pending.
 
 ## Exact report publication and recovery
@@ -729,3 +730,11 @@ Local tests are advisory. The frozen controller checks remain, in order,
 `git diff --check b166730570ee2bd2997aaf1a61604297057b6bf1 HEAD --`, with the documented
 process-only descriptor soft-limit prerequisite of 4096. Controller validation and
 Reviewer verification own acceptance; this guide asserts no acceptance result.
+
+## Controlled-run report reservations
+
+[Run control](run-control.md) reserves ordered report identities as pending intent.
+Fresh legacy report commits cannot take over a controlled run, reserved source or
+report operation; exact original reconciliation remains available first. Uncontrolled
+legacy reports retain their existing contracts. Automatic lifecycle capture, publication
+and acknowledgment require the mandatory subsequent REQ-D04-005 work.

@@ -235,8 +235,8 @@ selected project tree without exposing other projects' ledger payloads. The exec
 guide covers empty setup, saved baseline, uncertain partial work, authoritative
 settlement, reopened late-usage liability and resettlement, reopen and exact restoration. Exact report publication adds a version-2 readable plan, offline evidence navigation,
 original-attempt inspection/recovery and preserved refresh;
-automatic lifecycle hooks and pending-report gates remain mandatory future controller
-obligations. D04/D03/M0-E remain partial; M0-S remains pending.
+prepared lifecycle history and durable pending obligations are available through run control.
+Automatic reporting hooks and admission enforcement remain mandatory subsequent controller work. D04/D03/M0-E remain partial; M0-S remains pending.
 
 ## Authenticated operating readiness
 
@@ -248,3 +248,7 @@ do not authenticate permission. Current eligibility must be recomputed with trus
 time and current external policy inside the later admitting write transaction.
 No admission, dispatch, worker isolation, lifecycle enforcement, tool qualification
 or M0-S validation is added. Resource usage and uncertain liabilities remain unchanged.
+
+Prepared control and ordered pending report obligations are available through the
+[durable run-control API](../docs/run-control.md). These metadata facts keep ordinary
+work disabled and do not implement capture, publication, restart readiness or dispatch.

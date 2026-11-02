@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from research_pipeline.reports import ReportRequest, ReportCommitResult, ReportObservation
     from research_pipeline.operating_authority import SignedOperatingDecision
+    from research_pipeline.run_control import RunControlTransition, RunReportObligation
 
 from research_pipeline.artifacts import (
     ArtifactStore, ArtifactLayoutError, ArtifactIntegrityError, _path_directory,
@@ -96,13 +97,14 @@ def _fault(boundary: str) -> None:
     """
 
 
-def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision":
+def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision | RunControlTransition | RunReportObligation":
     """Decode a normalized envelope using one explicit format, without inference or fallback.
 
     Missing markers retain NotTypedContentError; other format/codec failures raise
     DomainValidationError. Scientific, assessment, work-product, Source, corpus and project codecs
     validate states and ordered links. Signed operating decisions additionally
-    recompute derived provenance, but this local dispatch authenticates no policy.
+    recompute derived provenance. Control codecs also verify complete local projections;
+    this dispatch certifies neither historical pairing nor current permission.
     """
     content = envelope.content
     if "format" not in content:
@@ -124,6 +126,12 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | Ass
         if discriminator == "research_pipeline.operating_authority_content":
             from research_pipeline.operating_authority import decode_envelope
             return decode_envelope(envelope)
+        if discriminator == "research_pipeline.run_control_transition":
+            from research_pipeline.run_control import decode_transition
+            return decode_transition(envelope)
+        if discriminator == "research_pipeline.run_report_obligation":
+            from research_pipeline.run_control import decode_obligation
+            return decode_obligation(envelope)
     raise DomainValidationError("format: unsupported typed content format")
 
 
@@ -428,6 +436,21 @@ class RecordStore:
         return inspect_operating_eligibility(self, authority_domain, project_id, purpose=purpose,
                                              policy=policy, evaluated_at=evaluated_at, limits=limits)
 
+    def commit_run_control(self, request, *, policy, evaluated_at, limits):
+        """Atomically commit prepared control and pending report intent; ordinary work stays disabled."""
+        from research_pipeline.run_control_store import commit_run_control
+        return commit_run_control(self, request, policy=policy, evaluated_at=evaluated_at, limits=limits)
+
+    def get_run_control_operation(self, operation_id, *, limits):
+        """Recover an original control result without current trust, time or artifact bytes."""
+        from research_pipeline.run_control_store import get_run_control_operation
+        return get_run_control_operation(self, operation_id, limits=limits)
+
+    def inspect_run_control(self, run_id, *, limits):
+        """Inspect complete control history and ordered pending intent without readiness claims."""
+        from research_pipeline.run_control_store import inspect_run_control
+        return inspect_run_control(self, run_id, limits=limits)
+
     def put_artifact(self, data: bytes) -> ArtifactReference:
         """Publish verified bytes without registering metadata; failed batches retain orphans."""
         self._require_open()
@@ -462,6 +485,7 @@ class RecordStore:
         Reconstruct and decode every member before reconciliation; malformed members
         raise domain/codec errors. New requests check typed target closure inside the
         write transaction, raising ReferenceResolutionError for invalid targets.
+        Fresh control facts and controlled report reservations require their dedicated API.
         Exact retries acknowledge the original commit without rechecking targets or
         bytes, including identical requests originally committed through submit.
         """
@@ -475,6 +499,7 @@ class RecordStore:
         Object verification/synchronization is allowed. This snapshot cannot promise
         eventual admission: commit must repeat the checks under its write lock. A
         used ID belongs to reconciliation through submit_typed, never preparation.
+        Fresh control facts and report reservations require their dedicated API.
         New operating decisions require the authenticated append API.
         """
         submission = self._normalize_submission(submission)
@@ -483,6 +508,8 @@ class RecordStore:
             if self._receipt(connection, submission.submission_id) is not None:
                 raise SubmissionConflictError(
                     f"submission {submission.submission_id}: already used; retry the saved proposal directly")
+            from research_pipeline.run_control_store import guard_fresh
+            guard_fresh(connection, submission.submission_id, submission.records)
             if decoded and any(record.content.get("format") == "research_pipeline.operating_authority_content"
                                for record in submission.records):
                 raise DomainValidationError("operating decisions require commit_operating_decision")
@@ -504,7 +531,7 @@ class RecordStore:
             raise DomainValidationError("submission: malformed nested typed value") from error
         return submission
 
-    def _commit_submission(self, submission, decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup, ...]):
+    def _commit_submission(self, submission, decoded: "tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision | RunControlTransition | RunReportObligation, ...]"):
         """Commit a normalized request and its ordered decoded values via one algorithm.
 
         Generic requests supply an empty tuple; typed requests supply one immutable
@@ -512,6 +539,7 @@ class RecordStore:
 
         Reconciliation precedes schema-kind admission and all availability/CAS checks,
         including refusal of new typed operating decisions outside authenticated append.
+        Fresh control/report reservations are guarded after original reconciliation.
         Exact revisions and links are append-only; serialized target inspection and CAS
         share this transaction even when independent handles advance heads. The owner
         must still prevent external database/file mutation.
@@ -525,6 +553,8 @@ class RecordStore:
                 if old[0] != canonical:
                     raise SubmissionConflictError(f"submission {submission.submission_id}: different canonical request")
                 return self._receipt(connection, submission.submission_id)
+            from research_pipeline.run_control_store import guard_fresh
+            guard_fresh(connection, submission.submission_id, submission.records)
             if decoded and any(record.content.get("format") == "research_pipeline.operating_authority_content"
                                for record in submission.records):
                 raise DomainValidationError("operating decisions require commit_operating_decision")
@@ -1096,7 +1126,7 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision]":
+    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision | RunControlTransition | RunReportObligation]":
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise

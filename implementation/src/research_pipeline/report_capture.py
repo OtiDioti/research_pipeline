@@ -415,6 +415,7 @@ def commit_report(store, request):
     capture, rendering, object placement and shared metadata insertion. Immutable
     objects may survive rollback as unregistered orphans; they are never removed.
     After COMMIT, acknowledgment failure requires original-operation reconciliation.
+    Fresh controlled-run/report reservations reject before capture or object placement.
     """
     from research_pipeline.store import SubmissionConflictError, RevisionConflictError
     from research_pipeline.schema import validate_request_kinds
@@ -428,6 +429,8 @@ def commit_report(store, request):
             if _canonical(request) != _canonical(found[1]):
                 raise SubmissionConflictError("report operation ID has a different canonical request")
             return found[0]
+        from research_pipeline.run_control_store import guard_report
+        guard_report(connection, request)
         watermark = connection.execute("SELECT max(event_id) FROM audit_events").fetchone()[0]
         _fault("after_first_read")
         observed_at = datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z")

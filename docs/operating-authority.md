@@ -4,7 +4,7 @@ This API adds a local shared-credential authority boundary for exact project
 readiness. **An eligibility result must be recomputed with current external host
 policy and trusted time inside the later admitting write transaction.** It reserves
 nothing and guarantees neither dispatch nor continued artifact availability.
-Admission, worker isolation, lifecycle/restart gates, tool enforcement and M0-S
+Admission, worker isolation, execution enforcement/restart readiness, tool enforcement and M0-S
 remain subsequent work. Synthetic procedural approvals are not scientific evidence.
 
 `ProjectSetup.readiness` remains an attributed proposal. A signed operator decision
@@ -571,3 +571,10 @@ with TemporaryDirectory(prefix="operating-authority-example-", dir="/tmp") as te
         assert history["decisions"][1]["signature_status"] == "unavailable"
         assert history["decisions"][-1]["signature_status"] == "verified"
 ```
+
+## Eligibility and prepared control
+
+[Durable run control](run-control.md) reevaluates this same eligibility algorithm in
+its write transaction before recording preparation. Eligibility is not preparation,
+and preparation is not admission. Original lifecycle recovery returns historical
+metadata without rechecking current policy and cannot grant permission to resume.
