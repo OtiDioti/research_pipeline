@@ -39,3 +39,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [6ae8ca11 — REQ-D04-002 shutdown](6ae8ca11-0df2-48e2-abc8-65d51adaa187.md): human-requested cancellation during first-milestone review; provisional2e4343890e51,806/806 validation,zero acceptance/integration; nonresumable terminal state preserved; continuousstart20/50,30remaining.
 
 - [d838a2c8 — REQ-D04-004-R1 interrupted controller](d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md): completed orphan draft preserved; terminal/noresume/no acceptance or integration; continuousstart27/50. One human-authorized exact response-mode correction allowed original-controller reconciliation. R2 requires fresh CWI-only acceptance.
+
+- [153bf4bf — REQ-D04-004-R2](153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md): prepared-control/ordered-report obligations finally accepted and exact-integrated at `771422b7`; final 946/946, integrated target passed 946/946 in 1146.754 seconds, zero skips/errors/failures/source mutation, ending 2026-11-02T20:54:40.836813Z (stdout SHA256 `0af73e8950f6ce1f59051b68cf134487e56610a1fae683b72bc47a9b3e38a243`, empty stderr); one internal bounds repair, continuous start 28/50.

@@ -33,3 +33,7 @@ REQ-D03-003 is accepted/exact-integrated9373860,396/396 target tests. [REQ-D03-0
 ## Control-foundation interrupted workflow recovery
 
 [REQ-D04-004-R2](REQ-D04-004-R2.md) freezes the completed but unaccepted R1/d838a2c8 draft, complete compatible contract and retained prescription for fresh validation/review. R1 is terminal/noresume; no source has been adopted. All original foundation and mandatory report/restart follow-ons remain. Root STATUS owns launch readiness.
+
+## Automatic-report follow-on prepared — 2026-11-02
+
+[REQ-D04-004-R2](REQ-D04-004-R2.md) is finally accepted/exact-integrated at `771422b7`, final 946/946 and integrated target passed 946/946 in 1146.754 seconds, zero skips/errors/failures/source mutation, ending 2026-11-02T20:54:40.836813Z (stdout SHA256 `0af73e8950f6ce1f59051b68cf134487e56610a1fae683b72bc47a9b3e38a243`, empty stderr). [REQ-D04-005](REQ-D04-005.md) retains all 13 mandatory automatic-report/restart criteria and uses two independently safe milestones. Its request and prelaunch checkpoint must be committed before one CWI start; no broader phase or scientific completion follows.

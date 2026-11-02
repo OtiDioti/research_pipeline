@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting, committed-report/publication/recovery and authenticated local operating-decision/readiness foundations are finally accepted and integrated. REQ-D04-004 stopped before implementation;correctedREQ-D04-004-R1 is prepared for the first durable-control/report-obligation foundation,followed by mandatory automatic report lifecycle/recovery. Queue/attempt/fencing,actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
+**State:** PARTIAL. Resource accounting, committed reports/publication/recovery, authenticated local operating authority and durable prepared-control/ordered-report obligations are finally accepted and integrated. REQ-D04-005 is prepared for mandatory automatic reporting, verified acknowledgment and restart/continuation evidence. Queue/attempt/fencing, actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -103,3 +103,9 @@ Original rune83c7165 stopped at Writer-blocker repair limit,no source candidate/
 R1/d838a2c8 is terminal without candidate/final acceptance or integration. The orphan Writer completed16files/32newtests while the parent remained frozen. One exact human-authorized response-mode correction allowed the original controller to reconcile without replay. [Run record](../runs/d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md). R2 freezes the byte-exact draft and complete contract/prescription for fresh CWI-only validation/review; it does not restart accepted work or install source manually.
 
 Every phase box remains unchanged. REQ-D04-005 automatic reporting/restart recovery retains all13criteria after actual foundation integration/target validation. Broader queue/attempt/fencing, transactional reservations/admission, isolation, model/tool/context, live and M0-S duties remain required. No phase or scientific completion is claimed.
+
+## Prepared control integrated; mandatory reporting follow-on prepared — 2026-11-02
+
+[Run 153bf4bf](../runs/153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md) finally accepted/exact-integrated `771422b7`, final receipt `71f34d42`; final 946/946 and integrated target passed 946/946 in 1146.754 seconds, zero skips/errors/failures/source mutation, ending 2026-11-02T20:54:40.836813Z (stdout SHA256 `0af73e8950f6ce1f59051b68cf134487e56610a1fae683b72bc47a9b3e38a243`, empty stderr). Prepared-control history, same-transaction current authority, ordered atomic report obligations, exact original-ID/CAS recovery, independent preconstruction bounds and preserved allocation/resource history are evidenced. Every result still reports ordinary_work_allowed=false/recheck_required=true. One internal repair resolved F-001/F-002; every prior test/fixture/validator blob/mode remains unchanged.
+
+[REQ-D04-005](../requests/REQ-D04-005.md) must complete all 13 original report-lifecycle criteria, with a compatible lifecycle-bound source/plan milestone followed by automatic publication, verified separate acknowledgment and restart/continuation inspection. Queue/attempt/fencing, transactional reservation/admission, isolation and actual worker/model/tool/context enforcement remain mandatory afterward. All phase acceptance boxes stay unchecked; full D04/M0-E and scientific/live acceptance remain partial.
