@@ -433,7 +433,7 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 Remaining typed payloads, assessment/support
 freshness, eligibility and promotion, actual worker isolation, attempt leases and
-fencing, operating-grant authentication, general migrations, periodic
+fencing, general migrations, periodic
 scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.
 Schema3 supplies [controller resource accounting](resource-accounting.md), with
 immutable protected allocations, no double charge for descendant commitments,
@@ -496,3 +496,14 @@ Live schema3 history is validated in one operational read transaction after jour
 recovery, with the same chronological invariants used by ledger and backup inspection.
 See [resource accounting](resource-accounting.md) for public constructors, mandatory
 handoff provisioning bounds, exact purpose arithmetic and COMMIT recovery.
+
+## Authenticated operating readiness
+
+[Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
+operator authentication, immutable exact dossier bindings, bounded current eligibility
+and original-operation recovery in the existing schema-2/3 submission transaction.
+Keys and current trust remain host-only; generic records and local typed decoding
+do not authenticate permission. Current eligibility must be recomputed with trusted
+time and current external policy inside the later admitting write transaction.
+No admission, dispatch, worker isolation, lifecycle enforcement, tool qualification
+or M0-S validation is added. Resource usage and uncertain liabilities remain unchanged.

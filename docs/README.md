@@ -72,7 +72,9 @@ exact original Source selection/location checks, attributed inspection and unres
 links, immutable baseline/replacement history, complete traversal/projection tables,
 recovery semantics and a runnable two-capture example. Empty/partial inventories
 are recorded setup data; attributed readiness proposals are recorded by project
-intake, while actual admission, authority and scientific interpretation remain later work.
+intake, while actual admission and scientific interpretation remain later work.
+[Authenticated local operating decisions](operating-authority.md) separately bind
+current externally configured operator policy to exact dossier readiness; they do not admit work.
 
 
 [Versioned project intake](project-intake.md) specifies ProjectSetup constructors,
@@ -113,3 +115,9 @@ settlement, reopened late-usage liability and resettlement, reopen and exact res
 original-attempt inspection/recovery and preserved refresh;
 automatic lifecycle hooks and pending-report gates remain mandatory future controller
 obligations. D04/D03/M0-E remain partial; M0-S remains pending.
+
+[Operating authority](operating-authority.md) documents strict signed decisions,
+explicit host-only credentials, exact bounded dossier preparation/current eligibility,
+metadata-only original-ID recovery, credential withdrawal and restore limitations,
+with a self-contained executable synthetic guide. Detached results require rechecking
+inside the later admitting transaction and provide no reservation or dispatch guarantee.

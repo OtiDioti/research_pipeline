@@ -393,3 +393,16 @@ General migrations, periodic scheduling, complete D02/R-019/R-017 fulfillment,
 research-run/session/job recovery, scientific validation, full scientific schemas,
 assessment freshness/eligibility, attempt lifecycle, worker isolation and live-provider work
 remain outstanding. M0-S and the original historical fixture/provenance are unchanged.
+
+## Operating authority and external current trust
+
+[Operating decisions](operating-authority.md) are ordinary immutable submission
+history and survive exact backup/restore. Host credentials and current authorization
+policy are never backup inputs. Without externally supplied verification material,
+restored history can be inspected but cannot establish current permission.
+
+An older backup cannot discover or reconcile later omitted revocations. Before any
+future dispatch, restart must supply current external denying policy or credential
+withdrawal and resolve the restored snapshot. Retaining public policy fingerprints
+does not authenticate key bytes or reconstruct current trust. Resource history is
+restored independently; operating approvals and reductions do not reset it.

@@ -15,6 +15,7 @@ from research_pipeline.work_product import WorkProductManifest, _validate_paths
 from research_pipeline.source import Source
 from research_pipeline.corpus import CorpusManifest, _validate_selection
 from research_pipeline.project import ProjectSetup, _validate_dossier, setup_presentation
+from research_pipeline.operating_authority import SignedOperatingDecision
 from research_pipeline.scientific import Claim, Justification
 from research_pipeline.assessment import Review, Issue
 
@@ -408,7 +409,11 @@ def _properties(envelope, value, snapshot_id):
 
 
 def _record_body(key, entry, value, notice, paths, decoded, envelopes, mappings, snapshot_id):
-    """Render honest typed fields and exact outgoing/incoming relations from captured records only."""
+    """Render exact captured fields/relations, qualifying signed decisions as historical and unverified.
+
+    This detached projection has neither current external policy nor a trusted
+    evaluation clock; approval prose never becomes current permission here.
+    """
     page = paths[key]
     envelope = envelopes[key]
     yield from _properties(envelope, value, snapshot_id)
@@ -441,6 +446,13 @@ def _record_body(key, entry, value, notice, paths, decoded, envelopes, mappings,
         if type(value) is WorkProductManifest and value.product_kind == "end_of_run_report":
             yield "Recorded run report; this declaration does not establish successful execution, stop reasons or continuation readiness.\n\n"
         content = value.to_dict()
+        if type(value) is SignedOperatingDecision:
+            yield "## Operating decision\n\n"
+            yield ("Operating decision status: historical; unverified. "
+                   "This detached snapshot cannot verify current external operator policy or trusted time. "
+                   "An approval is not current permission. Recompute eligibility inside the later admitting "
+                   "write transaction; this view reserves nothing and guarantees no dispatch.\n\n")
+            yield from _values(content)
         for heading, names in _FIELDS.get(envelope.kind, ()):
             yield "## " + heading + "\n\n"
             for name in names:

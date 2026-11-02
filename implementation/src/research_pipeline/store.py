@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from research_pipeline.reports import ReportRequest, ReportCommitResult, ReportObservation
+    from research_pipeline.operating_authority import SignedOperatingDecision
 
 from research_pipeline.artifacts import (
     ArtifactStore, ArtifactLayoutError, ArtifactIntegrityError, _path_directory,
@@ -95,12 +96,13 @@ def _fault(boundary: str) -> None:
     """
 
 
-def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup:
+def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision":
     """Decode a normalized envelope using one explicit format, without inference or fallback.
 
     Missing markers retain NotTypedContentError; other format/codec failures raise
     DomainValidationError. Scientific, assessment, work-product, Source, corpus and project codecs
-    validate states and ordered links.
+    validate states and ordered links. Signed operating decisions additionally
+    recompute derived provenance, but this local dispatch authenticates no policy.
     """
     content = envelope.content
     if "format" not in content:
@@ -119,6 +121,9 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> ScientificContent | Asse
             return _decode_corpus_envelope(envelope)
         if discriminator == "research_pipeline.project_content":
             return _decode_project_envelope(envelope)
+        if discriminator == "research_pipeline.operating_authority_content":
+            from research_pipeline.operating_authority import decode_envelope
+            return decode_envelope(envelope)
     raise DomainValidationError("format: unsupported typed content format")
 
 
@@ -392,6 +397,37 @@ class RecordStore:
         from research_pipeline.report_capture import read_report
         return read_report(self, operation_id)
 
+    def prepare_operating_binding(self, project, *, scope, limits):
+        """Prepare bounded exact dossier evidence in one snapshot; no reservation or permission."""
+        from research_pipeline.operating_authority_store import prepare_operating_binding
+        return prepare_operating_binding(self, project, scope=scope, limits=limits)
+
+    def commit_operating_decision(self, signed, *, policy, evaluated_at, limits):
+        """Append authenticated authority atomically, reconciling original IDs before fresh checks."""
+        from research_pipeline.operating_authority_store import commit_operating_decision
+        return commit_operating_decision(self, signed, policy=policy, evaluated_at=evaluated_at, limits=limits)
+
+    def get_operating_operation(self, operation_id, *, limits):
+        """Recover original receipt evidence without policy, a clock or artifact reads."""
+        from research_pipeline.operating_authority_store import get_operating_operation
+        return get_operating_operation(self, operation_id, limits=limits)
+
+    def inspect_operating_history(self, authority_domain, project_id, *, policy, limits):
+        """Inspect bounded complete metadata history; current policy annotations grant no permission."""
+        from research_pipeline.operating_authority_store import inspect_operating_history
+        return inspect_operating_history(self, authority_domain, project_id, policy=policy, limits=limits)
+
+    def inspect_operating_eligibility(self, authority_domain, project_id, *, purpose, policy, evaluated_at, limits):
+        """Inspect one coherent current snapshot with explicit external policy and trusted time.
+
+        This detached evidence reserves nothing. Recompute it inside the later
+        admitting write transaction; the audit watermark is not a global freshness
+        token and guarantees neither dispatch nor continued artifact availability.
+        """
+        from research_pipeline.operating_authority_store import inspect_operating_eligibility
+        return inspect_operating_eligibility(self, authority_domain, project_id, purpose=purpose,
+                                             policy=policy, evaluated_at=evaluated_at, limits=limits)
+
     def put_artifact(self, data: bytes) -> ArtifactReference:
         """Publish verified bytes without registering metadata; failed batches retain orphans."""
         self._require_open()
@@ -439,6 +475,7 @@ class RecordStore:
         Object verification/synchronization is allowed. This snapshot cannot promise
         eventual admission: commit must repeat the checks under its write lock. A
         used ID belongs to reconciliation through submit_typed, never preparation.
+        New operating decisions require the authenticated append API.
         """
         submission = self._normalize_submission(submission)
         decoded = tuple(_decode_typed_envelope(record) for record in submission.records)
@@ -446,6 +483,9 @@ class RecordStore:
             if self._receipt(connection, submission.submission_id) is not None:
                 raise SubmissionConflictError(
                     f"submission {submission.submission_id}: already used; retry the saved proposal directly")
+            if decoded and any(record.content.get("format") == "research_pipeline.operating_authority_content"
+                               for record in submission.records):
+                raise DomainValidationError("operating decisions require commit_operating_decision")
             validate_request_kinds(submission, self._schema_version)
             self._check_batch(connection, submission)
             self._check_typed_targets(connection, submission, decoded)
@@ -470,7 +510,8 @@ class RecordStore:
         Generic requests supply an empty tuple; typed requests supply one immutable
         value per member. Local decoding precedes this shared reconciliation path.
 
-        Reconciliation precedes schema-kind admission and all availability/CAS checks.
+        Reconciliation precedes schema-kind admission and all availability/CAS checks,
+        including refusal of new typed operating decisions outside authenticated append.
         Exact revisions and links are append-only; serialized target inspection and CAS
         share this transaction even when independent handles advance heads. The owner
         must still prevent external database/file mutation.
@@ -484,6 +525,9 @@ class RecordStore:
                 if old[0] != canonical:
                     raise SubmissionConflictError(f"submission {submission.submission_id}: different canonical request")
                 return self._receipt(connection, submission.submission_id)
+            if decoded and any(record.content.get("format") == "research_pipeline.operating_authority_content"
+                               for record in submission.records):
+                raise DomainValidationError("operating decisions require commit_operating_decision")
             validate_request_kinds(submission, self._schema_version)
             self._check_batch(connection, submission)
             self._check_typed_targets(connection, submission, decoded)
@@ -596,7 +640,7 @@ class RecordStore:
 
     def _check_typed_targets(self, connection, submission,
                              decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup, ...],
-                             *, report_source=None):
+                             *, report_source=None, authority_reader=None):
         """Validate exact constrained closure and review routes within the caller's snapshot.
 
         Resolve batch members before historical metadata, never reading transitive
@@ -609,11 +653,16 @@ class RecordStore:
         selections are checked per occurrence; complete histories are checked in order.
         Project dossiers are checked against their own pins after corpus validation,
         including every historical snapshot and every incoming document/location role.
+        Authority operations may supply their own bounded/preflighted reader. In
+        that mode every read, including Source predecessors and shallow edges,
+        consumes its independent budget; resolved maps are returned to the owner.
         Report orchestration alone may supply its separately validated source event
         as a shallow batch target; it never enters typed admission or the worklist.
         """
+        if authority_reader is not None:
+            from research_pipeline.operating_authority import AuthorityLimitError, AuthorityIntegrityError
         if not decoded:
-            return
+            return {}, {}
         proposed = {(record.record_id, record.revision): record for record in submission.records}
         if report_source is not None:
             if (type(report_source) is not RecordEnvelope or report_source.kind != "event"
@@ -633,6 +682,16 @@ class RecordStore:
             # following edges so descriptive scientific/self cycles terminate.
             processed.add(key)
             value = values[key]
+            if authority_reader is not None:
+                previous = authority_reader.history(envelopes[key], value)
+                if previous is not None:
+                    previous_key = (previous.record_id, previous.revision)
+                    envelopes[previous_key] = previous
+                    if previous_key not in values:
+                        authority_reader.retain_typed(previous)
+                        values[previous_key] = _decode_typed_envelope(previous)
+                    if previous_key not in processed:
+                        worklist.append(previous_key)
             if type(value) is Source and key[1] > 1:
                 # A missing supersedes must not hide a typed predecessor. Inspect only
                 # metadata, only on constrained closure, after original-ID reconciliation
@@ -642,11 +701,14 @@ class RecordStore:
                 try:
                     previous = envelopes.get(previous_key)
                     if previous is None:
-                        previous = self._metadata_envelope(connection, *previous_key)
+                        previous = (authority_reader.read(previous_key) if authority_reader is not None
+                                    else self._metadata_envelope(connection, *previous_key))
                         envelopes[previous_key] = previous
                     if (previous.content.get("format") == "research_pipeline.source_content"
                             or value.supersedes is not None):
                         if previous_key not in values:
+                            if authority_reader is not None:
+                                authority_reader.retain_typed(previous)
                             values[previous_key] = _decode_source_envelope(previous)
                         predecessor = values[previous_key]
                         if type(predecessor) is not Source:
@@ -658,6 +720,8 @@ class RecordStore:
                         if previous_key not in processed:
                             worklist.append(previous_key)
                 except (RecordNotFoundError, ValueError, TypeError, RecursionError, OverflowError) as error:
+                    if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
+                        raise
                     raise ReferenceResolutionError(f"{diagnostic}: invalid typed history: {error}") from error
             constrained, generic = self._typed_references(value)
             for reference in generic:
@@ -665,6 +729,8 @@ class RecordStore:
                 target = proposed.get(target_key)
                 if target is not None:
                     kind = target.kind
+                elif authority_reader is not None:
+                    kind = authority_reader.shallow(reference)
                 else:
                     row = connection.execute("""SELECT i.kind FROM revisions r JOIN identities i USING(record_id)
                         WHERE r.record_id=? AND r.revision=?""", target_key).fetchone()
@@ -682,15 +748,20 @@ class RecordStore:
                 target = envelopes.get(target_key)
                 if target is None:
                     try:
-                        target = self._metadata_envelope(connection, *target_key)
+                        target = (authority_reader.read(target_key) if authority_reader is not None
+                                  else self._metadata_envelope(connection, *target_key))
                     except RecordNotFoundError as error:
                         raise ReferenceResolutionError(f"{diagnostic}: absent") from error
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
+                        if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
+                            raise
                         raise ReferenceResolutionError(f"{diagnostic}: invalid metadata: {error}") from error
                     envelopes[target_key] = target
                 if target.kind != reference.target_kind:
                     raise ReferenceResolutionError(f"{diagnostic}: expected {reference.target_kind}, found {target.kind}")
                 if target_key not in values:
+                    if authority_reader is not None:
+                        authority_reader.retain_typed(target)
                     try:
                         values[target_key] = _decode_typed_envelope(target)
                     except DomainValidationError as error:
@@ -746,7 +817,7 @@ class RecordStore:
                     raise ReferenceResolutionError(f"project {identity}@{revision}: {error}") from error
                 previous = value
 
-        for record, value in zip(submission.records, decoded):
+        for key, value in values.items():
             if type(value) is not Review:
                 continue
             candidate = (value.candidate_claim.record_id, value.candidate_claim.revision)
@@ -757,8 +828,10 @@ class RecordStore:
                 # and revision define membership, for every reported route outcome.
                 if not any((ref.record_id, ref.revision) == candidate for ref in route.conclusions):
                     raise ReferenceResolutionError(
-                        f"review {record.record_id}@{record.revision}: assessed_route target "
+                        f"review {key[0]}@{key[1]}: assessed_route target "
                         f"{route_key[0]}@{route_key[1]} does not conclude candidate {candidate[0]}@{candidate[1]}")
+
+        return envelopes, values
 
     def _insert_links(self, connection, record):
         """Persist ordered duplicate links without rewriting any historical revision."""
@@ -1023,7 +1096,7 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup]:
+    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision]":
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise

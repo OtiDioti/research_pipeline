@@ -93,8 +93,7 @@ Real disk and fresh-process tests cover ordering/canonical fingerprints, stale a
 conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
 and later artifact integrity failures. Local test results are advisory to controller
 validation. Remaining typed payloads and state machines,
-support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, operating-grant
-authentication, general migrations, periodic scheduling, distributed
+support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. Schema3 provides immutable allocations and atomic conservative reservations with exact retries;
 [resource accounting](../docs/resource-accounting.md) documents cumulative usage, explicit authoritative/conservative settlement, sticky project-wide breaches, version-2 inspection and original-ID recovery. Artifact identity and completed task state confer no
 scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
@@ -238,3 +237,14 @@ settlement, reopened late-usage liability and resettlement, reopen and exact res
 original-attempt inspection/recovery and preserved refresh;
 automatic lifecycle hooks and pending-report gates remain mandatory future controller
 obligations. D04/D03/M0-E remain partial; M0-S remains pending.
+
+## Authenticated operating readiness
+
+[Local operating decisions](../docs/operating-authority.md) add externally configured HMAC-SHA256
+operator authentication, immutable exact dossier bindings, bounded current eligibility
+and original-operation recovery in the existing schema-2/3 submission transaction.
+Keys and current trust remain host-only; generic records and local typed decoding
+do not authenticate permission. Current eligibility must be recomputed with trusted
+time and current external policy inside the later admitting write transaction.
+No admission, dispatch, worker isolation, lifecycle enforcement, tool qualification
+or M0-S validation is added. Resource usage and uncertain liabilities remain unchanged.

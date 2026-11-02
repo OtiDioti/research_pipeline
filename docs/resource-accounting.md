@@ -560,3 +560,12 @@ transactions, process loss, actual page-spill hot journals, rehashed invalid
 backups and this exact block. Writer-local checks are advisory; controller validation
 and Reviewer verification determine acceptance. No controller or scientific
 acceptance is asserted by this guide.
+
+## Approved operating declarations
+
+[Authenticated operating scopes](operating-authority.md) reuse these dimensions,
+vectors, protected minima and call-envelope arithmetic for signed declarations.
+They do not allocate or reserve capacity, reset spent usage, release reservations
+or erase uncertain liabilities. Approval, denial and revocation leave every resource
+table unchanged. Monetary service declarations retain only `monitored_target`.
+Actual authenticated run/resource admission and enforced execution remain later work.

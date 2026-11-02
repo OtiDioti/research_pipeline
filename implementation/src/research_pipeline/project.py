@@ -391,6 +391,23 @@ def _validate_setup(value):
         raise DomainValidationError("readiness.evidence_declarations: unknown declaration ID")
     if readiness.status != "proposed_ready":
         return
+    if readiness.attribution.value is None:
+        raise DomainValidationError("readiness.attribution: proposed_ready requires known attribution")
+    _validate_ready_prerequisites(value, readiness.evidence_declarations,
+        {name: getattr(readiness, name) for name in ("substantive_relevance", "assignment_usability")})
+
+
+def _validate_ready_prerequisites(value, evidence_declarations, judgments):
+    """Check shared technical intake prerequisites against explicitly supplied procedural judgments.
+
+    Proposal validation supplies descriptive judgments; operating authority supplies
+    the authenticated statements. Neither path infers scientific relevance from text.
+    Target membership and artifact availability remain the transaction owner's work.
+    """
+    inspected = set(value.inspection.locations)
+    declarations = {item.declaration_id: item for item in value.declarations}
+    if not evidence_declarations or any(identity not in declarations for identity in evidence_declarations):
+        raise DomainValidationError("evidence_declarations: requires exact declared evidence IDs")
     for name in ("title", "objective", "researcher_intent"):
         if getattr(value, name).text.value is None:
             raise DomainValidationError(f"{name}.text: proposed_ready requires known text")
@@ -401,12 +418,10 @@ def _validate_setup(value):
         if getattr(value, name) is None:
             raise DomainValidationError(f"{name}: required for proposed_ready")
     for name in ("substantive_relevance", "assignment_usability"):
-        if getattr(readiness, name).status != "affirmed":
+        if judgments[name].status != "affirmed":
             raise DomainValidationError(f"readiness.{name}: proposed_ready requires affirmed judgment")
-    if readiness.attribution.value is None:
-        raise DomainValidationError("readiness.attribution: proposed_ready requires known attribution")
-    if not any(declarations[identity].locations for identity in readiness.evidence_declarations):
-        raise DomainValidationError("readiness.evidence_declarations: requires a declaration with an inspected location")
+    if not any(declarations[identity].locations for identity in evidence_declarations):
+        raise DomainValidationError("evidence_declarations: requires a declaration with an inspected location")
     if any(item.stage == "intake" for item in value.remaining):
         raise DomainValidationError("remaining: proposed_ready cannot retain intake requirements")
 

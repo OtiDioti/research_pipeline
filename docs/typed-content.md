@@ -399,3 +399,14 @@ and original-location coherence. Existing Evidence input_record, Issue
 affected_record and work-product build_dependency edges remain shallow even for
 malformed generic projects with damaged attachments. Presentation records no
 canonical operational/scientific state and grants no research authority.
+
+## Local signed decision decoding
+
+The [operating authority contract](operating-authority.md) adds strict local
+`research_pipeline.operating_authority_content` decoding for the existing decision
+kind. Its derived provenance and ordered projection are checked, but decoding does
+not establish current authentication or permission. New typed submissions must use
+`commit_operating_decision`; identical original submissions still reconcile first.
+Generic storage remains compatible, subject to independent complete verification
+before any current eligibility can be reported. Readable projections are explicitly
+historical/unverified and never render approval as current permission.

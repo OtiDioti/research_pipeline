@@ -151,7 +151,7 @@ give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptio
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
 Remaining typed payloads and state machines, support/assessment
-freshness, eligibility/promotion, worker isolation, leases/fencing, operating-grant authentication, general migrations,
+freshness, eligibility/promotion, worker isolation, leases/fencing, general migrations,
 periodic scheduling, distributed execution and research execution remain
 unsupported. Schema3 adds controller-private immutable allocation and reservation accounting
 with cumulative usage, explicit settlement, sticky breaches and exact operation retries;
@@ -299,3 +299,14 @@ closes, and never claim lost historical acknowledgment. Refresh recovery reuses
 its strict package reader and frozen preservation payload, without rereading prior
 edits or source artifacts. There is no schema, mutable ledger, CLI or service addition.
 Lifecycle hooks and pending-report admission gates remain mandatory future controller obligations.
+
+## Authenticated operating readiness
+
+[Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
+operator authentication, immutable exact dossier bindings, bounded current eligibility
+and original-operation recovery in the existing schema-2/3 submission transaction.
+Keys and current trust remain host-only; generic records and local typed decoding
+do not authenticate permission. Current eligibility must be recomputed with trusted
+time and current external policy inside the later admitting write transaction.
+No admission, dispatch, worker isolation, lifecycle enforcement, tool qualification
+or M0-S validation is added. Resource usage and uncertain liabilities remain unchanged.

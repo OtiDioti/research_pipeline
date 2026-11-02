@@ -428,3 +428,13 @@ This reader does not certify historical typed admission, research readiness or
 operating authority. Manifest artifact entries retain expected/unverified declarations
 even after publication. Materialization separately verifies the complete private
 generation; offline inspection checks its current local contents.
+
+## Authenticated readiness is separate from the proposal
+
+[Operating authority](operating-authority.md) now checks this exact dossier under
+externally configured HMAC credentials and signed procedural judgments. It reuses
+these technical intake and role-membership checks, verifies selected original and
+brief/report bytes for main research, and watches relevant exact heads. Incomplete
+setup may receive setup-only permission. `setup_presentation` remains proposal-only.
+An eligibility observation must be recomputed inside a later admitting transaction;
+no research admission or scientific endorsement follows from a proposal or signature.
