@@ -253,3 +253,10 @@ REQ-D04-002-R3/528cf918 finally accepted/exact-integrated7a1edeb8, final receipt
 Five completed roles add4,889,929 input (4,286,208 cached),23,640 output (4,344 reasoning) once. Cumulative reported lower bound211,423,619 input (193,192,064 cached),1,986,937 output (584,855 reasoning), plus three old unknown interrupted roles; nested categories included and quota/invoice unknown. No allowance reset or new grant.
 
 Next REQ-D04-003 authenticates synthetic local operator decisions/readiness through CWI; no actual scientific/provider grant or dispatch. Existing revision5 authority only, gpt-6-astra/high,1milestone,repairs2/6,2700-second limits,FD4096,bothchecks,no--merge. Its next start consumes24/50,leaving26,including failed preflight. Scientific/live/publication/purchase restrictions remain.
+
+
+## Authority candidate terminal reconciliation — 2026-11-02
+
+Continuous24/50 used,26remain; commissioning1/3 closed. Run5f304a70 has no final acceptance/integration despite876/876 tests because the approved provider model reached capacity during mandatory review. All25 runs reconcile18 finally accepted/integrated and7 terminal incomplete; no active owners/lease/quarantine. Two completed CWI repairs bring22. Coordinator recoveries8 include provider-capacity1/2, context-size1/2, deadline2/2 exhausted and four historical conditions1/2; no reset. Backend0/0/0. Nine completed role turns add11,227,846 input (10,377,472 cached),127,817 output (34,348 reasoning) once. Cumulative lower bound222,651,465 input (203,569,536 cached),2,114,754 output (619,203 reasoning), plus four unknown interrupted roles. Nested categories included; quota/invoice unknown.
+
+REQ-D04-003-R1 is an ordinary bounded fresh-workflow recovery under this existing grant, with exact preserved source, full original criteria/findings, same gpt-6-astra/high,1milestone,repairs2/6,2700s,FD4096,bothchecks,no--merge. Its start consumes25/50 leaving25 including failed preflight. No service/model/billing/scientific authority expansion. Provider capacity is not proof of exhausted allowance.

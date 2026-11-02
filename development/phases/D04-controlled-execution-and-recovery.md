@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting and the committed-report/publication/recovery foundation are finally accepted and integrated. REQ-D04-003 is ready for authenticated operating decisions/readiness; automatic lifecycle gates and controlled research execution remain unimplemented.
+**State:** PARTIAL. Resource accounting and the committed-report/publication/recovery foundation are finally accepted and integrated. REQ-D04-003 candidate passed876 tests but remains unaccepted after provider capacity failure; REQ-D04-003-R1 is prepared for fresh acceptance; automatic lifecycle gates and controlled research execution remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -81,3 +81,8 @@ R2 Writer completed within deadline; exact complete candidatebdcbd679 passed845/
 [Run 528cf918-2619-45c8-a6b6-ee35ed42fb3e](../runs/528cf918-2619-45c8-a6b6-ee35ed42fb3e.md) finally accepted/exact-integrated7a1edeb8, final receipt851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db; final/target845/845, zero skips/errors/failures/source mutation. Coherent report capture, deterministic seven-group output, complete historical navigation and offline original-plan publication/refresh recovery are delivered. Automatic initial/checkpoint/stop hooks and pending-report restart gates remain unimplemented and required before admitted execution.
 
 [REQ-D04-003](../requests/REQ-D04-003.md) delivers bounded authenticated operator decisions and exact readiness with synthetic credentials/fixtures. It does not dispatch research or certify science. Queue/attempt lifecycle, fencing and transactional authority/resource/report admission follow. Acceptance boxes stay unchecked; M0-S remains pending and gates dependent scientific work only.
+
+
+## Authority acceptance recovery — 2026-11-02
+
+REQ-D04-003/run5f304a70 retained231c712e (876/876, diff clean) after two repairs, then nonreplayable Reviewer capacity failure. Zero accepted milestones/final receipts/integration; phase boxes stay unchecked. Verified terminal no-owner/lease/quarantine evidence permits REQ-D04-003-R1 compact immutable source reuse through a fresh CWI-only workflow. All original criteria and formally open F001–F005 remain. Provider capacity1/2, cumulative coordinator8; no model/backend/security/authority change or reset of exhausted deadline2/2. Lifecycle/report restart gates and subsequent admission/fencing remain mandatory after actual authority integration.

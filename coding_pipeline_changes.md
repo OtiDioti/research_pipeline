@@ -96,3 +96,8 @@ R2 stopped before review because frozen source bodies plus the mandatory full di
 ## 2026-11-02 — Compact report recovery completed
 
 R3/528cf918 finally accepted and exact-integrated7a1edeb8; final/target845/845. Full milestone/final prompts596043/591401bytes fit unchanged guards using supported compact immutable Git-reference context. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073, attempted/adopted/reverted0/0/0. No hot patch, state/receipt edit, evidence truncation, environment/security change or approval rejection. Historical failures and recovery limits remain; no pending maintenance attempt.
+
+
+## 2026-11-02 — Authority Reviewer provider capacity, no backend change
+
+Run5f304a70 passed876/876 after two CWI product repairs, then selected-model capacity failure interrupted read-only review before verdict. Existing diagnosis requires terminal resolution and new_run_after_manual_salvage; supported compact context/fresh workflow provides the route. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted0/0/0. No backend defect/modification, state/receipt/guard edit, model substitution, live patch or approval rejection. All old failures and counters remain.

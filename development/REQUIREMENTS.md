@@ -308,3 +308,8 @@ R2/b63e2b5e candidatebdcbd679 passed845/845 and complete-base diff checks; no Re
 - R-017–019/R-025–028/R-031/R-092 supporting subsets: coherent transactions, actual metadata preflight limits, backup/exact restore, protected immutable generations, usable offline links, v1 compatibility and preserved edits/renames have real regression evidence. No scientific/runtime/full-workbench qualification is inferred.
 
 All94 obligations remain. Full D02/D03/D04/M0-E stay PARTIAL; M0-S R-001–003 remains pending. [REQ-D04-003](requests/REQ-D04-003.md) next commissions authenticated local operating decisions/readiness under R-004/R-008/R-016/R-020/R-023/R-032/R-040 and supporting durability/resource obligations; preparation alone supplies no new evidence. Queue/fencing/dispatch and mandatory report gates remain subsequent work.
+
+
+## Authenticated authority candidate remains unaccepted — 2026-11-02
+
+REQ-D04-003/run5f304a70 produced exact candidate231c712e with876/876 tests and complete-base checking after two repairs. Reviewer capacity failure yielded no verdict/final receipt/integration, so no mandatory row is promoted. R-004/R-008/R-016/R-020/R-023/R-032/R-040 and supporting R-017–019/R-041–043/R-092 remain at their previously integrated status. REQ-D04-003-R1 preserves all original AC01–06/16criteria/five findings for fresh CWI acceptance. All94 requirements, automatic lifecycle/report gates, transactional admission/fencing and scientific obligations persist.
