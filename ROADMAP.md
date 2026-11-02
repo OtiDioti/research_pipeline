@@ -122,3 +122,7 @@ The human resumed continuous engineering; fresh Git/CWI/host evidence validates 
 ## Report boundary recovery — 2026-11-02
 
 Capture-only milestone acceptance in d343c0af does not complete the report boundary; publication timed out and remains a retained draft. REQ-D04-002-R2 completes the same full report scope in one bounded recovery milestone, with actual-metadata preflight repair and preserved formats/guards/late-usage coverage. After final acceptance/integration, authenticated operating authority/readiness and lifecycle/admission/fencing remain the next engineering prerequisites. No phase or scientific gate is closed by salvage.
+
+## Reporting acceptance recovery — 2026-11-02
+
+The complete retained reporting candidate now passes845/845, but R2 stopped before independent review on combined context size. R3 changes only reference packaging and requires fresh acceptance; no product requirement or phase gate is removed. Authenticated operating authority/readiness and lifecycle/admission/fencing remain next after actual report integration and validation.

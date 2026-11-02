@@ -292,3 +292,7 @@ REQ-D04-002 / [stopped run 6ae8ca11-0df2-48e2-abc8-65d51adaa187](runs/6ae8ca11-0
 ## Partial report milestone; final acceptance pending — 2026-11-02
 
 [Run d343c0af](runs/d343c0af-b495-431d-a903-0cabbb520bf6.md) accepted capture milestoneadb1b439 with811/811 controller tests, including provenance depth and persistent post-settlement late usage. Publication draft timed out with no final acceptance/integration; no mandatory row is promoted to delivered. REQ-D04-002-R2 retains all R-051–R-053/supporting criteria, fixes confirmed actual-metadata preflight bounds, and requires fresh complete checks/review. All94 obligations, automatic lifecycle/report admission gates and scientific requirements remain unchanged.
+
+## Complete report candidate validated but unaccepted — 2026-11-02
+
+R2/b63e2b5e candidatebdcbd679 passed845/845 and complete-base diff checks; no Reviewer/milestone/final acceptance or integration exists because mandatory review context exceeded1MiB. R3 preserves all R-051–R-053/supporting criteria and exact candidate through compact immutable source identities. No row is promoted on tests alone. All94 obligations, automatic lifecycle/report gates and scientific requirements remain.

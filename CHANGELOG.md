@@ -138,3 +138,7 @@ Reconciled the human-requested shutdown against all 21 retained CWI runs, Git/wo
 ## 2026-11-02 — Partial report acceptance and terminal publication recovery
 
 Administrative checkpoint only; no new product integration. REQ-D04-002-R1 capture milestone acceptedadb1b439 after811/811 checks and repaired provenance-depth finding; publication Writer timed out, no final receipt. Preserved26 intended draft files and excluded scratch/log output for CWI-only REQ-D04-002-R2, including a confirmed metadata preflight repair. [Run evidence](development/runs/d343c0af-b495-431d-a903-0cabbb520bf6.md). Historical failures, usage and final allowed deadline-recovery consumption retained; full reporting/lifecycle/scientific obligations remain.
+
+## 2026-11-02 — Report candidate validated; compact review recovery prepared
+
+Administrative checkpoint only. R2 candidatebdcbd679 passed845/845 and full diff checking, including the executed report/recovery guide and metadata preflight repair. Reviewer prompt exceeded1MiB, so no acceptance/integration occurred. R3 freezes compact immutable Git identities instead of duplicate source bodies; complete review evidence and all limits remain. [Evidence](development/runs/b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md).

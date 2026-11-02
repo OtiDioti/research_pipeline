@@ -87,3 +87,7 @@ Read-only reconciliation confirmed clean backend 1f68060b5a5a9964c91811a53d3a515
 ## 2026-11-02 — Publication Writer deadline audit
 
 Run d343c0af stopped safely after Writer2700-second timeout with changes; no replay allowed. No backend defect established. Existing supported frozen --context provides fresh CWI-only salvage; source/test repairs stay delegated product work. Old index contains generated example/log output and remains untouched; reference excludes it. Backend clean1f68060b5a5a9964c91811a53d3a515e0b01a073, attempted/adopted/reverted0/0/0. No security/frozen-state alteration or approval rejection.
+
+## 2026-11-02 — Combined Reviewer context limit diagnosis
+
+R2 stopped before review because frozen source bodies plus the mandatory full diff made a1,497,360-byte prompt, over the existing1MiB guard. Read-only unchanged context.py composition reproduced overflow and accepted compact immutable commit/blob/hash reference at595,915 bytes, retaining all mandatory diff/validation/criteria/prescription evidence. No invocation, state persistence, code modification, guard increase or truncation. Supported --context suffices; no backend defect/repair candidate is established. Backend1f68060b unchanged, attempted/adopted/reverted0/0/0.

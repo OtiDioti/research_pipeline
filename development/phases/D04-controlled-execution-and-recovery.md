@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting is integrated. Report capture has milestone-only acceptance; publication draft timed out without final acceptance/integration. REQ-D04-002-R2 is prepared for fresh CWI recovery; controlled research execution remains unimplemented.
+**State:** PARTIAL. Resource accounting is integrated. Complete report candidate bdcbd679 passes845/845 but remains unaccepted after a Reviewer context-size stop. REQ-D04-002-R3 is prepared for compact-reference CWI recovery; controlled research execution remains unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -70,3 +70,7 @@ The human resumed engineering after the shutdown. [REQ-D04-002-R1](../requests/R
 ## Publication recovery — 2026-11-02
 
 REQ-D04-002-R1 capture milestone acceptedadb1b439 (811/811) but publication Writer timed out after2700 seconds. No final acceptance or integration; terminal owners resolved and no resume allowed. [REQ-D04-002-R2](../requests/REQ-D04-002-R2.md) is the one-milestone, last permitted deadline recovery using exact preserved capture/publication reference plus confirmed metadata-bound correction. Full original criteria/checks/reviews remain. Phase acceptance boxes remain unchecked and all automatic lifecycle/readiness/fencing obligations remain mandatory.
+
+## Compact review recovery — 2026-11-02
+
+R2 Writer completed within deadline; exact complete candidatebdcbd679 passed845/845, but CWI stopped before Reviewer on combined prompt size. No final acceptance/integration. [R3](../requests/REQ-D04-002-R3.md) freezes compact immutable source identities, with full diff/criteria/checks still required. Context recovery1/2 is distinct from exhausted deadline2/2. No phase box is checked; lifecycle/authority/report admission gates and scientific obligations remain open.
