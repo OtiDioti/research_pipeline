@@ -87,6 +87,11 @@ REQ-D04-002-R3 / CWI 528cf918-2619-45c8-a6b6-ee35ed42fb3e finally accepted and e
 B-018 is resolved by actual complete reviews with596043/591401-byte prompts and no evidence truncation, limit increase or backend change. Preserve context-size recovery1/2 and the exhausted B-013 Writer-deadline recovery2/2; success does not reset either allowance. All six earlier terminal incomplete runs and advisory failures remain recorded. No current reporting defect or permission blocker remains. Automatic lifecycle reporting/closeout gates, authenticated authority/readiness, queue/fencing/dispatch and scientific/live duties are mandatory remaining roadmap work; REQ-D04-003 is ready. STATUS supplies the single next safe action.
 
 
-## B-019 — Provider capacity during mandatory authority review — 2026-11-02
+## B-019 — RESOLVED — Provider capacity during mandatory authority review — 2026-11-02
 
 Owner: coordinator/CWI. Run5f304a70 passed876/876 candidate tests but Reviewer reported Selected model is at capacity before verdict. Terminal no-owner/lease/quarantine evidence permits supported fresh-workflow salvage, not uncertain replay or model substitution. REQ-D04-003-R1 is the first bounded capacity recovery1/2, cumulative coordinator8; deadline2/2 stays exhausted and prior counters persist. Fresh review must verify all five unresolved findings. No acceptance/integration or quota-exhaustion claim. Continue independent engineering after actual acceptance; scientific dependencies remain separately scoped. Exactly one next safe action is in STATUS.
+
+
+## Authority capacity recovery resolution — 2026-11-02
+
+R1/f14139d7 finally accepted/exact-integrated27638a93,final receiptc58ce255;final883/883 and target883/8831005.220s. Initial fresh review found an additional real metadata-retention gap; CWI repaired it, independent7/7boundary tests passed, and milestone/final review accepted all original criteria/finding corrections. The approved model worked without substitution/backend changes. Capacity recovery1/2 remains consumed; prior deadline2/2 stays exhausted and all old interrupted usage/source/state remains. No current provider/model blocker is asserted. REQ-D04-004 continues independent lifecycle engineering; scientific/live dependencies remain separately scoped. Exactly one next action is in STATUS.

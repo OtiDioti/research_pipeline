@@ -101,3 +101,8 @@ R3/528cf918 finally accepted and exact-integrated7a1edeb8; final/target845/845. 
 ## 2026-11-02 — Authority Reviewer provider capacity, no backend change
 
 Run5f304a70 passed876/876 after two CWI product repairs, then selected-model capacity failure interrupted read-only review before verdict. Existing diagnosis requires terminal resolution and new_run_after_manual_salvage; supported compact context/fresh workflow provides the route. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073; attempted/adopted/reverted0/0/0. No backend defect/modification, state/receipt/guard edit, model substitution, live patch or approval rejection. All old failures and counters remain.
+
+
+## 2026-11-02 — Authority capacity recovery completed without backend change
+
+R1/f14139d7 finally accepted/exact-integrated27638a93,final/target883/883. Backend stays clean1f68060b5a5a9964c91811a53d3a515e0b01a073;attempted/adopted/reverted0/0/0,no pending maintenance. One new product-review repair reserved detached metadata before construction across authority paths and added7tests; it belonged entirely to CWI Writer. Old provider-capacity failure,advisory mode-assumption failure,unknown usage and all counters remain preserved. No hot patch,guard/state/receipt edit,model substitution or approval rejection. Supported frozen context and fresh complete review/validation resolved recovery.

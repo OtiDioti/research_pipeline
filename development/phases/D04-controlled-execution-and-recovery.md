@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting and the committed-report/publication/recovery foundation are finally accepted and integrated. REQ-D04-003 candidate passed876 tests but remains unaccepted after provider capacity failure; REQ-D04-003-R1 is prepared for fresh acceptance; automatic lifecycle gates and controlled research execution remain unimplemented.
+**State:** PARTIAL. Resource accounting, committed-report/publication/recovery and authenticated local operating-decision/readiness foundations are finally accepted and integrated. REQ-D04-004 is ready for durable run/report lifecycle and pending recovery gates. Queue/attempt/fencing,actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -86,3 +86,9 @@ R2 Writer completed within deadline; exact complete candidatebdcbd679 passed845/
 ## Authority acceptance recovery — 2026-11-02
 
 REQ-D04-003/run5f304a70 retained231c712e (876/876, diff clean) after two repairs, then nonreplayable Reviewer capacity failure. Zero accepted milestones/final receipts/integration; phase boxes stay unchecked. Verified terminal no-owner/lease/quarantine evidence permits REQ-D04-003-R1 compact immutable source reuse through a fresh CWI-only workflow. All original criteria and formally open F001–F005 remain. Provider capacity1/2, cumulative coordinator8; no model/backend/security/authority change or reset of exhausted deadline2/2. Lifecycle/report restart gates and subsequent admission/fencing remain mandatory after actual authority integration.
+
+## Authority integrated; lifecycle commissioned next — 2026-11-02
+
+REQ-D04-003-R1/runf14139d7 finally accepted/exact-integrated27638a93/tree17ba0d7b,final receiptc58ce255;repaired candidate883/8831004.278s,final883/8831006.217s,target883/8831005.220s,zero skips/errors/failures/source mutation. Target ended15:50:26.430627Z,stdout4df8faa7,empty stderr. [Exact run evidence](../runs/f14139d7-a856-4b5a-986a-df5014792800.md). One CWI repair adds independent detached-retention reservations before constructors and7meaningful boundaries. Operator HMAC policy/decision history,current exact eligibility,reductions despite missing old artifacts,original-operation recovery and backup/current-policy limits are implemented. No scientific admission or actual worker isolation is claimed.
+
+REQ-D04-004 scopes at most2safe milestones for typed run/report obligations then deterministic automatic lifecycle publication/recovery and pending-report gates. Control preparation never implies actual scientific dispatch; later queue/reservation/fencing and tool/context/model boundaries remain required. All phase-completion boxes stay unchanged. Scientific/live M0-S dependencies remain separate.

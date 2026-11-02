@@ -138,3 +138,10 @@ Coherent committed reports, complete minimum content, immutable navigation/publi
 ## Authority candidate and capacity recovery — 2026-11-02
 
 [Run5f304a70](development/runs/5f304a70-d68b-422b-ac31-6d006d8a1825.md) candidate231c712e passed876/876 and full committed-base diff after two repairs, but Reviewer provider capacity failure returned no verdict. No final acceptance/integration; all five findings formally open. Terminal owners/effects resolved; diagnosis forbids resume/replay. [REQ-D04-003-R1](development/requests/REQ-D04-003-R1.md) preserves21 immutable source identities, original criteria/findings and requires fresh CWI install/check/review using the same approved model. No phase/full-product completion. STATUS remains authoritative for the next action.
+
+
+## Authenticated operating authority integrated; lifecycle next — 2026-11-02
+
+[REQ-D04-003-R1](development/runs/f14139d7-a856-4b5a-986a-df5014792800.md) finally accepted/exact-integrated27638a93e1658c269ffab68a9cf6c82c10115af8, final receiptc58ce255916cedd3a285a2f7e89123f14c9c6e65f6604f904e7d39af8044de84. Final/target883/883,zero skips/errors/failures/source mutation. Trusted external local credentials,exact immutable decisions/current eligibility/original receipts and backup-policy limits are executable; one repair adds preconstruction retention accounting and7boundary tests. No actual task admission/dispatch or scientific endorsement.
+
+REQ-D04-004 next scopes durable run control and automatic initial/checkpoint/stop reports with pending recovery gates,at most2safe milestones. Later queue/attempt/fencing,atomic reservations,worker isolation and model/tool/context enforcement remain mandatory. STATUS is authoritative for consumed resources and the single next action. All94 requirements and M0-S/live obligations persist.
