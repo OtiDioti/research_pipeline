@@ -130,3 +130,7 @@ Two CWI repairs resolved handoff prescription and provable unsampled invocation 
 ## 2026-11-01 — Human-requested graceful shutdown
 
 Stopped REQ-D04-002 during first-milestone review through the existing controller signal handler; all owned processes exited. Preserved unaccepted candidate2e4343890e51 and its806/806 evidence, with publication unimplemented. Last accepted/integrated product remainsb13fff0. Reconciled20/50 starts,30remaining and unknown cancelled-reviewer usage; no product/backend change, integration or new run. Saved complete handoff in local/live.md.
+
+## 2026-11-02 — Administrative resumption and report recovery preparation
+
+Reconciled the human-requested shutdown against all 21 retained CWI runs, Git/worktrees, exact report draft and host processes. All 17 accepted sources are integrated; no live development owner or pending integration remains. Recorded the human's resumption under unchanged limits and prepared REQ-D04-002-R1 with byte-exact frozen draft reference, fresh acceptance and pending publication/navigation. No product/backend implementation or new acceptance is claimed. Continuous starts remain 20/50 before launch; coordinator recoveries become five including this distinct salvage preparation.

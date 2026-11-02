@@ -284,3 +284,7 @@ All 94 mandatory rows preserved. These rows/full D02/D03/D04/M0-E remain PARTIAL
 ## Report candidate interrupted before acceptance — 2026-11-01
 
 REQ-D04-002 / [stopped run 6ae8ca11-0df2-48e2-abc8-65d51adaa187](runs/6ae8ca11-0df2-48e2-abc8-65d51adaa187.md) preserves candidate2e4343890e51 with806/806 controller validation. No Reviewer acceptance, milestone/final receipt or integration exists. R-051–R-053 and supporting storage/vault/recovery obligations are not promoted by these tests; immutable publication/navigation and lifecycle gates remain unimplemented. Existing b13fff0 resource evidence remains accepted/integrated. Human shutdown changes no specification or scientific acceptance requirement.
+
+## Reporting replacement prepared — 2026-11-02
+
+[REQ-D04-002-R1](requests/REQ-D04-002-R1.md) retains R-051–R-053 and supporting R-017–R-019/R-025–R-027/R-031/R-092 criteria from the cancelled request, with explicit persistent post-settlement late-usage report coverage. It uses the exact preserved draft as reference under a new CWI run, not accepted source. No row gains implementation evidence at this administrative checkpoint. All 94 obligations and specification v1.4 remain unchanged, including automatic lifecycle hooks/pending-report gates and outstanding scientific judgments.

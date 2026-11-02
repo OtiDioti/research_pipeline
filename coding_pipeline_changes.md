@@ -79,3 +79,7 @@ CWI4c1833ef-8ef9-4b07-9f33-79acb6f7e8b0 finally accepted/exact-integrated3f4564c
 ## Resource-accounting checkpoint — 2026-11-01
 
 REQ-D04-001/6eaf6f92-ec81-4d73-b83d-9b97a30cfb02: backend attempts/adoptions/reversions0/0/0 cumulative. Separate excluded backend 1f68060b remains clean. Both repairs were ordinary CWI product/prescription work. Read-only backend inspection established final-repair receipt binds repair-delta and whole-base digests separately; adapting the coordinator audit changed no controller source/state. Failed Writer advisory evidence retained, no isolation weakening or new grant.
+
+## 2026-11-02 — Report recovery preparation audit
+
+Read-only reconciliation confirmed clean backend 1f68060b5a5a9964c91811a53d3a515e0b01a073 and no live development owner. The cancelled read-only review requires a fresh run with preserved draft reference; existing --context and normal acceptance support recovery. No diagnosed backend defect, modification, maintenance attempt or state edit. Cumulative attempted/adopted/reverted remains 0/0/0.

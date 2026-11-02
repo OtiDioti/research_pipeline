@@ -25,3 +25,7 @@ REQ-D03-003 is accepted/exact-integrated9373860,396/396 target tests. [REQ-D03-0
 ## Current completed request — 2026-10-31
 
 [REQ-D03-004-R1](REQ-D03-004-R1.md) is finally accepted/exact-integrated c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests; [run evidence](../runs/7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md). Both frozen checks passed and the original unaccepted request/run remain preserved. All frozen request files are unchanged. There is no active or prepared next implementation request at this checkpoint. The next safe action in STATUS is to prepare a bounded request for generated-view refresh preserving direct edits and renames, under the same authority and remaining 36 starts.
+
+## Current prepared recovery — 2026-11-02
+
+[REQ-D04-002-R1](REQ-D04-002-R1.md) replaces human-cancelled REQ-D04-002 for execution after verified terminal ownership and Git reconciliation. Its exact draft context preserves completed capture work; fresh acceptance and pending publication/navigation remain required. The human resumed continuous development with unchanged budgets and scientific boundaries. STATUS contains the current next action.
