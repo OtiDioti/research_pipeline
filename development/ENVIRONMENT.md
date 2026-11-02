@@ -157,3 +157,10 @@ All 20 retained status/diagnose records reconcile17 accepted ancestors/3terminal
 ## New-session report recovery preflight — 2026-11-02
 
 Fresh catalog fetched 2026-11-02T06:18:13.488898508Z advertises the human-approved gpt-6-astra/high; project ceiling stays xhigh. Exact selected Codex 0.166.0 SHA b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8 is unchanged. Login inspection reports ChatGPT (existing read-only PATH-alias warning only). Backend is clean 1f68060b5a5a9964c91811a53d3a515e0b01a073. The stable non-secret map and process-local descriptors 4096/1048576 remain required. No installation, service, credential/configuration or backend change. Supported --context will freeze exact report draft references; both permanent-validator and literal new-base diff checks remain mandatory. Host inspection, all 21 retained status/diagnose observations and exact candidate/Git evidence are retained in local/reconciliation-20261102-report-recovery/. Local catalog/settings evidence is not independent server attestation.
+
+
+## Reporting completion and authority preflight — 2026-11-02
+
+R3/528cf918 used unchanged backend1f68060b, Codex0.166.0 SHA b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8, stable environment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09, gpt-6-astra/high andFD4096. Actual Reviewer PID argv/executable verified; final/target845/845 pass. No settings/backend/security change.
+
+Next-request local catalog fetched2026-11-02T10:36:43.569190724Z advertisesgpt-6-astra/high; selected CLI login remainsChatGPT. The existing read-only PATH-alias warning did not prevent inspection and does not require installation changes. Higher advertised efforts do not enlarge ceilingxhigh. All24 status/diagnose records reconcile18 accepted ancestors of main/6 terminal incomplete, no lease/quarantine. Evidence under local/attempts/D04-003-attempt-001; current target result underR3attempt. No authentication/config/full environment copied into tracked records.

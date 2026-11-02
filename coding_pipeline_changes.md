@@ -91,3 +91,8 @@ Run d343c0af stopped safely after Writer2700-second timeout with changes; no rep
 ## 2026-11-02 — Combined Reviewer context limit diagnosis
 
 R2 stopped before review because frozen source bodies plus the mandatory full diff made a1,497,360-byte prompt, over the existing1MiB guard. Read-only unchanged context.py composition reproduced overflow and accepted compact immutable commit/blob/hash reference at595,915 bytes, retaining all mandatory diff/validation/criteria/prescription evidence. No invocation, state persistence, code modification, guard increase or truncation. Supported --context suffices; no backend defect/repair candidate is established. Backend1f68060b unchanged, attempted/adopted/reverted0/0/0.
+
+
+## 2026-11-02 — Compact report recovery completed
+
+R3/528cf918 finally accepted and exact-integrated7a1edeb8; final/target845/845. Full milestone/final prompts596043/591401bytes fit unchanged guards using supported compact immutable Git-reference context. Backend remains clean1f68060b5a5a9964c91811a53d3a515e0b01a073, attempted/adopted/reverted0/0/0. No hot patch, state/receipt edit, evidence truncation, environment/security change or approval rejection. Historical failures and recovery limits remain; no pending maintenance attempt.

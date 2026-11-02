@@ -75,6 +75,13 @@ The human ended the session-only execution hold by requesting autonomous resumpt
 
 Report publication Writer in d343c0af-b495-431d-a903-0cabbb520bf6 timed out after2700 seconds. Host owners/lease/quarantine resolved; preserve accepted capture milestone and unaccepted publication draft. REQ-D04-002-R2 is recovery2/2 for the same Writer deadline blocker, cumulative coordinator recoveries6; the earlier successful D02 replacement did not reset it. One focused milestone reuses26 exact product files, excludes scratch/log output, and fixes the independently confirmed metadata-bound defect before fresh full checks/review. Owner coordinator/CWI Writer. No further same-blocker action without escalation. Next safe action is in STATUS; no implementation/final acceptance is claimed.
 
-## B-018 — Reviewer context size, compact recovery prepared — 2026-11-02
+## B-018 — RESOLVED, Reviewer context size — 2026-11-02
 
 Run b63e2b5e passed845/845 but stopped before review: mandatory prompt1,497,360 bytes exceeds1MiB. Exact candidatebdcbd679 remains unaccepted; no owners/lease/quarantine. Duplicated inline source reference plus complete diff caused overflow. Supported compact commit/tree/blob/SHA256 manifest preserves exact local source and the full mandatory diff; unchanged composer measured595,915 bytes. REQ-D04-002-R3 requires fresh CWI-only install/check/review, no safeguard/backend change. Owner coordinator; context recovery1/2 consumed, cumulative7. Writer deadline2/2 stays exhausted; this failure was not a timeout. Exactly one next action remains in STATUS.
+
+
+## Report recovery resolution — 2026-11-02
+
+REQ-D04-002-R3 / CWI 528cf918-2619-45c8-a6b6-ee35ed42fb3e finally accepted and exact-integrated **7a1edeb8b604bd7acd9c90861f096e2e107e32f6**, final receipt 851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db. Final controller845/845; Integrated target **845/845 in 958.769s**, zero skips/errors/failures and unchanged clean source; completed 2026-11-02T10:48:24.247315+00:00, stdout SHA-256 e62a74d73df7c3c135f081b7ec5097b1758ff8c752151ba159c9315a8af1c37d, empty stderr. [Run evidence](development/runs/528cf918-2619-45c8-a6b6-ee35ed42fb3e.md).
+
+B-018 is resolved by actual complete reviews with596043/591401-byte prompts and no evidence truncation, limit increase or backend change. Preserve context-size recovery1/2 and the exhausted B-013 Writer-deadline recovery2/2; success does not reset either allowance. All six earlier terminal incomplete runs and advisory failures remain recorded. No current reporting defect or permission blocker remains. Automatic lifecycle reporting/closeout gates, authenticated authority/readiness, queue/fencing/dispatch and scientific/live duties are mandatory remaining roadmap work; REQ-D04-003 is ready. STATUS supplies the single next safe action.

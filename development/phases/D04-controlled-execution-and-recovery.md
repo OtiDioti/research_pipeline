@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting is integrated. Complete report candidate bdcbd679 passes845/845 but remains unaccepted after a Reviewer context-size stop. REQ-D04-002-R3 is prepared for compact-reference CWI recovery; controlled research execution remains unimplemented.
+**State:** PARTIAL. Resource accounting and the committed-report/publication/recovery foundation are finally accepted and integrated. REQ-D04-003 is ready for authenticated operating decisions/readiness; automatic lifecycle gates and controlled research execution remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -74,3 +74,10 @@ REQ-D04-002-R1 capture milestone acceptedadb1b439 (811/811) but publication Writ
 ## Compact review recovery — 2026-11-02
 
 R2 Writer completed within deadline; exact complete candidatebdcbd679 passed845/845, but CWI stopped before Reviewer on combined prompt size. No final acceptance/integration. [R3](../requests/REQ-D04-002-R3.md) freezes compact immutable source identities, with full diff/criteria/checks still required. Context recovery1/2 is distinct from exhausted deadline2/2. No phase box is checked; lifecycle/authority/report admission gates and scientific obligations remain open.
+
+
+## Reporting foundation integrated; authority prerequisite next — 2026-11-02
+
+[Run 528cf918-2619-45c8-a6b6-ee35ed42fb3e](../runs/528cf918-2619-45c8-a6b6-ee35ed42fb3e.md) finally accepted/exact-integrated7a1edeb8, final receipt851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db; final/target845/845, zero skips/errors/failures/source mutation. Coherent report capture, deterministic seven-group output, complete historical navigation and offline original-plan publication/refresh recovery are delivered. Automatic initial/checkpoint/stop hooks and pending-report restart gates remain unimplemented and required before admitted execution.
+
+[REQ-D04-003](../requests/REQ-D04-003.md) delivers bounded authenticated operator decisions and exact readiness with synthetic credentials/fixtures. It does not dispatch research or certify science. Queue/attempt lifecycle, fencing and transactional authority/resource/report admission follow. Acceptance boxes stay unchecked; M0-S remains pending and gates dependent scientific work only.

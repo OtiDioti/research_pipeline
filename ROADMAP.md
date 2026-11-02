@@ -126,3 +126,10 @@ Capture-only milestone acceptance in d343c0af does not complete the report bound
 ## Reporting acceptance recovery — 2026-11-02
 
 The complete retained reporting candidate now passes845/845, but R2 stopped before independent review on combined context size. R3 changes only reference packaging and requires fresh acceptance; no product requirement or phase gate is removed. Authenticated operating authority/readiness and lifecycle/admission/fencing remain next after actual report integration and validation.
+
+
+## Reporting primitives delivered; authority boundary next — 2026-11-02
+
+REQ-D04-002-R3 / CWI 528cf918-2619-45c8-a6b6-ee35ed42fb3e finally accepted and exact-integrated **7a1edeb8b604bd7acd9c90861f096e2e107e32f6**, final receipt 851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db. Final controller845/845; Integrated target **845/845 in 958.769s**, zero skips/errors/failures and unchanged clean source; completed 2026-11-02T10:48:24.247315+00:00, stdout SHA-256 e62a74d73df7c3c135f081b7ec5097b1758ff8c752151ba159c9315a8af1c37d, empty stderr. [Run evidence](development/runs/528cf918-2619-45c8-a6b6-ee35ed42fb3e.md).
+
+Coherent committed reports, complete minimum content, immutable navigation/publication and offline recovery are delivered as library primitives. Automatic initial/checkpoint/stop hooks and pending-report restart gates remain mandatory before admitted execution. Next bounded REQ-D04-003 supplies authenticated operator decisions and exact readiness; database queue/attempt/fencing/resource admission follows. D02/D03/D04/M0-E remain partial and M0-S pending. The roadmap does not turn synthetic operator decisions into scientific approval; STATUS owns the current next safe action.

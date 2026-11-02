@@ -142,3 +142,10 @@ Administrative checkpoint only; no new product integration. REQ-D04-002-R1 captu
 ## 2026-11-02 — Report candidate validated; compact review recovery prepared
 
 Administrative checkpoint only. R2 candidatebdcbd679 passed845/845 and full diff checking, including the executed report/recovery guide and metadata preflight repair. Reviewer prompt exceeded1MiB, so no acceptance/integration occurred. R3 freezes compact immutable Git identities instead of duplicate source bodies; complete review evidence and all limits remain. [Evidence](development/runs/b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md).
+
+
+## 2026-11-02 — Committed reports and recovery accepted/integrated
+
+REQ-D04-002-R3 / CWI 528cf918-2619-45c8-a6b6-ee35ed42fb3e finally accepted and exact-integrated **7a1edeb8b604bd7acd9c90861f096e2e107e32f6**, final receipt 851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db. Final controller845/845; Integrated target **845/845 in 958.769s**, zero skips/errors/failures and unchanged clean source; completed 2026-11-02T10:48:24.247315+00:00, stdout SHA-256 e62a74d73df7c3c135f081b7ec5097b1758ff8c752151ba159c9315a8af1c37d, empty stderr. [Run evidence](development/runs/528cf918-2619-45c8-a6b6-ee35ed42fb3e.md).
+
+Added strict report contracts, coherent scientific/resource capture, seven-group deterministic output, versioned immutable publication/navigation and offline original-plan recovery with human edit/rename preservation. Sixty-seven new tests include metadata preflight boundaries and late-usage/resettlement history. No source changes beyond the verified retained candidate and guide-base correction; no internal repair/backend/grant change. Reconciled historical failures/resources, resolved context-size B-018, and prepared bounded REQ-D04-003 operator authority/readiness.
