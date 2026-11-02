@@ -145,3 +145,10 @@ Coherent committed reports, complete minimum content, immutable navigation/publi
 [REQ-D04-003-R1](development/runs/f14139d7-a856-4b5a-986a-df5014792800.md) finally accepted/exact-integrated27638a93e1658c269ffab68a9cf6c82c10115af8, final receiptc58ce255916cedd3a285a2f7e89123f14c9c6e65f6604f904e7d39af8044de84. Final/target883/883,zero skips/errors/failures/source mutation. Trusted external local credentials,exact immutable decisions/current eligibility/original receipts and backup-policy limits are executable; one repair adds preconstruction retention accounting and7boundary tests. No actual task admission/dispatch or scientific endorsement.
 
 REQ-D04-004 next scopes durable run control and automatic initial/checkpoint/stop reports with pending recovery gates,at most2safe milestones. Later queue/attempt/fencing,atomic reservations,worker isolation and model/tool/context enforcement remain mandatory. STATUS is authoritative for consumed resources and the single next action. All94 requirements and M0-S/live obligations persist.
+
+
+## Run-control contract recovery — 2026-11-02
+
+REQ-D04-004/e83c7165 stopped before any candidate after prescription blockers consumed2repair slots:missing run_revision type,addendum-only context,then actor/provenance incompatibility. Baseline883/883 passed but no implementation/acceptance/integration exists. Parent/childed010210 and backend1f68060 clean;terminal owners resolved. [Evidence](development/runs/e83c7165-ab29-48f5-8942-581617895c2a.md).
+
+[REQ-D04-004-R1](development/requests/REQ-D04-004-R1.md) freezes a full self-contained contract with existingASCII128 actor semantics and one bounded prepared-control/ordered-obligation milestone. Automatic reporting/restart recovery remains mandatory nextREQ-D04-005,with original13criteria retained;no scope-completion/admission claim. Prescriptions corrected rather than widening old provenance or changing backend/limits. STATUS remains authoritative for resources and the single next action.

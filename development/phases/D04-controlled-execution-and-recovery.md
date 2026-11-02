@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting, committed-report/publication/recovery and authenticated local operating-decision/readiness foundations are finally accepted and integrated. REQ-D04-004 is ready for durable run/report lifecycle and pending recovery gates. Queue/attempt/fencing,actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
+**State:** PARTIAL. Resource accounting, committed-report/publication/recovery and authenticated local operating-decision/readiness foundations are finally accepted and integrated. REQ-D04-004 stopped before implementation;correctedREQ-D04-004-R1 is prepared for the first durable-control/report-obligation foundation,followed by mandatory automatic report lifecycle/recovery. Queue/attempt/fencing,actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -92,3 +92,8 @@ REQ-D04-003/run5f304a70 retained231c712e (876/876, diff clean) after two repairs
 REQ-D04-003-R1/runf14139d7 finally accepted/exact-integrated27638a93/tree17ba0d7b,final receiptc58ce255;repaired candidate883/8831004.278s,final883/8831006.217s,target883/8831005.220s,zero skips/errors/failures/source mutation. Target ended15:50:26.430627Z,stdout4df8faa7,empty stderr. [Exact run evidence](../runs/f14139d7-a856-4b5a-986a-df5014792800.md). One CWI repair adds independent detached-retention reservations before constructors and7meaningful boundaries. Operator HMAC policy/decision history,current exact eligibility,reductions despite missing old artifacts,original-operation recovery and backup/current-policy limits are implemented. No scientific admission or actual worker isolation is claimed.
 
 REQ-D04-004 scopes at most2safe milestones for typed run/report obligations then deterministic automatic lifecycle publication/recovery and pending-report gates. Control preparation never implies actual scientific dispatch; later queue/reservation/fencing and tool/context/model boundaries remain required. All phase-completion boxes stay unchanged. Scientific/live M0-S dependencies remain separate.
+
+
+## Compatible control foundation recovery — 2026-11-02
+
+Original rune83c7165 stopped at Writer-blocker repair limit,no source candidate/milestone/final acceptance. Full31960byte prescription missed run_revision type;addendum5109bytes lacked priorcontext;complete37075byte replacement conflicted with existing provenance actor grammar. Actual source clean,all owners resolved. REQ-D04-004-R1 freezes corrected complete contract and one safe first milestone. NextREQ-D04-005 must deliver original automatic-report/restart13criteria;all phaseboxes stay unchanged. This is prescription recovery1/2,cumulative9,notanotherdeadline recovery or backend change. No lifecycle/admission/scientific completion claim.

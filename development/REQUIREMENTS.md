@@ -326,3 +326,8 @@ REQ-D04-003/run5f304a70 produced exact candidate231c712e with876/876 tests and c
 - R-032/R-041–R-043: exact latest permission evidence/current trusted policy and existing dimensioned scope/protected-policy arithmetic while preserving every resource row/liability. No queue,availability/reservation/admission or service-hard-cap enforcement is inferred.
 
 Original5f304a70 F001–F005 corrections were independently reviewed in fresh acceptance; new R1F001 retention gap is resolved with7stage-specific real-store tests. All67 predecessor files and31 retained authority tests remain. All94 requirements persist; REQ-D04-004 next addresses run-control/report lifecycle/pending gates. Full D02/D03/D04/M0-E and scientific/live qualification remain partial.
+
+
+## Lifecycle request terminal before implementation — 2026-11-02
+
+REQ-D04-004/e83c7165 has no candidate/acceptance/integration despite passing predecessor883/883baseline;prescription blockers exhausted2repair slots. No mandatory row advances. Corrected full-contextREQ-D04-004-R1 commissions only durable prepared-control/ordered report obligations;R-009/R-018/R-045/supporting subsets remain pending actual acceptance. Original automatic lifecycle reports/pending restart gates underR-049–R-053 and all13second-milestone criteria remain required nextREQ-D04-005. All94requirements and scientific/live/queue/fencing/admission/isolation obligations persist.
