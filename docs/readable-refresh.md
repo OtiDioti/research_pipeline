@@ -7,7 +7,8 @@ planned-only APIs below retain their original contracts.
 
 This is local preservation plus a reading generation, not backup, export, a filtered
 reviewer workspace, scientific qualification or runtime authorization. No current
-pointer, automatic importer or recovery writer is supplied. The
+pointer or automatic importer is supplied. Explicit retained-package recovery is
+available through the library API below. The
 [readable-view CLI](readable-view-cli.md) provides explicit preserved refresh and
 offline inspection with an independently retained and pinned baseline.
 
@@ -725,3 +726,49 @@ with TemporaryDirectory(prefix="readable-refresh-example-", dir="/tmp") as tempo
         for current, directories, files in os.walk(parent):
             os.chmod(current, 0o700)  # Disposable example cleanup, outside refresh.
 ```
+
+
+## Report history and explicit frozen-package recovery
+
+Refresh accepts canonical v1 and explicit report-containing v2 readable plans,
+including v1→v2 and v2→v2 transitions. A report-containing predecessor requires its
+entire ordered report bindings unchanged in the successor. Revisions may be appended;
+published history cannot be dropped or replaced. The existing capture/preservation
+formats retain the independently pinned full plan and exact report-copy mappings:
+manifest ID/revision, original logical filename, digest/size and declared provenance.
+Home, report, continuation, source and evidence edits/renames remain unsubmitted
+proposed work. Equal-byte moves retain ambiguity; they never adopt edited bytes as
+canonical report artifacts. The prior tree remains intact.
+
+Import `recover_readable_refresh` alongside `inspect_readable_refresh` from
+`research_pipeline.view_refresh`. Its signature is:
+
+```text
+recover_readable_refresh(attempt_path, destination, *, source_root,
+    protected_roots, limits: RefreshLimits, expected_refresh_id: str | None = None)
+    -> RefreshedReadableView
+```
+
+Recovery uses the inspector's same strict token-paired control and package reader,
+independent budgets and optional pinned refresh identity. Only a complete verified
+retained package or this attempt's exact already-published destination is eligible.
+It preserves the frozen preservation payload and successor, requiring no prior-view
+recapture, live database, original artifact availability or model. Later prior edits
+cannot change the recovered package. New file/directory barriers and checked closes
+establish current durability; missing ready/publication markers are appended only
+after verification. Same-parent no-replace rename cannot overwrite a competitor,
+including a destination containing equal bytes under another inode identity.
+
+Success returns `verification="verified_at_recovery"`; read-only inspection retains
+`historical_acknowledgment="not_established"`. Existing markers never prove a lost
+historical fsync acknowledgment. Any failure after entering rename remains uncertain.
+Repeated recovery uses the same attempt/package and performs no report commit or
+recapture. Incomplete, divergent, unsafe or contradictory packages are retained and
+fail without repairs. Reconcile the original attempt before preparing an explicit
+replacement into an absent destination. Existing read-only inspectors, package and
+inspection versions/status meanings, and CLI behavior remain unchanged.
+
+Reporting remains a primitive. Reading or publishing does not authorize continuation.
+Automatic initial/milestone/stop hooks, pending-report admission/restart gates and
+full lifecycle/tool/context/execution/authority contracts remain mandatory future
+work; D04/D03/M0-E are partial and M0-S pending.

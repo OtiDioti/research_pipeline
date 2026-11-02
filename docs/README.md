@@ -102,3 +102,14 @@ Cumulative usage, explicit authoritative/conservative settlement, late receipts,
 exact aggregate overflow, sticky project-wide admission blocking and version-2
 inspection preserve original identities and uncertainty. These
 controller declarations do not admit research or authenticate operating grants.
+
+[Committed run-report observations](committed-run-reports.md) provide strict saved declarations,
+coherent bounded scientific/resource capture, deterministic inert report/continuation
+bytes and original-operation reconciliation through existing artifacts/submissions.
+Schema 2 explicitly lacks resource accounting; schema 3 reports retain the complete
+selected project tree without exposing other projects' ledger payloads. The executed
+guide covers empty setup, saved baseline, uncertain partial work, authoritative
+settlement, reopened late-usage liability and resettlement, reopen and exact restoration. Exact report publication adds a version-2 readable plan, offline evidence navigation,
+original-attempt inspection/recovery and preserved refresh;
+automatic lifecycle hooks and pending-report gates remain mandatory future controller
+obligations. D04/D03/M0-E remain partial; M0-S remains pending.

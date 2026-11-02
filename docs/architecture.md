@@ -273,3 +273,29 @@ is empty for fresh creation, 2→3 for migrated fresh2, or preserved 1→2 follo
 2→3. Scientific outgoing closure remains unchanged by resource mutations.
 See [the resource contract](resource-accounting.md) for exact fields, arithmetic,
 version-2 detached inspection, original-ID recovery, and explicit settlement evidence.
+
+
+## Committed report capture
+
+`reports.py` owns strict saved declarations/observations/results, selected-project
+resource replay and deterministic inert rendering. `report_capture.py` holds one
+existing `BEGIN IMMEDIATE` through exact reconciliation, capture, artifacts and
+shared submission insertion. Connection-taking private snapshot/inspection helpers
+preserve the original public transaction boundaries. One generic source event and
+one typed manifest bind all historical artifacts; no schema or mutable report index
+is added. Metadata-only retries survive source-object damage. See the
+[report contract and executed example](committed-run-reports.md) for bounds, exact
+source membership, ledger projection completeness and original-ID recovery.
+`report_view.py` projects explicitly verified committed report history through the
+shared bounded readable inventory renderer. V1 plan/report rendering identities
+remain fixed; v2 report observations add adjacent navigation, and v2 readable
+manifests retain exact result/observation pairs separately from the pre-submission
+scientific snapshot. `prepare_report_view` verifies the original operation and
+complete chain in one read transaction, without recapture or metadata writes.
+The existing materializer copies exact objects and exclusively publishes a complete
+generation. Offline publication inspection and explicit recovery retain token/inode
+association and independent plan pins, establish current durability with checked
+closes, and never claim lost historical acknowledgment. Refresh recovery reuses
+its strict package reader and frozen preservation payload, without rereading prior
+edits or source artifacts. There is no schema, mutable ledger, CLI or service addition.
+Lifecycle hooks and pending-report admission gates remain mandatory future controller obligations.

@@ -207,7 +207,7 @@ reject it.
 
 Nothing here refreshes views, executes/imports dependencies or content, deletes
 drafts, promotes claims or repairs source files. D02 remains partial. Scientific
-sufficiency, detailed execution/TeX/checkpoint/run-report contracts, full vault/intake
+sufficiency, detailed execution/TeX/checkpoint contracts, full vault/intake
 and worker authorization remain deferred. The synthetic oscillator retains its
 original v1.3 provenance.
 
@@ -339,3 +339,6 @@ the store's reconciliation-before-availability order. See the [complete schemas,
 limits and recovery commands](local-cli.md). Orphan immutable objects may remain
 from preview failure; no scientific or operating authority is added. Full R-082,
 other draft kinds, scientific/M0-S and runtime obligations remain incomplete.
+
+Generated run-report capture uses the separate [committed report API](committed-run-reports.md);
+imported manifest kind labels alone do not establish that contract.

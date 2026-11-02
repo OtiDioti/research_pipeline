@@ -11,7 +11,8 @@ and freezes proposals for separate typed commit and original-ID recovery.
 
 A product kind and descriptive build/input links confer no execution authority,
 support, endorsement, task completion, verified exposure or certification of
-detailed TeX, checkpoint, run-report or execution contracts. Authors and envelope
+detailed TeX, checkpoint or execution contracts. Generated run reports use the
+separate [committed-report contract](committed-run-reports.md). Authors and envelope
 provenance are declared attribution, not authenticated authorship; their values
 need not match. No dates, authors, titles, status or content meaning are inferred
 from filenames or bytes. D02 remains partial. Scientific sufficiency, eligibility,

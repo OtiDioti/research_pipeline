@@ -694,3 +694,304 @@ def _inspect_readable_view(root, *, limits, max_entries, expected_plan_id=None, 
         result = ViewInspection(plan.snapshot_id, plan.plan_id, manifest_hash,
                                 "diverged" if differences else "verified", tuple(sorted(differences)))
     return result
+
+
+@dataclass(frozen=True)
+class PublicationInspection:
+    """Current attempt evidence, never proof of a lost historical durability acknowledgment.
+
+    A verified_payload_path identifies only the token-bound complete inode tree.
+    Markers describe present observations; explicit recovery establishes new
+    durability barriers and checked closes before returning MaterializedView.
+    """
+
+    status: str
+    snapshot_id: str | None
+    plan_id: str | None
+    manifest_sha256: str | None
+    verified_payload_path: str | None
+    readiness_observation: str
+    publication_observation: str
+    differences: tuple[ViewDifference, ...]
+    historical_acknowledgment: str = "not_established"
+
+
+@contextmanager
+def _publication_attempt(attempt_path, destination, expected_plan, limits, source_root, protected_roots, max_entries):
+    """Hold protected attempt, payload and ancestor bindings for inspection or explicit recovery.
+
+    Only fixed caller paths and their strict token-paired sibling are opened.
+    A competing destination is lstat-only, even when all of its bytes match.
+    Missing output is incomplete; contradictory present output is inconsistent.
+    No writes, mode repairs, source reads or inferred historical acknowledgment occur.
+    """
+    import re
+    from research_pipeline.snapshot import _strict_json
+    from research_pipeline.view_refresh import _sibling_aliases
+    from research_pipeline.view_refresh_inspection import _pair
+    _integer(max_entries, "max_entries", 1)
+    if type(expected_plan) is not ReadablePlan or type(limits) is not SnapshotLimits:
+        raise DomainValidationError("expected independently retained ReadablePlan and SnapshotLimits")
+    if type(protected_roots) not in (list, tuple):
+        raise DomainValidationError("protected_roots: explicit list/tuple required")
+    plan = readable_plan_from_manifest(expected_plan.manifest_bytes, limits=limits)
+    if plan != expected_plan:
+        raise ViewPlanError("expected plan differs from canonical reconstruction")
+    files, inventory = _inventory(plan, max_entries)
+    path, attempt = _path(destination), _path(attempt_path)
+    if attempt.parent != path.parent or re.fullmatch(r"\.readable-view-[0-9a-f]{32}", attempt.name) is None:
+        raise ViewLayoutError("attempt must be a strict token-paired sibling")
+    token = attempt.name[len(".readable-view-"):]
+    preparation = path.parent / (".readable-generation-" + token)
+    exclusions = [_path(source_root), Path(__file__).resolve().parents[2], *(_path(p) for p in protected_roots)]
+    for candidate in (path, attempt, preparation):
+        _outside(candidate, exclusions)
+    manifest_hash = hashlib.sha256(plan.manifest_bytes).hexdigest()
+    with _boundary(path), ExitStack() as stack:
+        directories = _Directories(stack)
+        parent = _parent(directories, path.parent)
+        ancestors = tuple((binding[2], Path(binding[6])) for binding in directories.bindings)
+        _sibling_aliases(parent, (path.name, attempt.name, preparation.name), max_entries)
+        state = dict(plan=plan, path=path, attempt_path=attempt, preparation=preparation, parent=parent,
+                     directories=directories, tree={}, pins={}, inventory={}, evidence={}, controls={},
+                     status="incomplete_preparation", verified=None, intent=None, attempt=None,
+                     differences=(), readiness="absent", publication="absent", bindings={})
+        for candidate in (path, preparation, attempt):
+            if _present(parent, candidate.name):
+                state["bindings"][candidate.name] = os.stat(candidate.name, dir_fd=parent, follow_symlinks=False)
+
+        def check():
+            """Recheck all held files, inventories and explicit sibling identities after bounded reads."""
+            _guards(directories)
+            for fd, location in ancestors:
+                _not_layout(fd, location)
+            for fd, names in state["inventory"].items():
+                if _entries(fd, max_entries) != names:
+                    raise ViewIntegrityError("publication inventory changed")
+            for owner, name, fd, info in state["pins"].values():
+                if (_signature(os.fstat(fd)) != _signature(info)
+                        or _signature(os.stat(name, dir_fd=owner, follow_symlinks=False)) != _signature(info)):
+                    raise ViewIntegrityError("publication file binding changed")
+            _sibling_aliases(parent, (path.name, attempt.name, preparation.name), max_entries)
+            for candidate in (path, preparation, attempt):
+                old = state["bindings"].get(candidate.name)
+                if _present(parent, candidate.name) != (old is not None):
+                    raise ViewIntegrityError("publication sibling presence changed")
+                if old is not None:
+                    now = os.stat(candidate.name, dir_fd=parent, follow_symlinks=False)
+                    if _identity(old) != _identity(now) or old.st_mode != now.st_mode:
+                        raise ViewIntegrityError("publication sibling identity changed")
+        state["check"] = check
+        try:
+            if attempt.name in state["bindings"]:
+                afd = directories.open(attempt.name, parent, private=True, path=attempt)
+                state["attempt"] = afd
+                if stat.S_IMODE(os.fstat(afd).st_mode) != 0o700:
+                    raise ViewIntegrityError("attempt mode must be 0700")
+                names = _entries(afd, max_entries)
+                state["inventory"][afd] = names
+                state["readiness"] = "present" if "ready.json" in names else "absent"
+                state["publication"] = "present" if "published.json" in names else "absent"
+                if names - {"intent.json", "ready.json", "published.json"}:
+                    raise ViewIntegrityError("unexpected attempt control")
+                for name in sorted(names):
+                    info = os.stat(name, dir_fd=afd, follow_symlinks=False)
+                    maximum = 16384 if name == "intent.json" else 2048
+                    if info.st_size > maximum:
+                        raise SnapshotLimitError("publication control exceeds fixed byte bound")
+                    if stat.S_IMODE(info.st_mode) != 0o400:
+                        raise ViewIntegrityError("publication controls require 0400")
+                    fd = _inspect_open(stack, afd, name, info, attempt / name)
+                    _, data = _inspect_bytes(fd, info, name, retain=True)
+                    state["pins"]["attempt/" + name] = (afd, name, fd, info)
+                    value = _strict_json(data.decode("ascii"), maximum_depth=8)
+                    if _canonical(value).encode("ascii") != data:
+                        raise ViewIntegrityError("noncanonical attempt control")
+                    state["controls"][name] = value
+                    state["evidence"][name] = info
+                controls = state["controls"]
+                if "intent.json" not in controls:
+                    if names:
+                        raise ViewIntegrityError("publication markers without intent")
+                else:
+                    intent = controls["intent.json"]
+                    if type(intent) is not dict:
+                        raise ViewIntegrityError("intent must be a closed JSON object")
+                    state["intent"] = intent
+                    expected = dict(format="research_pipeline.readable_view_attempt", version=1,
+                        token=token, destination=path.name, generation_name=preparation.name,
+                        parent=list(_identity(os.fstat(parent))), generation=intent.get("generation"),
+                        snapshot_id=plan.snapshot_id, plan_id=plan.plan_id, manifest_sha256=manifest_hash,
+                        recovery="No automatic replay, cleanup, resume or acceptance receipt.")
+                    _pair(intent.get("generation"))
+                    _pair(intent.get("parent"))
+                    if _canonical(intent) != _canonical(expected):
+                        raise ViewIntegrityError("attempt differs from pinned plan or explicit path association")
+                    marker = {key: intent[key] for key in ("generation", "snapshot_id", "plan_id", "manifest_sha256")}
+                    for name in ("ready.json", "published.json"):
+                        if name in controls and _canonical(controls[name]) != _canonical(marker):
+                            raise ViewIntegrityError("contradictory publication marker")
+                    if "published.json" in controls and "ready.json" not in controls:
+                        raise ViewIntegrityError("publication marker precedes readiness")
+                    own = [candidate for candidate in (preparation, path)
+                           if candidate.name in state["bindings"] and list(_identity(state["bindings"][candidate.name])) == intent["generation"]]
+                    competitor = path.name in state["bindings"] and path not in own
+                    if len(own) != 1:
+                        if competitor and not own:
+                            state["status"] = "competing_destination"
+                        else:
+                            raise ViewIntegrityError("recorded payload absent or multiply bound")
+                    else:
+                        current = own[0]
+                        if current == path and preparation.name in state["bindings"]:
+                            raise ViewIntegrityError("preparation binding remains after publication")
+                        if current == preparation and "published.json" in controls:
+                            raise ViewIntegrityError("published marker for unpublished payload")
+                        if current == path and "ready.json" not in controls:
+                            raise ViewIntegrityError("published payload without readiness")
+                        root = directories.open(current.name, parent, private=True, path=current)
+                        state["tree"][""] = root
+                        missing, total, count, identities = False, 0, 0, set()
+                        for relative, expected_names in inventory.items():
+                            if relative not in state["tree"]:
+                                missing = True
+                                continue
+                            fd = state["tree"][relative]
+                            mode = stat.S_IMODE(os.fstat(fd).st_mode)
+                            if mode != 0o500:
+                                if mode != 0o700 or current == path or "ready.json" in controls:
+                                    raise ViewIntegrityError("payload directory mode mismatch")
+                                missing = True
+                            names = _entries(fd, max_entries - count)
+                            count += len(names)
+                            state["inventory"][fd] = names
+                            if names - expected_names:
+                                raise ViewIntegrityError("unexpected payload inventory")
+                            if names != expected_names:
+                                missing = True
+                            for name in sorted(names):
+                                child = posixpath.join(relative, name)
+                                info = os.stat(name, dir_fd=fd, follow_symlinks=False)
+                                if info.st_dev != os.fstat(root).st_dev:
+                                    raise ViewIntegrityError("cross-device payload entry")
+                                if child in inventory:
+                                    state["tree"][child] = directories.open(name, fd, private=True, path=current / child)
+                                else:
+                                    if info.st_size > limits.max_file_bytes or total + info.st_size > limits.max_total_bytes:
+                                        raise SnapshotLimitError("publication payload exceeds caller byte allowance")
+                                    total += info.st_size
+                                    if stat.S_IMODE(info.st_mode) != 0o400:
+                                        raise ViewIntegrityError("payload file mode mismatch")
+                                    leaf = _inspect_open(stack, fd, name, info, current / child)
+                                    if _identity(info) in identities:
+                                        raise ViewIntegrityError("payload files share an inode")
+                                    identities.add(_identity(info))
+                                    digest, data = _inspect_bytes(leaf, info, child, retain=child == "manifest.json")
+                                    state["pins"]["payload/" + child] = (fd, name, leaf, info)
+                                    if ArtifactReference(digest, info.st_size) != files[child]:
+                                        raise ViewIntegrityError("payload bytes differ from pinned plan: " + child)
+                                    if child == "manifest.json" and data != plan.manifest_bytes:
+                                        raise ViewIntegrityError("payload manifest differs from pinned plan")
+                        if missing:
+                            if current == path or "ready.json" in controls:
+                                raise ViewIntegrityError("ready or published payload is incomplete")
+                            state["status"] = "competing_destination" if competitor else "incomplete_preparation"
+                        else:
+                            state["verified"] = str(current)
+                            state["status"] = ("published" if current == path else
+                                               "competing_destination" if competitor else "complete_unpublished")
+            if state["intent"] is None and path.name in state["bindings"]:
+                state["status"] = "competing_destination"
+            check()
+        except (ViewIntegrityError, ViewPlanError, DomainValidationError, UnicodeError, ValueError) as error:
+            if isinstance(error, SnapshotLimitError):
+                raise
+            state.update(status="inconsistent", verified=None,
+                         differences=(ViewDifference("", "inconsistent", str(error)[:240]),))
+        yield state
+
+
+def inspect_readable_publication(attempt_path, destination, *, expected_plan: ReadablePlan,
+                                  limits: SnapshotLimits, source_root, protected_roots,
+                                  max_entries: int) -> PublicationInspection:
+    """Read current attempt/payload evidence offline, without writes or historical durability claims."""
+    with _publication_attempt(attempt_path, destination, expected_plan, limits, source_root, protected_roots, max_entries) as state:
+        established = state["intent"] is not None and state["status"] != "inconsistent"
+        result = PublicationInspection(state["status"], expected_plan.snapshot_id if established else None,
+            expected_plan.plan_id if established else None,
+            hashlib.sha256(expected_plan.manifest_bytes).hexdigest() if established else None,
+            state["verified"], state["readiness"], state["publication"], state["differences"])
+    return result
+
+
+def recover_readable_view(attempt_path, destination, *, expected_plan: ReadablePlan,
+                          limits: SnapshotLimits, source_root, protected_roots, max_entries: int) -> MaterializedView:
+    """Explicitly publish or acknowledge only this complete pinned attempt, without recapture.
+
+    Reverify independent copied bytes and held bindings, establish current file
+    and directory durability and require checked closes. Never patch incomplete
+    output, overwrite a competitor, or infer historical fsync/acknowledgment.
+    Any failure after entering rename remains uncertain and retains all evidence.
+    """
+    entered = False
+    try:
+        with _publication_attempt(attempt_path, destination, expected_plan, limits, source_root, protected_roots, max_entries) as state:
+            if state["status"] not in ("complete_unpublished", "published"):
+                raise ViewIntegrityError("attempt cannot be recovered: " + state["status"])
+            parent, attempt = state["parent"], state["attempt"]
+            path, preparation = state["path"], state["preparation"]
+            check = state["check"]
+            check()
+            for _, _, fd, _ in state["pins"].values():
+                os.fsync(fd)
+            for fd in reversed(tuple(state["tree"].values())):
+                os.fsync(fd)
+            os.fsync(attempt)
+            os.fsync(parent)
+            check()
+            marker = {key: state["intent"][key] for key in ("generation", "snapshot_id", "plan_id", "manifest_sha256")}
+            if "ready.json" not in state["controls"]:
+                state["evidence"]["ready.json"] = _evidence(attempt, "ready.json", marker, state["attempt_path"], 2048)
+                state["inventory"][attempt].add("ready.json")
+                os.fsync(attempt)
+                os.fsync(parent)
+            _attempt_check(attempt, state["attempt_path"], state["evidence"], max_entries)
+            check()
+            if state["status"] == "complete_unpublished":
+                _fault("before_rename")
+                check()
+                _absent(parent, path.name, max_entries)
+                publish = _rename_noreplace()
+                entered = True
+                publish(parent, preparation.name, parent, path.name)
+                generation = state["tree"][""]
+                for index, binding in enumerate(state["directories"].bindings):
+                    if binding[2] == generation:
+                        state["directories"].bindings[index] = (parent, path.name, *binding[2:6], str(path))
+                        break
+                state["bindings"].pop(preparation.name)
+                state["bindings"][path.name] = os.fstat(generation)
+                _fault("after_rename")
+            else:
+                entered = True  # Existing publication also makes acknowledgment failure uncertain.
+            check()
+            os.fsync(parent)
+            _fault("after_publication_sync")
+            if "published.json" not in state["controls"]:
+                state["evidence"]["published.json"] = _evidence(attempt, "published.json", marker, state["attempt_path"], 2048)
+                state["inventory"][attempt].add("published.json")
+            os.fsync(attempt)
+            _fault("after_published")
+            _attempt_check(attempt, state["attempt_path"], state["evidence"], max_entries)
+            check()
+        return MaterializedView(expected_plan.snapshot_id, expected_plan.plan_id,
+            hashlib.sha256(expected_plan.manifest_bytes).hexdigest(), str(path), str(state["attempt_path"]),
+            "verified_at_recovery")
+    except KeyboardInterrupt as error:
+        _attach_recovery(error, dict(attempt_path=str(attempt_path), destination=str(destination),
+            snapshot_id=expected_plan.snapshot_id, plan_id=expected_plan.plan_id, rename_entered=entered))
+        raise
+    except Exception as error:
+        if entered:
+            raise ViewOperationalError(f"uncertain recovery acknowledgment; retain attempt {attempt_path} and destination {destination}: {error}") from error
+        raise

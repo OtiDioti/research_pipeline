@@ -453,7 +453,7 @@ fsync acknowledgment.
 | Ready and sibling payload, destination absent | Observed ready unpublished payload, subject to checking identities and current contents. No automatic completion/replay. |
 | Ready, no sibling payload, destination present, no published | Rename may have completed but acknowledgment was lost. Compare destination generation inode, plan and manifest with intent; inspect bytes. |
 | Ready and sibling payload, competitor destination present | A losing publisher retains its complete payload. Compare both bindings and identities; never overwrite the winner or replay automatically. |
-| Published and destination matching intent | Publication barriers were locally acknowledged when evidence was written; inspect current bytes independently. Evidence is not authentication. |
+| Published and destination matching intent | A publication marker is present; verify the exact destination and current bytes. Present evidence never proves historical barrier success or acknowledgment. |
 | Missing/mismatched destination, both bindings claiming the recorded generation, mismatched identities or contradictory evidence | Outcome remains uncertain; do not manufacture a receipt or overwrite/replay. |
 
 Preparation errors identify destination, attempt_path and payload_path, including
@@ -798,3 +798,61 @@ with TemporaryDirectory(prefix="project-intake-example-", dir="/tmp") as tempora
         for name in directories:
             (Path(current) / name).chmod(0o700)
 ```
+
+
+## Explicit committed-report projections and recovery
+
+The historical v1 planner above remains byte-identical, including its ordinary
+work-product interpretation of `end_of_run_report`. Use
+`report_capture.prepare_report_view(source, operation_id, *, limits)` for the explicit
+`research_pipeline.readable_plan.v2` projection. Its common fields retain the selected
+observation's original scientific snapshot/limits. It adds exactly
+`selected_report_operation_id` and complete revision-ordered `reports` entries with
+`result` and `observation`. Original source/manifest/receipt bindings are retained
+separately from the scientific watermark. The materializer public boundary is unchanged.
+
+Reports are exact artifact copies under
+`reports/runs/<actual-portable-run-record-id>/<revision>/`, with `report.md`,
+`continuation.json`, `source.json` and generated `README.md`. Unsafe actual run
+components fail, including device aliases. Home identifies the selected dated
+observation and links both report and evidence navigation; it never claims current
+live state or permission to continue. Each adjacent navigation page links only that
+report's own saved exact records/artifacts. Historical report version 1 bytes remain
+unchanged; version 2 adds a fixed adjacent README link. All copies, navigation,
+indexes and manifest duplication consume real output budgets. Caller allowances
+independently bound complete retained history before object reads; no truncation or
+limit substitution is permitted. See the [complete report contract and executed
+guide](committed-run-reports.md).
+
+Import `inspect_readable_publication` and `recover_readable_view` from `vault`.
+Both accept `(attempt_path, destination, *, expected_plan: ReadablePlan,
+limits: SnapshotLimits, source_root, protected_roots, max_entries: int)`.
+Retain the exact plan manifest independently before publication. Inspection is
+read-only and returns `PublicationInspection(status, snapshot_id, plan_id,
+manifest_sha256, verified_payload_path, readiness_observation,
+publication_observation, differences, historical_acknowledgment)`; identity and
+payload fields may be unavailable. Status is `incomplete_preparation`,
+`complete_unpublished`, `published`, `competing_destination`, or `inconsistent`.
+Historical acknowledgment is always `not_established`. Strict token-paired siblings,
+parent/payload device/inode bindings, canonical controls, marker ordering and bounded
+protected inventories are verified. Competitors are not traversed or adopted, even
+when equal bytes exist at the destination.
+
+Explicit recovery accepts only the complete exact payload or this attempt's already
+published destination. It revalidates bytes, modes, links, ownership, ancestors and
+held bindings, synchronizes files/directories and requires checked closes. Missing
+ready/publication markers are appended only after verification; existing evidence
+is preserved. Complete unpublished output uses the same exclusive no-replace rename.
+`MaterializedView.verification="verified_at_recovery"` acknowledges the current
+verified state, never a lost historical acknowledgment. Source artifacts, live
+metadata and models are unnecessary once the copied output is complete. A failure
+after entering rename is uncertain and must be reconciled using the same attempt.
+
+Incomplete preparation cannot be repaired in place. First reconcile the old attempt;
+when demonstrably unpublished, retain it and explicitly materialize the original
+operation and pinned plan into an absent destination as a distinct replacement
+attempt. A new destination never proves an earlier uncertain attempt unpublished.
+Unavailable destinations and reservation failures preserve the caller's committed
+source/result identity even without complete controls. No automatic retries,
+orphan sweeps, destination overwrites, mutable latest pointer, CLI behavior change
+or database publication state is introduced.

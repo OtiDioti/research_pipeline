@@ -575,4 +575,4 @@ def _refresh_readable_view(source: RecordStore, prior_view, destination, *, expe
 
 
 # Import after private shared checks are defined: inspection never calls the writer.
-from research_pipeline.view_refresh_inspection import inspect_readable_refresh
+from research_pipeline.view_refresh_inspection import inspect_readable_refresh, recover_readable_refresh

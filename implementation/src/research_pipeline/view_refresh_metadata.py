@@ -94,11 +94,19 @@ class RefreshInspection:
 
 
 def _relationships(prior, successor, maximum):
-    """Map the union of exact revisions and ordered requested roots without guessing replacements."""
+    """Map exact revisions/roots and reject dropping or changing previously published report bindings.
+
+    Scientific selections may change, but explicit immutable report history must
+    remain an identical prefix of the successor. Legacy v1 mappings stay unchanged.
+    """
     old, new = prior.to_dict(), successor.to_dict()
     if (old["selection"]["project"]["record_id"] != new["selection"]["project"]["record_id"]
             or old["resolutions"][0]["record_id"] != new["resolutions"][0]["record_id"]):
         raise ViewIntegrityError("refresh plans identify different projects")
+    # Publication history is append-only even though scientific selections may change.
+    old_reports, new_reports = old.get("reports", []), new.get("reports", [])
+    if _canonical(new_reports[:len(old_reports)]) != _canonical(old_reports):
+        raise ViewIntegrityError("refresh successor drops or changes published report bindings")
     inventories = [{(r["record_id"], r["revision"]): r for r in d["records"]} for d in (old, new)]
     keys = sorted(set(inventories[0]) | set(inventories[1]))
     if len(keys) > maximum:

@@ -160,7 +160,8 @@ session/job recovery, scientific validation and live-provider work remain outsta
 paths, ordered exact references and optional previous-revision supersession. Repeated
 bytes can appear at distinct paths. Manifest context/claims/supersession are typed
 edges; build dependencies and Review context-manifest references remain shallow.
-Kind labels certify no detailed TeX/checkpoint/run-report/execution contract; attribution
+Kind labels alone certify no detailed TeX/checkpoint/execution contract. Generated run reports
+use the separate [committed report contract](../docs/committed-run-reports.md); attribution
 is declared, not authenticated. [Safe durable checkout](../docs/checkout.md) provides
 `checkout_work_product` and read-only `inspect_checkout` directly from
 `research_pipeline.checkout`. Explicit exclusion roots and finite byte/count limits
@@ -226,3 +227,14 @@ Import `RefreshLimits`, `refresh_readable_view` and `inspect_readable_refresh` f
 `research_pipeline.view_refresh` for durable preservation, atomic associated successor
 publication and read-only interruption diagnosis. Open and pin `destination/generation`.
 Existing materialization, capture/planning, checkout and explicit import remain distinct.
+
+[Committed run-report observations](../docs/committed-run-reports.md) provide strict saved declarations,
+coherent bounded scientific/resource capture, deterministic inert report/continuation
+bytes and original-operation reconciliation through existing artifacts/submissions.
+Schema 2 explicitly lacks resource accounting; schema 3 reports retain the complete
+selected project tree without exposing other projects' ledger payloads. The executed
+guide covers empty setup, saved baseline, uncertain partial work, authoritative
+settlement, reopened late-usage liability and resettlement, reopen and exact restoration. Exact report publication adds a version-2 readable plan, offline evidence navigation,
+original-attempt inspection/recovery and preserved refresh;
+automatic lifecycle hooks and pending-report gates remain mandatory future controller
+obligations. D04/D03/M0-E remain partial; M0-S remains pending.

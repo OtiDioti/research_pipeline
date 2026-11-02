@@ -326,6 +326,13 @@ def inspect_readable_refresh(attempt_path, destination, *, source_root, protecte
     A competing destination is lstat-only; it is never traversed or exposed as this
     attempt's successor. Stored budgets cannot increase independent caller limits.
     """
+    return _inspect_or_recover_refresh(attempt_path, destination, source_root=source_root,
+        protected_roots=protected_roots, limits=limits, expected_refresh_id=expected_refresh_id)
+
+
+def _inspect_or_recover_refresh(attempt_path, destination, *, source_root, protected_roots,
+                                limits, expected_refresh_id=None, recover=False):
+    """Share strict offline acquisition while retaining all descriptors through optional recovery."""
     from research_pipeline.view_refresh import ATTEMPT_PREFIX, PACKAGE_PREFIX, _locations, _marker, _sibling_aliases
     limits = _limits_value(limits)
     if expected_refresh_id is not None:
@@ -353,6 +360,8 @@ def inspect_readable_refresh(attempt_path, destination, *, source_root, protecte
             if not _present(parent, attempt.name):
                 directories.check()
                 stack.close()
+                if recover:
+                    raise ViewIntegrityError("missing attempt cannot be recovered")
                 return RefreshInspection(status, None, None, None, None, readiness, publication, "not_established", ())
             attempt_fd = reader.directory(parent, attempt.name, attempt, "attempt")
             names = reader.names(attempt_fd)
@@ -443,8 +452,114 @@ def inspect_readable_refresh(attempt_path, destination, *, source_root, protecte
                 differences = (ViewDifference("", "inconsistent", detail),)
             if expected_refresh_id is not None and identity is not None and identity != expected_refresh_id:
                 raise ViewIntegrityError("independent expected_refresh_id mismatch")
+            if recover:
+                if status not in ("complete_unpublished", "published"):
+                    raise ViewIntegrityError("refresh attempt cannot be recovered: " + status)
+                return _recover_payload(reader, parent, attempt, path, package, intent, controls, status, stack)
             result = RefreshInspection(status, identity, verified,
                 str(Path(verified) / "generation") if verified else None,
                 str(Path(verified) / "preservation") if verified else None,
                 readiness, publication, "not_established", differences)
         return result
+
+
+def _recover_payload(reader, parent, attempt, destination, preparation, intent, controls, status, stack):
+    """Reestablish current durability of a complete frozen package, then publish without replacement.
+
+    Preservation remains byte-for-byte frozen; neither the prior view nor source
+    artifacts are opened. Rebind only the root inode moved by the kernel. Checked
+    closes are part of this new acknowledgment, never evidence of an old one.
+    """
+    from research_pipeline.view_refresh import _write_pin, _marker, _fault, _sibling_aliases
+    from research_pipeline.view_refresh_metadata import RefreshedReadableView
+    from research_pipeline.vault import _rename_noreplace, _not_layout, ViewOperationalError
+    entered = status == "published"
+    afd, package = reader.tree["attempt"], reader.tree["package"]
+    token = intent["token"]
+    manifest = _json(controls["refresh.json"])
+    ancestors = tuple((binding[2], Path(binding[6])) for binding in reader.directories.bindings
+                      if binding[2] not in reader.tree.values())
+
+    def check():
+        """Verify bytes and original signatures, including absent preparation and competing siblings."""
+        reader.check()
+        for fd, location in ancestors:
+            _not_layout(fd, location)
+        _sibling_aliases(parent, (attempt.name, destination.name, preparation.name), reader.limits.max_entries)
+        if entered:
+            if _present(parent, preparation.name):
+                raise ViewIntegrityError("preparation binding remains beside published package")
+        elif _present(parent, destination.name):
+            raise ViewIntegrityError("competing destination during refresh recovery")
+
+    def append_marker(name):
+        """Append only a missing verified marker and update this operation's expected directory change."""
+        key = "attempt/" + name + ".json"
+        if key in reader.pins:
+            return
+        check()
+        data = _canonical(_marker(name, token, intent["package"], intent["refresh_id"], intent["manifest_sha256"])).encode("ascii")
+        # _available_controls preflights the complete inventory including both markers.
+        reader.capacity()
+        reader.pins[key] = _write_pin(reader.stack, {"": afd}, name + ".json", data, 0o400)
+        reader.inventory["attempt"].add(name + ".json")
+        owner, leaf, fd, _ = reader.directory_pins["attempt"]
+        reader.directory_pins["attempt"] = (owner, leaf, fd, os.fstat(fd))
+        os.fsync(afd)
+
+    try:
+        check()
+        for _, _, fd, _, _ in reader.pins.values():
+            os.fsync(fd)
+        for fd in reversed(tuple(reader.tree.values())):
+            os.fsync(fd)
+        os.fsync(parent)
+        check()
+        append_marker("ready")
+        if not entered:
+            _fault("before_rename")
+            check()
+            _sibling_aliases(parent, (attempt.name, destination.name, preparation.name), reader.limits.max_entries,
+                             absent=(destination.name,))
+            publish = _rename_noreplace()
+            entered = True
+            publish(parent, preparation.name, parent, destination.name)
+            for index, binding in enumerate(reader.directories.bindings):
+                if binding[2] == package:
+                    reader.directories.bindings[index] = (parent, destination.name, *binding[2:6], str(destination))
+                    break
+            reader.directory_pins["package"] = (parent, destination.name, package, os.fstat(package))
+            _fault("after_rename")
+        check()
+        os.fsync(parent)
+        _fault("after_publication_sync")
+        append_marker("published")
+        _fault("after_published")
+        check()
+        stack.close()
+    except KeyboardInterrupt as error:
+        from research_pipeline.vault import _attach_recovery
+        _attach_recovery(error, dict(attempt_path=str(attempt), destination=str(destination),
+            refresh_id=intent["refresh_id"], rename_entered=entered))
+        raise
+    except Exception as error:
+        if entered:
+            raise ViewOperationalError(f"uncertain refresh recovery acknowledgment; retain {attempt} and {destination}: {error}") from error
+        raise
+    return RefreshedReadableView(manifest["refresh_id"], manifest["prior"]["path"],
+        manifest["prior"]["snapshot_id"], manifest["prior"]["plan_id"], manifest["capture"]["capture_id"],
+        manifest["preservation"]["preservation_plan_id"], manifest["successor"]["snapshot_id"],
+        manifest["successor"]["plan_id"], str(destination), str(destination / "generation"),
+        str(destination / "preservation"), str(attempt), manifest["same_plan"], "verified_at_recovery")
+
+
+def recover_readable_refresh(attempt_path, destination, *, source_root, protected_roots,
+                             limits: RefreshLimits, expected_refresh_id: str | None = None):
+    """Explicitly recover the exact complete retained refresh package without recapturing prior edits.
+
+    Incomplete, inconsistent and competing attempts fail without repair. Current
+    bytes, controls, modes, identities and durability barriers must all verify;
+    successful checked closes establish a new acknowledgment only.
+    """
+    return _inspect_or_recover_refresh(attempt_path, destination, source_root=source_root,
+        protected_roots=protected_roots, limits=limits, expected_refresh_id=expected_refresh_id, recover=True)

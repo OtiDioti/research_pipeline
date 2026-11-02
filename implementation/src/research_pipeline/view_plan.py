@@ -612,6 +612,15 @@ def plan_readable_snapshot(snapshot: DetachedSnapshot) -> ReadablePlan:
     All physical copy occurrences and generated descriptors consume limits. A
     failure produces no partial plan. Expected hashes never imply verified bytes.
     """
+    return ReadablePlan(*_plan_inventory(snapshot))
+
+
+def _plan_inventory(snapshot, report_entries=None):
+    """Render the shared bounded inventory, retaining v1 bytes when no explicit reports are supplied.
+
+    Return constructor arguments so v2 validation can compare canonical bytes
+    without recursively constructing another self-validating ReadablePlan.
+    """
     if type(snapshot) is not DetachedSnapshot:
         raise DomainValidationError("expected DetachedSnapshot")
     document = snapshot.to_dict()
@@ -659,18 +668,37 @@ def plan_readable_snapshot(snapshot: DetachedSnapshot) -> ReadablePlan:
                 raise SnapshotLimitError("physical artifact copies exceed byte budgets")
             mappings[key].append(mapping)
             copies.append(ArtifactCopy(mapping["relative_path"], mapping["digest"], mapping["size"]))
+    report_mappings = []
+    if report_entries is not None:
+        from research_pipeline.report_view import report_mappings as make_report_mappings, report_directory
+        for item in report_entries:
+            reserve_file(report_directory(item) + "/README.md")
+            for mapping in make_report_mappings(item):
+                reserve_file(mapping["relative_path"], artifact=True)
+                report_mappings.append(mapping)
+                copies.append(ArtifactCopy(mapping["relative_path"], mapping["digest"], mapping["size"]))
     for token in branches:
         reserve_file("branches/" + token + "/branch.md")
     all_paths = sorted(generated_paths | copy_paths)
-    _inventory_paths(all_paths, sorted(directories))
+    _inventory_paths(all_paths, sorted(directories), report_entries=report_entries)
     output = _Output(limits, sorted(generated_paths), copies)
-    output.add("README.md", _root_body(document, paths, decoded, notices, mappings, envelopes, directories), "home")
+    home = _root_body(document, paths, decoded, notices, mappings, envelopes, directories)
+    if report_entries is not None:
+        from research_pipeline.report_view import report_home, report_navigation
+        from itertools import chain
+        home = chain(report_home(report_entries), home)
+    output.add("README.md", home, "home")
     for key, record in records.items():
         page = paths[key]
         output.add(page, _record_body(key, record, decoded.get(key), notices.get(key), paths, decoded,
                                      envelopes, mappings[key], document["snapshot_id"]), "record_companion")
         output.add(posixpath.dirname(page) + "/envelope.json", (record["envelope_json"],), "exact_envelope")
     record_pages = set(paths.values())
+    if report_entries is not None:
+        for item in report_entries:
+            page = report_directory(item) + "/README.md"
+            output.add(page, report_navigation(item, report_entries, paths, mappings), "report_navigation")
+            record_pages.add(page)
     for directory in sorted(directories):
         page = (directory + "/" if directory else "") + "README.md"
         if page != "README.md" and page not in record_pages:
@@ -682,7 +710,7 @@ def plan_readable_snapshot(snapshot: DetachedSnapshot) -> ReadablePlan:
               "role": f.role, "mode": f.mode, "hash_kind": "generated"} for f in output.generated]
     files.extend({"path": c.relative_path, "sha256": c.digest, "size": c.size, "role": "artifact_copy",
                   "mode": c.mode, "hash_kind": "expected"} for c in copies)
-    all_mappings = sorted((m for group in mappings.values() for m in group), key=lambda item: item["relative_path"])
+    all_mappings = sorted([m for group in mappings.values() for m in group] + report_mappings, key=lambda item: item["relative_path"])
     manifest = {"format": "research_pipeline.readable_plan.v1", "snapshot_id": document["snapshot_id"],
         "schema": document["schema"], "watermark": document["watermark"], "selection": document["selection"],
         "resolutions": document["resolutions"], "scope": document["scope"], "limitations": list(_LIMITATIONS),
@@ -694,6 +722,9 @@ def plan_readable_snapshot(snapshot: DetachedSnapshot) -> ReadablePlan:
         "directories": [{"path": d, "mode": 0o500} for d in sorted(directories)],
         "files": sorted(files, key=lambda item: item["path"]),
         "descriptor": {"path": "manifest.json", "mode": 0o400, "self_excluded": True}}
+    if report_entries is not None:
+        manifest.update(format="research_pipeline.readable_plan.v2", reports=report_entries,
+                        selected_report_operation_id=report_entries[-1]["result"]["operation_id"])
     # The descriptor excludes itself. Hash the canonical body without plan_id;
     # bound both that body and the larger final descriptor before returning.
     digest = hashlib.sha256()
@@ -706,14 +737,14 @@ def plan_readable_snapshot(snapshot: DetachedSnapshot) -> ReadablePlan:
     plan_id = digest.hexdigest()
     manifest["plan_id"] = plan_id
     descriptor = output.add("manifest.json", _json_chunks(manifest), "manifest")
-    return ReadablePlan(document["snapshot_id"], plan_id,
+    return (document["snapshot_id"], plan_id,
                         tuple(sorted(output.generated, key=lambda item: item.relative_path)),
                         tuple(sorted(copies, key=lambda item: item.relative_path)),
                         tuple(DirectoryEntry(d) for d in sorted(directories)), descriptor.data)
 
 
-def _inventory_paths(files, directories):
-    """Check portable aliases, generated prefixes, length ceilings and exact useful directory closure."""
+def _inventory_paths(files, directories, *, report_entries=None):
+    """Check portable paths and useful directory closure; report paths require explicit v2 bindings."""
     try:
         _validate_paths(files)
         if len(set(directories)) != len(directories):
@@ -725,7 +756,20 @@ def _inventory_paths(files, directories):
         from research_pipeline.domain import _KINDS
         allowed |= _KINDS
         expected = {""}
+        report_paths = set()
+        if report_entries is not None:
+            from research_pipeline.report_view import report_directory
+            for item in report_entries:
+                base = report_directory(item)
+                report_paths.update(base + "/" + name for name in ("README.md", "report.md", "source.json", "continuation.json"))
+                report_paths.add(posixpath.dirname(base) + "/README.md")
         for path in files:
+            if path in report_paths:
+                parent = posixpath.dirname(path)
+                while parent:
+                    expected.add(parent)
+                    parent = posixpath.dirname(parent)
+                continue
             if len(path.encode("utf-8")) > 1024 or not path.isascii():
                 raise ViewPlanError("generated path exceeds portable relative ceiling")
             components = path.split("/")
@@ -813,7 +857,9 @@ def _snapshot_from_manifest(manifest):
     """
     required = {"format", "snapshot_id", "plan_id", "schema", "watermark", "selection", "resolutions", "scope",
                 "limitations", "limits", "metadata_fetched_bytes", "records", "artifacts", "mappings", "directories", "files", "descriptor"}
-    if type(manifest) is not dict or set(manifest) != required or manifest["format"] != "research_pipeline.readable_plan.v1":
+    if type(manifest) is dict and manifest.get("format") == "research_pipeline.readable_plan.v2":
+        required |= {"selected_report_operation_id", "reports"}
+    if type(manifest) is not dict or set(manifest) != required or manifest["format"] not in ("research_pipeline.readable_plan.v1", "research_pipeline.readable_plan.v2"):
         raise ViewPlanError("unsupported manifest structure")
     names = ("snapshot_id", "schema", "watermark", "selection", "resolutions", "scope", "limits", "metadata_fetched_bytes")
     document = {name: manifest[name] for name in names}
@@ -840,13 +886,17 @@ def readable_plan_from_manifest(data: bytes, *, limits: SnapshotLimits) -> Reada
     if len(data) > min(limits.max_file_bytes, limits.max_total_bytes):
         raise SnapshotLimitError("manifest exceeds caller byte allowance")
     try:
-        manifest = _strict_json(data.decode("ascii"), maximum_depth=69)
+        manifest = _manifest_json(data)
         embedded = SnapshotLimits(**manifest["limits"])
         allowances = limits.to_dict()
         if any(value > allowances[name] for name, value in embedded.to_dict().items()):
             raise SnapshotLimitError("embedded allowance exceeds caller inspection allowance")
         document = _snapshot_from_manifest(manifest)
-        plan = plan_readable_snapshot(DetachedSnapshot(document))
+        if manifest["format"] == "research_pipeline.readable_plan.v2":
+            from research_pipeline.report_view import plan_report_snapshot
+            plan = plan_report_snapshot(DetachedSnapshot(document), manifest["reports"], limits=limits)
+        else:
+            plan = plan_readable_snapshot(DetachedSnapshot(document))
         if plan.manifest_bytes != data:
             raise ViewPlanError("manifest differs from deterministic canonical plan")
         return plan
@@ -862,18 +912,27 @@ def verify_plan_links(plan: ReadablePlan) -> None:
     Parent traversal is allowed only after normalization stays inside the complete
     file inventory. Fragments must uniquely identify generated Markdown headings;
     authored links and artifact fragments are deliberately outside this guarantee.
-    Manifest wrappers permit depth 69; reconstructed snapshot validation still
-    enforces depth 64 for embedded stored provenance. Invalid plans raise ViewPlanError.
+    Manifest wrappers permit depth 69 for v1 and 72 for v2; nested codecs retain
+    their own limits, including depth 64 for stored provenance. Invalid plans raise ViewPlanError.
     """
     try:
         if type(plan) is not ReadablePlan:
             raise ViewPlanError("expected ReadablePlan")
+        if type(plan.manifest_bytes) is not bytes:
+            raise ViewPlanError("manifest must be immutable bytes")
         for entries, expected in ((plan.generated_files, GeneratedFile), (plan.artifact_copies, ArtifactCopy),
                                   (plan.directories, DirectoryEntry)):
             if type(entries) is not tuple or any(type(entry) is not expected for entry in entries):
                 raise ViewPlanError("immutable inventory tuples required")
             for entry in entries:
                 entry.__post_init__()
+        ArtifactReference(plan.snapshot_id, 0)
+        ArtifactReference(plan.plan_id, 0)
+        dispatched = _manifest_json(plan.manifest_bytes)
+        if dispatched.get("format") == "research_pipeline.readable_plan.v2":
+            from research_pipeline.report_view import verify_report_plan
+            verify_report_plan(plan, dispatched)
+            return
         for entries in (plan.generated_files, plan.artifact_copies):
             if [entry.relative_path for entry in entries] != sorted(entry.relative_path for entry in entries):
                 raise ViewPlanError("file inventory must be sorted")
@@ -998,3 +1057,15 @@ def verify_plan_links(plan: ReadablePlan) -> None:
         if isinstance(error, (ViewPlanError, SnapshotLimitError)):
             raise
         raise ViewPlanError(f"invalid plan: {str(error)[:240]}") from error
+
+
+def _manifest_json(data):
+    """Dispatch strict manifest depth without enlarging the historical v1 decoder.
+
+    V2 adds a reports array and entry wrapper; each report and snapshot codec
+    independently enforces its original nested limits after this outer gate.
+    """
+    value = _strict_json(data.decode("ascii"), maximum_depth=72)
+    if value.get("format") != "research_pipeline.readable_plan.v2":
+        return _strict_json(data.decode("ascii"), maximum_depth=69)
+    return value

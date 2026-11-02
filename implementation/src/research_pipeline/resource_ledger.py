@@ -609,34 +609,43 @@ def inspect(store, limits):
     except AttributeError as error:
         raise ResourceValidationError("malformed inspection limits") from error
     with store._transaction(reconciliation_id="operation_id") as connection:
-        accounts = connection.execute("SELECT count(*) FROM resource_accounts").fetchone()[0]
-        operations = connection.execute("SELECT count(*) FROM resource_operations").fetchone()[0]
-        if accounts > limits.max_accounts or operations > limits.max_operations:
-            raise ResourceInspectionLimitError("inspection count limits exceeded")
-        _fault("inspection_after_counts")
-        # Preflight lengths incrementally in Python: never SQLite SUM over input
-        # quantities or potentially unbounded metadata totals, and never truncate.
-        size = 0
-        for table, expressions in (("resource_operations", ("request_json", "result_json")),
-                                   ("resource_accounts", ("scope_json", "dimensions_json", "limits_json", "policy_json")),
-                                   ("resource_allocations", ("purpose_limits_json",)),
-                                   ("resource_reservations", ("maxima_json", "call_bounds_json")),
-                                   ("resource_record_links", ("operation_id", "target_id", "relationship", "target_kind")),
-                                   ("migration_history", ("source_manifest_json", "provenance_json"))):
-            for row in connection.execute("SELECT " + ','.join(f"length(CAST({c} AS BLOB))" for c in expressions) + " FROM " + table):
-                size += sum(row)
-                if size > limits.max_metadata_bytes:
-                    raise ResourceInspectionLimitError("inspection metadata preflight limit exceeded")
-        state, operations = validate_ledger(connection)
-        body = {"format": "research_pipeline.resource_snapshot", "version": 2, "schema_version": 3,
-                "schema_identity": _schema_identity(3), "resource_sequence": len(operations),
-                "administrative_history": _history(connection), "operations": operations,
-                **_projections(state), "balances": _balances(state)}
-        identity = hashlib.sha256(canonical(body).encode("ascii")).hexdigest()
-        doc = {**body, "snapshot_id": identity}
-        if len(canonical(doc)) > limits.max_metadata_bytes:
-            raise ResourceInspectionLimitError("complete inspection exceeds metadata byte limit")
-        return ResourceSnapshot(doc)
+        return _inspect(connection, limits)
+
+
+def _inspect(connection, limits):
+    """Inspect and validate the complete ledger inside the caller-owned transaction.
+
+    Reports must run this complete preflight before projecting a project subtree;
+    filtered operations never masquerade as a complete ResourceSnapshot.
+    """
+    accounts = connection.execute("SELECT count(*) FROM resource_accounts").fetchone()[0]
+    operations = connection.execute("SELECT count(*) FROM resource_operations").fetchone()[0]
+    if accounts > limits.max_accounts or operations > limits.max_operations:
+        raise ResourceInspectionLimitError("inspection count limits exceeded")
+    _fault("inspection_after_counts")
+    # Preflight lengths incrementally in Python: never SQLite SUM over input
+    # quantities or potentially unbounded metadata totals, and never truncate.
+    size = 0
+    for table, expressions in (("resource_operations", ("request_json", "result_json")),
+                               ("resource_accounts", ("scope_json", "dimensions_json", "limits_json", "policy_json")),
+                               ("resource_allocations", ("purpose_limits_json",)),
+                               ("resource_reservations", ("maxima_json", "call_bounds_json")),
+                               ("resource_record_links", ("operation_id", "target_id", "relationship", "target_kind")),
+                               ("migration_history", ("source_manifest_json", "provenance_json"))):
+        for row in connection.execute("SELECT " + ','.join(f"length(CAST({c} AS BLOB))" for c in expressions) + " FROM " + table):
+            size += sum(row)
+            if size > limits.max_metadata_bytes:
+                raise ResourceInspectionLimitError("inspection metadata preflight limit exceeded")
+    state, operations = validate_ledger(connection)
+    body = {"format": "research_pipeline.resource_snapshot", "version": 2, "schema_version": 3,
+            "schema_identity": _schema_identity(3), "resource_sequence": len(operations),
+            "administrative_history": _history(connection), "operations": operations,
+            **_projections(state), "balances": _balances(state)}
+    identity = hashlib.sha256(canonical(body).encode("ascii")).hexdigest()
+    doc = {**body, "snapshot_id": identity}
+    if len(canonical(doc)) > limits.max_metadata_bytes:
+        raise ResourceInspectionLimitError("complete inspection exceeds metadata byte limit")
+    return ResourceSnapshot(doc)
 
 
 def validate_snapshot(value):
