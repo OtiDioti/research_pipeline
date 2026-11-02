@@ -70,3 +70,7 @@ This is an explicit operational stop, not a new product defect or resource-budge
 ## Resumed report recovery — 2026-11-02
 
 The human ended the session-only execution hold by requesting autonomous resumption. Read-only reconciliation confirms the cancelled report run is terminal and owner-free; its pending read-only operation must not be replayed. REQ-D04-002-R1 is prepared with exact draft context, unchanged acceptance and explicit persistent late-usage coverage, followed by publication/navigation. This is a bounded recovery, not a diagnosed backend defect or scientific waiver. Historical failures and unknown usage stay recorded; B-010/B-011 remain scoped holds on dependent scientific/live work.
+
+## B-013 recurrence — final allowed deadline recovery prepared, 2026-11-02
+
+Report publication Writer in d343c0af-b495-431d-a903-0cabbb520bf6 timed out after2700 seconds. Host owners/lease/quarantine resolved; preserve accepted capture milestone and unaccepted publication draft. REQ-D04-002-R2 is recovery2/2 for the same Writer deadline blocker, cumulative coordinator recoveries6; the earlier successful D02 replacement did not reset it. One focused milestone reuses26 exact product files, excludes scratch/log output, and fixes the independently confirmed metadata-bound defect before fresh full checks/review. Owner coordinator/CWI Writer. No further same-blocker action without escalation. Next safe action is in STATUS; no implementation/final acceptance is claimed.

@@ -83,3 +83,7 @@ REQ-D04-001/6eaf6f92-ec81-4d73-b83d-9b97a30cfb02: backend attempts/adoptions/rev
 ## 2026-11-02 — Report recovery preparation audit
 
 Read-only reconciliation confirmed clean backend 1f68060b5a5a9964c91811a53d3a515e0b01a073 and no live development owner. The cancelled read-only review requires a fresh run with preserved draft reference; existing --context and normal acceptance support recovery. No diagnosed backend defect, modification, maintenance attempt or state edit. Cumulative attempted/adopted/reverted remains 0/0/0.
+
+## 2026-11-02 — Publication Writer deadline audit
+
+Run d343c0af stopped safely after Writer2700-second timeout with changes; no replay allowed. No backend defect established. Existing supported frozen --context provides fresh CWI-only salvage; source/test repairs stay delegated product work. Old index contains generated example/log output and remains untouched; reference excludes it. Backend clean1f68060b5a5a9964c91811a53d3a515e0b01a073, attempted/adopted/reverted0/0/0. No security/frozen-state alteration or approval rejection.

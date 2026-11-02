@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. REQ-D04-001 resource accounting is accepted, exact-integrated and target-validated. REQ-D04-002 deterministic reporting has an unaccepted capture candidate preserved after human-requested shutdown. REQ-D04-002-R1 is prepared for fresh CWI acceptance and completion after the human resumed development on 2026-11-02; controlled research execution is not yet implemented.
+**State:** PARTIAL. Resource accounting is integrated. Report capture has milestone-only acceptance; publication draft timed out without final acceptance/integration. REQ-D04-002-R2 is prepared for fresh CWI recovery; controlled research execution remains unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -66,3 +66,7 @@ Phase remains PARTIAL. Preserve the capture draft for future CWI-only salvage an
 ## Resumed reporting boundary — 2026-11-02
 
 The human resumed engineering after the shutdown. [REQ-D04-002-R1](../requests/REQ-D04-002-R1.md) is prepared with byte-exact unaccepted draft context for fresh CWI-only implementation/review and completion of publication/navigation. All first-milestone semantics and full original criteria remain; persistent late-usage reporting coverage must close the recorded gap. No new acceptance or phase completion exists yet. Automatic lifecycle/report hooks, readiness/authority/fencing and dispatch remain subsequent mandatory prerequisites.
+
+## Publication recovery — 2026-11-02
+
+REQ-D04-002-R1 capture milestone acceptedadb1b439 (811/811) but publication Writer timed out after2700 seconds. No final acceptance or integration; terminal owners resolved and no resume allowed. [REQ-D04-002-R2](../requests/REQ-D04-002-R2.md) is the one-milestone, last permitted deadline recovery using exact preserved capture/publication reference plus confirmed metadata-bound correction. Full original criteria/checks/reviews remain. Phase acceptance boxes remain unchecked and all automatic lifecycle/readiness/fencing obligations remain mandatory.

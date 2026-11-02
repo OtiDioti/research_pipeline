@@ -134,3 +134,7 @@ Stopped REQ-D04-002 during first-milestone review through the existing controlle
 ## 2026-11-02 — Administrative resumption and report recovery preparation
 
 Reconciled the human-requested shutdown against all 21 retained CWI runs, Git/worktrees, exact report draft and host processes. All 17 accepted sources are integrated; no live development owner or pending integration remains. Recorded the human's resumption under unchanged limits and prepared REQ-D04-002-R1 with byte-exact frozen draft reference, fresh acceptance and pending publication/navigation. No product/backend implementation or new acceptance is claimed. Continuous starts remain 20/50 before launch; coordinator recoveries become five including this distinct salvage preparation.
+
+## 2026-11-02 — Partial report acceptance and terminal publication recovery
+
+Administrative checkpoint only; no new product integration. REQ-D04-002-R1 capture milestone acceptedadb1b439 after811/811 checks and repaired provenance-depth finding; publication Writer timed out, no final receipt. Preserved26 intended draft files and excluded scratch/log output for CWI-only REQ-D04-002-R2, including a confirmed metadata preflight repair. [Run evidence](development/runs/d343c0af-b495-431d-a903-0cabbb520bf6.md). Historical failures, usage and final allowed deadline-recovery consumption retained; full reporting/lifecycle/scientific obligations remain.

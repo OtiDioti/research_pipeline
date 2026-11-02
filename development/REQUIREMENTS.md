@@ -288,3 +288,7 @@ REQ-D04-002 / [stopped run 6ae8ca11-0df2-48e2-abc8-65d51adaa187](runs/6ae8ca11-0
 ## Reporting replacement prepared — 2026-11-02
 
 [REQ-D04-002-R1](requests/REQ-D04-002-R1.md) retains R-051–R-053 and supporting R-017–R-019/R-025–R-027/R-031/R-092 criteria from the cancelled request, with explicit persistent post-settlement late-usage report coverage. It uses the exact preserved draft as reference under a new CWI run, not accepted source. No row gains implementation evidence at this administrative checkpoint. All 94 obligations and specification v1.4 remain unchanged, including automatic lifecycle hooks/pending-report gates and outstanding scientific judgments.
+
+## Partial report milestone; final acceptance pending — 2026-11-02
+
+[Run d343c0af](runs/d343c0af-b495-431d-a903-0cabbb520bf6.md) accepted capture milestoneadb1b439 with811/811 controller tests, including provenance depth and persistent post-settlement late usage. Publication draft timed out with no final acceptance/integration; no mandatory row is promoted to delivered. REQ-D04-002-R2 retains all R-051–R-053/supporting criteria, fixes confirmed actual-metadata preflight bounds, and requires fresh complete checks/review. All94 obligations, automatic lifecycle/report admission gates and scientific requirements remain unchanged.

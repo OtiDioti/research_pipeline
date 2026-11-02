@@ -118,3 +118,7 @@ D04 remains at the report primitive boundary; next engineering work requires pre
 ## New-session reporting recovery — 2026-11-02
 
 The human resumed continuous engineering; fresh Git/CWI/host evidence validates the shutdown disposition and all 17 integrated acceptances. [REQ-D04-002-R1](development/requests/REQ-D04-002-R1.md) is prepared to reuse the exact unaccepted capture draft through frozen CWI context and complete immutable publication/navigation with fresh acceptance. No accepted reporting evidence is claimed yet. All original reporting/lifecycle, D02/D03/M0-E and scientific obligations remain. STATUS owns the single next safe action; historical shutdown statements refer to the ended session.
+
+## Report boundary recovery — 2026-11-02
+
+Capture-only milestone acceptance in d343c0af does not complete the report boundary; publication timed out and remains a retained draft. REQ-D04-002-R2 completes the same full report scope in one bounded recovery milestone, with actual-metadata preflight repair and preserved formats/guards/late-usage coverage. After final acceptance/integration, authenticated operating authority/readiness and lifecycle/admission/fencing remain the next engineering prerequisites. No phase or scientific gate is closed by salvage.
