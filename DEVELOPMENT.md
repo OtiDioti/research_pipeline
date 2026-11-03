@@ -228,3 +228,12 @@ When implementation can proceed but D10 needs unapproved live resources or exper
 ## Current continuous-start envelope — 2026-11-03
 
 Actual human AUTHrevision6 increases the continuous CWI start allowance to100 across active settings and startup prompts. Consumption persists; STATUS and AUTHORIZATION own current counters/evidence. Historical50-start envelopes remain historical records, not current settings. This administrative amendment changes no backend runtime knob, other recovery/repair/model/deadline bounds, scientific requirement or service/data/publication permission.
+
+
+## Full validation scheduling and Reviewer diagnostics — 2026-11-03
+
+The permanent command remains `python3 -B implementation/scripts/validate.py`. It discovers all standard tests and automatically schedules safe fixture groups in supervised isolated processes, using effective available CPUs and exact `C=min(T//2,max(0,A-2))`, at most2*C concurrent units, with safe intact sequential fallback. All baseline/candidate/final and post-integration full checks remain mandatory. Add ordinary `implementation/tests/test_*.py` tests normally; no scheduler registration or worker assignment is needed. Exceptional shared dependencies, global cleanup/custom-suite behavior, source checks, result coverage and platform limits are described in the [validator guide](docs/test-validation.md). The additive `--sequential` option still executes the entire suite and is useful for equivalent-source comparisons.
+
+The separately requested Reviewer prompt policy uses exact current-candidate controller results as full-suite evidence. A Reviewer does not rerun the complete suite; optional permitted diagnostics address concrete uncertainties in affected behavior, callers, dependencies, shared helpers/fixtures and regression paths. Report actual selection/outcomes as advisory evidence, preserving complete review scope and all required gates; do not substitute stale results or invent validation IDs. Clarification remains non-executing. [Exact product/backend audit](coding_pipeline_changes.md) and [measured full-suite benchmark](development/benchmarks/concurrent-validation-20261103.md) record the implemented limits and evidence. The prompt policy itself has no measured acceleration/compliance claim.
+
+The focused optimization and added prompt instruction are complete at this session's safe checkpoint. Stop here as explicitly instructed; the existing CONTINUOUS grant can be recovered in a new session, without resetting consumption or automatically restarting.
