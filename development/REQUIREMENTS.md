@@ -349,3 +349,7 @@ REQ-D04-004/e83c7165 has no candidate/acceptance/integration despite passing pre
 - R-049–R-053/R-092: ordered durable report intent survives stop/cancel preemption and original recovery with always-closed work gates. Automatic capture/publication/acknowledgment and restart/continuation evidence remain mandatory [REQ-D04-005](requests/REQ-D04-005.md), retaining all 13 follow-on criteria.
 
 All 94 obligations/specification v1.4 remain. D02/D03/D04/M0-E/product remain PARTIAL; R-001–003/M0-S and scientific/live qualification remain pending. All 73 predecessor test/fixture/validator blobs/modes and 32 saved methods remain; 31 meaningful new methods bring 63 lifecycle tests and 82 predecessor paths for the next request. Engineering evidence does not supply scientific judgments.
+
+## Reporting run terminal; contract decomposition — 2026-11-03
+
+[Run7632b4e0](runs/7632b4e0-7877-4e25-b23f-33d66232ebf1.md) has no source candidate/change/acceptance/integration. Baseline946/946 supplies no new requirement evidence. All94mandatory rows remain unchanged. [R1](requests/REQ-D04-005-R1.md) prepares only R-004/R-009/R-018/R-045 and R-049–R-053/R-092 structural binding subsets. [ADR-063](decisions/ADR-063-lifecycle-report-decomposition.md) explicitly assigns every original FOLLOWON-01–13 across binding/source/plan/automatic-publication/restart slices. Capture/render/commit/recovery/publication/ack/current-policy continuation remain mandatory, not deferred or complete. Full D04/M0-E and scientific/live obligations stay partial.

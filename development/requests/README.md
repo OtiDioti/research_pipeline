@@ -37,3 +37,7 @@ REQ-D03-003 is accepted/exact-integrated9373860,396/396 target tests. [REQ-D03-0
 ## Automatic-report follow-on prepared — 2026-11-02
 
 [REQ-D04-004-R2](REQ-D04-004-R2.md) is finally accepted/exact-integrated at `771422b7`, final 946/946 and integrated target passed 946/946 in 1146.754 seconds, zero skips/errors/failures/source mutation, ending 2026-11-02T20:54:40.836813Z (stdout SHA256 `0af73e8950f6ce1f59051b68cf134487e56610a1fae683b72bc47a9b3e38a243`, empty stderr). [REQ-D04-005](REQ-D04-005.md) retains all 13 mandatory automatic-report/restart criteria and uses two independently safe milestones. Its request and prelaunch checkpoint must be committed before one CWI start; no broader phase or scientific completion follows.
+
+## Reporting binding recovery prepared — 2026-11-03
+
+Original [REQ-D04-005](REQ-D04-005.md)/7632b4e0 is terminal with no candidate/change/acceptance. [REQ-D04-005-R1](REQ-D04-005-R1.md) prepares one useful pure-binding milestone under final prescription recovery2/2. [ADR-063](../decisions/ADR-063-lifecycle-report-decomposition.md) owns every original follow-on through mandatory subsequent slices. Original frozen requests remain unedited. STATUS owns launch readiness and counters.
