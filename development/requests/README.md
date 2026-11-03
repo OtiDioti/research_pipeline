@@ -45,3 +45,12 @@ Original [REQ-D04-005](REQ-D04-005.md)/7632b4e0 is terminal with no candidate/ch
 ## Coherent lifecycle-source request prepared — 2026-11-03
 
 [R1](REQ-D04-005-R1.md)/b4dd25a5 finally accepted/exact-integrated091561b9, final/target978/978. [REQ-D04-006](REQ-D04-006.md) next prepares one source-only capture/commit/recovery milestone consuming accepted offline binding. Original frozen requests remain unchanged. AUTHrevision6 raises allowance100,30starts used70remain; next31leaves69. STATUS owns launch readiness. All original FOLLOWONcriteria/ordinary-work closure/scientific duties remain.
+
+## Lifecycle source completion and next rendering request — 2026-11-03
+
+[REQ-D04-006-R1](REQ-D04-006-R1.md) is finally accepted, exact integrated and target-
+validated at b19e7ffa; [run evidence](../runs/7d05376e-aabf-4c5a-9481-91205611eb0c.md). The frozen
+request remains unchanged. [REQ-D04-007-A](REQ-D04-007-A.md) next scopes pure shared
+rendering with fixed accepted legacy references and93protected predecessor paths.
+All later output/plan/publication/ack/restart criteria remain mandatory; STATUS
+owns launch readiness, current counters and the single next safe action.

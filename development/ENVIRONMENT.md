@@ -196,3 +196,26 @@ Fresh catalog fetched2026-11-03T07:50:19.740910354Z advertisesapprovedgpt-6-astr
 Runf78fa4a9 completed roles/checks on unchanged backendc74df0b/Codex0.166.0/b8a11fed, stable map46f63a41, gpt-6-astra/high andFD4096/1048576. Terminal source1f9c243c remains unaccepted despite1025passes; no target integration/validation applies. Host scan11:32:54.155191Z verifies no remaining owners/descendants; status/diagnose show no lease/quarantine/recording gap and prohibit resume.
 
 Fresh local model catalog fetched2026-11-03T11:35:11.661655616Z advertises approvedgpt-6-astra/high; higher levels do not raise ceilingxhigh. Exact pinned executable SHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8 and clean backendc74df0b09b4883776b1889b859b2df065f0b2fe4 rechecked. Exact CLI login reports ChatGPT with the existing harmless read-only PATH-alias warning. No authentication file, complete environment, dependency or setting was copied/changed. R1uses the same stable nonsecret map, process-onlyFD4096,2700s,one milestone,two frozen checks/no--merge and compact immutable source references. Actual prelaunch base/settings/UUID remain local.
+
+## Source acceptance/integration and renderer readiness — 2026-11-03
+
+Run7d05376e completed with unchanged clean backend c74df0b09b4883776b1889b859b2df065f0b2fe4,
+Codex0.166.0/executableSHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8,
+approved gpt-6-astra/high, stable validation environment46f63a41, process FD4096/1048576,
+2700s and both ordered checks. Five actual role invocations match these settings;
+no server-side model attestation is inferred. Candidate 1033/1033 in 1730.199s; final
+1033/1033 in 1740.418s; exact integrated target 1033/1033 in 1769.410s ended14:11:07.355675Z,
+stdout5dee8e19cf18a033f1b07902cf3be7c9bfdcb392235cd079a9a6b4e711b9e5c6, empty stderr
+and unchanged clean source. Post-target host quiescence verified14:12:40.312736Z.
+
+Current account catalog fetched13:50:50.791991424Z advertisesgpt-6-astra/high. Exact
+pinned CLI version/login rechecked13:51:50.785985Z:0.166.0, ChatGPT login, existing
+harmless read-only PATH-alias warning. Backend and executable remain clean/identical.
+No auth/full environment copied, dependency installed or host/provider/security
+setting changed. The selected high effort stays below ceiling xhigh irrespective
+of other catalog entries. Refresh verification before the next launch.
+
+007-A uses compact pre-extraction legacy v1/v2 hashes generated from accepted
+b19e7ffa and protected report_v1 fixture, not a new persisted/scientific execution.
+Next context/source/request checks are retained under local/attempts/D04-007-A-attempt-001/.
+No old frozen run is resumed; current grant/settings and unknown liabilities persist.

@@ -45,3 +45,8 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [7632b4e0 — REQ-D04-005](7632b4e0-7877-4e25-b23f-33d66232ebf1.md): terminal/noresume, no candidate/change/milestone/final acceptance; baseline946/946, two prescription repairs, continuous start29/50. Original source/evidence preserved, final bounded prescription recovery prepared.
 
 - [b4dd25a5 — REQ-D04-005-R1](b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md): pure offline lifecycle binding finally accepted/exact-integrated091561b9, final/target978/978, no findings/repairs. Continuousstart30 launched under50; later actual human revision6 sets100, preserving30consumed/70remaining.
+
+- [7d05376e — REQ-D04-006-R1](7d05376e-aabf-4c5a-9481-91205611eb0c.md): corrected committed lifecycle
+  sources finally accepted/exact integrated b19e7ffa, final 1033/1033 and target 1033/1033
+  in 1769.410s, zero skips/errors/failures/mutation, no findings/repairs. Continuous
+  start 32/100; source facts leave publication/admission gates closed.

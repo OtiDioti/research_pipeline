@@ -18,7 +18,8 @@ Preparation consumes the final prescription-completeness recovery B-020 2/2, cum
 | --- | --- | --- |
 | REQ-D04-005-R1 | Pure closed versioned preparation/transition/obligation binding, arbitrary saved-work baseline, independent preallocation limits and offline codecs | 04,09,11–13 structural subsets |
 | REQ-D04-006, prepare after R1 evidence | Coherent same-transaction scientific/resource lifecycle source capture/commit/read/original-ID recovery, actual later first-capture watermark and gaps | 02–07,09–13 source subsets |
-| REQ-D04-007, prepare after source evidence | Shared seven-group rendering, complete-history immutable plan, independent bounded offline reconstruction/original-plan recovery | 02–06,09–13 plan subsets |
+| REQ-D04-007-A, after source evidence | Pure bounded shared seven-group rendering; preserved legacy v1/v2 bytes and detached lifecycle continuation | 02–04,09,11–13 rendering subsets |
+| REQ-D04-007-B, after rendering evidence | Authentic separate output commitment, complete-history immutable plan, independent bounded offline reconstruction/original-plan recovery | 02–06,09–13 output/plan subsets |
 | REQ-D04-008, prepare after plan evidence | Ordinary lifecycle calls automatically drive ordered protected publication/refresh and separately verified nonrecursive acknowledgment | 01–07,09–13 |
 | REQ-D04-009, prepare after publication evidence | Current-policy/dependency/resource/pending-gate restart and same-allocation continuation, actual process/backup/restore and executed guide | 08,10–13; final audit of all01–13 |
 
@@ -45,3 +46,19 @@ R1/b4dd25a5 finally accepted/exact-integrated091561b9/tree9e501de0/finalreceiptc
 ## Source attempt terminal; focused correctness recovery — 2026-11-03
 
 006/f78fa4a9 has no acceptance/integration after two repairs, despite1025passes. R1retains exact source1f9c243c/tree947d3b7e and all source criteria, repairing resource chronology and redundant baseline scalar types through new CWI acceptance. Its B-022 source contract correctness1/2 does not reset exhausted prescription/ownership/deadline/permission families. The source row remains incomplete; all original13FOLLOWONcriteria and later reserved rendering/plan/publication/restart rows remain mandatory and dependent. A possible later007A/Bsubdivision exists only in local preparation, not as completed work or a waived criterion.
+
+## Corrected source evidence and bounded rendering split — 2026-11-03
+
+R1/7d05376e is finally accepted/exact integrated `b19e7ffa82b490460225cfc1c0d5100355e2a5d6`, final/target 1033/1033,
+final receipt`d790c2e53c3dda63789ff98604d7c73dc76732c5ff13396a516b971ffeb5640a`, target 1769.410s with zero
+skips/errors/failures/mutation. Complete resource-prefix chronology and exact baseline
+types are corrected; all source criteria/durability/recovery/limits and93 current
+predecessor paths remain. Source facts do not discharge report obligations.
+
+DEV-067 chooses pure rendering007-A then durable output/plans007-B. The additional
+cycle separates pure bounded projection/compatibility from metadata/history/plan
+recovery, preserving all original13FOLLOWONcriteria. Compact accepted v1/v2 legacy
+reference hashes fix compatibility before extraction. Only actual accepted/integrated
+rendering later enables007-B. 008publication/verified acknowledgment and009 current-policy
+restart/continuation/final audit remain mandatory. No new grant, recovery/reset or
+scientific acceptance is implied. Full D04/M0-E and broader duties remain partial.

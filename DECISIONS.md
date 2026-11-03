@@ -231,3 +231,22 @@ R1finallyaccepted/integrated091561b9 supplies exact offline structural bindings,
 Original006is safely terminal/nonresumable after two internal repairs, with1025passes but no accepted milestone/final receipt/integration. Independent review and actual disposable-store probes establish resource-date chronology and redundant baseline scalar defects. Choose a compact immutable-source recovery with those two focused corrections, preserving all sound code and full original acceptance, rather than reauthoring the feature. Resume is prohibited; integrating provisional code and direct coordinator product patches are unavailable. No backend defect or larger guard/budget is established.
 
 [REQ-D04-006-R1](development/requests/REQ-D04-006-R1.md) uses source1f9c243c/tree947d3b7e and exact22-path identities; only its Writer installs21complete blobs plus original README navigation while preserving the current administrative maturity paragraph. B-022 source contract correctness1/2 is conservatively counted as coordinator14, distinct from completed-role-context/ownership/deadline failures and with no reset of exhausted families. All original source guarantees,47new methods,86accepted predecessor paths and13follow-on criteria remain. Dependent renderer/plans/publication/restart wait for actual corrected source evidence; scientific/live judgments stay separate.
+
+## DEV-067 — Share pure rendering before durable output plans
+
+Corrected lifecycle sources are finally accepted, exact integrated and target-validated
+at b19e7ffa; no source failure or backend issue requires recovery. The coordinator
+selects two independently reviewable parts of ADR-063's007boundary: pure bounded
+shared rendering007-A, then authenticated separate O/X/M output commitment, complete
+history plans and offline reconstruction007-B. One combined request couples output
+projection, metadata recovery and plan accounting; the split costs another full CWI
+cycle but keeps each contract useful and assessable. This is an ordinary engineering
+choice under existing authority, not a new human approval or recovery allowance.
+
+Reuse actual shared fact projection and inert framing; fabricated legacy observations
+conflict with saved-work baseline semantics and duplicate renderers are excluded.
+Freeze accepted v1/v2 source/output hashes before extraction, preserve93 predecessor
+paths and require exact-byte compatibility. New lifecycle output is detached generated
+bytes, without publication/authenticity/current permission. Architect must prescribe
+complete APIs/formats/errors/accounting before Writer work. All 13FOLLOWONcriteria,
+008publication/verified acknowledgment and009restart/final audit remain mandatory.

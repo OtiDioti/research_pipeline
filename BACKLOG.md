@@ -121,8 +121,22 @@ Owner coordinator/CWI. Run7632b4e0 ended STOPPED_INCOMPLETE without changes/cand
 
 R1/b4dd25a5 finally accepted/exact-integrated091561b9, final/target978/978; complete standalone prescription and pure-binding decomposition produced a useful bounded contract with zero CWI repairs. Preserved7632 evidence and corrected its first-two-blocker chronology from immutable timestamps. Prescription recovery2/2 stays exhausted; success and the human's higher100-start allowance reset no repairs/recoveries. All original FOLLOWON01–13 stay owned by mandatory subsequent source/plan/publication/restart work. No new engineering blocker found; B-010/B-011 remain only for dependent scientific/live work. REQ-D04-006 is ready under AUTHrevision6 with30/100used70remain. STATUS owns one next action.
 
-## B-022 — Source chronology and exact reference correctness — 2026-11-03
+## B-022 — Source chronology and exact reference correctness — 2026-11-03 (RESOLVED below)
 
-ACTIVE; coordinator/CWI. Runf78fa4a9 completed all roles, two repairs and valid candidate checks1025/1025, but third review found F007: source observation may precede included independently dated resource receipts. A separate genuine-store/rehashing probe confirms redundant baselineTrue/1.0 aliases. No accepted source/integration exists. Owner/process/effect/lease/quarantine and evidence integrity are resolved; no backend/model/permission defect is implicated. [Run evidence](development/runs/f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md).
+Recovery preparation history; coordinator/CWI. Runf78fa4a9 completed all roles, two repairs and valid candidate checks1025/1025, but third review found F007: source observation may precede included independently dated resource receipts. A separate genuine-store/rehashing probe confirms redundant baselineTrue/1.0 aliases. No accepted source/integration exists. Owner/process/effect/lease/quarantine and evidence integrity are resolved; no backend/model/permission defect is implicated. [Run evidence](development/runs/f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md).
 
 Preparing [R1](development/requests/REQ-D04-006-R1.md) is the first bounded source contract correctness recovery1/2, cumulative coordinator14, with compact immutable retained-source reuse by the new CWI Writer only. It repairs concrete implementation invariants, not unavailable prescription context, controller interruption, response permissions or deadline exhaustion; those old2/2families remain exhausted. All30internal repairs and31starts persist. Any recurrence stays in B-022; renaming/splitting resets nothing. Preserve F001–006,47retained source methods,86accepted predecessor blobs/modes, full original source criteria and all13later reporting criteria. Close only after exact final acceptance/integration/full target evidence. STATUS owns the sole next safe action.
+
+## B-022 resolved by exact accepted source and target evidence — 2026-11-03
+
+[REQ-D04-006-R1](development/runs/7d05376e-aabf-4c5a-9481-91205611eb0c.md). Accepted/integrated `b19e7ffa82b490460225cfc1c0d5100355e2a5d6`, tree `93947f1b2c43dd83ec7e117f5eb759f5af535b2e`, final receipt `d790c2e53c3dda63789ff98604d7c73dc76732c5ff13396a516b971ffeb5640a`. Candidate 1033/1033 in 1730.199s; final 1033/1033 in 1740.418s; integrated target 1033/1033 in 1769.410s, zero skips/errors/failures/source mutation. Target ended 2026-11-03T14:11:07.355675Z, stdout SHA256 `5dee8e19cf18a033f1b07902cf3be7c9bfdcb392235cd079a9a6b4e711b9e5c6`, empty stderr.
+Real tests and independent reviews establish fresh complete-prefix resource-date
+rejection before placement/insertion, retained-only detached chronology, original
+historical-prefix checks, exact baseline scalar types and rollback-clock original-ID
+recovery, with unchanged earlier guarantees. No source obligation is discharged.
+
+The original f78fa4a9 run remains terminal/unaccepted. Correctness recovery1/2 stays
+consumed, cumulative coordinator 14; no old exhausted/partial allowance resets.
+No new backend, permission, capacity or integrity blocker was found. 007-A shared
+rendering is ordinary next engineering; all broader reporting/admission duties and
+B-010/B-011 dependent scientific/live holds remain. STATUS owns one next safe action.

@@ -1,6 +1,11 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting, committed legacy reports, operator authority, prepared control/ordered obligations and offline binding are accepted/integrated. REQ-D04-006 is terminal unaccepted after review-limit exhaustion; REQ-D04-006-R1 prepares retained-source correctness repair. Source capture, shared rendering/plans, automatic publication/separate acknowledgment and restart remain mandatory and incomplete. Queue/attempt/fencing, admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
+**State:** PARTIAL. Resource accounting, committed legacy reports, operator authority,
+prepared control/ordered obligations, offline binding and corrected committed lifecycle
+sources are accepted/integrated. REQ-D04-007-A prepares pure shared rendering. Output
+commitment/plans, automatic publication/separate acknowledgment and restart remain
+mandatory. Queue/attempt/fencing, admission/dispatch and worker/context/tool/model
+enforcement remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -121,3 +126,21 @@ Every phase box remains unchanged. REQ-D04-005 automatic reporting/restart recov
 ## Source correctness recovery — 2026-11-03
 
 [Runf78fa4a9](../runs/f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md) is terminal/nonresumable with zero accepted milestones/final receipt/integration despite1025/1025 and both checks. F001–006resolved; resource chronology and independent baseline scalar contracts remain invalid. [R1](../requests/REQ-D04-006-R1.md) reuses the exact retained source through CWI-only installation and focused correction, preserving all original criteria and47new methods. No phase box advances. B-022source contract correctness1/2/coordinator14 preserves all old exhausted families, global30CWIrepairs and31starts. Rendering/plans/publication/ack/restart and broader D04/scientific/live duties remain mandatory.
+
+## Corrected lifecycle sources integrated; pure rendering next — 2026-11-03
+
+[Run7d05376e-aabf-4c5a-9481-91205611eb0c](../runs/7d05376e-aabf-4c5a-9481-91205611eb0c.md) finally accepted/exact integrated
+`b19e7ffa82b490460225cfc1c0d5100355e2a5d6`, tree`93947f1b2c43dd83ec7e117f5eb759f5af535b2e`, final receipt
+`d790c2e53c3dda63789ff98604d7c73dc76732c5ff13396a516b971ffeb5640a`. Candidate 1033/1033 in 1730.199s,
+final 1033/1033 in 1740.418s; target 1033/1033 in 1769.410s ended14:11:07.355675Z,
+zero skips/errors/failures/mutation. Both checks/reviews passed without repairs.
+Source-only coherent capture, original-ID metadata recovery, exact types/dates,
+durability, full independent bounds and real failure/reopen/backup/restore now have
+source evidence. All report obligations remain pending and work gates remain closed.
+
+[REQ-D04-007-A](../requests/REQ-D04-007-A.md) consumes only these evidenced contracts
+for pure shared rendering, preserving93 predecessor paths and frozen v1/v2 output
+references. 007-B owns output commitment/plans/offline recovery;008publication/ack
+and009restart/final 13criterion audit remain mandatory. No phase box is checked: full
+execution/admission/fencing/isolation/context/tool/model and scientific/live duties
+are still incomplete. STATUS owns counters and the single current next action.

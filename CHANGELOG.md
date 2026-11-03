@@ -192,3 +192,17 @@ At the human's explicit request, active continuous-start settings increase50→1
 ## Unaccepted source attempt and focused recovery prepared — 2026-11-03
 
 REQ-D04-006/f78fa4a9 ended terminal/nonresumable with no acceptance/integration. Retained1f9c243c passed1025/1025 and both frozen checks; resource chronology and independent baseline-type defects prevent source-contract completion. Six formal findings were resolved through two CWI repairs; all failures and old source remain preserved. [Run evidence](development/runs/f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md). Administrative records book ten completed turns once and prepare R1 immutable source adoption/correction through CWI, under existing limits. No product/backend implementation is added by this checkpoint.
+
+## Committed lifecycle source capture and recovery integrated — 2026-11-03
+
+[REQ-D04-006-R1](development/runs/7d05376e-aabf-4c5a-9481-91205611eb0c.md) commits coherent original lifecycle source facts with
+durable source-only artifacts, protected identities, original-ID recovery, independent
+limits and real process/backup/restore evidence. Resource chronology and redundant
+baseline scalar defects are corrected; earlier failed source remains preserved.
+
+Accepted/integrated `b19e7ffa82b490460225cfc1c0d5100355e2a5d6`, tree `93947f1b2c43dd83ec7e117f5eb759f5af535b2e`, final receipt `d790c2e53c3dda63789ff98604d7c73dc76732c5ff13396a516b971ffeb5640a`. Candidate 1033/1033 in 1730.199s; final 1033/1033 in 1740.418s; integrated target 1033/1033 in 1769.410s, zero skips/errors/failures/source mutation. Target ended 2026-11-03T14:11:07.355675Z, stdout SHA256 `5dee8e19cf18a033f1b07902cf3be7c9bfdcb392235cd079a9a6b4e711b9e5c6`, empty stderr.
+All 86 prior blobs/modes and47 retained methods remain;8 new methods bring1033 tests.
+No findings/repairs or backend changes. Source commitment leaves all obligations
+pending and grants no publication/readiness/admission/scientific authority.
+The following administrative checkpoint prepares pure shared rendering007-A, with
+all later output/plan/publication/ack/restart and broader obligations preserved.

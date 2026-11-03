@@ -148,3 +148,19 @@ R1/b4dd25a5 finally accepted/exact-integrated091561b9, final/target978/978, zero
 ## 2026-11-03 — Source review exhaustion, backend unchanged
 
 Runf78fa4a9 completed roles and both candidate checks but stopped at its fixed per-review repair limit. Actual defects concern source resource chronology and a redundant baseline contract, not CWI evidence/process/executable behavior. Host quiescence and terminal no-lease/quarantine/recording-gap state were verified; no resume or guard change occurred. Retained source is input only for fresh CWI-only product correctness work. Backendc74df0b remains clean; attempted/adopted/reverted1/1/0, no new candidate or maintenance attempt. Old CP-001/failed environment evidence and all recovery counts persist. Read-only audit schema/path/phase-transition corrections changed no controller state, product code, permissions or source refs; no automatic-approval rejection occurred.
+
+## 2026-11-03 — Source recovery finally accepted and integrated; backend unchanged
+
+Run7d05376e finally accepted/exact integrated b19e7ffa, final/target 1033/1033, no
+CWI repairs. Existing controller survived the prior session-only shutdown and
+completed naturally; no replay/restart, backend fix, controller-state/receipt edit,
+permission correction, guard weakening or model/environment substitution was used.
+Final receipt/source/diff/review/check chain, host quiescence and exact FF were
+verified, then the unchanged target validator passed. Backend remains clean
+c74df0b; attempted/adopted/reverted1/1/0. Old CP-001 and its failed environment
+attempts remain preserved. No new maintenance candidate or pending audit exists.
+
+The coordinator maintained administrative local evidence and froze accepted legacy
+renderer output references for next 007-A; all product implementation/tests remain
+CWI-owned. Read-only path/patch-context mistakes were corrected without product,
+controller or source-evidence mutation; no automatic-approval rejection occurred.
