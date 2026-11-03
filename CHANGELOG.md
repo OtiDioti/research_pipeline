@@ -215,3 +215,9 @@ all later output/plan/publication/ack/restart and broader obligations preserved.
 Repair controller1063/1063/2102.306s; integrated target1063/1063/2102.974test seconds/2103.466wall seconds,zero skips/errors/failures/source mutation,ended17:53:49.207478Z,stdout3aaaa7a97a3b3cc14ac9ba81418d40e4329de2590ab652cde8dafbb5a806fa43,empty stderr. All1063executed IDs match discovery once. Original sequential benchmark2073.61user+11.35system CPU,99%CPU,340388KiB maximum resident set. No concurrent speedup exists yet.
 
 This administrative checkpoint records actual recovery/resources and the human-priority REQ-DEV-VALIDATION-001. Product implementation remains CWI-only; the session stops after the focused optimization is accepted/integrated/benchmarked/documented. Broader roadmap/scientific obligations persist. Backend unchanged.
+
+## Concurrent validator finally accepted; integration withheld for demonstrated fixture defect — 2026-11-03
+
+REQ-DEV-VALIDATION-001/cd93ad37 produced safe resource-wave scheduling, exhaustive discovery/accounting, process isolation and lifecycle regressions across eight product paths; two CWI repairs resolved F001–003. Exact source7d2622c5/receipt9d2516ee passed1119/1119 in466.037593s and458.412761s with matching inventories and unchanged98 predecessors. This source was intentionally not integrated: a fresh exact-source probe proves import-time module cleanup callbacks execute twice in concurrent mode while reporting success.
+
+This administrative checkpoint preserves the acceptance/contradictory probe and prepares REQ-DEV-VALIDATION-001-R1 for fresh CWI-only exact source adoption/correction, full reacceptance/integration/benchmarks. The original sequential product validator remains. Start34/100/two repairs/eleven completed turns are booked once; new B-023 recovery1/2 is counted without resetting previous limits. Backend unchanged; no acceleration/completed optimization or scientific advancement claimed.

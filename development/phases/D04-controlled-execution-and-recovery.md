@@ -151,3 +151,7 @@ are still incomplete. STATUS owns counters and the single current next action.
 [REQ-D04-007-A/b7952877](../runs/b7952877-c4a8-4a38-ab2e-daa9419e60c3.md) finally accepted/exact-integrated1867872, final receipt31f52a0a; controller/target1063/1063 passed. Pure detached shared seven-group rendering, legacyv1/v2 compatibility, independent limits and corrected repeated-root traversal have evidence; no publication/discharge/current permission/admission. Every phase acceptance box remains unchanged. 007-B/008/009 and all original13criteria remain mandatory.
 
 The current human temporarily prioritizes REQ-DEV-VALIDATION-001 development-validator concurrency and requires a stop after its verified integrated documented benchmark checkpoint. This does not implement D04research-worker concurrency or change any scientific/runtime requirement. Subsequent normal roadmap work resumes in a later session.
+
+## Focused validator priority; declined intermediate integration — 2026-11-03
+
+REQ-DEV-VALIDATION-001/cd93ad37 finally accepted7d2622c5 with1119/1119 candidate/final, but independent global module-cleanup duplication violates standard fixture semantics. Integration explicitly declined after terminal/quiescent resolution. R1 corrects/adopts only through fresh CWI Writer and retains all original acceptance/benchmarks; D04/scientific/runtime behavior is unchanged. All13FOLLOWONcriteria,007-B/008/009 and broader mandatory duties persist for later. Complete this development-validator optimization/checkpoint then STOP; STATUS owns counters and one next action.
