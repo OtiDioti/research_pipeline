@@ -6,6 +6,10 @@ Development control records are under [development/](../development/README.md). 
 
 Document implemented behavior and limitations explicitly. Do not present a planned capability as available.
 
+The [development test-validation guide](test-validation.md) explains automatic
+fixture-safe scheduling, complete sequential comparison, resource and lifecycle
+bounds, accounting, the isolation audit and benchmark procedure.
+
 The implemented [foundation architecture](architecture.md) describes the package,
 CLI, validator, test isolation, and current limits. See the
 [implementation guide](../implementation/README.md) for exact local commands, and the

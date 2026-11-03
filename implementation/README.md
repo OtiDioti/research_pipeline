@@ -64,7 +64,15 @@ report it as unavailable with a reason. Revision output describes source context
 not acceptance.
 
 The validator derives the repository root from its own location, accepts no root
-or bypass options, and disables bytecode writes. Tests launch isolated subprocesses
+or bypass options, and disables bytecode writes. It automatically schedules intact
+module fixture units in supervised Linux child processes. Use
+`python3 -B implementation/scripts/validate.py --sequential` for the complete
+intact sequential comparison; both modes use the same discovery and accounting.
+Exceptional `VALIDATION_SERIAL = True` metadata selects exclusive whole-suite
+execution. The [test-validation guide](../docs/test-validation.md) documents the
+independence audit, CPU/quota/affinity formula, wave boundaries, full inventories,
+2650-second internal deadline, 16 MiB output/protocol bounds, descendant cleanup
+and equivalent-condition measurement procedure. Tests launch isolated subprocesses
 and use disposable fixtures, including Git administration fixtures without commits.
 They check that fixture bytes and directory contents remain unchanged. Import-effect
 guards demonstrate observed behavior, not a security sandbox.
