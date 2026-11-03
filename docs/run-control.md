@@ -300,3 +300,13 @@ This foundation implements none of capture, rendering, publication, acknowledgme
 restart readiness, task admission, dispatch or model hooks. D04/M0-E remains partial;
 synthetic engineering fixtures establish no live scientific execution, scientific
 validation, new operating grant or M0-S claim.
+
+## Offline lifecycle intent binding
+
+The [offline lifecycle-report binding contract](lifecycle-report-binding.md) retains and validates
+original preparation, selected control transition and required-report intent
+under explicit independent processing allowances. It accepts arbitrary saved-work
+baselines without changing historical report v1 baseline grammar. It proves local
+consistency only, creates/discharges no obligation, and never authorizes ordinary work.
+Source capture, rendering integration, publication, acknowledgment and current-policy
+continuation remain the mandatory subsequent ADR-063 slices.

@@ -737,4 +737,14 @@ Reviewer verification own acceptance; this guide asserts no acceptance result.
 Fresh legacy report commits cannot take over a controlled run, reserved source or
 report operation; exact original reconciliation remains available first. Uncontrolled
 legacy reports retain their existing contracts. Automatic lifecycle capture, publication
-and acknowledgment require the mandatory subsequent REQ-D04-005 work.
+and acknowledgment remain mandatory in the subsequent ADR-063 slices.
+
+## Offline lifecycle intent binding
+
+The [offline lifecycle-report binding contract](lifecycle-report-binding.md) retains and validates
+original preparation, selected control transition and required-report intent
+under explicit independent processing allowances. It accepts arbitrary saved-work
+baselines without changing historical report v1 baseline grammar. It proves local
+consistency only, creates/discharges no obligation, and never authorizes ordinary work.
+Source capture, rendering integration, publication, acknowledgment and current-policy
+continuation remain the mandatory subsequent ADR-063 slices.

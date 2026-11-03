@@ -252,3 +252,13 @@ or M0-S validation is added. Resource usage and uncertain liabilities remain unc
 Prepared control and ordered pending report obligations are available through the
 [durable run-control API](../docs/run-control.md). These metadata facts keep ordinary
 work disabled and do not implement capture, publication, restart readiness or dispatch.
+
+## Offline lifecycle intent binding
+
+The [offline lifecycle-report binding contract](../docs/lifecycle-report-binding.md) retains and validates
+original preparation, selected control transition and required-report intent
+under explicit independent processing allowances. It accepts arbitrary saved-work
+baselines without changing historical report v1 baseline grammar. It proves local
+consistency only, creates/discharges no obligation, and never authorizes ordinary work.
+Source capture, rendering integration, publication, acknowledgment and current-policy
+continuation remain the mandatory subsequent ADR-063 slices.
