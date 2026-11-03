@@ -43,7 +43,9 @@ separate O submission containing `X@1` and `M@n`, consuming the exact committed
 E/source artifact and requiring heads `X:0, M:n-1`. Output commitments must be
 ordered by manifest revision. They cannot append to S, replace E, regenerate its
 source, or reinterpret S's one-member receipt. This milestone implements no
-output API, output event, manifest, renderer, placeholder or publication mechanism.
+output API, output event, manifest, placeholder or publication mechanism.
+The separate [pure lifecycle renderer](lifecycle-report-rendering.md) now returns
+generated report/continuation bytes from detached sources; capture does not invoke it.
 Generic, typed, import, authority, control and legacy-report fresh writes respect
 these reservations. Exact historical reconciliation still precedes fresh guards.
 
@@ -312,8 +314,10 @@ RevisionConflictError, RecordNotFoundError, store closed/layout/operational erro
 and artifact layout/not-found/integrity/I/O errors retain their meanings. Genuine
 storage errors and programming assertions are not logical denials.
 
-Automatic lifecycle driving, seven-group rendering and immutable plans, publication,
-acknowledgment, and current-policy restart remain mandatory later ADR-063 slices.
+The separate [pure lifecycle renderer](lifecycle-report-rendering.md) shares the
+seven-group projection and inert framing with historical reports. Automatic lifecycle
+driving, output commitment and immutable plans, publication, acknowledgment, and
+current-policy restart remain mandatory later ADR-063 slices.
 D04, transactional admission/fencing, worker isolation, scientific qualification and
 live-provider obligations remain partial. These local engineering facts are no
 scientific or live-provider acceptance.

@@ -18,6 +18,7 @@ from research_pipeline.resources import ResourceInspectionLimits, ResourceReques
 
 REQUEST_BYTES = 256 * 1024
 REPORT_BYTES = 64 * 1024 * 1024
+_EMPTY_RESULTS = "No result was established by this report."
 # result.receipt.provenance adds one fixed container to request.provenance's 32-container bound.
 _RESULT_MAXIMUM_DEPTH = 33
 OUTCOMES = ("objective_met", "partial_progress", "unresolved", "stopped", "not_yet_assessed")
@@ -524,14 +525,32 @@ def _envelopes(snapshot):
     return {pin(entry): RecordEnvelope.from_dict(json.loads(entry["envelope_json"])) for entry in snapshot["records"]}
 
 
-def _closure(roots, envelopes):
+def _closure(roots, envelopes, *, bounds=None):
     """Derive scientific membership without treating report bookkeeping as scientific changes.
 
     The saved DetachedSnapshot still contains the entire outgoing closure. This
     narrower presentation/comparison walk stops at report artifacts and source
     events so their retained ledger/history dependencies do not become results.
+    Lifecycle callers supply (root occurrences, records, reference occurrences)
+    ceilings. Inventory is checked before traversal containers are allocated;
+    legacy callers deliberately retain their historical unbounded behavior.
     """
-    pending, reached, visited = [pin(r) for r in roots], set(), set()
+    if bounds is not None:
+        max_roots, max_records, max_references = bounds
+        if len(roots) > max_roots or len(envelopes) > max_records:
+            raise ReportLimitError("closure inventory ceiling exceeded")
+        references = 0
+        for envelope in envelopes.values():
+            references += len(envelope.record_references) + len(envelope.artifact_references)
+            if references > max_references:
+                raise ReportLimitError("closure reference ceiling exceeded")
+    pending, reached, visited = [], set(), set()
+    root_count = edge_count = 0
+    for root in roots:
+        root_count += 1
+        if bounds is not None and root_count > max_roots:
+            raise ReportLimitError("closure root ceiling exceeded")
+        pending.append(pin(root))
     while pending:
         key = pending.pop()
         if key in visited:
@@ -546,12 +565,16 @@ def _closure(roots, envelopes):
                     and content.get("product_kind") == "end_of_run_report")):
             continue
         reached.add(key)
-        pending.extend((ref.record_id, ref.revision) for ref in envelope.record_references)
+        for ref in envelope.record_references:
+            edge_count += 1
+            if bounds is not None and edge_count > max_references:
+                raise ReportLimitError("closure traversal ceiling exceeded")
+            pending.append((ref.record_id, ref.revision))
     return reached
 
 
-def _check_scope(request, snapshot, resources):
-    """Check real envelope ownership edges and explicitly requested typed evidence/checkpoints."""
+def _check_scope(request, snapshot, resources, *, closure_bounds=None):
+    """Check ownership and typed declarations, using explicit bounded lifecycle traversal when supplied."""
     from research_pipeline.store import _decode_typed_envelope
     from research_pipeline.work_product import WorkProductManifest
     from research_pipeline.scientific import Evidence
@@ -572,8 +595,9 @@ def _check_scope(request, snapshot, resources):
         for ref in envelope.record_references:
             if ref.relationship == "project" and (ref.target_kind != "project" or ref.record_id != project_id):
                 raise ReportScopeError("cross-project ownership edge")
+    closure = _closure(roots, envelopes, bounds=closure_bounds)
     primary = {pin(r) for r in roots}
-    for key in primary | _closure(roots, envelopes):
+    for key in primary | closure:
         envelope = envelopes[key]
         if envelope.kind == "run" and envelope.record_id != run_id:
             raise ReportScopeError("sibling runs are allowed only as resource context")
@@ -936,13 +960,19 @@ def _changes(observation):
                 for k in sorted(old_selected.keys() & new_selected.keys())]}
 
 
-def _groups(value):
-    """Project seven complete saved fact groups, preserving typed labels and explicit unknowns."""
-    request, declarations = value["request"], value["request"]["declarations"]
-    envelopes = _envelopes(value["scientific"])
-    selected = _closure(_scientific_roots(request), envelopes)
+def _project_groups(*, declarations, context, baseline, scientific, resources,
+                    root_categories, source_bindings, qualifications, fact_roots,
+                    recorded_changes, authority_notice, stopping_notice, job_notice,
+                    continuation_notice, closure_bounds=None):
+    """Project seven validated saved-fact groups without interpreting baselines or authority.
+
+    Callers supply explicit facts/notices and authorize reconstruction beforehand.
+    The optional closure bounds are mandatory on the lifecycle path.
+    """
+    envelopes = _envelopes(scientific)
+    selected = _closure(fact_roots, envelopes, bounds=closure_bounds)
     typed, opaque = [], []
-    for entry in value["scientific"]["records"]:
+    for entry in scientific["records"]:
         if pin(entry) not in selected:
             continue
         envelope = envelopes[pin(entry)]
@@ -954,27 +984,77 @@ def _groups(value):
             opaque.append({**fact, "typed_interpretation": unavailable(entry["classification"]["detail"])})
     return {
         "objective_scope_context_outcome": {k: declarations[k] for k in ("objective", "scope", "outcome", "interpretation", "stop_reason")} | {
-            "context": request["context"], "operational_stop_verification": unavailable(QUALIFICATIONS[3]),
-            "admission_and_authority": unavailable(QUALIFICATIONS[2])},
-        "results_and_recorded_changes": {"results": declarations["results"], "baseline": request["start_baseline"],
-            "empty_results": "No result was established by this report." if not declarations["results"] else None,
-            "recorded_changes": _changes(value)},
+            "context": context, "operational_stop_verification": unavailable(stopping_notice),
+            "admission_and_authority": unavailable(authority_notice)},
+        "results_and_recorded_changes": {"results": declarations["results"], "baseline": baseline,
+            "empty_results": _EMPTY_RESULTS if not declarations["results"] else None,
+            "recorded_changes": recorded_changes},
         "reported_checks_and_unresolved_issues": {"reported_completed_checks": declarations["completed_checks"],
             "unresolved_issues": declarations["unresolved_issues"], "exact_typed_assessments_and_states": typed,
             "unavailable_typed_interpretations": opaque},
         "saved_work_jobs_and_gaps": {"saved_work": declarations["saved_work"], "declared_outstanding_jobs": declarations["outstanding_jobs"],
-            "job_inventory_and_termination": unavailable(QUALIFICATIONS[4]), "gaps": declarations["gaps"],
-            "ledger_uncertainty": value["resources"].get("reservation_usage", value["resources"])},
-        "dimensioned_resources_and_stopping_decision": {"resources": value["resources"], "reported_stopping_decision": declarations["stop_reason"],
+            "job_inventory_and_termination": unavailable(job_notice), "gaps": declarations["gaps"],
+            "ledger_uncertainty": resources.get("reservation_usage", resources)},
+        "dimensioned_resources_and_stopping_decision": {"resources": resources, "reported_stopping_decision": declarations["stop_reason"],
             "accounting_rule": "Use separate recorded balances. Never sum ancestors/descendants or add cache/reasoning telemetry to token totals.",
             "protected_capacity": QUALIFICATIONS[7]},
-        "saved_prioritized_continuation": {"plan": declarations["continuation"], "authority": unavailable(QUALIFICATIONS[2]),
-            "notice": QUALIFICATIONS[5]},
+        "saved_prioritized_continuation": {"plan": declarations["continuation"], "authority": unavailable(authority_notice),
+            "notice": continuation_notice},
         "inspection_reproduction_and_limitations": {"reproduction": declarations["reproduction"], "limitations": declarations["limitations"],
-            "scope_qualifications": value["qualifications"], "root_categories": value["root_categories"],
+            "scope_qualifications": qualifications, "root_categories": root_categories,
             "record_routes": [{"record_id": r["record_id"], "revision": r["revision"], "commit": r["commit"], "membership": b}
-                              for r, b in zip(value["scientific"]["records"], value["source_bindings"])],
-            "artifact_routes": [{"digest": a["digest"], "size": a["size"]} for a in value["scientific"]["artifacts"]]}}
+                              for r, b in zip(scientific["records"], source_bindings)],
+            "artifact_routes": [{"digest": a["digest"], "size": a["size"]} for a in scientific["artifacts"]]}}
+
+
+def _groups(value):
+    """Supply the historical projection inputs and earlier-report comparison unchanged."""
+    request = value["request"]
+    return _project_groups(declarations=request["declarations"], context=request["context"],
+        baseline=request["start_baseline"], scientific=value["scientific"], resources=value["resources"],
+        root_categories=value["root_categories"], source_bindings=value["source_bindings"],
+        qualifications=value["qualifications"], fact_roots=_scientific_roots(request),
+        recorded_changes=_changes(value), authority_notice=QUALIFICATIONS[2],
+        stopping_notice=QUALIFICATIONS[3], job_notice=QUALIFICATIONS[4], continuation_notice=QUALIFICATIONS[5])
+
+
+_HEADINGS = ("Objective, scope, exact context and attributed outcome", "Saved results and recorded revision/selection changes",
+             "Reported completed checks and unresolved issues", "Saved products, incomplete work, declared jobs and gaps",
+             "Dimensioned resources, protected capacity and reported stopping decision", "Saved prioritized continuation",
+             "Exact inspection, reproduction and limitations")
+_LEGACY_OPENING = ("This dated observation describes state immediately before its own submission. It is not indefinitely current.\n\n"
+    "Outcome labels and stop reasons are attributed assessments. Operational stopping and authenticated authority remain unavailable.\n\n"
+    "[Saved source](source.json) · [Saved continuation](continuation.json)\n\n")
+_LEGACY_FOOTER = ("Inspect original metadata with get_report_operation(operation_id); verify retained content with read_report(operation_id). "
+    "Use get_revision/get_typed_revision(record_id, revision), read_artifact(digest/size reference), or existing checkout for exact evidence. "
+    "Reproduction text is inert and is never executed. Reading does not authorize continuation.\n")
+
+
+def _markdown_frames(identities, groups, *, opening, navigation, footer):
+    """Yield fixed prose and literal values for both sizing and the single Markdown framing engine."""
+    yield "# Controller-generated state report\n\n"
+    yield opening
+    yield identities
+    yield navigation
+    for heading, facts in zip(_HEADINGS, groups.values()):
+        yield "## " + heading + "\n\n"
+        if facts.get("empty_results"):
+            yield _EMPTY_RESULTS + "\n\n"
+        yield facts
+    yield footer
+
+
+def _serialize_outputs(identities, groups, continuation, *, opening, navigation, footer, maximum):
+    """Emit inert Markdown and canonical ASCII continuation bytes after the caller's preflight."""
+    from research_pipeline.view_plan import _literal
+    chunks = []
+    for frame in _markdown_frames(identities, groups, opening=opening, navigation=navigation, footer=footer):
+        if type(frame) is str:
+            chunks.append(frame)
+        else:
+            chunks.extend(_literal(frame))
+    return {"report.md": "".join(chunks).encode("utf-8"),
+            "continuation.json": (_encode(continuation, maximum, "continuation") + "\n").encode("ascii")}
 
 
 def render_report(observation):
@@ -984,7 +1064,6 @@ def render_report(observation):
     Authored data uses inert JSON literal blocks, never active Markdown. No store,
     clock, filesystem, environment, execution callback or network is consulted.
     """
-    from research_pipeline.view_plan import _literal
     if type(observation) is not ReportObservation:
         raise DomainValidationError("expected ReportObservation")
     value = ReportObservation.to_dict(observation)
@@ -999,31 +1078,85 @@ def render_report(observation):
     continuation = {"format": "research_pipeline.report_continuation", "version": 1, "identities": identities,
                     "saved_work": request["declarations"]["saved_work"], "groups": groups,
                     "continuation": request["declarations"]["continuation"]}
-    headings = ("Objective, scope, exact context and attributed outcome", "Saved results and recorded revision/selection changes",
-                "Reported completed checks and unresolved issues", "Saved products, incomplete work, declared jobs and gaps",
-                "Dimensioned resources, protected capacity and reported stopping decision", "Saved prioritized continuation",
-                "Exact inspection, reproduction and limitations")
-    chunks = ["# Controller-generated state report\n\n",
-              "This dated observation describes state immediately before its own submission. It is not indefinitely current.\n\n",
-              "Outcome labels and stop reasons are attributed assessments. Operational stopping and authenticated authority remain unavailable.\n\n",
-              "[Saved source](source.json) · [Saved continuation](continuation.json)\n\n", *list(_literal(identities))]
-    # Rendering identity is persisted: old source hashes and old output bytes never change.
-    if value["version"] == 2:
-        chunks.append("[Evidence navigation available in a published readable generation](README.md)\n\n")
-    for heading, facts in zip(headings, groups.values()):
-        chunks.append("## " + heading + "\n\n")
-        if "empty_results" in facts and facts["empty_results"]:
-            chunks.append(facts["empty_results"] + "\n\n")
-        chunks.extend(_literal(facts))
-    chunks.append("Inspect original metadata with get_report_operation(operation_id); verify retained content with read_report(operation_id). "
-                  "Use get_revision/get_typed_revision(record_id, revision), read_artifact(digest/size reference), or existing checkout for exact evidence. "
-                  "Reproduction text is inert and is never executed. Reading does not authorize continuation.\n")
     limits = request["limits"]
-    outputs = {"report.md": "".join(chunks).encode("utf-8"),
-               "continuation.json": (_encode(continuation, limits["max_output_file_bytes"], "continuation") + "\n").encode("ascii")}
+    # Rendering identity is persisted: retain version-specific navigation and bytes.
+    navigation = ("[Evidence navigation available in a published readable generation](README.md)\n\n"
+                  if value["version"] == 2 else "")
+    outputs = _serialize_outputs(identities, groups, continuation, opening=_LEGACY_OPENING,
+        navigation=navigation, footer=_LEGACY_FOOTER, maximum=limits["max_output_file_bytes"])
     source_bytes = len(_canonical(value))
     if (any(len(data) > limits["max_output_file_bytes"] for data in outputs.values()) or
             source_bytes > limits["max_output_file_bytes"] or
             source_bytes + sum(map(len, outputs.values())) > limits["max_output_total_bytes"]):
         raise ReportLimitError("complete generated files exceed output budgets")
     return outputs
+
+
+_LIFECYCLE_AUTHORITY = 'Captured authority is historical; current permission and admission are unavailable.'
+_LIFECYCLE_QUALIFICATIONS = [
+    'Detached structural consistency only; persisted origin and artifact availability are not authenticated.',
+    'Generated bytes only; no output commitment, readable plan, publication, or acknowledgment is established.',
+    'Actual first-capture state, not reconstructed transition-time state; missing facts remain unknown.',
+    'Reading or rendering grants no readiness, restart, continuation, or worker admission.',
+]
+_LIFECYCLE_OPENING = (
+    'This report renders detached first-capture facts and preserves original intent separately from later captured control. '
+    'It proves structural consistency only and returns generated bytes without publication or authorization.\n\n')
+_LIFECYCLE_FOOTER = (
+    'The source_route describes get_lifecycle_source_operation(control_operation_id) and '
+    'read_lifecycle_source(control_operation_id), requiring a separately opened store and appropriate limits. '
+    'Inspect exact evidence with get_revision/get_typed_revision(record_id, revision), '
+    'read_artifact(ArtifactReference(digest,size)), or existing work-product checkout through explicit inspection. '
+    'Exact route arguments are retained in the literal data; availability is not established. '
+    'Reproduction instructions are inert and never executed. Reading does not authorize continuation.\n')
+
+
+def _lifecycle_projection(value, scientific_limits):
+    """Extend the shared seven groups with validated original intent and later captured facts.
+
+    The renderer must reserve projection work before calling. Repeated scientific,
+    dossier and baseline root occurrences are intentional, not new snapshot roots.
+    Control/resource history stays inspectable without becoming scientific results.
+    """
+    packet = value['binding']
+    selected = packet['transition']['content']['request']
+    preparation = packet['preparation']['content']['request']['preparation']
+    obligation = packet['obligation']['content']
+    report = selected['report']
+    declarations = report['declarations']
+    roots = [ref for category in ('scientific', 'dossier', 'saved_baseline')
+             for ref in value['root_categories'][category]]
+    bounds = (len(roots), *(min(getattr(scientific_limits, name), report['limits']['snapshot'][name])
+                           for name in ('max_records', 'max_references')))
+    groups = _project_groups(declarations=declarations, context=preparation['context'],
+        baseline=value['baseline'], scientific=value['scientific'], resources=value['resources'],
+        root_categories=value['root_categories'], source_bindings=value['source_bindings'],
+        qualifications=list(_LIFECYCLE_QUALIFICATIONS), fact_roots=roots, closure_bounds=bounds,
+        recorded_changes={'unavailable': unavailable('Historical report comparison is unavailable for a lifecycle saved-work baseline.')},
+        authority_notice=_LIFECYCLE_AUTHORITY, stopping_notice=QUALIFICATIONS[3],
+        job_notice=QUALIFICATIONS[4], continuation_notice=QUALIFICATIONS[5])
+    groups['objective_scope_context_outcome']['lifecycle'] = {
+        'binding': packet, 'captured_control': value['control'], 'selection': report['selection'],
+        'source_qualifications': value['qualifications']}
+    groups['saved_prioritized_continuation']['next_action_interpretation'] = unavailable(
+        'No interpreted next action is established; inspect the saved continuation and checkpoint records.')
+    groups['inspection_reproduction_and_limitations'].update(
+        source_route={'control_operation_id': selected['operation_id'],
+                      'metadata_method': 'get_lifecycle_source_operation',
+                      'observation_method': 'read_lifecycle_source', 'limits_required': True},
+        record_methods=['get_revision', 'get_typed_revision'], artifact_method='read_artifact')
+    identities = {'control_operation_id': selected['operation_id'],
+        'report_operation_id': obligation['report_operation_id'],
+        'run': {'record_id': selected['run_id'], 'revision': selected['run_revision'],
+                'relationship': 'run', 'target_kind': 'run'},
+        'report_revision': obligation['report_revision'],
+        'source_event': {'record_id': obligation['report_source_id'], 'revision': 1,
+                         'relationship': 'lifecycle_report_source', 'target_kind': 'event'},
+        'snapshot_id': value['snapshot_id'], 'scientific_snapshot_id': value['scientific']['snapshot_id'],
+        'binding_digest': value['binding_digest'], 'transitioned_at': selected['transitioned_at'],
+        'observed_at': value['observed_at'], 'scientific_watermark': value['scientific']['watermark'],
+        'resource_sequence': value['resources'].get('resource_sequence')}
+    continuation = {'format': 'research_pipeline.lifecycle_report_continuation', 'version': 1,
+        'identities': identities, 'saved_work': declarations['saved_work'], 'groups': groups,
+        'continuation': declarations['continuation'], 'ordinary_work_allowed': False, 'recheck_required': True}
+    return identities, groups, continuation

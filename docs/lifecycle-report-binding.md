@@ -223,8 +223,9 @@ performs none of those reads.
 
 [ADR-063](../development/decisions/ADR-063-lifecycle-report-decomposition.md) assigns
 the implemented coherent lifecycle source capture/commit/original-ID recovery to REQ-D04-006;
-shared rendering, complete-history plans and bounded offline reconstruction to
-REQ-D04-007; ordered publication/refresh and separately verified acknowledgment to
+[pure shared rendering](lifecycle-report-rendering.md) to REQ-D04-007-A, and
+output commitment, complete-history plans and bounded offline reconstruction to
+REQ-D04-007-B; ordered publication/refresh and separately verified acknowledgment to
 REQ-D04-008; and current-policy restart/continuation with resource/dependency/pending
 gates to REQ-D04-009. All FOLLOWON-01–13 and wider requirements remain mandatory.
 Report v2, plan and publication contracts are unchanged. This binding proves no

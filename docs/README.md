@@ -123,3 +123,5 @@ with a self-contained executable synthetic guide. Detached results require reche
 inside the later admitting transaction and provide no reservation or dispatch guarantee.
 
 - [Durable run control](run-control.md): authenticated preparation, atomic pending report intent, bounded historical recovery and an always-closed ordinary-work gate.
+
+- [Pure lifecycle report rendering](lifecycle-report-rendering.md): bounded detached seven-group report/continuation bytes, structural-only trust, closed work gates and an executed guide.

@@ -436,7 +436,8 @@ def _observation(value, limits):
     """Validate source intent, exact baseline types and retained factual chronology.
 
     Called after enclosing measurement/work reservation, this rejects detached
-    contradictions without consulting storage, current time or policy.
+    contradictions without consulting storage, current time or policy. Scientific
+    scope closure always receives the effective caller/original traversal bounds.
     """
     control.authority.exact(value, 'format version binding binding_digest observed_at control scientific resources baseline root_categories source_bindings verified_artifacts qualifications snapshot_id ordinary_work_allowed recheck_required')
     packet = binding.LifecycleReportBinding(value['binding'], limits=limits.binding)
@@ -482,7 +483,9 @@ def _observation(value, limits):
                  'roots': [dict(zip(('record_id', 'revision'), pin)) for pin in pins[1:]]}
     if selection != scientific['selection'] or list(selection.values())[0] != scientific['resolutions'][0]:
         raise LifecycleSourceValidationError('source exact selection mismatch')
-    reports._check_scope(intent, scientific, value['resources'])
+    reports._check_scope(intent, scientific, value['resources'], closure_bounds=tuple(
+        min(getattr(limits.scientific, name), original['snapshot'][name])
+        for name in ('max_roots', 'max_records', 'max_references')))
     baseline = packet['preparation']['content']['request']['preparation']['start_baseline']
     # Both fragments are already measured within the enclosing 64P reservation.
     # Canonical JSON preserves scalar types without a second saved-work grammar.
