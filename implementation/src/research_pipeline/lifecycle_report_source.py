@@ -437,7 +437,9 @@ def _observation(value, limits):
 
     Called after enclosing measurement/work reservation, this rejects detached
     contradictions without consulting storage, current time or policy. Scientific
-    scope closure always receives the effective caller/original traversal bounds.
+    scope closure receives the validated scientific occurrence inventory and the
+    effective caller/original record and reference bounds, independently of the
+    distinct snapshot-pin ceiling enforced before reconstruction.
     """
     control.authority.exact(value, 'format version binding binding_digest observed_at control scientific resources baseline root_categories source_bindings verified_artifacts qualifications snapshot_id ordinary_work_allowed recheck_required')
     packet = binding.LifecycleReportBinding(value['binding'], limits=limits.binding)
@@ -483,9 +485,13 @@ def _observation(value, limits):
                  'roots': [dict(zip(('record_id', 'revision'), pin)) for pin in pins[1:]]}
     if selection != scientific['selection'] or list(selection.values())[0] != scientific['resolutions'][0]:
         raise LifecycleSourceValidationError('source exact selection mismatch')
-    reports._check_scope(intent, scientific, value['resources'], closure_bounds=tuple(
-        min(getattr(limits.scientific, name), original['snapshot'][name])
-        for name in ('max_roots', 'max_records', 'max_references')))
+    # Snapshot max_roots counts distinct pins; declarations retain repetitions.
+    # This locally derived occurrence inventory is covered by source work/size
+    # reservations and matches _check_scope's scientific roots exactly.
+    reports._check_scope(intent, scientific, value['resources'], closure_bounds=(
+        len(categories['scientific']),
+        min(limits.scientific.max_records, original['snapshot']['max_records']),
+        min(limits.scientific.max_references, original['snapshot']['max_references'])))
     baseline = packet['preparation']['content']['request']['preparation']['start_baseline']
     # Both fragments are already measured within the enclosing 64P reservation.
     # Canonical JSON preserves scalar types without a second saved-work grammar.

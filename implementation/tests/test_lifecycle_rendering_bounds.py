@@ -138,7 +138,7 @@ class LifecycleRenderingBoundsTests(unittest.TestCase):
         """Full renders honor scientific inventory/fetched bytes and adjust enclosing W3 when M changes."""
         scientific = self.doc['scientific']
         entries = [json.loads(row['envelope_json']) for row in scientific['records']]
-        thresholds = {'max_roots': max(len(scientific['resolutions']), len(self.doc['root_categories']['scientific'])),
+        thresholds = {'max_roots': len(scientific['resolutions']),
             'max_records': len(entries),
             'max_references': sum(len(e['record_references']) + len(e['artifact_references']) for e in entries),
             'max_record_bytes': max(max(len(f.canonical(row)), row['fetched_bytes']) for row in scientific['records']),
@@ -149,10 +149,8 @@ class LifecycleRenderingBoundsTests(unittest.TestCase):
             with self.subTest(field=name):
                 exact = replace(sources.LIMITS, scientific=replace(sources.LIMITS.scientific, **{name: threshold}))
                 small = replace(exact, scientific=replace(exact.scientific, **{name: threshold-1}))
-                # Root occurrences in the scope closure can exceed snapshot's
-                # distinct roots. That separate ceiling is exercised at closure.
-                sentinel = 'research_pipeline.lifecycle_report_source.DetachedSnapshot' if name != 'max_roots' else None
-                self.source_boundary(exact, small, sentinel=sentinel)
+                self.source_boundary(exact, small,
+                    sentinel='research_pipeline.lifecycle_report_source.DetachedSnapshot')
         exact = replace(sources.LIMITS, scientific=replace(sources.LIMITS.scientific,
             max_metadata_bytes=thresholds['max_metadata_bytes']))
         adjusted = f.counters(self.doc, self.outputs, replace(f.LIMITS, source=exact))
@@ -267,6 +265,10 @@ class LifecycleRenderingBoundsTests(unittest.TestCase):
         self.assertEqual(len(closure.call_args_list), 2)
         for call in closure.call_args_list:
             self.assertIsNotNone(call.kwargs['bounds'])
+        validation = closure.call_args_list[0]
+        self.assertEqual(validation.args[0], self.doc['root_categories']['scientific'])
+        self.assertEqual(validation.kwargs['bounds'][0], len(validation.args[0]))
+        self.assertGreater(len(validation.args[0]), len({reports.pin(ref) for ref in validation.args[0]}))
         presentation = closure.call_args_list[-1]
         roots = [ref for category in ('scientific', 'dossier', 'saved_baseline') for ref in self.doc['root_categories'][category]]
         self.assertEqual(presentation.args[0], roots)
@@ -274,6 +276,8 @@ class LifecycleRenderingBoundsTests(unittest.TestCase):
         self.assertGreater(len(roots), len({reports.pin(ref) for ref in roots}))
         envelopes = reports._envelopes(self.doc['scientific'])
         reference_count = sum(len(e.record_references)+len(e.artifact_references) for e in envelopes.values())
+        self.assertEqual(reports._closure(roots, envelopes,
+            bounds=(len(roots), len(envelopes), reference_count)), reports._closure(roots, envelopes))
         with patch.object(reports, 'pin', side_effect=AssertionError('traversal allocation')):
             for bounds in ((len(roots)-1, len(envelopes), reference_count),
                            (len(roots), len(envelopes)-1, reference_count),

@@ -532,12 +532,13 @@ def _closure(roots, envelopes, *, bounds=None):
     narrower presentation/comparison walk stops at report artifacts and source
     events so their retained ledger/history dependencies do not become results.
     Lifecycle callers supply (root occurrences, records, reference occurrences)
-    ceilings. Inventory is checked before traversal containers are allocated;
-    legacy callers deliberately retain their historical unbounded behavior.
+    ceilings. The internal root-occurrence bound differs from SnapshotLimits.max_roots,
+    which counts distinct selection pins. Inventory is checked before traversal
+    containers are allocated; legacy callers retain their historical unbounded behavior.
     """
     if bounds is not None:
-        max_roots, max_records, max_references = bounds
-        if len(roots) > max_roots or len(envelopes) > max_records:
+        max_root_occurrences, max_records, max_references = bounds
+        if len(roots) > max_root_occurrences or len(envelopes) > max_records:
             raise ReportLimitError("closure inventory ceiling exceeded")
         references = 0
         for envelope in envelopes.values():
@@ -548,7 +549,7 @@ def _closure(roots, envelopes, *, bounds=None):
     root_count = edge_count = 0
     for root in roots:
         root_count += 1
-        if bounds is not None and root_count > max_roots:
+        if bounds is not None and root_count > max_root_occurrences:
             raise ReportLimitError("closure root ceiling exceeded")
         pending.append(pin(root))
     while pending:

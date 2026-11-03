@@ -116,6 +116,16 @@ before appending, and retaining revision pins, visited handling, missing-record
 failures and stops at report-source events/end-of-run manifests. Legacy callers
 retain their historical closure behavior.
 
+Caller scientific `max_roots` and original snapshot `max_roots` count distinct
+exact `(record_id, revision)` selection pins across all categories, deduplicated
+in first-occurrence order. Repeated declaration references do not consume extra
+snapshot pins. Source validation bounds its walk by the locally derived
+`scientific` occurrence count; presentation uses the ordered
+`scientific`+`dossier`+`saved_baseline` occurrence count. Neither is a new public
+ceiling. The source reconstruction reservation covers the validation inventory,
+and the projection reservation covers the presentation inventory. Repetitions
+still consume source bytes/nodes, traversal entries, work and output space.
+
 ## Inert Markdown and explicit inspection
 
 The title remains `# Controller-generated state report` with the same seven

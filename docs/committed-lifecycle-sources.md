@@ -115,7 +115,11 @@ the original project, selected exact generic run, available context, original
 selection and declarations. Dossier repeats initial/current corpus pins in that
 order. Control history selects the actual captured control head. Resource evidence
 retains operation/reference order. Category repetitions remain; SnapshotSelection
-uses first-occurrence deduplication of exact pins across this order. No latest
+uses first-occurrence deduplication of exact pins across this order. Both caller
+scientific and original snapshot `max_roots` count these distinct pins, not
+repeated declaration references. Source-validation closure bounds its scientific
+root occurrences separately by the locally derived category length, covered by
+the source byte/node/depth/work reservations; repetitions remain charged. No latest
 scientific head is selected implicitly.
 
 `source_bindings` is the record-sorted list of exact
