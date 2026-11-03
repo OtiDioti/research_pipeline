@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     from research_pipeline.reports import ReportRequest, ReportCommitResult, ReportObservation
     from research_pipeline.operating_authority import SignedOperatingDecision
     from research_pipeline.run_control import RunControlTransition, RunReportObligation
+    from research_pipeline.lifecycle_report_source import (
+        LifecycleSourceLimits, LifecycleSourceCommitResult, LifecycleSourceInspection, LifecycleSourceObservation,
+    )
 
 from research_pipeline.artifacts import (
     ArtifactStore, ArtifactLayoutError, ArtifactIntegrityError, _path_directory,
@@ -435,6 +438,31 @@ class RecordStore:
         from research_pipeline.operating_authority_store import inspect_operating_eligibility
         return inspect_operating_eligibility(self, authority_domain, project_id, purpose=purpose,
                                              policy=policy, evaluated_at=evaluated_at, limits=limits)
+
+    def commit_lifecycle_source(self, control_operation_id: str, *, expected_binding_digest: str,
+                                limits: "LifecycleSourceLimits") -> "LifecycleSourceCommitResult":
+        """Commit first coherent source for original control intent; every obligation stays pending."""
+        from research_pipeline.lifecycle_source_capture import commit_lifecycle_source
+        return commit_lifecycle_source(self, control_operation_id,
+            expected_binding_digest=expected_binding_digest, limits=limits)
+
+    def get_lifecycle_source_operation(self, control_operation_id: str, *,
+                                   limits: "LifecycleSourceLimits") -> "LifecycleSourceCommitResult | None":
+        """Recover original source metadata without reading objects, or return None if unsubmitted."""
+        from research_pipeline.lifecycle_source_capture import get_lifecycle_source_operation
+        return get_lifecycle_source_operation(self, control_operation_id, limits=limits)
+
+    def inspect_lifecycle_source(self, control_operation_id: str, *,
+                                   limits: "LifecycleSourceLimits") -> "LifecycleSourceInspection":
+        """Inspect verified persisted intent and source state; artifact availability is not checked."""
+        from research_pipeline.lifecycle_source_capture import inspect_lifecycle_source
+        return inspect_lifecycle_source(self, control_operation_id, limits=limits)
+
+    def read_lifecycle_source(self, control_operation_id: str, *,
+                                   limits: "LifecycleSourceLimits") -> "LifecycleSourceObservation":
+        """Read and verify the original committed source and evidence without recapture."""
+        from research_pipeline.lifecycle_source_capture import read_lifecycle_source
+        return read_lifecycle_source(self, control_operation_id, limits=limits)
 
     def commit_run_control(self, request, *, policy, evaluated_at, limits):
         """Atomically commit prepared control and pending report intent; ordinary work stays disabled."""
@@ -902,13 +930,16 @@ class RecordStore:
         return RecordEnvelope(record_id, revision, row[0], json.loads(row[1]), CreationProvenance.from_dict(json.loads(row[2])),
                               references, artifacts, row[3], row[4])
 
-    def _snapshot_record(self, connection, key, limits, remaining_metadata, remaining_references):
+    def _snapshot_record(self, connection, key, limits, remaining_metadata, remaining_references, *, _source_budget=None):
         """Preflight one exact revision before fetching JSON/links; return bounded detached metadata.
 
         Counts include repeated record/artifact links. BLOB lengths count UTF-8
         bytes, including variable-width links and commit metadata. This private
         capture path leaves admission and existing public read semantics unchanged.
+        The private source budget checks complete framing before reconstruction.
         """
+        if _source_budget is not None:
+            _source_budget.preflight_record(connection, key, remaining_references, limits)
         row = connection.execute("""SELECT
             length(CAST(i.kind AS BLOB)), length(CAST(r.content_json AS BLOB)),
             length(CAST(r.provenance_json AS BLOB)),
@@ -953,13 +984,19 @@ class RecordStore:
             JOIN submissions s USING(submission_id) JOIN audit_events a USING(submission_id)
             WHERE r.record_id=? AND r.revision=?""", key).fetchone()
         try:
-            _strict_json(raw[0])
-            _strict_json(raw[1])
-            envelope = self._metadata_envelope(connection, *key)
+            if _source_budget is None:
+                _strict_json(raw[0])
+                _strict_json(raw[1])
+                envelope = self._metadata_envelope(connection, *key)
+            else:
+                envelope = _source_budget.envelope(connection, key, raw, limits)
             commit = dict(zip(("submission_id", "committed_at", "fingerprint"), raw[2:]))
             _commit(commit)
             if _canonical(envelope.content) != raw[0] or _canonical(envelope.provenance.to_dict()) != raw[1]:
                 raise SnapshotIntegrityError("noncanonical content/provenance structure")
+            if _source_budget is not None:
+                _source_budget.record_entry(envelope, raw, commit, fetched,
+                    min(limits.max_record_bytes, remaining_metadata - fetched))
             envelope_json = _bounded_json(envelope.to_dict(), limits.max_record_bytes, "envelope")
             entry = {"record_id": key[0], "revision": key[1], "content_json": raw[0],
                      "provenance_json": raw[1], "envelope_json": envelope_json,
@@ -990,12 +1027,17 @@ class RecordStore:
         with self._transaction(write=False) as connection:
             return self._capture_snapshot(connection, selection, limits)
 
-    def _capture_snapshot(self, connection, selection, limits):
+    def _capture_snapshot(self, connection, selection, limits, *, _source_budget=None):
         """Capture exact closure inside the caller's transaction using validated inputs.
 
         The caller owns transaction lifetime; reports hold a write lock through
-        insertion while the public snapshot API retains its read transaction.
+        insertion while the public snapshot API retains its read transaction. The
+        private source budget narrows work limits while retaining original intent
+        limits in the serialized snapshot; it never changes admission.
         """
+        original_limits = limits
+        if _source_budget is not None:
+            limits = _source_budget.effective(limits)
         requests = (selection.project, *selection.roots)
         if len(requests) > limits.max_roots:
             raise SnapshotLimitError("max_roots exceeded (including project)")
@@ -1060,7 +1102,7 @@ class RecordStore:
             try:
                 envelope, entry, size, count = self._snapshot_record(
                     connection, key, limits, limits.max_metadata_bytes - fetched - retained,
-                    limits.max_references - references)
+                    limits.max_references - references, _source_budget=_source_budget)
             except RecordNotFoundError as error:
                 if origin is None:
                     raise
@@ -1103,17 +1145,22 @@ class RecordStore:
             for ordinal, edge in enumerate(envelope.record_references):
                 if edge.target_kind not in (None, envelopes[(edge.record_id, edge.revision)].kind):
                     raise SnapshotIntegrityError(f"{key[0]}@{key[1]} edge {ordinal}: declared target kind mismatch")
+        schema = _schema_identity(connection.execute("PRAGMA user_version").fetchone()[0])
+        fetched += len(str(schema["version"]))
+        if _source_budget is not None:
+            _source_budget.snapshot_plan(selection, resolutions, schema, watermark, records,
+                artifacts, original_limits, fetched, limits.max_metadata_bytes - fetched)
         ordered_records = [records[key] for key in sorted(records)]
         ordered_artifacts = [artifacts[key] for key in sorted(artifacts)]
         for artifact in ordered_artifacts:
             artifact["occurrences"].sort(key=lambda item: (item["record_id"], item["revision"], item["ordinal"]))
-        schema = _schema_identity(connection.execute("PRAGMA user_version").fetchone()[0])
-        fetched += len(str(schema["version"]))
         document = {"format": "research_pipeline.snapshot.v1", "selection": selection.to_dict(),
             "resolutions": resolutions, "schema": schema,
             "watermark": watermark, "records": ordered_records, "artifacts": ordered_artifacts,
-            "limits": limits.to_dict(), "metadata_fetched_bytes": fetched,
+            "limits": original_limits.to_dict(), "metadata_fetched_bytes": fetched,
             "scope": _scope(selection.to_dict(), resolutions, ordered_records, ordered_artifacts)}
+        if _source_budget is not None:
+            _source_budget.snapshot(document, limits.max_metadata_bytes - fetched)
         body = _bounded_json(document, limits.max_metadata_bytes - fetched, "detached metadata")
         document["snapshot_id"] = hashlib.sha256(body.encode("ascii")).hexdigest()
         _bounded_json(document, limits.max_metadata_bytes - fetched, "detached metadata")

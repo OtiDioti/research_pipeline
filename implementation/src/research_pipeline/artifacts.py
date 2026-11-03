@@ -82,7 +82,11 @@ def _regular_object(info: os.stat_result, digest: str) -> None:
 
 def _read_object(objects: int, reference: ArtifactReference, *, retain: bool,
                  synchronize: bool = False, expected: bytes | None = None) -> bytes | None:
-    """Verify one opened inode's type, bytes, size and hash, optionally retaining or syncing it."""
+    """Verify an inode with bounded reads and checked close, optionally retaining or syncing bytes.
+
+    Each read is limited by the remaining expected size plus one growth sentinel;
+    a growing object fails before its unexpected bytes can enter retained chunks.
+    """
     digest = reference.digest
     try:
         info = os.stat(digest, dir_fd=objects, follow_symlinks=False)
@@ -106,7 +110,8 @@ def _read_object(objects: int, reference: ArtifactReference, *, retain: bool,
         hasher = hashlib.sha256()
         chunks = []
         while True:
-            chunk = os.read(descriptor, 1024 * 1024)
+            # Read one extra byte only to detect growth; never retain that byte.
+            chunk = os.read(descriptor, min(1024 * 1024, reference.size - count + 1))
             if not chunk:
                 break
             if expected is not None and chunk != expected[count:count + len(chunk)]:

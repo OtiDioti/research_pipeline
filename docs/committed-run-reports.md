@@ -746,5 +746,13 @@ original preparation, selected control transition and required-report intent
 under explicit independent processing allowances. It accepts arbitrary saved-work
 baselines without changing historical report v1 baseline grammar. It proves local
 consistency only, creates/discharges no obligation, and never authorizes ordinary work.
-Source capture, rendering integration, publication, acknowledgment and current-policy
-continuation remain the mandatory subsequent ADR-063 slices.
+[Committed lifecycle sources](committed-lifecycle-sources.md) implement the separate
+one-event source stage. Historical report v1/v2 and their receipts remain unchanged.
+Rendering integration, publication, acknowledgment and current-policy continuation
+remain mandatory subsequent ADR-063 slices.
+
+The [controlled lifecycle source API](committed-lifecycle-sources.md) does not call
+`commit_report`, render output, or treat arbitrary saved-work baselines as earlier
+generated reports. It reserves a distinct source submission S and a later report
+submission O, preserving the existing source event identity and manifest revision.
+The later output protocol cannot append to S or reinterpret its one-member receipt.

@@ -507,3 +507,13 @@ do not authenticate permission. Current eligibility must be recomputed with trus
 time and current external policy inside the later admitting write transaction.
 No admission, dispatch, worker isolation, lifecycle enforcement, tool qualification
 or M0-S validation is added. Resource usage and uncertain liabilities remain unchanged.
+
+## Lifecycle source-only submissions
+
+[Committed lifecycle sources](committed-lifecycle-sources.md) persist canonical
+source bytes before a single immutable event and its original one-member receipt
+commit atomically. The source operation is separate from the reserved later output
+operation. Metadata-only original-ID recovery works even after required objects
+become unavailable; verified reads fail on missing or damaged source/evidence.
+No manifest/output, obligation discharge or ordinary-work permission is produced.
+Historical control and legacy report wire/receipt formats remain unchanged.

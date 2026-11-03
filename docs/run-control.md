@@ -157,7 +157,12 @@ Older obligations are never discarded, coalesced, overwritten, or regenerated.
 lifecycle operation ID; `report_operation_id(operation_id)` uses
 `run-control-report-` plus the same digest. Future source/manifest identities use
 existing `reports.source_id(report_operation_id)` and `reports.manifest_id(run_id)`.
-These are reservations only: there is no source, manifest, capture time or plan.
+The control operation itself creates only reservations. The separate
+[committed source stage](committed-lifecycle-sources.md) can later create the source
+and actual capture time; it creates no report manifest or plan. Its source submission
+uses `run-control-source-` plus the original operation digest. The reserved later
+output event uses `run-control-output-` plus that digest, in the separate report
+submission. Source commitment never rewrites the original control receipt.
 
 The obligation's transition role is `run_control`. Its report revision equals the
 control revision, and required time equals transition time. Kind is `initial` for
@@ -296,8 +301,10 @@ REQ-D04-005 FOLLOWON-01–13 remain mandatory subsequent work, not optional back
     isolation, context/tool/model/access enforcement, adapter qualification,
     synthesis/export and M0-S boundaries.
 
-This foundation implements none of capture, rendering, publication, acknowledgment,
-restart readiness, task admission, dispatch or model hooks. D04/M0-E remains partial;
+The control foundation itself implements none of rendering, publication,
+acknowledgment, restart readiness, task admission, dispatch or model hooks.
+[Committed lifecycle sources](committed-lifecycle-sources.md) now implement the
+separate bounded source capture/recovery stage, preserving all pending obligations. D04/M0-E remains partial;
 synthetic engineering fixtures establish no live scientific execution, scientific
 validation, new operating grant or M0-S claim.
 
@@ -308,5 +315,6 @@ original preparation, selected control transition and required-report intent
 under explicit independent processing allowances. It accepts arbitrary saved-work
 baselines without changing historical report v1 baseline grammar. It proves local
 consistency only, creates/discharges no obligation, and never authorizes ordinary work.
-Source capture, rendering integration, publication, acknowledgment and current-policy
-continuation remain the mandatory subsequent ADR-063 slices.
+[Committed lifecycle sources](committed-lifecycle-sources.md) verify persisted origin
+and commit coherent source facts. Rendering integration, publication, acknowledgment
+and current-policy continuation remain mandatory subsequent ADR-063 slices.

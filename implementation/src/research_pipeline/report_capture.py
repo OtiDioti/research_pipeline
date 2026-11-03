@@ -323,8 +323,40 @@ def _read(store, connection, operation_id, *, maximum=REPORT_BYTES, found=None,
     return observation
 
 
+def _verify_source_bindings(reader, snapshot, limits, work, *, expected=None):
+    """Verify full original batches for all closure records and bind their actual original ordinals."""
+    from research_pipeline.lifecycle_source_capture import _original, _row
+    from research_pipeline.lifecycle_report_source import LifecycleSourceIntegrityError
+    from research_pipeline import run_control as control, operating_authority_store as operating
+    verified, bindings = {}, []
+    for entry in snapshot['records']:
+        reader.reference_count(1)
+        row = _row(reader, 'revisions r LEFT JOIN audit_events a USING(submission_id) LEFT JOIN submissions s USING(submission_id)',
+            'a.event_id r.ordinal r.submission_id a.committed_at s.fingerprint',
+            'r.record_id=? AND r.revision=?', reports.pin(entry), integers=('a.event_id', 'r.ordinal'))
+        if (dict(zip(('submission_id', 'committed_at', 'fingerprint'), row[2:])) != entry['commit'] or
+                not 1 <= row[0] <= snapshot['watermark']['event_id']):
+            raise LifecycleSourceIntegrityError('captured original commit mismatch')
+        sid = row[2]
+        if sid not in verified:
+            original = _original(reader, sid, limits, work)
+            if original is None:
+                raise LifecycleSourceIntegrityError('missing captured original submission')
+            verified[sid] = original
+        batch, receipt = verified[sid]
+        if (not 0 <= row[1] < len(batch.records) or receipt.event_id != row[0] or
+                control.canonical(batch.records[row[1]].to_dict()) != entry['envelope_json']):
+            raise LifecycleSourceIntegrityError('captured original member bytes/ordinal mismatch')
+        reader.reserve(operating._object_bytes(record_id=control._string_size(entry['record_id']),
+            revision=len(str(entry['revision'])), event_id=len(str(row[0])), ordinal=len(str(row[1]))))
+        bindings.append({'record_id': entry['record_id'], 'revision': entry['revision'], 'event_id': row[0], 'ordinal': row[1]})
+    if expected is not None and bindings != expected:
+        raise LifecycleSourceIntegrityError('saved source bindings differ from actual originals')
+    return bindings
+
+
 def _verify_bindings(store, connection, snapshot, expected=None, *, preparation_budget=None,
-                     remaining_references=None):
+                     remaining_references=None, _source_context=None):
     """Verify original requests/audits, retaining only selected revision event IDs and ordinals.
 
     Original batches may contain unrelated members. Bound their input bytes before
@@ -332,7 +364,14 @@ def _verify_bindings(store, connection, snapshot, expected=None, *, preparation_
     unrelated payloads rather than copying whole receipts into the observation.
     Preparation shares byte and reference counters across the entire report chain;
     its scalar preflight is independent of capture's existing verification allowance.
+    A private lifecycle-source context extends this verifier to complete original
+    batches, including unselected members, under its caller-owned reader/budgets.
     """
+    if _source_context is not None:
+        reader, limits, work = _source_context
+        if reader.store is not store or reader.connection is not connection:
+            raise AssertionError('source verifier must use its transaction owner')
+        return _verify_source_bindings(reader, snapshot, limits, work, expected=expected)
     bindings, verified = [], {}
     remaining = min(REPORT_BYTES, snapshot["limits"]["max_metadata_bytes"])
     remaining -= snapshot["metadata_fetched_bytes"] + len(_canonical(snapshot))

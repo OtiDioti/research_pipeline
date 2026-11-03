@@ -598,10 +598,12 @@ def _managed_manifest(connection, identity):
 
 def guard_fresh(connection, operation_id, records=()):
     """Reject fresh public writes into lifecycle and controlled-report reservations after reconciliation."""
-    if operation_id.startswith('run-control-report-'):
+    if operation_id.startswith(('run-control-report-', 'run-control-source-')):
         raise RunControlStateError('report operation identity is reserved for controlled reporting')
     for record in records:
-        if (record.record_id.startswith('run-control-') or record.content.get('format') in control.FORMATS or
+        if (record.record_id.startswith('run-control-') or record.content.get('format') in control.FORMATS + (
+                'research_pipeline.lifecycle_source_observation', 'research_pipeline.lifecycle_source_event',
+                'research_pipeline.lifecycle_source_commit_result', 'research_pipeline.lifecycle_source_inspection') or
                 _managed_manifest(connection, record.record_id) or _reserved_source(connection, record.record_id)):
             raise RunControlStateError('record identity or format is owned by run control')
 
@@ -615,10 +617,14 @@ def guard_report(connection, request):
 
 
 def _fresh_reservations(reader, request):
-    """Refuse existing future source/report operations and preexisting legacy manifests at preparation."""
+    """Reserve S/O submissions, E/X events and the initial manifest before creating an obligation."""
     connection = reader.connection
     operation = control.report_operation_id(request['operation_id'])
-    if (connection.execute('SELECT 1 FROM submissions WHERE submission_id=?', (operation,)).fetchone() is not None or
+    source = control._identity('run-control-source-', request['operation_id'])
+    output = control._identity('run-control-output-', request['operation_id'])
+    if (connection.execute('SELECT 1 FROM submissions WHERE submission_id=?', (source,)).fetchone() is not None or
+            connection.execute('SELECT 1 FROM identities WHERE record_id=?', (output,)).fetchone() is not None or
+            connection.execute('SELECT 1 FROM submissions WHERE submission_id=?', (operation,)).fetchone() is not None or
             connection.execute('SELECT 1 FROM identities WHERE record_id=?', (reports.source_id(operation),)).fetchone() is not None):
         raise RunControlStateError('future report identity already occupied')
     if request['action'] == 'prepare' and connection.execute('SELECT 1 FROM identities WHERE record_id=?',
@@ -844,33 +850,40 @@ def inspect_run_control(store, run_id, *, limits):
         watermark = reader.watermark()
         _fault('snapshot_established')
         history = _history(reader, identity)
-        size = operating._object_bytes(format=len('"research_pipeline.run_control_inspection"'), version=1,
-            run_id=control._string_size(run_id), head=4 if not history else operating._reference_bytes(identity, len(history), 'run_control', 'event'),
-            disposition=4 if not history else control._string_size(history[-1][1]['disposition']),
-            transitions=operating._array_bytes(operating._object_bytes(envelope=reader.envelope_sizes[(item[0].record_id, item[0].revision)],
-                receipt=reader.receipt_sizes[item[3].submission_id]) for item in history),
-            pending_obligations=operating._array_bytes(reader.envelope_sizes[(item[2].record_id, 1)] for item in history),
-            watermark=operating._fragment_bytes(watermark), ordinary_work_allowed=5, recheck_required=4)
-        # Count all output value nodes and wrapper depth from validated fragments
-        # before constructing either result array or the detached inspection.
-        base_nodes = 15 + (4 if history else 0)
-        for item in history:
-            transition_nodes, transition_depth = reader.envelope_shapes[(item[0].record_id, item[0].revision)]
-            obligation_nodes, obligation_depth = reader.envelope_shapes[(item[2].record_id, 1)]
-            receipt_nodes = 16  # receipt object, provenance and two two-scalar member arrays
-            base_nodes += 1 + transition_nodes + receipt_nodes + obligation_nodes
-            if transition_depth + 3 > control.JSON_DEPTH or obligation_depth + 2 > control.JSON_DEPTH:
-                raise RunControlLimitError('control inspection JSON depth limit exceeded')
-        if base_nodes > control.JSON_NODES:
-            raise RunControlLimitError('control inspection JSON node limit exceeded')
-        _reserve_result(reader, size, control.RESULT_BYTES)
-        with reader.temporary(size * 5):
-            result = control.RunControlInspection({'format': 'research_pipeline.run_control_inspection', 'version': 1,
-                'run_id': run_id, 'head': None if not history else control.reference(identity, len(history), 'run_control'),
-                'disposition': None if not history else history[-1][1]['disposition'],
-                'transitions': [{'envelope': item[0].to_dict(), 'receipt': item[3].to_dict()} for item in history],
-                'pending_obligations': [item[2].to_dict() for item in history], 'watermark': watermark,
-                'ordinary_work_allowed': False, 'recheck_required': True})
-        if len(result._json) > limits.max_result_bytes:
-            raise RunControlLimitError('control inspection exceeds independent allowance')
-        return result
+        return _inspection(reader, run_id, history, watermark)
+
+
+def _inspection(reader, run_id, history, watermark):
+    """Build bounded historical inspection on the caller's connection without recapture."""
+    identity = control.control_id(run_id)
+    limits = reader.control_limits
+    size = operating._object_bytes(format=len('"research_pipeline.run_control_inspection"'), version=1,
+        run_id=control._string_size(run_id), head=4 if not history else operating._reference_bytes(identity, len(history), 'run_control', 'event'),
+        disposition=4 if not history else control._string_size(history[-1][1]['disposition']),
+        transitions=operating._array_bytes(operating._object_bytes(envelope=reader.envelope_sizes[(item[0].record_id, item[0].revision)],
+            receipt=reader.receipt_sizes[item[3].submission_id]) for item in history),
+        pending_obligations=operating._array_bytes(reader.envelope_sizes[(item[2].record_id, 1)] for item in history),
+        watermark=operating._fragment_bytes(watermark), ordinary_work_allowed=5, recheck_required=4)
+    # Count all output value nodes and wrapper depth from validated fragments
+    # before constructing either result array or the detached inspection.
+    base_nodes = 15 + (4 if history else 0)
+    for item in history:
+        transition_nodes, transition_depth = reader.envelope_shapes[(item[0].record_id, item[0].revision)]
+        obligation_nodes, obligation_depth = reader.envelope_shapes[(item[2].record_id, 1)]
+        receipt_nodes = 16  # receipt object, provenance and two two-scalar member arrays
+        base_nodes += 1 + transition_nodes + receipt_nodes + obligation_nodes
+        if transition_depth + 3 > control.JSON_DEPTH or obligation_depth + 2 > control.JSON_DEPTH:
+            raise RunControlLimitError('control inspection JSON depth limit exceeded')
+    if base_nodes > control.JSON_NODES:
+        raise RunControlLimitError('control inspection JSON node limit exceeded')
+    _reserve_result(reader, size, control.RESULT_BYTES)
+    with reader.temporary(size * 5):
+        result = control.RunControlInspection({'format': 'research_pipeline.run_control_inspection', 'version': 1,
+            'run_id': run_id, 'head': None if not history else control.reference(identity, len(history), 'run_control'),
+            'disposition': None if not history else history[-1][1]['disposition'],
+            'transitions': [{'envelope': item[0].to_dict(), 'receipt': item[3].to_dict()} for item in history],
+            'pending_obligations': [item[2].to_dict() for item in history], 'watermark': watermark,
+            'ordinary_work_allowed': False, 'recheck_required': True})
+    if len(result._json) > limits.max_result_bytes:
+        raise RunControlLimitError('control inspection exceeds independent allowance')
+    return result

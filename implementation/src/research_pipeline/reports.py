@@ -434,8 +434,12 @@ def _resource_scope(state, request):
                 if a["scope"]["kind"] == "run" and a["scope"]["type"] == "controller"]}
 
 
-def _project_resources(snapshot, request):
-    """Project a fully validated complete snapshot, retaining original sequence gaps and receipts."""
+def _project_resources(snapshot, request, *, _source_budget=None):
+    """Project complete relevant history, retaining original sequences and receipts.
+
+    A private source budget measures the full wrapper before retaining the new
+    projection. Legacy callers retain their original format and default behavior.
+    """
     from research_pipeline.resource_ledger import _empty_state, _admit, _projections, _balances
     accounts = {a["account_id"]: a for a in snapshot["accounts"]}
     roots = [a["account_id"] for a in accounts.values() if _scope_match(a, "project", request["project"]["record_id"])]
@@ -455,11 +459,14 @@ def _project_resources(snapshot, request):
     state = _empty_state()
     for item in operations:
         _admit(state, item["request"])
+    projected, balances, scope = _projections(state), _balances(state), _resource_scope(state, request)
+    if _source_budget is not None:
+        _source_budget.projection(projected, balances, scope, operations, request, snapshot)
     return {"format": "research_pipeline.report_resources", "version": 1,
             "project": request["project"], "run": request["run"],
             "resource_sequence": snapshot["resource_sequence"], "complete_snapshot_id": snapshot["snapshot_id"],
-            "operations": operations, **_projections(state), "balances": _balances(state),
-            "scope": _resource_scope(state, request), "limits": request["limits"]["resources"]}
+            "operations": operations, **projected, "balances": balances,
+            "scope": scope, "limits": request["limits"]["resources"]}
 
 
 def _validate_resources(value, request, schema):

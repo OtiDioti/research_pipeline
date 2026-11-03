@@ -444,6 +444,7 @@ def validate_ledger(connection):
     Live callers must first allow legitimate journal recovery. Immutable backup
     callers independently validate scientific history and artifact closure too.
     Returns detached validated projections and original operations, never writes.
+    Watermarks use individual existence checks rather than retaining all audit IDs.
     """
     try:
         validate_schema(connection.execute("PRAGMA user_version").fetchone()[0],
@@ -453,7 +454,6 @@ def validate_ledger(connection):
         if connection.execute("PRAGMA foreign_key_check").fetchall():
             raise ResourceIntegrityError("ledger foreign key violation")
         state, operations, links = _empty_state(), [], []
-        events = {row[0] for row in connection.execute("SELECT event_id FROM audit_events")}
         seen_ops, seen_receipts = set(), set()
         previous_watermark = 0
         for row in connection.execute("SELECT sequence,operation_id,receipt_id,request_json,fingerprint,result_json,committed_at FROM resource_operations ORDER BY sequence"):
@@ -466,7 +466,8 @@ def validate_ledger(connection):
             if (sequence != len(operations) + 1 or op in seen_ops or rid in seen_receipts
                     or op != doc["operation_id"] or rid != doc["receipt_id"] or text != request._json
                     or fingerprint != request.fingerprint or result_text != receipt._json
-                    or watermark < previous_watermark or (watermark != 0 and watermark not in events)):
+                    or watermark < previous_watermark or (watermark != 0 and connection.execute(
+                        "SELECT 1 FROM audit_events WHERE event_id=?", (watermark,)).fetchone() is None)):
                 raise ResourceIntegrityError("operation canonical identity, sequence, fingerprint or watermark mismatch")
             expected = _receipt(doc, fingerprint, sequence, timestamp, watermark)
             if expected != receipt or timestamp != result["committed_at"]:
@@ -612,12 +613,16 @@ def inspect(store, limits):
         return _inspect(connection, limits)
 
 
-def _inspect(connection, limits):
+def _inspect(connection, limits, *, _source_budget=None):
     """Inspect and validate the complete ledger inside the caller-owned transaction.
 
     Reports must run this complete preflight before projecting a project subtree;
-    filtered operations never masquerade as a complete ResourceSnapshot.
+    filtered operations never masquerade as a complete ResourceSnapshot. A private
+    source budget preflights all replay SQL and reserves work before reconstruction;
+    existing callers retain their original format and allowances.
     """
+    if _source_budget is not None:
+        _source_budget.preflight(connection)
     accounts = connection.execute("SELECT count(*) FROM resource_accounts").fetchone()[0]
     operations = connection.execute("SELECT count(*) FROM resource_operations").fetchone()[0]
     if accounts > limits.max_accounts or operations > limits.max_operations:
@@ -641,6 +646,8 @@ def _inspect(connection, limits):
             "schema_identity": _schema_identity(3), "resource_sequence": len(operations),
             "administrative_history": _history(connection), "operations": operations,
             **_projections(state), "balances": _balances(state)}
+    if _source_budget is not None:
+        _source_budget.result(body)
     identity = hashlib.sha256(canonical(body).encode("ascii")).hexdigest()
     doc = {**body, "snapshot_id": identity}
     if len(canonical(doc)) > limits.max_metadata_bytes:

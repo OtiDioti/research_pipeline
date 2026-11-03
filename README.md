@@ -4,6 +4,12 @@ An evidence-oriented workbench for theoretical scientific research. The product 
 
 **Current maturity:** accepted engineering subsets include durable records/artifacts and backup/migration, scientific and work-product/source/corpus/intake contracts, protected readable views and local CLI, resource accounting, operator authority, prepared-control/report obligations, and offline lifecycle bindings. [STATUS.md](STATUS.md) records exact integrated versions, validation and unfinished work. Research execution and expert scientific evaluation remain pending; deterministic fixtures do not establish scientific validation. See [the mock walkthrough](docs/synthetic-oscillator.md) and [M0 decision packet](development/decisions/M0-contract-and-scientific-review.md).
 
+[Committed lifecycle sources](docs/committed-lifecycle-sources.md) provide bounded
+first-capture commitment and original-ID recovery for required control obligations.
+They preserve pending intent and a closed ordinary-work gate. Rendering, publication,
+acknowledgment and current-policy restart remain later ADR-063 work; this source
+stage makes no scientific or live-provider acceptance claim.
+
 ## Start here
 
 | Question | Read |

@@ -212,14 +212,17 @@ when rehashed, but a fully rewritten internally consistent packet with recompute
 hashes cannot be distinguished here from persisted facts. Local hashes provide no
 authenticity claim or guarantee that every alternate preparation is detectable.
 
-Later store verification must establish the actual generic-run-to-project ownership
+The separate [committed source stage](committed-lifecycle-sources.md) establishes
+the actual generic-run-to-project ownership
 edge; dossier/source/account existence; original committed preparation bytes;
 operation ownership; submission membership, receipt and audit provenance; authority
-decision authenticity and original watermark; previous-run relationship; and the
-necessary intermediate history. The module performs none of those reads.
+decision's committed historical metadata and original watermark; previous-run
+relationship; and the necessary intermediate history. It does not claim current
+cryptographic verification without current keys. This offline binding module itself
+performs none of those reads.
 
 [ADR-063](../development/decisions/ADR-063-lifecycle-report-decomposition.md) assigns
-coherent lifecycle source capture/commit/original-ID recovery to REQ-D04-006;
+the implemented coherent lifecycle source capture/commit/original-ID recovery to REQ-D04-006;
 shared rendering, complete-history plans and bounded offline reconstruction to
 REQ-D04-007; ordered publication/refresh and separately verified acknowledgment to
 REQ-D04-008; and current-policy restart/continuation with resource/dependency/pending

@@ -406,3 +406,14 @@ future dispatch, restart must supply current external denying policy or credenti
 withdrawal and resolve the restored snapshot. Retaining public policy fingerprints
 does not authenticate key bytes or reconstruct current trust. Resource history is
 restored independently; operating approvals and reductions do not reset it.
+
+## Committed lifecycle sources
+
+[Lifecycle source submissions](committed-lifecycle-sources.md), source artifacts,
+scientific rows, original receipts and pending control/resource histories are ordinary
+immutable runtime state preserved by healthy exact backup/restore. No new backup
+format or schema is introduced. Source metadata-only recovery can retain its historical
+meaning after later object loss; a verified source read and a healthy backup require
+all required bytes. A schema-2 source retains its original schema-2 resource-unavailable
+observation after an allowed migration. Restoring a source never grants current
+permission, discharges an obligation, publishes output or establishes restart readiness.

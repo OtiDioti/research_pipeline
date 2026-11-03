@@ -569,3 +569,24 @@ They do not allocate or reserve capacity, reset spent usage, release reservation
 or erase uncertain liabilities. Approval, denial and revocation leave every resource
 table unchanged. Monetary service declarations retain only `monitored_target`.
 Actual authenticated run/resource admission and enforced execution remain later work.
+
+## Committed lifecycle source observations
+
+[Lifecycle source capture](committed-lifecycle-sources.md) uses the same complete
+ledger replay/accounting algorithms inside its scientific/control write transaction,
+with independent preflighted row/reference/byte/work limits. Its saved project
+projection retains sibling liabilities and original receipt sequence gaps while
+excluding unrelated-project payloads. Reading an older source verifies saved relevant
+original requests, receipts and immutable rows through its original sequence, without
+recapturing today's balances. Fresh source time must equal or exceed the maximum
+of captured scientific/control factual dates and every receipt date in the complete
+resource prefix, including omitted unrelated operations. Resource clocks are
+independent; an earlier sequence can carry a later timestamp. Fresh violations
+raise LifecycleSourceStateError before source artifact placement or metadata.
+Verified reads enforce the saved complete prefix with LifecycleSourceIntegrityError;
+later operations are irrelevant. Detached validation enforces only retained facts
+with LifecycleSourceValidationError: gaps and complete-snapshot identity establish
+no omitted receipt dates offline and disclose no private payload. Equality succeeds,
+and metadata-only exact retries return original fixed dates without current-clock
+checks. Capture neither reserves nor settles resources and
+cannot turn preparation's unknown account declarations into an earlier known fact.
