@@ -224,3 +224,7 @@ These coordination rules are instructions, not an implemented supervisor or an O
 Use the scope/evidence gate in [AUTONOMY.md](development/AUTONOMY.md). All mandatory in-scope requirements need exact integrated-source evidence, whole-product verification, accurate documentation, and required live/scientific/human assessment. A completed foundation or mock-only research demonstration is not full-project completion.
 
 When implementation can proceed but D10 needs unapproved live resources or expert review, record the exact remaining obligation and report the narrower delivered scope. Do not waive it, impersonate the expert, or keep making unrelated changes merely to avoid reporting a blocker. The [completion report template](development/templates/COMPLETION.md) separates these verdicts.
+
+## Current continuous-start envelope — 2026-11-03
+
+Actual human AUTHrevision6 increases the continuous CWI start allowance to100 across active settings and startup prompts. Consumption persists; STATUS and AUTHORIZATION own current counters/evidence. Historical50-start envelopes remain historical records, not current settings. This administrative amendment changes no backend runtime knob, other recovery/repair/model/deadline bounds, scientific requirement or service/data/publication permission.

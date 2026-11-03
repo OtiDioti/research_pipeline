@@ -1,6 +1,6 @@
 # Continuous development policy
 
-**Policy version:** 2, 2026-10-30. This is a workflow policy, not an authorization grant, an installed scheduler, or evidence of product completion.
+**Policy version:** 3, 2026-11-03. This is a workflow policy, not an authorization grant, an installed scheduler, or evidence of product completion.
 
 ## 1. Strategy: supervised commissioning, then bounded continuous execution
 
@@ -57,7 +57,7 @@ Do not start the next run until the previous integration and checkpoint are reco
 
 ## 5. Proposed limits for the activation prompt
 
-Current grant override: AUTH-2026-10-30-001 revision 5 explicitly raises per-agent and per-validation deadlines to 2,700 seconds for new runs. Historical frozen runs retain their original limits. Other defaults and cumulative allowances below are unchanged.
+Current grant overrides: revision 6 explicitly increases continuous starts to 100 without resetting consumption; AUTH-2026-10-30-001 revision 5 explicitly raises per-agent and per-validation deadlines to 2,700 seconds for new runs. Historical frozen runs retain their original limits. Other defaults and cumulative allowances below are unchanged.
 
 These are transparent defaults for a grant, not claims that they guarantee completion or limit monetary expenditure. Adjust before activation, not while resuming a frozen run.
 
@@ -65,7 +65,7 @@ These are transparent defaults for a grant, not claims that they guarantee compl
 | --- | --- |
 | Phase range | D01–D10, including remaining D01 obligations |
 | Product CWI concurrency | One |
-| New CWI start attempts | 50 after activation, including failed preflights and replacement starts |
+| New CWI start attempts | 100 after activation, including failed preflights and replacement starts |
 | Internal milestones | 1 for bootstrap; at most 3 for a later request, each independently acceptable |
 | CWI repairs | At most 2 per review and 6 per run |
 | Agent / validation deadlines | 900 seconds per invocation / check; configurable before a new run |

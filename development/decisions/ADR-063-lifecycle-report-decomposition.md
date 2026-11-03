@@ -4,7 +4,7 @@ Date: 2026-11-03. Coordinator decision within existing revision-5 authority; no 
 
 ## Cause and alternatives
 
-REQ-D04-005/run7632b4e0 is terminal/nonresumable/unchanged at dbe1509. Both baseline checks passed, 946/946. Initial 30207-byte Architect prescription left the public offline v3 reconstruction limit contract unspecified. The 31264-byte replacement supplied it, but its Writer could not complete preallocation across resource replay, snapshot reconstruction, rendering and plan preparation and removed its draft. Final 8734-byte supplement depended on unavailable preceding contracts. Fresh Writer correctly refused to invent them. Two internal repair slots consumed; no candidate/acceptance exists.
+REQ-D04-005/run7632b4e0 is terminal/nonresumable/unchanged at dbe1509. Both baseline checks passed, 946/946. Initial 30207-byte Architect prescription was followed by Writer8f06ee0c, which could not complete preallocation across resource replay, snapshot reconstruction, rendering and plan preparation and removed its draft (O-001). The 31264-byte replacement was followed by Writer73ccaada, which identified the unspecified public offline v3 reconstruction limit contract (O-002). Final 8734-byte supplement depended on unavailable preceding contracts. Fresh Writer correctly refused to invent them. Two internal repair slots consumed; no candidate/acceptance exists.
 
 The backend already demands complete prescriptions and supplies the fresh Writer only the current one. No new backend defect is established. Repeating the complete first milestone retains the same coupled workload. Freezing the old blueprint cures unavailable context but leaves cross-layer implementation in one Writer. Direct coordinator implementation and wider limits/acceptance are unavailable alternatives.
 
@@ -35,3 +35,9 @@ Full D04/M0-E/R-049–R-053 stay PARTIAL. Actual owner/job reconciliation, task 
 5. Forged retained objects/subclasses/malformed/oversized input fail without store/clock/policy/artifact/model/network access.
 
 Unchanged source-local validator and literal-base full diff run at baseline/candidate/final. Independent milestone/final review/final receipt precede exact authorized integration and full target validation. All82predecessor test/fixture/validator blobs/modes remain. No new service/dependency/CLI/prompt/runtime schema/grant.
+
+Chronology corrected at the 2026-11-03 post-integration checkpoint from immutable invocation timestamps and O-001/O-002 mappings; the first checkpoint reversed these first two blockers. No frozen request/receipt/source/state or acceptance criterion was changed.
+
+## First slice evidenced — 2026-11-03
+
+R1/b4dd25a5 finally accepted/exact-integrated091561b9/tree9e501de0/finalreceiptc5f90d42, final/target978/978, no findings/repairs. The binding row above is now implemented with structural-only trust, independent preallocation bounds and executed guide. Other rows remain mandatory/unimplemented. REQ-D04-006 is prepared for actual coherent committed source facts, with compatible source-only receipts/identity protocol before rendering. Human start allowance now100 under AUTHrevision6; consumed/recovery limits do not reset. No original FOLLOWON obligation is waived.

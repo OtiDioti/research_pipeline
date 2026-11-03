@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting, committed reports/publication/recovery, authenticated local operating authority and durable prepared-control/ordered-report obligations are finally accepted and integrated. REQ-D04-005 is terminal without implementation; REQ-D04-005-R1 prepares the pure-binding subset, with all automatic reporting, verified acknowledgment and restart/continuation criteria owned by mandatory subsequent ADR-063 slices. Queue/attempt/fencing, actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
+**State:** PARTIAL. Resource accounting, committed reports/publication/recovery, authenticated local operating authority and durable prepared-control/ordered-report obligations are finally accepted and integrated. REQ-D04-005 is terminal; REQ-D04-005-R1 pure offline binding is accepted/integrated. REQ-D04-006 prepares coherent committed sources; all automatic reporting, verified acknowledgment and restart/continuation criteria remain owned by mandatory subsequent ADR-063 slices. Queue/attempt/fencing, actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -113,3 +113,7 @@ Every phase box remains unchanged. REQ-D04-005 automatic reporting/restart recov
 ## Reporting prescription failure and bounded recovery — 2026-11-03
 
 [Run7632b4e0](../runs/7632b4e0-7877-4e25-b23f-33d66232ebf1.md) is terminal/nonresumable/unchanged with no candidate/acceptance. Baseline946/946 is predecessor evidence only. [ADR-063](../decisions/ADR-063-lifecycle-report-decomposition.md) supersedes the two-milestone decomposition: [R1](../requests/REQ-D04-005-R1.md) pure bounded binding, then mandatory source capture, shared plan/offline reconstruction, automatic ordered publication/separate verified acknowledgment, current-policy restart/continuation and cross-slice guide/audit. Every original13criterion remains binding; all phase boxes remain unchecked. Final prescription recovery2/2 is consumed in preparation; no backend/grant/limit/scientific change.
+
+## Offline binding integrated; committed sources prepared — 2026-11-03
+
+[Runb4dd25a5](../runs/b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md) finally accepted/exact-integrated091561b9, final/target978/978, no findings/repairs/source mutation. Pure closed bounded offline binding is implemented; it proves no persisted authenticity/current authority/capture/publication/discharge/admission. All86current predecessor paths are protected. [REQ-D04-006](../requests/REQ-D04-006.md) prepares source-only coherent capture/commit/original recovery with actual store facts and independent bounds. Shared rendering/plans/automatic publication/verified acknowledgment/restart remain mandatory ADR-063 slices. All phase acceptance boxes remain unchecked. AUTHrevision6 actual human100-start allowance preserves30consumed/70remaining and every other limit/requirement.

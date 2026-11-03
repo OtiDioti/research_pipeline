@@ -43,3 +43,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 - [153bf4bf — REQ-D04-004-R2](153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md): prepared-control/ordered-report obligations finally accepted and exact-integrated at `771422b7`; final 946/946, integrated target passed 946/946 in 1146.754 seconds, zero skips/errors/failures/source mutation, ending 2026-11-02T20:54:40.836813Z (stdout SHA256 `0af73e8950f6ce1f59051b68cf134487e56610a1fae683b72bc47a9b3e38a243`, empty stderr); one internal bounds repair, continuous start 28/50.
 
 - [7632b4e0 — REQ-D04-005](7632b4e0-7877-4e25-b23f-33d66232ebf1.md): terminal/noresume, no candidate/change/milestone/final acceptance; baseline946/946, two prescription repairs, continuous start29/50. Original source/evidence preserved, final bounded prescription recovery prepared.
+
+- [b4dd25a5 — REQ-D04-005-R1](b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md): pure offline lifecycle binding finally accepted/exact-integrated091561b9, final/target978/978, no findings/repairs. Continuousstart30 launched under50; later actual human revision6 sets100, preserving30consumed/70remaining.

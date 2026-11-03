@@ -217,3 +217,11 @@ First commit a coherent report source/plan while pending intent remains truthful
 ## DEV-063 — Narrow lifecycle reporting after coupled prescription failures
 
 [ADR-063](development/decisions/ADR-063-lifecycle-report-decomposition.md) records actual terminal7632b4e0 evidence, alternatives and independent pure-binding/source/plan/publication/restart decomposition. R1 earns only executable structural binding; all13original criteria and historical formats remain. Complete standalone prescriptions, independent caller limits and structural-versus-persisted trust boundaries are explicit. This coordinator choice uses the final prescription recovery2/2, cumulative13, with no backend/limit/scientific change.
+
+## DEV-064 — Actual human raises continuous CWI starts50→100
+
+The human explicitly requested100uses throughoutsettings. AUTHrevision6 records the actual quote and effective100-start allowance; consumed30starts remain30, leaving70. Active autonomy/startup settings and current counters/newrequests use100. Old frozen requests/receipts/historical denominators remain factual. Backend has no aggregate-start configuration flag; its other limits stay unchanged. No API/purchase/live/scientific/integration/recovery authority is expanded.
+
+## DEV-065 — Commit source facts before rendering and publication
+
+R1finallyaccepted/integrated091561b9 supplies exact offline structural bindings, not authenticity. REQ-D04-006 consumes them with actual persisted ownership/history and coherent scientific/resource capture in the shared connection. Legacy report commit couples rendering/two-record membership and earlier-report baseline grammar; it cannot be reused unchanged as a source-only commit. Architect must prescribe a compatible durable source-stage identity/receipt protocol that later outputs can consume without rewriting originals, minimal shared capture/budget extraction, and complete independent preallocation tests. Rendering/plans/publication/ack/restart remain later ADR-063 slices. One milestone/high effort and unchanged2700s/repair bounds keep scope concrete; no parallel ledger/renderer or invented permission.

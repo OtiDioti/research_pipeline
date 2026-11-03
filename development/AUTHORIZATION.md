@@ -1,6 +1,6 @@
 # Development operating authorization
 
-**Actual human grant: AUTH-2026-10-30-001, revision 5. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; independent engineering resumed under the explicit M0-E/M0-S dependency amendment.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, and the subsequent instruction “extend time limit of cwi to 2700 seconds”. The repetition does not reset any counters.
+**Actual human grant: AUTH-2026-10-30-001, revision 6. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; independent engineering resumed under the explicit M0-E/M0-S dependency amendment.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, and the subsequent instruction “extend time limit of cwi to 2700 seconds”. The repetition does not reset any counters.
 
 ## Effective grant
 
@@ -13,7 +13,7 @@
 | First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/full-diff/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
 | Continuous activation | Only after first final acceptance, complete inspection, exact integration, successful validation and documentation checkpoint; record activation then |
 | Active continuous scope | Reconciled mandatory specification across D01–D10, including remaining D01; current target branch; proceed through ready slices without routine confirmation |
-| Continuous starts | At most 50 new starts after activation, including failed preflights/replacements; separate from commissioning; no reset between sessions/request renames |
+| Continuous starts | At most 100 new starts after activation, including failed preflights/replacements; separate from commissioning; no reset between sessions/request renames |
 | Run bounds | One product CWI run at a time; bootstrap 1 internal milestone; later at most 3; at most 2 repairs per review and 6 per run; 2,700 seconds per agent invocation and validation for new runs under revision 5; historical frozen runs retain 900 seconds |
 | Recovery | At most 2 evidence-based actions for the same blocker; no uncertain replay; read-only inspection is not recovery consumption |
 | Backend maintenance | Focused necessary diagnosed repairs only under BACKEND_MAINTENANCE.md; at most 2 unsuccessful candidates per issue; preserve original/evidence, isolate/test, log every attempt, never patch live owners or silently resume under changed code |
@@ -30,7 +30,9 @@
 
 The human selected **“Authorize GPT-6 Astra (`gpt-6-astra`)”** in response to the catalog mismatch question on 2026-10-30. This resolves MODEL_SELECTION_REQUIRED for future runs using that exact ID. It does not authorize substituting `gpt-6.1-sol`, creating an alias, using a higher reasoning level, or changing frozen settings.
 
-## Activation and current consumption
+## Activation and historical consumption checkpoints
+
+Current allowance is100 under revision6; current consumed/remaining counts are in STATUS and the latest revision6 entry. Earlier50-denominator checkpoints below retain the limits in force at their recorded dates.
 
 Commissioning REQ-D01-001 finally accepted as CWI run `47d6ef06-c251-4a0d-bb2c-da2059d9360f`. The coordinator inspected the complete diff, exact receipt and validation artifacts, clean branch/base, ancestry, collisions and hooks. Exact fast-forward integrated `7d5acab359e404cbb81d94aa3213971468764d01` on main at 2026-10-30T08:09:00Z. The permanent validator then passed 19 tests with zero skips/failures and left the parent clean. No tracked commit occurred between acceptance and integration. The [run record](runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f.md) preserves the receipt and source identities.
 
@@ -298,3 +300,13 @@ REQ-D04-005 is authorized ordinary remaining engineering under the same grant, t
 The human explicitly requested autonomous recovery and continuation with existing scope/permissions/resource budgets. No new spending/service/data/publication/scientific authority or reset. Run7632b4e0 consumed continuous29/50 and two CWI repairs; terminal/nonresumable/no product change/acceptance/live owner/lease/quarantine. All30runs reconcile20finallyaccepted integrated/10terminal incomplete. Preparing R1 pure-binding decomposition is the final prescription-completeness recovery2/2, cumulative coordinator13. Permission/interruption/Writer-deadline2/2 stay exhausted; capacity/context/validation/formatting/descriptor1/2 persist. Continuous21starts remain; next start30leaves20including failed preflight. CWIrepairs28/backend1/1/0.
 
 Seven unique completed turns add7,156,073input(6,541,440cached),67,251output(26,877reasoning) exactly once, replacing provisional Designer usage. Cumulative lower bound259,853,513input(237,466,752cached),2,453,239output(723,238reasoning); four prior interrupted roles/native backend-review usage/quota/invoice retain recorded unknowns. Nested categories included. [ADR-063](decisions/ADR-063-lifecycle-report-decomposition.md) preserves all13mandatory original reporting criteria across smaller CWI slices. R1one milestone/gpt-6-astra/high/repairs2/6/2700s/FD4096/bothchecks/no--merge; broader scientific/live/worker admission obligations remain.
+
+## Revision 6 — Human increases continuous CWI starts to 100, 2026-11-03
+
+Actual human instruction: “whenever you find the time, please update the number of uses of coding_pipeline/cwi from 50 to 100. Make sure this update is reflected throughout all the setting files”. The effective continuous-start allowance is now **100**, including failed preflights and replacements. Consumption does not reset: **30/100 used, 70 remain**; the next start31 leaves69. Commissioning remains1/3 closed. Other milestone/repair/recovery/deadline/model/billing/service/data/scientific/integration/publication limits and unknown liabilities remain unchanged. Revision5's2700-second deadlines and approvedgpt-6-astra correction continue under this revision.
+
+Active allowance settings in AUTONOMY.md, CODEX_START.md and CODEX_START_AUTONOMOUS.md use100; STATUS and new requests use current consumption. Historical launch records/frozen requests/receipts retain the then-effective50 denominator. CWI has no separate aggregate-start CLI/configuration field; its milestone/repair fields are not this coordinator allowance and were not changed. Exact human amendment is also captured locally in local/reconciliation-20261103/human-start-limit-100.json. This is an actual human grant extension, not coordinator self-authorization or an additional API/purchase/live-scientific grant.
+
+R1/b4dd25a5 finally accepted/exact-integrated091561b9/tree9e501de0/finalreceiptc5f90d42; final978/9781225.283s and target978/9781229.382s, zero skips/errors/failures/source mutation. All31runs reconcile21finallyaccepted sources integrated/10terminal incomplete, no live CWI/lease/quarantine/pending integration. This run consumed start30 and zero repairs/recoveries. Cumulative CWIrepairs28/coordinator13/backend1/1/0. Prescription/permission/interrupted-workflow salvage/Writer-deadline2/2 each stay exhausted; capacity/context-size/validation-context/formatting/descriptor1/2 each remain. No reset.
+
+Five unique completed R1turns add4,975,630input(4,534,144cached),67,760output(23,950reasoning) exactly once, replacing provisional current-run snapshots. Cumulative reported lower bound264,829,143input(242,000,896cached),2,520,999output(747,188reasoning). Four prior interrupted roles remain unknown; native backend review outside CWI and quota/invoice remain unmeasured. Nested categories included. REQ-D04-006 is ordinary remaining source-capture engineering under revision6, one milestone,gpt-6-astra/high,repairs2/6,2700s,FD4096,bothchecks,no--merge; no new scientific/live authority.

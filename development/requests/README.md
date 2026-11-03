@@ -41,3 +41,7 @@ REQ-D03-003 is accepted/exact-integrated9373860,396/396 target tests. [REQ-D03-0
 ## Reporting binding recovery prepared — 2026-11-03
 
 Original [REQ-D04-005](REQ-D04-005.md)/7632b4e0 is terminal with no candidate/change/acceptance. [REQ-D04-005-R1](REQ-D04-005-R1.md) prepares one useful pure-binding milestone under final prescription recovery2/2. [ADR-063](../decisions/ADR-063-lifecycle-report-decomposition.md) owns every original follow-on through mandatory subsequent slices. Original frozen requests remain unedited. STATUS owns launch readiness and counters.
+
+## Coherent lifecycle-source request prepared — 2026-11-03
+
+[R1](REQ-D04-005-R1.md)/b4dd25a5 finally accepted/exact-integrated091561b9, final/target978/978. [REQ-D04-006](REQ-D04-006.md) next prepares one source-only capture/commit/recovery milestone consuming accepted offline binding. Original frozen requests remain unchanged. AUTHrevision6 raises allowance100,30starts used70remain; next31leaves69. STATUS owns launch readiness. All original FOLLOWONcriteria/ordinary-work closure/scientific duties remain.
