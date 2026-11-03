@@ -41,3 +41,7 @@ Chronology corrected at the 2026-11-03 post-integration checkpoint from immutabl
 ## First slice evidenced — 2026-11-03
 
 R1/b4dd25a5 finally accepted/exact-integrated091561b9/tree9e501de0/finalreceiptc5f90d42, final/target978/978, no findings/repairs. The binding row above is now implemented with structural-only trust, independent preallocation bounds and executed guide. Other rows remain mandatory/unimplemented. REQ-D04-006 is prepared for actual coherent committed source facts, with compatible source-only receipts/identity protocol before rendering. Human start allowance now100 under AUTHrevision6; consumed/recovery limits do not reset. No original FOLLOWON obligation is waived.
+
+## Source attempt terminal; focused correctness recovery — 2026-11-03
+
+006/f78fa4a9 has no acceptance/integration after two repairs, despite1025passes. R1retains exact source1f9c243c/tree947d3b7e and all source criteria, repairing resource chronology and redundant baseline scalar types through new CWI acceptance. Its B-022 source contract correctness1/2 does not reset exhausted prescription/ownership/deadline/permission families. The source row remains incomplete; all original13FOLLOWONcriteria and later reserved rendering/plan/publication/restart rows remain mandatory and dependent. A possible later007A/Bsubdivision exists only in local preparation, not as completed work or a waived criterion.

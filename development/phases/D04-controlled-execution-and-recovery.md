@@ -1,6 +1,6 @@
 # D04 — Controlled execution and recovery
 
-**State:** PARTIAL. Resource accounting, committed reports/publication/recovery, authenticated local operating authority and durable prepared-control/ordered-report obligations are finally accepted and integrated. REQ-D04-005 is terminal; REQ-D04-005-R1 pure offline binding is accepted/integrated. REQ-D04-006 prepares coherent committed sources; all automatic reporting, verified acknowledgment and restart/continuation criteria remain owned by mandatory subsequent ADR-063 slices. Queue/attempt/fencing, actual admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
+**State:** PARTIAL. Resource accounting, committed legacy reports, operator authority, prepared control/ordered obligations and offline binding are accepted/integrated. REQ-D04-006 is terminal unaccepted after review-limit exhaustion; REQ-D04-006-R1 prepares retained-source correctness repair. Source capture, shared rendering/plans, automatic publication/separate acknowledgment and restart remain mandatory and incomplete. Queue/attempt/fencing, admission/dispatch and worker/context/tool/model enforcement remain unimplemented.
 
 **Goal:** Run bounded research tasks with durable attempts, isolated workspaces, accounted resources, and conservative recovery.
 
@@ -117,3 +117,7 @@ Every phase box remains unchanged. REQ-D04-005 automatic reporting/restart recov
 ## Offline binding integrated; committed sources prepared — 2026-11-03
 
 [Runb4dd25a5](../runs/b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md) finally accepted/exact-integrated091561b9, final/target978/978, no findings/repairs/source mutation. Pure closed bounded offline binding is implemented; it proves no persisted authenticity/current authority/capture/publication/discharge/admission. All86current predecessor paths are protected. [REQ-D04-006](../requests/REQ-D04-006.md) prepares source-only coherent capture/commit/original recovery with actual store facts and independent bounds. Shared rendering/plans/automatic publication/verified acknowledgment/restart remain mandatory ADR-063 slices. All phase acceptance boxes remain unchecked. AUTHrevision6 actual human100-start allowance preserves30consumed/70remaining and every other limit/requirement.
+
+## Source correctness recovery — 2026-11-03
+
+[Runf78fa4a9](../runs/f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md) is terminal/nonresumable with zero accepted milestones/final receipt/integration despite1025/1025 and both checks. F001–006resolved; resource chronology and independent baseline scalar contracts remain invalid. [R1](../requests/REQ-D04-006-R1.md) reuses the exact retained source through CWI-only installation and focused correction, preserving all original criteria and47new methods. No phase box advances. B-022source contract correctness1/2/coordinator14 preserves all old exhausted families, global30CWIrepairs and31starts. Rendering/plans/publication/ack/restart and broader D04/scientific/live duties remain mandatory.

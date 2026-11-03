@@ -2,7 +2,7 @@
 
 An evidence-oriented workbench for theoretical scientific research. The product requirements are in [project_description.md](project_description.md). This repository contains the **software that implements that workbench**; it is not itself a live scientific investigation.
 
-**Current maturity:** the Python foundation, synthetic harmonic/quartic example and durable SQLite/artifact submissions with verified local backup/restoration and typed provisional scientific records are accepted and integrated. The suite passes 116 tests. Remaining scientific record kinds, assessment freshness and controller execution remain pending. Research execution and expert scientific evaluation remain unimplemented; independent engineering continues under the authorized M0-E/M0-S dependency split; required scientific decisions remain pending. See [the mock walkthrough](docs/synthetic-oscillator.md), [M0 decision packet](development/decisions/M0-contract-and-scientific-review.md), and [current evidence/status](STATUS.md).
+**Current maturity:** accepted engineering subsets include durable records/artifacts and backup/migration, scientific and work-product/source/corpus/intake contracts, protected readable views and local CLI, resource accounting, operator authority, prepared-control/report obligations, and offline lifecycle bindings. [STATUS.md](STATUS.md) records exact integrated versions, validation and unfinished work. Research execution and expert scientific evaluation remain pending; deterministic fixtures do not establish scientific validation. See [the mock walkthrough](docs/synthetic-oscillator.md) and [M0 decision packet](development/decisions/M0-contract-and-scientific-review.md).
 
 ## Start here
 
