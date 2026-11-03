@@ -190,3 +190,10 @@ blobs/modes; compact accepted references are frozen for compatibility. ADR-063 s
 and offline recovery007-B. Automatic publication/ack008 and restart/audit009 remain
 mandatory; all 13FOLLOWONcriteria persist. Full phases/M0-E/product remain PARTIAL;
 scientific/live gates are unchanged. STATUS owns counters and one next action.
+
+
+## Renderer integrated; human-priority validator optimization — 2026-11-03
+
+REQ-D04-007-A/b7952877 finally accepted/exact-integrated18678728106b3956f83766b5e5a008242ec183ff, tree82b58805c34579d6d8962697382853c868651596, final receipt31f52a0af5006feaa1647da2e4e732eb7d51f950f5a717a48d63dd6236e91c71. Final repair1063/1063 in2102.306s and target1063/1063 in2102.974s passed, source unchanged. Shared detached rendering preserves legacyv1/v2 bytes and distinct-pin/repeated-occurrence bounds; no publication/discharge/admission. [Run evidence](development/runs/b7952877-c4a8-4a38-ab2e-daa9419e60c3.md).
+
+The current human temporarily prioritizes [REQ-DEV-VALIDATION-001](development/requests/REQ-DEV-VALIDATION-001.md), a focused R-007 development-validator improvement through unchanged CWI acceptance/integration. Original sequential baseline2103.466wall seconds,1063unique executions,2073.61user+11.35system CPU,340388KiB maximum resident set. Optimization is prepared, not implemented or measured. After its actual integration/verification/benchmark/documentation checkpoint, stop. Mandatory007-B/008/009 and all94requirements/13FOLLOWONcriteria remain for later; no phase/scientific requirement is changed. STATUS owns counters and one next safe action.

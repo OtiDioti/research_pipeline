@@ -140,3 +140,10 @@ consumed, cumulative coordinator 14; no old exhausted/partial allowance resets.
 No new backend, permission, capacity or integrity blocker was found. 007-A shared
 rendering is ordinary next engineering; all broader reporting/admission duties and
 B-010/B-011 dependent scientific/live holds remain. STATUS owns one next safe action.
+
+
+## Renderer final-review repair resolved; focused human priority — 2026-11-03
+
+Existing b7952877 completed naturally; final F-001 distinct-pin versus repeated-root accounting is resolved by actual CWI repair, genuine schema2/3 regressions and independent final review. Finally accepted/exact-integrated1867872, final receipt31f52a0a; controller/target1063/1063 passed with unchanged predecessor tests/source. No new coordinator recovery or backend blocker. Preserve original failed whole review and all consumed limits; [run evidence](development/runs/b7952877-c4a8-4a38-ab2e-daa9419e60c3.md).
+
+The human's temporary validator-optimization priority is not a deferral or reduction of scientific/product requirements. 007-B/008/009 and broader engineering remain normal mandatory work for a later session. B-010/B-011 remain scoped scientific/live holds. REQ-DEV-VALIDATION-001 must finish through CWI, equivalent-inventory benchmarks and checkpoint, then this session stops. No concurrency safety/performance success is claimed before evidence.

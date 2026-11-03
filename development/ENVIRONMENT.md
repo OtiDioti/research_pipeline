@@ -219,3 +219,10 @@ of other catalog entries. Refresh verification before the next launch.
 b19e7ffa and protected report_v1 fixture, not a new persisted/scientific execution.
 Next context/source/request checks are retained under local/attempts/D04-007-A-attempt-001/.
 No old frozen run is resumed; current grant/settings and unknown liabilities persist.
+
+
+## Renderer recovery and original sequential benchmark — 2026-11-03
+
+Existing b7952877 completed naturally on unchanged backendc74df0b/Codex0.166.0/b8a11fed/stable map46f63a41/gpt-6-astra high/FD4096/2700s. Final source1867872/receipt31f52a0a exact-integrated after host quiescence and source/evidence checks. Target1063/1063 in2102.974test seconds/2103.466wall seconds,2073.61user+11.35system CPU,99%CPU,340388KiB maximum resident set,zero other outcomes/source mutation,ended17:53:49.207478Z. Exact command unchanged; GNUtime memory is largest process, not concurrent tree aggregate.
+
+Readiness17:25:25Z rehashed exact pinned executable, checked clean backend, actual ephemeral/new/resume/login parser compatibility and selected CLI ChatGPT login. Existing read-only PATH-alias warning only. Catalog17:23:30Z advertises approvedgpt-6-astra/high; higher efforts do not enlarge ceilingxhigh. No auth/config/environment/dependency/security/backend changes or server-model attestation. Host exposes24CPUaffinity0–23/cgroup2rootcpuset0–23,~64GiBmemory; cpu controller is not delegated along the current user/session hierarchy and cpu.max is absent there. Future validator must inspect actual affinity/quota hierarchy where exposed. Focused request retains all launch settings and CWI gates; only its product validator scheduler may change through CWI.

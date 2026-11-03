@@ -206,3 +206,12 @@ No findings/repairs or backend changes. Source commitment leaves all obligations
 pending and grants no publication/readiness/admission/scientific authority.
 The following administrative checkpoint prepares pure shared rendering007-A, with
 all later output/plan/publication/ack/restart and broader obligations preserved.
+
+
+## Shared detached lifecycle rendering integrated; validation optimization prepared — 2026-11-03
+
+[REQ-D04-007-A/b7952877](development/runs/b7952877-c4a8-4a38-ab2e-daa9419e60c3.md) finally accepted/exact-integrated18678728106b3956f83766b5e5a008242ec183ff, tree82b58805c34579d6d8962697382853c868651596, final receipt31f52a0af5006feaa1647da2e4e732eb7d51f950f5a717a48d63dd6236e91c71. Adds pure bounded detached seven-group rendering through shared legacy projection/framing, preserved fixedv1/v2 bytes, generated continuation and an executed guide. One final-review repair resolves repeated-root occurrence bounds without changing distinct snapshot-pin meaning; four new genuine regressions bring30new methods/1063tests. All93predecessor blobs/modes remain intact. No output commitment/publication/acknowledgment/admission or scientific judgment.
+
+Repair controller1063/1063/2102.306s; integrated target1063/1063/2102.974test seconds/2103.466wall seconds,zero skips/errors/failures/source mutation,ended17:53:49.207478Z,stdout3aaaa7a97a3b3cc14ac9ba81418d40e4329de2590ab652cde8dafbb5a806fa43,empty stderr. All1063executed IDs match discovery once. Original sequential benchmark2073.61user+11.35system CPU,99%CPU,340388KiB maximum resident set. No concurrent speedup exists yet.
+
+This administrative checkpoint records actual recovery/resources and the human-priority REQ-DEV-VALIDATION-001. Product implementation remains CWI-only; the session stops after the focused optimization is accepted/integrated/benchmarked/documented. Broader roadmap/scientific obligations persist. Backend unchanged.

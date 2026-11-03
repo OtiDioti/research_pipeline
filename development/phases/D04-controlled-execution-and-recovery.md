@@ -2,7 +2,7 @@
 
 **State:** PARTIAL. Resource accounting, committed legacy reports, operator authority,
 prepared control/ordered obligations, offline binding and corrected committed lifecycle
-sources are accepted/integrated. REQ-D04-007-A prepares pure shared rendering. Output
+sources and pure shared rendering are accepted/integrated. Output
 commitment/plans, automatic publication/separate acknowledgment and restart remain
 mandatory. Queue/attempt/fencing, admission/dispatch and worker/context/tool/model
 enforcement remain unimplemented.
@@ -144,3 +144,10 @@ references. 007-B owns output commitment/plans/offline recovery;008publication/a
 and009restart/final 13criterion audit remain mandatory. No phase box is checked: full
 execution/admission/fencing/isolation/context/tool/model and scientific/live duties
 are still incomplete. STATUS owns counters and the single current next action.
+
+
+## Shared rendering integrated; temporary validator priority — 2026-11-03
+
+[REQ-D04-007-A/b7952877](../runs/b7952877-c4a8-4a38-ab2e-daa9419e60c3.md) finally accepted/exact-integrated1867872, final receipt31f52a0a; controller/target1063/1063 passed. Pure detached shared seven-group rendering, legacyv1/v2 compatibility, independent limits and corrected repeated-root traversal have evidence; no publication/discharge/current permission/admission. Every phase acceptance box remains unchanged. 007-B/008/009 and all original13criteria remain mandatory.
+
+The current human temporarily prioritizes REQ-DEV-VALIDATION-001 development-validator concurrency and requires a stop after its verified integrated documented benchmark checkpoint. This does not implement D04research-worker concurrency or change any scientific/runtime requirement. Subsequent normal roadmap work resumes in a later session.

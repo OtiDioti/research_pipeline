@@ -1,77 +1,27 @@
 # Development status
 
-## Lifecycle sources integrated; shared rendering prepared — 2026-11-03
+## Renderer recovered and integrated; concurrent validation is the human priority — 2026-11-03
 
-AUTH-2026-10-30-001 **revision 6 CONTINUOUS** remains active. Continuous starts
-**32/100 used, 68 remain**; the next start 33 leaves 67, including failed preflight.
-Commissioning 1/3 is closed. No automatic restart supervisor exists.
+AUTH-2026-10-30-001 revision6 CONTINUOUS remains active with the current focused human instruction: implement safe automatic concurrent test validation through CWI, verify/integrate/benchmark/document it, prepare a safe checkpoint, then **STOP**. Do not initiate unrelated roadmap work in this session. Scientific requirements, model, resource grants and acceptance/integration policies are unchanged.
 
-[REQ-D04-006-R1 / run7d05376e](development/runs/7d05376e-aabf-4c5a-9481-91205611eb0c.md) is finally accepted, exact fast-forward
-integrated and target-validated. Product source **b19e7ffa82b490460225cfc1c0d5100355e2a5d6**,
-tree **93947f1b2c43dd83ec7e117f5eb759f5af535b2e**, final receipt SHA256
-**d790c2e53c3dda63789ff98604d7c73dc76732c5ff13396a516b971ffeb5640a**. Integration completed
-2026-11-03T13:40:28.223535Z from clean literal base b98f3cc834636a03edb5595e4944f7b41a585ed5.
+[REQ-D04-007-A / run b7952877](development/runs/b7952877-c4a8-4a38-ab2e-daa9419e60c3.md) completed naturally, finally accepted and exact fast-forward integrated from clean literal8067f09. Accepted source **18678728106b3956f83766b5e5a008242ec183ff**, tree **82b58805c34579d6d8962697382853c868651596**, final receipt SHA256 **31f52a0af5006feaa1647da2e4e732eb7d51f950f5a717a48d63dd6236e91c71**. Final review resolves F-001, preserving distinct snapshot pins and separately bounding repeated root occurrences. All93 predecessor test/fixture/validator blobs/modes remain unchanged;30 new methods bring1063 tests. Generated rendering bytes grant no publication, discharge, current authority/readiness or worker admission.
 
-Candidate **1033/1033 in 1730.199s**, final **1033/1033 in 1740.418s**, target
-**1033/1033 in 1769.410s**; all zero skips/errors/failures/source mutation. Both
-ordered controller checks passed at baseline/candidate/final. Target ended
-2026-11-03T14:11:07.355675Z; stdout SHA256
-`5dee8e19cf18a033f1b07902cf3be7c9bfdcb392235cd079a9a6b4e711b9e5c6`, empty stderr.
-Independent milestone/final reviews accepted without findings or repairs. The
-23-path diff and23referenced artifacts were independently rehashed; all 86 prior
-blobs/modes and47 retained source tests remain, with8 new correction methods.
+Repair controller **1063/1063 in2102.306s**, both frozen checks passed without source mutation. Integrated target **1063/1063 in2102.974 test seconds /2103.466 wall seconds**, zero skips/expected failures/failures/errors/unexpected successes. Target ended **2026-11-03T17:53:49.207478Z**; stdout SHA256 `3aaaa7a97a3b3cc14ac9ba81418d40e4329de2590ab652cde8dafbb5a806fa43`, empty stderr, source clean. All1063 executed IDs exactly match discovery once, ordered inventory SHA256 `85a80da695886d34301e5f56a2f12d146cf71123f67239b3328244e21c4dc5d4`,85fixture-owner modules.
 
-Committed sources now verify persisted original intent, coherent scientific and
-resource facts, complete required history, immutable artifacts and original-ID
-recovery. Fresh capture and verified reads enforce complete resource-prefix
-chronology; detached consumers enforce retained dates and exact baseline types.
-All report obligations stay pending; ordinary_work_allowed=false and
-recheck_required=true. Source facts grant no current permission, publication,
-discharge, restart readiness or admission. B-022 is resolved for this delivery;
-its consumed correctness recovery1/2 remains counted.
+This unchanged target check is the original sequential benchmark: **2073.61s user+11.35s system CPU,99%CPU,340388KiB GNUtime maximum resident set**. The memory metric describes the largest process, not simultaneous aggregate tree memory. No concurrent implementation or acceleration is claimed yet. Detailed measurements, exact IDs and safety audit are under ignored local/concurrent-validation-20261103/.
 
-All 33 runs reconcile **22 finally accepted sources integrated,11terminal incomplete**.
-No CWI owner/lease/quarantine/recording gap or accepted result awaits integration.
-Host quiescence was verified after target validation at14:12:40Z. Historical
-terminal drafts, dirty worktrees and non-replayable read-only records are preserved;
-CWI's historical ACCEPTED_UNMERGED statuses are not rewritten after outer integration.
+All34 retained runs reconcile **23 finally accepted sources integrated,11terminal incomplete**. No CWI owner/lease/quarantine/recording gap or final acceptance awaits integration. Original controller/descendants were verified quiescent before exact integration; target supervisor verified group quiescence afterward. Historical terminal drafts/partial milestones/worktrees and original failed whole review remain preserved. Historical CWI ACCEPTED_UNMERGED labels are not rewritten after outer integration.
 
-[REQ-D04-007-A](development/requests/REQ-D04-007-A.md) prepares pure bounded shared seven-group rendering over
-these sources, preserving legacy v1/v2 bytes using frozen accepted references.
-007-B output commitment/plans,008automatic publication/separate acknowledgment,
-009restart/continuation and the final all 13 FOLLOWON audit remain mandatory under
-[ADR-063](development/decisions/ADR-063-lifecycle-report-decomposition.md).
+[REQ-DEV-VALIDATION-001](development/requests/REQ-DEV-VALIDATION-001.md) is prepared as one focused milestone. It preserves full unittest discovery and fixture/result semantics, uses safe process groups with conservative serial fallback, computes **C=min(T//2,max(0,A-2))** with at most2*C simultaneous units, applies child-only affinity where supported, and fails on worker/timeout/output/accounting/cleanup errors without replay. Ordinary future tests require no registration. All99 current test/fixture/validator paths are frozen as evidence; only the validator is authorized to change, with new focused regressions/docs. No product runtime or backend optimization is authorized by this request.
 
-Global CWI repairs **30**; coordinator recoveries **14**; backend attempted/adopted/
-reverted **1/1/0**, clean c74df0b. Prescription, permission, interrupted-workflow
-salvage and Writer-deadline families remain exhausted2/2 each. Capacity,
-context-size, validation-context, formatting, descriptor and source-correctness
-families retain1/2 each. Success resets none of these limits.
+Continuous starts **33/100 used,67 remain**; next start34leaves66 including failed preflight. Commissioning1/3closed. Global CWI repairs **31**, coordinator recoveries **14**, backend attempted/adopted/reverted **1/1/0**, clean c74df0b. Prescription/permission/interrupted-workflow salvage/Writer-deadline families remain exhausted2/2each. Capacity/context-size/validation-context/formatting/descriptor/source-correctness retain1/2each. Successful recovery resets none.
 
-Five unique completed R1 turns are booked once: **8,345,273 input(7,790,464 cached),
-44,056 output(12,351 reasoning)**. Cumulative reported lower bound:
-**297,974,794 input(273,350,784 cached),2,752,687 output(834,861 reasoning)**.
-Four older interrupted-role amounts, native backend review, coordinator, quota and
-invoice remain unknown. Nested usage categories are included, not additive.
-No new API/purchase/service/data/push/publication/live/scientific authority exists.
+Eight unique renderer turns booked once: **11628915input(10839680cached),91767output(29098reasoning)**. Cumulative reported lower bound **309603709input(284190464cached),2844454output(863959reasoning)**. Four older interrupted-role amounts, native backend review, coordinator, quota and invoice remain unknown; nested categories are included, not additional charges. No new API/purchase/service/data/push/publication/live/scientific authority.
 
-Explicit approved gpt-6-astra/high, ceiling xhigh; unchanged Codex0.166.0/b8a11fed,
-backend c74df0b, stable environment46f63a41, process FD4096 and2700s agent/check
-limits persist. Fresh catalog13:50:50Z advertises high; exact CLI ChatGPT login and
-executable/backend checks passed. Refresh/verify readiness before launch.
+Approved **gpt-6-astra/high**, ceilingxhigh; unchanged Codex0.166.0/SHA256b8a11fed, backendc74df0b, stable environment46f63a41, process FD4096 and2700s agent/check limits. Exact executable hash/backend cleanliness/parser compatibility/ChatGPT login passed17:25:25Z; catalog17:23:30Z advertises high. Refresh readiness before actual launch. No source/config/dependency/security/backend change occurred during recovery.
 
-All 94requirements/specification v1.4 and original13FOLLOWONcriteria persist.
-D02/D03/D04/M0-E/product remain PARTIAL. Queue/attempt/fencing, transactional
-reservation/admission, isolation, context/tool/model/access enforcement,
-qualification, synthesis/export and other mandatory engineering remain open.
-M0-S/R-001–003 and separate live permissions gate dependent scientific evaluation
-and release; independent engineering continues.
+All94requirements/specificationv1.4 and13originalFOLLOWONcriteria persist. D02/D03/D04/M0-E/product remain PARTIAL. 007-Boutput commitment/history plans,008automatic publication/separate acknowledgment,009restart/final audit remain mandatory under ADR-063 for a later session. Queue/attempt/fencing, transactional admission/reservation, isolation, context/tool/model/access enforcement, qualification, synthesis/export and scientific work remain open. M0-S/R001–003 and separate live permission gate dependent evaluation/release. No external restart supervisor exists.
 
 ## Exactly one next safe action
 
-Launch prepared **REQ-D04-007-A** once through the unchanged direct-child CWI after
-this administrative checkpoint is committed and its clean literal baseline/readiness
-are verified. Explicitgpt-6-astra/high, one milestone, repairs2/6, agent/check2700s,
-process FD4096, compact frozen reference context, full validator then literal-base
-diff check, no --merge. Record the actual UUID locally. Do not resume old terminal
-runs or replay their uncertain operations.
+Launch prepared **REQ-DEV-VALIDATION-001 once** through the unchanged direct-child CWI from this clean committed administrative checkpoint, after verifying the literal launch base/readiness. Explicitgpt-6-astra/high, one milestone, repairs2/review6/run,2700s agent/check, FD4096, compact frozen context at local/attempts/DEV-VALIDATION-001-attempt-001/context, full validator then literal-base complete-diff check, no --merge. Record the actual UUID locally. Complete this optimization and checkpoint, then stop without an unrelated request.
