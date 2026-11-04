@@ -1,5 +1,13 @@
 # Blocked, paused, and deferred work
 
+## Assessment contracts integrated; existing holds preserved — 2026-11-04
+
+[Run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](development/runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) accepted/exact-integrated `150aa0ee3e9e5611c77eeb714f18b8484578235c`,
+final/target1276/1276 with no findings or repairs. No new blocker or backend defect.
+B-013 deadline2/2 still blocks its failed B1 recovery path; B-010/B-011 retain
+scientific/live holds. Independent REQ-D05-005 is READY without failed-draft reuse
+or any recovery reset. STATUS owns current counters and exactly one next action.
+
 ## Registration accepted; existing holds preserved — 2026-11-04
 
 REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) passed final/target1216/1216,exact-integrated`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,zero repairs/findings. No new blocker or backend defect. B-013deadline2/2 continues to block its failed B1 recovery path and dependent output/publication/restart; B-010/B-011 retain scientific/live holds. Ordinary independent REQ-D05-004 is ready without the failed draft. All40CWI runs are terminal; earlier cd93accepted source is deliberately superseded, not pending integration. Budgets remain39/100used61remain,35repairs15coordinator recoveries,backend2/2/0.

@@ -4,7 +4,7 @@
 
 REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. That slice supplied passive conversion and projections only. Registration and history were subsequently integrated below; assessment, permission and real execution remain required.
 
-**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 passive registration is accepted, integrated and target-validated. REQ-D05-004 pure attributed assessments are READY; qualification and execution remain incomplete.
+**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 passive registration is accepted, integrated and target-validated. REQ-D05-004 pure attributed assessments are accepted, integrated and target-validated. REQ-D05-005 typed persistence is READY; authenticated qualification and execution remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.
 
@@ -84,3 +84,15 @@ REQ-D05-002 is finally accepted/exact-integrated0a6a01e2, final/target1189/1189.
 ## Passive registration integrated; assessment boundary ready — 2026-11-04
 
 REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](../runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) finally accepted/exact-integrated`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,final/target1216/1216,zerootheroutcomes/mutation and identical dispositions. All112predecessors remain;117paths are protected now. Typed dispatch/role closure/full metadata history/direct bytes/original-ID recovery have evidence. No qualification/permission/execution gate is satisfied by registration. DEV-075 prepares REQ-D05-004 pure attributed assessments; it remains unlaunched. All phase acceptance boxes, D04 duties, M0-E/scientific/live/human obligations remain open. STATUS owns counters and one next safe action.
+
+## Passive assessment contracts integrated; typed persistence ready — 2026-11-04
+
+[REQ-D05-004/run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](../runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) finally
+accepted/exact-integrated `150aa0ee3e9e5611c77eeb714f18b8484578235c`, final/target1276/1276,
+zero other outcomes/mutation and identical dispositions. All15milestone criteria
+and final review accepted without findings. Separate reported permission, three
+qualification dimensions and lifecycle status remain passive supplied assessments.
+No store admission, authentication, permission, scientific credit or execution.
+[REQ-D05-005](../requests/REQ-D05-005.md) is READY for existing transactional typed
+admission, exact release pairing and history. All phase acceptance boxes remain
+open; current source, scientific/live limits and exhausted recoveries persist.

@@ -1,5 +1,18 @@
 # Specification-to-evidence crosswalk
 
+## Passive ToolAssessment contract evidence — 2026-11-04
+
+[REQ-D05-004 / run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md), exact
+source `150aa0ee3e9e5611c77eeb714f18b8484578235c`, receipt `43dd7b1cafa532949c4f28770bae437c19c6fdea768144915e41c5b2c98d8ff6`, advances
+structural R-004/R-008/R-016/R-055/R-057/R-058/R-092/R-093 and meaningful R-007
+validation. Separate attributed dimensions, strict finite codecs, exact complete
+projections, mutation/forgery/ceiling/passivity cases and an executed guide have
+independent criterion review and final/target1276/1276 evidence. No authenticity,
+permission, qualification credit, scientific truth or execution follows. Typed
+persistence, current authenticated enablement and real execution remain required.
+REQ-D05-005 prepares persistence only. All94requirements/13FOLLOWONcriteria and
+scientific/human gates remain; no broad requirement or phase is closed.
+
 ## Transactional Tool-release persistence evidence — 2026-11-04
 
 REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md),exact source`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,receiptSHA256`b343da69da3d2c9ce330fdae0e675780b94d967506a73c2809771d9e12c4fd10`,advances persistence subsets of R-004/R-008/R-016/R-055/R-058/R-092/R-093 (and meaningful R-007 validation). Final/target1216/1216and identical dispositions establish exact role checks, complete metadata Tool history, direct-byte verification and real transactional/recovery faults. No permission/qualification/scientific/execution or full-row completion is inferred. REQ-D05-004 is prepared for pure attributed assessments only; all94mandatory requirements/13FOLLOWONcriteria and scientific/human gates remain.

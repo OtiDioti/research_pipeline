@@ -1,5 +1,15 @@
 # Development roadmap
 
+## Passive attributed assessments integrated; persistence ready — 2026-11-04
+
+[REQ-D05-004 / run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](development/runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) finally accepted and exact-integrated
+`150aa0ee3e9e5611c77eeb714f18b8484578235c`; final/target1276/1276, zero other outcomes/mutation.
+Separate passive permission/qualification/lifecycle reports, finite codecs and
+exact envelopes have evidence. [REQ-D05-005](development/requests/REQ-D05-005.md)
+is READY for existing typed-store admission, target/release pairing and history;
+authentication, scoped enablement and execution remain later mandatory duties.
+All partial phases, exhausted recoveries and scientific/live gates persist.
+
 ## Passive registration integrated; assessment contract ready — 2026-11-04
 
 REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) is finally accepted/exact-integrated`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,final/target1216/1216. Existing typed persistence now validates exact roles and complete Tool history with original-ID recovery. [REQ-D05-004](development/requests/REQ-D05-004.md) is the next independent pure attributed-assessment boundary, committed READY but unlaunched. D05/D04/M0-E and all scientific/live duties remain partial/pending; no recovery resets.

@@ -360,3 +360,15 @@ All 745 retained historical snapshots/events/receipts/observational log files re
 
 
 **Limits and next action:** no live provider-model execution or effective provider-model attestation is claimed. Actual installed Codex 0.166.0 parser/security interface and existing ChatGPT authentication probes passed; SHA256 b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8. Account catalog fetched2026-11-04T16:39:43.361492207Z advertises both approved identifiers/efforts; readiness is time-dependent. No scientific/product acceptance is implied. The unlaunched REQ-D05-004 retains its preparatory old model note; request snapshots were outside this maintenance edit set. Exactly one next safe action after this checkpoint: in a later session, reconcile that pending request and fresh new-run readiness against revision 7 before any product launch. This session stops without a new product run or historical resume.
+
+## 2026-11-04 — Assessment contracts accepted; backend unchanged
+
+REQ-D05-004/run `2b89ca22-5cae-4535-aa48-c16d07b3cff6` finally accepted/exact-integrated
+`150aa0ee3e9e5611c77eeb714f18b8484578235c`; final/target1276/1276 with no findings or repairs.
+This first product run on adopted schema-2 backendbcb7ad24 used the four approved
+role pairs and all five actual invocation records agree. Backend source, Codex,
+launch map and security settings stayed fixed. No maintenance candidate or
+recovery was attempted; backend counts remain3/3/0 after CP-003. CWI owns
+implementation review/validation; coordinator checked Designer understanding,
+receipt/source/integration safety and required target validation. Historical
+state and the original backend remain preserved; no migration/resume occurred.

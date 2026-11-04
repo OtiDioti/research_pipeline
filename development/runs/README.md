@@ -59,3 +59,8 @@ Store concise sanitized evidence and references, not full private logs. Exact re
   repairs close DEL-byte sizing and metaclass-hook rejection. Continuousstart37/100;
   no coordinator recovery/backend change. Exact envelopes are the next prepared
   request; scientific/live/lifecycle holds remain.
+
+- [2b89ca22-5cae-4535-aa48-c16d07b3cff6 — REQ-D05-004](2b89ca22-5cae-4535-aa48-c16d07b3cff6.md): passive attributed
+  ToolAssessment contracts/codecs/envelopes finally accepted/exact-integrated
+  `150aa0ee3e9e5611c77eeb714f18b8484578235c`, final/target1276/1276, zero repairs/findings.
+  Continuous start40/100; no backend or authority change.

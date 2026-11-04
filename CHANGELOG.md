@@ -1,5 +1,16 @@
 # Integrated development history
 
+## Passive attributed Tool assessments integrated — 2026-11-04
+
+[REQ-D05-004 / run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](development/runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) finally accepted/exact-integrated
+`150aa0ee3e9e5611c77eeb714f18b8484578235c`, receipt `43dd7b1cafa532949c4f28770bae437c19c6fdea768144915e41c5b2c98d8ff6`. Adds three pure
+content/codec/envelope modules, six new test/helper files, an executed guide and
+five product FOLDER_CONTENT indexes; all 117 predecessor blobs/modes preserved.
+Sixty new methods bring final/target tests to1276/1276 with zero other outcomes
+or mutation and matching dispositions. No store dispatch, permission, scientific
+qualification or execution is added. No repair or backend/environment change.
+Prepared unlaunched REQ-D05-005; full product/scientific gates remain open.
+
 ## Passive transactional Tool releases integrated — 2026-11-04
 
 [REQ-D05-003/run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) finally accepted and exact-integrated **4608f0ecd8a0599e81c31a170dba50fdff0b36f0**,tree`3547e714a3e800daa1799e774300d3bdebdf3369`,receiptSHA256`b343da69da3d2c9ce330fdae0e675780b94d967506a73c2809771d9e12c4fd10`. Adds ToolRelease typed dispatch, exact constrained/shallow roles, complete metadata-only release history and local snapshot recognition, preserving shared artifact/transaction/original-ID recovery.27new tests plus executed guide;112predecessor blobs/modes retained. Candidate/final/integrated target each1216/1216; no other outcomes/source mutation and final/target dispositions match. Target998.031889s ended13:46:44.848776Z,stdoutSHA256`d54f97f563caa762df60f40df8880eed8a566fd8ba4d78112000bd5c941a030a`,empty stderr. No repairs/recoveries/backend change. Administrative checkpoint reconciles resources and readies REQ-D05-004; no new launch, permission, scientific qualification or product completion.

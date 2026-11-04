@@ -326,3 +326,19 @@ formatting checks,no--merge. Before attempt40continuous39/100used61remain;
 commissioning1/3closed,CWIrepairs35,coordinator15,backend3/3/0. No recovery or
 new usage is booked during readiness. All previous holds and unknown liabilities
 persist. Private readiness:local/reconciliation-20261104-assessments/.
+
+## Assessment integration and target evidence — 2026-11-04
+
+REQ-D05-004/run2b89ca22 used unchanged backendbcb7ad24, pinnedCodex0.166.0/
+SHA256b8a11fed, stablemapb674ef72/validationdigest46f63a41 and FD4096. All five
+recorded invocations match Designergpt-6-astra/xhigh, Architectgpt-6.1-sol/xhigh,
+Writer/Reviewergpt-6.1-sol/high,2700seconds. Successful completions establish this
+run’s configured access; no independent server-side model or quota attestation.
+Baseline1216/1216/1008.211937s,candidate1276/1276/996.318509s,final1276/1276/
+1002.713220s,target1276/1276/991.977131s,zero other outcomes/mutation and both
+checks passed. Exact FF19:38:00.433426Z preceded tracked changes. Target ended
+19:54:35.010598Z,empty stderr,stdoutSHA256e161f3f8cd020dfd55f3f62ae5e845e1ac0aaa6a96b8a719a92387a07cda5312;
+all dispositions match. Actual post-target host inspection finds no live CWI/role/
+validator. No install/auth/config/dependency/provider/backend/security change.
+Fresh exact readiness is still required before a future start41; no automatic
+restart or historical resume is installed or authorized by this observation.

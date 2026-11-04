@@ -68,3 +68,11 @@ final/target1165/1165; its frozen request bytes remain unchanged. [Run evidence]
 accepted contracts. Later authenticated typed registration and actual execution
 remain mandatory. No failed B1 draft is consumed and its deadline hold remains.
 STATUS owns current37/100consumption, readiness and exactly one next safe action.
+
+## Current request checkpoint — assessment persistence, 2026-11-04
+
+[REQ-D05-004](REQ-D05-004.md)/[run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](../runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md)
+is finally accepted, exactly integrated and target-validated1276/1276. Its frozen
+request remains unchanged. [REQ-D05-005](REQ-D05-005.md) is READY but unlaunched
+for passive typed persistence/history/target pairing. It grants no permission or
+qualification and uses no failed B1 source. STATUS owns readiness and counters.

@@ -319,3 +319,18 @@ Implementation Source/manifest, child release, Evidence and Issue roles are cons
 After exact registration integration`4608f0ecd8a0599e81c31a170dba50fdff0b36f0` and matching1216/1216final/target results, choose [REQ-D05-004](development/requests/REQ-D05-004.md) for a complete pure ToolAssessment declaration, finite codecs and exact envelopes. Combining this with store history/authenticated permission would couple new assessment semantics to a second persistence/authority boundary. The pure content/envelope slice is substantive and independently reviewable; later typed persistence, exact release/environment pairing, current authenticated enablement and actual execution remain mandatory.
 
 Reported permission, operational/software/scientific qualification and lifecycle status remain separate supplied dimensions. A reported pass, assessor attribution or generic qualification reference cannot grant execution or scientific support. Architect prescribes complete schemas/vocabularies/bounds and only CWI Writer implements. No failed B1 draft, new recovery or scope/scientific-authority change. All117current predecessor test/helper/fixture/validator paths are protected. The long session ends at a safe context boundary with a committed ready request, not a new active controller or completed product.
+
+## DEV-076 — Passive transactional assessment admission before enablement
+
+After exact ToolAssessment contract integration and matching final/target
+1276/1276 results, choose REQ-D05-005 to extend the existing RecordStore transaction
+and typed inspection boundary. Reuse pure envelopes and existing connection-owned
+release/reference/history/artifact/idempotency checks rather than introducing a
+parallel registry or admission ledger. Exact target/release pairing is persisted
+consistency, not evidence of authenticated assessor identity, permission, check
+execution or scientific qualification. A separate authority/enablement boundary
+remains mandatory. Architect prescribes complete role/history/limit/error rules;
+only CWI Writer implements. Preserve 123 test/helper/fixture/validator paths and
+all1276tests, while updating navigation indexes as required. This is ordinary
+independent engineering, with no failed B1 source, new recovery or scientific
+authority. Existing holds and all remaining requirements persist.
