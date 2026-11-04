@@ -36,6 +36,8 @@ from research_pipeline.work_product import (
     WorkProductManifest, decode_envelope as _decode_work_product_envelope,
 )
 from research_pipeline.source import Source, decode_envelope as _decode_source_envelope
+from research_pipeline.tool_release import ToolRelease
+from research_pipeline.tool_release_envelope import decode_envelope as _decode_tool_release_envelope
 from research_pipeline.corpus import (
     CorpusManifest, decode_envelope as _decode_corpus_envelope, _links as _corpus_links,
     _validate_selection, _validate_successor,
@@ -100,11 +102,11 @@ def _fault(boundary: str) -> None:
     """
 
 
-def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision | RunControlTransition | RunReportObligation":
+def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | SignedOperatingDecision | RunControlTransition | RunReportObligation":
     """Decode a normalized envelope using one explicit format, without inference or fallback.
 
     Missing markers retain NotTypedContentError; other format/codec failures raise
-    DomainValidationError. Scientific, assessment, work-product, Source, corpus and project codecs
+    DomainValidationError. Scientific, assessment, work-product, Source, corpus, project and ToolRelease codecs
     validate states and ordered links. Signed operating decisions additionally
     recompute derived provenance. Control codecs also verify complete local projections;
     this dispatch certifies neither historical pairing nor current permission.
@@ -124,6 +126,8 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | Ass
             return _decode_source_envelope(envelope)
         if discriminator == "research_pipeline.corpus_content":
             return _decode_corpus_envelope(envelope)
+        if discriminator == "research_pipeline.tool_release_content":
+            return _decode_tool_release_envelope(envelope)
         if discriminator == "research_pipeline.project_content":
             return _decode_project_envelope(envelope)
         if discriminator == "research_pipeline.operating_authority_content":
@@ -222,7 +226,7 @@ class RecordStore:
 
     Use create/open and close or a context manager. No connection or general SQL
     operation is exposed. submit is trusted generic persistence; submit_typed adds
-    structural scientific and assessment admission. Supported APIs append revisions and links,
+    structural typed admission, including passive Tool releases. Supported APIs append revisions and links,
     never rewrite exact history. The owner must prevent external file mutation.
     """
 
@@ -508,11 +512,12 @@ class RecordStore:
         return self._commit_submission(self._normalize_submission(submission), ())
 
     def submit_typed(self, submission: Submission) -> SubmissionReceipt:
-        """Atomically admit scientific, assessment, work-product, Source, corpus and project content with exact target checks.
+        """Atomically admit scientific, assessment, work-product, Source, corpus, project and ToolRelease content.
 
         Reconstruct and decode every member before reconciliation; malformed members
         raise domain/codec errors. New requests check typed target closure inside the
-        write transaction, raising ReferenceResolutionError for invalid targets.
+        write transaction, including complete ToolRelease history, raising
+        ReferenceResolutionError for invalid targets or predecessors.
         Fresh control facts and controlled report reservations require their dedicated API.
         Exact retries acknowledge the original commit without rechecking targets or
         bytes, including identical requests originally committed through submit.
@@ -559,11 +564,11 @@ class RecordStore:
             raise DomainValidationError("submission: malformed nested typed value") from error
         return submission
 
-    def _commit_submission(self, submission, decoded: "tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision | RunControlTransition | RunReportObligation, ...]"):
+    def _commit_submission(self, submission, decoded: "tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | SignedOperatingDecision | RunControlTransition | RunReportObligation, ...]"):
         """Commit a normalized request and its ordered decoded values via one algorithm.
 
         Generic requests supply an empty tuple; typed requests supply one immutable
-        value per member. Local decoding precedes this shared reconciliation path.
+        value per member, including ToolRelease. Local decoding precedes this shared reconciliation path.
 
         Reconciliation precedes schema-kind admission and all availability/CAS checks,
         including refusal of new typed operating decisions outside authenticated append.
@@ -648,7 +653,7 @@ class RecordStore:
             self._artifacts._verify_for_commit(reference)
 
     @staticmethod
-    def _typed_references(value: ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup) -> tuple[
+    def _typed_references(value: ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease) -> tuple[
             tuple[RecordReference, ...], tuple[RecordReference, ...]]:
         """Partition decoded semantic roles into constrained and shallow generic references.
 
@@ -658,6 +663,8 @@ class RecordStore:
         Review context_manifest stays shallow even for a typed manifest target.
         Source predecessors/reports/evidence are constrained; related sources and
         reported executions stay shallow. All corpus and project projected record roles are constrained.
+        Tool implementation sources, children, evidence and issues are constrained;
+        reported provenance, qualification and build dependencies remain shallow.
         """
         if type(value) is ResearchContext:
             return (), ()
@@ -690,14 +697,29 @@ class RecordStore:
             shallow = (*(item.reference for item in value.related_sources),
                        *(ref for ref in checks if ref.relationship == "reported_tool_execution"))
             return constrained, shallow
+        if type(value) is ToolRelease:
+            tree = ToolRelease.to_dict(value)
+            identity, evidence = tree["identity"], tree["evidence_limitations"]
+            constrained, shallow = [], []
+            for fact, destination in (
+                    (identity["provenance_records"], shallow),
+                    (identity["implementation"]["source_records"], constrained),
+                    (tree["effects_authority"]["child_tools"], constrained),
+                    (evidence["qualification_reports"], shallow),
+                    (evidence["evidence"], constrained),
+                    (evidence["issues"], constrained),
+                    (tree["reproducibility"]["dependency_records"], shallow)):
+                if fact["state"] == "known":
+                    destination.extend(RecordReference.from_dict(item) for item in fact["value"])
+            return tuple(constrained), tuple(shallow)
         if type(value) is CorpusManifest:
             return _corpus_links(value)[0], ()
         if type(value) is ProjectSetup:
             return _project_links(value)[0], ()
-        raise DomainValidationError("content: expected a decoded scientific, assessment, work-product, Source, corpus or project value")
+        raise DomainValidationError("content: expected a decoded scientific, assessment, work-product, Source, corpus, project or ToolRelease value")
 
     def _check_typed_targets(self, connection, submission,
-                             decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup, ...],
+                             decoded: tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease, ...],
                              *, report_source=None, authority_reader=None):
         """Validate exact constrained closure and review routes within the caller's snapshot.
 
@@ -711,6 +733,8 @@ class RecordStore:
         selections are checked per occurrence; complete histories are checked in order.
         Project dossiers are checked against their own pins after corpus validation,
         including every historical snapshot and every incoming document/location role.
+        ToolRelease requires every exact predecessor and its constrained closure,
+        with required decoded classes checked on every incoming Tool role.
         Authority operations may supply their own bounded/preflighted reader. In
         that mode every read, including Source predecessors and shallow edges,
         consumes its independent budget; resolved maps are returned to the owner.
@@ -781,6 +805,32 @@ class RecordStore:
                     if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
                         raise
                     raise ReferenceResolutionError(f"{diagnostic}: invalid typed history: {error}") from error
+            if type(value) is ToolRelease and key[1] > 1:
+                # Tool history is implicit in the stable identity and explicit revision;
+                # every predecessor reenters this worklist, even without a content link.
+                previous_key = (key[0], key[1] - 1)
+                diagnostic = f"tool predecessor {previous_key[0]}@{previous_key[1]}"
+                try:
+                    previous = envelopes.get(previous_key)
+                    if previous is None:
+                        previous = (authority_reader.read(previous_key) if authority_reader is not None
+                                    else self._metadata_envelope(connection, *previous_key))
+                        envelopes[previous_key] = previous
+                    if previous.kind != "tool_release":
+                        raise DomainValidationError("predecessor must have kind tool_release")
+                    if previous_key not in values:
+                        if authority_reader is not None:
+                            authority_reader.retain_typed(previous)
+                        values[previous_key] = _decode_tool_release_envelope(previous)
+                    predecessor = values[previous_key]
+                    if type(predecessor) is not ToolRelease or predecessor.tool_id != value.tool_id:
+                        raise DomainValidationError("predecessor must be ToolRelease with the same tool_id")
+                    if previous_key not in processed:
+                        worklist.append(previous_key)
+                except (RecordNotFoundError, ValueError, TypeError, RecursionError, OverflowError) as error:
+                    if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
+                        raise
+                    raise ReferenceResolutionError(f"{diagnostic}: invalid typed history: {error}") from error
             constrained, generic = self._typed_references(value)
             for reference in generic:
                 target_key = (reference.record_id, reference.revision)
@@ -825,6 +875,11 @@ class RecordStore:
                     except DomainValidationError as error:
                         raise ReferenceResolutionError(f"{diagnostic}: invalid typed content: {error}") from error
                 # Role-specific checks belong to each incoming edge, not the cache fill.
+                if type(value) is ToolRelease:
+                    required = {"source": Source, "work_product_manifest": WorkProductManifest,
+                                "tool_release": ToolRelease, "evidence": Evidence, "issue": Issue}
+                    if type(values[target_key]) is not required[reference.target_kind]:
+                        raise ReferenceResolutionError(f"{diagnostic}: expected typed {reference.target_kind}")
                 if (type(value) is Source and reference.relationship == "reading_report"
                         and (type(values[target_key]) is not WorkProductManifest
                              or values[target_key].product_kind != "reading_report")):
@@ -1173,14 +1228,14 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | SignedOperatingDecision | RunControlTransition | RunReportObligation]":
+    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | SignedOperatingDecision | RunControlTransition | RunReportObligation]":
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise
         NotTypedContentError and other codec failures raise DomainValidationError.
         This checks selected-envelope coherence, not past admission or scientific
         validity. Work-product/Source/corpus/project supersession is checked locally against identity/revision;
-        corpus and project reads do not traverse or certify historical admission.
+        corpus, project and ToolRelease reads do not traverse or certify historical admission.
         It never traverses targets or establishes review route membership.
         """
         envelope = self.get_revision(record_id, revision)

@@ -178,7 +178,7 @@ def _classification(envelope, decoder):
     if "format" not in content:
         return {"category": "generic", "diagnostic": "no_format", "detail": "Typed projection unavailable."}
     formats = {"research_pipeline." + name + "_content" for name in
-               ("scientific", "assessment", "work_product", "source", "corpus", "project", "operating_authority")}
+               ("scientific", "assessment", "work_product", "source", "corpus", "project", "operating_authority", "tool_release")}
     if type(content["format"]) is not str or content["format"] not in formats:
         return {"category": "unsupported", "diagnostic": "unknown_format", "detail": "Typed projection unavailable."}
     if "version" in content and (type(content["version"]) is not int or content["version"] != 1):

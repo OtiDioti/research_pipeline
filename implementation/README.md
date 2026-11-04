@@ -109,7 +109,7 @@ scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion fo
 The [typed scientific content contract](../docs/typed-content.md) documents frozen
 contexts, provisional claims, conjunctive justifications and synthetic/unverified
 evidence, strict codecs, exact role projection and runnable codec/persistence examples.
-`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest, Source, corpus-manifest and project kinds
+`RecordStore.submit_typed` admits the four scientific, two assessment, work-product manifest, Source, corpus-manifest, project and Tool-release kinds
 as coherent exact typed target graphs atomically;
 `get_typed_revision` returns the exact envelope and decoded value. `submit` remains
 a trusted generic persistence API, not a scientific admission gate. Typed retries
@@ -276,5 +276,7 @@ mandatory subsequent ADR-063 slices. Capture itself produces no rendered output.
 
 [Passive Tool releases](../docs/tool-releases.md) provides strict immutable seven-area
 declarations, bounded canonical codecs and exact passive envelopes, with self-contained
-local/remote and envelope examples. It does not durably admit, register, qualify or
-execute tools.
+local/remote, envelope and registration examples. Passive `RecordStore` typed
+registration checks exact constrained/shallow roles and full metadata-only Tool
+history, reusing original-ID recovery. Qualification, permission and execution
+remain separate responsibilities.

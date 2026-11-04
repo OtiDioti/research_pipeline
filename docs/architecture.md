@@ -79,8 +79,8 @@ submission provenance saved with the exact proposal; digests are internal bindin
 not authentication. Offline inspection makes no historical durability claim and
 never repairs retained evidence. Postpublication/postcommit close/output failures
 retain uncertainty with original-ID receipt/retry guidance. See [preview and explicit import](work-product-import.md).
-`RecordStore.submit_typed` selects the scientific, assessment, work-product, Source, corpus or project codec
-explicitly and decodes every member locally, admitting mixed ten-kind batches. For a new canonical
+`RecordStore.submit_typed` selects the scientific, assessment, work-product, Source, corpus, project or ToolRelease codec
+explicitly and decodes every member locally, admitting mixed eleven-kind batches. For a new canonical
 request, it resolves constrained exact target closure inside the existing serialized
 write transaction after submission-ID reconciliation. Historical target checks read metadata; public exact reads verify
 direct artifacts. The traversal follows explicit per-kind constrained roles;
@@ -96,8 +96,11 @@ original and location occurrence, and check full snapshot history to baseline.
 Corpus history has no generic baseline transition; local IDs and attributed
 narrative declarations add no traversal edges. [Project intake](project-intake.md) constrains
 all project pins, validates each historical dossier against its own current corpus,
-and checks each incoming document role independently of cached target resolution. No transitive artifact
-verification is added. Every submitted Review's assessed route
+and checks each incoming document role independently of cached target resolution. [Tool releases](tool-releases.md) add constrained implementation Source/manifest,
+child Tool, Evidence and Issue roles; provenance, qualification and build dependencies
+remain shallow. Tool history expands exact predecessors back to revision 1 in the
+same cached worklist, checking every historical constrained closure. No transitive
+artifact verification is added. Every submitted Review's assessed route
 must conclude its exact candidate, without equating their contexts. See the
 [complete traversal contract](attributed-assessments.md#durable-api-and-exact-traversal).
 `get_typed_revision` returns the detached envelope and typed value without recursively

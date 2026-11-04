@@ -132,5 +132,6 @@ inside the later admitting transaction and provide no reservation or dispatch gu
 
 [Passive Tool releases](tool-releases.md) documents the complete seven-area immutable
 declaration, exact identities, bounded codecs and exact passive envelopes, with
-executable local/opaque-remote and envelope examples. Durable typed admission,
-registration, permission, qualification and execution remain separate work.
+executable local/opaque-remote, envelope and transactional registration examples.
+Passive `RecordStore` registration validates exact roles and complete Tool history;
+permission, qualification and execution remain separate work.

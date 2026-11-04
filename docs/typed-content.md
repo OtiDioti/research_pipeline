@@ -10,7 +10,7 @@ The separate [attributed assessment contract](attributed-assessments.md) adds pu
 Review/Issue values and exact envelopes with its own discriminator. Its reported
 dimensions are content, separate from canonical state. Durable `submit_typed` and
 `get_typed_revision` support all four scientific kinds, both assessment kinds and
-[work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md) and [project intake](project-intake.md),
+[work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md), [project intake](project-intake.md) and [Tool releases](tool-releases.md),
 with constrained traversal and exact review route-conclusion membership checks.
 
 This contract establishes structural coherence, not scientific completeness,
@@ -26,7 +26,7 @@ fixture's v1.3 provenance are unchanged.
 
 Evidence `input_records` may name any of the twenty generic kinds, including
 new generic project, run or source records. Commit generic records separately
-through `submit`; the ten supported typed kinds may share a typed batch with
+through `submit`; the eleven supported typed kinds may share a typed batch with
 forward references. Input roles check exact existence and declared kinds without
 extending constrained traversal. Generic project/run/source content cannot serve
 as typed members or targets in context, premise, conclusion, evidence or
@@ -193,11 +193,11 @@ explicit controller attribution, ordered members and an expectation for each
 identity (`0` for creation). The public methods are:
 
 - `submit_typed(submission: Submission) -> SubmissionReceipt`
-- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup]`
+- `get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease]`
 
 A typed batch contains any of the four scientific kinds, the two
 [assessment kinds](attributed-assessments.md) and coherent
-[work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md) and [project intake](project-intake.md), in any order. Commit generic tasks,
+[work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md), [project intake](project-intake.md) and [Tool releases](tool-releases.md), in any order. Commit generic tasks,
 arbitrary generic manifests, policies and executions separately through `submit`;
 evidence may name them as exact inputs. All supplied members are defensively reconstructed and decoded,
 including complete ordered content/link agreement. No links are repaired from
@@ -256,7 +256,7 @@ reading object bytes. It promises structural coherence, not transitive artifact
 availability. New batch attachments undergo full existing commit verification.
 `get_typed_revision` reuses the snapshot-consistent generic exact read, verifies
 its direct attachments, and decodes the detached envelope. It returns both the
-original identity/provenance/state/links and the scientific, assessment, work-product, Source, corpus or project value.
+original identity/provenance/state/links and the scientific, assessment, work-product, Source, corpus, project or ToolRelease value.
 Missing exact revisions retain `RecordNotFoundError`, direct-artifact errors propagate, and
 closed handles retain `StoreClosedError`. A typed read checks the selected
 revision's content and links; it does not certify historical typed admission or
@@ -410,3 +410,14 @@ not establish current authentication or permission. New typed submissions must u
 Generic storage remains compatible, subject to independent complete verification
 before any current eligibility can be reported. Readable projections are explicitly
 historical/unverified and never render approval as current permission.
+
+[Passive Tool registration](tool-releases.md#passive-transactional-registration)
+uses the same typed transaction and schema gate. Implementation Source/manifest,
+child Tool, Evidence and Issue roles require typed constrained closure; reported
+provenance, qualification and build dependencies remain exact existence/kind-only
+checks. Every submitted or constrained-reached Tool requires all exact typed
+predecessors back to revision 1, including their constrained closure, using metadata
+only. Selected inspection never traverses history or transitive targets. Original-ID
+reconciliation precedes availability/CAS checks after local decoding, including
+identical generic-original requests; receipts do not certify past typed admission,
+authorship, permission, qualification or execution.

@@ -1,12 +1,13 @@
 # Passive versioned Tool releases
 
-`research_pipeline.tool_release` describes one exact reusable release before
-registration, admission, qualification or execution. Local consistency and a content
-identity authenticate neither historical records nor available bytes. There is no
-store dispatch, `submit_typed` support, reference resolver, registry,
-current pointer, installation, dependency discovery or execution in this API.
-`research_pipeline.tool_release_envelope` adds exact passive envelope conversion
-without durable typed admission.
+`research_pipeline.tool_release` describes one exact reusable release. Its pure
+content codecs and `research_pipeline.tool_release_envelope` conversion establish
+local consistency, without reading records or bytes. `RecordStore.submit_typed`
+adds passive transactional registration through the existing record store;
+`get_typed_revision` inspects one exact release and its direct artifacts.
+Registration grants no permission, qualification, authorship authentication or
+execution. There is no separate registry, current-release pointer, installation
+or dependency discovery.
 
 ## Public API
 
@@ -611,8 +612,9 @@ Both declarations round-trip; no tool was run or qualified.
 ## Exact passive envelope API
 
 Import conversion from `research_pipeline.tool_release_envelope`; content APIs
-remain in `research_pipeline.tool_release`. No package export or store dispatch
-is added. The complete conversion signatures are:
+remain in `research_pipeline.tool_release`. These pure conversion functions do not
+access storage. The store dispatches the same unchanged decoder for typed
+submission and exact inspection. The complete conversion signatures are:
 
 ```text
 ToolReleaseEnvelopeLimits(max_metadata_chars: int = 262144,
@@ -753,7 +755,7 @@ additional enforced or configurable ceiling. No data is truncated or limit enlar
 
 Consistent detached forgeries can pass these local checks. Canonicality, hashes and
 exact projections establish neither historical authenticity nor durable typed
-admission. Generic persisted lookalikes remain distinct from admitted typed releases.
+admission. Inspecting a generic persisted lookalike cannot prove typed admission.
 
 ## Runnable exact passive envelope example
 
@@ -932,12 +934,355 @@ Content and all three identities round-trip; mismatched projection rejected.
 Only local consistency: no registration, authentication, qualification or execution.
 ```
 
+## Passive transactional registration
+
+Use `research_pipeline.store.RecordStore`; there is no `MetadataStore` alias or
+parallel persistence service. The existing schema gate permits Tool releases in
+schema 2 and 3. Schema 1 does not support this kind; submission does not migrate
+or change the DDL, backup format or generic storage contract.
+
+```text
+store.put_artifact(data: bytes) -> ArtifactReference
+store.submit_typed(submission: Submission) -> SubmissionReceipt
+store.get_typed_revision(record_id: str, revision: int) -> (RecordEnvelope, ToolRelease)
+store.get_submission(submission_id: str) -> SubmissionReceipt | None
+```
+
+The typed methods also support the other documented content kinds. Normalize and
+decode all submitted envelopes first, using the unchanged default Tool limits.
+The explicit `research_pipeline.tool_release_content` discriminator selects the
+codec; kind alone never implies typed content. Stable `record_id == tool_id`, an
+explicit positive revision, both null states, derived identities and complete
+ordered projections must agree. Typed failure has no generic retry fallback.
+
+For a fresh request, one `BEGIN IMMEDIATE` transaction checks relevant heads,
+exact projected targets and direct artifacts, then constrained closure and
+history, before appending the submission, revisions, ordered links, heads and
+one audit event. `expected_heads` names exactly the submitted identities; each
+member appends expected head + 1 and a batch contains only one revision per
+identity. Forward batch references, including a proposed child Tool revision,
+resolve against the proposed batch before committed metadata. Unrelated head
+changes do not invalidate a batch; target revisions never follow current heads.
+
+### Exact reference roles
+
+Every occurrence checks exact existence and its declared kind. Repeated references
+remain in their original envelope projection order; checking caches do not remove
+links or skip incoming-role requirements.
+
+| Content collection | Relationship | Required target and traversal |
+| --- | --- | --- |
+| `identity.implementation.source_records` | `implementation_source` | Typed `Source` for kind `source`, or typed `WorkProductManifest` for kind `work_product_manifest`; constrained closure |
+| `effects_authority.child_tools` | `child_tool` | Typed `ToolRelease`, kind `tool_release`; constrained closure and full Tool history |
+| `evidence_limitations.evidence` | `reported_evidence` | Typed `Evidence`, kind `evidence`; constrained closure |
+| `evidence_limitations.issues` | `reported_issue` | Typed `Issue`, kind `issue`; constrained closure |
+| `identity.provenance_records` | `reported_provenance` | Existence and exact declared kind only |
+| `evidence_limitations.qualification_reports` | `reported_qualification` | Existence and kind `tool_assessment` only; no typed qualification contract exists |
+| `reproducibility.dependency_records` | `build_dependency` | Existence and exact declared kind only |
+
+Unknown/unavailable collections add no references. Shallow occurrences never
+cause typed decoding or traversal, even if a target has a supported format,
+malformed content, invalid constrained closure or invalid Tool history. Generic
+`tool_assessment` reporting needs no permission or qualification state and grants
+neither. A later constrained occurrence of that same target still receives all
+checks. Constrained traversal preserves existing Source reading-report product
+kinds, manifest, scientific, review, corpus and project rules. Descriptive self
+and cross cycles terminate through exact-key caches without scientific support.
+
+### Complete history and artifact scope
+
+Every submitted or constrained-reached Tool at revision N > 1 requires the exact
+Tool predecessor `(same record_id, N-1)`, continuing to revision 1. Each predecessor
+must have kind `tool_release`, coherent Tool content/envelope identity/projections,
+and valid constrained outgoing closure. A coherent latest release cannot hide
+an older missing, generic, unsupported or malformed predecessor. Generic storage
+origin neither exempts a target from fresh validation nor makes a coherent target
+invalid. Shallow Tool references never trigger history validation.
+
+There is no Tool `supersedes` field or extra projection. An unchanged declaration
+may receive a new revision and envelope provenance with the same `release_id`.
+A changed declaration receives its independently derived content identity; hashes
+need not increase or change on every revision. Old exact releases and their
+original envelope attribution remain immutable. Envelope creator/submission
+provenance is separate from reported `declared_by` and `declared_at`.
+
+Direct implementation files, adapter files, self-tests and dependency artifacts
+are verified and synchronized through `ArtifactStore` before fresh metadata
+insertion. Artifact projection keeps the first digest occurrence. Conflicting
+declared sizes, registered-size mismatches, absent objects and corrupt bytes
+fail; metadata effects are atomic and staged unreferenced artifacts may remain.
+History and constrained closure read metadata only. Missing historical or child
+bytes do not prevent a new consumer with available direct attachments.
+
+`get_typed_revision` uses `get_revision` first, verifying selected direct bytes,
+then decodes that detached envelope. It does not traverse targets/predecessors or
+certify past admission. Thus a coherent generic-stored selected Tool may be
+inspected despite invalid older history, while a fresh constrained consumer fails.
+Snapshots classify Tool content as locally decoded using the same codec without
+adding implicit history traversal, artifact reads or historical certification.
+
+### Reconciliation and errors
+
+After local normalization/decoding, an identical original `submission_id` returns
+its original receipt before CAS, target/history or artifact availability checks.
+This remains true after head advancement or target/byte loss or corruption, and
+when the original identical request used generic `submit`. Such an acknowledgment
+is not retroactive typed admission. Changed locally valid requests with that ID
+raise `SubmissionConflictError` before availability checks. Malformed local
+requests still fail before reconciliation. After lost acknowledgment or uncertain
+COMMIT, reopen and reconcile the saved original Submission with its original ID.
+No extra receipt, admission marker, resource charge or status transition is added.
+
+| Failure | Public error |
+| --- | --- |
+| Missing content format | `NotTypedContentError` |
+| Unsupported format | `DomainValidationError` |
+| Invalid local Tool content/projection or exceeded codec ceiling | `ToolReleaseValidationError` or `ToolReleaseLimitError` |
+| Invalid fresh constrained target or predecessor | `ReferenceResolutionError`, naming exact target/predecessor with a chained codec/read cause where applicable |
+| Relevant head, proposed revision or stable-kind conflict | `RevisionConflictError` |
+| Changed request with original ID | `SubmissionConflictError` |
+| Missing exact selected revision | `RecordNotFoundError` |
+| Direct object absent/corrupt or I/O failure | Existing artifact absence/integrity/I/O errors |
+| Closed handle, SQLite/database or busy failure | Existing `StoreClosedError`, `StoreDatabaseError`, `StoreBusyError` |
+
+Storage, inspection and receipts prove neither reported authorship, qualification,
+execution permission, actual invocation nor scientific support.
+
+## Runnable passive registration example
+
+This separate self-contained block imports only product modules and stdlib. Run
+with candidate-local imports (`PYTHONPATH="$PWD/implementation/src" python3 -B`).
+It creates and cleans a private temporary runtime, stages inert bytes, uses a
+forward manifest reference and inspects exact history. It never runs the declared
+program or uses dependencies, credentials or network access.
+
+<!-- tool-registration-example:start -->
+```python
+import copy
+import hashlib
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+from research_pipeline.domain import ArtifactReference, CreationProvenance, RecordEnvelope, RecordReference, Submission
+from research_pipeline.resources import Dimension
+from research_pipeline.work_product import WorkProductFile, WorkProductManifest, encode_envelope as manifest_envelope
+from research_pipeline.tool_release_envelope import encode_envelope
+from research_pipeline.store import RecordStore, ReferenceResolutionError
+from research_pipeline.tool_release import ToolRelease
+
+
+def K(value):
+    """Declare a known fact, preserving empty strings, empty lists, null entry and zero."""
+    return {"state": "known", "value": value, "reason": None}
+
+
+def U(reason, state="unknown"):
+    """Keep absent knowledge or unavailable information explicit and reasoned."""
+    return {"state": state, "value": None, "reason": reason}
+
+
+def pin(data):
+    """Describe synthetic in-memory bytes without opening or executing anything."""
+    return ArtifactReference(hashlib.sha256(data).hexdigest(), len(data))
+
+
+def no_activity():
+    """Report no inner activity while making clear this is not an execution receipt."""
+    return {"state": "none", "runtime": K(""), "providers": K([]),
+            "description": K("No inner model or delegated activity is declared."),
+            "visibility": "complete", "limitations": K(["No usage was measured."])}
+
+
+def interface(name, description):
+    """Describe ordered coordinate rows through inert authored labels."""
+    return {"description": K(description), "fields": K([
+        {"name": name, "type": "float64", "shape": K(["N ordered rows"]),
+         "presence": "required", "description": K("Coordinate in metres."),
+         "artifact_conventions": K(["UTF-8 decimal rows in original order."])}])}
+
+
+implementation_file = WorkProductFile("src/affine.py", pin(b"# synthetic affine bytes; never executed\n"))
+adapter_file = WorkProductFile("client.py", pin(b"# synthetic client description; never executed\n"))
+units = {"local_time": "nanosecond", "local_compute": "cpu_nanosecond",
+         "local_storage": "byte", "model_input_tokens": "token",
+         "model_output_tokens": "token", "model_calls": "call", "tool_calls": "call"}
+extra_units = {"memory_bytes": "byte", "output_bytes": "byte",
+               "context_capacity_tokens": "token", "per_call_output_tokens": "token",
+               "model_concurrency": "concurrent_call", "descendant_jobs": "job",
+               "retries": "retry", "repairs": "repair"}
+bounds = []
+for name, unit in {**units, **extra_units}.items():
+    dimension = Dimension("dim_" + name, name, unit, None, 1) if name in units else None
+    bounds.append({"name": name, "dimension": dimension, "unit": unit,
+                   "quantity": K(0), "mode": "claimed_hard", "enforceability": "unknown",
+                   "mechanism": U("No enforcement was inspected."),
+                   "limitations": K(["Zero is a declaration, not an available allocation."])})
+
+local_sections = {
+    "identity": {
+        "tool_id": "affine_example", "display_name": "Affine transformation α",
+        "release_label": K("example 1"), "origin": "researcher_supplied",
+        "supplier": K(["Example researcher"]), "developer": K(["Example author"]),
+        "declared_by": K("Example researcher"), "declared_at": K("2026-10-30T12:00:00Z"),
+        "provenance_records": K([]),
+        "access": {"status": "available", "detail": "Synthetic bytes are staged in this private runtime; no execution is asserted."},
+        "license": K("Synthetic example text only; no external license is asserted."),
+        "implementation": {
+            "identity": K("affine y = 2*x"), "reported_version": K("example-1"),
+            "artifacts": K([implementation_file]),
+            "source_records": K([RecordReference("implementation", 1, "implementation_source", "work_product_manifest")]),
+            "observability": "pinned_local",
+            "limitations": K(["Synthetic bytes have not been run or scientifically qualified."])},
+        "readme": """# Local affine release
+Identity: researcher-supplied synthetic bytes, with exact artifact and source pins.
+Invocation: a descriptive client consumes ordered coordinate rows in metres.
+Scientific meaning: y=2*x; floating-point roundoff and overflow remain limitations.
+Effects: input reading and output writing are requested descriptions, not permission.
+Resources/recovery: zero unverified maxima; uncertain completion retains liability.
+Evidence: no executed self-test or qualification is supplied.
+Reproducibility: exact bytes do not prove a suitable environment or authentic output.
+"""},
+    "invocation": {
+        "kind": "local_program",
+        "adapter": {"adapter_id": "affine_client", "version": K("client-1"),
+                    "description": K("Inert client declaration for ordered rows."),
+                    "files": K([adapter_file]), "entry_file": K("client.py"),
+                    "entry_point": K("python client.py --input rows.txt")},
+        "configuration": K([{"name": "slope", "value": "2"}, {"name": "note", "value": ""}]),
+        "inputs": interface("x", "Input coordinate rows."),
+        "outputs": interface("y", "Transformed coordinate rows."),
+        "artifact_conventions": K(["Preserve row order and explicit units."]),
+        "mode": "synchronous", "mode_detail": K("One complete result is expected per call."),
+        "environment_requirements": K(["Future execution needs an independently verified Python environment."])},
+    "scientific_meaning": {
+        "equations_or_transformations": K(["y = 2*x; this is a transformation, not a fit."]),
+        "units": K(["x and y in metres; slope dimensionless."]),
+        "conventions": K(["Ordered rows; no reordering or interpolation."]),
+        "input_domains": K(["Finite real coordinates representable in binary64."]),
+        "output_domains": K(["Finite results only; overflow is a failure."]),
+        "parameter_regimes": K(["Fixed slope 2; no asymptotic approximation."]),
+        "boundary_conditions": K(["No boundary value problem is solved."]),
+        "approximations": K(["Binary64 roundoff; no interval certificate."]),
+        "error_claims": K(["No certified numerical error bound is supplied."]),
+        "success_meaning": K(["A returned number would not establish scientific support."]),
+        "failure_conditions": K(["Nonfinite input or overflow invalidates the declared use."])},
+    "effects_authority": {
+        "filesystem_read": K(["selected input rows"]),
+        "filesystem_write": K(["selected output file"]), "network_destinations": K([]),
+        "credential_references": K([]), "external_effects": K([]), "child_tools": K([]),
+        "model_activity": no_activity(), "delegated_activity": no_activity(),
+        "delegation_contract": {name: K("") for name in (
+            "assignment", "input_artifacts_and_context", "acceptance_criteria", "deliverables",
+            "descendant_scope", "backend_state_and_run_identity", "waiting_parent_behavior")}},
+    "resources_recovery": {
+        "bounds": bounds,
+        "recovery": {"cancellation": U("No running job or cancellation observation exists."),
+                     "checkpointing": K("No checkpoint protocol is declared."),
+                     "replay_safety": "conditional", "replay_conditions": K("Require exact inputs and a fresh output destination."),
+                     "uncertain_completion": K("Retain liability and reconcile; do not infer safe replacement execution."),
+                     "descendant_cancellation": K("No descendants declared; termination is not certified."),
+                     "reconciliation": U("No execution receipt exists.", "unavailable")},
+        "nested_accounting": {"basis": "exclusive", "visibility": "complete", "limitations": K(["Only declarations; no measured use."])}},
+    "evidence_limitations": {
+        "intended_uses": K(["Demonstrate an affine contract with explicit limitations."]),
+        "reported_qualified_applicability": K(["No independently qualified applicability is claimed."]),
+        "qualification_reports": K([]), "self_tests": K([]), "evidence": K([]), "issues": K([]),
+        "tested_environments": U("No environment was tested."), "tested_cases": K([]),
+        "known_failures": K(["Overflow is outside the declared successful domain."]),
+        "limitations": K(["A manifest and synthetic byte hashes cannot establish scientific validity."])},
+    "reproducibility": {
+        "dependencies": K([]), "dependency_artifacts": K([]), "dependency_records": K([]),
+        "environment": U("No execution environment was inspected."), "determinism": "conditional",
+        "randomness": K([]), "output_provenance": K(["Future output receipts must link exact input/output artifact identities."]),
+        "replay_limits": K(["Matching bytes alone do not establish matching execution environments."])}
+}
+
+creator = CreationProvenance("controller-curator", "2026-11-04T10:00:00Z", {"purpose": "passive registration"})
+editor = CreationProvenance("second-curator", "2026-11-04T11:00:00Z", {"purpose": "new attribution"})
+
+with TemporaryDirectory(prefix="tool-registration-example-") as temporary:
+    with RecordStore.create(Path(temporary) / "runtime") as store:
+        implementation = store.put_artifact(b"# synthetic affine bytes; never executed\n")
+        adapter = store.put_artifact(b"# synthetic client description; never executed\n")
+        assert implementation == implementation_file.artifact
+        assert adapter == adapter_file.artifact
+        release = ToolRelease(**local_sections)
+        manifest = WorkProductManifest(
+            "program", "Inert affine implementation", "Preserve declared implementation bytes",
+            ["Example author"], None, None, None, None, [], [], None, [],
+            [implementation_file], "src/affine.py", ["Not executed or qualified"])
+        first = encode_envelope("affine_example", 1, release, creator)
+        batch = Submission("register", creator,
+            [first, manifest_envelope("implementation", 1, manifest, creator)],
+            {"affine_example": 0, "implementation": 0})
+        receipt = store.submit_typed(batch)
+        assert receipt.revisions == (("affine_example", 1), ("implementation", 1))
+        selected, decoded = store.get_typed_revision("affine_example", 1)
+        assert selected == first and decoded == release
+        assert selected.record_references == (RecordReference("implementation", 1, "implementation_source", "work_product_manifest"),)
+        assert selected.artifact_references == (implementation, adapter)
+        assert selected.operational_status is None and selected.scientific_disposition is None
+        assert selected.provenance.actor == "controller-curator"
+        assert decoded.to_dict()["identity"]["declared_by"]["value"] == "Example researcher"
+        second = encode_envelope("affine_example", 2, release, editor)
+        store.submit_typed(Submission("reattribute", editor, [second], {"affine_example": 1}))
+        changed_sections = copy.deepcopy(local_sections)
+        changed_sections["identity"]["display_name"] = "Amended affine description"
+        changed = ToolRelease(**changed_sections)
+        independent = changed.to_dict()
+        independent.pop("release_id")
+        expected = "sha256:" + hashlib.sha256(json.dumps(independent, sort_keys=True,
+            separators=(",", ":"), ensure_ascii=True, allow_nan=False).encode("ascii")).hexdigest()
+        assert changed.release_id == expected and changed.release_id != release.release_id
+        third = encode_envelope("affine_example", 3, changed, creator)
+        store.submit_typed(Submission("amend", creator, [third], {"affine_example": 2}))
+        assert store.history("affine_example") == (first, second, third)
+        assert store.get_typed_revision("affine_example", 2)[1].release_id == release.release_id
+        assert store.get_typed_revision("affine_example", 1)[0].provenance == creator
+        assert store.get_typed_revision("affine_example", 2)[0].provenance == editor
+        assert store.submit_typed(batch) == receipt
+        generic = RecordEnvelope("untyped_child", 1, "tool_release", {"description": "not a Tool codec"}, creator)
+        store.submit(Submission("generic-child", creator, [generic], {"untyped_child": 0}))
+        refused_sections = copy.deepcopy(local_sections)
+        refused_sections["identity"]["tool_id"] = "refused"
+        refused_sections["effects_authority"]["child_tools"] = K([
+            RecordReference("untyped_child", 1, "child_tool", "tool_release")])
+        refused = encode_envelope("refused", 1, ToolRelease(**refused_sections), creator)
+        before = store.audit_events()
+        try:
+            store.submit_typed(Submission("refused", creator, [refused], {"refused": 0}))
+        except ReferenceResolutionError:
+            pass
+        else:
+            raise AssertionError("A generic child lookalike must fail fresh constrained admission")
+        assert store.get_submission("refused") is None and store.head("refused") is None
+        assert store.audit_events() == before
+        assert [event.submission_id for event in before] == ["register", "reattribute", "amend", "generic-child"]
+        assert store.read_artifact(implementation) == b"# synthetic affine bytes; never executed\n"
+        print("Registered Tool and forward implementation manifest: 2 exact revisions, 2 artifact digests.")
+        print("History 1, 2, 3 preserved: same release/new provenance, then independently hashed amendment.")
+        print("Original receipt reconciled; generic child refused without receipt, head or audit effects.")
+        print("Passive persistence only; no tool executed, qualified or permitted.")
+```
+<!-- tool-registration-example:end -->
+
+Expected output:
+
+```text
+Registered Tool and forward implementation manifest: 2 exact revisions, 2 artifact digests.
+History 1, 2, 3 preserved: same release/new provenance, then independently hashed amendment.
+Original receipt reconciled; generic child refused without receipt, head or audit effects.
+Passive persistence only; no tool executed, qualified or permitted.
+```
+
 ## Later responsibilities and remaining scope
 
-REQ-D05-003 must provide authenticated exact target and artifact-byte checks,
-typed transactional admission, immutable history and original-submission recovery.
-It must distinguish generic persisted lookalikes from admitted typed releases.
-Separate permission, qualification and lifecycle assessments remain required.
+Passive typed registration now checks exact targets, direct artifact bytes and
+complete Tool history transactionally, with original-submission recovery. Generic
+persistence, local inspection and original receipts cannot establish the original
+typed admission route. Separate permission, qualification and lifecycle assessments
+remain required.
 A future executor must verify invocation
 environment, confinement, available bounds, actual remote versions, authentic
 outputs, descendants, cancellation, usage and uncertain-completion recovery.
@@ -946,8 +1291,8 @@ promote its output to scientific support. No passive declaration establishes
 these facts. Real selected-backend evidence is required for interoperability and
 optional composite qualification claims.
 
-This contract does not complete D04, full D05 or M0-E. Registration, canonical typed
-admission, actual isolation/execution, resource enforcement, receipts, recovery,
-live permissions and scientific qualification remain separate work. Focused tests
+This contract does not complete D04, full D05 or M0-E. Actual isolation/execution,
+descendant and resource enforcement, authentic invocation receipts and execution
+recovery, live permissions and scientific qualification remain separate work. Focused tests
 are implementation evidence only; controller validation, independent reviews,
 final receipt and coordinator inspection/integration remain separate responsibilities.

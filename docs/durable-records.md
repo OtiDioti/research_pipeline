@@ -14,7 +14,7 @@ an intentionally separate paper example.
 and exact envelope-link coherence for four scientific kinds.
 `research_pipeline.assessment` adds [attributed Review/Issue contracts](attributed-assessments.md)
 with a distinct format. `submit_typed` provides durable structural admission for
-all ten kinds, including [work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md) and [project intake](project-intake.md), and checks
+all eleven kinds, including [work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md), [project intake](project-intake.md) and [Tool releases](tool-releases.md), and checks
 exact review route-conclusion membership; `get_typed_revision` returns an exact
 envelope and decoded value. `submit` remains a trusted generic persistence API,
 not a scientific admission gate: generic submission resolves
@@ -67,10 +67,9 @@ internal `submission_committed` audit event. These generic names supply neither
 full payload contracts nor state machines, scientific authority or promotion.
 In particular, descriptive review, decision, eligibility or execution assertions
 cannot grant authority. Four scientific content schemas, two attributed assessment
-schemas and work-product manifests are available through their separate
-[scientific](typed-content.md), [assessment](attributed-assessments.md) and
-[work-product](work-products.md) codecs
-and one durable typed boundary.
+schemas, work-product manifests, Sources, corpus manifests, projects and Tool
+releases are available through their separate codecs and one durable typed
+boundary. See [typed content](typed-content.md) and [Tool registration](tool-releases.md).
 
 | Kind | Required canonical state |
 | --- | --- |
@@ -226,8 +225,8 @@ No installation or package-level re-exports are needed.
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
 | `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
 | `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
-| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all ten supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
-| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest \| ProjectSetup]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source, corpus or project value. No historical admission certificate. |
+| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all eleven supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
+| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest \| ProjectSetup \| ToolRelease]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source, corpus, project or ToolRelease value. No historical admission certificate. |
 | `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
 | `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
 | `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |
@@ -517,3 +516,14 @@ operation. Metadata-only original-ID recovery works even after required objects
 become unavailable; verified reads fail on missing or damaged source/evidence.
 No manifest/output, obligation discharge or ordinary-work permission is produced.
 Historical control and legacy report wire/receipt formats remain unchanged.
+
+[Passive Tool registration](tool-releases.md#passive-transactional-registration)
+uses the same typed transaction and schema gate. Implementation Source/manifest,
+child Tool, Evidence and Issue roles require typed constrained closure; reported
+provenance, qualification and build dependencies remain exact existence/kind-only
+checks. Every submitted or constrained-reached Tool requires all exact typed
+predecessors back to revision 1, including their constrained closure, using metadata
+only. Selected inspection never traverses history or transitive targets. Original-ID
+reconciliation precedes availability/CAS checks after local decoding, including
+identical generic-original requests; receipts do not certify past typed admission,
+authorship, permission, qualification or execution.
