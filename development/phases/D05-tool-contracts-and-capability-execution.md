@@ -1,10 +1,10 @@
 # D05 — Tool contracts and capability execution
 
-## 2026-11-04 — Envelope slice integrated
+## Historical envelope checkpoint — 2026-11-04
 
-REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. Passive conversion and projections only. Authenticated admission, history, assessment, permission and real execution remain required.
+REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. That slice supplied passive conversion and projections only. Registration and history were subsequently integrated below; assessment, permission and real execution remain required.
 
-**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 typed persistence is READY. Registration, qualification and execution remain incomplete.
+**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 passive registration is accepted, integrated and target-validated. REQ-D05-004 pure attributed assessments are READY; qualification and execution remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.
 
@@ -79,3 +79,8 @@ one next safe action.
 ## Next bounded persistence boundary — 2026-11-04
 
 REQ-D05-002 is finally accepted/exact-integrated0a6a01e2, final/target1189/1189. REQ-D05-003 is prepared for existing typed submission/inspection dispatch, same-transaction exact role checks, complete immutable release history and original-submission recovery. DEV-074 chooses the existing store boundary over a parallel registry. All112predecessor test/helper/fixture/validator paths remain protected. No failed B1 source, new schema, authority/qualification/execution or scientific claim is included. Full phase acceptance boxes above remain open.
+
+
+## Passive registration integrated; assessment boundary ready — 2026-11-04
+
+REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](../runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) finally accepted/exact-integrated`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,final/target1216/1216,zerootheroutcomes/mutation and identical dispositions. All112predecessors remain;117paths are protected now. Typed dispatch/role closure/full metadata history/direct bytes/original-ID recovery have evidence. No qualification/permission/execution gate is satisfied by registration. DEV-075 prepares REQ-D05-004 pure attributed assessments; it remains unlaunched. All phase acceptance boxes, D04 duties, M0-E/scientific/live/human obligations remain open. STATUS owns counters and one next safe action.

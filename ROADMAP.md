@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Passive registration integrated; assessment contract ready — 2026-11-04
+
+REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) is finally accepted/exact-integrated`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,final/target1216/1216. Existing typed persistence now validates exact roles and complete Tool history with original-ID recovery. [REQ-D05-004](development/requests/REQ-D05-004.md) is the next independent pure attributed-assessment boundary, committed READY but unlaunched. D05/D04/M0-E and all scientific/live duties remain partial/pending; no recovery resets.
+
 ## Typed Tool-release persistence prepared — 2026-11-04
 
 [REQ-D05-003](development/requests/REQ-D05-003.md) is the next independent bounded store/reference/history slice after actual D05-002 integration. DEV-074 records reuse of the existing transaction/reconciliation boundary. No registration, qualification or execution is implemented by this preparation; all partial phases and original obligations remain.

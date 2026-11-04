@@ -235,3 +235,8 @@ evidence remain. No controller state/receipt/log/lease/quarantine edit, guard wa
 model substitution, frozen-environment change or automatic approval rejection.
 Read-only coordinator audit corrections changed no product/backend state and consumed
 no recovery. Current source/receipt/check/integration evidence: [run record](development/runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md).
+
+
+## 2026-11-04 — Passive registration accepted; no backend change
+
+REQ-D05-003/run9ec9e902 finally accepted/exact-integrated4608f0e,receiptb343da69,final/target1216/1216. No internal repair, backend defect, source/config/prompt change or maintenance candidate. Clean supported clone remainsb6a2e05283f92f2bb42402d49e4a274225b43f6a; cumulative attempted/adopted/reverted2/2/0. Timing observation and one corrected read-only receipt-reference helper changed no product/backend/state/receipt and consumed no recovery. All prior patches, failed attempts and historical recording findings remain preserved. No controller-owned state/log/lease/quarantine edit, guard weakening, model substitution or automatic approval rejection occurred. [Exact evidence](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md).

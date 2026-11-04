@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Registration accepted; existing holds preserved — 2026-11-04
+
+REQ-D05-003/[run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) passed final/target1216/1216,exact-integrated`4608f0ecd8a0599e81c31a170dba50fdff0b36f0`,zero repairs/findings. No new blocker or backend defect. B-013deadline2/2 continues to block its failed B1 recovery path and dependent output/publication/restart; B-010/B-011 retain scientific/live holds. Ordinary independent REQ-D05-004 is ready without the failed draft. All40CWI runs are terminal; earlier cd93accepted source is deliberately superseded, not pending integration. Budgets remain39/100used61remain,35repairs15coordinator recoveries,backend2/2/0.
+
 ## D05 envelope evidence — 2026-11-04
 
 REQ-D05-002 was integrated at `0a6a01e2552b886232e2880d80123479b70a79e6` with 1189/1189 target tests; it does not resolve B-010, B-011, or the exhausted B-013 path. Typed registration and operational/scientific duties remain mandatory. See [run evidence](development/runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md).

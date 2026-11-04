@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Passive transactional Tool releases integrated — 2026-11-04
+
+[REQ-D05-003/run9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) finally accepted and exact-integrated **4608f0ecd8a0599e81c31a170dba50fdff0b36f0**,tree`3547e714a3e800daa1799e774300d3bdebdf3369`,receiptSHA256`b343da69da3d2c9ce330fdae0e675780b94d967506a73c2809771d9e12c4fd10`. Adds ToolRelease typed dispatch, exact constrained/shallow roles, complete metadata-only release history and local snapshot recognition, preserving shared artifact/transaction/original-ID recovery.27new tests plus executed guide;112predecessor blobs/modes retained. Candidate/final/integrated target each1216/1216; no other outcomes/source mutation and final/target dispositions match. Target998.031889s ended13:46:44.848776Z,stdoutSHA256`d54f97f563caa762df60f40df8880eed8a566fd8ba4d78112000bd5c941a030a`,empty stderr. No repairs/recoveries/backend change. Administrative checkpoint reconciles resources and readies REQ-D05-004; no new launch, permission, scientific qualification or product completion.
+
 ## 2026-11-04 — Exact passive Tool-release envelopes
 
 REQ-D05-002 / [d4513360-8b98-4b8d-9bdc-91835d40a323](development/runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and exactly integrated `0a6a01e2552b886232e2880d80123479b70a79e6`. Added bounded conversion, ordered record projections and deduplicated artifact projections with tests and guide; final and target tests 1189/1189. It grants no registration, permission, execution or scientific validity.
