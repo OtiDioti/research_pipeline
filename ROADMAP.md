@@ -1,5 +1,9 @@
 # Development roadmap
 
+## D05 envelope integration — 2026-11-04
+
+REQ-D05-002 / [d4513360-8b98-4b8d-9bdc-91835d40a323](development/runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and exactly integrated `0a6a01e2552b886232e2880d80123479b70a79e6` with 1189/1189 target tests. Passive exact envelope conversion is available; authenticated typed registration and history remain the next independent engineering boundary. D05 and the product remain incomplete.
+
 This is the proposed sequence for implementing the product in [project_description.md](project_description.md). Current execution belongs in [STATUS.md](STATUS.md), not in a second independent set of status cells here. Each phase has a coherent outcome and acceptance obligations; each may require several bounded coding-pipeline runs.
 
 **Amended 2026-10-30 to specification v1.4:** M0-E contracts and executable evidence gate dependent engineering. M0-S pilot/expert/protocol decisions remain pending and gate their corresponding scientific evaluations, qualification claims and release, not independent implementation. All mandatory requirements remain mapped; documentation is not M0-E completion. Mixed phases track engineering and empirical outcomes separately.

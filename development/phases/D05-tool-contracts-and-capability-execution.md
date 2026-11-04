@@ -1,5 +1,9 @@
 # D05 — Tool contracts and capability execution
 
+## 2026-11-04 — Envelope slice integrated
+
+REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. Passive conversion and projections only. Authenticated admission, history, assessment, permission and real execution remain required.
+
 **State:** PARTIAL. REQ-D05-001 passive contracts are accepted, integrated and target-validated. REQ-D05-002 exact envelopes are READY. Registration, qualification and execution remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.

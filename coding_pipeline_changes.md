@@ -1,5 +1,9 @@
 # coding_pipeline change audit
 
+## 2026-11-04 — REQ-D05-002 backend audit
+
+Run `d4513360-8b98-4b8d-9bdc-91835d40a323` accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`. Backend remained clean at `b6a2e05283f92f2bb42402d49e4a274225b43f6a`; no backend maintenance attempted. Attempted/adopted/reverted remains 2/2/0.
+
 This file records necessary modifications to the separately cloned development backend. It is not the research product's changelog. Follow [the maintenance policy](development/BACKEND_MAINTENANCE.md).
 
 **Initial record:** no backend source modification was made in preparing this documentation update. This is not a statement about changes that may already exist in your local clone. Inspect and preserve those before adopting this template.

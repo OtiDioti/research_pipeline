@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## D05 envelope evidence — 2026-11-04
+
+REQ-D05-002 was integrated at `0a6a01e2552b886232e2880d80123479b70a79e6` with 1189/1189 target tests; it does not resolve B-010, B-011, or the exhausted B-013 path. Typed registration and operational/scientific duties remain mandatory. See [run evidence](development/runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md).
+
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
 Current exceptions on2026-11-04: B-010/B-011 scientific/live holds and the reopened B-013 Writer-deadline path hold. Later dated entries supersede historical resolution snapshots; independent passive engineering remains ready.

@@ -1,5 +1,9 @@
 # Integrated development history
 
+## 2026-11-04 — Exact passive Tool-release envelopes
+
+REQ-D05-002 / [d4513360-8b98-4b8d-9bdc-91835d40a323](development/runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and exactly integrated `0a6a01e2552b886232e2880d80123479b70a79e6`. Added bounded conversion, ordered record projections and deduplicated artifact projections with tests and guide; final and target tests 1189/1189. It grants no registration, permission, execution or scientific validity.
+
 Record accepted and integrated changes here, grouped by bounded development outcome. Preserve exact run and accepted-commit references in the linked run records.
 
 ## Initial documentation setup
