@@ -16,7 +16,7 @@
 - Read `DEVELOPMENT.md`, `STATUS.md`, `development/AUTHORIZATION.md`, `development/AUTONOMY.md`, the active phase/request, relevant decisions, and actual Git/CWI evidence. At setup read all of `project_description.md`; later read relevant original sections and preserve their constraints.
 - Every research-product implementation or repair goes through `coding_pipeline/bin/agentic-flow`: source, tests, executable utilities, dependency/build configuration, runtime prompts, and behavior-changing configuration. Do not use your own agents/skills to bypass that backend.
 - You may directly edit administrative Markdown and execute permitted setup, inspection, validation, and authorized Git integration commands. Do not hide an implementation in Markdown and execute it to evade CWI.
-- **Narrow repair exception:** the human permits necessary, focused changes to the separate coding_pipeline backend. Apply `development/BACKEND_MAINTENANCE.md` and log every attempt in `coding_pipeline_changes.md` (locally first while the parent is bound). This does not authorize direct product coding, speculative backend improvements, or disabling safeguards.
+- **Narrow maintenance exception:** the human permits necessary, focused repairs to the separate coding_pipeline backend, plus the specifically authorized 2026-11-04 modernization under `development/BACKEND_MAINTENANCE.md`. Log every attempt in `coding_pipeline_changes.md` (locally first while the parent is bound). The dated authorization is limited to that task; it does not authorize direct product coding, unrelated backend improvements, or disabling safeguards.
 
 ## 2. Scope and authority
 
@@ -46,9 +46,9 @@ The default uses no CWI `--merge`. After actual final acceptance, the outer coor
 
 ## 5. Model and reasoning
 
-Read `development/MODEL_POLICY.md`. The requested model is **Astra 6.1**, whose exact supported identifier must be established locally or explicitly corrected by the human. Do not guess an identifier or silently select a different model.
+Read `development/MODEL_POLICY.md`. For new runs the human-approved selections are Designer `gpt-6-astra` / `xhigh`, Architect `gpt-6.1-sol` / `xhigh`, Writer `gpt-6.1-sol` / `high`, and Reviewer `gpt-6.1-sol` / `high`. Verify actual local support/access; do not guess identifiers or silently substitute settings.
 
-Pass `--model` and `--reasoning` explicitly for every CWI start. Use a supported effort from `low`, `medium`, `high`, `xhigh`; **never above extra-high (`xhigh`)**. Choose according to workload. The reviewed CWI freezes one model/effort across a run; adapt between runs, not during resume or by pretending to set individual roles. Inspect frozen settings and available actual-invocation evidence. A natural-language model self-report is not proof.
+Pass all eight explicit flags for every new CWI start: `--designer-model gpt-6-astra --designer-reasoning xhigh --architect-model gpt-6.1-sol --architect-reasoning xhigh --writer-model gpt-6.1-sol --writer-reasoning high --reviewer-model gpt-6.1-sol --reviewer-reasoning high`. **Never exceed extra-high (`xhigh`)**. Revision-2 state freezes each role's selection immutably on resume; no global fallback or old-state migration is authorized. Preserve the original backend revision for historical inspection; do not automatically resume historical runs. Inspect frozen settings and available actual-invocation evidence. A natural-language model self-report is not proof.
 
 ## 6. Files, environments, and maintenance
 

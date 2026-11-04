@@ -1,65 +1,54 @@
 # Development model and reasoning policy
 
-## Effective decision — 2026-10-30
+## Effective decision — 2026-11-04
 
-The human explicitly approved **GPT-6 Astra (`gpt-6-astra`)** after inspection found no supported identifier for “Astra 6.1.” This is revision 2 of [AUTHORIZATION.md](AUTHORIZATION.md), not a silent substitution. The local account catalog advertises `gpt-6-astra` with low/medium/high/xhigh and the selected Codex adapter recognizes the ChatGPT login. Use `--model gpt-6-astra` and explicit effort at or below xhigh. REQ-D01-001 selects medium. Record actual invocation/frozen evidence; catalog/login checks do not guarantee successful service execution. The original ambiguity below is retained as history and no longer blocks this corrected selection.
+The human explicitly authorized these selections for new CWI runs under [AUTHORIZATION.md](AUTHORIZATION.md) revision 7:
 
-## Original user requirement and ambiguity
+| Role | Exact model identifier | Reasoning |
+| --- | --- | --- |
+| Designer | `gpt-6-astra` | `xhigh` |
+| Architect | `gpt-6.1-sol` | `xhigh` |
+| Writer | `gpt-6.1-sol` | `high` |
+| Reviewer | `gpt-6.1-sol` | `high` |
 
-The requested development model is **“Astra 6.1.”** Do not silently replace it with another model, infer an API identifier from the display label, or fall back to the user's ordinary Codex default.
+Use all eight explicit start flags, with no global selection or fallback:
 
-On 2026-10-30, the official OpenAI model catalog inspected for this update listed **GPT-6 Astra (`gpt-6-astra`)** and **GPT-6.1 Sol (`gpt-6.1-sol`)**. I did not verify an official identifier for “Astra 6.1.” This is a model-selection ambiguity, not authorization to choose either listed alternative. The installed client's authenticated model list may supply additional evidence; a local alias must be traced to its actual provider/model mapping. Never create a misleading alias merely to satisfy the requested name.
+```text
+--designer-model gpt-6-astra --designer-reasoning xhigh
+--architect-model gpt-6.1-sol --architect-reasoning xhigh
+--writer-model gpt-6.1-sol --writer-reasoning high
+--reviewer-model gpt-6.1-sol --reviewer-reasoning high
+```
 
-Before launching any CWI model-dependent run:
+These are development-agent selections. They do not make Codex or either model a mandatory runtime provider for the scientific product. The amendment changes no spending, start, repair, recovery, milestone, deadline, service, or scientific authorization.
 
-1. Inspect the actual compatible Codex installation, account access, selected provider, supported model catalog, and supported reasoning levels.
-2. Record the exact requested name, verified model identifier, evidence, and effective provider in [ENVIRONMENT.md](ENVIRONMENT.md).
-3. If the requested model cannot be established, record `MODEL_SELECTION_REQUIRED` and ask the human to identify/approve the available model. Read-only inspection and administrative preparation may continue, but do not run implementation with a substitute.
-4. Any human-approved alternative becomes an explicit model-policy decision, not a silent correction of this document.
+## Readiness and evidence
 
-This governs **development agents**. It does not make that model or Codex a mandatory runtime provider of the finished scientific product. Runtime adapter choices remain separate product decisions.
+Before a new model-dependent run, inspect the actual compatible Codex executable, account/provider access, supported model catalog and reasoning levels. Record identities and non-secret evidence in [ENVIRONMENT.md](ENVIRONMENT.md). The local catalog fetched `2026-11-04T16:39:43.361492207Z` advertises both exact identifiers and `high`/`xhigh`; the selected installed Codex is 0.166.0. This is advertised support, not live execution or a guarantee of future access. Fresh readiness remains required before product development resumes.
 
-## Reasoning effort
+If an approved selection cannot be established, record `MODEL_SELECTION_REQUIRED` and stop model-dependent work. Read-only inspection and administrative preparation may continue. Do not invent aliases, silently substitute a model/effort, or accept a fallback. Changing this approved allocation requires actual human authorization.
 
-Use only supported values from `low`, `medium`, `high`, and `xhigh`. **Extra-high means `xhigh`; it is the hard ceiling.** Do not use `max`, `ultra`, auto-escalation above the ceiling, or a hidden higher default.
+Only supported reasoning values `low`, `medium`, `high`, and `xhigh` are permitted by the backend contract. **Extra-high means `xhigh`; it is the hard ceiling.** The current grant selects the exact values above, not arbitrary values from that allow-list. Never use `max`, `ultra`, or a higher implicit default.
 
-| Workload | Suggested effort |
-| --- | --- |
-| Routine constrained work with little ambiguity | low or medium |
-| Normal feature development, interface work, tests | medium |
-| Architecture, provenance/recovery, security-sensitive changes, difficult debugging | high |
-| Demonstrably difficult reasoning after lower effort proved inadequate | xhigh, with a recorded reason |
+The adapter isolates child configuration. Setting the outer session's model, changing a normal Codex profile or adding prompt text does not configure CWI's child roles. Inspect frozen role selections and available actual invocation arguments for every role, including resumed persistent sessions. A model's textual self-identification is not evidence of its backend identity. Report any absence of effective-model telemetry separately from verified requested settings.
 
-Choose effort for the hardest consequential responsibility in the request, not only the Writer's easiest task. Lower effort is not permission to skip verification. If the model does not support a chosen level, select a supported level at or below the ceiling before launch; do not accept an undocumented fallback.
+## Frozen state and historical runs
 
-## What the reviewed CWI backend actually supports
+The modernized backend uses schema revision 2 and freezes all four model/effort pairs. They remain immutable on resume; resume does not accept replacement selections. No migration of revision-1 state is authorized or supplied. Keep historical state, receipts, prompts and invocation evidence unchanged. Preserve the exact original backend revision and environment for historical inspection; do not automatically resume an old run using either backend. Any later recovery requires its own supported diagnosis and explicit disposition.
 
-The supplied backend accepts `start --model NAME --reasoning EFFORT`. It freezes **one model and one effort for the entire run**, including its role invocations. It passes the model to Codex `--model` and the effort through `-c model_reasoning_effort=...`. Its state consistency checks require those values to remain unchanged on resume. These facts come from `cwi/cli.py`, `cwi/codex_cli.py`, `cwi/state.py`, and `cwi/state_store.py` in the reviewed archive.
+All eight values are explicit argv, not exported model-selection variables. Preserve the recorded stable launch environment; adding variables during an unfinished run can change its frozen digest. Backend parsing enforces required role flags and supported effort spellings; local/provider readiness and the exact human-approved allocation still require coordinator verification. Acceptance of a model string by the CLI does not establish service support.
 
-Therefore adapt effort **between bounded runs**, not by editing a running session or claiming unsupported per-role settings. Split substantially different workloads when that produces a coherent independent request. Do not patch the backend just to add a desired optimization that is not needed for correctness.
+## Historical decisions and original backend contract
 
-The adapter deliberately ignores user configuration and disables other discovery paths. Setting the outer session's model, adding text to a prompt, or changing a normal Codex profile alone does not configure CWI's child roles. Always pass explicit flags and inspect frozen state and retained invocation evidence. A model's textual self-identification is not verification of its backend identity. If effective-model telemetry is unavailable, report that limitation separately from verified requested settings.
+The original request named “Astra 6.1.” The official catalog inspected on 2026-10-30 listed GPT-6 Astra (`gpt-6-astra`) and GPT-6.1 Sol (`gpt-6.1-sol`), without establishing an exact “Astra 6.1” identifier. The human then explicitly approved GPT-6 Astra under authorization revision 2. That decision authorized only `gpt-6-astra`; revision 7 now separately authorizes the role allocation above. The commissioning request selected `medium`.
 
-## Launch contract
+The originally reviewed revision-1 backend accepted `start --model NAME --reasoning EFFORT` and froze one pair for the whole run. It passed the model to Codex `--model` and effort via `-c model_reasoning_effort=...`; state consistency required them unchanged on resume. These are historical facts from `cwi/cli.py`, `cwi/codex_cli.py`, `cwi/state.py` and `cwi/state_store.py`, not current launch instructions. Historical requests and runs retain their original settings.
 
-Set non-secret shell variables only after resolution, for example `CWI_MODEL` to the verified identifier and `CWI_REASONING` to `medium`. They need not be exported: the runbook passes their values explicitly to CWI. Exporting new variables during an unfinished run can change its inherited-environment digest.
-
-Before launch, the coordinator enforces:
-
-- Nonempty, verified model identifier with no unapproved substitution.
-- An explicitly selected effort in the supported allow-list, never above `xhigh`.
-- Compatibility of the actual installed Codex with CWI's required parser/security flags.
-- Permission and resource allowance for the actual authenticated billing mode.
-
-The CLI's acceptance of a string is not proof that the service supports it. The current backend does not independently enforce this project's model identity or effort ceiling; these are checked coordination rules, not a claim of an installed hard gate. A future machine-enforced launcher must be implemented and tested through CWI if required.
-
-An older unfinished run with incompatible frozen model settings must not be silently resumed under the new policy or altered in place. Inspect it, preserve it, and seek an explicit disposition under the recovery procedure.
-
-## Official references checked for this update
+## Official references inspected on 2026-10-30
 
 - OpenAI model catalog: https://developers.openai.com/api/docs/models
 - OpenAI reasoning guide: https://developers.openai.com/api/docs/guides/reasoning
 - Codex configuration reference: https://developers.openai.com/codex/config-reference
 - Codex non-interactive execution and session resume: https://developers.openai.com/codex/noninteractive
 
-Availability and supported settings can change. Recheck when selecting a new installation/model, but never upgrade or change a frozen run's environment merely to match newer documentation.
+These references document the earlier inspection, not a new online availability check. Recheck readiness before future execution without changing any frozen run's environment to match newer documentation.

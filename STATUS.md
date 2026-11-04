@@ -1,5 +1,7 @@
 # Development status
 
+> **Backend maintenance checkpoint — 2026-11-04 17:21 UTC:** CP-003 was tested and adopted as `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`. See [the backend audit](coding_pipeline_changes.md) for the exact diff, tests, compatibility limits and protected backup. New runs require the eight role flags in [MODEL_POLICY.md](development/MODEL_POLICY.md), under authorization revision 7. Historical schema-1 runs require their original backend for inspection and must not be automatically resumed. The product checkpoint and resource accounting below are preserved as historical observations; this note supersedes only their backend/model launch guidance. No product run was started during maintenance.
+
 ## Passive Tool-release registration integrated — 2026-11-04
 
 [REQ-D05-003 / run 9ec9e902-27ba-4f3f-891e-4e89eed13e0d](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) is finally accepted and exactly integrated as **4608f0ecd8a0599e81c31a170dba50fdff0b36f0**, tree `3547e714a3e800daa1799e774300d3bdebdf3369`, final receipt SHA256 `b343da69da3d2c9ce330fdae0e675780b94d967506a73c2809771d9e12c4fd10`. Final and integrated target each passed **1216/1216**, zero other outcomes or source mutation; all per-test dispositions match. Exact fast-forward from `af978e8cda862d6e0d3846c51755194ae1fa1d30` preceded tracked administrative changes. Target completed 2026-11-04T13:46:44.848776Z, validator wall time 998.031889 seconds, stdout SHA256 `d54f97f563caa762df60f40df8880eed8a566fd8ba4d78112000bd5c941a030a`, empty stderr; both ordered checks passed. All 112 predecessor test/helper/fixture/validator blobs and modes remain unchanged; 117 paths are now protected.
@@ -16,4 +18,4 @@ This long reconstruction/execution session reaches a safe context checkpoint aft
 
 ## Exactly one next safe action
 
-Recover this checkpoint and fresh exact Git/CWI/host/model/environment readiness, then launch REQ-D05-004 once through the supported CWI controller with its two literal-base checks. Preserve all prior budgets/holds and keep the parent fixed while the run is active or base-bound.
+In a later development session, reconcile the unlaunched REQ-D05-004's preparatory legacy model note with authorization revision 7, then perform fresh Git/CWI ownership, model, environment and budget readiness before any new launch. This maintenance session stops here; no historical run is resumed and all existing product limits and holds persist.

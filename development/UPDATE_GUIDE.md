@@ -1,6 +1,6 @@
 # Applying the continuous-development update
 
-**Prepared:** 2026-10-30. This update changes development instructions and record formats. It contains no product implementation, backend source patch, installed supervisor, or replacement for `project_description.md`.
+**Prepared:** 2026-10-30; current role-selection adoption guidance amended 2026-11-04. The original documentation package contains no product implementation, backend source patch, installed supervisor, or replacement for `project_description.md`. The separately authorized 2026-11-04 backend modernization and its evidence are recorded in [coding_pipeline_changes.md](../coding_pipeline_changes.md).
 
 ## 1. Choose the appropriate package
 
@@ -26,13 +26,13 @@ Add missing policy/navigation/template files. Add `coding_pipeline_changes.md` o
 
 Merge the new authority/mode/model/consumption fields into the actual STATUS. Preserve actual phase, request, run, commits, blockers, and next action. Merge backlog, decisions, environment, requirements, phase plans, and the first request without erasing their histories. A request already frozen by a run must remain unchanged; use a later revision/new request as appropriate.
 
-The new AUTHORIZATION file is a form, not an active grant. Migrate any existing genuine grant accurately; do not replace it with NOT_RECORDED or infer broader authority. Mark pending activation when no such grant exists. Preserve actual grants' dates, scope, source, budgets, and consumption.
+An AUTHORIZATION file supplied by a starter kit is a form, not an active grant. This repository's AUTHORIZATION.md records actual human grants and amendments. Migrate any existing genuine grant accurately; do not replace it with NOT_RECORDED or infer broader authority. Mark pending activation when no such grant exists. Preserve actual grants' dates, scope, source, budgets, and consumption.
 
-## 4. Resolve the requested model before calling it
+## 4. Adopt and verify the current role selections
 
-The user requested Astra 6.1. This update retains that requirement but does not invent a supported identifier. The official catalog inspected listed GPT-6 Astra and GPT-6.1 Sol, not a verified Astra 6.1 identifier. Confirm local model/account evidence or obtain an explicit correction before model-dependent execution. No silent fallback is permitted.
+The original “Astra 6.1” ambiguity was resolved by the human's 2026-10-30 `gpt-6-astra` correction. The separate 2026-11-04 amendment now approves Designer `gpt-6-astra`/`xhigh`, Architect `gpt-6.1-sol`/`xhigh`, Writer `gpt-6.1-sol`/`high`, and Reviewer `gpt-6.1-sol`/`high`. Verify actual executable/account/catalog support before new model-dependent execution; no silent fallback is permitted.
 
-Record the resolved model/provider and effort policy in ENVIRONMENT. Select a supported effort per CWI run, at most `xhigh`; use explicit `--model` and `--reasoning` flags. Do not assume setting the outer Codex session's model configures its child processes.
+Record model/provider and effort evidence in ENVIRONMENT. Every new start requires `--designer-model gpt-6-astra --designer-reasoning xhigh --architect-model gpt-6.1-sol --architect-reasoning xhigh --writer-model gpt-6.1-sol --writer-reasoning high --reviewer-model gpt-6.1-sol --reviewer-reasoning high`. The schema-revision-2 contract freezes all four pairs immutably on resume, with no revision-1 migration. Preserve original backend revisions for historical inspection; do not automatically resume historical runs. The outer Codex session's selection does not configure child processes.
 
 ## 5. Commit and enter the appropriate workflow
 
@@ -55,9 +55,10 @@ By default there is one human first-result review, then no routine prompt per re
 ## 6. Verify the adoption
 
 - The original product description and existing progress/evidence are intact.
-- Coordinator and delegated-role permissions agree: product implementation through CWI; focused direct backend repairs only by the coordinator under the maintenance procedure.
+- Coordinator and delegated-role permissions agree: product implementation through CWI; focused direct backend repairs and the specifically authorized 2026-11-04 modernization follow the maintenance procedure, with no ongoing general modernization exception.
 - Continuous scope and integration authority trace to a real human grant; templates have not activated themselves.
-- Every new start passes a verified model identifier and explicit supported effort at or below xhigh.
+- Every new start passes all eight explicit role flags with the verified human-approved selections, at or below xhigh; revision-2 pairs remain immutable on resume.
+- Historical state is unchanged, with original backend revisions available for inspection, no state migration and no automatic historical resume.
 - Every live/base-bound run retains the original source/environment/runtime identity; no policy update rewrote its evidence.
 - The next safe action is unambiguous and correctly distinguishes a new request, a resume, an integration, or a human decision.
 

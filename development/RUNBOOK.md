@@ -1,6 +1,6 @@
 # Local setup and CWI runbook
 
-This runbook targets the supplied controller snapshot. Confirm the [review](PIPELINE_REVIEW.md), your actual clone revision, and `start --help` before using a materially different version. Replace the repository URL placeholders; do not execute them literally. Continuous progression, authority, model selection, and focused backend repair are defined in [AUTONOMY.md](AUTONOMY.md), [AUTHORIZATION.md](AUTHORIZATION.md), [MODEL_POLICY.md](MODEL_POLICY.md), and [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md).
+This runbook describes the current role-specific launch contract. The supplied-snapshot review and historical run records retain their original contract. Confirm the [review](PIPELINE_REVIEW.md), your actual clone revision, and `start --help` before using a materially different version. Replace the repository URL placeholders; do not execute them literally. Continuous progression, authority, model selection, and focused backend repair are defined in [AUTONOMY.md](AUTONOMY.md), [AUTHORIZATION.md](AUTHORIZATION.md), [MODEL_POLICY.md](MODEL_POLICY.md), and [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md).
 
 ## 1. Install the documentation without losing the specification
 
@@ -95,22 +95,13 @@ Keep the working directory at `CWI_ROOT` for `start`. Restore the same root, PAT
 
 `TERM=dumb` deliberately disables terminal animation; JSON status and logs remain available. An approved trusted command execution may be required when launching this helper from outer Codex, because CWI manages Git and writes outside the project into its account-state root. Do not use a blanket sandbox bypass.
 
-## 4.1. Resolve the development model and reasoning before launch
+## 4.1. Verify all four role selections before launch
 
-Follow [MODEL_POLICY.md](MODEL_POLICY.md). The requested display name is Astra 6.1; the official catalog checked for this update did not establish that exact identifier. Inspect local account/provider evidence and get an explicit correction if required. Do not put an invented model slug into the command or silently select another model.
+Follow [MODEL_POLICY.md](MODEL_POLICY.md). The 2026-11-04 human amendment approves Designer `gpt-6-astra` / `xhigh`, Architect `gpt-6.1-sol` / `xhigh`, Writer `gpt-6.1-sol` / `high`, and Reviewer `gpt-6.1-sol` / `high`. Verify the actual selected Codex executable, account access, both model identifiers and supported efforts before any new model-dependent run. If a selection is unavailable, stop and report the blocker; do not substitute a model, effort or global default.
 
-Set `CWI_MODEL` to the **verified** exact identifier, and `CWI_REASONING` to the supported chosen value before using either launch example. Do not export these new variables into an existing frozen environment. The following check is an operator shell guard, not an installed product feature:
+Every new start must pass all eight role flags shown below. No model-selection environment variables are required. Keep the recorded launch map unchanged. Child configuration is isolated; setting the outer Codex model is insufficient. All four selections freeze in schema-revision-2 state and remain immutable on resume. No revision-1 migration or automatic historical resume is authorized; retain the original backend revision for read-only historical inspection.
 
-```bash
-: "${CWI_MODEL:?Set the verified, authorized exact model ID first}"
-: "${CWI_REASONING:?Choose an explicitly supported effort first}"
-case "$CWI_REASONING" in
-  low|medium|high|xhigh) ;;
-  *) printf 'Reasoning effort must be supported and no higher than xhigh.\n' >&2; exit 1 ;;
-esac
-```
-
-The allow-list enforces this policy's ceiling, not provider availability; verify that separately. Run it in the same launching shell (or an abort-on-failure launch block), and do not continue after failure. Use explicit flags below for every start. CWI's child configuration is isolated; merely setting the outer Codex model is insufficient. Resume uses its frozen values and has no model-override option.
+The launch examples are templates for new, unfrozen requests after readiness and authority checks. Do not relaunch the historical commissioning request or reuse a frozen request's old model envelope. This maintenance session ends at its documented checkpoint without starting product development.
 
 ## 5. Commit the prelaunch state
 
@@ -144,8 +135,14 @@ Follow [BOOTSTRAP.md](BOOTSTRAP.md), which constructs `BOOTSTRAP_CHECK` without 
 if cwi start \
   --request development/requests/REQ-D01-001.md \
   --check "$BOOTSTRAP_CHECK" \
-  --model "${CWI_MODEL:?verified model required}" \
-  --reasoning "${CWI_REASONING:?explicit supported effort required}" \
+  --designer-model gpt-6-astra \
+  --designer-reasoning xhigh \
+  --architect-model gpt-6.1-sol \
+  --architect-reasoning xhigh \
+  --writer-model gpt-6.1-sol \
+  --writer-reasoning high \
+  --reviewer-model gpt-6.1-sol \
+  --reviewer-reasoning high \
   --max-milestones 1 \
   --max-repairs-per-review 2 \
   --max-repairs-per-run 6 \
@@ -161,13 +158,15 @@ fi
 printf 'CWI command exit: %s\n' "$RUN_EXIT"
 ```
 
-The timeouts are proposed per-invocation ceilings, not estimates or monetary caps. Choose them within your operating envelope before starting. Explicit model/effort resolution is required, and one pair is frozen for all roles in this run. Do not add `--merge`; the default workflow integrates through the coordinator after inspection. The commissioning prompt allows at most three start attempts of this same request, with a diagnosed correction and safe disposition before replacement; it does not allow three competing runs or blind retries.
+The timeouts are proposed per-invocation ceilings, not estimates or monetary caps. Choose them within your operating envelope before starting. All four approved role selections must be verified and explicitly supplied; each pair is frozen for this run. Do not add `--merge`; the default workflow integrates through the coordinator after inspection. The commissioning prompt allows at most three start attempts of this same request, with a diagnosed correction and safe disposition before replacement; it does not allow three competing runs or blind retries.
 
 CWI is synchronous. A supervising tool's shorter timeout must not repeatedly kill and restart it. Keep ownership and the run ID recoverable; do not launch another run while the first may be active.
 
 `start` prints a final JSON report when it can. A failed preflight may create no run; a killed process may leave no complete final report. Recover the exact run ID from retained local observations, CWI logs/state, and their source/request identities; do not simply assume the newest unrelated directory is your run.
 
 ## 7. Inspect the exact run
+
+Use the backend revision compatible with the retained run's schema. Revision-1 historical inspection uses the preserved original backend, not the modernized revision-2 loader; neither route authorizes automatic resume. Keep the recorded source/environment identities intact.
 
 ```bash
 RUN_ID='THE_ACTUAL_CWI_UUID'
@@ -218,14 +217,20 @@ CWI can merge automatically only when `--merge` was authorized in the original s
 
 ## 9. Subsequent implementation runs
 
-After D01 has actually established and validated the normal check, use a fresh bounded request and a clean prelaunch commit. Under a continuous grant, repeat this process across ready requirements and phases without routine approval pauses. Choose effort before each run and retain it unchanged on resume. Count start attempts before execution and retain final output in a fresh ignored attempt directory as for bootstrap. Example:
+After D01 has actually established and validated the normal check, use a fresh bounded request and a clean prelaunch commit. Under a continuous grant, repeat this process across ready requirements and phases without routine approval pauses. Verify and pass the four approved role selections before each run and retain them unchanged on resume. Count start attempts before execution and retain final output in a fresh ignored attempt directory as for bootstrap. Example:
 
 ```bash
 cwi start \
-  --request development/requests/REQ-D02-001.md \
+  --request development/requests/REQ-Dxx-nnn.md \
   --check 'python3 -B implementation/scripts/validate.py' \
-  --model "${CWI_MODEL:?verified model required}" \
-  --reasoning "${CWI_REASONING:?explicit supported effort required}" \
+  --designer-model gpt-6-astra \
+  --designer-reasoning xhigh \
+  --architect-model gpt-6.1-sol \
+  --architect-reasoning xhigh \
+  --writer-model gpt-6.1-sol \
+  --writer-reasoning high \
+  --reviewer-model gpt-6.1-sol \
+  --reviewer-reasoning high \
   --max-milestones 2 \
   --max-repairs-per-review 2 \
   --max-repairs-per-run 6 \
@@ -233,7 +238,7 @@ cwi start \
   --validation-timeout 2700
 ```
 
-`REQ-D02-001.md` is a future request, not supplied or ready yet. CWI must not be invoked against a nonexistent request or validator. The validation command resolves `python3` through the deliberately frozen PATH; an explicitly quoted absolute interpreter is also valid.
+`REQ-Dxx-nnn.md` is a placeholder for a new committed bounded request, not a ready request. CWI must not be invoked against a nonexistent request or validator. The validation command resolves `python3` through the deliberately frozen PATH; an explicitly quoted absolute interpreter is also valid.
 
 All checks run from the worktree root and are parsed into argv without a shell. `--check 'cd implementation && pytest'` is not a supported way to change directory. Use a real validation entry point or Python's explicit arguments instead. Supplying `--check` bypasses automatic runner selection and its native test-free execution-count requirement.
 
@@ -244,11 +249,11 @@ Do not pass a public `--config`: this CLI has none. It generates its own frozen 
 ```bash
 cwi status "$RUN_ID"
 cwi diagnose "$RUN_ID"
-# Only when diagnosis permits and the original environment/installation is restored:
+# Only for a revision-2 run when diagnosis permits and its exact environment/backend is restored:
 cwi resume "$RUN_ID"
 ```
 
-Never turn a failed check into a new `start` loop. Resume uses frozen request/context/checks and verifies the launch environment and executable identity. To change these, first resolve the previous run safely and prepare a new request.
+Never turn a failed check into a new `start` loop. Resume uses frozen request/context/checks and all four role selections, and verifies the launch environment and executable identity. Revision-1 state is not migrated; use the preserved original backend revision for historical inspection, without automatically resuming old runs. To change these, first resolve the previous run safely and prepare a new request.
 
 Follow `wait_for_controller`, `manual_quarantine_intervention`, or `new_run_after_manual_salvage` literally. A missing PID does not prove all descendants or external effects ended. Never delete a live lease, blindly remove quarantine, rewrite snapshots, or reset managed worktrees.
 

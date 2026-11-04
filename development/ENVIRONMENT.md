@@ -44,7 +44,7 @@ Use `env -i` with exactly these values from target root for start/resume. Retain
 | GIT_AUTHOR_NAME / GIT_COMMITTER_NAME | `Codex Development Coordinator` / `Codex Development Coordinator` |
 | GIT_AUTHOR_EMAIL / GIT_COMMITTER_EMAIL | `codex@localhost` / `codex@localhost` |
 
-Model and reasoning are explicit argv (`--model gpt-6-astra --reasoning medium`), not new exported variables. No proxy/certificate override has been found necessary by parser/login inspection; authenticated model transport is not yet exercised. Any required launch-environment correction must occur after safely resolving the prior attempt, never silently on resume. The focused pytest test override is test-only and is not part of this launch map.
+Historical commissioning model and reasoning were explicit argv (`--model gpt-6-astra --reasoning medium`), not new exported variables. New runs use all eight role flags in MODEL_POLICY.md and the dated 2026-11-04 amendment below. At commissioning preparation, no proxy/certificate override had been found necessary by parser/login inspection and authenticated model transport was not yet exercised. Any required launch-environment correction must occur after safely resolving the prior attempt, never silently on resume. The focused pytest test override is test-only and is not part of this launch map.
 
 ## Evidence identities
 
@@ -286,3 +286,18 @@ Fresh12:06Zhost process inspection shows no controller/role/validator or histori
 REQ-D05-003/run9ec9e902 used unchanged clean backendb6a2e052,pinnedCodex0.166.0/SHA256b8a11fed,stablemapb674ef72/validationdigest46f63a41,processFD4096/2700s,explicitgpt-6-astra/high/one milestone/repairs2perreview6perrun/both checks/no--merge. All five actual invocation records match; no server-side model attestation or quota claim. Baseline1189/1189/1035.542244s,candidate1216/1216/998.138291s,final1216/1216/1007.676536s,target1216/1216/998.031889s. Different timing from prior runs has no established cause or diagnosed defect; checks passed without changes/retries.
 
 Exact FF13:29:38.628137Zto4608f0e followed receipt/source/cleanliness/hooks/collision/host checks. Target ended13:46:44.848776Z,empty stderr,stdoutSHAd54f97f563caa762df60f40df8880eed8a566fd8ba4d78112000bd5c941a030a,no mutation,all final/target dispositions match. Host13:47:19Zconfirms CWI/target processes gone. No install, auth/config, dependency, provider, backend or security change. Fresh exact readiness and ownership reconciliation remain required before future start40; local next-assessment draft/request does not establish a launch.
+
+## Role-specific launch amendment — 2026-11-04
+
+AUTH revision 7 approves the following explicit argv for new runs; these values add no environment variables and change no resource budgets:
+
+```text
+--designer-model gpt-6-astra --designer-reasoning xhigh
+--architect-model gpt-6.1-sol --architect-reasoning xhigh
+--writer-model gpt-6.1-sol --writer-reasoning high
+--reviewer-model gpt-6.1-sol --reviewer-reasoning high
+```
+
+The local account catalog fetched `2026-11-04T16:39:43.361492207Z` advertises both model identifiers with `high`/`xhigh`. The existing selected Codex remains 0.166.0. These observations establish advertised support only; no live model call or product CWI start was made for this amendment, and fresh compatibility/authentication/model readiness is required before future product execution. Preserve historical executable/environment/receipt evidence and obtain the adopted backend identity from coding_pipeline_changes.md.
+
+New state is schema revision 2 with all four role pairs immutable on resume. No revision-1 state migration is authorized or supplied. Retain the original backend revision for historical inspection; do not automatically resume historical runs. This maintenance session ends after its safe checkpoint without further product development.

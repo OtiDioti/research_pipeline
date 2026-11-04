@@ -8,6 +8,12 @@ The exception covers a focused backend fix, its regression tests, and necessary 
 
 Do not preemptively modify the backend because it might fail. Preserve an actual observed failure and establish its cause first. An intended rejection of broken product code, denied permission, unavailable model, or exhausted quota is not automatically a backend defect.
 
+### Explicit task authorization — 2026-11-04
+
+For this task only, the human additionally authorizes focused modernization of `coding_pipeline` to require four explicit role model/effort pairs: Designer `gpt-6-astra`/`xhigh`, Architect `gpt-6.1-sol`/`xhigh`, Writer and Reviewer `gpt-6.1-sol`/`high`; corresponding schema-revision-2 freezing/validation and invocation propagation; and directly affected tests and operating documentation. This is explicit authorization beyond defect repair, not a finding that the previous shared selection was defective. All eight start flags are required, with no global fallback. Selections remain immutable on resume; no migration or editing of old retained state is authorized. Preserve the original backend revision for historical inspection and do not automatically resume historical runs.
+
+The quiescence, isolation, review, evidence-preservation, audit and safe-adoption requirements below still apply. Existing resource budgets, consumed allocations, acceptance/security controls and product/scientific/service permissions remain unchanged. Complete this focused maintenance, document a safe checkpoint and stop without launching further product development this session. This authorization ends with the task; it creates no general permission for speculative backend improvements.
+
 ## 2. Classify before changing anything
 
 | Observation | First route |
@@ -65,4 +71,4 @@ If the defect could have invalidated an earlier acceptance decision, mark affect
 
 ## 7. Return to normal development
 
-Recheck the fixed backend's compatibility, direct-child layout, clean committed revision, model/effort propagation, relevant tests, and any affected recovery invariants. Reconcile the parent checkpoint and audit at a safe boundary. Then return to the continuous-development loop within the existing grant. The exception ends when the diagnosed backend problem is addressed; product changes still go through CWI.
+Recheck the fixed backend's compatibility, direct-child layout, clean committed revision, model/effort propagation, relevant tests, and any affected recovery invariants. Reconcile the parent checkpoint and audit at a safe boundary. Then return to the continuous-development loop within the existing grant unless the human specified a stop; the 2026-11-04 modernization task explicitly stops at that checkpoint. The exception ends when the diagnosed backend problem or specifically authorized task is addressed; product changes still go through CWI.

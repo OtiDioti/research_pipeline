@@ -7,7 +7,7 @@
 | Phase / request / request source commit | Record actual values |
 | CWI run UUID | Actual generated UUID, not an invented label |
 | Controller source revision | Exact local clone commit |
-| Launch model/runtime/environment record | Link non-secret environment record and retained identity |
+| Launch role selections/runtime/environment record | Record all four frozen model/effort pairs; link non-secret environment and actual invocation evidence |
 | Target branch / original base | Exact recorded values |
 | Start / last observation / completion | Actual timestamps with timezone |
 | Current CWI phase / outcome | Exact inspected fields |
@@ -37,6 +37,6 @@ Link backlog entries, effects whose termination is uncertain, prerequisite chang
 
 ## Continuation, authorization, and resource accounting
 
-Actual grant ID/revision; mode; outer coordinator session ID (distinct from CWI UUID); start-attempt label; requested and verified model/provider; explicit effort and available effective-invocation evidence; cumulative starts/recovery/maintenance consumption before/after; measured usage vs unknown liabilities; expiry/remaining authority.
+Actual grant ID/revision; mode; outer coordinator session ID (distinct from CWI UUID); start-attempt label; requested and verified model/provider/effort for each of Designer, Architect, Writer and Reviewer; all eight explicit start flags, frozen schema revision and available effective-invocation evidence; cumulative starts/recovery/maintenance consumption before/after; measured usage vs unknown liabilities; expiry/remaining authority. New runs use MODEL_POLICY.md's approved allocation and schema revision 2; preserve historical revision-1 settings without migration or automatic resume.
 
 Link backend-maintenance incidents and exact backend revisions if any. State why the original run could safely resume under unchanged code, was safely superseded, or requires human recovery. Preserve old receipts. Record whether next ready work should continue automatically under the grant or the exact reason it cannot.

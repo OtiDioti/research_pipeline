@@ -182,7 +182,7 @@ Use the exact nested checkout name supported by the reviewed backend. Keep it ou
 
 The outer Codex sandbox may prevent CWI from writing its account-state directories, managing Git, or starting authenticated child sessions. Use a specifically approved trusted execution of the CWI command, or run that exact command in a normal terminal. Do not solve this by globally disabling safeguards.
 
-CWI's milestone, repair, and timeout limits are not a financial spending cap. Record the actual human operating envelope in [AUTHORIZATION.md](development/AUTHORIZATION.md) for permitted phases, integrations, live services, model selection, and expenditure. Use [MODEL_POLICY.md](development/MODEL_POLICY.md) to resolve the requested Astra 6.1 identifier and enforce a maximum effort of `xhigh`; explicit per-run flags, not prompt wording alone, configure CWI. Do not advertise a nonexistent CWI budget flag.
+CWI's milestone, repair, and timeout limits are not a financial spending cap. Record the actual human operating envelope in [AUTHORIZATION.md](development/AUTHORIZATION.md) for permitted phases, integrations, live services, model selection, and expenditure. Use the four approved role selections in [MODEL_POLICY.md](development/MODEL_POLICY.md), with a maximum effort of `xhigh`; all eight explicit role flags, not prompt wording alone, configure each new CWI run. Role selections are immutable on resume. Do not advertise a nonexistent CWI budget flag.
 
 ## 11. Failure and recovery
 

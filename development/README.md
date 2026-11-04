@@ -10,7 +10,7 @@ This directory preserves the development plan and its evidence between Codex ses
 | [CODEX_START_AUTONOMOUS.md](CODEX_START_AUTONOMOUS.md) | Optional one-prompt first-integration preauthorization and continuous execution |
 | [AUTONOMY.md](AUTONOMY.md) | Continuous loop, limits, stopping and completion gates |
 | [AUTHORIZATION.md](AUTHORIZATION.md) | Actual human operating grant, not a self-issued permission |
-| [MODEL_POLICY.md](MODEL_POLICY.md) | Requested model resolution and explicit effort ceiling |
+| [MODEL_POLICY.md](MODEL_POLICY.md) | Four approved role selections, explicit launch flags, readiness and effort ceiling |
 | [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md) | Necessary focused repair exception and recovery |
 | [UPDATE_GUIDE.md](UPDATE_GUIDE.md) | Safe adoption without resetting existing work |
 | [backend_patches/](backend_patches/README.md) | Reviewed repair patches or protected backup references |

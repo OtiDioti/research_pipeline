@@ -1,6 +1,6 @@
 # Development operating authorization
 
-**Actual human grant: AUTH-2026-10-30-001, revision 6. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; independent engineering resumed under the explicit M0-E/M0-S dependency amendment.** Recorded 2026-10-30. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, and the subsequent instruction “extend time limit of cwi to 2700 seconds”. The repetition does not reset any counters.
+**Actual human grant: AUTH-2026-10-30-001, revision 7. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; the current session is limited to the explicitly authorized backend modernization and safe checkpoint below.** Recorded from 2026-10-30 through the 2026-11-04 amendment. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, the subsequent instruction “extend time limit of cwi to 2700 seconds”, and the focused modernization instruction recorded below. The repetition and amendment do not reset any counters.
 
 ## Effective grant
 
@@ -8,7 +8,7 @@
 | --- | --- |
 | Repository / target | `/home/francesco/Desktop/gits/research_pipeline`, branch `main`; inspected original commit `dce9bedb998c8be4389d42627916911f4c25d336` |
 | Current specification | project_description.md v1.4; SHA-256 `fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f`; narrowly amended under actual human authority; historical v1.3 evidence preserved |
-| Current mode | CONTINUOUS: commissioning completed; proceed through ready D01–D10 work within the original limits and dependency gates |
+| Current mode | CONTINUOUS grant persists; current session completes only the authorized 2026-11-04 backend modernization and safe checkpoint, then stops without further product development |
 | Commissioning starts | At most 3, including failed preflights/replacements; correction must be diagnosed and previous attempt safely resolved; no blind retries |
 | First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/full-diff/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
 | Continuous activation | Only after first final acceptance, complete inspection, exact integration, successful validation and documentation checkpoint; record activation then |
@@ -16,9 +16,9 @@
 | Continuous starts | At most 100 new starts after activation, including failed preflights/replacements; separate from commissioning; no reset between sessions/request renames |
 | Run bounds | One product CWI run at a time; bootstrap 1 internal milestone; later at most 3; at most 2 repairs per review and 6 per run; 2,700 seconds per agent invocation and validation for new runs under revision 5; historical frozen runs retain 900 seconds |
 | Recovery | At most 2 evidence-based actions for the same blocker; no uncertain replay; read-only inspection is not recovery consumption |
-| Backend maintenance | Focused necessary diagnosed repairs only under BACKEND_MAINTENANCE.md; at most 2 unsuccessful candidates per issue; preserve original/evidence, isolate/test, log every attempt, never patch live owners or silently resume under changed code |
+| Backend maintenance | Focused necessary diagnosed repairs, plus the task-specific 2026-11-04 modernization under BACKEND_MAINTENANCE.md; at most 2 unsuccessful candidates per issue; preserve original/evidence, isolate/test, log every attempt, never patch live owners or silently resume under changed code; no ongoing general modernization exception |
 | Development billing | Human authorizes existing Codex allowance without purchases/top-ups. Local login is ChatGPT; no API spending cap is granted. If actual transport becomes API-billed, hold before calls |
-| Model | Revision 1 requested Astra 6.1. Revision 2 explicitly authorizes GPT-6 Astra (`gpt-6-astra`); supported local catalog observed. Explicit supported low/medium/high/xhigh only; ceiling xhigh; one frozen pair per run |
+| Model | Revision 7 new runs: Designer `gpt-6-astra`/`xhigh`, Architect `gpt-6.1-sol`/`xhigh`, Writer `gpt-6.1-sol`/`high`, Reviewer `gpt-6.1-sol`/`high`; all eight role flags explicit; ceiling xhigh; four pairs immutable on resume; historical settings preserved |
 | Services/data | Existing approved development service only; no new paid services, external-data permission changes, purchases, pushes/publication/deployment |
 | Product live/pilot use | Separate service/data/budget approval required; no scientific-pilot data access or live-provider experiments authorized by development allowance |
 | Human scientific decisions | Remain human decisions; pilot/domain, expert fixture/reference judgments, consequential conclusions and release signoff cannot be supplied by coordinator |
@@ -26,9 +26,11 @@
 | Stop conditions | Missing authority/resources/model/permissions, integrity failure, uncertain effects/owners, material conflicts, exhausted limits, required human judgment; preserve handoff and one next safe action |
 | Persistence | Grant survives session replacement, with same counters and liabilities; no external restart supervisor is installed or promised |
 
-## Actual model correction
+## Historical model correction — revision 2
 
 The human selected **“Authorize GPT-6 Astra (`gpt-6-astra`)”** in response to the catalog mismatch question on 2026-10-30. This resolves MODEL_SELECTION_REQUIRED for future runs using that exact ID. It does not authorize substituting `gpt-6.1-sol`, creating an alias, using a higher reasoning level, or changing frozen settings.
+
+The paragraph above records revision 2 unchanged. Revision 7 separately supersedes its future-run model limitation with the new role allocation; historical runs retain their original contract.
 
 ## Activation and historical consumption checkpoints
 
@@ -420,3 +422,9 @@ for a fresh session, without automatic restart or budget reset.
 Human fresh-session autonomous continuation recovers the same grant, without reset or broader permissions. REQ-D05-003/run9ec9e902 finally accepted/exact-integrated4608f0e/receiptb343da69,final/target1216/1216. No current owner/lease/quarantine/pending integration. All40runs:28final receipts,27integrated final sources,one intentionally superseded validator acceptance,12terminal incomplete. Continuous39/100used61remain; next40leaves60 including failed preflight. Commissioning1/3closed,CWIrepairs35,coordinator15,backend2/2/0. Every consumed/exhausted family persists, especially B013deadline2/2; no failed draft was used.
 
 Five completed turns book5113673input(4627456cached),48444output(8841reasoning) once at this checkpoint. Raw all-run audit matches312turns/339988249input(311144192cached)/3227229output(978625reasoning). Five historical interrupted-role amounts/native backend reviews/coordinator/quota/invoice unknown; nested categories included. Same existing ChatGPT allowance,approvedgpt-6-astra/high/ceilingxhigh,pinnedenvironment/FD4096/2700s/one milestone/repairs2perreview6perrun/two checks/no--merge. No new API/purchase/service/data/live/scientific/push/publication/deployment authority. REQ-D05-004 is ordinary ready independent engineering, not a recovery/limit amendment. The long session reaches a safe context checkpoint; CONTINUOUS persists for a manually started fresh session, without an installed automatic restart supervisor.
+
+## Revision 7 — focused backend modernization and role allocation, 2026-11-04
+
+The human explicitly authorizes focused `coding_pipeline` modernization and directly affected tests/documentation, including four required role selections for new runs: Designer `gpt-6-astra`/`xhigh`, Architect `gpt-6.1-sol`/`xhigh`, Writer and Reviewer `gpt-6.1-sol`/`high`. Pass all eight explicit role flags under MODEL_POLICY.md; schema-revision-2 selections are immutable on resume. No old-state migration or automatic historical resume is authorized; preserve the original backend revision for historical inspection. Apply BACKEND_MAINTENANCE.md safeguards and audit every attempt. This task-specific permission extends beyond diagnosed defects only for the requested modernization and creates no ongoing general exception.
+
+No resource budget, consumed allocation, recovery/repair/start/milestone/deadline limit, unknown liability, service/data/billing permission, product requirement, scientific gate or acceptance control changes. Complete the maintenance, verification and documentation, leave a safe checkpoint, and stop without further product development this session.

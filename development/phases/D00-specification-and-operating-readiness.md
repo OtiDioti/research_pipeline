@@ -36,7 +36,7 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 
 ## Additional readiness obligations for continuous development
 
-- Resolve the requested Astra 6.1 identifier/access, explicit supported effort and xhigh ceiling, billing mode, and invocation evidence under [MODEL_POLICY.md](../MODEL_POLICY.md). Unresolved identity blocks calls, not read-only preparation.
+- Before future starts, verify all four human-approved role selections, all eight explicit flags, the xhigh ceiling, billing mode and invocation evidence under [MODEL_POLICY.md](../MODEL_POLICY.md). The 2026-11-04 allocation supersedes the historical single-model commissioning contract; preserve that old evidence. Unresolved identity/access blocks calls, not read-only preparation.
 - Record commissioning vs continuous authority, integration terms, and cumulative resource bounds in [AUTHORIZATION.md](../AUTHORIZATION.md). A prompt template does not activate itself.
 - Inspect prior runs and pending backend-repair records before applying updated policies; do not invalidate an unfinished run by installing the update.
 - Confirm the first-result human checkpoint or its explicit preauthorization. Prepare dependencies and a safe baseline; do not implement the product directly.

@@ -240,3 +240,123 @@ no recovery. Current source/receipt/check/integration evidence: [run record](dev
 ## 2026-11-04 — Passive registration accepted; no backend change
 
 REQ-D05-003/run9ec9e902 finally accepted/exact-integrated4608f0e,receiptb343da69,final/target1216/1216. No internal repair, backend defect, source/config/prompt change or maintenance candidate. Clean supported clone remainsb6a2e05283f92f2bb42402d49e4a274225b43f6a; cumulative attempted/adopted/reverted2/2/0. Timing observation and one corrected read-only receipt-reference helper changed no product/backend/state/receipt and consumed no recovery. All prior patches, failed attempts and historical recording findings remain preserved. No controller-owned state/log/lease/quarantine edit, guard weakening, model substitution or automatic approval rejection occurred. [Exact evidence](development/runs/9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md).
+
+## CP-003 — Human-requested role configuration and prompt modernization, 2026-11-04
+
+**Authorization and scope:** the human's November 4 focused modernization instruction expressly authorizes this backend update beyond observed defects, and the exact future role allocation recorded in AUTH-2026-10-30-001 revision 7. No general maintenance expansion, product implementation, product run, historical resume, provider experiment, push, or publication occurred. All previous grants, budgets, historical configurations and resource-consumption records remain preserved.
+
+**Safety and source:** original parent `b9068d8e527c7872de8dd35b2694597f27b3f09e`, clean main; original supported backend `b6a2e05283f92f2bb42402d49e4a274225b43f6a`, clean main. Isolated worktree `local/backend-repairs/CP-003`, branch `maintenance/CP-003-role-selections`. CP-001/002 remain retained. Host inspection found no live CWI/controller/role/validator; all 40 retained runs terminal, latest accepted source integrated, no lease/quarantine/pending integration. Old6ae8ca11/5f304a70 pending-operation markers are documented terminal nonresumable evidence, not live owners; preserved without replay. Historical inspection remains available with the original revision in `local/backend-repairs/CP-002` and the protected Git backup below.
+
+**Architecture:** mandatory `RoleSelection`/`RoleSelections` immutable records replace the global run pair. Eight required flags validate generic model syntax and low/medium/high/xhigh before new-run effects; no defaults, inheritance, deprecated aliases or project model IDs in production. One typed role resolver supplies every invocation, correction, repair, final review and persistent continuation. Snapshot, in-flight, active-session, Designer-origin, amendment-conversation and replacement-state checks enforce the invoked role's pair while retaining session/source/Git/executable/sandbox/runtime identity checks. Run/audit schema 2 explicitly refuses old snapshots without mutation; no migration. Independent repository identity remains schema 1 so future new runs can use existing targets without touching old coordination records. Validation TOML and role response schemas remain unchanged.
+
+Existing observational `run_published.details.role_selections` records all four requested model/reasoning_effort pairs, including unexecuted roles. Existing invocation_prepared events retain exact role attribution through corrections and resume; logging remains nonauthoritative and failure-contained. This is requested configuration, not independent provider execution telemetry.
+
+Writer policy requires meaningful silent-test support and parallel-safe fixture design with legitimate serial exceptions; Reviewer optional diagnostics always use a valid quiet mode, remain targeted/read-only, and do not rerun full suites. Controller validation, native execution counts, failure evidence and acceptance remain unchanged. Shared FOLDER_CONTENT policy covers immediate directory navigation recursively within authorized scope, with planning/implementation/review responsibilities and ephemeral/external exclusions. Four source indexes were added; an explicit nine-resource manifest keeps navigation out of runtime prompts. Parent policy/runbook/startup/templates now require Designer gpt-6-astra/xhigh; Architect gpt-6.1-sol/xhigh; Writer/Reviewer gpt-6.1-sol/high, with all eight flags. Historical observations and frozen requests remain unchanged.
+
+**Exact changed backend paths** (relative to the separate backend repository):
+
+```text
+FOLDER_CONTENT.md
+README.md
+cwi/FOLDER_CONTENT.md
+cwi/cli.py
+cwi/controller_logging.py
+cwi/milestone.py
+cwi/orchestration.py
+cwi/prompts/FOLDER_CONTENT.md
+cwi/prompts/common.md
+cwi/prompts/reviewer.md
+cwi/prompts/writer.md
+cwi/role_selection.py
+cwi/run_setup.py
+cwi/state.py
+cwi/state_store.py
+pyproject.toml
+tests/FOLDER_CONTENT.md
+tests/role_selection_fixtures.py
+tests/test_agent_logging.py
+tests/test_amendment_conversations.py
+tests/test_automatic_start.py
+tests/test_cli.py
+tests/test_codex_cli.py
+tests/test_codex_selection.py
+tests/test_command_start.py
+tests/test_controller.py
+tests/test_controller_logging.py
+tests/test_conversations.py
+tests/test_diagnostics.py
+tests/test_finalization.py
+tests/test_git_logging.py
+tests/test_milestone.py
+tests/test_orchestration.py
+tests/test_prompts.py
+tests/test_recovery_logging.py
+tests/test_release.py
+tests/test_release_live.py
+tests/test_repair.py
+tests/test_repository_coordination.py
+tests/test_roadmap.py
+tests/test_role_selection.py
+tests/test_run_setup.py
+tests/test_sessions.py
+tests/test_source_launcher.py
+tests/test_state.py
+tests/test_state_store.py
+tests/test_terminal_progress.py
+tests/test_test_bootstrap.py
+tests/test_validation.py
+tests/test_validation_logging.py
+tests/test_workflow.py
+```
+
+**Exact parent operating-document paths:**
+
+```text
+AGENTS.md
+DEVELOPMENT.md
+STATUS.md
+coding_pipeline_changes.md
+development/AUTHORIZATION.md
+development/BACKEND_MAINTENANCE.md
+development/CODEX_START.md
+development/CODEX_START_AUTONOMOUS.md
+development/ENVIRONMENT.md
+development/MODEL_POLICY.md
+development/PIPELINE_REVIEW.md
+development/README.md
+development/RUNBOOK.md
+development/UPDATE_GUIDE.md
+development/phases/D00-specification-and-operating-readiness.md
+development/templates/REQUEST.md
+development/templates/RUN.md
+```
+
+**Verification environment:** existing Python 3.11.15 (conda-forge), Git 2.40.1 from `/home/francesco/miniconda3/pkgs/git-2.40.1-pl5340h9abc3c3_4/bin`, matching GIT_EXEC_PATH/libexec/git-core and GIT_TEMPLATE_DIR/share/git-core/templates, process-only FD 4096. Final full verification uses explicit umask 022, a protected precreated log, a minimal process environment and PYTHONDONTWRITEBYTECODE=1; fixture-owned actor identities, no live opt-ins or changed global environment. Source imports resolve to the isolated checkout. Pytest-specific follow-up uses existing `/home/francesco/miniconda3/envs/botify312/bin/python` (3.12.13/pytest9.0.3), without installation.
+
+**Attempt history:** one CP-003 maintenance candidate, refined before adoption. Required-CLI regression first failed as expected; packaging regression exposed wildcard inclusion before the explicit manifest. Original revision focused state/CLI29/29 passed. Initial fixture migration boundary batch102/102 passed (tool transcript only). First routing batch107 ran with 104passes,1 opt-in skip,2fixture errors: retained Writer intent in a newly added sequence, and a role-only forged session rejected earlier by stronger invariants. Reordering the no-effect argv probe and forging a coherent role/settings tuple preserved the intended original assertions; five targeted cases then passed. A follow-up command had a nonexistent selector (3passes/1loader error), corrected without product changes. An early `/usr/bin/python3` attempt failed imports because it is Python3.10; suitable existing Python3.11 was selected. An early diagnostic full sweep was interrupted 130 before a completion summary; not counted as passing. The agent's initial Python3.13 label was corrected from actual interpreter evidence to3.11.15.
+
+Independent review found two Important issues, both fixed before adoption: the run schema bump must not change the shared repository identity format; opted-in real integration tests must not use fake fixture model IDs. The repository regression first encountered a test-directory permissions error, then reproduced the actual schema mismatch once private fixture setup was correct, then passed with the independent schema 1 identity constant. All 19 coordination tests passed. All opt-in entry points now require eight explicit CWI_LIVE_* model/effort settings; deterministic helper validation passed, and no actual live model was invoked. Reviewer's initial system-Git targeted attempt failed the existing -z prerequisite; rerun with the established capable Git passed. Independent final review: no outstanding findings,17 targeted checks passed including package build/install; final small prompt/assertion additions also reviewed without findings.
+
+The in-progress diagnostic sweep completed 1044 tests/703.001s:1017 passed,21 skipped,2 failures,4 errors. Five failures/errors match the reviewed repository-schema and session-fixture issues; the other is a test-launch prerequisite: umask 077 masks an existing fixture's requested 0755 public log directory to 0700. The permissions test passed unchanged under a normal mask. A second full sweep was interrupted 130 after recognizing that same mask; host inspection confirmed no surviving test/CWI descendants. No frozen-candidate claim is made for either sweep. A third sweep with corrected mask exposed a deterministic adapter fault test that deliberately bypassed live setUp, leaving its new role_selections absent. The fake-CLI fixture now supplies explicit synthetic selections; the preceding corrected-environment full sweep recorded 1046 tests/1030 passed/15 skipped/1error in719.799s, preserving that exact failure. All 47 adapter cases complete with 38 passed/9 live skips in5.580s. Earlier full patch b47bcd9d18e0932ffedbfced833a66e12cc5b621f35fe85e4efc5cec857903b0 is retained separately; no old record was rewritten to hide these attempts. Final verification uses the corrected stable source.
+
+**Retained verification commands and results:**
+
+- `python3 -m unittest tests.test_state tests.test_cli -v` on original CP-002:29 passed/1.683s.
+- `python -m unittest tests.test_role_selection tests.test_state tests.test_state_store tests.test_controller tests.test_cli tests.test_command_start -q`:102 passed/9.115s, tool transcript only.
+- `python -m unittest tests.test_sessions tests.test_agent_logging tests.test_controller_logging tests.test_amendment_conversations tests.test_state_store.StateStoreTests.test_old_global_selection_schema_rejects_load_without_mutation -q`: initial107/104 passed/1 skipped/2 errors,145.261s; preserved tests-focused-routing.log. Corrected five-case follow-up5 passed/1.807s, tests-focused-final.log.
+- `python -m unittest tests.test_prompts tests.test_release -q`:25 passed/20.434s, including actual sdist/wheel/clean-install/external loading. Later strengthened assembled-prompt tests: `python3 -m unittest tests.test_prompts -q`,7 passed/9.411s, prompts-final.log.
+- `python3 -m unittest tests.test_repository_coordination -q`:19 passed/1.960s, repository-schema-green.log; actual old-identity-to-new-run failure retained in repository-schema-red.log.
+- Live-fixture/helper deterministic checks:24 collected/9 passed/15 opt-in skipped,0.175s, tests-live-fixture-checks.log. Full exact commands and diagnostic artifacts remain under local/backend-maintenance/CP-003 and in the task transcript.
+- `CWI_TEST_PYTEST_PYTHON=/home/francesco/miniconda3/envs/botify312/bin/python PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_test_bootstrap -v`:21 passed/35.807s, zero skips; covers all 6 pytest cases absent from the primary interpreter.
+- Current README and runbook: all 4 start examples parse against the new CLI;13 shell blocks pass bash -n;92 parent local links checked; git diff --check clean. No obsolete global CWI flags remain in current startup instructions; remaining mentions are labeled historical evidence or the unchanged underlying Codex option.
+
+**Final verification and adoption:** `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tests -v` from the isolated checkout, with the environment above and existing CWI_TEST_PYTEST_PYTHON, ran **1046 tests:1031 passed,15 opt-in live skipped,0 failures/errors**,721.167s,exit 0 (2026-11-04T17:07:52Z–17:19:54Z). All 6 pytest cases executed within this full run. The15 skipped cases require separately opted-in authenticated model execution; they were not represented as passed. Full log `local/backend-maintenance/CP-003/acceptance-suite.log`,SHA256`6ad7c18c8f084c448048a0c9042c7c3550de5f3ed7e66485904544ca7f528223`. Source-byte manifest confirms the exact105 source files stayed unchanged throughout this final run. Observational-logging warning messages belong to intentional failure-containment tests, not acceptance overrides.
+
+Backend commit **bcb7ad24f83ff5193345f3d4fa72122ea53a4e66**,tree`887cb6cfb7650276851da99e0f5164f6309e8fd4`, was committed on the maintenance branch and adopted into supported main by exact fast-forward at **2026-11-04T17:21:41Z**. Original base **b6a2e05283f92f2bb42402d49e4a274225b43f6a** remains in CP-002 and the backup. Fresh host17:21:12Z inspection found no controller/role/validator/test descendants;40 retained runs terminal. Original-backend status confirmed no lease/quarantine/recovery; branch/base/cleanliness/hooks/diff/collision checks passed. The supported checkout then passed `PYTHONDONTWRITEBYTECODE=1 python3 -m unittest tests.test_role_selection tests.test_prompts -q`:**15/15**,zero skips/failures/errors,8.622s, including real packaging/install verification, with supported-checkout source origin proved. Its logSHA256`92c9adbf3932857d5fe2694f829b7b7f911f5dccec8dbbcc39ffaf60cfc99eab`. Both backend worktrees remain clean at the tested commit.
+
+Protected reviewable [final patch](local/backend-maintenance/CP-003/CP-003-role-selections-final.patch),SHA256**b26dc6650538784e479c6010a5536a74aede2609fe99b516fc99148c18f7e575**, matches the exact base-to-adopted Git diff. Protected [complete-history Git bundle](local/backend-maintenance/CP-003/CP-003-backend.bundle),SHA256**c2b3d878782dec0eecc5c6e2026e75cd7edef3ff1228c82473e2153e70911f38**, passed git bundle verify and retains both original and new branch refs. Earlier intermediate patch, failed/pre-test/interrupted outputs, final source digests and sanitized adoption record remain in the same private evidence directory; no failed attempt was relabeled successful. Backend attempted/adopted/reverted cumulative **3/3/0**; all product start/repair/recovery limits and historical resource accounting are unchanged. Coordinator/native review usage is not measured by the product CWI ledger.
+
+All 745 retained historical snapshots/events/receipts/observational log files rehash unchanged. No implementation/, product specification, historical request/run record, controller state, receipts or validation results were modified. STATUS adds only a new operating handoff note and next safe action; its prior product checkpoint and consumption text are preserved. Parent current policy, examples and templates are synchronized, with complete17-path inventory above. The initial parent staging/commit command encountered the sandbox's read-only .git boundary before changing the index or creating a commit; scoped Git escalation is required for the already-authorized administrative checkpoint. This was a filesystem denial, not an automatic-approval review rejection. No push or publication occurred. The backend is implemented, tested and adopted, and is safe for **new schema-2 runs** after ordinary readiness checks; this does not authorize historical resume or skipping future prelaunch reconciliation.
+
+
+**Limits and next action:** no live provider-model execution or effective provider-model attestation is claimed. Actual installed Codex 0.166.0 parser/security interface and existing ChatGPT authentication probes passed; SHA256 b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8. Account catalog fetched2026-11-04T16:39:43.361492207Z advertises both approved identifiers/efforts; readiness is time-dependent. No scientific/product acceptance is implied. The unlaunched REQ-D05-004 retains its preparatory old model note; request snapshots were outside this maintenance edit set. Exactly one next safe action after this checkpoint: in a later session, reconcile that pending request and fresh new-run readiness against revision 7 before any product launch. This session stops without a new product run or historical resume.
