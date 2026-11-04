@@ -58,3 +58,13 @@ owns launch readiness, current counters and the single next safe action.
 ## Current request checkpoint — 2026-11-04
 
 [REQ-D04-007-B1](REQ-D04-007-B1.md) is terminal without candidate/acceptance/integration after Writer timeout; its frozen request remains unchanged. B-013deadline recovery2/2 is exhausted, so no replacement/adoption is prepared. [REQ-D05-001](REQ-D05-001.md) is the next independent ready request for passive Tool-release contracts, consuming no failed draft and granting no registration/admission/execution. All original reporting/scientific obligations remain. STATUS owns exact launch readiness, budgets and the single next action.
+
+
+## Tool contracts delivered; exact envelopes ready — 2026-11-04
+
+[REQ-D05-001](REQ-D05-001.md) is finally accepted/exact-integrated8cd859f7,
+final/target1165/1165; its frozen request bytes remain unchanged. [Run evidence](../runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md).
+[REQ-D05-002](REQ-D05-002.md) is prepared for exact passive envelope conversion from
+accepted contracts. Later authenticated typed registration and actual execution
+remain mandatory. No failed B1 draft is consumed and its deadline hold remains.
+STATUS owns current37/100consumption, readiness and exactly one next safe action.

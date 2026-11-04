@@ -242,3 +242,24 @@ Administrative resumption only. Reconciled all36retained CWI statuses/final rece
 Administrative checkpoint only. [REQ-D04-007-B1/run2bc3d843](development/runs/2bc3d843-0c94-41b2-8344-636a48853805.md) passed1130/1130 baseline and complete-base diff, then stopped at its2700-second Writer deadline with no candidate/acceptance/integration. Preserved17-file draft and all failed/passing advisory evidence; all104predecessors and original productef3bfcf7 remain unchanged. Actual owners/lease/quarantine resolved; resume is forbidden. Existing B-013deadline recovery2/2 prevents another attempt under this grant.
 
 Prepared [REQ-D05-001](development/requests/REQ-D05-001.md) for independent passive Tool-release contracts, with no failed-draft reuse, registry/admission/execution or live/scientific claim. Reconciled36/100starts,33CWIrepairs,15coordinator recoveries,backend2/2/0 and two completed-role amounts once; Writer usage remains unknown. All94requirements/13FOLLOWONcriteria and partial engineering/scientific scope persist. No product/backend change is integrated by this checkpoint.
+
+
+## Passive immutable Tool-release contracts integrated — 2026-11-04
+
+[REQ-D05-001/run33db2c31](development/runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md) finally accepted/exact-integrated
+**8cd859f7bffeda241658dab8b13e3221002f6fdb**, tree50de06bc9902fb13e8a287c9b8d6a4516bdcffb8, receipt
+`02b794abcf7eac3668eb82b9ad8a094b87bf73c7d7c996ec167ad72fa7b99d5a`. Adds complete seven-area passive
+ToolRelease declarations, strict finite codecs, exact canonical identities, explicit
+unknown/unavailable facts and local/remote/composite descriptions; [executed guide](docs/tool-releases.md).
+No registry, activation, permission, qualification or execution is introduced.
+
+Thirty-five new methods bring1165tests; all104predecessor blobs/Git modes remain.
+Two CWI repairs close genuine DEL-byte sizing and metaclass-hook rejection findings
+with independent bounds/inertness regressions. Final repaired and integrated target
+1165/1165, zero other outcomes/source mutation, identical per-test dispositions.
+Target538.212054validator wallseconds, ended09:48:12.836308Z; stdout
+`ec426b5081c3ca97c50933dc12afe396d4fc17379e47329fe20057c502fc5d30`, empty stderr.
+Exact FF preceded all tracked checkpoint edits; no backend/schema/dependency/provider/
+CLI/runtime-prompt change. The administrative checkpoint books start37/100,two
+repairs/eleven completed turns once and prepares REQ-D05-002. All94requirements,
+partial phases, blocked lifecycle path and scientific/live acceptance remain.

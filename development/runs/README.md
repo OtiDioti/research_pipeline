@@ -52,3 +52,10 @@ Store concise sanitized evidence and references, not full private logs. Exact re
   start 32/100; source facts leave publication/admission gates closed.
 
 - [2bc3d843 — REQ-D04-007-B1](2bc3d843-0c94-41b2-8344-636a48853805.md): baseline1130/1130, then Writer2700-second timeout after changes; no candidate/acceptance/integration, terminal/noresume/quiescent.17-file draft preserved; existing deadline recovery2/2 exhausted. Continuous start36/100. STATUS identifies the independent next request.
+
+
+- [33db2c31 — REQ-D05-001](33db2c31-2248-425c-9de3-8c553d2dbd47.md): passive Tool-release contracts finally
+  accepted/exact-integrated8cd859f7, final/target1165/1165; two genuine internal
+  repairs close DEL-byte sizing and metaclass-hook rejection. Continuousstart37/100;
+  no coordinator recovery/backend change. Exact envelopes are the next prepared
+  request; scientific/live/lifecycle holds remain.

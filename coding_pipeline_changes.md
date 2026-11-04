@@ -217,3 +217,17 @@ Preserved sanitized [3159-byte zero-context patch](development/backend_patches/C
 ## 2026-11-04 — Output Writer deadline; no backend change
 
 REQ-D04-007-B1/run2bc3d843 used clean supported backendb6a2e052 and stopped at its frozen2700-second Writer timeout after source changes. Actual final status has no candidate/acceptance/integration and forbids resume. Host/effects/lease/quarantine are resolved; draft/evidence are preserved. Enforcement of the configured limit is not evidence of a backend defect. No backend repair candidate, source/config/prompt change, guard/receipt/state edit, environment/security change or automatic-approval rejection occurred. Cumulative attempted/adopted/reverted2/2/0 stays. Existing deadline recovery2/2 remains exhausted; independent passive Tool-release work is selected without the failed draft or a new recovery allowance.
+
+
+## 2026-11-04 — Passive Tool-release acceptance; backend unchanged
+
+REQ-D05-001/run33db2c31 finally accepted/exact-integrated8cd859f7, final/target1165/1165.
+The two genuine findings concerned new product codec DEL sizing and caller metaclass
+hooks; both were repaired only by CWI Writers and independently accepted. No backend
+malfunction, source/prompt/configuration change or maintenance attempt occurred.
+Supported clone remains cleanb6a2e05283f92f2bb42402d49e4a274225b43f6a; cumulative
+attempted/adopted/reverted2/2/0. CP001/002 patches, failed environments and all prior
+evidence remain. No controller state/receipt/log/lease/quarantine edit, guard waiver,
+model substitution, frozen-environment change or automatic approval rejection.
+Read-only coordinator audit corrections changed no product/backend state and consumed
+no recovery. Current source/receipt/check/integration evidence: [run record](development/runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md).

@@ -174,3 +174,16 @@ The human resumes ordinary continuous engineering after the prior required focus
 REQ-D04-007-B1/run2bc3d843 exhausted its frozen2700-second Writer limit after changes. Zero candidate/milestone/final acceptance or integration. Real host/lease/quarantine/effect checks establish terminal quiescence;17unaccepted files and original evidence are preserved. [Run record](development/runs/2bc3d843-0c94-41b2-8344-636a48853805.md). The existing deadline family2/2 recoveries remains exhausted (the first46114120 recovery and later report-publication recovery already counted). No third replacement, subdivision/adoption, timeout increase or direct product coding is authorized. This is a recurrence of B-013, not a new blocker family with a fresh allowance. Owner: coordinator preserves evidence; human authority is required before reopening this exhausted recovery path. Evidence preservation alone is not a replacement action.
 
 Independent [REQ-D05-001](development/requests/REQ-D05-001.md) passive Tool-release contracts remain ready without lifecycle output, worker admission or live service/scientific use. Its later registry/execution prerequisites remain mandatory; it consumes no failed B1 draft. Therefore this hold is not a blanket stop on engineering. B-010/B-011 and every prior exhausted/partial family remain. STATUS owns counters and one next safe action.
+
+
+## Passive tool contracts delivered; existing holds unchanged — 2026-11-04
+
+[Run33db2c31](development/runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md) finally accepted/exact-integrated8cd859f7,
+final/target1165/1165. Ordinary CWI findings F001DEL sizing and F002metaclass-hook
+rejection were repaired and independently closed; no new unresolved exception or
+backend defect remains. Two internal repairs bring cumulative35; coordinator15
+unchanged. All consumed/exhausted recovery families remain. B-013deadline2/2 still
+blocks B1 and its dependent output/publication/restart path; no failed draft was
+consumed. B-010/B-011 retain scientific/live holds. Independent exact Tool-release
+envelopes in REQ-D05-002 are ready, with later registration/execution mandatory.
+No phase/product completion or authority expansion. STATUS owns one next action.

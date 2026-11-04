@@ -1,29 +1,70 @@
 # Development status
 
-## Writer timeout reconciled; independent tool-contract request ready — 2026-11-04
+## Passive Tool-release contracts integrated; context checkpoint — 2026-11-04
 
-AUTH-2026-10-30-001 revision 6 CONTINUOUS remains effective after the human's fresh-session resumption. No scope, scientific, permission, resource or model limit is expanded. No restart supervisor is installed.
+[REQ-D05-001 / run 33db2c31](development/runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md) is finally accepted and exactly integrated
+on main as **8cd859f7bffeda241658dab8b13e3221002f6fdb**, tree `50de06bc9902fb13e8a287c9b8d6a4516bdcffb8`,
+final receipt SHA256 `02b794abcf7eac3668eb82b9ad8a094b87bf73c7d7c996ec167ad72fa7b99d5a`. The exact fast-forward from
+`65d3df0b4c3898c0d003c80d44d9fd990c2f1b99` completed at09:39:14.565361Z,
+with no intervening tracked commit. All nine working files matched accepted bytes.
 
-[REQ-D04-007-B1 / run 2bc3d843](development/runs/2bc3d843-0c94-41b2-8344-636a48853805.md) stopped **INCOMPLETE** when its Writer exhausted the frozen 2700-second limit after source changes. There is **no candidate, acceptance, final receipt or integration**. CWI forbids resume and uncertain replay. Baseline full validation passed1130/1130 with zero other outcomes/source mutation, and the literal launch-base diff check passed. Those are predecessor evidence, not validation of the draft. Designer/Architect completed; Writer advisory passes and failures remain preserved without a final whole-draft pass claim.
+The product now has immutable seven-area Tool-release declarations, strict bounded
+canonical codecs, exact release/adapter/configuration identities, explicit unknown
+and unavailable facts, local/remote/composite descriptions, and an executed guide.
+These are passive values. Registration, authenticated references/history,
+permission, qualification, actual isolated execution and receipts remain mandatory.
+No store/schema/CLI/provider/dependency/runtime-prompt behavior changed.
 
-The run is safely terminal: actual host inspection07:27:06Z found no live controller/role/validator; final status has no in-flight operation, lease, quarantine or recording gap. Main remained clean at launch base `0ff9485b8a70feb583157061511f8aea808f0858`. All104protected predecessor test/helper/fixture/validator files are unchanged. The17-file unaccepted draft (531484bytes), exact hashes/modes and tracked patch are retained under `local/attempts/D04-007-B1-attempt-001/`; original CWI worktree/state/logs/refs are untouched.
+Two genuine review findings were repaired through CWI: U+007F canonical-byte
+undercounting (F-001) and caller-controlled metaclass hooks during type rejection
+(F-002). Both are resolved. The final repaired-source full check and integrated
+full target check each passed **1165/1165**, with zero other outcomes or source
+mutation. Their exact dispositions, including successful subtests, match. Target
+validation ended09:48:12.836308Z; validator wall538.212054seconds,
+stdoutSHA256 `ec426b5081c3ca97c50933dc12afe396d4fc17379e47329fe20057c502fc5d30`,
+empty stderr. All 104 predecessor blobs/Git modes remain; 108 paths are now protected.
 
-**B-013 Writer-deadline recovery is already exhausted at2/2.** This recurrence blocks the B1 path; no third retry, renamed/split adoption, higher timeout or direct coordinator implementation is authorized. Evidence preservation is not an attempted replacement. B1/B2/008/009 and all13original FOLLOWON criteria remain mandatory and unimplemented beyond their previously evidenced source/render subsets. No backend defect is established by enforcement of the configured timeout.
+All 38 retained CWI runs are terminal:26 final acceptances, **25 exact final sources
+integrated**, one accepted validator result deliberately superseded, and 12 terminal
+incomplete. No CWI run, validation process group, lease, quarantine or pending
+integration remains. Host09:50:40Z verified quiescence. Three historical terminal
+recording findings remain preserved; no new gap was introduced.
 
-Independent engineering remains ready. [REQ-D05-001](development/requests/REQ-D05-001.md) prepares **passive versioned tool-release contracts** covering all seven specification contract areas. It uses accepted domain/reference/work-product conventions, consumes none of the failed draft, performs no registration/admission/execution, and needs no lifecycle output or live/scientific permission. DEV-072 records this ordinary dependency decision. Preparation supplies no implementation or acceptance evidence. D05 remains incomplete; later registry, permission/qualification and actual isolated execution/receipts are mandatory.
+AUTH-2026-10-30-001 revision6 **CONTINUOUS** persists. Continuous 37/100 starts used,
+63 remain; next attempted start 38 leaves 62, including failed preflight. Commissioning
+1/3 closed; cumulative CWI repairs35, coordinator recoveries15, backend attempted/
+adopted/reverted2/2/0. Every consumed or exhausted recovery allowance persists.
+[B-013](BACKLOG.md) Writer-deadline recovery 2/2 still blocks B1; no failed draft was
+used. All 94 requirements, thirteen FOLLOWON criteria, partial D02/D03/D04/D05/M0-E
+and product, and B-010/B-011 scientific/live obligations remain.
 
-Current accepted/integrated product remains **`ef3bfcf723a246750021cce32024cf6717eb5fa9`**, tree `777c79c5214e5042f2fb31bab605767d03cfe654`, [run1c313198](development/runs/1c313198-868b-4bbb-bd2f-7e7c0d3cec60.md), final receiptSHA256 `2ecf76d54d7e85b60b25eb3a61ae1201e842cabbb4c54d0758ecba203ebee1de`. It passed1130/1130 in candidate/final and both integrated validator modes. Its [benchmark](development/benchmarks/concurrent-validation-20261103.md) measured4.5091× wall speedup with higher total CPU/sample group memory. Initialcd93accepted validator source is deliberately declined/superseded, not awaiting integration.
+Eleven completed turns are booked once here:5,656,186 input (4,829,312 cached), 96,042 output
+(26,337 reasoning). Cumulative reported CWI lower bound is **330,933,462 input
+(302,978,944 cached), 3,129,138 output (957,442 reasoning)**, 302 known completed turns.
+Five historical interrupted-role amounts, native backend reviews, coordinator,
+quota and invoice remain unknown. Nested categories are included, not added twice.
+Existing ChatGPT development allowance only; no API/purchase/new service/data/live
+scientific/push/publication/deployment permission expands.
 
-All37retained runs reconcile25finallyaccepted: **24exact accepted sources integrated, one intentionally superseded;12terminal incomplete**. No active or base-bound implementation or pending integration remains. Three older terminal recording findings are preserved. Historical usage was independently recomputed from289completed prior turns and exactly matched the previous checkpoint.
+Backend `b6a2e05283f92f2bb42402d49e4a274225b43f6a`, pinned Codex0.166.0/
+SHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8,
+stable environment46f63a41, explicit gpt-6-astra/high, ceiling xhigh, FD4096,
+2700-second limits, one milestone, repairs2/review6/run and both ordered checks
+remain unchanged. All 11 prepared invocation settings were verified, with 8 persistent
+session completions and 11 completed usage turns; no server-side model attestation
+or remaining-quota claim. No backend change or maintenance attempt occurred.
 
-Continuous **36/100 used,64remain**; next attempted start37leaves63 including failedpreflight. Commissioning1/3closed; CWI repairs33; coordinator recoveries15; backend attempted/adopted/reverted2/2/0. Prescription/permission/interrupted-workflow salvage/Writer-deadline2/2 stay exhausted. Source-correctness/global-cleanup/capacity/context-size/validation-context/formatting/descriptor1/2 remain consumed. No new recovery is taken or counter reset.
-
-Two completed new turns add2038827input(1825664cached),25514output(13320reasoning) once at this checkpoint. Cumulative CWI reported lowerbound **325277276input(298149632cached),3033096output(931105reasoning)**. The timed-out Writer adds a fifth unknown interrupted-role amount; coordinator/native backend audits/quota/invoice remain unknown. Nested categories are included. Existing ChatGPT development allowance only; no API/purchase/new service/data/live scientific/push/publication/deployment authority.
-
-Supported backend **`b6a2e05283f92f2bb42402d49e4a274225b43f6a`** and pinned Codex0.166.0/SHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8 remain unchanged. Both completed roles used explicitgpt-6-astra/high; no server-side effective-model attestation is claimed. Fresh readiness is required before the next launch. Stable environment, FD4096/hard1048576,2700s,one milestone,repairs2perreview6perrun,two ordered full checks and no--merge remain. Specific automatic approval is available for necessary authorized Git/CWI operations; no security bypass is authorized.
-
-All94requirements/specificationv1.4, partial D02/D03/D04/M0-E/product and pending M0-S/live/human acceptance persist. Broader queue/attempt/fencing/admission/isolation/context/model/tool qualification/reporting/synthesis/export remain required. [B-010/B-011](BACKLOG.md) gate dependent scientific/live work only. This is a safe context handoff after a long recovery/attempt cycle, not project completion or grant revocation.
+[REQ-D05-002](development/requests/REQ-D05-002.md) is prepared for exact passive
+record-envelope conversion. DEV-073 records the dependency/size choice; subsequent
+typed registration and actual execution remain mandatory. It consumes only accepted
+Tool-release/reference conventions and none of the failed B1 draft. Preparation is
+not implementation. This session ends at a practical context boundary after full
+recovery, implementation, two repairs, integration and verification; the grant is
+not revoked and the project is not complete. No restart supervisor is installed.
 
 ## Exactly one next safe action
 
-Recover this clean checkpoint and actual Git/CWI evidence, refresh pinned readiness, then **launch REQ-D05-001 once through the supported CWI** with explicitgpt-6-astra/high and both literal-base checks under the existing limits. Do not retry/adopt the blocked B1 draft or reset its exhausted recovery allowance.
+Recover this clean checkpoint and actual Git/CWI evidence, refresh pinned readiness,
+then **launch REQ-D05-002 once through supported CWI**, with explicit gpt-6-astra/high,
+unchanged limits and both checks bound to the actual literal committed launch base.
+Do not retry/adopt B1 or reset its exhausted recovery allowance.

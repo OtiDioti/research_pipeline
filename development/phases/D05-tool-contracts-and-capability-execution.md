@@ -1,6 +1,6 @@
 # D05 — Tool contracts and capability execution
 
-**State:** READY for the passive contract subset in REQ-D05-001. No implementation or execution evidence exists yet. All registration, qualification and execution obligations remain incomplete.
+**State:** PARTIAL. REQ-D05-001 passive contracts are accepted, integrated and target-validated. REQ-D05-002 exact envelopes are READY. Registration, qualification and execution remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.
 
@@ -51,3 +51,22 @@ Operational fixture qualification may be evidenced deterministically. Scientific
 ## First independent passive boundary — 2026-11-04
 
 [REQ-D05-001](../requests/REQ-D05-001.md) prepares the complete seven-area passive Tool-release declaration, strict bounded canonical codecs, tests and executed guide. Actual accepted domain/reference/work-product conventions suffice; no lifecycle output, queue, worker or provider execution is consumed. DEV-072 records the contract-specific v1.4 dependency decision while D04B1 is held by exhausted deadline recovery. This request does not consume the failed B1 draft, implement registration/typed admission, grant permission/qualification, execute a tool or claim scientific validity. Later D05 outcomes and all original phase acceptance boxes remain mandatory. STATUS owns resources and one next safe action.
+
+
+## Passive declarations integrated; exact envelope boundary — 2026-11-04
+
+[REQ-D05-001/run33db2c31](../runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md) finally accepted/exact-integrated
+`8cd859f7bffeda241658dab8b13e3221002f6fdb`, receipt02b794ab; final/target1165/1165,
+zero other outcomes/source mutation, exact matching dispositions. Seven contract
+areas, immutable canonical identities, finite strict codecs, explicit missing facts,
+local/opaque-remote/composite declarations and executed guide are evidenced. Two
+internal repairs resolve DEL sizing and hostile metaclass hooks;104predecessors
+remain unchanged and108paths are now protected.
+
+The acceptance boxes above remain open: no capability is registered, qualified,
+permitted or executed. [REQ-D05-002](../requests/REQ-D05-002.md) prepares exact pure
+record-envelope conversion; later typed registration/reference/history checks and
+actual isolated execution remain mandatory. DEV-073 records the ordinary scope
+choice. No failed B1 draft, new authority or recovery allowance is used. Full D05,
+M0-E and scientific/live outcomes remain partial/pending. STATUS owns budgets and
+one next safe action.

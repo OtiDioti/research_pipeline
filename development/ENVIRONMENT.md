@@ -253,3 +253,24 @@ Actual adapter ephemeral/new/resume/login parser checks and ChatGPT login passed
 CWI2bc3d843 used unchanged backendb6a2e052, pinnedCodex0.166.0/b8a11fed, stable environment46f63a41,explicitgpt-6-astra/high,FD4096/2700s and both required checks. Actual baseline1130/1130 passed. Designer/Architect completed; Writer timed out after source changes, not an environment/parser failure. Final status is terminal/noresume/noacceptance/no recording gap; host07:27:06Z confirms no owned process/lease/quarantine. No install, authentication, security, backend or frozen environment change. No effective-model attestation or remaining-quota claim.
 
 Current product remains ef3bfcf7. Passive Tool-release contract work needs no new dependency or live-provider permission and no B1 draft. Recheck exact backend/executable, catalog/login, source/quiescence and stable map before the next fresh run. Preserve all prior2/2deadline recovery consumption; never silently resume this or an old terminal run.
+
+
+## Tool-release run and target verification — 2026-11-04
+
+CWI33db2c31 completed naturally on unchanged clean backendb6a2e052, pinnedCodex0.166.0/
+SHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8,
+stable environment46f63a41, explicitgpt-6-astra/high,FD4096/hard1048576,2700s and
+both required checks. Fresh07:46:54Z actual parser/login probes passed; catalog
+07:46:25Z advertised approvedmodel/high. Eleven prepared invocation settings and
+eight persistent completion records were inspected; three Writers were ephemeral.
+All11completed usage turns exist. No server-side model attestation is claimed.
+
+Source8cd859f7/receipt02b794ab exact-integrated09:39:14.565361Z. Full target1165/1165
+in538.212054validator wallseconds ended09:48:12.836308Z with identical final/target
+dispositions, zero other outcomes/source mutation and empty stderr. Host09:50:40Z
+confirms controller/role/validation groups gone. No package, auth/config, security,
+provider/backend or launch-map change. Private CWI checkout0600 physical file modes
+were distinguished from unchanged Git100644/100755 modes during source auditing.
+Fresh pinned readiness is required before the next request; terminal runs do not
+resume under changed code. Remaining quota/invoice and older unknown usage remain
+unknown. No new resource/service/data/scientific authority.

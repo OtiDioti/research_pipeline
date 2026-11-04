@@ -387,3 +387,29 @@ REQ-D04-007-B1/run2bc3d843 consumed continuous start36/100 and exhausted its fro
 Continuous36/100used64remain;next37leaves63including failedpreflight. Commissioning1/3closed,CWIrepairs33,coordinator15,backend2/2/0. All exhausted/partial families persist. Two completed turns add2038827input(1825664cached),25514output(13320reasoning) once here: cumulative325277276input(298149632cached),3033096output(931105reasoning). Timed-out Writer usage is unknown; five interrupted-role amounts plus native backend audits/coordinator/quota/invoice remain unknown. Nested categories included.
 
 Independent passive Tool-release contracts in REQ-D05-001 fit existing D01–D10 engineering authority without the failed output source, worker admission or live service/scientific use. This is an ordinary technical dependency decision, not new human approval or a waiver of later D04/D05/scientific gates. Existing ChatGPT development allowance, approvedgpt-6-astra/high,ceilingxhigh,one milestone,repairs2perreview6perrun,2700s/FD4096,two orderedchecks/no--merge remain. No API/purchase/new service/data/live scientific/push/publication authority expands. Grant persists through the context handoff; no automatic restart is promised.
+
+
+## Post-Tool-release checkpoint — 2026-11-04; revision6 unchanged
+
+REQ-D05-001/run33db2c31 finally accepted/exact-integrated8cd859f7, receipt02b794ab,
+final/target1165/1165. One continuous start and two ordinary internal CWI repairs;
+no coordinator recovery, backend attempt or new authority. Current38runs reconcile
+26finallyaccepted:25exact final sources integrated,cd93deliberately superseded;
+12terminal incomplete. No active CWI/target validator, lease/quarantine or pending
+integration; three historical recording findings remain preserved.
+
+Continuous37/100used63remain; next38leaves62 including failedpreflight.
+Commissioning1/3closed,CWIrepairs35,coordinator15,backend2/2/0. All consumed/exhausted
+families persist; B013deadline2/2 remains held and no failed B1 draft was used.
+Eleven completed turns add5656186input(4829312cached),96042output(26337reasoning)
+once here. Cumulative lowerbound330933462input(302978944cached),3129138output
+(957442reasoning),302knownturns. Five historical interrupted roles/native backend
+reviews/coordinator/quota/invoice remain unknown; nested categories included.
+
+Same existing ChatGPT allowance, approvedgpt-6-astra/high/ceilingxhigh,FD4096,2700s,
+one milestone,repairs2/6,two ordered checks,no--merge. No API/purchase/new service/
+data/live scientific/push/publication permission expands. All94requirements,
+13FOLLOWONcriteria and scientific/human gates remain. Preparing independent exact
+Tool-release envelopes is an ordinary dependency decision, not new human approval
+or reset. The long session ends at a safe context checkpoint; CONTINUOUS persists
+for a fresh session, without automatic restart or budget reset.

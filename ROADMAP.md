@@ -218,3 +218,21 @@ The human resumes engineering after the completed focused optimization checkpoin
 [Run2bc3d843](development/runs/2bc3d843-0c94-41b2-8344-636a48853805.md) is terminal after Writer2700-second timeout, without candidate/acceptance/integration. Original productef3bfcf7 remains. B-013deadline recovery2/2 was already exhausted; B1 is held, not silently retried or subdivided to reset the allowance. B2/008/009 and all13FOLLOWONcriteria remain mandatory.
 
 [REQ-D05-001](development/requests/REQ-D05-001.md) is ready for passive Tool-release contracts from accepted domain/reference/work-product conventions. Relevant D04 execution/reporting prerequisites gate later actual execution, not an inert manifest codec. DEV-072 records this ordinary v1.4 dependency decision. No failed draft is consumed and no registration, activation or execution is introduced. D05/M0-E and all broader phases remain incomplete; all94requirements and scientific/live gates persist. STATUS owns budgets and the single next action.
+
+
+## Passive Tool-release contracts integrated; exact envelopes next — 2026-11-04
+
+[REQ-D05-001/run33db2c31](development/runs/33db2c31-2248-425c-9de3-8c553d2dbd47.md) finally accepted and exact-integrated
+`8cd859f7bffeda241658dab8b13e3221002f6fdb`, receipt02b794abcf7eac3668eb82b9ad8a094b87bf73c7d7c996ec167ad72fa7b99d5a.
+Strict passive seven-area declarations, canonical identities/bounds and executed
+local/remote guide are delivered. Two internal repairs resolve DEL sizing and
+metaclass-hook rejection. Final repaired and target1165/1165, exact dispositions
+match;104predecessors unchanged,108now protected. No registry/permission/qualification/
+execution is delivered, and D05/M0-E/product remain partial.
+
+[REQ-D05-002](development/requests/REQ-D05-002.md) prepares exact pure envelopes from
+accepted contracts. DEV-073 compares this with a coupled codec/store slice and owns
+subsequent mandatory typed registration. All94requirements/13FOLLOWONcriteria,
+D04B1deadline2/2 hold and scientific/live gates remain. Continuous37/100used63remain;
+STATUS owns the single next safe action. This is a long-session context checkpoint,
+not grant revocation, scientific completion or an automatic restart.

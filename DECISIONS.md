@@ -284,3 +284,24 @@ Reuse accepted source verification on the same transaction connection and the un
 B1/run2bc3d843 did not fit the frozen2700-second Writer invocation: CWI stopped without candidate/review/acceptance. A clean host/source/lease/quarantine audit resolved ownership and preserved17unaccepted files. This is the existing B-013deadline mechanism, whose2/2 recovery actions are already exhausted. No third retry, relabeled adoption, higher timeout, acceptance waiver or direct implementation is authorized; no backend defect is established by the configured stop.
 
 Select [REQ-D05-001](development/requests/REQ-D05-001.md), a complete passive seven-area Tool-release manifest/codec boundary. It consumes accepted domain/reference/work-product conventions and no failed output code. Continuing dependent B2 would lack its prerequisite; starting actual tool execution would lack D04 admission/isolation/report gates. Passive provider/tool-independent declarations need neither and commission a useful M0-E subset. This is the coordinator's ordinary decomposition decision under the existing v1.4 grant, not human scientific approval or a reset. Later D05 typed registration, authority/qualification and real isolated execution remain mandatory. B1/B2/008/009, all13FOLLOWONcriteria/all94requirements and scientific/live judgments persist. Keep new source/test work CWI-only.
+
+
+## DEV-073 — Exact Tool-release envelopes before typed registration
+
+REQ-D05-001 is actually accepted, integrated and target-validated at8cd859f7; its
+complete pure declaration is a usable consumed M0-E subset. The next decision is
+whether to combine exact envelope/projection conversion with transactional typed
+admission or review those boundaries separately. Existing store dispatch includes
+constrained/shallow targets, historical closure, original-ID recovery and generic
+lookalike semantics; coupling all of that to new projections increases repair scope.
+
+Choose [REQ-D05-002](development/requests/REQ-D05-002.md) for exact passive envelopes
+first, followed by mandatory typed registration/reference/history work. An extra
+CWI cycle costs time, but gives independent local-consistency evidence before
+persisted authenticity. Record IDs match stable tool_id; revision and creator
+provenance are explicit. No activation, permission, qualification or store authenticity
+comes from conversion. Finite content and projection bounds must precede copying;
+unknown projected collections retain their unknown state in content. Architect owns
+the complete prescription; CWI Writer alone implements. This is an ordinary
+reversible engineering choice under the existing grant, not new human design
+approval, a failed-draft salvage or a recovery reset. All broader obligations remain.
