@@ -274,3 +274,8 @@ were distinguished from unchanged Git100644/100755 modes during source auditing.
 Fresh pinned readiness is required before the next request; terminal runs do not
 resume under changed code. Remaining quota/invoice and older unknown usage remain
 unknown. No new resource/service/data/scientific authority.
+
+
+## Passive registration prelaunch readiness — 2026-11-04
+
+Fresh12:06Zhost process inspection shows no controller/role/validator or historicalPIDs1242050/1153640. All39runs status/diagnose reconcile27final receipts (26integrated,oneexplicitly superseded) and12terminal incomplete; no lease/quarantine/pending integration. Envelope receipt3343eb04 and accepted ancestry are independently verified. At12:07:21Zactual pinned adapter ephemeral/new/resume/login parser probes and ChatGPT login passed; unchangedCodex0.166.0/executableSHAb8a11fed and cleanbackendb6a2e052. Account catalog fetched12:04:41Zadvertisesgpt-6-astra/high; projectceilingxhigh stays. Existing harmless read-only PATH-alias warning only. Stable mapSHAb674ef72 unchanged; launch processFD4096/2700s/one milestone/repairs2perreview6perrun/two orderedchecks/no--merge. No install, auth/config, provider, backend or security change; quota/invoice/server-model attestation unknown. Local read-only evidence:local/reconciliation-20261104-registration/.

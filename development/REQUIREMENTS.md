@@ -441,3 +441,8 @@ canonical registered/readable/execution obligations are pending.
 typed registration/history validation; no new implementation is credited by that
 preparation. All94rows/specificationv1.4/thirteen FOLLOWONcriteria, D04B1deadline2/2
 hold, partial D02/D03/D04/D05/M0-E/product and pending M0-S/live/human gates persist.
+
+
+## Transactional Tool-release registration prepared — 2026-11-04
+
+REQ-D05-003 advances only R-004/R-008/R-016/R-055/R-058/R-092/R-093 persistence subsets after accepted/integrated D05-002. Same-transaction exact role/reference/history validation and original-ID recovery are requested, not yet implemented or evidenced. All94mandatory rows and scientific/live release gates remain; no unsupported qualification/execution or phase completion is inferred.

@@ -305,3 +305,10 @@ unknown projected collections retain their unknown state in content. Architect o
 the complete prescription; CWI Writer alone implements. This is an ordinary
 reversible engineering choice under the existing grant, not new human design
 approval, a failed-draft salvage or a recovery reset. All broader obligations remain.
+
+
+## DEV-074 — Reuse transactional typed admission for passive Tool releases
+
+REQ-D05-002 is exact-integrated/target-validated0a6a01e2. The existing MetadataStore already owns immutable revisions, direct-artifact synchronization, same-connection target resolution, rollback and original-ID reconciliation. A separate registry or dedicated duplicate transaction would introduce competing identity/recovery semantics. Choose REQ-D05-003 to extend existing dispatch and constrained closure, keeping local inspection separate from past admission.
+
+Implementation Source/manifest, child release, Evidence and Issue roles are constrained; provenance/dependencies/reported tool_assessment stay shallow. The last has no implemented typed qualification contract. Complete prior ToolRelease revisions are metadata-validated under the same transaction; unchanged content can receive new provenance without manufacturing a new release hash. No new marker or schema change claims generic-original retries were typed-certified. This is an ordinary coordinator decision under the existing grant, not human scientific approval, failed-B1 adoption or a recovery reset. CWI Architect prescribes complete interfaces/errors/tests and only its Writer implements. D04 output/restart, all13FOLLOWONcriteria, permission/qualification/actual execution and all scientific/live requirements remain mandatory.

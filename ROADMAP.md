@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Typed Tool-release persistence prepared — 2026-11-04
+
+[REQ-D05-003](development/requests/REQ-D05-003.md) is the next independent bounded store/reference/history slice after actual D05-002 integration. DEV-074 records reuse of the existing transaction/reconciliation boundary. No registration, qualification or execution is implemented by this preparation; all partial phases and original obligations remain.
+
 ## D05 envelope integration — 2026-11-04
 
 REQ-D05-002 / [d4513360-8b98-4b8d-9bdc-91835d40a323](development/runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and exactly integrated `0a6a01e2552b886232e2880d80123479b70a79e6` with 1189/1189 target tests. Passive exact envelope conversion is available; authenticated typed registration and history remain the next independent engineering boundary. D05 and the product remain incomplete.

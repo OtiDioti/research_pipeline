@@ -4,7 +4,7 @@
 
 REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. Passive conversion and projections only. Authenticated admission, history, assessment, permission and real execution remain required.
 
-**State:** PARTIAL. REQ-D05-001 passive contracts are accepted, integrated and target-validated. REQ-D05-002 exact envelopes are READY. Registration, qualification and execution remain incomplete.
+**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 typed persistence is READY. Registration, qualification and execution remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.
 
@@ -39,7 +39,7 @@ Operational details: [runbook](../RUNBOOK.md), [request template](../templates/R
 
 ## Current v1.4 gate — Tool releases and bounded adapter boundary
 
-**Requirement ownership:** R-029, R-040, R-043–R-044, R-054–R-060, R-064, R-082, R-092. All constituent obligations in those rows and cited original sections apply; no product evidence exists yet.
+**Requirement ownership:** R-029, R-040, R-043–R-044, R-054–R-060, R-064, R-082, R-092. All constituent obligations in those rows and cited original sections apply. Only the passive declaration/envelope subsets below have product evidence.
 
 Complete all release manifest and lifecycle fields in §§10.6–10.8. Distinguish execution permission/qualification/lifecycle, scientific semantics/schema shape and live observed versions/pinned local code. Demonstrate actual isolated local execution and authentic receipts. Register representative fixtures without requiring a user tool. Define optional delegated-job boundaries and descendant accounting; do not claim named compatibility without real qualified execution. Restricted TeX rendering must preserve source on build failure.
 
@@ -74,3 +74,8 @@ actual isolated execution remain mandatory. DEV-073 records the ordinary scope
 choice. No failed B1 draft, new authority or recovery allowance is used. Full D05,
 M0-E and scientific/live outcomes remain partial/pending. STATUS owns budgets and
 one next safe action.
+
+
+## Next bounded persistence boundary — 2026-11-04
+
+REQ-D05-002 is finally accepted/exact-integrated0a6a01e2, final/target1189/1189. REQ-D05-003 is prepared for existing typed submission/inspection dispatch, same-transaction exact role checks, complete immutable release history and original-submission recovery. DEV-074 chooses the existing store boundary over a parallel registry. All112predecessor test/helper/fixture/validator paths remain protected. No failed B1 source, new schema, authority/qualification/execution or scientific claim is included. Full phase acceptance boxes above remain open.
