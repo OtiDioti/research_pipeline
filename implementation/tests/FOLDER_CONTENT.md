@@ -126,7 +126,7 @@ Immediate files and child directories only.
 - [view_refresh_fixtures.py](view_refresh_fixtures.py) — Disposable refresh fixtures reusing accepted capture/prior-state helpers.
 - [tool_assessment_store_fixtures.py](tool_assessment_store_fixtures.py) — Real private-store assessment declarations and independently specified projections.
 - [test_tool_assessment_persistence.py](test_tool_assessment_persistence.py) — Passive mixed assessment admission, exact role/pairing/history and local inspection.
-- [test_tool_assessment_persistence_bounds.py](test_tool_assessment_persistence_bounds.py) — Exact scalar-error precedence, public control/fingerprint scratch boundaries and historical shallow failure diagnostics.
+- [test_tool_assessment_persistence_bounds.py](test_tool_assessment_persistence_bounds.py) — Exact scalar-error precedence, control/fingerprint scratch boundaries, Source predecessor/supplied-reader allocation-order regressions and historical shallow diagnostics.
 - [test_tool_assessment_persistence_recovery.py](test_tool_assessment_persistence_recovery.py) — Direct artifacts, atomic rollback, real SQLite contention and process-exit recovery.
 - [test_tool_assessment_persistence_example.py](test_tool_assessment_persistence_example.py) — Execute the exact self-contained passive persistence guide in candidate Python.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

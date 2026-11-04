@@ -375,15 +375,18 @@ class _Budget:
 
         An existing reader still owns its read hooks and smaller independent limits.
         Raw strings are separately checked so normalization cannot repair stored facts.
+        Both preflights retain their permanent charges; assessment scratch covers
+        the supplied read and raw reconstruction and is refunded even on failure.
         """
         if reader is not None:
             # Both preflights run before either reconstruction. The supplied
             # reader retains its smaller limits and its own subsequent read hook.
             reader.preflight(key)
         size = self.preflight(connection, key)
-        if reader is not None:
-            reader.read(key)
         with self.temporary(6 * size):
+            # Keep scratch through both reconstructions, including cached read hooks.
+            if reader is not None:
+                reader.read(key)
             row = connection.execute("""SELECT i.kind,r.content_json,r.provenance_json,r.operational_status,
                 r.scientific_disposition FROM revisions r JOIN identities i USING(record_id)
                 WHERE r.record_id=? AND r.revision=?""", key).fetchone()

@@ -1,7 +1,8 @@
 """Assessment store retained-value safety and finite preallocation guard evidence."""
 
 from copy import deepcopy
-from contextlib import closing
+from contextlib import closing, ExitStack
+from dataclasses import replace
 import hashlib
 import json
 import sqlite3
@@ -264,6 +265,145 @@ class AssessmentPersistenceBoundsTests(AssessmentCase):
             with self.assertRaisesRegex(AuthorityLimitError, "history"):
                 self.store._check_typed_targets(connection, batch, (ToolAssessment.from_dict(document()),), authority_reader=reader)
         self.assertIsNone(self.store.get_submission("reader"))
+
+    def test_source_predecessor_parse_requires_scratch_before_content(self):
+        """Guard the later predecessor parse independently of read/decode scratch and roll back failures."""
+        from tests.test_source import uninspected
+        from tests.test_source_store import capture
+
+        self.seed_release()
+        first = uninspected()
+        self.store.submit_typed(request("source-first", [capture("capture", first)]))
+        successor = replace(first, supersedes=ref("capture", "supersedes", "source"))
+        batch = request("source-second", [assessment(), capture("capture", successor, 2)],
+                        {"assessment": 0, "capture": 1})
+        previous_key = ("capture", 1)
+        original_read, original_content = bounded._Budget.read, RecordEnvelope.content
+        before = rows(self.root)
+        for deficit in (1, 0):
+            state, parsed = {}, []
+            with self.subTest(deficit=deficit), ExitStack() as patches:
+                def read(budget, connection, key, reader=None):
+                    """Finish the genuine predecessor read before narrowing only its later parse budget."""
+                    result = original_read(budget, connection, key, reader)
+                    if key == previous_key:
+                        self.assertFalse(state, "predecessor should be fetched once")
+                        state.update(budget=budget, permanent=budget.metadata_bytes,
+                                     scratch=6 * budget.sizes[key])
+                        patches.enter_context(patch.object(bounded, "RESULT_BYTES",
+                            state["permanent"] + state["scratch"] - deficit))
+                    return result
+
+                def content(envelope):
+                    """Witness only this exact predecessor's property parse after its guarded read."""
+                    if (envelope.record_id, envelope.revision) == previous_key:
+                        parsed.append(previous_key)
+                        self.assertEqual(state["budget"].metadata_bytes,
+                                         state["permanent"] + state["scratch"])
+                        raise ProtectedStageReached("source predecessor content")
+                    return original_content.fget(envelope)
+
+                patches.enter_context(patch.object(bounded._Budget, "read", read))
+                patches.enter_context(patch.object(RecordEnvelope, "content", property(content)))
+                expected = ReferenceResolutionError if deficit else ProtectedStageReached
+                with self.assertRaises(expected) as caught:
+                    self.store.submit_typed(batch)
+                self.assertIs(type(caught.exception), expected)
+                if deficit:
+                    self.assertIs(type(caught.exception.__cause__), ToolAssessmentLimitError)
+                    self.assertIn("source predecessor capture@1", str(caught.exception))
+                self.assertEqual(parsed, [] if deficit else [previous_key])
+                self.assertEqual(state["budget"].metadata_bytes, state["permanent"])
+            self.assertEqual(rows(self.root), before)
+
+        self.store.submit_typed(batch)
+        self.assertEqual(self.store.get_typed_revision("capture", 2)[1], successor)
+        self.assertEqual(self.store.history("capture"),
+                         (capture("capture", first), batch.records[1]))
+        self.assertEqual(self.store.head("assessment"), 1)
+
+    def test_supplied_reader_requires_assessment_scratch_before_read(self):
+        """Reserve before supplied reads, preserve caller limits/errors and refund only assessment scratch."""
+        from research_pipeline.operating_authority import AuthorityLimits, AuthorityLimitError
+        from research_pipeline.operating_authority_store import _Reader
+
+        self.seed_release()
+        key = ("tool", 1)
+        controls = AuthorityLimits(max_decisions=1, max_history_revisions=10, max_records=10,
+            max_references=32, max_record_bytes=4194304, max_metadata_bytes=67108864,
+            max_artifacts=0, max_file_bytes=1, max_total_bytes=0, max_result_bytes=4194304)
+        before = rows(self.root)
+        for cached in (False, True):
+            for deficit in (1, 0):
+                with self.subTest(cached=cached, deficit=deficit), self.store._transaction() as connection:
+                    reader, budget = _Reader(self.store, connection, controls), bounded._Budget()
+                    reader.preflight(key)
+                    size = budget.preflight(connection, key)
+                    if cached:
+                        reader.read(key)
+                    permanent, caller_permanent = budget.metadata_bytes, reader.metadata_bytes
+
+                    def read(exact_key):
+                        """Witness the supplied hook, including cache hits, with all scratch already active."""
+                        self.assertEqual(exact_key, key)
+                        self.assertEqual(budget.metadata_bytes, permanent + 6 * size)
+                        raise ProtectedStageReached("supplied reader")
+
+                    with patch.object(bounded, "RESULT_BYTES", permanent + 6 * size - deficit), \
+                            patch.object(reader, "read", side_effect=read) as hook, \
+                            patch.object(bounded, "_json", side_effect=AssertionError("unreserved raw parse")):
+                        expected = ToolAssessmentLimitError if deficit else ProtectedStageReached
+                        with self.assertRaises(expected) as caught:
+                            budget.read(connection, key, reader)
+                        self.assertIs(type(caught.exception), expected)
+                        self.assertEqual(hook.call_count, 0 if deficit else 1)
+                    self.assertEqual(budget.metadata_bytes, permanent)
+                    self.assertEqual(reader.metadata_bytes, caller_permanent)
+                self.assertEqual(rows(self.root), before)
+
+        with self.store._transaction() as connection:
+            reader, budget = _Reader(self.store, connection, controls), bounded._Budget()
+            reader.preflight(key)
+            size = budget.preflight(connection, key)
+            permanent, real_read = budget.metadata_bytes, reader.read
+
+            def read(exact_key):
+                """Run real caller reconstruction/cache hooks while assessment scratch remains reserved."""
+                self.assertEqual(budget.metadata_bytes, permanent + 6 * size)
+                return real_read(exact_key)
+
+            with patch.object(bounded, "RESULT_BYTES", permanent + 6 * size), \
+                    patch.object(reader, "read", side_effect=read) as hook:
+                for cached in (False, True):
+                    raw = budget.read(connection, key, reader)
+                    self.assertIsNot(raw, reader.envelopes[key])
+                    self.assertEqual(raw, reader.envelopes[key])
+                    self.assertEqual(budget.metadata_bytes, permanent)
+                self.assertEqual(hook.call_count, 2)
+
+        with self.store._transaction() as connection:
+            reader, budget = _Reader(self.store, connection, controls), bounded._Budget()
+            reader.preflight(key)
+            size = budget.preflight(connection, key)
+            permanent, caller_permanent = budget.metadata_bytes, reader.metadata_bytes
+            failure = AuthorityLimitError("supplied reconstruction failure")
+            with patch.object(bounded, "RESULT_BYTES", permanent + 6 * size), \
+                    patch.object(reader, "_before_envelope", side_effect=failure), \
+                    self.assertRaises(AuthorityLimitError) as caught:
+                budget.read(connection, key, reader)
+            self.assertIs(caught.exception, failure)
+            self.assertEqual(budget.metadata_bytes, permanent)
+            self.assertEqual(reader.metadata_bytes, caller_permanent)
+
+        with self.store._transaction() as connection:
+            reader = _Reader(self.store, connection, replace(controls, max_record_bytes=1))
+            budget = bounded._Budget()
+            with patch.object(reader, "read", side_effect=AssertionError("caller preflight bypassed")), \
+                    patch.object(budget, "preflight", side_effect=AssertionError("assessment preflight ran first")), \
+                    self.assertRaises(AuthorityLimitError):
+                budget.read(connection, key, reader)
+            self.assertEqual(budget.metadata_bytes, 0)
+        self.assertEqual(rows(self.root), before)
 
     def test_stored_provenance_generic_scalars_and_retention_fail_closed(self):
         """Signed/bool/finite details survive reads; duplicate/noncanonical/depth-forged history does not."""

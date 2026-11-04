@@ -91,7 +91,12 @@ of aggregate fetched/retained representations plus scratch. These are processing
 accounts, not measured RAM. Permanent charges cover fetched field/link bytes,
 prospective envelope framing, retained typed text, and twice the complete
 prospective canonical request size. Six temporary enclosing envelope
-representations protect member decoding and reconstruction.
+representations precede member decoding and reconstruction, including Source
+predecessor discriminator parsing after its metadata read has completed. That
+parse releases its scratch before the separate typed decoding reservation.
+Reconstruction through a supplied connection reader also begins only after this
+assessment scratch is reserved and retains the reader's independent limits;
+the reservation lasts through the separately checked raw envelope reconstruction.
 In addition, six temporary enclosing control-object representations protect
 submission provenance and expected-head parsing/reconstruction, including full
 provenance details and framing. Six temporary complete fingerprint-v1 request

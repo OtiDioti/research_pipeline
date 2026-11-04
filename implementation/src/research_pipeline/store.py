@@ -815,6 +815,8 @@ class RecordStore:
         with required decoded classes checked on every incoming Tool role.
         Assessments additionally check exact assessed/replacement release identities,
         complete implicit assessment history and every constrained reported role.
+        Assessment scratch guards Source predecessor discriminator parsing separately
+        from the completed metadata read and subsequent typed decoding.
         Only assessment-budget failures on shallow edges are translated to their
         incoming owner's diagnostic; supplied-reader and database errors escape.
         Passive reports establish no authority or historical admission certificate.
@@ -903,8 +905,11 @@ class RecordStore:
                     if previous is None:
                         previous = read_metadata(previous_key)
                         envelopes[previous_key] = previous
-                    if (previous.content.get("format") == "research_pipeline.source_content"
-                            or value.supersedes is not None):
+                    # Read scratch has already been released; accessing content parses
+                    # it again. Release this scratch before decoding reserves its own.
+                    with metadata_work(previous_key, diagnostic):
+                        typed_predecessor = previous.content.get("format") == "research_pipeline.source_content"
+                    if typed_predecessor or value.supersedes is not None:
                         if previous_key not in values:
                             values[previous_key] = decode_metadata(previous, _decode_source_envelope)
                         predecessor = values[previous_key]
