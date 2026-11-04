@@ -40,7 +40,8 @@ Every object below is closed: all listed fields are required, even nullable fiel
 and known-empty declarations. There are no factual defaults or extension mappings.
 Constructor section objects must be ordinary `dict`; collections must be ordinary
 `list` or `tuple`. Wire objects and arrays must be ordinary `dict` and `list`.
-Subclasses, lookalikes, generators, sets and arbitrary objects are rejected.
+Subclasses, lookalikes, generators, sets and arbitrary objects are rejected without
+invoking their instance methods or metaclass equality/hash hooks.
 
 `F(T)` means exactly `{state, value, reason}`:
 

@@ -172,7 +172,7 @@ class _SchemaCheck:
         self.references = 0
 
     def visit(self, value, schema, label):
-        """Validate one bounded subtree without normalizing paths or constructing domain objects."""
+        """Validate a bounded subtree with inert exact-type checks before consuming its fields."""
         if type(schema) is dict:
             _closed(value, schema, label)
             for name, child in schema.items():
@@ -191,7 +191,8 @@ class _SchemaCheck:
                         raise ToolReleaseValidationError(f"{label}: missing fact value must be null")
                     _text(value["reason"], label + ".reason", nonblank=True)
             elif tag == "list":
-                if type(value) not in ((list, tuple) if self.typed else (list,)):
+                kind = type(value)
+                if kind is not list and not (self.typed and kind is tuple):
                     raise ToolReleaseValidationError(f"{label}: expected ordinary ordered collection")
                 for child in value:
                     self.visit(child, schema[1], label + "[]")

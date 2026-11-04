@@ -11,6 +11,8 @@ import subprocess
 import unittest
 from unittest.mock import patch
 
+from research_pipeline import tool_release as product
+from research_pipeline import tool_release_codec as codec
 from research_pipeline.domain import ArtifactReference, RecordReference
 from research_pipeline.resources import Dimension
 from research_pipeline.work_product import WorkProductFile
@@ -109,6 +111,34 @@ class StrAlias(str):
     """A string alias is deliberately outside the exact scalar contract."""
 
 
+def hostile_metaclasses(calls):
+    """Return separate equality/hash traps and an unhashable variant, recording into calls."""
+    class EqualityTrap(type):
+        """Expose class membership comparisons without disabling ordinary class hashing."""
+
+        def __eq__(cls, other):
+            """Record and fail any equality comparison involving the caller's class."""
+            calls.append("equality")
+            raise AssertionError("metaclass equality invoked")
+
+        __hash__ = type.__hash__
+
+    class HashTrap(type):
+        """Expose class-key lookups independently of equality comparisons."""
+
+        def __hash__(cls):
+            """Record and fail any attempt to hash the caller's class."""
+            calls.append("hash")
+            raise AssertionError("metaclass hashing invoked")
+
+    class UnhashableTrap(EqualityTrap):
+        """Require inert rejection even when the caller's class cannot be hashed."""
+
+        __hash__ = None
+
+    return (("equality", EqualityTrap), ("hash", HashTrap), ("unhashable", UnhashableTrap))
+
+
 class ToolReleaseTests(unittest.TestCase):
     """Verify complete passive declarations without opening a store or resolving any links."""
 
@@ -116,6 +146,16 @@ class ToolReleaseTests(unittest.TestCase):
         """Check a raw dictionary failure, optionally requiring a meaningful diagnostic."""
         with self.assertRaisesRegex(ToolReleaseValidationError, pattern or "."):
             decode_content(value)
+
+    def assert_inert_rejection(self, consume, calls, operations=()):
+        """Require validation failure and zero hook calls before any protected operation."""
+        with ExitStack() as stack:
+            for module, name in operations:
+                stack.enter_context(patch.object(module, name, side_effect=AssertionError("protected work reached")))
+            with self.assertRaises(ToolReleaseValidationError):
+                calls.clear()
+                consume()
+            self.assertEqual(calls, [])
 
     def test_complete_variants_and_actual_statements(self):
         """All origins and invocation kinds retain scientific, provenance and authority detail."""
@@ -353,6 +393,124 @@ class ToolReleaseTests(unittest.TestCase):
         inputs = constructor_sections()
         with patch.object(ArtifactReference, "to_dict", side_effect=AssertionError("serializer")), patch.object(RecordReference, "to_dict", side_effect=AssertionError("serializer")), patch.object(Dimension, "to_dict", side_effect=AssertionError("serializer")), patch.object(WorkProductFile, "to_dict", side_effect=AssertionError("serializer")):
             self.assertEqual(ToolRelease(**inputs).to_dict(), wire())
+
+    def test_metaclass_hooks_in_scalar_and_container_trees(self):
+        """Every tree boundary rejects hostile scalar/container aliases before hooks or copying."""
+        cases = (
+            ("readme", str, ("identity", "readme")),
+            ("integer", int, ("resources_recovery", "bounds", 0, "quantity", "value")),
+            ("mapping", TrapDict, ("identity", "access")),
+            ("list", TrapList, ("identity", "supplier", "value")),
+            ("tuple", TrapTuple, ("identity", "supplier", "value")),
+        )
+        operations = ((product, "detached"), (codec.json, "dumps"))
+        calls = []
+        for hook, metaclass in hostile_metaclasses(calls):
+            for label, base, path in cases:
+                hostile = metaclass("HostileValue", (base,), {
+                    "__doc__": "A scalar or container alias with caller-controlled class hooks.",
+                })
+                for boundary in ("decode_content", "from_dict", "constructor"):
+                    tree = constructor_sections() if boundary == "constructor" else wire()
+                    at(tree, path[:-1])[path[-1]] = hostile(at(tree, path))
+                    if boundary == "constructor":
+                        consume = lambda: ToolRelease(**tree)
+                    elif boundary == "from_dict":
+                        consume = lambda: ToolRelease.from_dict(tree)
+                    else:
+                        consume = lambda: decode_content(tree)
+                    with self.subTest(hook=hook, slot=label, boundary=boundary):
+                        self.assert_inert_rejection(consume, calls, operations)
+
+    def test_metaclass_hooks_in_all_typed_positions(self):
+        """Typed subclasses fail inertly at all tree consumers, including serializer traps."""
+        cases = (
+            ("artifact", TrapArtifact, ("evidence_limitations", "self_tests", "value", 0)),
+            ("record", TrapRecord, ("identity", "provenance_records", "value", 0)),
+            ("file", TrapFile, ("invocation", "adapter", "files", "value", 0)),
+            ("dimension", TrapDimension, ("resources_recovery", "bounds", 0, "dimension")),
+        )
+        operations = ((product, "detached"), (codec.json, "dumps"))
+        calls = []
+        for hook, metaclass in hostile_metaclasses(calls):
+            for label, base, path in cases:
+                hostile = metaclass("HostilePin", (base,), {
+                    "__doc__": "A typed pin alias whose metaclass and serializer must remain unused.",
+                })
+                for boundary in ("decode_content", "from_dict", "constructor"):
+                    inputs = constructor_sections()
+                    tree = inputs if boundary == "constructor" else wire()
+                    bad = hostile(**vars(at(inputs, path)))
+                    at(tree, path[:-1])[path[-1]] = bad
+                    if boundary == "constructor":
+                        consume = lambda: ToolRelease(**tree)
+                    elif boundary == "from_dict":
+                        consume = lambda: ToolRelease.from_dict(tree)
+                    else:
+                        consume = lambda: decode_content(tree)
+                    with self.subTest(hook=hook, slot=label, boundary=boundary):
+                        self.assert_inert_rejection(consume, calls, operations)
+
+    def test_metaclass_hooks_in_bypass_mutated_reference_fields(self):
+        """Virtual traversal of an exact reference rejects hostile retained scalars before copying."""
+        calls = []
+        operations = ((product, "detached"), (codec.json, "dumps"))
+        for hook, metaclass in hostile_metaclasses(calls):
+            for field, base in (("digest", str), ("size", int)):
+                inputs = constructor_sections()
+                reference = inputs["evidence_limitations"]["self_tests"]["value"][0]
+                hostile = metaclass("HostileScalar", (base,), {
+                    "__doc__": "A forged retained scalar whose class hooks must never run.",
+                })
+                object.__setattr__(reference, field, hostile(getattr(reference, field)))
+                with self.subTest(hook=hook, field=field):
+                    self.assert_inert_rejection(lambda: ToolRelease(**inputs), calls, operations)
+
+    def test_metaclass_hooks_at_external_json_boundary(self):
+        """Hostile str/bytes containing valid JSON fail before lexical scanning or parsing."""
+        text = canonical(wire())
+        calls = []
+        operations = ((codec, "lexical_preflight"), (codec.json, "loads"))
+        for hook, metaclass in hostile_metaclasses(calls):
+            for label, base, ordinary in (("text", str, text), ("bytes", bytes, text.encode("utf-8"))):
+                hostile = metaclass("HostileJSON", (base,), {
+                    "__doc__": "An external JSON alias that must be rejected before reading its content.",
+                })
+                data = hostile(ordinary)
+                with self.subTest(hook=hook, input=label):
+                    self.assert_inert_rejection(lambda: loads_content(data), calls, operations)
+
+    def test_metaclass_hooks_in_retained_json_at_every_consumer(self):
+        """All retained consumers, including both equality directions, reject hostile text inertly."""
+        text = canonical(wire())
+        valid = loads_content(text)
+        scan = codec.lexical_preflight
+
+        def scan_exact_text(data, limits):
+            """Allow the valid equality operand's scan but fail if hostile input reaches scanning."""
+            if type(data) is not str:
+                raise AssertionError("hostile input reached lexical scan")
+            return scan(data, limits)
+
+        calls = []
+        for hook, metaclass in hostile_metaclasses(calls):
+            hostile = metaclass("HostileSnapshot", (str,), {
+                "__doc__": "A retained text alias that must fail before any scan or comparison.",
+            })
+            forged = object.__new__(ToolRelease)
+            object.__setattr__(forged, "_json", hostile(text))
+            consumers = (
+                ("to_dict", lambda: forged.to_dict()),
+                ("dumps_content", lambda: dumps_content(forged)),
+                ("tool_id", lambda: forged.tool_id),
+                ("release_id", lambda: forged.release_id),
+                ("equality_left", lambda: forged == valid),
+                ("equality_right", lambda: valid == forged),
+            )
+            for boundary, consume in consumers:
+                with self.subTest(hook=hook, boundary=boundary):
+                    with patch.object(codec, "lexical_preflight", side_effect=scan_exact_text):
+                        self.assert_inert_rejection(consume, calls)
 
     def test_all_typed_subclasses_and_serialization_lookalikes(self):
         """Every typed position rejects subclasses and lookalikes without invoking hooks."""

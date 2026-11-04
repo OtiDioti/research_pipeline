@@ -55,17 +55,29 @@ def raw_attribute(value, name):
         raise ToolReleaseValidationError(f"missing retained field: {name}") from error
 
 
-_LAYOUTS = {
-    ArtifactReference: ("digest", "size"),
-    RecordReference: ("record_id", "revision", "relationship", "target_kind"),
-    WorkProductFile: ("path", "artifact"),
-    Dimension: ("dimension_id", "kind", "unit", "currency", "scale"),
-}
+_LAYOUTS = (
+    (ArtifactReference, ("digest", "size")),
+    (RecordReference, ("record_id", "revision", "relationship", "target_kind")),
+    (WorkProductFile, ("path", "artifact")),
+    (Dimension, ("dimension_id", "kind", "unit", "currency", "scale")),
+)
+
+
+def _layout_for_type(kind):
+    """Return an exact supported class's virtual fields, or None, without invoking hooks."""
+    # Class equality and hashing can invoke caller-controlled metaclass methods.
+    for expected_class, layout in _LAYOUTS:
+        if kind is expected_class:
+            return layout
+    return None
 
 
 def raw_fields(value):
-    """Project only the fixed virtual wire layout of an already exact typed object."""
-    return {name: raw_attribute(value, name) for name in _LAYOUTS[type(value)]}
+    """Project fixed virtual fields, rejecting unsupported classes before attribute access."""
+    layout = _layout_for_type(type(value))
+    if layout is None:
+        raise ToolReleaseValidationError("unsupported exact value type")
+    return {name: raw_attribute(value, name) for name in layout}
 
 
 def check_limit(limits, name, amount):
@@ -112,25 +124,30 @@ class _Counts:
 
 
 def _children(value, typed):
-    """Yield keys and values incrementally; typed layouts use fixed schema field order."""
-    if type(value) in _LAYOUTS and typed:
-        for name in _LAYOUTS[type(value)]:
+    """Yield exact container children or constructor-only virtual fields; reject aliases inertly."""
+    kind = type(value)
+    layout = _layout_for_type(kind) if typed else None
+    if layout is not None:
+        for name in layout:
             yield name, True
             yield raw_attribute(value, name), False
-    elif type(value) is dict:
+    elif kind is dict:
         for key, child in value.items():
             yield key, True
             yield child, False
-    else:
+    elif kind is list or (typed and kind is tuple):
         for child in value:
             yield child, False
+    else:
+        raise ToolReleaseValidationError("unsupported exact value type")
 
 
 def preflight(value, limits, *, typed=False):
-    """Bound a tree's virtual wire form before copying; reject cycles and scalar aliases.
+    """Bound a tree's virtual wire form before copying; reject cycles and aliases inertly.
 
     Only depth-sized iterator frames are retained. Repeated acyclic aliases are
     visited and charged again, because each occurrence appears in the wire form.
+    Classify exact types by identity before length, iteration or field access.
     Return base reconstruction units for subsequent schema-specific path charges.
     """
     counts = _Counts(limits)
@@ -146,6 +163,7 @@ def preflight(value, limits, *, typed=False):
                 active.remove(owner)
             continue
         kind = type(item)
+        layout = _layout_for_type(kind) if typed else None
         if key and kind is not str:
             raise ToolReleaseValidationError("object keys must be ordinary strings")
         if kind is str:
@@ -156,13 +174,13 @@ def preflight(value, limits, *, typed=False):
             if not 0 <= item <= 2**63 - 1:
                 raise ToolReleaseValidationError("integer outside nonnegative signed-64 range")
             counts.add(nodes=1, size=len(str(item)))
-        elif kind in (dict, list) or (typed and (kind is tuple or kind in _LAYOUTS)):
+        elif kind is dict or kind is list or (typed and kind is tuple) or layout is not None:
             if id(item) in active:
                 raise ToolReleaseValidationError("cyclic container")
             depth = len(stack)
             check_limit(limits, "max_depth", depth)
-            mapping = kind is dict or kind in _LAYOUTS
-            length = len(_LAYOUTS[kind]) if kind in _LAYOUTS else len(item)
+            mapping = kind is dict or layout is not None
+            length = len(layout) if layout is not None else len(item)
             check_limit(limits, "max_collection_items", length)
             counts.add(nodes=1, size=2 + max(0, length - 1) + (length if mapping else 0))
             active.add(id(item))
@@ -173,14 +191,14 @@ def preflight(value, limits, *, typed=False):
 
 
 def detached(value):
-    """Copy an already bounded, schema-checked constructor tree to ordinary wire values."""
+    """Copy a bounded, schema-checked tree to wire values using identity-only class dispatch."""
     kind = type(value)
-    if kind in _LAYOUTS:
+    if _layout_for_type(kind) is not None:
         value = raw_fields(value)
         kind = dict
     if kind is dict:
         return {key: detached(child) for key, child in value.items()}
-    if kind in (list, tuple):
+    if kind is list or kind is tuple:
         return [detached(child) for child in value]
     return value
 
@@ -327,8 +345,12 @@ def lexical_preflight(data, limits):
 
 
 def parse(data, limits, *, retained=False):
-    """Bound external UTF-8 input (or retained canonical text), scan, then parse strictly."""
-    if type(data) not in (str, bytes) or (retained and type(data) is not str):
+    """Reject input aliases inertly, then bound, scan and parse exact UTF-8 bytes or text.
+
+    Retained canonical input must be exact str and uses the canonical byte ceiling.
+    """
+    kind = type(data)
+    if (kind is not str and kind is not bytes) or (retained and kind is not str):
         raise ToolReleaseValidationError("JSON input: expected ordinary str or bytes")
     ceiling = "max_canonical_bytes" if retained else "max_wire_bytes"
     check_limit(limits, ceiling, len(data))
