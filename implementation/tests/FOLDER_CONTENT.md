@@ -1,0 +1,127 @@
+# Directory contents
+
+Immediate files and child directories only.
+
+- [__init__.py](__init__.py) — Foundation tests discoverable from the candidate implementation directory.
+- [fixtures/](fixtures/) — Static synthetic test inputs.
+- [legacy.py](legacy.py) — Independent historical SQLite and format-1 fixtures for compatibility tests.
+- [lifecycle_binding_fixtures.py](lifecycle_binding_fixtures.py) — Real stored control originals and independent wire oracles for offline binding tests.
+- [lifecycle_rendering_fixtures.py](lifecycle_rendering_fixtures.py) — Genuine captured observations and independent accounting for pure rendering tests.
+- [lifecycle_source_fixtures.py](lifecycle_source_fixtures.py) — Real disposable lifecycle source state and explicit independent processing budgets.
+- [operating_fixtures.py](operating_fixtures.py) — Disposable exact authority declarations and real stored short-note dossier fixtures.
+- [report_fixtures.py](report_fixtures.py) — Bounded synthetic report declarations without admission or operational authority.
+- [resource_fixtures.py](resource_fixtures.py) — Small complete controller declarations for resource tests; no operating authority.
+- [run_control_fixtures.py](run_control_fixtures.py) — Synthetic authenticated control fixtures with real metadata and explicitly pending reports.
+- [snapshot_fixtures.py](snapshot_fixtures.py) — Shared private synthetic inputs for reader/planner engineering evidence, never scientific evaluation.
+- [test_artifacts.py](test_artifacts.py) — Real-filesystem tests of local artifact ownership, integrity and publication failures.
+- [test_assessment.py](test_assessment.py) — Pure attributed contracts: strict syntax, detached declarations and exact envelope links.
+- [test_assessment_store.py](test_assessment_store.py) — Durable synthetic assessments: exact admission, retained disagreement and real recovery.
+- [test_backup.py](test_backup.py) — Real snapshot, independent restore, corruption and publication recovery evidence.
+- [test_checkout.py](test_checkout.py) — Real bounded checkout publication, substitution, interruption and inert-content tests.
+- [test_cli.py](test_cli.py) — Exercise the candidate CLI and observed import behavior in isolated processes.
+- [test_cli_operations.py](test_cli_operations.py) — Candidate-local subprocess evidence for bounded exact CLI inspection and checkout.
+- [test_cli_proposals.py](test_cli_proposals.py) — Saved-package codecs, binding gates and retained publication evidence using real private files.
+- [test_cli_readable_controls.py](test_cli_readable_controls.py) — Strict complete authored controls, independent numeric ceilings and bounded diagnostic encoding.
+- [test_cli_saved_work_product.py](test_cli_saved_work_product.py) — Fresh-process CLI draft round trips, exact retries and real interrupted acknowledgment.
+- [test_cli_view_example.py](test_cli_view_example.py) — Execute the exact self-contained readable-view CLI guide against candidate source.
+- [test_cli_views.py](test_cli_views.py) — Candidate-local subprocess coverage of immutable readable view CLI controls and recovery.
+- [test_corpus.py](test_corpus.py) — Strict, inert corpus values, ordered projections and bounded immutable declarations.
+- [test_corpus_store.py](test_corpus_store.py) — Real corpus capture/admission, immutable history, shallow boundaries and durable recovery.
+- [test_domain.py](test_domain.py) — Behavioral tests for domain-independent immutable envelope values.
+- [test_fixtures.py](test_fixtures.py) — Exercise the synthetic contract and source-local loader, without physics execution.
+- [test_lifecycle_rendering.py](test_lifecycle_rendering.py) — Offline shared rendering of genuine first-capture source facts and adversarial retained objects.
+- [test_lifecycle_rendering_bounds.py](test_lifecycle_rendering_bounds.py) — Full-public-operation equality, one-unit deficits and preallocation sentinels for lifecycle rendering.
+- [test_lifecycle_rendering_compatibility.py](test_lifecycle_rendering_compatibility.py) — Frozen pre-extraction v1/v2 source and output references; predecessor fixture remains untouched.
+- [test_lifecycle_rendering_example.py](test_lifecycle_rendering_example.py) — Execute the exact product/stdlib-only detached rendering guide from candidate-local source.
+- [test_lifecycle_rendering_repeated_roots.py](test_lifecycle_rendering_repeated_roots.py) — Persisted repeated declarations retain distinct-pin limits and bounded occurrence work.
+- [test_lifecycle_report_binding.py](test_lifecycle_report_binding.py) — Offline contract and cross-member semantic tests using accepted stored originals.
+- [test_lifecycle_report_binding_bounds.py](test_lifecycle_report_binding_bounds.py) — Independent accounting, exact types, retained-state checks and allocation-stage sentinels.
+- [test_lifecycle_report_binding_example.py](test_lifecycle_report_binding_example.py) — Execute the exact self-contained offline binding guide with candidate-local imports.
+- [test_lifecycle_source_bounds.py](test_lifecycle_source_bounds.py) — Independent source-stage equality/overflow boundaries and protected fresh ownership paths.
+- [test_lifecycle_source_correctness.py](test_lifecycle_source_correctness.py) — Real-store resource chronology and exact saved-baseline scalar regressions.
+- [test_lifecycle_source_example.py](test_lifecycle_source_example.py) — Execute the exact product/stdlib-only committed lifecycle source documentation example.
+- [test_lifecycle_source_recovery.py](test_lifecycle_source_recovery.py) — Actual source durability, contention, crash recovery, backups and malformed stored metadata.
+- [test_lifecycle_source_repairs.py](test_lifecycle_source_repairs.py) — Request-derived replay bounds, retained work, and adversarial public source boundaries.
+- [test_lifecycle_sources.py](test_lifecycle_sources.py) — Real coherent source commitment, immutable original recovery and closed detached contracts.
+- [test_migration.py](test_migration.py) — Verified legacy migration, exact history, actual interruption and continued-use evidence.
+- [test_operating_authority.py](test_operating_authority.py) — Pure authority wire, detached state, strict bounds and domain-separated host authentication.
+- [test_operating_authority_example.py](test_operating_authority_example.py) — Run the exact self-contained published synthetic authority example with candidate imports.
+- [test_operating_authority_readiness.py](test_operating_authority_readiness.py) — Actual dossier failures, source restrictions, historical integrity and bounded preflight.
+- [test_operating_authority_recovery.py](test_operating_authority_recovery.py) — Independent-handle authority races, real process/close loss, backup and resource preservation.
+- [test_operating_authority_store.py](test_operating_authority_store.py) — Real-store authority, current readiness, immutable recovery and reduced permissions.
+- [test_project.py](test_project.py) — Strict detached project codecs and attributed proposal prerequisites without effects.
+- [test_project_store.py](test_project_store.py) — Real captured project dossiers, exact historical admission, retries and durable recovery.
+- [test_report_example.py](test_report_example.py) — Execute the exact self-contained committed-report guide with candidate-local imports.
+- [test_report_publication.py](test_report_publication.py) — Exact historical report projection, offline navigation and explicit publication recovery.
+- [test_report_recovery.py](test_report_recovery.py) — Real report transaction contention, process loss, immutable artifact damage and exact restoration.
+- [test_report_rendering.py](test_report_rendering.py) — Retained negative typed labels and saved continuation declarations render without interpretation.
+- [test_report_resources.py](test_report_resources.py) — Selected-project resource projections with original receipts, uncertainty and exact source pins.
+- [test_reports.py](test_reports.py) — Strict report codecs and real committed setup reports; no scientific acceptance claims.
+- [test_resource_example.py](test_resource_example.py) — Execute the exact published resource example with candidate-local imports.
+- [test_resource_ledger.py](test_resource_ledger.py) — Real schema3 hierarchical/protected capacity, identity and detached inspection tests.
+- [test_resource_recovery.py](test_resource_recovery.py) — Real transaction contention, original-ID recovery, process loss and hot journals.
+- [test_resource_schema.py](test_resource_schema.py) — Schema3 creation, verified migrations, immutable tampering and scientific compatibility.
+- [test_resource_usage.py](test_resource_usage.py) — Strict usage evidence, cumulative settlement, exact overflow and sticky admission boundaries.
+- [test_resource_usage_integrity.py](test_resource_usage_integrity.py) — Rehashed live/immutable histories must retain evidence identity and historical admission semantics.
+- [test_resource_usage_recovery.py](test_resource_usage_recovery.py) — Real observation/settlement interruption and synchronized serial transaction outcomes.
+- [test_resources.py](test_resources.py) — Closed resource codec and exact provisioning arithmetic boundaries.
+- [test_run_control.py](test_run_control.py) — Closed lifecycle documents, exact projections, and pure non-admitting transition rules.
+- [test_run_control_boundaries.py](test_run_control_boundaries.py) — Independent limits, permission failures, actual artifact loss and reserved terminal metadata capacity.
+- [test_run_control_failures.py](test_run_control_failures.py) — Real storage damage, transaction acknowledgment failures and historical guard regressions.
+- [test_run_control_policy_resources.py](test_run_control_policy_resources.py) — Current policy, explicit generic revisions and immutable resource-anchor regression cases.
+- [test_run_control_preflight.py](test_run_control_preflight.py) — Allocation-stage boundaries for complete lifecycle envelopes, batches and results.
+- [test_run_control_recovery.py](test_run_control_recovery.py) — Independent-handle/process races, acknowledgment loss and exact backup recovery for control.
+- [test_run_control_serialization.py](test_run_control_serialization.py) — Explicit lock-order evidence for competing control successors on independent handles.
+- [test_run_control_store.py](test_run_control_store.py) — Real-store lifecycle admission, exact recovery, report ownership and bounded metadata failures.
+- [test_schema_history.py](test_schema_history.py) — Synthetic administrative-format consistency; these tests do not execute migration.
+- [test_scientific.py](test_scientific.py) — Structural scientific contracts, strict codecs and exact ordered envelope coherence.
+- [test_snapshot.py](test_snapshot.py) — Consistent bounded metadata capture over real private SQLite stores; engineering evidence only.
+- [test_source.py](test_source.py) — Strict bounded Source declarations, exact lineage and inert codecs on synthetic values.
+- [test_source_capture.py](test_source_capture.py) — Real explicit Source capture, bounded filesystem checks and strict detached proposals.
+- [test_source_capture_recovery.py](test_source_capture_recovery.py) — Saved Source captures across competing handles, process exits and exact backup restore.
+- [test_source_store.py](test_source_store.py) — Real synthetic Source history, exact admission, backup/restore and unchanged shallow boundaries.
+- [test_store.py](test_store.py) — Real local SQLite submissions, restart, concurrency and deterministic crash coverage.
+- [test_tool_assessment.py](test_tool_assessment.py) — Complete passive assessment content behavior and adverse exact-type boundaries.
+- [test_tool_assessment_bounds.py](test_tool_assessment_bounds.py) — Independent content accounting and preallocation guard ordering.
+- [test_tool_assessment_envelope.py](test_tool_assessment_envelope.py) — Complete literal projections, raw envelope validation and passive detachment.
+- [test_tool_assessment_envelope_bounds.py](test_tool_assessment_envelope_bounds.py) — Independent envelope accounting, stage precedence and finite provenance work.
+- [test_tool_assessment_example.py](test_tool_assessment_example.py) — Execute the exact self-contained documented assessment example with local imports.
+- [test_tool_registration.py](test_tool_registration.py) — Passive ToolRelease admission across exact roles, generic origins and cached closures.
+- [test_tool_registration_example.py](test_tool_registration_example.py) — Execute exactly the self-contained registration guide against candidate-local product modules.
+- [test_tool_registration_history.py](test_tool_registration_history.py) — Complete implicit Tool histories, exact selected inspection and snapshot authority limits.
+- [test_tool_registration_recovery.py](test_tool_registration_recovery.py) — Actual Tool commit faults, direct artifacts, serialized CAS and original-ID recovery.
+- [test_tool_release.py](test_tool_release.py) — Independent contract, identity, exact-type, semantic and passive-boundary coverage.
+- [test_tool_release_bounds.py](test_tool_release_bounds.py) — Independent equality/deficit oracles and pre-operation sentinels for every processing ceiling.
+- [test_tool_release_envelope.py](test_tool_release_envelope.py) — Exact projections, retained forgery rejection, detachment and passive boundaries.
+- [test_tool_release_envelope_bounds.py](test_tool_release_envelope_bounds.py) — Independent envelope ceilings and protected-operation witnesses for both conversions.
+- [test_tool_release_envelope_example.py](test_tool_release_envelope_example.py) — Execute the separate self-contained passive envelope guide with candidate-local imports.
+- [test_tool_release_example.py](test_tool_release_example.py) — Execute the exact product/stdlib-only Tool-release guide with candidate-local imports.
+- [test_typed_store.py](test_typed_store.py) — Typed admission over real durable stores, exact history, recovery and backups.
+- [test_validation.py](test_validation.py) — Test the real validator on tiny disposable suites, never recursively on this suite.
+- [test_validation_concurrent.py](test_validation_concurrent.py) — Real tiny candidate suites exercise automatic scheduling and intact sequential semantics.
+- [test_validation_lifecycle.py](test_validation_lifecycle.py) — Bounded fresh-process failure regressions for validator-owned workers and descendants.
+- [test_validation_module_cleanups.py](test_validation_module_cleanups.py) — Compare shared module-cleanup transitions with stock unittest in fresh candidates.
+- [test_validation_resources.py](test_validation_resources.py) — Pure resource and protocol regression cases; no host limits or affinity are changed.
+- [test_vault.py](test_vault.py) — Protected independent generations and bounded offline observations over disposable stores.
+- [test_vault_recovery.py](test_vault_recovery.py) — Observable publication, interruption and mutation evidence without sleeps or automatic replay.
+- [test_versions.py](test_versions.py) — Version-specific real SQLite admission, legacy compatibility and exact backup tests.
+- [test_view_capture.py](test_view_capture.py) — Real read-only filesystem safety, finite bounds and coordinated capture consistency tests.
+- [test_view_plan.py](test_view_plan.py) — Pure offline projections, portable inert inventory and independently enumerated navigation evidence.
+- [test_view_preservation.py](test_view_preservation.py) — Exact detached comparison and complete planned-only preservation without canonical writes.
+- [test_view_refresh.py](test_view_refresh.py) — Exact preservation, successor isolation and strict refresh input regression tests.
+- [test_view_refresh_budgets.py](test_view_refresh_budgets.py) — Independent outer preservation/control and nested capture admission boundaries.
+- [test_view_refresh_example.py](test_view_refresh_example.py) — Execute the published self-contained continuation verbatim in fresh candidate Python.
+- [test_view_refresh_failures.py](test_view_refresh_failures.py) — Resource, mutation and layout failures retain original trees and explicit partial output.
+- [test_view_refresh_observation.py](test_view_refresh_observation.py) — Coordinated final-read mutations and strict interrupted-control validation regressions.
+- [test_view_refresh_recovery.py](test_view_refresh_recovery.py) — Real refresh interruption, competing publication and offline tamper evidence.
+- [test_work_product.py](test_work_product.py) — Strict immutable work-product values, portable names and exact envelope coherence.
+- [test_work_product_import.py](test_work_product_import.py) — Real draft capture, strict proposals, explicit commits and durable original-ID recovery.
+- [test_work_product_store.py](test_work_product_store.py) — Real durable manifest admission, exact history, shallow declarations and preserved backups.
+- [tool_assessment_fixtures.py](tool_assessment_fixtures.py) — Independent synthetic assessment declarations, projection oracles and accounting.
+- [tool_registration_fixtures.py](tool_registration_fixtures.py) — Real-store fixtures for passive registration, independent wire identities and damage tests.
+- [tool_release_envelope_fixtures.py](tool_release_envelope_fixtures.py) — Independent envelope fixtures and ordered expectations, never production projections.
+- [tool_release_fixtures.py](tool_release_fixtures.py) — Independent complete passive declarations and stdlib-only wire/count oracles.
+- [validation_fixtures.py](validation_fixtures.py) — Setup-only fixtures for tiny standalone validator processes; no repository-suite recursion.
+- [view_capture_fixtures.py](view_capture_fixtures.py) — Private candidate-local fixtures for bounded capture and pure preservation tests.
+- [view_refresh_fixtures.py](view_refresh_fixtures.py) — Disposable refresh fixtures reusing accepted capture/prior-state helpers.
+- [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

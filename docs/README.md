@@ -6,6 +6,10 @@ Development control records are under [development/](../development/README.md). 
 
 Document implemented behavior and limitations explicitly. Do not present a planned capability as available.
 
+The [passive Tool-assessment guide](tool-assessments.md) specifies attributed
+checks, independent permission/qualification/lifecycle reports, bounded content
+codecs and exact pure envelopes, with an executable in-memory example.
+
 The [development test-validation guide](test-validation.md) explains automatic
 fixture-safe scheduling, complete sequential comparison, resource and lifecycle
 bounds, accounting, the isolation audit and benchmark procedure.

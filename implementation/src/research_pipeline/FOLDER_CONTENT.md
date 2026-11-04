@@ -1,0 +1,55 @@
+# Directory contents
+
+Immediate files and child directories only.
+
+- [__init__.py](__init__.py) — Identity of the research workbench foundation; no research runtime yet.
+- [__main__.py](__main__.py) — Source-local entry point for bounded foundation CLI operations.
+- [artifacts.py](artifacts.py) — Owned local POSIX artifact storage with verified, durable no-overwrite publication.
+- [assessment.py](assessment.py) — Pure attributed assessment contracts; declarations confer no scientific authority.
+- [backup.py](backup.py) — Explicit local snapshots with strict verification and durable completeness markers.
+- [checkout.py](checkout.py) — Bounded, inert local copies with durable publication and untrusted base descriptors.
+- [cli.py](cli.py) — Source-local inspection and explicit work-product round trips with bounded acknowledgment semantics.
+- [cli_controls.py](cli_controls.py) — Strict bounded local CLI controls; none of these values conveys scientific authority.
+- [cli_inspection.py](cli_inspection.py) — Bounded exact CLI metadata reconstruction and offline original-checkout observation.
+- [cli_proposals.py](cli_proposals.py) — Strict saved work-product packages, offline observations and private publication.
+- [cli_views.py](cli_views.py) — Bounded CLI admission and observations for the existing immutable readable-view APIs.
+- [corpus.py](corpus.py) — Pure immutable seed inventories over exact Source captures; declarations confer no authority.
+- [domain.py](domain.py) — Validated storage envelopes; descriptive JSON never grants scientific authority.
+- [fixtures.py](fixtures.py) — Load a synthetic paper example; validate its contract, never scientific truth.
+- [lifecycle_report_binding.py](lifecycle_report_binding.py) — Bounded offline lifecycle intent consistency; never persistence or work authority.
+- [lifecycle_report_rendering.py](lifecycle_report_rendering.py) — Pure bounded rendering of detached first-capture facts, never storage authentication.
+- [lifecycle_report_source.py](lifecycle_report_source.py) — Bounded detached lifecycle source facts; consistency never establishes permission.
+- [lifecycle_source_capture.py](lifecycle_source_capture.py) — Connection-owned first lifecycle sources, durable objects and original-ID recovery.
+- [operating_authority.py](operating_authority.py) — Detached local operating declarations and explicit host-only HMAC trust.
+- [operating_authority_store.py](operating_authority_store.py) — Bounded authority operations on the existing immutable SQLite submission store.
+- [project.py](project.py) — Pure versioned intake dossiers; attributed readiness proposals grant no authority.
+- [report_capture.py](report_capture.py) — Atomic report source capture on existing scientific, artifact and resource transactions.
+- [report_view.py](report_view.py) — Explicit v2 readable projections of exact committed report history, without store access.
+- [reports.py](reports.py) — Strict committed report declarations and deterministic, inert saved-state rendering.
+- [resource_ledger.py](resource_ledger.py) — Canonical resource admissions and historical invariants on the store's SQLite boundary.
+- [resources.py](resources.py) — Strict, detached controller resource declarations; these confer no execution authority.
+- [run_control.py](run_control.py) — Detached prepared-control facts and pending report intent, never execution authority.
+- [run_control_store.py](run_control_store.py) — Connection-owned durable control history and bounded metadata-only recovery.
+- [schema.py](schema.py) — Fixed metadata/backup version contracts and pure consistency validation.
+- [scientific.py](scientific.py) — Pure versioned scientific descriptions and coherent links, without scientific authority.
+- [snapshot.py](snapshot.py) — Bounded detached navigation metadata, without artifact availability or admission claims.
+- [source.py](source.py) — Pure bounded source declarations and exact capture links, without acquisition or parsing.
+- [source_capture.py](source_capture.py) — Explicit bounded local Source preparation and pure saved requests; never implicit commit.
+- [store.py](store.py) — Local controller-only atomic revision submissions over SQLite and immutable bytes.
+- [tool_assessment.py](tool_assessment.py) — Passive attributed tool assessments; local validity conveys no permission or truth.
+- [tool_assessment_codec.py](tool_assessment_codec.py) — Private finite codec adapters and public ceilings for passive tool assessments.
+- [tool_assessment_envelope.py](tool_assessment_envelope.py) — Pure bounded assessment envelopes; projections and provenance remain unauthenticated data.
+- [tool_release.py](tool_release.py) — Passive immutable tool-release declarations; identities confer no execution authority.
+- [tool_release_codec.py](tool_release_codec.py) — Private bounded traversal and JSON guards for passive tool-release declarations.
+- [tool_release_envelope.py](tool_release_envelope.py) — Bounded, passive ToolRelease envelopes; local consistency is not authenticity.
+- [vault.py](vault.py) — Private immutable reading generations with exclusive Linux publication and offline checks.
+- [view_capture.py](view_capture.py) — Bounded read-only observations of edited readable generations, detached from storage.
+- [view_plan.py](view_plan.py) — Pure deterministic reading plans with inert originals and verified generated navigation.
+- [view_preservation.py](view_preservation.py) — Pure deterministic preservation proposals over fully detached readable-view captures.
+- [view_refresh.py](view_refresh.py) — Preserve an original observation and atomically publish its associated reading successor.
+- [view_refresh_controls.py](view_refresh_controls.py) — Strict metadata-only refresh descriptor checks, including unfinished preparations.
+- [view_refresh_inspection.py](view_refresh_inspection.py) — Read-only current-state inspection of token-paired refresh observations and packages.
+- [view_refresh_metadata.py](view_refresh_metadata.py) — Strict refresh representations and deterministic inert continuation reports.
+- [work_product.py](work_product.py) — Pure versioned multi-file declarations; paths and kind labels confer no authority.
+- [work_product_import.py](work_product_import.py) — Bounded draft previews and pure frozen proposals; explicit typed submission commits.
+- [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.
