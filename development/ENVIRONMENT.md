@@ -301,3 +301,28 @@ AUTH revision 7 approves the following explicit argv for new runs; these values 
 The local account catalog fetched `2026-11-04T16:39:43.361492207Z` advertises both model identifiers with `high`/`xhigh`. The existing selected Codex remains 0.166.0. These observations establish advertised support only; no live model call or product CWI start was made for this amendment, and fresh compatibility/authentication/model readiness is required before future product execution. Preserve historical executable/environment/receipt evidence and obtain the adopted backend identity from coding_pipeline_changes.md.
 
 New state is schema revision 2 with all four role pairs immutable on resume. No revision-1 state migration is authorized or supplied. Retain the original backend revision for historical inspection; do not automatically resume historical runs. This maintenance session ends after its safe checkpoint without further product development.
+
+## REQ-D05-004 fresh launch readiness — 2026-11-04 18:04 UTC
+
+Fresh host inspection finds no CWI controller, role or product validator.
+Original-backend status/diagnose reconciles all40historical schema-1 runs:
+28final receipts,27exact sources integrated,cd93ad37 deliberately superseded,
+12terminal incomplete,no lease/quarantine/pending integration. Three historical
+recording findings remain preserved. Original backendb6a2e052 is retained in
+local/backend-repairs/CP-002; no historical resume or migration is attempted.
+
+Supported backend is cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66. At18:04:19Z
+actual adapter ephemeral/new/resume/login parser probes and ChatGPT login pass.
+Pinned Codex0.166.0/SHA256b8a11fed is unchanged. Account catalog fetched
+18:03:21.024596720Z advertises both exact approved models and high/xhigh.
+No server-side model attestation, quota or invoice measurement is claimed.
+Stable launch mapSHA256b674ef72 remains unchanged; no installation, dependency,
+auth/config, provider or security modification. Inherited descriptor limits
+1024/1048576 permit the documented launch-process-only soft4096 setting.
+
+REQ-D05-004 uses all eight revision7 role flags,one milestone,repairs2perreview
+6perrun,2700seconds per agent/check,both ordered full-validator/literal-base
+formatting checks,no--merge. Before attempt40continuous39/100used61remain;
+commissioning1/3closed,CWIrepairs35,coordinator15,backend3/3/0. No recovery or
+new usage is booked during readiness. All previous holds and unknown liabilities
+persist. Private readiness:local/reconciliation-20261104-assessments/.

@@ -1,5 +1,7 @@
 # Development status
 
+> **Current prelaunch checkpoint — 2026-11-04 18:04 UTC:** REQ-D05-004 is READY and unlaunched. Fresh Git/host/original-backend status and diagnosis reconcile all40prior runs with no active owner, lease, quarantine or pending integration. Adopted backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`, pinned Codex, ChatGPT login, catalog support and stable launch map pass readiness. See [ENVIRONMENT.md](development/ENVIRONMENT.md). Before attempted start40: continuous39/100used61remain, CWIrepairs35, coordinator recoveries15, backend3/3/0. All historical usage, exhausted recoveries and scientific/live holds persist.
+
 > **Current documentation checkpoint — 2026-11-04:** the human resumed coordination after CP-003, then requested a documentation-only policy consistency pass. Current guidance permits removal of obsolete interfaces without backward compatibility, checks goal understanding at the Designer level (Architect only when necessary), and delegates implementation review/validation to CWI. Acceptance evidence, exact Git identities, integration/recovery/security gates and required post-integration validation remain. New starts use all eight revision7 role flags; historical records and frozen configurations retain their original settings. No product run has started in this session.
 
 > **Backend maintenance checkpoint — 2026-11-04 17:21 UTC:** CP-003 was tested and adopted as `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`. See [the backend audit](coding_pipeline_changes.md) for the exact diff, tests, compatibility limits and protected backup. New runs require the eight role flags in [MODEL_POLICY.md](development/MODEL_POLICY.md), under authorization revision 7. Historical schema-1 runs require their original backend for inspection and must not be automatically resumed. The product checkpoint and resource accounting below are preserved as historical observations; this note supersedes only their backend/model launch guidance. No product run was started during maintenance.
@@ -20,8 +22,9 @@ This long reconstruction/execution session reaches a safe context checkpoint aft
 
 ## Exactly one next safe action
 
-After the documentation checkpoint, refresh exact Git/CWI ownership, model,
-environment and budget readiness, then launch the still-unlaunched REQ-D05-004
-once through the adopted backend with all eight revision7 role flags and both
-literal-base checks. Continuous39/100starts remain consumed (61available); no
-attempt40has been made. Existing holds, usage and exhausted recoveries persist.
+Launch REQ-D05-004 once from this committed clean baseline through the supported
+direct-child backend, counting attempted start40locally first. Use all eight
+revision7 role flags,one milestone,repairs2/6,2700seconds,processFD4096,the stable
+map,both full-validator/literal-launch-base checks,no--merge. Keep tracked parent,
+backend and launch environment fixed while live or base-bound; check Designer goal
+understanding and authoritative CWI evidence without routine Writer inspection.
