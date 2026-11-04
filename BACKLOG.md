@@ -1,5 +1,15 @@
 # Blocked, paused, and deferred work
 
+## Assessment persistence integrated; existing holds unchanged — 2026-11-05
+
+[Run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](development/runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted/exact-integrated `9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb`,
+final/target1326/1326. Two internal repairs explicitly resolved F001–F004; no
+unresolved new blocker, coordinator recovery or backend defect remains. B013
+Writerdeadline2/2 still blocks its failed B1 recovery path; B010/B011 retain
+dependent scientific/live holds. REQ-D05-006 is ordinary independent CLI work,
+without failed-draft reuse, authority expansion or allowance reset. STATUS owns
+current counters and exactly one next safe action.
+
 ## Assessment contracts integrated; existing holds preserved — 2026-11-04
 
 [Run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](development/runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) accepted/exact-integrated `150aa0ee3e9e5611c77eeb714f18b8484578235c`,

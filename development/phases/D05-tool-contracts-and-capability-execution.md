@@ -4,7 +4,7 @@
 
 REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. That slice supplied passive conversion and projections only. Registration and history were subsequently integrated below; assessment, permission and real execution remain required.
 
-**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 passive registration is accepted, integrated and target-validated. REQ-D05-004 pure attributed assessments are accepted, integrated and target-validated. REQ-D05-005 typed persistence is READY; authenticated qualification and execution remain incomplete.
+**State:** PARTIAL. REQ-D05-001 passive contracts and REQ-D05-002 exact envelopes are accepted, integrated and target-validated. REQ-D05-003 passive registration is accepted, integrated and target-validated. REQ-D05-004 pure attributed assessments are accepted, integrated and target-validated. REQ-D05-005 typed persistence is accepted, integrated and target-validated. REQ-D05-006 passive CLI is READY; authenticated qualification and execution remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.
 
@@ -96,3 +96,15 @@ No store admission, authentication, permission, scientific credit or execution.
 [REQ-D05-005](../requests/REQ-D05-005.md) is READY for existing transactional typed
 admission, exact release pairing and history. All phase acceptance boxes remain
 open; current source, scientific/live limits and exhausted recoveries persist.
+
+## Transactional assessments delivered; passive CLI ready — 2026-11-05
+
+[Run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](../runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted/exact-integrated
+`9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb`,receipt`1c598a1ba845198a431794b9c0b879770423a441996ef4a87158f72f5553270e`,
+final/target1326/1326,zero other outcomes/mutation. Exact release pairing, complete
+metadata history/roles, bounded public processing, transactional original-ID
+recovery and executed documentation are evidenced. Two CWI repairs close four
+findings;123 predecessor paths remain,128 are protected now. No permission,
+qualification credit, current lifecycle or execution is established. All phase
+acceptance boxes and D04/M0-E/scientific/live duties stay open. REQ-D05-006 is
+READY for a focused passive CLI boundary; STATUS owns one next safe action.

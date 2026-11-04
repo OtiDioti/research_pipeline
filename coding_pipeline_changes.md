@@ -372,3 +372,14 @@ recovery was attempted; backend counts remain3/3/0 after CP-003. CWI owns
 implementation review/validation; coordinator checked Designer understanding,
 receipt/source/integration safety and required target validation. Historical
 state and the original backend remain preserved; no migration/resume occurred.
+
+## 2026-11-05 — Passive assessment persistence; backend unchanged
+
+REQ-D05-005/run5bad636b finally accepted/exact-integrated9f6cd171,
+receipt1c598a1b,final/target1326/1326. Two CWI product repairs close four
+allocation/error-context findings; they are not backend maintenance or coordinator
+recoveries. Backend stayed cleanbcb7ad24,pinnedCodex/map/security unchanged;all11
+role invocations match revision7. No maintenance candidate or historical migration
+was attempted. Counts remain3/3/0. Original backend/evidence are preserved.
+Read-only coordinator audit-helper assumptions were corrected without mutating
+source/state/receipts or consuming recovery. Required target verification passed.

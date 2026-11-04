@@ -1,79 +1,67 @@
 # Development status
 
-## Passive attributed Tool assessments integrated — 2026-11-04
+## Passive Tool-assessment persistence integrated — 2026-11-05 Europe/Berlin
 
-[REQ-D05-004 / run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](development/runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) is finally accepted and
-exactly integrated as **150aa0ee3e9e5611c77eeb714f18b8484578235c**, tree `4229eb65f10367679bd080560e15ceec72a9e51e`.
-Final receipt SHA256 `43dd7b1cafa532949c4f28770bae437c19c6fdea768144915e41c5b2c98d8ff6`. Exact fast-forward at
-19:38:00.433426Z preceded all tracked checkpoint edits. Final and integrated
-target each passed **1276/1276**, zero other outcomes or source mutation, with
-identical per-test dispositions. Target ended 19:54:35.010598Z in 991.977131
-validator seconds, empty stderr; both frozen commands passed.
+[REQ-D05-005 / run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](development/runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted and
+exactly integrated **9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb**, tree `eac404c7e61d663a9ddab3a4154f1e240da528eb`,
+final receipt SHA256 `1c598a1ba845198a431794b9c0b879770423a441996ef4a87158f72f5553270e`. Final/target **1326/1326**,
+zero other outcomes/source mutation; all1326 per-test dispositions match.
+Exact fast-forward 2026-11-04T23:04:32.602262+00:00 preceded tracked checkpoint edits.
+Target completed 2026-11-04T23:21:42.462651+00:00 in 1002.703616 validator seconds,
+empty stderr; both frozen checks passed. Stdout SHA256
+`f056150fc5670b11cb634c6144ee0c88306bc3a2f2da78727b537e6244ca433b`.
 
-The product now has pure ToolAssessment declarations, finite canonical codecs,
-exact passive envelopes, separate attributed assessment dimensions and an executed
-guide. All 117 predecessor test/helper/fixture/validator blobs/modes remain exact;
-123 such paths are now protected, excluding navigation indexes. There is no typed
-assessment persistence, authenticated permission/qualification or actual execution.
-D02/D03/D04/D05/M0-E and the whole product remain partial. D04B1/B2/008/009, all
-13 FOLLOWON criteria, all 94 requirements and scientific/live/human gates remain.
-B-013 Writer-deadline recovery stays exhausted 2/2; no failed B1 draft was used.
-B-010/B-011 still gate dependent scientific/live work only.
+The existing typed store now admits passive assessments with exact release pairing,
+complete immutable metadata history, bounded constrained/shallow traversal and
+original-ID recovery. Selected inspection remains local consistency, without a
+historical admission certificate, authenticated assessor, permission, qualification
+credit or execution. All123 predecessor test/helper/fixture/validator blobs/modes,
+pure assessment contracts and the exposed evaluation fixture remain exact;
+128 test/helper/fixture/validator paths are now protected, excluding indexes.
+Fifty new methods extend1276 to1326. Two CWI product repairs closed F001–F004;
+no coordinator recovery or backend change occurred.
 
-All **41** retained runs are terminal: **29** final receipts, **28** exact final
-sources integrated, one validator acceptance deliberately superseded, **12**
-terminal incomplete. No current controller, role, target validator, lease,
-quarantine or pending integration remains. Historical recording findings and
-CWI’s external-integration label ACCEPTED_UNMERGED remain unchanged.
+All42retained runs are terminal:30final receipts,29integrated exact final sources,
+one validator acceptance deliberately superseded,12incomplete histories. No current
+controller/role/target validator,lease,quarantine,pending integration or open finding
+remains. Historical recording findings and external ACCEPTED_UNMERGED labels stay
+preserved. The original schema1 backend remains available for historical inspection;
+no historical resume or migration occurred.
 
-AUTH-2026-10-30-001 revision **7 CONTINUOUS** persists. Continuous **40/100 starts
-used; 60 remain**. Next attempted start41 leaves59, including failed preflight.
-Commissioning1/3 closed; cumulative CWI repairs35, coordinator recoveries15,
-backend attempted/adopted/reverted3/3/0. This run consumed zero repairs/recoveries.
-Five completed turns add 6,247,804 input (5,705,984 cached), 97,944 output
-(33,374 reasoning) once. Raw audit confirms 317 known turns and reported lower
-bound **346,236,053 input (316,850,176 cached), 3,325,173 output (1,011,999
-reasoning)**. Nested categories are included; five historical interrupted roles,
-native backend/coordinator and quota/invoice liabilities remain unknown.
-No API spending, purchase, new service/data/live/scientific, push, publication
-or deployment authority is added.
+AUTH-2026-10-30-001 revision7 CONTINUOUS persists. Continuous **41/100 starts
+used;59remain**; next attempted42leaves58 including failed preflight. Commissioning
+1/3closed; cumulative CWIrepairs37,coordinator recoveries15,backend3/3/0. All consumed
+and exhausted families persist,especially B013Writerdeadline2/2; no failed B1 source
+was used. Eleven completed turns add25,792,371input(24,459,904cached),208,911output
+(109,845reasoning) once at this checkpoint. Cumulative reported lower bound:
+**372,028,424input(341,310,080cached),3,534,084output(1,121,844reasoning)**,
+328known turns. Nested categories are included; five older interrupted roles,
+native backend/coordinator,quota/invoice liabilities remain unknown. No API,
+purchase,new service/data,product-live/scientific,push,publication/deployment
+permission is added.
 
-Clean adopted backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`, pinned
-Codex0.166.0/SHA256b8a11fed, stable mapb674ef72, FD4096, 2700-second limits, one
-milestone, repairs2/6, two ordered checks and no --merge stayed fixed. All five
-actual invocation records match the eight role flags in
-[MODEL_POLICY.md](development/MODEL_POLICY.md). No effective server-model
-attestation or remaining quota is claimed. The coordinator verified Designer goal
-understanding and CWI acceptance/Git/integration evidence without routine Writer
-artifact inspection. Required target validation completed; no extra suite rerun.
+Clean backendbcb7ad24f83ff5193345f3d4fa72122ea53a4e66,pinnedCodex0.166.0/SHA256b8a11fed,
+stable mapb674ef72/validationdigest46f63a41,FD4096,2700-second invocation/check
+limits,one milestone,repairs2/6,two ordered checks and no--merge stayed fixed.
+All11actual invocations match the eight role flags in
+[MODEL_POLICY.md](development/MODEL_POLICY.md). No server effective-model
+attestation or remaining-quota claim. The coordinator checked Designer goal
+understanding, receipt/review/validation/Git identities and integration safety;
+no routine Writer code/test/substantive-diff inspection or duplicate full checks.
+Read-only audit-helper assumptions were corrected without evidence/source mutation
+or recovery consumption. Required target validation is complete.
 
-This long reconstruction, documentation and implementation session reaches a safe
-context checkpoint. [REQ-D05-005](development/requests/REQ-D05-005.md) is READY
-for passive typed persistence, exact target/release pairing and immutable history.
-It has not launched and consumes no new start or recovery. CONTINUOUS persists;
-no automatic restart supervisor is installed. Local handoff preserves details.
-
-## Fresh persistence prelaunch reconciliation — 2026-11-04 20:06 UTC
-
-The human resumed the same CONTINUOUS grant in a fresh session. Read-only
-status/diagnose inspection reconciles all 41 retained runs: 29 final receipts,
-28 integrated final sources, the deliberately superseded validator acceptance,
-and 12 terminal incomplete histories. No current lease, quarantine or pending
-integration exists. Historical recording findings and terminal in-flight markers
-remain preserved under their previous nonresumable dispositions. Host process
-inspection found only the coordinator's inspection processes, with no competing
-implementation owner. No historical run was resumed or migrated.
-
-REQ-D05-005 remains committed READY, request SHA256
-617e543eb33714c41e18d8bdbfffd30f04d5a2b523543a3a488b1709673aa04a.
-Pinned Codex compatibility/login probes pass; the current account catalog
-advertises both exact approved models and efforts. Backend and launch map remain
-unchanged. Continuous starts are still 40/100 used, 60 remaining; count attempted
-start41 locally before invocation. No recovery, usage or allowance reset occurs
-during this preparation. Evidence: local/reconciliation-20261104-persistence/.
+D02/D03/D04/D05/M0-E and the product remain partial. D04B1/B2/008/009,
+all13FOLLOWONcriteria,all94requirements and scientific/live/human gates remain.
+B010/B011 gate dependent scientific/live work only. [REQ-D05-006](development/requests/REQ-D05-006.md)
+is READY/unlaunched for explicit passive Tool-record CLI submission/inspection;
+DEV077 records this ordinary independent scope choice. No new start or recovery
+was consumed by preparation. This long recovery/two-repair session reaches a
+context checkpoint. CONTINUOUS persists; no automatic restart supervisor exists.
 
 ## Exactly one next safe action
 
-Launch REQ-D05-005 once from this actual committed clean baseline through the
-supported direct-child backend, using all eight revision7 role flags, both
-literal-base checks and existing bounds. Count attempted start41 locally first.
+Refresh Git/CWI/host ownership, exact model/environment readiness and budget evidence,
+then launch REQ-D05-006 once from its actual committed clean baseline through the
+supported backend with all eight role flags,both literal-base checks and existing
+bounds. Count attempted start42 locally before invocation.

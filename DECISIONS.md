@@ -334,3 +334,23 @@ only CWI Writer implements. Preserve 123 test/helper/fixture/validator paths and
 all1276tests, while updating navigation indexes as required. This is ordinary
 independent engineering, with no failed B1 source, new recovery or scientific
 authority. Existing holds and all remaining requirements persist.
+
+## DEV-077 — Expose passive Tool records through the existing CLI
+
+After actual assessment persistence acceptance/integration and1326/1326 target
+validation, choose REQ-D05-006 for exact typed inspection and a separate explicit
+mixed ToolRelease/ToolAssessment submission batch. One atomic batch preserves
+forward-reference pairing; reuse private config, bounded control/output handling
+and existing typed store/recovery instead of a generic canonical-write command or
+another registry. Permit only an essential prescribed connection-owned bounded
+read seam if required to preserve caller limits and snapshot identity.
+
+Authenticated enablement is a separate current-authority boundary; execution also
+needs missing D04 admission/isolation/report contracts. Those remain mandatory;
+this CLI gives a useful terminal workflow without consuming failed B1 source or
+an exhausted recovery. Preserve128 predecessor blobs/modes and1326 tests, exact
+original IDs and the local-consistency/authenticity distinction. Architect fixes
+complete standalone interfaces before its CWI Writer implements. This is an
+ordinary coordinator choice within the existing grant, not human scientific
+approval or a reset. Session context requires a safe handoff with this committed
+request ready; no new implementation start is claimed.

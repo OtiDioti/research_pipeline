@@ -1,5 +1,14 @@
 # Coding-pipeline requests
 
+## Current checkpoint — passive Tool CLI ready, 2026-11-05
+
+[REQ-D05-005](REQ-D05-005.md)/[run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](../runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md)
+is finally accepted/exact-integrated/target-validated1326/1326. Its frozen request
+bytes remain unchanged. [REQ-D05-006](REQ-D05-006.md) is READY/unlaunched for exact
+passive typed Tool inspection and explicit mixed submission. No new grant,
+start,recovery,permission,qualification or execution is implied. STATUS owns
+readiness,counters and one next safe action.
+
 Each request is a bounded, committed implementation assignment. Use [the template](../templates/REQUEST.md). The original specification stays authoritative, but the request gives CWI an actionable scope and measurable acceptance criteria without relying on a stale outer conversation.
 
 - [REQ-D01-001](REQ-D01-001.md): first testable product foundation; accepted and integrated in the historical commissioning run.

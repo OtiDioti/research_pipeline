@@ -1,5 +1,23 @@
 # Development roadmap
 
+## Assessment persistence delivered; passive Tool CLI ready — 2026-11-05
+
+[REQ-D05-005 / run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](development/runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted and
+exactly integrated **9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb**, tree `eac404c7e61d663a9ddab3a4154f1e240da528eb`,
+final receipt SHA256 `1c598a1ba845198a431794b9c0b879770423a441996ef4a87158f72f5553270e`. Final/target **1326/1326**,
+zero other outcomes/source mutation; all1326 per-test dispositions match.
+Exact fast-forward 2026-11-04T23:04:32.602262+00:00 preceded tracked checkpoint edits.
+Target completed 2026-11-04T23:21:42.462651+00:00 in 1002.703616 validator seconds,
+empty stderr; both frozen checks passed. Stdout SHA256
+`f056150fc5670b11cb634c6144ee0c88306bc3a2f2da78727b537e6244ca433b`.
+
+Typed assessment admission, exact pairing/history and original-ID recovery are
+now evidenced. [REQ-D05-006](development/requests/REQ-D05-006.md) is READY for an
+explicit passive CLI batch and exact typed inspection. Authentication/current
+scoped enablement, qualification enforcement and real execution remain mandatory.
+D04B1/B2/008/009,all13FOLLOWONcriteria and scientific/live gates stay open;
+B013deadline2/2 is not reopened. Full phases and product remain partial.
+
 ## Passive attributed assessments integrated; persistence ready — 2026-11-04
 
 [REQ-D05-004 / run 2b89ca22-5cae-4535-aa48-c16d07b3cff6](development/runs/2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) finally accepted and exact-integrated

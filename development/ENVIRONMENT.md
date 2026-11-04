@@ -365,3 +365,23 @@ milestone, repairs2/6, 2700-second invocation/check limits, both ordered checks
 and no --merge. Continuous40/100 remains before counting attempted start41;
 all consumed/exhausted recoveries and unknown liabilities persist. Private
 readiness: local/reconciliation-20261104-persistence/.
+
+## Assessment persistence integration and target evidence — 2026-11-05
+
+REQ-D05-005/run5bad636b retained clean backendbcb7ad24,pinnedCodex0.166.0/SHA256b8a11fed,
+stablemapb674ef72/validationdigest46f63a41,FD4096,2700s,one milestone,repairs2/6,
+two ordered checks,no--merge. All11 actual invocation records match revision7 role
+pairs. No install/auth/config/dependency/provider/backend/security change or
+server-model/quota claim. Original schema1 backendb6a2e052 remains preserved.
+Baseline1276/1276/994.401890s;initialcandidate1313/1313/995.361484s;milestonerepair
+1324/1324/986.044321s;initialfinal1324/1324/1002.712892s;finalrepair1326/1326/
+1001.255034s. All checks passed with no other outcomes/mutation; review findings
+required two genuine product repairs and are explicitly resolved.
+
+ExactFF2026-11-04T23:04:32.602262+00:00 integrated9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb beforetrackededits.
+Target ended2026-11-04T23:21:42.462651+00:00,1326/1326/1002.703616s,
+empty stderr,stdoutSHA256f056150fc5670b11cb634c6144ee0c88306bc3a2f2da78727b537e6244ca433b;all1326final/target dispositions
+match and source stayed clean. Post-target host inspection finds no surviving
+controller/role/validator. No broad performance claim or extra suite rerun.
+Fresh readiness remains required before a future start42; launch settings and
+all consumed/unknown liabilities persist. Evidence:local/attempts/D05-005-attempt-001/.

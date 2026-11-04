@@ -64,3 +64,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
   ToolAssessment contracts/codecs/envelopes finally accepted/exact-integrated
   `150aa0ee3e9e5611c77eeb714f18b8484578235c`, final/target1276/1276, zero repairs/findings.
   Continuous start40/100; no backend or authority change.
+
+- [5bad636b — REQ-D05-005](5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md): passive assessment persistence finally accepted/exact-integrated `9f6cd171`,final/target1326/1326,two CWI product repairs/four resolved findings,no coordinator recovery/backend change;continuous start41/100.
