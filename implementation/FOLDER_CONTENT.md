@@ -2,7 +2,7 @@
 
 Immediate files and child directories only.
 
-- [README.md](README.md) — Research workbench foundation.
+- [README.md](README.md) — Research workbench foundation and documented passive typed persistence.
 - [evaluations/](evaluations/) — Synthetic development evaluation material.
 - [pyproject.toml](pyproject.toml) — Package and build metadata.
 - [scripts/](scripts/) — Development validation entry points.

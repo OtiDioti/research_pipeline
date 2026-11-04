@@ -16,8 +16,9 @@ trips establish no actual absence of exposure, authenticity or admission.
 
 ## Public interfaces and identity
 
-Import directly from the two submodules; package exports and store dispatch are
-unchanged. Content public signatures are:
+Import directly from the two pure submodules; package exports are unchanged.
+[Transactional persistence](tool-assessment-persistence.md) extends existing store
+dispatch and selected inspection. Content public signatures are:
 
 ```text
 ToolAssessment(*, assessment_id: str, attribution: dict, target: dict,
@@ -396,8 +397,9 @@ Content max_string_chars and max_wire_bytes are never imposed on metadata.
 
 This v1 boundary advances only structural contracts. Generic tool_assessment rows
 and ToolRelease reported_qualification existence/kind-only links remain unchanged.
-Later work must provide transactional exact target/release/history pairing, typed
-assessment persistence, authenticated scoped decisions/enablement/withdrawal,
+[Typed persistence](tool-assessment-persistence.md) now supplies transactional exact
+target/release/history pairing and local selected inspection. Later work must provide
+authenticated scoped decisions/enablement/withdrawal,
 qualification enforcement, actual isolated execution, authentic receipts and
 recovery, scientific review, live evaluation and human acceptance. This is not full
 D05, M0-E or product completion; no current-release selection, persisted admission

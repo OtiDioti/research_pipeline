@@ -32,10 +32,10 @@ Immediate files and child directories only.
 - [run_control_store.py](run_control_store.py) — Connection-owned durable control history and bounded metadata-only recovery.
 - [schema.py](schema.py) — Fixed metadata/backup version contracts and pure consistency validation.
 - [scientific.py](scientific.py) — Pure versioned scientific descriptions and coherent links, without scientific authority.
-- [snapshot.py](snapshot.py) — Bounded detached navigation metadata, without artifact availability or admission claims.
+- [snapshot.py](snapshot.py) — Bounded detached navigation and local typed classification, without artifact availability or admission claims.
 - [source.py](source.py) — Pure bounded source declarations and exact capture links, without acquisition or parsing.
 - [source_capture.py](source_capture.py) — Explicit bounded local Source preparation and pure saved requests; never implicit commit.
-- [store.py](store.py) — Local controller-only atomic revision submissions over SQLite and immutable bytes.
+- [store.py](store.py) — Atomic revision submissions, passive Tool assessments and exact metadata history over SQLite and immutable bytes.
 - [tool_assessment.py](tool_assessment.py) — Passive attributed tool assessments; local validity conveys no permission or truth.
 - [tool_assessment_codec.py](tool_assessment_codec.py) — Private finite codec adapters and public ceilings for passive tool assessments.
 - [tool_assessment_envelope.py](tool_assessment_envelope.py) — Pure bounded assessment envelopes; projections and provenance remain unauthenticated data.
@@ -52,4 +52,5 @@ Immediate files and child directories only.
 - [view_refresh_metadata.py](view_refresh_metadata.py) — Strict refresh representations and deterministic inert continuation reports.
 - [work_product.py](work_product.py) — Pure versioned multi-file declarations; paths and kind labels confer no authority.
 - [work_product_import.py](work_product_import.py) — Bounded draft previews and pure frozen proposals; explicit typed submission commits.
+- [tool_assessment_store.py](tool_assessment_store.py) — Bounded assessment reconstruction, deferred scalar semantics and prepared control/request scratch accounting; transactions remain store-owned.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

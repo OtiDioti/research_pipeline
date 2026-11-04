@@ -30,4 +30,5 @@ Immediate files and child directories only.
 - [typed-content.md](typed-content.md) — Typed provisional scientific content.
 - [work-product-import.md](work-product-import.md) — Work-product preview and explicit import.
 - [work-products.md](work-products.md) — Versioned work-product manifests.
+- [tool-assessment-persistence.md](tool-assessment-persistence.md) — Passive assessment admission, bounded history/control/request accounting, inspection and original-ID recovery.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

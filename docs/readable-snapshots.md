@@ -856,3 +856,11 @@ Unavailable destinations and reservation failures preserve the caller's committe
 source/result identity even without complete controls. No automatic retries,
 orphan sweeps, destination overwrites, mutable latest pointer, CLI behavior change
 or database publication state is introduced.
+
+[ToolAssessment persistence](tool-assessment-persistence.md) adds the explicit
+version-one assessment format to local classification. It retains generic,
+unsupported, malformed_typed and locally_decoded categories. Classification checks
+no target/release pairing or implicit metadata predecessors; navigation still
+follows only explicit outgoing links under the supplied SnapshotLimits. A locally
+coherent generic-original assessment is inspectable without certification of former
+typed admission, authentic actors, permission, qualification or execution.

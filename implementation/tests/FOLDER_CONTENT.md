@@ -124,4 +124,9 @@ Immediate files and child directories only.
 - [validation_fixtures.py](validation_fixtures.py) — Setup-only fixtures for tiny standalone validator processes; no repository-suite recursion.
 - [view_capture_fixtures.py](view_capture_fixtures.py) — Private candidate-local fixtures for bounded capture and pure preservation tests.
 - [view_refresh_fixtures.py](view_refresh_fixtures.py) — Disposable refresh fixtures reusing accepted capture/prior-state helpers.
+- [tool_assessment_store_fixtures.py](tool_assessment_store_fixtures.py) — Real private-store assessment declarations and independently specified projections.
+- [test_tool_assessment_persistence.py](test_tool_assessment_persistence.py) — Passive mixed assessment admission, exact role/pairing/history and local inspection.
+- [test_tool_assessment_persistence_bounds.py](test_tool_assessment_persistence_bounds.py) — Exact scalar-error precedence, public control/fingerprint scratch boundaries and historical shallow failure diagnostics.
+- [test_tool_assessment_persistence_recovery.py](test_tool_assessment_persistence_recovery.py) — Direct artifacts, atomic rollback, real SQLite contention and process-exit recovery.
+- [test_tool_assessment_persistence_example.py](test_tool_assessment_persistence_example.py) — Execute the exact self-contained passive persistence guide in candidate Python.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

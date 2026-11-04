@@ -1296,3 +1296,10 @@ descendant and resource enforcement, authentic invocation receipts and execution
 recovery, live permissions and scientific qualification remain separate work. Focused tests
 are implementation evidence only; controller validation, independent reviews,
 final receipt and coordinator inspection/integration remain separate responsibilities.
+
+[Passive ToolAssessment persistence](tool-assessment-persistence.md) adds typed
+assessment batches, exact assessed/replacement release pairing and complete
+assessment metadata history. ToolRelease `reported_qualification` stays shallow:
+it checks only existence and declared kind, even for supported assessment content.
+Neither a report nor local inspection/classification proves historical typed
+admission, an authentic actor, granted permission, qualification or execution.

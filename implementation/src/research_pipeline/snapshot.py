@@ -173,18 +173,42 @@ def _strict_json(text, *, maximum_depth=64):
 
 
 def _classification(envelope, decoder):
-    """Classify complete local codec results without checking targets or historical admission."""
-    content = envelope.content
+    """Classify bounded local codec results without targets, history or admission claims.
+
+    Assessment retained fields are preflighted before parsing and kept original for
+    their unchanged codec; malformed retained values become local diagnostics.
+    """
+    from research_pipeline import tool_assessment_store as assessment_store
+    if type(envelope) is not RecordEnvelope:
+        raise DomainValidationError("classification: expected exact RecordEnvelope")
+    budget = None
+    text = assessment_store._raw(envelope, "_content_json")
+    kind = assessment_store._raw(envelope, "kind")
+    if (type(kind) is str and kind == "tool_assessment") or (type(text) is str and "research_pipeline.tool_assessment_content" in text):
+        try:
+            budget = assessment_store._Budget()
+            size = budget.envelope(envelope)
+            with budget.temporary(6 * size):
+                content = assessment_store._json(text)
+        except DomainValidationError as error:
+            return {"category": "malformed_typed", "diagnostic": "local_codec_failure", "detail": str(error)[:512]}
+    else:
+        content = envelope.content
+    if type(content) is not dict:
+        return {"category": "malformed_typed", "diagnostic": "local_codec_failure", "detail": "content: expected object"}
     if "format" not in content:
         return {"category": "generic", "diagnostic": "no_format", "detail": "Typed projection unavailable."}
     formats = {"research_pipeline." + name + "_content" for name in
-               ("scientific", "assessment", "work_product", "source", "corpus", "project", "operating_authority", "tool_release")}
+               ("scientific", "assessment", "work_product", "source", "corpus", "project", "operating_authority", "tool_release", "tool_assessment")}
     if type(content["format"]) is not str or content["format"] not in formats:
         return {"category": "unsupported", "diagnostic": "unknown_format", "detail": "Typed projection unavailable."}
     if "version" in content and (type(content["version"]) is not int or content["version"] != 1):
         return {"category": "unsupported", "diagnostic": "unsupported_version", "detail": "Typed projection unavailable."}
     try:
-        decoder(envelope)
+        if budget is None:
+            decoder(envelope)
+        else:
+            budget.decode(envelope, decoder)
     except DomainValidationError as error:
         return {"category": "malformed_typed", "diagnostic": "local_codec_failure", "detail": str(error)[:512]}
     return {"category": "locally_decoded", "diagnostic": "local_codec_only", "detail": "No historical admission certification."}

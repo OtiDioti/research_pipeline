@@ -14,7 +14,7 @@ an intentionally separate paper example.
 and exact envelope-link coherence for four scientific kinds.
 `research_pipeline.assessment` adds [attributed Review/Issue contracts](attributed-assessments.md)
 with a distinct format. `submit_typed` provides durable structural admission for
-all eleven kinds, including [work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md), [project intake](project-intake.md) and [Tool releases](tool-releases.md), and checks
+all twelve passive typed kinds, including [work-product manifests](work-products.md), [Source captures](sources.md), [corpus inventories](corpus.md), [project intake](project-intake.md) [Tool releases](tool-releases.md) and [Tool assessments](tool-assessment-persistence.md), and checks
 exact review route-conclusion membership; `get_typed_revision` returns an exact
 envelope and decoded value. `submit` remains a trusted generic persistence API,
 not a scientific admission gate: generic submission resolves
@@ -225,8 +225,8 @@ No installation or package-level re-exports are needed.
 | `store.put_artifact(data: bytes) -> ArtifactReference` | Delegate durable byte publication; no metadata registration. |
 | `store.read_artifact(reference: ArtifactReference) -> bytes` | Delegate verified byte retrieval. |
 | `store.submit(submission: Submission) -> SubmissionReceipt` | Atomically append a new batch, or return the original receipt for an exact retry. |
-| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all eleven supported typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
-| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest \| ProjectSetup \| ToolRelease]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source, corpus, project or ToolRelease value. No historical admission certificate. |
+| `store.submit_typed(submission: Submission) -> SubmissionReceipt` | Decode all twelve supported passive typed kinds, then admit exact target closure and review route membership atomically; exact retries return the original receipt before target/artifact checks. See [typed rules and errors](typed-content.md). |
+| `store.get_typed_revision(record_id: str, revision: int) -> tuple[RecordEnvelope, ScientificContent \| AssessmentContent \| WorkProductManifest \| Source \| CorpusManifest \| ProjectSetup \| ToolRelease \| ToolAssessment]` | Verify direct artifacts and exact local content/link coherence; return the detached envelope and decoded scientific, assessment, work-product, Source, corpus, project ToolRelease or ToolAssessment value. No historical admission certificate. |
 | `store.get_revision(record_id: str, revision: int) -> RecordEnvelope` | Return exactly that revision after checking direct artifacts; absence raises `RecordNotFoundError`. |
 | `store.history(record_id: str) -> tuple[RecordEnvelope, ...]` | Revision-ascending verified history; absent identities return an empty tuple. |
 | `store.head(record_id: str) -> int \| None` | Metadata-only current revision number or absence. |
@@ -527,3 +527,13 @@ only. Selected inspection never traverses history or transitive targets. Origina
 reconciliation precedes availability/CAS checks after local decoding, including
 identical generic-original requests; receipts do not certify past typed admission,
 authorship, permission, qualification or execution.
+
+Passive [ToolAssessment persistence](tool-assessment-persistence.md) uses the same
+submission transaction, direct-artifact validation and original-ID reconciliation.
+It checks exact assessed/replacement release IDs and complete immutable assessment
+history on fresh admission. Selected inspection and snapshot classification check
+local coherence only; neither certifies historical typed admission, authentic
+actors, permission, qualification, scientific sufficiency or execution. Reported
+decision/execution/dependency slots and ToolRelease reported_qualification remain
+shallow exact existence/kind checks. Dedicated authenticated operating decisions
+and lifecycle-control formats retain their separate fresh-commit restrictions.

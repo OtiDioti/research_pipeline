@@ -139,3 +139,10 @@ declaration, exact identities, bounded codecs and exact passive envelopes, with
 executable local/opaque-remote, envelope and transactional registration examples.
 Passive `RecordStore` registration validates exact roles and complete Tool history;
 permission, qualification and execution remain separate work.
+
+[Transactional passive Tool assessments](tool-assessment-persistence.md) documents mixed typed
+submission, exact release pairing, complete immutable assessment history, finite
+processing and original-ID recovery. Its self-contained executed example stages
+inert bytes and demonstrates reopen/inspection and atomic mismatched-pair refusal.
+Local inspection/classification establishes coherence only; authentication,
+permission, qualification, scientific sufficiency and execution remain separate.
