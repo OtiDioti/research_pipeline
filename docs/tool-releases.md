@@ -3,8 +3,10 @@
 `research_pipeline.tool_release` describes one exact reusable release before
 registration, admission, qualification or execution. Local consistency and a content
 identity authenticate neither historical records nor available bytes. There is no
-store dispatch, envelope codec, `submit_typed` support, reference resolver, registry,
+store dispatch, `submit_typed` support, reference resolver, registry,
 current pointer, installation, dependency discovery or execution in this API.
+`research_pipeline.tool_release_envelope` adds exact passive envelope conversion
+without durable typed admission.
 
 ## Public API
 
@@ -62,7 +64,8 @@ and required explanations are nonblank. Opaque IDs follow `domain._identifier`:
 1–128 ASCII letters/digits/underscore/hyphen, beginning with a letter or digit.
 Narrative `F(text)` may be deliberately empty. Integers are exact `int` from zero
 through `2**63-1`, except positive reference revisions and dimension scales.
-Booleans, floats, numerical aliases and nonfinite values are rejected everywhere.
+Booleans, floats, numerical aliases and nonfinite values are rejected throughout
+ToolRelease content.
 An authored interface label such as `float64` remains legal text.
 
 ## Seven closed sections
@@ -605,11 +608,337 @@ Unknown environment retained; unavailable remote bytes retained; changed label c
 Both declarations round-trip; no tool was run or qualified.
 ```
 
+## Exact passive envelope API
+
+Import conversion from `research_pipeline.tool_release_envelope`; content APIs
+remain in `research_pipeline.tool_release`. No package export or store dispatch
+is added. The complete conversion signatures are:
+
+```text
+ToolReleaseEnvelopeLimits(max_metadata_chars: int = 262144,
+                          max_projection_references: int = 1024)
+encode_envelope(record_id: str, revision: int, content: ToolRelease,
+                provenance: CreationProvenance, *,
+                limits: ToolReleaseLimits | None = None,
+                envelope_limits: ToolReleaseEnvelopeLimits | None = None) -> RecordEnvelope
+decode_envelope(envelope: RecordEnvelope, *,
+                limits: ToolReleaseLimits | None = None,
+                envelope_limits: ToolReleaseEnvelopeLimits | None = None) -> ToolRelease
+```
+
+Encoding requires exact `ToolRelease` and `CreationProvenance` instances, an exact
+domain identifier equal to `identity.tool_id`, and an explicit exact positive
+signed-64 revision. A release label never supplies that revision or selects a
+current release. The exact `RecordEnvelope` has kind `tool_release` and both
+`operational_status` and `scientific_disposition` null. All content, including
+`release_id`, `adapter_identity` and `configuration_identity`, is preserved.
+Decoding reconstructs a fresh fully validated `ToolRelease`. Envelope metadata
+stays on the envelope; it does not become content.
+
+The envelope creator's actor/time/details attribute the envelope creation. They
+need not agree with the content's reported `declared_by`/`declared_at`. Generic
+provenance details retain ordinary JSON booleans, negative integers, finite
+floats, nested lists/maps and Unicode. Content's narrower scalar grammar does
+not apply to details. Neither attribution authenticates the reported statements.
+
+### Complete ordered projections
+
+Record occurrences follow these seven sections, preserving every occurrence and
+the list order within each section:
+
+| Content collection | Required relationship |
+| --- | --- |
+| `identity.provenance_records` | `reported_provenance` |
+| `identity.implementation.source_records` | `implementation_source` |
+| `effects_authority.child_tools` | `child_tool` |
+| `evidence_limitations.qualification_reports` | `reported_qualification` |
+| `evidence_limitations.evidence` | `reported_evidence` |
+| `evidence_limitations.issues` | `reported_issue` |
+| `reproducibility.dependency_records` | `build_dependency` |
+
+Each occurrence preserves `record_id`, `revision`, `relationship` and explicit
+`target_kind`, including the schema's target-kind restrictions. Repetition within
+a role or across roles remains repetition, even when the caller used the same
+exact reference object twice.
+
+Artifact candidates follow `identity.implementation.artifacts[*].artifact`,
+`invocation.adapter.files[*].artifact`, `evidence_limitations.self_tests[*]`, then
+`reproducibility.dependency_artifacts[*]`. Only the first occurrence of each digest
+survives, in that order; there is no sorting. Full content validation still rejects
+conflicting sizes in later occurrences, including ones omitted by deduplication.
+
+Only known facts project entries. Unknown, unavailable and known-empty collections
+remain distinct in content. Missing pins do not change effects/activity declarations
+or imply permission. Authored text, credential descriptions and provenance details
+are never additional reference slots. No target, artifact bytes, credential or
+described entry point is opened, resolved or invoked.
+
+### Independent bounds, retained shapes and error precedence
+
+`ToolReleaseEnvelopeLimits` is frozen and slotted. Its defaults are hard maxima;
+each field accepts only an exact integer from zero through that maximum. `None`
+creates fresh defaults. Both supplied limits objects are revalidated on every
+conversion, including missing fields and bypass mutations, and neither is retained.
+Existing `ToolReleaseLimits` meanings and defaults are unchanged; in particular,
+`max_wire_bytes` remains an external-load-only ceiling, not an envelope ceiling.
+
+`max_projection_references` measures
+`len(record_references) + len(artifact_references)`. Derived artifacts count after
+first-digest deduplication. Every supplied occurrence counts without deduplication.
+Supplied containers must be exact retained tuples; lists, subclasses, lookalikes
+and generators are rejected. Their combined length is checked before visiting any
+element or copying the containers. References must be exact domain instances.
+
+`max_metadata_chars` sums lengths of these exact retained strings: envelope
+`record_id` and `kind`; provenance `actor`, `created_at` and complete
+`_details_json`; every projected record's `record_id`, `relationship` and
+`target_kind`; and every projected artifact's `digest`. Repeated occurrences count
+again. The entire serialized details text counts, including keys, punctuation and
+escapes. Content is excluded because its own limits protect it independently.
+Revisions and sizes retain their finite signed-64 ranges. States must be null.
+
+Encoding bounds the prospective envelope. Decoding independently bounds the
+supplied and content-derived envelopes under the same ceilings; it never adds
+their measurements together. A small supplied projection cannot evade the expected
+projection bound, and comparison cannot bypass a supplied projection bound.
+
+The ordered stages are:
+
+1. Revalidate limits, exact outer receivers, fixed field types, null states and
+   supplied tuple lengths. Read fixed raw fields without supplied method dispatch.
+   Charge string lengths before scanning, encoding or copying their contents.
+2. Finish supplied metadata/reference preflight before content parsing. Encoding
+   starts with base metadata and finishes projection contributions after schema
+   inspection. Scalar aliases and missing retained fields are rejected.
+3. Parse exact retained `_json`/`_content_json` under existing retained content
+   limits; check the tree, missing format and complete version-one schema,
+   including aggregate reference/path work. Derive raw ordered projections and
+   finish their envelope bounds before any full content reconstruction.
+4. Reconstruct provenance from its bounded raw fields. Details must be exact ASCII
+   canonical JSON with an ordinary object root and no duplicate keys, nonfinite
+   values or invalid Unicode. Valid generic scalar semantics are preserved.
+   Reconstructed normalized time and canonical details must equal the retained
+   strings; forged noncanonical snapshots are not silently normalized. Bounded
+   parser recursion failures are validation failures, without a new depth ceiling.
+5. Fully revalidate content with `ToolRelease.from_dict` and the supplied content
+   limits. Require identical canonical retained text, all three identities and
+   stable-ID equality. Content semantic contradictions precede identity mismatches.
+6. Reconstruct exact fresh references. Decode compares every validated field and
+   complete ordered membership against the expected projections, rejecting
+   omissions, extras, reordering and substitutions without repair. Construct a
+   checked generic envelope using the revalidated supplied projections on decode.
+
+Earlier stages win; within a preflight traversal, the first detected violation
+wins, with no total ordering among simultaneous faults. Metadata/projection limit
+errors precede provenance reconstruction, domain-reference reconstruction, generic
+copying and serialization. Bounded content lexical parsing and schema inspection
+may precede prospective projection measurement. Supplied serialization methods and
+properties are never needed to guard retained values; freezing alone is not trusted.
+
+Failures use existing `ToolReleaseValidationError` and `ToolReleaseLimitError`; a
+limit error names the exceeded field. Missing content format after bounded parsing
+retains `NotTypedContentError`. Expected domain, malformed-field, JSON, Unicode,
+recursion and overflow failures become validation errors without echoing entire
+documents. Programming assertions are not caught. Ordinary argument-binding
+`TypeError` can remain a Python error.
+
+These guards cover the complete variable work: at most 1024 projected occurrences
+have fixed layouts; all metadata strings share the 262144-character ceiling;
+numeric widths are finite; complete retained ASCII details text bounds provenance
+JSON allocation before parsing; and content has its separate finite ceilings.
+A conservative serialized-envelope upper bound is **content canonical bytes +
+12 × metadata characters + 256 × (projection occurrences + 1)**, covering escaping,
+fixed keys/punctuation and numeric widths. This explains finiteness; it is not an
+additional enforced or configurable ceiling. No data is truncated or limit enlarged.
+
+Consistent detached forgeries can pass these local checks. Canonicality, hashes and
+exact projections establish neither historical authenticity nor durable typed
+admission. Generic persisted lookalikes remain distinct from admitted typed releases.
+
+## Runnable exact passive envelope example
+
+This separate, self-contained product/stdlib-only block constructs a complete
+descriptive release and exact typed pins. It needs no files, store, credentials or
+services, and never executes the described tool. Repeated records remain ordered;
+repeated artifact digests collapse to their first occurrence.
+
+```python
+import hashlib
+
+from research_pipeline.domain import ArtifactReference, CreationProvenance, RecordEnvelope, RecordReference
+from research_pipeline.resources import Dimension
+from research_pipeline.tool_release import ToolRelease, ToolReleaseValidationError
+from research_pipeline.tool_release_envelope import encode_envelope, decode_envelope
+from research_pipeline.work_product import WorkProductFile
+
+
+def K(value):
+    """Declare a known value while retaining deliberate empty text and lists."""
+    return {"state": "known", "value": value, "reason": None}
+
+
+def U(reason):
+    """Preserve an explicit reason for missing knowledge without inventing an empty fact."""
+    return {"state": "unknown", "value": None, "reason": reason}
+
+
+def pin(data):
+    """Describe in-memory synthetic bytes; hashing is neither execution nor authentication."""
+    return ArtifactReference(hashlib.sha256(data).hexdigest(), len(data))
+
+
+def interface(name):
+    """Describe one required ordered numerical column with explicit units and shape."""
+    return {"description": K("Ordered coordinates in metres."), "fields": K([
+        {"name": name, "type": "float64", "shape": K(["N rows"]), "presence": "required",
+         "description": K("Finite coordinates only."), "artifact_conventions": K(["UTF-8 decimal rows"])}])}
+
+
+def no_activity():
+    """Report no inner activity without claiming observed execution or permission."""
+    return {"state": "none", "runtime": K(""), "providers": K([]),
+            "description": K("No inner model or delegated activity declared."),
+            "visibility": "complete", "limitations": K(["Declaration only; no receipt."])}
+
+
+implementation, adapter, self_test = [pin(data) for data in (
+    b"synthetic scale implementation", b"synthetic adapter", b"unexecuted self-test description")]
+provenance_pin = RecordReference("supply", 2, "reported_provenance", "work_product_manifest")
+units = {"local_time": "nanosecond", "local_compute": "cpu_nanosecond", "local_storage": "byte",
+         "model_input_tokens": "token", "model_output_tokens": "token", "model_calls": "call", "tool_calls": "call"}
+extra = {"memory_bytes": "byte", "output_bytes": "byte", "context_capacity_tokens": "token",
+         "per_call_output_tokens": "token", "model_concurrency": "concurrent_call",
+         "descendant_jobs": "job", "retries": "retry", "repairs": "repair"}
+bounds = []
+for name, unit in {**units, **extra}.items():
+    dimension = Dimension("dim_" + name, name, unit, None, 1) if name in units else None
+    bounds.append({"name": name, "dimension": dimension, "unit": unit, "quantity": K(0),
+                   "mode": "claimed_hard", "enforceability": "unknown",
+                   "mechanism": U("No enforcement inspected."),
+                   "limitations": K(["Unverified authored maximum, not an allocation."])})
+
+science = {
+    "equations_or_transformations": ["y = 2*x"], "units": ["x and y in metres"],
+    "conventions": ["Preserve row order"], "input_domains": ["Finite binary64 coordinates"],
+    "output_domains": ["Finite doubled coordinates"], "parameter_regimes": ["Fixed factor 2"],
+    "boundary_conditions": ["No boundary value problem"], "approximations": ["Binary64 roundoff"],
+    "error_claims": ["No certified error bound"], "success_meaning": ["Transformation only, not scientific support"],
+    "failure_conditions": ["Overflow or nonfinite input invalidates declared use"],
+}
+release = ToolRelease(
+    identity={
+        "tool_id": "scale_tool", "display_name": "Synthetic scale release", "release_label": K("demo-3"),
+        "origin": "researcher_supplied", "supplier": K(["Example supplier"]), "developer": K(["Example author"]),
+        "declared_by": K("Reported author"), "declared_at": K("2026-11-04T09:00:00Z"),
+        "provenance_records": K([provenance_pin, provenance_pin]),
+        "access": {"status": "available", "detail": "Synthetic bytes described in memory; no store inspected."},
+        "license": K("Synthetic example only"),
+        "implementation": {"identity": K("Scale by two"), "reported_version": K("demo-3"),
+            "artifacts": K([WorkProductFile("scale.py", implementation)]),
+            "source_records": K([RecordReference("source", 4, "implementation_source", "source")]),
+            "observability": "pinned_local", "limitations": K(["Bytes never run or qualified."])},
+        "readme": """# Scale release
+Identity: synthetic reported author and exact byte pins, without authentication.
+Invocation: descriptive adapter consumes ordered coordinates in metres.
+Science: y=2*x with binary64 roundoff and overflow limitations.
+Effects: requested input reads and output writes need separate permission.
+Resources/recovery: unverified zero maxima; retain uncertain-completion liability.
+Evidence: reported links and unexecuted self-test bytes do not qualify this release.
+Reproducibility: exact pins alone cannot establish authentic outputs or environment.
+"""},
+    invocation={
+        "kind": "local_program", "adapter": {"adapter_id": "scale_adapter", "version": K("adapter-1"),
+            "description": K("Inert ordered-row adapter"),
+            "files": K([WorkProductFile("scale.py", implementation), WorkProductFile("client.py", adapter)]),
+            "entry_file": K("client.py"), "entry_point": K("python client.py --input rows.txt")},
+        "configuration": K([{"name": "factor", "value": "2"}]), "inputs": interface("x"), "outputs": interface("y"),
+        "artifact_conventions": K(["Retain order and units"]), "mode": "synchronous",
+        "mode_detail": K("One complete result per call"), "environment_requirements": U("No environment inspected.")},
+    scientific_meaning={name: K(value) for name, value in science.items()},
+    effects_authority={
+        "filesystem_read": K(["selected rows"]), "filesystem_write": K(["selected output"]),
+        "network_destinations": K([]), "credential_references": K([]), "external_effects": K([]),
+        "child_tools": K([RecordReference("child", 5, "child_tool", "tool_release")]),
+        "model_activity": no_activity(), "delegated_activity": no_activity(),
+        "delegation_contract": {name: K("") for name in (
+            "assignment", "input_artifacts_and_context", "acceptance_criteria", "deliverables",
+            "descendant_scope", "backend_state_and_run_identity", "waiting_parent_behavior")}},
+    resources_recovery={"bounds": bounds,
+        "recovery": {"cancellation": U("No running job exists."), "checkpointing": K("None declared"),
+            "replay_safety": "conditional", "replay_conditions": K("Require exact inputs and fresh output destination"),
+            "uncertain_completion": K("Retain liability and reconcile before replacement execution"),
+            "descendant_cancellation": U("No termination observation"), "reconciliation": U("No execution receipt")},
+        "nested_accounting": {"basis": "exclusive", "visibility": "complete", "limitations": K(["No measured use"])}},
+    evidence_limitations={
+        "intended_uses": K(["Demonstrate passive scale metadata"]),
+        "reported_qualified_applicability": K(["No independent qualification claimed"]),
+        "qualification_reports": K([RecordReference("qualification", 6, "reported_qualification", "tool_assessment")]),
+        "self_tests": K([implementation, self_test, self_test]),
+        "evidence": K([RecordReference("evidence", 7, "reported_evidence", "evidence")]),
+        "issues": K([RecordReference("issue", 8, "reported_issue", "issue")]),
+        "tested_environments": U("None tested"), "tested_cases": K([]),
+        "known_failures": K(["Overflow outside declared domain"]), "limitations": K(["No scientific support inferred"])},
+    reproducibility={"dependencies": K(["Exact reported source revision"]),
+        "dependency_artifacts": K([adapter, implementation]),
+        "dependency_records": K([RecordReference("source", 4, "build_dependency", "source")]),
+        "environment": U("No environment inspected"), "determinism": "conditional", "randomness": K([]),
+        "output_provenance": K(["Future receipts must link exact inputs and outputs"]),
+        "replay_limits": K(["Pins do not prove environment or authentic execution"])})
+
+creator = CreationProvenance("envelope_creator", "2026-11-04T10:00:00Z",
+                             {"description": "Passive packaging α", "observed_execution": False, "offset": -1})
+envelope = encode_envelope("scale_tool", 17, release, creator)
+expected_records = (
+    ("supply", 2, "reported_provenance", "work_product_manifest"),
+    ("supply", 2, "reported_provenance", "work_product_manifest"),
+    ("source", 4, "implementation_source", "source"), ("child", 5, "child_tool", "tool_release"),
+    ("qualification", 6, "reported_qualification", "tool_assessment"),
+    ("evidence", 7, "reported_evidence", "evidence"), ("issue", 8, "reported_issue", "issue"),
+    ("source", 4, "build_dependency", "source"))
+assert tuple((pin.record_id, pin.revision, pin.relationship, pin.target_kind)
+             for pin in envelope.record_references) == expected_records
+assert envelope.artifact_references == (implementation, adapter, self_test)
+assert envelope.record_id == "scale_tool" and envelope.revision == 17 and envelope.kind == "tool_release"
+assert envelope.operational_status is None and envelope.scientific_disposition is None
+assert envelope.provenance.to_dict() == creator.to_dict()
+decoded = decode_envelope(envelope)
+assert decoded is not release and decoded.to_dict() == release.to_dict()
+for identity in ("release_id", "adapter_identity", "configuration_identity"):
+    assert decoded.to_dict()[identity] == release.to_dict()[identity]
+
+# Generic envelopes can carry incomplete projections; typed decoding must reject them.
+mismatched = RecordEnvelope("scale_tool", 17, "tool_release", envelope.content, creator,
+                            envelope.record_references[1:], envelope.artifact_references)
+try:
+    decode_envelope(mismatched)
+except ToolReleaseValidationError:
+    pass
+else:
+    raise AssertionError("Missing required record occurrence was accepted")
+print("envelope scale_tool revision 17: 8 record occurrences, 3 artifact digests")
+print("record order: supply, supply, source, child, qualification, evidence, issue, source")
+print("artifact order: implementation, adapter, self-test")
+print("Content and all three identities round-trip; mismatched projection rejected.")
+print("Only local consistency: no registration, authentication, qualification or execution.")
+```
+
+The exact output is:
+
+```text
+envelope scale_tool revision 17: 8 record occurrences, 3 artifact digests
+record order: supply, supply, source, child, qualification, evidence, issue, source
+artifact order: implementation, adapter, self-test
+Content and all three identities round-trip; mismatched projection rejected.
+Only local consistency: no registration, authentication, qualification or execution.
+```
+
 ## Later responsibilities and remaining scope
 
-A future registry/admission boundary must authenticate exact records and bytes,
-validate references and immutable history, and record separate permission,
-qualification and lifecycle assessments. A future executor must verify invocation
+REQ-D05-003 must provide authenticated exact target and artifact-byte checks,
+typed transactional admission, immutable history and original-submission recovery.
+It must distinguish generic persisted lookalikes from admitted typed releases.
+Separate permission, qualification and lifecycle assessments remain required.
+A future executor must verify invocation
 environment, confinement, available bounds, actual remote versions, authentic
 outputs, descendants, cancellation, usage and uncertain-completion recovery.
 A self-test or builder-authored report cannot self-qualify a tool, enable it, or

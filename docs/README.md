@@ -131,5 +131,6 @@ inside the later admitting transaction and provide no reservation or dispatch gu
 - [Pure lifecycle report rendering](lifecycle-report-rendering.md): bounded detached seven-group report/continuation bytes, structural-only trust, closed work gates and an executed guide.
 
 [Passive Tool releases](tool-releases.md) documents the complete seven-area immutable
-declaration, exact identities, bounded codecs and an executable local/opaque-remote
-example. Registration, permission, qualification and execution remain separate work.
+declaration, exact identities, bounded codecs and exact passive envelopes, with
+executable local/opaque-remote and envelope examples. Durable typed admission,
+registration, permission, qualification and execution remain separate work.

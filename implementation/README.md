@@ -275,5 +275,6 @@ automatic publication, acknowledgment and current-policy continuation remain
 mandatory subsequent ADR-063 slices. Capture itself produces no rendered output.
 
 [Passive Tool releases](../docs/tool-releases.md) provides strict immutable seven-area
-declarations and bounded canonical codecs, with a self-contained local/remote example.
-It does not register, admit, qualify or execute tools.
+declarations, bounded canonical codecs and exact passive envelopes, with self-contained
+local/remote and envelope examples. It does not durably admit, register, qualify or
+execute tools.
