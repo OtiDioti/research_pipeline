@@ -24,6 +24,8 @@ This directory preserves the development plan and its evidence between Codex ses
 | [review/](review/README.md) | Backend inventory and local verification evidence |
 | [templates/](templates/README.md) | Reusable record formats |
 
+Current operating policy is defined by [AGENTS.md](../AGENTS.md), [AUTONOMY.md](AUTONOMY.md) and [MODEL_POLICY.md](MODEL_POLICY.md). Backward compatibility is not required for new authorized changes; current functionality, safety, historical evidence and unfinished-run recovery remain protected. Coordinator oversight uses Designer goal checks (Architect only when necessary) and CWI acceptance/Git/integration evidence, without routine Writer artifact inspection or duplicate successful checks. Required post-integration validation remains. Dated historical entries and frozen requests describe their original behavior and are not current launch instructions.
+
 No file here may turn an unaccepted candidate into an accepted result. The documents explain and point to evidence; CWI owns its run state and receipts.
 
 Backend change history lives at the root in [coding_pipeline_changes.md](../coding_pipeline_changes.md). Frozen controller evidence remains authoritative for execution; the human grant remains authoritative for permission. Neither Markdown state nor a run success can manufacture the other.

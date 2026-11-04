@@ -13,6 +13,10 @@ Paste after starting Codex in the target root. For an already-started project, u
 ```text
 You are the development coordinator for this repository, not the direct product implementer.
 
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+
 Read AGENTS.md and DEVELOPMENT.md. Read project_description.md in full, then STATUS.md, ROADMAP.md, BACKLOG.md, DECISIONS.md, development/AUTHORIZATION.md, development/AUTONOMY.md, development/MODEL_POLICY.md, development/BACKEND_MAINTENANCE.md, and the development runbook, bootstrap procedure, environment record, and supplied-pipeline review.
 
 Inspect the actual repository and all relevant existing coding_pipeline runs. Do not assume starter-kit status is current. Reconcile every mandatory specification requirement into development/REQUIREMENTS.md and the phase plans. Preserve project_description.md; surface material conflicts rather than silently changing or dropping requirements. Treat roadmap and language choices as defaults to check against the specification.
@@ -27,7 +31,7 @@ Narrow maintenance exception: coding_pipeline may itself malfunction. If an obse
 
 Complete D00, then prepare and execute only REQ-D01-001 with the documented exact-baseline bootstrap check and one internal CWI milestone, when all prerequisites are satisfied. Do not write the skeleton or validator yourself. At most three start attempts for this commissioning request are authorized, including failed preflights; a replacement needs a diagnosed correction and a safely resolved prior attempt. No blind retries. Use only an existing explicitly approved Codex allowance; API-billed use requires an approved cap. No new purchases or paid external services.
 
-For this first run, do not pass --merge or integrate automatically. Keep the original checkout clean and unchanged while CWI is live or still bound to its base. Retain attempt IDs, actual run IDs, and live observations under the already-ignored local area. Inspect the real final report, receipt, exact accepted source, and complete diff. Stop at the accepted-unmerged checkpoint for my review. Follow status/diagnose if CWI stops instead of bypassing guards or restarting blindly.
+For this first run, do not pass --merge or integrate automatically. Keep the original checkout clean and unchanged while CWI is live or still bound to its base. Retain attempt IDs, actual run IDs, and live observations under the already-ignored local area. Verify the real final report, receipt, exact accepted commit/tree, completed validation/review and CWI’s complete-diff review evidence; do not routinely reread Writer artifacts. Stop at the accepted-unmerged checkpoint for my review. Follow status/diagnose if CWI stops instead of bypassing guards or restarting blindly.
 
 Before ending, leave an accurate handoff and exactly one next safe action. Update tracked checkpoints only when that cannot interfere with an active or still-bound run. Never claim completion merely because code exists or a command returned success.
 ```
@@ -37,7 +41,11 @@ Before ending, leave an accurate handoff and exactly one next safe action. Updat
 Use after reviewing the first accepted result. The limits below are proposed defaults made explicit by this prompt. Edit them before issuing it when different limits are appropriate. This approval must refer to the real result, not an unexecuted template.
 
 ```text
-I have reviewed the first accepted implementation result. Integrate only that exact finally accepted commit after rechecking its receipt, diff, original branch/base, clean state, and all integration preconditions.
+I have reviewed the first accepted implementation result. Integrate only that exact finally accepted commit after rechecking its receipt, bound complete-diff review evidence, exact Git identities, original branch/base, clean state, and all integration preconditions.
+
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
 
 I authorize CONTINUOUS development of the reconciled project_description.md requirements across D01–D10, including any remaining D01 work, on the current recorded target branch. Use the workflow in AGENTS.md and development/AUTONOMY.md. Do not ask for routine confirmation at request or phase boundaries. Continue in this session until the authorized scope is genuinely complete or a defined stopping condition occurs.
 
@@ -66,6 +74,10 @@ The preauthorization is recorded before launch; activation and continuous counte
 
 ```text
 Resume as the development coordinator under AGENTS.md and DEVELOPMENT.md. Read development/AUTHORIZATION.md, development/AUTONOMY.md, development/MODEL_POLICY.md, and development/BACKEND_MAINTENANCE.md; then STATUS.md, the local live/handoff and pending-approval/maintenance notes if present, the active phase/request/run record, BACKLOG.md, relevant decisions, and coding_pipeline_changes.md. Read the relevant original specification sections.
+
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
 
 Reconcile dated authorization and backend-audit amendments before acting on an older STATUS checkpoint. When resuming the 2026-11-04 modernization task, complete its maintenance checkpoint and stop; an older product next-action entry does not authorize further product development in that session.
 

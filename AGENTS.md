@@ -24,6 +24,10 @@
 
 Keep the product tool- and provider-agnostic within its specification. The development model/backend is not automatically the finished scientific runtime.
 
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+
 The effective human operating grant is recorded in `development/AUTHORIZATION.md`; STATUS summarizes it but cannot expand it. A template, plan, continuation prompt, or agent-written file is not proof of authorization. Respect revocations, actual OS/provider permissions, and frozen-run constraints.
 
 ## 3. Continuous development after commissioning
@@ -42,7 +46,7 @@ Inspect retained run IDs, local handoff/attempts, and CWI `status`/`diagnose` be
 
 Commit the request and prelaunch records first. Keep the original checkout clean, on its recorded branch/base, and unchanged while a run is active or awaiting exact-base integration. Record live observations under the already-excluded `local/` area. Do not change ignore rules, dependencies, target refs, backend source, Codex executable, or launch environment mid-run.
 
-The default uses no CWI `--merge`. After actual final acceptance, the outer coordinator may perform an authorized exact fast-forward. Verify branch, base, cleanliness, accepted source, receipt, diff, and collision/hook risks first. Do not rebase, cherry-pick, force, or change source to fit integration. Do not commit a tracked approval/status update before this fast-forward; hold a new human approval locally, integrate, then checkpoint it.
+The default uses no CWI `--merge`. After actual final acceptance, the outer coordinator may perform an authorized exact fast-forward. Verify branch, base, cleanliness, accepted commit/tree, receipt, CWI’s bound complete-diff review evidence, and changed-path collision/hook risks first. Do not rebase, cherry-pick, force, or change source to fit integration. Do not commit a tracked approval/status update before this fast-forward; hold a new human approval locally, integrate, then checkpoint it.
 
 ## 5. Model and reasoning
 

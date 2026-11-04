@@ -1,6 +1,6 @@
 # Continuous development policy
 
-**Policy version:** 3, 2026-11-03. This is a workflow policy, not an authorization grant, an installed scheduler, or evidence of product completion.
+**Policy version:** 4, 2026-11-04. This is a workflow policy, not an authorization grant, an installed scheduler, or evidence of product completion.
 
 ## 1. Strategy: supervised commissioning, then bounded continuous execution
 
@@ -39,6 +39,10 @@ The grant must identify the repository, target branch, applicable specification 
 
 A material architecture choice is not automatically a human decision: the coordinator may choose reversible internal details within the specification and document the rationale. Changes to mandatory requirements, scientific intent, data disclosure, external costs, security boundaries, or the operating grant require authorization. Keep this distinction so autonomy does not collapse into questions about every function name.
 
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+
 ## 4. The continuous loop
 
 At every iteration:
@@ -47,10 +51,10 @@ At every iteration:
 2. **Resolve existing work.** Continue only through a supported resume or authorized exact-source integration. An uncertain run blocks another implementation run in that target repository.
 3. **Select.** Choose the smallest useful ready slice that advances a mandatory requirement. Prioritize correctness/recovery defects over new features. Respect dependencies. An unrelated blocked item need not halt independent authorized work once no active or bound run prevents it.
 4. **Prepare.** Read the original specification sections; write a bounded request with testable criteria, interfaces, dependencies, risks, limits, model/effort, and validation. Commit the prelaunch records while the target is clean and no prior binding remains.
-5. **Execute.** Launch CWI once with explicit supported settings. Record attempt identity and later the actual run UUID under ignored local storage. Do not change the original checkout or backend installation during execution.
-6. **Inspect.** Read final receipts, exact accepted source, meaningful test results, review findings, and the complete diff. Successful inspection or the presence of `accepted_head` alone is insufficient.
+5. **Execute.** Launch CWI once with all eight explicit role flags from MODEL_POLICY.md: Designer gpt-6-astra/xhigh, Architect gpt-6.1-sol/xhigh, Writer and Reviewer gpt-6.1-sol/high. Record attempt identity and later the actual run UUID under ignored local storage. Do not change the original checkout or backend installation during execution.
+6. **Inspect.** Check Designer goal understanding, consulting Architect outputs only when necessary. Verify final receipts, exact accepted commit/tree, meaningful controller validation results, completed reviews, criterion coverage and unresolved findings; rely on CWI’s complete-diff review evidence without routinely rereading Writer artifacts. Successful inspection or the presence of `accepted_head` alone is insufficient.
 7. **Integrate.** Under the existing grant, fast-forward only to the exact finally accepted commit after branch/base/cleanliness/collision checks. Do not pass CWI `--merge` in this default workflow; coordinator-controlled integration is still automatic from the human's perspective after activation.
-8. **Validate and record.** Run the documented read-only post-integration check. Record exact source/receipt identities, requirement evidence, phase outcomes, resource consumption, unresolved issues, and one next action in an administrative checkpoint. Distinguish that commit from the accepted product commit.
+8. **Validate and record.** Run the required documented read-only post-integration check; do not add routine reruns of successful controller or Reviewer checks. Record exact source/receipt identities, requirement evidence, phase outcomes, resource consumption, unresolved issues, and one next action in an administrative checkpoint. Distinguish that commit from the accepted product commit.
 9. **Continue.** If completion is not established and another authorized task is ready, begin the next iteration in the same session. Ordinary request success, a phase boundary, or finishing a status update is not a stopping condition.
 
 Do not start the next run until the previous integration and checkpoint are reconciled. Do not create a status commit between acceptance and the pending fast-forward: that changes the expected base.

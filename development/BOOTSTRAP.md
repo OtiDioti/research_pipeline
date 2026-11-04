@@ -12,7 +12,7 @@ Use one narrowly scoped run with a **frozen, inline bootstrap check**. Its sole 
 
 D00 has reconciled the real specification and approved the first request. The documentation and request are committed. The target is clean and no other run is active. The source contains only tracked Markdown files at this initial baseline. Dependencies, exclusions, authentication, and the stable `cwi` helper in [RUNBOOK.md](RUNBOOK.md) are prepared.
 
-If there is already product source, this is not the correct bootstrap path: inspect the existing implementation and use its appropriate passing baseline checks.
+If there is already product source, this is not the correct bootstrap path: reconcile its accepted source identities and authoritative CWI evidence and use its appropriate passing baseline checks. Do not routinely reread Writer code, tests or diffs; inspect implementation details only for a concrete failure or inconsistency.
 
 ## Construct the exact command
 

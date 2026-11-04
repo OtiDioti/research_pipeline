@@ -20,7 +20,7 @@ Do not use a hard reset, stash of unknown user work, broad clean, destructive wo
 
 ## 3. Integrate the policy changes
 
-At a safe boundary, review and merge the updated root `AGENTS.md` and `DEVELOPMENT.md`, coordinator prompts, runbook, autonomy policy, model policy, and backend-maintenance policy. They form one coordinated update; changing only the prompt can leave contradictory repository instructions.
+At a safe boundary, review and merge the updated root `AGENTS.md` and `DEVELOPMENT.md`, coordinator prompts, runbook, autonomy policy, model policy, and backend-maintenance policy. They form one coordinated update; changing only the prompt can leave contradictory repository instructions. Apply the current no-backward-compatibility and coordinator-oversight policies: obsolete paths may be removed within authorized scope while current functionality, safety, evidence and unfinished-run recovery remain protected. Check goals through Designer outputs (Architect only when necessary), rely on CWI for implementation review/validation, and retain acceptance/Git/integration gates. Routine Writer code/test/diff inspection or duplicate successful CWI checks is not required.
 
 Add missing policy/navigation/template files. Add `coding_pipeline_changes.md` only if absent; if it exists, preserve every historical entry and adopt the new audit fields. This file records changes to the ignored nested backend, not research-product changes.
 
@@ -36,7 +36,7 @@ Record model/provider and effort evidence in ENVIRONMENT. Every new start requir
 
 ## 5. Commit and enter the appropriate workflow
 
-Inspect the complete diff, check links and root layout, and commit explicit paths at a safe boundary. Do not stage the nested clone, logs, secrets, or private local data. If bootstrap has not started, capture its exact baseline only **after** this final prelaunch commit. The bootstrap program is unchanged by this update; do not introduce a broad missing-tests exemption.
+Inspect this administrative Markdown update’s diff, check links and root layout, and commit explicit paths at a safe boundary. This does not require routine review of Writer-produced implementation diffs. Do not stage the nested clone, logs, secrets, or private local data. If bootstrap has not started, capture its exact baseline only **after** this final prelaunch commit. The bootstrap program is unchanged by this update; do not introduce a broad missing-tests exemption.
 
 Select the prompt by actual state:
 

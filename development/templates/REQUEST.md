@@ -12,7 +12,7 @@ List exact existing APIs/data formats, context/conventions, relevant decisions, 
 
 ## Required changes and non-goals
 
-List concrete responsibilities and allowed areas. Define public interfaces that later requests will rely on. Let the Architect resolve internal implementation details within the specified constraints.
+List concrete responsibilities and allowed areas. Define public interfaces that later requests will rely on. Backward compatibility is not required: remove superseded interfaces, flags, modules, adapters and unused functionality within scope, preserving current required behavior, safety, historical evidence and unfinished-run recovery. Let the Architect resolve internal implementation details within the specified constraints.
 
 ## Acceptance criteria
 
@@ -28,7 +28,7 @@ Specify limits, required external permissions, milestone ceiling, integration au
 
 ## Completion reporting
 
-Require truthful changed-path summaries, executed checks, remaining obligations, and evidence references. CWI owns final acceptance and Git source transitions. The outer coordinator owns post-integration administrative records.
+Require truthful changed-path summaries, executed checks, remaining obligations, and evidence references. CWI owns implementation correctness, validation, review, final acceptance and Git source transitions. The coordinator checks Designer goal understanding (Architect only when necessary), verifies acceptance evidence, Git identities and integration safety, and owns post-integration administrative records. No routine Writer code/test/diff inspection or duplicate successful CWI checks; implementation diagnostics require a concrete failure or inconsistency. Required post-integration validation remains.
 
 ## Coordinator execution envelope
 

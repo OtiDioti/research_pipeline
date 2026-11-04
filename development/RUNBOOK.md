@@ -101,7 +101,11 @@ Follow [MODEL_POLICY.md](MODEL_POLICY.md). The 2026-11-04 human amendment approv
 
 Every new start must pass all eight role flags shown below. No model-selection environment variables are required. Keep the recorded launch map unchanged. Child configuration is isolated; setting the outer Codex model is insufficient. All four selections freeze in schema-revision-2 state and remain immutable on resume. No revision-1 migration or automatic historical resume is authorized; retain the original backend revision for read-only historical inspection.
 
-The launch examples are templates for new, unfrozen requests after readiness and authority checks. Do not relaunch the historical commissioning request or reuse a frozen request's old model envelope. This maintenance session ends at its documented checkpoint without starting product development.
+The launch examples are templates for new, unfrozen requests after readiness and authority checks. Do not relaunch the historical commissioning request or reuse a frozen request's old model envelope. The 2026-11-04 maintenance session ended at its documented checkpoint without starting product development; later sessions follow their current human instructions and recorded grant.
+
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
 
 ## 5. Commit the prelaunch state
 
@@ -116,7 +120,7 @@ git commit -m "docs: establish controlled development workflow"
 git status --porcelain
 ```
 
-The last command must produce no unexpected changes. Existing tracked files are preserved; inspect the staged diff before committing. Do not use `git add .` as a shortcut around exclusion mistakes.
+The last command must produce no unexpected changes. Existing tracked files are preserved; inspect the staged administrative Markdown diff before committing. Do not use `git add .` as a shortcut around exclusion mistakes.
 
 Create a local attempt directory **before** starting. The local attempt label is not the future CWI run ID:
 
@@ -183,7 +187,7 @@ Logs are in `workflow_logs/<run-id>/` in the original checkout. Preserve both ev
 
 ## 8. Integrate an accepted result
 
-The default result is `ACCEPTED_UNMERGED`. Inspect the final acceptance evidence and complete diff. Do not merge a provisional candidate, a partially accepted run, or a branch selected merely by its name.
+The default result is `ACCEPTED_UNMERGED`. Verify final acceptance evidence, completed criterion assessments and CWI’s complete-diff review against the exact accepted commit/tree. Check task understanding through Designer outputs; consult Architect outputs only when necessary. Do not routinely reread Writer code, tests or substantive diffs. Do not merge a provisional candidate, a partially accepted run, or a branch selected merely by its name.
 
 After human authorization for the first integration (or an explicit first-run preauthorization), obtain `base_commit` and `accepted_head` from the inspected report. Later integrations use the already-recorded continuous grant when applicable, without a new human prompt. If approval is new while the target remains at the bound base, capture it locally first; do not commit tracked authorization before integrating. Confirm the original checkout is still on the recorded branch, clean, and at the recorded base. Use those actual hashes in the commands below:
 
@@ -202,7 +206,8 @@ TARGET_BRANCH='RECORDED_TARGET_BRANCH'
   test "$ACCEPTED_COMMIT" != "$BASE_COMMIT"
   git diff --check "$BASE_COMMIT" "$ACCEPTED_COMMIT"
   git diff --stat "$BASE_COMMIT" "$ACCEPTED_COMMIT"
-  # The substantive diff and receipt must already have been inspected.
+  # Verify the receipt, exact Git identities and bound CWI complete-diff review evidence first.
+  # The mechanical formatting/stat checks above support integration safety, not code review.
   git merge --ff-only "$ACCEPTED_COMMIT"
   test "$(git rev-parse HEAD)" = "$ACCEPTED_COMMIT"
   test -z "$(git status --porcelain)"
@@ -211,7 +216,7 @@ TARGET_BRANCH='RECORDED_TARGET_BRANCH'
 
 Stop if any precondition fails; do not force, reset, rebase, or cherry-pick merely to fit the command. Review locally configured Git hooks and any ignored-path collision before integration. If manual integration changes content, the new source is not the exact accepted candidate and needs separate validation/review.
 
-Run the documented read-only post-integration validator, then create the run record and post-integration documentation checkpoint. Record any newly issued grant at that checkpoint, together with consumed allowances and the next action. A failed post-integration check is a real defect to diagnose, not permission for a forced reset or a false completion statement. Its new commit may follow the accepted implementation commit; retain both identities. CWI's historical state can correctly remain `ACCEPTED_UNMERGED` after an external manual merge. Do not edit its receipt or state to make it say `MERGED`.
+Run the required documented read-only post-integration validator without additional routine reruns of successful CWI checks, then create the run record and post-integration documentation checkpoint. Record any newly issued grant at that checkpoint, together with consumed allowances and the next action. A failed post-integration check is a real defect to diagnose, not permission for a forced reset or a false completion statement. Its new commit may follow the accepted implementation commit; retain both identities. CWI's historical state can correctly remain `ACCEPTED_UNMERGED` after an external manual merge. Do not edit its receipt or state to make it say `MERGED`.
 
 CWI can merge automatically only when `--merge` was authorized in the original start command. Its automatic gate rejects changes to any `.gitignore` while ignored local artifacts/the embedded clone are present. This includes nested `.gitignore` files. Manual integration is therefore the clearer initial policy; it still requires collision and source checks. Do not keep changing local live files across an automatically controlled merge, whose pre-state binds ignored content too.
 
@@ -301,7 +306,7 @@ For synthetic capture tests/examples, explicitly use private directories0700 and
 
 ## Bind the required complete-diff result — DEV-039
 
-For future requests requiring complete-base formatting, pass a second explicit --check alongside the permanent validator: `git diff --check ACTUAL_COMMITTED_LAUNCH_BASE HEAD --`, substituting the exact launch-base SHA before start. CWI parses argv without a shell. The whole committed range includes new files, and check-2 must appear in frozen baseline/candidate/final results. Coordinator diff inspection remains required but cannot substitute for a controller-bound criterion. The formatting check supplements meaningful test execution; it never replaces it. Do not alter a live profile or the permanent validator to retrofit evidence.
+For future requests requiring complete-base formatting, pass a second explicit --check alongside the permanent validator: `git diff --check ACTUAL_COMMITTED_LAUNCH_BASE HEAD --`, substituting the exact launch-base SHA before start. CWI parses argv without a shell. The whole committed range includes new files, and check-2 must appear in frozen baseline/candidate/final results. The coordinator verifies this bound formatting result and the complete-diff review evidence; routine substantive diff inspection is not required. Neither integration checks nor review evidence can substitute for a controller-bound criterion. The formatting check supplements meaningful test execution; it never replaces it. Do not alter a live profile or the permanent validator to retrofit evidence.
 
 REQ-D03-004 demonstrates the terminal missing-check case. After verified owner/lease/quarantine resolution, preserve exact unaccepted CWI Writer output under ignored local context with hashes, prepare a new bounded request and use supported --context. Only the new delegated Writer may reuse/modify the draft in its assigned worktree. Never merge/transplant unaccepted source, rewrite old receipts/state, or resume a run whose diagnosis forbids it. Count the original failed start, its repairs and the distinct recovery across sessions.
 

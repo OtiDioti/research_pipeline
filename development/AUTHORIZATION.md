@@ -1,6 +1,6 @@
 # Development operating authorization
 
-**Actual human grant: AUTH-2026-10-30-001, revision 7. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; the current session is limited to the explicitly authorized backend modernization and safe checkpoint below.** Recorded from 2026-10-30 through the 2026-11-04 amendment. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, the subsequent instruction “extend time limit of cwi to 2700 seconds”, and the focused modernization instruction recorded below. The repetition and amendment do not reset any counters.
+**Actual human grant: AUTH-2026-10-30-001, revision 7. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; fresh-session autonomous product coordination resumed by the human on 2026-11-04 after the completed backend-maintenance checkpoint.** Recorded from 2026-10-30 through the 2026-11-04 amendment. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, the subsequent instruction “extend time limit of cwi to 2700 seconds”, and the focused modernization instruction recorded below. The repetition and amendment do not reset any counters.
 
 ## Effective grant
 
@@ -8,9 +8,9 @@
 | --- | --- |
 | Repository / target | `/home/francesco/Desktop/gits/research_pipeline`, branch `main`; inspected original commit `dce9bedb998c8be4389d42627916911f4c25d336` |
 | Current specification | project_description.md v1.4; SHA-256 `fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f`; narrowly amended under actual human authority; historical v1.3 evidence preserved |
-| Current mode | CONTINUOUS grant persists; current session completes only the authorized 2026-11-04 backend modernization and safe checkpoint, then stops without further product development |
+| Current mode | CONTINUOUS; human fresh-session resumption supersedes the prior maintenance-session-only stop; ready D01–D10 engineering continues within unchanged limits |
 | Commissioning starts | At most 3, including failed preflights/replacements; correction must be diagnosed and previous attempt safely resolved; no blind retries |
-| First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/full-diff/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
+| First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/CWI complete-diff-review evidence/exact Git identity/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
 | Continuous activation | Only after first final acceptance, complete inspection, exact integration, successful validation and documentation checkpoint; record activation then |
 | Active continuous scope | Reconciled mandatory specification across D01–D10, including remaining D01; current target branch; proceed through ready slices without routine confirmation |
 | Continuous starts | At most 100 new starts after activation, including failed preflights/replacements; separate from commissioning; no reset between sessions/request renames |
@@ -428,3 +428,17 @@ Five completed turns book5113673input(4627456cached),48444output(8841reasoning) 
 The human explicitly authorizes focused `coding_pipeline` modernization and directly affected tests/documentation, including four required role selections for new runs: Designer `gpt-6-astra`/`xhigh`, Architect `gpt-6.1-sol`/`xhigh`, Writer and Reviewer `gpt-6.1-sol`/`high`. Pass all eight explicit role flags under MODEL_POLICY.md; schema-revision-2 selections are immutable on resume. No old-state migration or automatic historical resume is authorized; preserve the original backend revision for historical inspection. Apply BACKEND_MAINTENANCE.md safeguards and audit every attempt. This task-specific permission extends beyond diagnosed defects only for the requested modernization and creates no ongoing general exception.
 
 No resource budget, consumed allocation, recovery/repair/start/milestone/deadline limit, unknown liability, service/data/billing permission, product requirement, scientific gate or acceptance control changes. Complete the maintenance, verification and documentation, leave a safe checkpoint, and stop without further product development this session.
+
+## Current coordinator policy amendment — 2026-11-04
+
+The human’s fresh-session resumption preserves revision7’s scope, role allocation,
+budgets and all consumed/exhausted allowances. The additional documentation-only
+instruction makes backward compatibility unnecessary for authorized changes,
+while preserving current functionality, safety, historical evidence and unfinished
+run recovery. The coordinator checks Designer outputs for goal understanding,
+consults Architect outputs only when necessary, and relies on CWI for implementation
+review and validation. Routine Writer code/test/diff inspection and duplicate
+successful CWI checks are removed; concrete failures or inconsistencies still
+require diagnosis. Acceptance evidence, exact Git identities, integration safety
+and required post-integration validation remain mandatory. Historical grants and
+frozen configurations are unchanged. No new CWI start or budget reset occurred.

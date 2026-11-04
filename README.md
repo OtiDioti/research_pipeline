@@ -32,11 +32,13 @@ stage makes no scientific or live-provider acceptance claim.
 
 ## Development model
 
-A top-level Codex session acts as the **development coordinator**. It maintains plans, prepares bounded change requests, invokes the local coding pipeline, inspects its evidence, and updates development records. Product code, tests, executable scripts, build configuration, and runtime prompts are implemented through that pipeline, not directly by the coordinator. Necessary focused repairs of the separate coding backend are the documented exception, with regression evidence and a complete audit.
+A top-level Codex session acts as the **development coordinator**. It maintains plans, prepares bounded change requests, invokes the local coding pipeline, checks Designer outputs for goal understanding, verifies acceptance evidence and Git/integration safety, and updates development records. It consults Architect outputs only when necessary and investigates Writer code, tests or diffs only for concrete failures or inconsistencies; CWI owns implementation review and validation. Product code, tests, executable scripts, build configuration, and runtime prompts are implemented through that pipeline, not directly by the coordinator. Necessary focused repairs of the separate coding backend are the documented exception, with regression evidence and a complete audit.
 
 The recommended workflow holds the first accepted result for human review, then uses one continuous grant to proceed across requests and phases without repeated routine prompts. A separately selected preauthorization can remove the first review pause. Durable checkpoints support later sessions, but this kit installs no automatic restart supervisor.
 
 The local clone must be named `coding_pipeline/`, even if its remote repository has a different name. It remains an untracked, locally excluded development dependency, not a Git submodule and not a mandatory runtime tool of the research product.
+
+Backward compatibility is not required: authorized changes may remove superseded interfaces and unused functionality while preserving current requirements, safety, historical evidence and unfinished-run recovery.
 
 The pipeline's delegated Writer is allowed to implement the prescribed change directly in its private worktree. It must not launch another coding-pipeline run.
 

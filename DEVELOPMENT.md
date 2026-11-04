@@ -116,6 +116,10 @@ CWI's authoritative state is a fourth storage location controlled by CWI, not by
 
 Do not create separate `CURRENT_STEP.md`, `NEXT_STEP.md`, and `HANDOFF.md` files that all independently assert current state. `STATUS.md` contains the current checkpoint and one next action; the run record and optional local handoff carry detail. This reduces contradictions without losing the requested visibility.
 
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+
 ## 5. Development units and their relationships
 
 A **phase** is a coherent product outcome. A **request** is an executable slice of a phase. A **CWI run** is one controller execution of a frozen request. A **CWI milestone** is an internal step in that run's Designer roadmap. A **session** is merely an interaction with an agent.
@@ -150,7 +154,7 @@ The root checkpoint may say `READY; launched run not yet reconciled`. A local li
 
 ### After execution
 
-Inspect the controller's actual result and final receipt. Inspect the diff and requirement coverage. If accepted and integration is authorized, integrate the exact accepted commit without rebasing or changing its contents. If stopped, preserve evidence, record the blocker, and follow `diagnose` rather than repeatedly starting new runs.
+Check Designer outputs for task understanding, consulting Architect outputs only when necessary. Verify the controller’s actual result, final receipt, accepted Git identities, bound validation/review results and requirement coverage. Rely on CWI’s substantive complete-diff review; inspect changed-path metadata only as needed for integration safety. Investigate Writer artifacts only for a concrete failure or inconsistency. If accepted and integration is authorized, integrate the exact accepted commit without rebasing or changing its contents. If stopped, preserve evidence, record the blocker, and follow `diagnose` rather than repeatedly starting new runs.
 
 After integration or safe termination, update the run summary, phase evidence, requirements map, backlog, changelog where applicable, and `STATUS.md` together in one administrative checkpoint commit. Do not claim evidence that did not exist at the time of the implementation commit.
 

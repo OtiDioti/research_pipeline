@@ -1,5 +1,7 @@
 # Development status
 
+> **Current documentation checkpoint — 2026-11-04:** the human resumed coordination after CP-003, then requested a documentation-only policy consistency pass. Current guidance permits removal of obsolete interfaces without backward compatibility, checks goal understanding at the Designer level (Architect only when necessary), and delegates implementation review/validation to CWI. Acceptance evidence, exact Git identities, integration/recovery/security gates and required post-integration validation remain. New starts use all eight revision7 role flags; historical records and frozen configurations retain their original settings. No product run has started in this session.
+
 > **Backend maintenance checkpoint — 2026-11-04 17:21 UTC:** CP-003 was tested and adopted as `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`. See [the backend audit](coding_pipeline_changes.md) for the exact diff, tests, compatibility limits and protected backup. New runs require the eight role flags in [MODEL_POLICY.md](development/MODEL_POLICY.md), under authorization revision 7. Historical schema-1 runs require their original backend for inspection and must not be automatically resumed. The product checkpoint and resource accounting below are preserved as historical observations; this note supersedes only their backend/model launch guidance. No product run was started during maintenance.
 
 ## Passive Tool-release registration integrated — 2026-11-04
@@ -18,4 +20,8 @@ This long reconstruction/execution session reaches a safe context checkpoint aft
 
 ## Exactly one next safe action
 
-In a later development session, reconcile the unlaunched REQ-D05-004's preparatory legacy model note with authorization revision 7, then perform fresh Git/CWI ownership, model, environment and budget readiness before any new launch. This maintenance session stops here; no historical run is resumed and all existing product limits and holds persist.
+After the documentation checkpoint, refresh exact Git/CWI ownership, model,
+environment and budget readiness, then launch the still-unlaunched REQ-D05-004
+once through the adopted backend with all eight revision7 role flags and both
+literal-base checks. Continuous39/100starts remain consumed (61available); no
+attempt40has been made. Existing holds, usage and exhausted recoveries persist.

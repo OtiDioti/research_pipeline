@@ -29,7 +29,7 @@ Record controller state/artifact relative locations and protected backup identit
 
 ## Integration
 
-Record inspected accepted diff, original-base checks, authorization, exact fast-forward or alternative reviewed integration, and subsequent validation. If source was altered during integration, it is no longer the identical accepted candidate.
+Record Designer goal-understanding checks (and any necessary Architect consultation), CWI’s bound complete-diff review/validation/acceptance evidence, exact accepted commit/tree, original-base checks, authorization, collision/hook checks, exact fast-forward and required post-integration validation. Routine Writer code/test/diff inspection and duplicate successful CWI checks are not coordinator duties. Record any concrete failure or inconsistency that required implementation diagnostics. If source was altered during integration, it is no longer the identical accepted candidate.
 
 ## Remaining work and next action
 
