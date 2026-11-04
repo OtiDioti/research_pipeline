@@ -62,3 +62,9 @@ reference hashes fix compatibility before extraction. Only actual accepted/integ
 rendering later enables007-B. 008publication/verified acknowledgment and009 current-policy
 restart/continuation/final audit remain mandatory. No new grant, recovery/reset or
 scientific acceptance is implied. Full D04/M0-E and broader duties remain partial.
+
+## Output and complete-history planning separated — 2026-11-04
+
+Fresh-session inspection verifies007-A finallyaccepted/exact-integrated18678728106b3956f83766b5e5a008242ec183ff,receipt31f52a0af5006feaa1647da2e4e732eb7d51f950f5a717a48d63dd6236e91c71,controller/target1063/1063. Later accepted validator-onlyef3bfcf7 preserves those product contracts and passed1130/1130. No active/bound run or pending integration remains.
+
+DEV-071 adopts the preserved conditional draft's ordinary B1/B2decomposition. [REQ-D04-007-B1](../requests/REQ-D04-007-B1.md) owns authentic separate O/X/M output commitment, verified read and metadata-only original-ID recovery. Mandatory B2retains complete ordered-history readable plans, real links, independent bounded offline reconstruction and original-plan recovery. Neither is delivered by this administrative decision. Earlier source snapshots may not contain later output records; planning must preserve that distinction.008automatic publication/separate acknowledgment and009restart/continuation/final all13audit remain unchanged. Every original FOLLOWONcriterion remains binding, with no new recovery allowance or scientific/scope reduction.
