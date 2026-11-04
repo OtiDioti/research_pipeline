@@ -342,3 +342,26 @@ all dispositions match. Actual post-target host inspection finds no live CWI/rol
 validator. No install/auth/config/dependency/provider/backend/security change.
 Fresh exact readiness is still required before a future start41; no automatic
 restart or historical resume is installed or authorized by this observation.
+
+## Passive assessment persistence readiness — 2026-11-04 20:06 UTC
+
+Fresh status/diagnose reconciles 41 terminal runs, 29 final receipts and 28 exact
+integrated final sources; the validator acceptance deliberately superseded and
+12 incomplete histories remain preserved. No current lease/quarantine/pending
+integration exists. Host inspection finds no competing implementation owner.
+Historical recording findings do not authorize replay or state migration.
+
+The actual adopted backend remains clean bcb7ad24f83ff5193345f3d4fa72122ea53a4e66;
+pinned Codex0.166.0/executable SHA256b8a11fed is unchanged. Actual adapter
+ephemeral/new/resume/login parser probes and ChatGPT login pass. Account catalog
+fetched 2026-11-04T20:06:09.491683002Z advertises both approved model identifiers
+and high/xhigh efforts; the exact role allocation remains mandatory. No server
+effective-model attestation or remaining-quota measurement is claimed.
+
+Stable launch map SHA256b674ef72 is unchanged. Existing nofile1024/1048576 allows
+the documented launch-process-only soft4096 setting. No installation, dependency,
+auth/config, backend, provider or security change occurred. REQ-D05-005 keeps one
+milestone, repairs2/6, 2700-second invocation/check limits, both ordered checks
+and no --merge. Continuous40/100 remains before counting attempted start41;
+all consumed/exhausted recoveries and unknown liabilities persist. Private
+readiness: local/reconciliation-20261104-persistence/.

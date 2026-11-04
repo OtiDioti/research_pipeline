@@ -53,9 +53,27 @@ for passive typed persistence, exact target/release pairing and immutable histor
 It has not launched and consumes no new start or recovery. CONTINUOUS persists;
 no automatic restart supervisor is installed. Local handoff preserves details.
 
+## Fresh persistence prelaunch reconciliation — 2026-11-04 20:06 UTC
+
+The human resumed the same CONTINUOUS grant in a fresh session. Read-only
+status/diagnose inspection reconciles all 41 retained runs: 29 final receipts,
+28 integrated final sources, the deliberately superseded validator acceptance,
+and 12 terminal incomplete histories. No current lease, quarantine or pending
+integration exists. Historical recording findings and terminal in-flight markers
+remain preserved under their previous nonresumable dispositions. Host process
+inspection found only the coordinator's inspection processes, with no competing
+implementation owner. No historical run was resumed or migrated.
+
+REQ-D05-005 remains committed READY, request SHA256
+617e543eb33714c41e18d8bdbfffd30f04d5a2b523543a3a488b1709673aa04a.
+Pinned Codex compatibility/login probes pass; the current account catalog
+advertises both exact approved models and efforts. Backend and launch map remain
+unchanged. Continuous starts are still 40/100 used, 60 remaining; count attempted
+start41 locally before invocation. No recovery, usage or allowance reset occurs
+during this preparation. Evidence: local/reconciliation-20261104-persistence/.
+
 ## Exactly one next safe action
 
-Refresh Git/CWI ownership, exact model/environment readiness and budget evidence,
-then launch REQ-D05-005 once from the actual committed clean baseline through the
+Launch REQ-D05-005 once from this actual committed clean baseline through the
 supported direct-child backend, using all eight revision7 role flags, both
 literal-base checks and existing bounds. Count attempted start41 locally first.
