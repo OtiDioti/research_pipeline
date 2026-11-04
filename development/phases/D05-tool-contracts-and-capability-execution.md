@@ -1,6 +1,6 @@
 # D05 — Tool contracts and capability execution
 
-**State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
+**State:** READY for the passive contract subset in REQ-D05-001. No implementation or execution evidence exists yet. All registration, qualification and execution obligations remain incomplete.
 
 **Goal:** Support optional bundled, supplied, and research-generated tools without coupling the product to one tool set.
 
@@ -47,3 +47,7 @@ Complete all release manifest and lifecycle fields in §§10.6–10.8. Distingui
 Under specification v1.4, relevant implemented predecessor contracts and deterministic/fault evidence gate engineering. M0-E is evidenced per consumed contract, not completed by this plan. M0-S (R-001–R-003) and live interoperability remain pending until actual approvals/evidence exist; they block only the affected scientific evaluations, qualification claims and final release. An engineering-complete subset may enable subsequent independent work while the whole mixed phase remains partial. No exposed development fixture becomes held-out evidence, and scientific standards must precede scored evaluation.
 
 Operational fixture qualification may be evidenced deterministically. Scientific-domain applicability and real-service compatibility remain separate unperformed acceptance outcomes until M0-S and relevant permissions/evidence are available.
+
+## First independent passive boundary — 2026-11-04
+
+[REQ-D05-001](../requests/REQ-D05-001.md) prepares the complete seven-area passive Tool-release declaration, strict bounded canonical codecs, tests and executed guide. Actual accepted domain/reference/work-product conventions suffice; no lifecycle output, queue, worker or provider execution is consumed. DEV-072 records the contract-specific v1.4 dependency decision while D04B1 is held by exhausted deadline recovery. This request does not consume the failed B1 draft, implement registration/typed admission, grant permission/qualification, execute a tool or claim scientific validity. Later D05 outcomes and all original phase acceptance boxes remain mandatory. STATUS owns resources and one next safe action.

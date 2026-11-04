@@ -166,3 +166,9 @@ This implements development-test concurrency only, with no D04research-worker/ap
 ## Resumed output boundary — 2026-11-04
 
 Fresh actual Git/CWI/host evidence verifies the prior accepted/integrated source/render/validator contracts and no active or pending integration. [REQ-D04-007-B1](../requests/REQ-D04-007-B1.md) prepares authentic separate output commitment/read/original-ID recovery; no implementation is claimed. Mandatory B2retains complete-history plans/offline reconstruction, followed by008publication/verified nonrecursive acknowledgment and009restart/continuation/final all13criterion audit. This ordinary decomposition preserves every original obligation and all phase acceptance boxes unchecked. Full D04/M0-E, broader queue/attempt/fencing/admission/isolation/context/tool/model and scientific/live work remain incomplete. STATUS owns counters and one next action.
+
+## Output Writer deadline hold — 2026-11-04
+
+[REQ-D04-007-B1/run2bc3d843](../runs/2bc3d843-0c94-41b2-8344-636a48853805.md) stopped at2700-second Writer timeout, without candidate/review/acceptance/integration. Baseline1130/1130 is unchanged-product evidence only.17unaccepted files and104unchanged predecessors are preserved; final owners/lease/quarantine resolved. B-013deadline recovery2/2 was already exhausted, so no renamed/split recovery or increased limit is authorized. B1/B2/008/009 and all13original criteria remain mandatory; every phase completion box stays unchecked.
+
+Independent passive D05Tool-release contracts may proceed under DEV-072 from evidenced domain/reference/work-product conventions. They grant no execution/readiness/worker admission and consume no failed draft. Remaining D04queue/attempt/fencing/reservations/isolation/context/model/reporting and scientific/live obligations persist. STATUS owns counters and one next action.

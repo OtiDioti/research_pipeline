@@ -50,3 +50,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
   sources finally accepted/exact integrated b19e7ffa, final 1033/1033 and target 1033/1033
   in 1769.410s, zero skips/errors/failures/mutation, no findings/repairs. Continuous
   start 32/100; source facts leave publication/admission gates closed.
+
+- [2bc3d843 — REQ-D04-007-B1](2bc3d843-0c94-41b2-8344-636a48853805.md): baseline1130/1130, then Writer2700-second timeout after changes; no candidate/acceptance/integration, terminal/noresume/quiescent.17-file draft preserved; existing deadline recovery2/2 exhausted. Continuous start36/100. STATUS identifies the independent next request.

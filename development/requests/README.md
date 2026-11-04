@@ -54,3 +54,7 @@ request remains unchanged. [REQ-D04-007-A](REQ-D04-007-A.md) next scopes pure sh
 rendering with fixed accepted legacy references and93protected predecessor paths.
 All later output/plan/publication/ack/restart criteria remain mandatory; STATUS
 owns launch readiness, current counters and the single next safe action.
+
+## Current request checkpoint — 2026-11-04
+
+[REQ-D04-007-B1](REQ-D04-007-B1.md) is terminal without candidate/acceptance/integration after Writer timeout; its frozen request remains unchanged. B-013deadline recovery2/2 is exhausted, so no replacement/adoption is prepared. [REQ-D05-001](REQ-D05-001.md) is the next independent ready request for passive Tool-release contracts, consuming no failed draft and granting no registration/admission/execution. All original reporting/scientific obligations remain. STATUS owns exact launch readiness, budgets and the single next action.

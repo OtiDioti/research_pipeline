@@ -2,6 +2,8 @@
 
 This is the authoritative list of **deliberate exceptions to the normal roadmap**. Ordinary future phases belong in [ROADMAP.md](ROADMAP.md), not here again.
 
+Current exceptions on2026-11-04: B-010/B-011 scientific/live holds and the reopened B-013 Writer-deadline path hold. Later dated entries supersede historical resolution snapshots; independent passive engineering remains ready.
+
 Reconciled 2026-11-01 against local evidence. Foundation, requested mock, durable storage, verified local backups and typed provisional scientific records, verified schema migration and attributed reviews/issues plus work-product draft round trips and Source captures are accepted/integrated; continuous grant is active; AUTH revision 5 retains independent engineering while M0-S remains pending. Mandatory human scientific and live-resource dependencies below remain obligations; optional extensions are distinct.
 
 | ID | State | Item | Reason / dependency | Resume or decision condition | Owner |
@@ -166,3 +168,9 @@ Human-added CP-002 Reviewer prompt request is also complete as separate backendb
 ## Fresh-session resumption — 2026-11-04
 
 The human resumes ordinary continuous engineering after the prior required focused-session STOP. No new blocker or recovery is established by fresh Git/CWI/host inspection:36terminal runs,24accepted sources integrated and cd93accepted source deliberately declined/superseded, with no pending integration/owner/lease/quarantine. Historical failures and consumed/exhausted recovery families remain. [REQ-D04-007-B1](development/requests/REQ-D04-007-B1.md) and mandatory later B2/008/009 are normal remaining engineering, not deferred obligations. B-010/B-011 still block only dependent scientific/live work. STATUS owns counters and one next safe action; nothing resets.
+
+## B-013 reopened — Writer deadline recurrence; path blocked — 2026-11-04
+
+REQ-D04-007-B1/run2bc3d843 exhausted its frozen2700-second Writer limit after changes. Zero candidate/milestone/final acceptance or integration. Real host/lease/quarantine/effect checks establish terminal quiescence;17unaccepted files and original evidence are preserved. [Run record](development/runs/2bc3d843-0c94-41b2-8344-636a48853805.md). The existing deadline family2/2 recoveries remains exhausted (the first46114120 recovery and later report-publication recovery already counted). No third replacement, subdivision/adoption, timeout increase or direct product coding is authorized. This is a recurrence of B-013, not a new blocker family with a fresh allowance. Owner: coordinator preserves evidence; human authority is required before reopening this exhausted recovery path. Evidence preservation alone is not a replacement action.
+
+Independent [REQ-D05-001](development/requests/REQ-D05-001.md) passive Tool-release contracts remain ready without lifecycle output, worker admission or live service/scientific use. Its later registry/execution prerequisites remain mandatory; it consumes no failed B1 draft. Therefore this hold is not a blanket stop on engineering. B-010/B-011 and every prior exhausted/partial family remain. STATUS owns counters and one next safe action.
