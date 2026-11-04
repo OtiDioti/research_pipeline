@@ -129,3 +129,7 @@ inside the later admitting transaction and provide no reservation or dispatch gu
 - [Durable run control](run-control.md): authenticated preparation, atomic pending report intent, bounded historical recovery and an always-closed ordinary-work gate.
 
 - [Pure lifecycle report rendering](lifecycle-report-rendering.md): bounded detached seven-group report/continuation bytes, structural-only trust, closed work gates and an executed guide.
+
+[Passive Tool releases](tool-releases.md) documents the complete seven-area immutable
+declaration, exact identities, bounded codecs and an executable local/opaque-remote
+example. Registration, permission, qualification and execution remain separate work.
