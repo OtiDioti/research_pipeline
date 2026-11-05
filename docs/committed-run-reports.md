@@ -4,7 +4,7 @@
 dated state observation and commits its source plus deterministic `report.md` and
 `continuation.json` artifacts. It returns `ReportCommitResult`, meaning **source
 committed**. It makes no filesystem publication claim. Reports work on schema 2
-(resource accounting explicitly unavailable) and schemas 3–6. New captures identify the actual schema; older saved
+(resource accounting explicitly unavailable) and schemas 3–7. New captures identify the actual schema; older saved
 documents retain exact bytes and interpretation. Schema 1 requires an
 explicit existing migration. Schema identities, default creation at 2, backup
 formats, generic/typed admission and previous readable formats remain unchanged.
@@ -759,3 +759,9 @@ The [controlled lifecycle source API](committed-lifecycle-sources.md) does not c
 generated reports. It reserves a distinct source submission S and a later report
 submission O, preserving the existing source event identity and manifest revision.
 The later output protocol cannot append to S or reinterpret its one-member receipt.
+
+Schema 7 preserves this capability through the existing guarded insertion and
+original-operation reconciliation paths. New snapshots/captures name actual
+schema 7 and its registry-derived identity; saved schema-6 and earlier documents
+retain their original bytes, interpretation and recovery. Support-context freshness
+adds no execution or scientific authority.

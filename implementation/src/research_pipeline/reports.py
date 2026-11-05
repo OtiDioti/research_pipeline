@@ -477,7 +477,7 @@ def _validate_resources(value, request, schema):
         if value != unavailable("Schema 2: resource accounting unavailable; explicit migration to schema 3 is required."):
             raise ReportIntegrityError("schema-2 resource unavailability mismatch")
         return
-    if schema not in (3, 4, 5, 6):
+    if schema not in (3, 4, 5, 6, 7):
         raise ReportIntegrityError("reports require schema 2, 3, 4, 5 or 6")
     _fields_exact(value, "format version project run resource_sequence complete_snapshot_id operations accounts allocations reservations reservation_usage breaches balances scope limits", "report resources")
     if value["format"] != "research_pipeline.report_resources" or type(value["version"]) is not int or value["version"] != 1:

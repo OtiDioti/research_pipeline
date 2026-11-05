@@ -4,7 +4,8 @@
 `RecordStore.submit_typed(Submission(...))`, using `encode_envelope`; the result is
 an unchanged `SubmissionReceipt`. Generic `submit` recognizes the same explicit
 content and enforces the same registration and freshness rules. Policy-head
-freshness requires opt-in schema 5; target-context freshness requires opt-in schema 6. Schema 4 retains its original Review/Issue semantics and schema 5
+freshness requires opt-in schema 5; target-context freshness requires opt-in schema 6;
+selected support-context freshness requires opt-in schema 7 with version-4 inspection. Schema 4 retains its original Review/Issue semantics and schema 5
 retains its original policy semantics and version-2 inspection. Neither path
 produces positive scientific eligibility, promotion or authorized disposition.
 
@@ -739,4 +740,255 @@ with TemporaryDirectory() as temporary:
     with RecordStore.open(root) as reopened:
         assert reopened.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 7
         assert reopened.submit_typed(saved) == original_receipt
+```
+
+## Schema-7 support-context freshness and activation
+
+Opt in with `RecordStore.create(root, schema_version=7)`. Creation still defaults
+to schema 2. Schema-1–6 DDL identities, ClaimUse wire version 1, receipts, history
+version 1, public method signatures and the six-field inspection limit constructor
+are unchanged. Schema-4/5/6 retain their historical version-1/2/3 inspection and
+admission accounts. Opening never enables a feature or migrates metadata.
+
+Schema 7 adds immutable `claim_use_support_contexts` occurrences alongside the
+unchanged dependency and upstream projections. Each exact registered binding
+selects, in order, its candidate Claim's context; then each selected route's
+Justification context, every complete ordered premise Claim context and every
+ordered Evidence context. Roles are `candidate_claim`, `support_route`, `premise`
+and `evidence`. Ordinals are contiguous within that binding; route, premise and
+Evidence coordinates are zero based, with `-1` for inapplicable coordinates.
+Repeated sources and scopes across routes or roles remain separate occurrences,
+even when they coincide with the target context. A premise without an explicit
+upstream use contributes its own context and discovers no inferred support route.
+Exact explicit upstream bindings contribute their own occurrences when visited.
+
+Evidence inputs and target claims, other conclusions, unselected Justifications,
+Review checks, Issue associations, shallow authority references, prose and
+arbitrary links create no additional context watches. Constrained admission may
+still validate those records under its original rules. An unwatched generic
+ResearchContext identity requires no scientific decoding merely for its kind.
+Every watched successor is potentially material, including identical content and
+prose-only changes. Revision 1 creates no advancement cause.
+
+Each stored row contains `use_id`, `binding_revision`, `ordinal`, `source_id`,
+`source_revision`, `source_kind`, `source_role`, `route_ordinal`, `premise_ordinal`,
+`evidence_ordinal`, `context_id`, `context_revision` and `registration_event`.
+Its primary key is `(use_id,binding_revision,ordinal)`. Foreign keys retain exact
+source/context revisions and the owning binding's original registration tuple.
+`claim_use_support_context_watch` orders context identity, registration event,
+use identity, binding revision and ordinal. Discovery seeks identity followed by
+the visible event range and complete suffix; it never scans bindings or source
+or context histories. Proposed occurrences are derived before impact discovery
+and stored after their binding exists, with the actual receipt event.
+
+A direct cause has exactly `type="support_context_changed"`, `binding`,
+`occurrence_ordinal`, `source`, `source_role`, `route_ordinal`, `premise_ordinal`,
+`evidence_ordinal`, `bound_context`, `previous_context` and `new_context`.
+Binding and source pins are exact record/revision/kind triples. All three context
+pins explicitly name `research_context`; the previous pin is the preceding
+visible head, independently of the bound revision. A coincident target watch
+retains its separate `target_context_changed` cause. All origins join the existing
+bounded delta worklist before propagation; late arrivals through unequal diamonds
+retain distinct origins and immediate `upstream_affected` reasons without complete
+path enumeration. Rebinding never redirects consumers of old exact bindings.
+Only affected final current identities receive one coalesced transition per batch;
+registration starts at generation 1 and alone does not invalidate consumers.
+
+Current inspection is version 4. It preserves every schema-6 field and adds:
+
+- `support_context_freshness={"available":true,"activation_event_watermark":...}`.
+- `observed_support_contexts`, ordered by binding identity, binding revision and
+  occurrence ordinal. Each observation has `binding`, `occurrence_ordinal`,
+  `source`, `source_role`, `route_ordinal`, `premise_ordinal`, `evidence_ordinal`,
+  `bound_context`, `observed_context`, complete supported ResearchContext
+  `bound_content` and `observed_content`, `attributed=true` and `superseded`.
+
+Each visited exact root/upstream binding's stored support projection must equal
+its metadata-derived projection. Missing, extra, reordered or substituted rows
+are integrity failures. Observed heads must exist in the temporal snapshot and
+be no older than bound pins. Derived `support_context_pin_superseded` reasons have
+the occurrence descriptor plus `bound_context` and `observed_context`; they join
+stored causes and existing derived reasons in canonical order. They never rewrite
+history or increment a generation. An old pin registered against an advanced
+head, including a same-batch binding, immediately exposes supersession. Complete
+historical envelopes and original provenance remain unchanged. Selected Evidence
+with a different exact scope from its binding's target adds an unresolved-transfer
+limitation identifying binding, route and Evidence occurrence.
+
+The immutable limits are shared: `context_revisions=1024` counts distinct required
+target and support revisions within each Reader; `context_observations=512`
+counts emitted target and support occurrences together. Independent prospective
+roots also charge the aggregate write account. Records, bindings, references and
+index rows bound source discovery/projection work; every attempted direct,
+propagated or derived cause is charged before deduplication. Metadata bytes cover
+projection representations, codec/canonicalization scratch, cause keys and repeated
+complete scope content. Cache hits do not erase occurrence/output charges. Scalar
+and UTF-8 preflight and remaining-budget-plus-one sentinels precede payloads;
+local and aggregate scratch capacity bound complete serialization. The existing
+support-depth, transition, artifact, request, record and 4 MiB result ceilings
+remain. Every transitioning root must fit its complete maximum-limit prospective
+version-4 inspection, including forward/historical bindings, both context arrays,
+limitations and coalesced reasons. Excess fails the entire submission without
+truncation, partial impact or metadata insertion.
+
+Support metadata uses the same owning transaction and mandatory insertion seam
+as heads, records, links, events, requests, receipts and generations. Existing
+fault seams remain usable. Metadata-only propagation and inspection do not read
+historical attachment bytes; fresh binding closure admission, submitted artifacts
+and exact historical reads keep their existing verification. Canonical completed
+request reconciliation runs first inside `BEGIN IMMEDIATE`; exact retry returns
+the original receipt before CAS, discovery, inspection or artifact checks, even
+after activation, later revisions or historical byte damage. Conflicting reuse
+still fails. Signed-64-bit generation and scientific-event exhaustion fail
+atomically, including no-impact writes. Required malformed, unsupported,
+wrong-kind, missing, noncanonical, incoherent or temporally unavailable metadata
+fails explicitly; limit errors retain dimensions and stored inconsistency uses
+`ClaimUseIntegrityError` with established public layout/reference translations.
+
+Exact backup format/schema `(7,7)` preserves metadata bytes, all four origins,
+histories and receipts. Only explicit `restore_backup(schema6_backup, destination,
+target_schema=7, migration_provenance=...)` activates support semantics; earlier
+stores take all consecutive steps. The verified unpublished copy SQL-copies all
+six administrative columns unchanged, appends the attributed 6→7 source-backup
+row and records the exact source scientific maximum in
+`claim_use_support_context_origin`. Fresh schema 7 initializes all four origins
+to zero. Registration ≤ policy ≤ target-context ≤ support activation ≤ current
+maximum; nonzero boundaries must name actual events. No event, generation,
+receipt, request or original dependency row is rewritten or fabricated.
+
+Backfill streams every registered historical binding under independent bounded
+per-binding accounts. It resolves selected source/context pins at the first event
+after the original registration, allowing same-event forward references but no
+repair by later metadata. Rows retain the original registration event; activation
+is separate. Integrity verification independently derives and compares all rows,
+rejecting orphans and incorrect owning events. Chronological event plans activate
+support semantics only strictly after the support watermark. Earlier policy
+boundary inspections explicitly disable both context features; target-context
+boundary inspections disable support semantics. Complete independent version-4
+inspections at support activation use the first later event as strict cutoff, or
+the current snapshot when none exists, never watermark plus one. Required unusable
+metadata or oversized views reject migration before publication. Failed destinations
+retain `.restore-incomplete`; recover into a new absent destination. Source and
+backup remain unchanged. Lifetime streaming is confined to integrity/activation.
+
+Resources, operating decisions, reports, controls and lifecycle sources preserve
+their existing capabilities on schema 7. New captures use actual schema 7 and its
+registry-derived identity; older saved documents retain original schema semantics,
+bytes and original-operation recovery.
+
+`eligible=false`, `requires_reassessment=true` and
+`authorized_disposition.available=false` remain. Context advancement conveys
+potential materiality only. It establishes neither falsity nor inapplicability,
+sufficiency, sufficient alternatives, independence, authority, active-context
+adoption or scientific transfer. Positive disposition/promotion, active-project
+context selection, remaining Task/lifecycle/report work and scientific/live/human
+gates remain separate mandatory work. D02 and whole-product obligations remain
+partial. Writer-local checks are advisory; controller validation and complete-diff
+review determine acceptance.
+
+## Executable schema-7 support-context example
+
+This standard-library/product-only example uses a disposable local store and
+assertions about engineering behavior, without scientific authorization.
+
+```python
+from dataclasses import replace
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from research_pipeline.domain import CreationProvenance, RecordReference, RecordEnvelope, Submission
+from research_pipeline.scientific import ResearchContext, Claim, Justification, Evidence, encode_envelope
+from research_pipeline.assessment import (Review, IndependenceDeclaration, SubstantiveAssessment,
+    SupportRouteAssessment, encode_envelope as assessment_envelope)
+from research_pipeline.claim_use import (ClaimUse, ClaimUsePremise, ClaimUseRoute,
+    ClaimUseInspectionLimits, encode_envelope as use_envelope)
+from research_pipeline.store import RecordStore
+
+creator = CreationProvenance("synthetic-example", "2026-11-06T00:00:00Z")
+limits = ClaimUseInspectionLimits(512, 1024, 8192, 1024, 67108864, 4194304)
+
+def ref(identity, role, kind, revision=1):
+    """Declare an exact pin without conferring authority."""
+    return RecordReference(identity, revision, role, kind)
+
+def batch(identity, records):
+    """Retain the complete original request and explicit expected-head CAS."""
+    return Submission(identity, creator, records, {r.record_id: r.revision-1 for r in records})
+
+def review(candidate, route):
+    """Declare an attributed route assessment; favorable words confer no permission."""
+    return Review(ref(candidate, "candidate_claim", "claim"), ref("target", "target_context", "research_context"),
+        "synthetic reviewer", IndependenceDeclaration("candidate_aware_audit", "candidate_aware_audit",
+        [], [], [], [], [], [], []), ref("manifest", "context_manifest", "work_product_manifest"),
+        ref("policy", "authorization_policy", "decision"), [],
+        SubstantiveAssessment("under_review", "supported_within_scope", ["analytical"], "applicable",
+        "unassessed", "Attributed only", [], [], []),
+        [SupportRouteAssessment(ref(route, "assessed_route", "justification"), "sufficient", "Unverified", [], [])],
+        [], [], [], "synthetic")
+
+def use(candidate, routes=(), target="target"):
+    """Bind only selected exact support; status is supplied by the store."""
+    return ClaimUse(ref(candidate, "candidate_claim", "claim"), ref(target, "target_context", "research_context"),
+        list(routes), [], [ref("policy", "authorization_policy", "decision")], ["Synthetic only"])
+
+with TemporaryDirectory() as temporary:
+    root = Path(temporary)/"store"
+    with RecordStore.create(root, schema_version=7) as store:
+        store.submit(batch("declarations", [RecordEnvelope("policy", 1, "decision", {}, creator),
+            RecordEnvelope("manifest", 1, "work_product_manifest", {}, creator)]))
+        scope = ResearchContext("Synthetic scope", ["f(x)=x"], ["x is real"], [], [], ["R"], [], [], [], [], [])
+        science = [encode_envelope(i, 1, replace(scope, question=i), creator) for i in
+            ("candidate-scope", "route-scope", "premise-scope", "evidence-scope", "target", "down-scope", "independent")]
+        for identity, context in (("candidate", "candidate-scope"), ("premise", "premise-scope"),
+                                  ("down", "down-scope"), ("independent-claim", "independent")):
+            science.append(encode_envelope(identity, 1, Claim(identity, "synthetic", [],
+                ref(context, "context", "research_context"), [], [], []), creator))
+        artifact = store.put_artifact(b"synthetic evidence")
+        evidence = Evidence([artifact], ref("evidence-scope", "context", "research_context"), "identity",
+            [], "declared method", [], [], [], "unverified", [], [], "synthetic")
+        science.append(encode_envelope("evidence", 1, evidence, creator))
+        for identity, candidate, premise, context, evidence_refs in (
+                ("route", "candidate", "premise", "route-scope", [ref("evidence", "evidence", "evidence")]),
+                ("down-route", "down", "candidate", "down-scope", [])):
+            science.append(encode_envelope(identity, 1, Justification(ref(context, "context", "research_context"),
+                [ref(premise, "premise", "claim")], [], "declared method",
+                [ref(candidate, "conclusion", "claim")], evidence_refs, []), creator))
+            science.append(assessment_envelope(identity+"-review", 1, review(candidate, identity), creator))
+        store.submit_typed(batch("science", science))
+        route = ClaimUseRoute(ref("route", "support_route", "justification"),
+            [ClaimUsePremise(ref("premise", "premise", "claim"), None)],
+            [ref("route-review", "support_assessment", "review")])
+        downstream = ClaimUseRoute(ref("down-route", "support_route", "justification"),
+            [ClaimUsePremise(ref("candidate", "premise", "claim"), ref("U", "premise_use", "promotion_eligibility"))],
+            [ref("down-route-review", "support_assessment", "review")])
+        original = batch("register", [use_envelope("D", 1, use("down", [downstream]), creator),
+            use_envelope("U", 1, use("candidate", [route]), creator),
+            use_envelope("I", 1, use("independent-claim", target="independent"), creator)])
+        receipt = store.submit_typed(original)  # D's forward U@1 pin is exact.
+        historical = store.inspect_claim_use("U", limits=limits).to_dict()["binding"]
+        advance = batch("advance-evidence-scope", [encode_envelope("evidence-scope", 2,
+            replace(scope, question="Potentially material prose change"), creator)])
+        advanced_receipt = store.submit(advance)
+        upstream = store.inspect_claim_use("U", limits=limits).to_dict()
+        downstream_view = store.inspect_claim_use("D", limits=limits).to_dict()
+        assert upstream["version"] == 4 and upstream["generation"] == downstream_view["generation"] == 2
+        assert store.inspect_claim_use("I", limits=limits).to_dict()["generation"] == 1
+        assert {o["source_role"] for o in upstream["observed_support_contexts"]} == {
+            "candidate_claim", "support_route", "premise", "evidence"}
+        occurrence = upstream["observed_support_contexts"][3]
+        assert occurrence["source"] == {"record_id": "evidence", "revision": 1, "target_kind": "evidence"}
+        assert occurrence["binding"] == {"record_id": "U", "revision": 1, "target_kind": "promotion_eligibility"}
+        assert (occurrence["route_ordinal"], occurrence["premise_ordinal"], occurrence["evidence_ordinal"]) == (0, -1, 0)
+        assert occurrence["bound_context"]["revision"] == 1 and occurrence["observed_context"]["revision"] == 2
+        assert occurrence["bound_content"]["question"] == "evidence-scope"
+        assert occurrence["observed_content"]["question"] == "Potentially material prose change"
+        assert occurrence["superseded"] and occurrence["attributed"]
+        assert upstream["binding"] == historical == downstream_view["upstream_bindings"][0]
+        assert any(c["type"] == "support_context_changed" for c in downstream_view["mechanical_freshness"]["last_transition"]["causes"])
+        assert not upstream["eligible"] and upstream["requires_reassessment"]
+        assert not upstream["authorized_disposition"]["available"]
+        assert any("Evidence evidence@1" in s for s in upstream["limitations"])
+    with RecordStore.open(root) as store:
+        assert store.submit_typed(original) == receipt
+        assert store.submit(advance) == advanced_receipt
+        assert store.inspect_claim_use("D", limits=limits).to_dict()["generation"] == 2
 ```

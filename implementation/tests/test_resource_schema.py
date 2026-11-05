@@ -44,7 +44,7 @@ class ResourceSchemaTests(unittest.TestCase):
 
     def test_creation_defaults_invalid_options_and_old_schema_resource_rejection(self):
         """Verify supported creation, rejection before reservation and older-store migration requirements."""
-        for i, version in enumerate((None, True, False, 1, 0, 7, -1, "3", 3.0, [], {})):
+        for i, version in enumerate((None, True, False, 1, 0, 8, -1, "3", 3.0, [], {})):
             root = self.parent / f"invalid-{i}"
             with self.assertRaises(StoreLayoutError):
                 RecordStore.create(root, schema_version=version)

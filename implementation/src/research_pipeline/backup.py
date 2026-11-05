@@ -209,10 +209,10 @@ def _database(path):
         if version == 2:
             validate_history(connection.execute("SELECT * FROM migration_history").fetchall(),
                              [(item.digest, item.size) for item in registrations])
-        elif version in (3, 4, 5, 6):
+        elif version in (3, 4, 5, 6, 7):
             from research_pipeline.resource_ledger import validate_ledger
             validate_ledger(connection)
-            if version in (4, 5, 6):
+            if version in (4, 5, 6, 7):
                 from research_pipeline.claim_use_store import validate
                 validate(RecordStore(None, connection, version), connection)
         return version, links
@@ -619,11 +619,57 @@ def _migrate_v5(path, info, provenance_json):
         connection.close()
 
 
+def _migrate_v6(path, info, provenance_json):
+    """Activate schema-7 support-context freshness on a verified unpublished schema-6 copy.
+
+    SQL copying preserves all six administrative fields and every scientific and
+    freshness row. Validation includes boundary inspections before commit; failures
+    roll back and leave the caller's durable incomplete marker intact.
+    """
+    from research_pipeline.schema import _HISTORY_V7
+    from research_pipeline.claim_use_schema import SUPPORT_CONTEXT_DDL
+    from research_pipeline.claim_use_store import validate, _verify_support_contexts
+    from research_pipeline.resource_ledger import validate_ledger
+    manifest = _manifest(info.metadata, info.artifacts, info.schema_version)
+    if info.schema_version != 6 or _info(manifest) != info:
+        raise BackupIntegrityError("migration: verified schema-6 source required")
+    connection = _connect(path)
+    try:
+        connection.execute("BEGIN IMMEDIATE")
+        connection.execute("CREATE TEMP TABLE saved_history AS SELECT * FROM main.migration_history")
+        connection.execute("DROP TABLE migration_history")
+        _fault("migration_transform")
+        connection.execute(_HISTORY_V7)
+        connection.execute("INSERT INTO migration_history SELECT * FROM temp.saved_history")
+        next_id = connection.execute("SELECT count(*) + 1 FROM migration_history").fetchone()[0]
+        connection.execute("INSERT INTO migration_history VALUES (?,6,7,?,?,?)",
+                           (next_id, info.backup_id, _canonical(manifest).decode(), provenance_json))
+        connection.execute("DROP TABLE temp.saved_history")
+        for statement in SUPPORT_CONTEXT_DDL:
+            connection.execute(statement)
+        connection.execute("INSERT INTO claim_use_support_context_origin SELECT 1,coalesce(max(event_id),0) FROM audit_events")
+        connection.execute("PRAGMA user_version=7")
+        validate_schema(7, [r[0] for r in connection.execute("SELECT sql FROM main.sqlite_master WHERE sql IS NOT NULL")])
+        _application(connection, 7)
+        validate_ledger(connection)
+        store = RecordStore(None, connection, 7)
+        _verify_support_contexts(store, connection, backfill=True)
+        validate(store, connection)
+        connection.execute("COMMIT")
+        _fault("migration_committed")
+    except BaseException:
+        if connection.in_transaction:
+            connection.rollback()
+        raise
+    finally:
+        connection.close()
+
+
 def restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore:
-    """Verify and restore into an absent runtime, optionally migrating one step through 1→2→3→4→5→6.
+    """Verify and restore into an absent runtime, optionally migrating one step through 1→2→3→4→5→6→7.
 
     With both options absent, preserve the source schema and metadata bytes.
-    Migration requires an ordinary integer next target (2, 3, 4, 5 or 6), a fully verified
+    Migration requires an ordinary integer next target (2, 3, 4, 5, 6 or 7), a fully verified
     source backup, and explicit CreationProvenance; invalid options raise BackupLayoutError
     before reservation. Original rows/receipts remain unchanged in either mode.
     The independent store opens after verification and publication barriers.
@@ -633,14 +679,14 @@ def restore_backup(root, destination, *, target_schema=None, migration_provenanc
     with _errors("restore backup", destination):
         _outside(destination, path)
         provenance_json = None
-        option_error = ("migration permits only schema 1 to schema 2, schema 2 to schema 3, schema 3 to schema 4, schema 4 to schema 5 or schema 5 to schema 6 with "
+        option_error = ("migration permits only schema 1 to schema 2, schema 2 to schema 3, schema 3 to schema 4, schema 4 to schema 5, schema 5 to schema 6 or schema 6 to schema 7 with "
                         "the next target_schema and explicit CreationProvenance; "
                         "omit both options for exact restore")
         if target_schema is None:
             if migration_provenance is not None:
                 raise BackupLayoutError(option_error)
         else:
-            if type(target_schema) is not int or target_schema not in (2, 3, 4, 5, 6) or not isinstance(migration_provenance, CreationProvenance):
+            if type(target_schema) is not int or target_schema not in (2, 3, 4, 5, 6, 7) or not isinstance(migration_provenance, CreationProvenance):
                 raise BackupLayoutError(option_error)
             try:
                 # Frozen instances can still be forged; reconstruct all fields,
@@ -652,7 +698,7 @@ def restore_backup(root, destination, *, target_schema=None, migration_provenanc
             except (AttributeError, ValueError, TypeError, RecursionError, OverflowError) as error:
                 raise BackupLayoutError(option_error + f": invalid attribution: {error}") from error
         info = _verify(path)
-        if target_schema is not None and (info.schema_version, target_schema) not in ((1, 2), (2, 3), (3, 4), (4, 5), (5, 6)):
+        if target_schema is not None and (info.schema_version, target_schema) not in ((1, 2), (2, 3), (3, 4), (4, 5), (5, 6), (6, 7)):
             raise BackupLayoutError(option_error)
         source = ArtifactStore.open(path)
         target = _reserve(destination, ".restore-incomplete")
@@ -668,7 +714,7 @@ def restore_backup(root, destination, *, target_schema=None, migration_provenanc
         if _reference(copied) != info.metadata or _database(destination / "metadata.sqlite3") != (info.schema_version, info.artifacts):
             raise BackupIntegrityError(f"restore {destination}: copied database mismatch")
         if target_schema is not None:
-            transform = {2: _migrate_v1, 3: _migrate_v2, 4: _migrate_v3, 5: _migrate_v4, 6: _migrate_v5}[target_schema]
+            transform = {2: _migrate_v1, 3: _migrate_v2, 4: _migrate_v3, 5: _migrate_v4, 6: _migrate_v5, 7: _migrate_v6}[target_schema]
             transform(destination / "metadata.sqlite3", info, provenance_json)
         # Check the standalone layout before immutable verification so a retained
         # SQLite sidecar can never be ignored and mistaken for a complete copy.

@@ -206,7 +206,7 @@ at the canonical stream fails closed, with no older-approval fallback.
 
 ## Store operations and results
 
-All methods are on `RecordStore`; they use schemas 2–6, with no new tables.
+All methods are on `RecordStore`; they use schemas 2–7, with no new tables.
 
 | Method | Result and boundary |
 | --- | --- |
@@ -578,3 +578,9 @@ with TemporaryDirectory(prefix="operating-authority-example-", dir="/tmp") as te
 its write transaction before recording preparation. Eligibility is not preparation,
 and preparation is not admission. Original lifecycle recovery returns historical
 metadata without rechecking current policy and cannot grant permission to resume.
+
+Schema 7 preserves this capability through the existing guarded insertion and
+original-operation reconciliation paths. New snapshots/captures name actual
+schema 7 and its registry-derived identity; saved schema-6 and earlier documents
+retain their original bytes, interpretation and recovery. Support-context freshness
+adds no execution or scientific authority.

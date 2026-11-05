@@ -57,7 +57,7 @@ normalize to six fractional digits. This is attributed creation information,
 not authenticated execution or a database commit timestamp.
 
 Schema 1 supports `research_context`, `claim`, `justification`, `evidence`, and
-`task_specification`. New stores default to schema2; explicit schema3/4/5/6 support the same kinds. Schema2 also supports `project`, `run`,
+`task_specification`. New stores default to schema2; explicit schema3/4/5/6/7 support the same kinds. Schema2 also supports `project`, `run`,
 `corpus_manifest`, `branch`, `source`, `work_product_manifest`, `tool_release`,
 `tool_assessment`, `issue`, `review`, `promotion_eligibility`, `decision`, `attempt`,
 `tool_execution`, and `event`. All twenty use the same immutable envelope, opaque
@@ -508,7 +508,7 @@ handoff provisioning bounds, exact purpose arithmetic and COMMIT recovery.
 
 [Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3/4/5/6 submission transaction.
+and original-operation recovery in the existing schema-2/3/4/5/6/7 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -578,3 +578,12 @@ checks. See [the exact contract](claim-use-freshness.md#schema-6-target-context-
 for causes, temporal integrity and fixed independent budgets. Eligibility and
 scientific authorization remain unavailable; D02, R-015, R-077 and the product
 remain PARTIAL.
+
+Opt-in schema 7 adds transactional selected support-context freshness and version-4
+inspection. Candidate, selected Justification, complete premise and selected
+Evidence scopes retain separate immutable occurrences and exact historical upstream
+pins. Context successors, heads, events, receipts and coalesced generations commit
+in the same owning transaction; completed-request reconciliation still precedes
+fresh discovery, CAS and artifact checks. Default creation remains schema 2; only
+explicit verified 6→7 restore activates support semantics. Earlier schemas keep
+their original contracts. See [support-context freshness](claim-use-freshness.md#schema-7-support-context-freshness-and-activation).

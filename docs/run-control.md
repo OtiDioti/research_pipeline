@@ -7,7 +7,7 @@ Existing generic `run` records remain descriptive. Authority eligibility is a
 current-policy evaluation; prepared control is an immutable record of one such
 evaluation plus a pending report obligation. Neither is an admission token.
 
-Schema support extends through explicit schema 6, using the actual registry-derived
+Schema support extends through explicit schema 7, using the actual registry-derived
 schema identity in new captures and retaining original-operation reconciliation,
 authentication/guards and resource liabilities. Old saved documents retain exact
 bytes and interpretation. Target-context freshness shares the existing insertion
@@ -324,3 +324,9 @@ consistency only, creates/discharges no obligation, and never authorizes ordinar
 [Committed lifecycle sources](committed-lifecycle-sources.md) verify persisted origin
 and commit coherent source facts. Rendering integration, publication, acknowledgment
 and current-policy continuation remain mandatory subsequent ADR-063 slices.
+
+Schema 7 preserves this capability through the existing guarded insertion and
+original-operation reconciliation paths. New snapshots/captures name actual
+schema 7 and its registry-derived identity; saved schema-6 and earlier documents
+retain their original bytes, interpretation and recovery. Support-context freshness
+adds no execution or scientific authority.

@@ -120,19 +120,19 @@ bound unsafe filesystem handling. Failure can retain objects or staging entries;
 the API does not sweep or repair them.
 
 `research_pipeline.store` uses the artifact layout plus a private mode-0600
-`metadata.sqlite3`. It creates schema2 by default or explicit schema3/4/5/6 in absent roots and gates opening on the fixed
-version-1–6 registry through a read-only immutable preflight, before allowing normal
+`metadata.sqlite3`. It creates schema2 by default or explicit schema3/4/5/6/7 in absent roots and gates opening on the fixed
+version-1–7 registry through a read-only immutable preflight, before allowing normal
 SQLite rollback-journal recovery. This preflight is solely for fixed schema/version,
 never live data or integrity conclusions. Operational connections require DELETE
 journaling, EXTRA synchronization, foreign keys and a 5000 ms busy timeout.
 
-`research_pipeline.schema` owns a fixed six-entry DDL/kind/backup-format registry
+`research_pipeline.schema` owns a fixed seven-entry DDL/kind/backup-format registry
 and pure manifest/history validation, depending only on domain values and the
 standard library. It owns no SQLite connections or filesystem work. Schema 1's
 exact five-kind DDL remains supported; schema 2 extends the kind checks and state
 trigger and adds a singleton administrative history table, empty on fresh creation.
 Operational connections validate administrative rows after journal recovery.
-Explicit restore-time consecutive v1→v2→v3→v4→v5→v6 migration lives only in `backup.py`, transforming a
+Explicit restore-time consecutive v1→v2→v3→v4→v5→v6→v7 migration lives only in `backup.py`, transforming a
 verified private copy transactionally under the existing incomplete marker.
 Store creation/opening and generic/typed submission do not migrate. See [version contracts](durable-records.md)
 for kind mappings and [backup pairs](backups.md) for exact-copy verification.
@@ -308,7 +308,7 @@ Automatic reporting hooks and admission enforcement remain mandatory subsequent 
 
 [Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3/4/5/6 submission transaction.
+and original-operation recovery in the existing schema-2/3/4/5/6/7 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -368,3 +368,11 @@ Chronological policy and context selection use independent strict event boundari
 policy activation inspections explicitly disable context semantics. Resource and
 report/control/source/operating seams support actual schema 6 without weakening
 their guards. See [target-context activation](claim-use-freshness.md#schema-6-target-context-freshness-and-activation).
+
+Schema 7 extends that connection-owned Reader/Plan/apply path with immutable selected
+support-context occurrences and one context/event watch index. Metadata derivation,
+shared finite accounts and complete version-4 prospective inspection precede the
+mandatory shared insertion seam. Independent 6→7 activation backfills exact historical
+bindings at original temporal views without rewriting old dependencies, events or
+receipts. Chronological verification explicitly disables support semantics before
+activation. See [support-context activation](claim-use-freshness.md#schema-7-support-context-freshness-and-activation).

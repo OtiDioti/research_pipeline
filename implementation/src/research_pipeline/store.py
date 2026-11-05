@@ -260,14 +260,14 @@ class RecordStore:
 
     @classmethod
     def create(cls, root, *, schema_version=2) -> "RecordStore":
-        """Create an absent schema2 (default) or explicit schema3/4/5/6 store and sync its layout.
+        """Create an absent schema2 (default) or explicit schema3/4/5/6/7 store and sync its layout.
 
-        Only ordinary integer versions 2, 3, 4, 5 and 6 are accepted, before root reservation.
+        Only ordinary integer versions 2, 3, 4, 5, 6 and 7 are accepted, before root reservation.
         Existing roots are rejected unchanged. Failed creation may leave an
         incomplete root, which is retained rather than erased or repaired.
         """
-        if type(schema_version) is not int or schema_version not in (2, 3, 4, 5, 6):
-            raise StoreLayoutError("creation requires ordinary integer schema_version 2, 3, 4, 5 or 6")
+        if type(schema_version) is not int or schema_version not in (2, 3, 4, 5, 6, 7):
+            raise StoreLayoutError("creation requires ordinary integer schema_version 2, 3, 4, 5, 6 or 7")
         try:
             artifacts = ArtifactStore.create(root)
             path = artifacts._root / "metadata.sqlite3"
@@ -279,12 +279,14 @@ class RecordStore:
                     connection.execute("BEGIN IMMEDIATE")
                     for statement in _VERSIONS[schema_version][0]:
                         connection.execute(statement)
-                    if schema_version in (4, 5, 6):
+                    if schema_version in (4, 5, 6, 7):
                         connection.execute("INSERT INTO claim_use_origin VALUES (1,0)")
-                    if schema_version in (5, 6):
+                    if schema_version in (5, 6, 7):
                         connection.execute("INSERT INTO claim_use_policy_origin VALUES (1,0)")
-                    if schema_version == 6:
+                    if schema_version in (6, 7):
                         connection.execute("INSERT INTO claim_use_context_origin VALUES (1,0)")
+                    if schema_version == 7:
+                        connection.execute("INSERT INTO claim_use_support_context_origin VALUES (1,0)")
                     connection.execute(f"PRAGMA user_version={schema_version}")
                     connection.execute("COMMIT")
                 finally:
@@ -320,14 +322,14 @@ class RecordStore:
                                          connection.execute("SELECT digest,size FROM artifacts").fetchall())
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
                         raise StoreLayoutError(f"invalid migration history: {error}") from error
-                if version in (3, 4, 5, 6):
+                if version in (3, 4, 5, 6, 7):
                     from research_pipeline.resource_ledger import validate_ledger
                     try:
                         # Read all live invariants in one snapshot only after the
                         # operational connection has recovered legitimate journals.
                         connection.execute("BEGIN")
                         validate_ledger(connection)
-                        if version in (4, 5, 6):
+                        if version in (4, 5, 6, 7):
                             _claim_uses.validate(cls(artifacts, connection, version), connection)
                         connection.execute("COMMIT")
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
@@ -602,7 +604,7 @@ class RecordStore:
                                for record in submission.records):
                 raise DomainValidationError("operating decisions require commit_operating_decision")
             validate_request_kinds(submission, self._schema_version)
-            if self._schema_version not in (4, 5, 6):
+            if self._schema_version not in (4, 5, 6, 7):
                 _claim_uses.prepare(self, connection, submission, decoded=decoded)
             if budget is None:
                 self._check_batch(connection, submission)
@@ -685,7 +687,7 @@ class RecordStore:
             validate_request_kinds(submission, self._schema_version)
             # Fresh schema admission follows canonical receipt reconciliation, but
             # precedes target availability/CAS checks on stores without freshness.
-            if self._schema_version not in (4, 5, 6):
+            if self._schema_version not in (4, 5, 6, 7):
                 _claim_uses.prepare(self, connection, submission, decoded=decoded)
             if assessment_budget is None:
                 self._check_batch(connection, submission)
@@ -714,14 +716,17 @@ class RecordStore:
         """
         if _prepared_plan is None:
             _prepared_plan = _claim_uses.prepare(self, connection, submission)
-        if self._schema_version in (5, 6):
+        if self._schema_version in (5, 6, 7):
             # SQLite otherwise falls back to random lower ROWIDs at exhaustion,
             # which would reverse chronological freshness/activation semantics.
             maximum = connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
             watermark = connection.execute("SELECT event_watermark FROM claim_use_policy_origin WHERE singleton=1").fetchone()[0]
-            if self._schema_version == 6:
+            if self._schema_version in (6, 7):
                 context = connection.execute("SELECT event_watermark FROM claim_use_context_origin WHERE singleton=1").fetchone()[0]
                 watermark = max(watermark, context)
+            if self._schema_version == 7:
+                support = connection.execute("SELECT event_watermark FROM claim_use_support_context_origin WHERE singleton=1").fetchone()[0]
+                watermark = max(watermark, support)
             if maximum >= _MAX_INTEGER or maximum < watermark:
                 raise ClaimUseLimitError("event_id: scientific event sequence exhausted or below activation")
         _fault("before_metadata")
@@ -743,9 +748,9 @@ class RecordStore:
         connection.execute("INSERT INTO audit_events(submission_id,event_type,committed_at,provenance_json) VALUES (?, 'submission_committed', ?, ?)",
                            (submission.submission_id, committed_at, _snapshot(submission.provenance.to_dict(), "provenance")))
         receipt = self._receipt(connection, submission.submission_id)
-        # Index all schema-4/5/6 submissions at this shared seam, even without a
+        # Index all schema-4/5/6/7 submissions at this shared seam, even without a
         # freshness plan. Only the actual event belongs in temporal projections.
-        if self._schema_version in (4, 5, 6):
+        if self._schema_version in (4, 5, 6, 7):
             _claim_uses.index_submission(connection, submission, receipt)
         _claim_uses.apply(connection, _prepared_plan, receipt)
         _fault("after_claim_use_updates")

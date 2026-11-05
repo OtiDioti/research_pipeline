@@ -133,3 +133,59 @@ def target_context_graph(store):
     request = batch("target-register", [use_envelope(i, 1, v, PROVENANCE) for i, v in
                     (("downstream-use", downstream), ("unrelated-use", independent), ("use", upstream))])
     return artifact, request, store.submit_typed(request), upstream, downstream, independent
+
+
+def support_context_graph(store, *, uses=True, shared=False):
+    """Store independently identifiable selected scopes, exact upstreams and excluded links.
+
+    Setup uses the original declarations/artifact helper, then gives even unrelated
+    candidates disjoint contexts. Shared mode deliberately repeats one scope across
+    all four selected roles and both alternatives, retaining every occurrence.
+    Returned values are setup data, never expected projection/cause calculations.
+    """
+    artifact = populate(store, uses=False)
+    scopes = {role: "support-shared" if shared else "support-"+role for role in
+              ("candidate", "route-a", "route-b", "premise-a", "premise-b", "evidence")}
+    context_ids = {*scopes.values(), "support-target", "down-target", "independent-target",
+                   "down-scope", "independent-scope", "excluded-input", "excluded-target", "excluded-route"}
+    context = ResearchContext("Synthetic support scope", ["f(x)=x"], ["x is real"], [], [], ["R"], [], [], [], [], [])
+    records = [encode_envelope(i, 1, replace(context, question=i), PROVENANCE) for i in sorted(context_ids)]
+    for identity, scope in (("s-candidate", scopes["candidate"]), ("s-premise-a", scopes["premise-a"]),
+                            ("s-premise-b", scopes["premise-b"]), ("s-down", "down-scope"),
+                            ("s-independent", "independent-scope"), ("excluded-claim", "excluded-target")):
+        records.append(encode_envelope(identity, 1, Claim(identity, "synthetic", [],
+                       ref(scope, "context", "research_context"), [], [], []), PROVENANCE))
+    evidence = Evidence([artifact], ref(scopes["evidence"], "context", "research_context"), "Synthetic property",
+                        [ref("excluded-claim", "target_claim", "claim")], "Synthetic method",
+                        [ref("excluded-input", "input_record", "research_context")], [], [], "Unverified", [], [], "synthetic")
+    records.append(encode_envelope("s-evidence", 1, evidence, PROVENANCE))
+    definitions = (("s-route-a", scopes["route-a"], ("s-premise-a", "s-premise-b"), "s-candidate", True),
+                   ("s-route-b", scopes["route-b"], ("s-premise-b",), "s-candidate", True),
+                   ("s-route-d", "down-scope", ("s-candidate",), "s-down", False),
+                   ("s-unselected", "excluded-route", (), "s-candidate", False))
+    for identity, scope, premises, candidate, selected_evidence in definitions:
+        records.append(encode_envelope(identity, 1, Justification(ref(scope, "context", "research_context"),
+            [ref(p, "premise", "claim") for p in premises], [], identity,
+            [ref(candidate, "conclusion", "claim"), ref("excluded-claim", "conclusion", "claim")],
+            [ref("s-evidence", "evidence", "evidence")] if selected_evidence else [], []), PROVENANCE))
+    for identity, candidate, route, target in (("s-review-a", "s-candidate", "s-route-a", "support-target"),
+            ("s-review-b", "s-candidate", "s-route-b", "support-target"),
+            ("s-review-d", "s-down", "s-route-d", "down-target")):
+        records.append(assessment_envelope(identity, 1, review(candidate, route, target), PROVENANCE))
+    store.submit_typed(batch("support-science", records))
+    upstream = replace(binding("s-candidate", (), (), ()),
+        target_context=ref("support-target", "target_context", "research_context"),
+        routes=[ClaimUseRoute(ref(route, "support_route", "justification"),
+            [ClaimUsePremise(ref(p, "premise", "claim"), None) for p in premises],
+            [ref(assessment, "support_assessment", "review")]) for route, premises, assessment in (
+                ("s-route-a", ("s-premise-a", "s-premise-b"), "s-review-a"),
+                ("s-route-b", ("s-premise-b",), "s-review-b"))])
+    downstream = replace(binding("s-down", ("s-route-d",), ("s-review-d",), ("s-candidate",), "use"),
+                         target_context=ref("down-target", "target_context", "research_context"))
+    independent = replace(binding("s-independent", (), (), ()),
+                          target_context=ref("independent-target", "target_context", "research_context"))
+    request = batch("support-register", [use_envelope(i, 1, v, PROVENANCE) for i, v in
+                    (("downstream-use", downstream), ("unrelated-use", independent), ("use", upstream))])
+    receipt = store.submit_typed(request) if uses else None
+    return dict(artifact=artifact, request=request, receipt=receipt, upstream=upstream,
+                downstream=downstream, independent=independent, scopes=scopes)

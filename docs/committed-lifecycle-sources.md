@@ -7,7 +7,7 @@ rendered report, continuation output, publication, acknowledgment, restart
 readiness, or worker admission. The accepted offline binding remains structural
 evidence; capture verifies its persisted origin independently.
 
-Schema support extends through explicit schema 6, using the actual registry-derived
+Schema support extends through explicit schema 7, using the actual registry-derived
 schema identity in new captures and retaining original-operation reconciliation,
 authentication/guards and resource liabilities. Old saved documents retain exact
 bytes and interpretation. Target-context freshness shares the existing insertion
@@ -552,3 +552,9 @@ with TemporaryDirectory(prefix='committed-lifecycle-source-example-') as tempora
         assert reopened.head(c._identity('run-control-output-', 'checkpoint')) is None
 print('Original source bytes and receipts recovered; all obligations pending. No report output or publication was produced.')
 ```
+
+Schema 7 preserves this capability through the existing guarded insertion and
+original-operation reconciliation paths. New snapshots/captures name actual
+schema 7 and its registry-derived identity; saved schema-6 and earlier documents
+retain their original bytes, interpretation and recovery. Support-context freshness
+adds no execution or scientific authority.

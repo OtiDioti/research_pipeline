@@ -25,7 +25,7 @@ explicit structural admission boundary over durable storage; `submit` remains a
 trusted generic persistence API, not a scientific admission gate. Generic
 submission of a typed-looking envelope does not establish typed target validation.
 Scientific wire version 1 and its four codecs remain unchanged. New metadata
-stores default to schema 2 and backup format 2; explicit versions through 6 are supported; existing schema-1 stores and format-1
+stores default to schema 2 and backup format 2; explicit versions through 7 are supported; existing schema-1 stores and format-1
 backups remain supported unchanged. Original generic history and the oscillator
 fixture's v1.3 provenance are unchanged.
 
@@ -446,3 +446,12 @@ requires no typed interpretation. Version-3 inspection retains both full immutab
 bound scope and observed head declarations, including historical upstream bindings.
 This adds no scientific transfer, active-context adoption or typed Decision authority.
 Schema 4/5 retain their exact historical contracts. See [target-context freshness](claim-use-freshness.md#schema-6-target-context-freshness-and-activation).
+
+Schema 7 additionally watches only explicit selected support contexts: candidate
+Claim, selected Justifications, their complete premise Claims and ordered Evidence.
+Exact upstream bindings contribute their own occurrences, including historical
+bindings after rebinding. Evidence inputs/target links, other conclusions, unselected
+routes and shallow declarations do not create watches. Version-4 inspection retains
+complete bound/observed scope and exact source/role/selection provenance for every
+occurrence, with explicit unresolved Evidence transfers. Schema-4/5/6 interpretations
+remain historical. See [support-context freshness](claim-use-freshness.md#schema-7-support-context-freshness-and-activation).

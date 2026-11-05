@@ -28,7 +28,7 @@ def require_schema(store):
     """Preserve closed-handle errors and reject old schemas before resource API effects."""
     from research_pipeline.store import StoreLayoutError
     store._require_open()
-    if store._schema_version not in (3, 4, 5, 6):
+    if store._schema_version not in (3, 4, 5, 6, 7):
         raise StoreLayoutError("resource accounting requires explicit migration to schema 3")
 
 
@@ -665,7 +665,7 @@ def validate_snapshot(value):
     """
     fields(value, "format version schema_version schema_identity resource_sequence administrative_history operations accounts allocations reservations reservation_usage breaches balances snapshot_id", "resource snapshot")
     if (value["format"] != "research_pipeline.resource_snapshot" or type(value["version"]) is not int
-            or value["version"] != 2 or type(value["schema_version"]) is not int or value["schema_version"] not in (3, 4, 5, 6)
+            or value["version"] != 2 or type(value["schema_version"]) is not int or value["schema_version"] not in (3, 4, 5, 6, 7)
             or canonical(value["schema_identity"]) != canonical(_schema_identity(value["schema_version"]))):
         raise ResourceValidationError("unsupported resource snapshot identity")
     quantity(value["resource_sequence"], "resource sequence")
