@@ -3,14 +3,14 @@
 Immediate files and child directories only.
 
 - [README.md](README.md) — Product documentation.
-- [architecture.md](architecture.md) — Foundation architecture, transactional freshness and indexed temporal navigation.
+- [architecture.md](architecture.md) — Foundation architecture, schema-5 transactional policy freshness and temporal activation.
 - [attributed-assessments.md](attributed-assessments.md) — Durable attributed reviews and issues.
-- [backups.md](backups.md) — Verified local backup, exact restoration and metadata-only temporal migration backfill.
+- [backups.md](backups.md) — Verified local backup, exact format-5 restoration and forward temporal/policy activation.
 - [checkout.md](checkout.md) — Safe durable work-product checkout.
 - [committed-lifecycle-sources.md](committed-lifecycle-sources.md) — Committed lifecycle sources.
 - [committed-run-reports.md](committed-run-reports.md) — Committed run-report observations.
 - [corpus.md](corpus.md) — Immutable seed inventories.
-- [durable-records.md](durable-records.md) — Durable revisions, artifacts, atomic submissions and explicit CLI boundaries.
+- [durable-records.md](durable-records.md) — Durable revisions, artifacts, schema-5 policy freshness and atomic submission/CLI boundaries.
 - [lifecycle-report-binding.md](lifecycle-report-binding.md) — Offline lifecycle-report bindings.
 - [lifecycle-report-rendering.md](lifecycle-report-rendering.md) — Pure lifecycle report rendering.
 - [local-cli.md](local-cli.md) — Local inspection, explicit saved work-product round trips and navigation to passive Tool commands.
@@ -19,7 +19,7 @@ Immediate files and child directories only.
 - [readable-refresh.md](readable-refresh.md) — Preserved readable refresh.
 - [readable-snapshots.md](readable-snapshots.md) — Immutable private readable snapshots.
 - [readable-view-cli.md](readable-view-cli.md) — Immutable readable views through the local CLI.
-- [resource-accounting.md](resource-accounting.md) — Controller-private resource accounting.
+- [resource-accounting.md](resource-accounting.md) — Controller-private resource accounting and schema-3–5 snapshots.
 - [run-control.md](run-control.md) — Durable prepared run control.
 - [source-capture.md](source-capture.md) — Bounded local Source capture.
 - [sources.md](sources.md) — Versioned source captures.
@@ -32,5 +32,5 @@ Immediate files and child directories only.
 - [work-product-import.md](work-product-import.md) — Work-product preview and explicit import.
 - [work-products.md](work-products.md) — Versioned work-product manifests.
 - [tool-assessment-persistence.md](tool-assessment-persistence.md) — Passive assessment admission, bounded history/control/request accounting with predecessor and supplied-reader guards, inspection and original-ID recovery.
-- [claim-use-freshness.md](claim-use-freshness.md) — Exact passive bindings as Issue anchors, current/historical relevance, bounded propagation/inspection, reason contracts and schema-4 persistence.
+- [claim-use-freshness.md](claim-use-freshness.md) — Exact policy/assertion origins, shallow canonical policy metadata without typed decoding, historical downstream impact, version-2 observations, activation, bounds and an executable schema-5 example.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

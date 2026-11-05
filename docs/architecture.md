@@ -120,7 +120,7 @@ bound unsafe filesystem handling. Failure can retain objects or staging entries;
 the API does not sweep or repair them.
 
 `research_pipeline.store` uses the artifact layout plus a private mode-0600
-`metadata.sqlite3`. It creates schema2 by default or explicit schema3/4 in absent roots and gates opening on the fixed
+`metadata.sqlite3`. It creates schema2 by default or explicit schema3/4/5 in absent roots and gates opening on the fixed
 version-1, version-2, version-3 or version-4 schema through a read-only immutable preflight, before allowing normal
 SQLite rollback-journal recovery. This preflight is solely for fixed schema/version,
 never live data or integrity conclusions. Operational connections require DELETE
@@ -346,3 +346,15 @@ independent root and aggregate accounts; subsequent stored-record and binding
 comparisons use independent validation accounts, so verification cannot add a
 stricter combined admission limit. See [the exact contract](claim-use-freshness.md).
 Positive authorization remains absent; R-015 and R-077 remain PARTIAL.
+
+Schema 5 reuses that same reader/plan/application machinery and indexes, adding
+only a separate policy activation origin and expanded administrative history.
+Exact policy identity watches discover successor impact, and a bounded worklist
+propagates newly added originating causes through cached historical upstream edges.
+All transitioning current roots receive complete prospective version-2 inspections
+before insertion. There is no separate policy registry, engine, service or second
+commit. Internal event semantics preserve exact schema-4 output/accounting through
+the migration watermark; later events include policies. Independent streamed
+activation inspections use the first later event as cutoff, never later lifetime
+history. Resources and dedicated report/control/source/operating writers retain
+the shared insertion seam and existing authentication/recovery rules on schema 5.

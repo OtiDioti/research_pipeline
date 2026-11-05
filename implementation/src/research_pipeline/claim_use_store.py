@@ -5,6 +5,7 @@ repointed. Only explicit premise-use edges carry deductive support dependencies.
 """
 
 from collections import deque
+import sqlite3
 from dataclasses import dataclass, field
 
 from research_pipeline.claim_use import (
@@ -26,10 +27,10 @@ from research_pipeline.snapshot import (
 
 
 def require_schema(store):
-    """Require explicit schema 4 without initializing or upgrading old metadata."""
+    """Require registration schema 4 or 5 without upgrading older metadata."""
     from research_pipeline.store import StoreLayoutError
     store._require_open()
-    if store._schema_version != 4:
+    if store._schema_version not in (4, 5):
         raise StoreLayoutError("claim-use registration and inspection require explicit migration to schema 4")
 
 
@@ -41,8 +42,8 @@ def _raw(value, name):
         raise DomainValidationError(f"{name}: missing retained field") from error
 
 
-def relevant_request(submission):
-    """Validate exact outer shells before selecting freshness work from ordinary text."""
+def relevant_request(submission, *, policy=False):
+    """Validate retained shells and select legacy work or active policy Decisions."""
     if type(submission) is not Submission:
         raise DomainValidationError("submission: expected exact Submission")
     records = _raw(submission, "records")
@@ -55,7 +56,7 @@ def relevant_request(submission):
         kind, text = _raw(record, "kind"), _raw(record, "_content_json")
         if type(kind) is not str or type(text) is not str:
             raise DomainValidationError("record: malformed retained kind/content")
-        if kind in ("review", "issue", "promotion_eligibility") or FORMAT in text:
+        if kind in ("review", "issue", "promotion_eligibility") or FORMAT in text or (policy and kind == "decision"):
             found = True
     return found
 
@@ -115,14 +116,28 @@ def _request_shell(submission):
 
 
 def preflight(store, submission):
-    """Return a safe detached relevant request after early size/count checks on schema 4.
+    """Return safe retained shells after applicable schema-4/5 admission bounds.
 
     Older schemas retain generic normalization and original-receipt reconciliation;
     only fresh admission in prepare requires schema 4. Assessment originals must
     first pass their independent preparation, before entering this boundary.
     """
-    if not relevant_request(submission) or store._schema_version != 4:
+    legacy = relevant_request(submission)
+    if store._schema_version not in (4, 5) or not (legacy or (
+            store._schema_version == 5 and relevant_request(submission, policy=True))):
         return submission
+    if not legacy:
+        # Existence only bypasses *new* policy preflight. It neither acknowledges
+        # nor compares a request; the owning write transaction does both later.
+        identity = _raw(submission, "submission_id")
+        _identifier(identity, "submission_id")
+        from research_pipeline.store import _database_error
+        try:
+            used = store._connection.execute("SELECT 1 FROM submissions WHERE submission_id=?", (identity,)).fetchone()
+        except sqlite3.Error as error:
+            raise _database_error(error) from error
+        if used:
+            return submission
     _check_count(len(_raw(submission, "records")), WRITE_LIMITS["records"], "records")
     submission = _request_shell(submission)
     size = (len(submission.submission_id) + len(submission._expected_heads_json)
@@ -174,6 +189,22 @@ def bounded(value, maximum, dimension):
         raise ClaimUseLimitError(f"{dimension}: {error}") from error
 
 
+def _cause_key(reader, cause):
+    """Encode an active schema-5 cause within remaining scratch before retaining its key.
+
+    Callers charge attempted cause occurrences separately, before deduplication.
+    Reusing this bounded canonical text avoids a second unaccounted encoding; the
+    legacy path keeps its original accounting and cause shapes unchanged.
+    """
+    remaining = (reader.caps["metadata_bytes"] - reader.counts["metadata_bytes"]) // 6
+    if reader.aggregate is not None:
+        remaining = min(remaining, (reader.aggregate.caps["metadata_bytes"]
+                                   - reader.aggregate.counts["metadata_bytes"]) // 6)
+    text = bounded(cause, remaining, "metadata_bytes")
+    reader.charge("metadata_bytes", 6 * len(text))
+    return text
+
+
 def pin(reference):
     """Return the exact target triple independent of its incoming semantic role."""
     return reference.record_id, reference.revision, reference.target_kind
@@ -192,13 +223,16 @@ class Reader:
     The history hook deliberately preserves ordinary scientific admission rules.
     """
 
-    def __init__(self, store, connection, proposed=(), limits=None, cutoff=None, *, overlay=None, aggregate=None):
+    def __init__(self, store, connection, proposed=(), limits=None, cutoff=None, *, overlay=None, aggregate=None, policy=None):
         """Retain independent caches/counters, optionally viewing a private prospective plan.
 
         Overlay readers charge proposed values on demand as persisted metadata would
         be charged. Their work also accrues to the owning write's aggregate account.
+        The private policy selection matches the event's activation semantics;
+        legacy readers never resolve policies or construct schema-5 output.
         """
         self.store, self.connection, self.cutoff = store, connection, cutoff
+        self.policy_active = store._schema_version == 5 if policy is None else policy
         self.overlay, self.aggregate = overlay, aggregate
         self.caps = dict(WRITE_LIMITS)
         if limits is not None:
@@ -207,6 +241,8 @@ class Reader:
                 self.caps[name] = getattr(limits, "max_" + name)
         self.counts = {name: 0 for name in self.caps}
         self.seen_records, self.typed_keys, self.assertions = set(), set(), set()
+        self.policies = set()
+        self.policy_values = {}
         self.binding_keys = set()
         self.cache = {}
         self.values = {}
@@ -283,11 +319,15 @@ class Reader:
         if fetched != count:
             raise ClaimUseIntegrityError("index count changed within owned snapshot")
 
-    def read(self, key):
+    def read(self, key, *, classify=True):
         """Reconstruct exact metadata after scalar/link preflight, including private proposed values.
 
-        Proposed values reserve the same framing, reconstruction and codec work as
-        immediately persisted rows; cache hits never alter a root's initial charge.
+        Proposed values reserve framing and reconstruction work against the same
+        budgets as persisted rows; cache hits never alter a root's initial charge.
+        Classification is enabled by default for existing readers. Private shallow
+        policy reads disable it, retaining exact envelope validation and constraining
+        stored reconstruction by both local and aggregate remaining metadata budgets.
+        Limit and integrity failures retain claim-use error translations.
         """
         from research_pipeline.store import RecordNotFoundError
         self.record(key)
@@ -308,13 +348,17 @@ class Reader:
             raise ClaimUseIntegrityError("invalid stored UTF-8 metadata lengths")
         _check_count(sum(row[5:]), self.caps["record_bytes"], "record_bytes")
         remaining = self.caps["metadata_bytes"] - self.counts["metadata_bytes"]
+        if classify is False and self.aggregate is not None:
+            remaining = min(remaining, self.aggregate.caps["metadata_bytes"]
+                            - self.aggregate.counts["metadata_bytes"])
         limits = SnapshotLimits(1, self.caps["records"], self.caps["references"],
                                 8 * self.caps["record_bytes"], max(1, remaining),
                                 256, 1024, self.caps["record_bytes"], self.caps["metadata_bytes"])
         try:
             record, entry, size, refs = self.store._snapshot_record(
                 self.connection, key, limits, remaining // 6,
-                self.caps["references"] - self.counts["references"])
+                self.caps["references"] - self.counts["references"],
+                **({"_classify": False} if classify is False else {}))
         except SnapshotLimitError as error:
             dimension = "references" if "references" in str(error) else "record_bytes/metadata_bytes"
             raise ClaimUseLimitError(f"{dimension}: {error}") from error
@@ -402,9 +446,9 @@ class Reader:
         """Account passive Tool predecessor work without replacing its independent budget."""
         self.record(key)
 
-    def head(self, identity):
-        """Return a proposed/current head or seek the last revision strictly before the event."""
-        if identity in self.proposed_heads:
+    def head(self, identity, *, proposed=True):
+        """Seek the visible head, optionally excluding the proposed successor overlay."""
+        if proposed and identity in self.proposed_heads:
             return self.proposed_heads[identity]
         if self.cutoff is None:
             row = self.connection.execute("SELECT head FROM identities WHERE record_id=?", (identity,)).fetchone()
@@ -412,6 +456,43 @@ class Reader:
             row = self.connection.execute("""SELECT revision FROM claim_use_revision_events INDEXED BY claim_use_revision_event
                 WHERE record_id=? AND event_id<? ORDER BY event_id DESC,revision DESC LIMIT 1""", (identity, self.cutoff)).fetchone()
         return row[0] if row else None
+
+    def policy(self, key):
+        """Resolve one exact shallow Decision declaration without interpreting its graph.
+
+        A generic JSON object, including {}, is valid. Metadata reconstruction and
+        strict canonical envelope checking are required; attachments are not read.
+        Recognized format markers remain ordinary attributed JSON, with no
+        scientific or operating-policy decoding. Scratch is reserved before strict
+        policy parsing and envelope validation; deficient budgets fail closed.
+        The independent revision ceiling counts each exact resolution once here
+        and counts independent prospective-root resolutions in the write account.
+        """
+        from research_pipeline.store import ReferenceResolutionError
+        if key not in self.policies:
+            self.charge("policy_revisions")
+            self.policies.add(key)
+        self.charge("references")
+        # Classification can dispatch codecs before policy-validation scratch is
+        # reserved, and policy declarations require only shallow exact metadata.
+        envelope = self.read(key, classify=False)
+        if envelope.kind != "decision":
+            raise ReferenceResolutionError(f"policy {key}: expected Decision")
+        if key in self.policy_values:
+            return self.policy_values[key]
+        self.retain_typed(envelope)
+        try:
+            content = _strict_json(envelope._content_json)
+            if type(content) is not dict or _canonical(content) != envelope._content_json:
+                raise ValueError("noncanonical Decision JSON object")
+            # Reconstructing verifies states and exact envelope scalar contracts,
+            # without typed scientific or operating-policy dispatch.
+            if RecordEnvelope.from_dict(envelope.to_dict()) != envelope:
+                raise ValueError("incoherent Decision envelope")
+        except (ValueError, TypeError, RecursionError) as error:
+            raise ReferenceResolutionError(f"policy {key}: malformed declaration: {error}") from error
+        self.policy_values[key] = content
+        return content
 
     def assertion(self, key):
         """Require coherent local assertion content under a separate exact-revision ceiling."""
@@ -578,7 +659,10 @@ def dependencies(reader, key, value):
         for affected in (*issue.affected_records, *issue.supporting_evidence):
             add(affected, "issue_declared")
     for reference in value.policies:
-        reader.shallow(reference)
+        if reader.policy_active:
+            reader.policy(pin(reference)[:2])
+        else:
+            reader.shallow(reference)
         add(reference, "policy_declared")
     return result, upstreams
 
@@ -746,7 +830,7 @@ def observed(reader, deps, *, binding_keys):
     return relevant
 
 
-def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=True):
+def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=True, policy=None):
     """Prepare registrations, affected transitions and complete baseline views before insertion.
 
     Same-batch forward edges resolve through proposed values. Rebinding an upstream
@@ -755,20 +839,23 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
     indexed membership and prospective rows consume bounded work before propagation.
     Unsupported schemas reject fresh root discriminators only here, after the
     owner's original-request reconciliation. No helper starts a transaction.
+    The private policy selection preserves pre-activation schema-4 preparation,
+    output and accounting during chronological verification, never a public switch.
     """
     from research_pipeline.store import ReferenceResolutionError
-    if not relevant_request(submission):
+    policy_active = store._schema_version == 5 if policy is None else policy
+    if not relevant_request(submission, policy=policy_active):
         return None
-    if store._schema_version != 4:
+    if store._schema_version not in (4, 5):
         if any(r.content.get("format") == FORMAT for r in submission.records):
             require_schema(store)
         return None
-    if not any(r.kind in ("review", "issue") or r.content.get("format") == FORMAT
+    if not any(r.kind in ("review", "issue") or (policy_active and r.kind == "decision") or r.content.get("format") == FORMAT
                or (r.kind == "promotion_eligibility" and connection.execute(
                    "SELECT 1 FROM claim_use_current WHERE use_id=?", (r.record_id,)).fetchone() is not None)
                for r in submission.records):
         return None
-    reader = Reader(store, connection, submission.records, cutoff=cutoff)
+    reader = Reader(store, connection, submission.records, cutoff=cutoff, policy=policy_active)
     plan = Plan(reader, submission_id=submission.submission_id)
     assertions = []
     for record in submission.records:
@@ -826,7 +913,8 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
                     reader.charge("causes")
                     cause = dict(type="binding_affected", assertion=keypin(changed, reader.proposed[changed].kind),
                                  binding=keypin(binding_key))
-                    affected.setdefault(binding_key, {})[_canonical(cause)] = cause
+                    text = _cause_key(reader, cause) if policy_active else _canonical(cause)
+                    affected.setdefault(binding_key, {})[text] = cause
             for row in reader.rows("""SELECT d.use_id,d.binding_revision,d.ordinal,d.target_id,d.target_revision,
                     d.target_kind,d.role,d.context_id,d.context_revision,d.route_ordinal,d.premise_ordinal,d.registration_event
                     FROM claim_use_dependencies d INDEXED BY claim_use_dependency_target
@@ -851,35 +939,42 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
             if matched:
                 candidates.setdefault(key, []).extend(matched)
         for key, deps in candidates.items():
-            for dep in sorted(set(deps)):
+            for dep in sorted(deps if policy_active else set(deps)):
                 reader.charge("causes")
                 cause = dict(type="assertion_changed", assertion=keypin(changed, reader.proposed[changed].kind),
                              dependency=dict(ordinal=dep[0], target=keypin(dep[1:3], dep[3]), role=dep[4],
                                              context=None if not dep[5] else keypin(dep[5:7], "research_context"),
                                              route_ordinal=dep[7], premise_ordinal=dep[8]))
-                affected.setdefault(key, {})[_canonical(cause)] = cause
-    queue = deque(sorted(affected))
-    visited = set()
-    while queue:
-        key = queue.popleft()
-        if key in visited:
-            continue
-        visited.add(key)
-        reader.binding(key)
-        edges = []
-        temporal = " AND u.registration_event<?" if cutoff is not None else ""
-        for identity, revision, event in reader.rows("""SELECT u.use_id,u.binding_revision,u.registration_event
-                FROM claim_use_upstreams u INDEXED BY claim_use_upstream_target
-                WHERE u.upstream_id=? AND u.upstream_revision=?""" + temporal +
-                " ORDER BY u.registration_event,u.use_id,u.binding_revision,u.route_ordinal,u.premise_ordinal",
-                (*key, cutoff) if cutoff is not None else key):
-            edges.append((identity, revision))
-        edges.extend(k for k, rows in plan.upstreams.items() for r in rows if r[2:] == key)
-        for downstream in edges:
-            reader.charge("causes")
-            cause = dict(type="upstream_affected", upstream_binding=keypin(key))
-            affected.setdefault(downstream, {})[_canonical(cause)] = cause
-            queue.append(downstream)
+                if policy_active:
+                    cause["binding"] = keypin(key)
+                text = _cause_key(reader, cause) if policy_active else _canonical(cause)
+                affected.setdefault(key, {})[text] = cause
+    if policy_active:
+        _policy_impact(plan, affected)
+        _propagate_origins(plan, affected)
+    else:
+        queue = deque(sorted(affected))
+        visited = set()
+        while queue:
+            key = queue.popleft()
+            if key in visited:
+                continue
+            visited.add(key)
+            reader.binding(key)
+            edges = []
+            temporal = " AND u.registration_event<?" if cutoff is not None else ""
+            for identity, revision, event in reader.rows("""SELECT u.use_id,u.binding_revision,u.registration_event
+                    FROM claim_use_upstreams u INDEXED BY claim_use_upstream_target
+                    WHERE u.upstream_id=? AND u.upstream_revision=?""" + temporal +
+                    " ORDER BY u.registration_event,u.use_id,u.binding_revision,u.route_ordinal,u.premise_ordinal",
+                    (*key, cutoff) if cutoff is not None else key):
+                edges.append((identity, revision))
+            edges.extend(k for k, rows in plan.upstreams.items() for r in rows if r[2:] == key)
+            for downstream in edges:
+                reader.charge("causes")
+                cause = dict(type="upstream_affected", upstream_binding=keypin(key))
+                affected.setdefault(downstream, {})[_canonical(cause)] = cause
+                queue.append(downstream)
     for key in sorted(set(affected) | set(plan.bindings)):
         old = reader.current(key[0])
         new_key = next((k for k in plan.bindings if k[0] == key[0]), None)
@@ -889,7 +984,8 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
         if key in plan.bindings:
             reader.charge("causes")
             cause = dict(type="binding_registered", binding=keypin(key))
-            causes[_canonical(cause)] = cause
+            text = _cause_key(reader, cause) if policy_active else _canonical(cause)
+            causes[text] = cause
         generation = 1 if old is None else old[1] + 1
         if generation > _MAX_INTEGER:
             raise ClaimUseLimitError("generation: signed-64-bit overflow")
@@ -900,15 +996,116 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
     # A fresh reader per root prevents admission caches from discounting its
     # eventual standalone inspection. All repeated work remains write-accounted.
     limits = ClaimUseInspectionLimits(512, 1024, 8192, 1024, 64*1024*1024, 4*1024*1024)
-    for key in sorted(plan.bindings):
+    roots = sorted(plan.transitions) if policy_active else [key[0] for key in sorted(plan.bindings)]
+    for identity in roots:
         baseline = Reader(store, connection, submission.records, limits, cutoff,
-                          overlay=plan, aggregate=reader)
-        _inspection(baseline, key[0], limits)
+                          overlay=plan, aggregate=reader, policy=policy_active)
+        _inspection(baseline, identity, limits)
     return plan
 
 
+def _policy_impact(plan, affected):
+    """Seed exact policy-change causes through temporal identity watches, never history scans.
+
+    Only successor Decisions matching explicit policy_declared occurrences matter.
+    A preceding head is resolved without the new-head overlay; the bound pin may
+    independently be older or the same-batch successor. Every occurrence is charged
+    before canonical cause deduplication, including prospective watch occurrences.
+    """
+    reader = plan.reader
+    from research_pipeline.store import ReferenceResolutionError
+    visible_maximum = reader.connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
+    for changed, envelope in reader.proposed.items():
+        if envelope.kind != "decision" or changed[1] == 1:
+            continue
+        temporal = " AND d.registration_event<?" if reader.cutoff is not None else " AND d.registration_event<=?"
+        boundary = reader.cutoff if reader.cutoff is not None else visible_maximum
+        args = (changed[0], "decision", "policy_declared", boundary)
+        candidates = reader.rows("""SELECT d.use_id,d.binding_revision,d.ordinal,d.target_revision,d.registration_event
+            FROM claim_use_dependencies d INDEXED BY claim_use_dependency_watch
+            WHERE d.target_id=? AND d.target_kind=? AND d.role=?""" + temporal +
+            " ORDER BY d.registration_event,d.use_id,d.binding_revision,d.ordinal", args)
+        previous = None
+        def add(key, ordinal, revision):
+            """Resolve the three exact policy pins and retain one charged direct occurrence."""
+            nonlocal previous
+            reader.binding(key)
+            reader.charge("references")
+            reader.charge("causes")
+            if previous is None:
+                previous = reader.head(changed[0], proposed=False)
+                if previous != changed[1] - 1:
+                    raise ReferenceResolutionError("policy successor lacks its visible preceding head")
+            bound = changed[0], revision
+            reader.policy(bound)
+            reader.policy((changed[0], previous))
+            reader.policy(changed)
+            cause = dict(type="policy_changed", binding=keypin(key), dependency_ordinal=ordinal,
+                         bound_policy=keypin(bound, "decision"),
+                         previous_policy=keypin((changed[0], previous), "decision"),
+                         new_policy=keypin(changed, "decision"))
+            affected.setdefault(key, {})[_cause_key(reader, cause)] = cause
+        for identity, revision, ordinal, bound_revision, event in candidates:
+            add((identity, revision), ordinal, bound_revision)
+        for key, deps in plan.dependencies.items():
+            for dep in deps:
+                reader.charge("references")
+                if dep[1] == changed[0] and dep[3:5] == ("decision", "policy_declared"):
+                    reader.charge("index_rows")
+                    reader.charge("metadata_bytes", 8 * (len(key[0]) + sum(len(str(n)) for n in
+                                  (key[1], dep[0], dep[2], _MAX_INTEGER))))
+                    add(key, dep[0], dep[2])
+
+
+def _propagate_origins(plan, affected):
+    """Propagate bounded origin-cause deltas through cached exact historical upstream edges.
+
+    A node can receive another origin after its first expansion (for example in a
+    diamond). Each newly retained origin must therefore travel onward; a boolean
+    visited set would lose causes. Immediate edge reasons are retained but never
+    replace or multiply complete paths. Registration alone is not an invalidation.
+    """
+    reader = plan.reader
+    queue = deque((key, tuple(causes.items())) for key, causes in sorted(affected.items()))
+    edges = {}
+    while queue:
+        key, delta = queue.popleft()
+        reader.binding(key)
+        if key not in edges:
+            temporal = " AND u.registration_event<?" if reader.cutoff is not None else ""
+            args = (*key, reader.cutoff) if reader.cutoff is not None else key
+            outgoing = [row[:2] for row in reader.rows("""SELECT u.use_id,u.binding_revision,u.registration_event
+                FROM claim_use_upstreams u INDEXED BY claim_use_upstream_target
+                WHERE u.upstream_id=? AND u.upstream_revision=?""" + temporal +
+                " ORDER BY u.registration_event,u.use_id,u.binding_revision,u.route_ordinal,u.premise_ordinal", args)]
+            for downstream, rows in plan.upstreams.items():
+                for row in rows:
+                    reader.charge("references")
+                    if row[2:] == key:
+                        reader.charge("index_rows")
+                        reader.charge("metadata_bytes", 8 * (len(downstream[0]) + sum(len(str(n)) for n in
+                                      (downstream[1], row[0], row[1], _MAX_INTEGER))))
+                        outgoing.append(downstream)
+            edges[key] = outgoing
+        for downstream in edges[key]:
+            reader.charge("references")
+            destination = affected.setdefault(downstream, {})
+            reason = dict(type="upstream_affected", upstream_binding=keypin(key))
+            reader.charge("causes")
+            destination[_cause_key(reader, reason)] = reason
+            added = []
+            for text, cause in delta:
+                reader.charge("causes")
+                reader.charge("metadata_bytes", 6 * len(text))
+                if text not in destination:
+                    destination[text] = cause
+                    added.append((text, cause))
+            if added:
+                queue.append((downstream, tuple(added)))
+
+
 def index_submission(connection, submission, receipt):
-    """Index every schema-4 submission's original revisions and selected link occurrences.
+    """Index every schema-4/5 submission's original revisions and selected link occurrences.
 
     The caller supplies the actual receipt inside its owning transaction, after
     all revisions and links exist. This metadata-only helper never commits; any
@@ -1035,6 +1232,8 @@ def _inspection(reader, use_id, limits):
     roots with no routes and historical upstream bindings whose heads have changed.
     The same traversal, limitations, output and scratch charges govern public reads
     and pre-insertion baseline admission. Neither path owns a transaction here.
+    Policy declarations, including retained-output measurements, use shallow exact
+    envelope reads without format-driven classification or authority interpretation.
     """
     from research_pipeline.store import RecordNotFoundError, _fault
     current = reader.current(use_id)
@@ -1042,6 +1241,7 @@ def _inspection(reader, use_id, limits):
         raise RecordNotFoundError(f"claim use {use_id}: missing or unregistered")
     root = use_id, current[0]
     todo, seen, bindings, deps = [root], set(), [], []
+    policy_occurrences = []
     limitations = ["Positive scientific authorization is unavailable; eligible is always false.",
                     "Attribution, independence and execution are unverified.",
                     "Policy and provenance references are declarations, never verified authority."]
@@ -1063,6 +1263,11 @@ def _inspection(reader, use_id, limits):
         if stored_upstreams != upstream_rows:
             raise ClaimUseIntegrityError("current binding upstream projection mismatch")
         deps.extend(own_deps)
+        if reader.policy_active:
+            for dep in own_deps:
+                reader.charge("references")
+                if dep[4] == "policy_declared":
+                    policy_occurrences.append((key, dep[0], dep[1], dep[2]))
         bindings.append(dict(binding=keypin(key), envelope=envelope.to_dict(), content=value.to_dict()))
         candidate = reader.typed(value.candidate_claim, Claim)
         if pin(candidate.context) != pin(value.target_context):
@@ -1103,6 +1308,39 @@ def _inspection(reader, use_id, limits):
                                            key=lambda b: (b["binding"]["record_id"], b["binding"]["revision"])),
                   observed_assertions=observations, limitations=sorted(set(limitations)),
                   attachment_availability="not_checked_metadata_only")
+    if reader.policy_active:
+        policies, reasons = [], {}
+        for cause in transition["causes"]:
+            reader.charge("causes")
+            reasons[_cause_key(reader, cause)] = cause
+        for key, ordinal, identity, revision in sorted(policy_occurrences):
+            reader.charge("references")
+            reader.policy((identity, revision))
+            head = reader.head(identity)
+            if type(head) is not int or head < revision:
+                raise ClaimUseIntegrityError("visible policy head is absent or older than bound pin")
+            content = reader.policy((identity, head))
+            common = dict(binding=keypin(key), dependency_ordinal=ordinal,
+                          bound_policy=keypin((identity, revision), "decision"),
+                          observed_policy=keypin((identity, head), "decision"))
+            # The checked canonical declaration is already retained. Reserve its
+            # repeated output occurrence before attaching it, without encoding an
+            # otherwise redundant scratch copy merely to measure its size.
+            reader.charge("metadata_bytes", 6 * len(reader.read((identity, head), classify=False)._content_json))
+            policies.append(dict(**common, observed_content=content, attributed=True, superseded=head > revision))
+            if head > revision:
+                reader.charge("causes")
+                cause = dict(type="policy_pin_superseded", **common)
+                reasons[_cause_key(reader, cause)] = cause
+        result["version"] = 2
+        result["observed_policies"] = policies
+        registration = reader.connection.execute("SELECT event_watermark FROM claim_use_origin WHERE singleton=1").fetchone()
+        if registration is None or type(registration[0]) is not int:
+            raise ClaimUseIntegrityError("missing or malformed registration origin")
+        maximum = reader.connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
+        watermark = _policy_origin(reader.connection, registration[0], maximum)
+        result["policy_freshness"] = dict(available=True, activation_event_watermark=watermark)
+        result["mechanical_freshness"]["reasons"] = [reasons[k] for k in sorted(reasons)]
     remaining = (reader.caps["metadata_bytes"] - reader.counts["metadata_bytes"]) // 6
     if reader.aggregate is not None:
         remaining = min(remaining, (reader.aggregate.caps["metadata_bytes"]
@@ -1211,12 +1449,15 @@ def validate(store, connection):
     maximum = connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
     if origin > maximum:
         raise ClaimUseIntegrityError("freshness origin exceeds scientific event watermark")
+    policy_origin = _policy_origin(connection, origin, maximum) if store._schema_version == 5 else None
     if connection.execute("SELECT 1 FROM claim_use_bindings WHERE registration_event<=? LIMIT 1", (origin,)).fetchone():
         raise ClaimUseIntegrityError("pre-origin generic document was registered")
     count_bindings, count_transitions = 0, 0
     for event, sid in connection.execute("SELECT event_id,submission_id FROM audit_events WHERE event_id>? ORDER BY event_id", (origin,)):
+        policy_active = policy_origin is not None and event > policy_origin
         selected = connection.execute("""SELECT 1 FROM revisions r JOIN identities i USING(record_id)
-            WHERE r.submission_id=? AND i.kind IN ('review','issue','promotion_eligibility') LIMIT 1""", (sid,)).fetchone()
+            WHERE r.submission_id=? AND (i.kind IN ('review','issue','promotion_eligibility')
+            OR (? AND i.kind='decision')) LIMIT 1""", (sid, policy_active)).fetchone()
         if selected is None:
             plan = None
         else:
@@ -1229,7 +1470,7 @@ def validate(store, connection):
             submission = Submission.from_dict(doc["submission"])
             if _canonical({"fingerprint_version": 1, "submission": submission.to_dict()}) != text:
                 raise ClaimUseIntegrityError("noncanonical freshness request")
-            plan = prepare(store, connection, submission, cutoff=event, verify=False)
+            plan = prepare(store, connection, submission, cutoff=event, verify=False, policy=policy_active)
             if plan is not None:
                 # Preparation already consumed its complete admission account.
                 # Each stored-record comparison has an independent bounded reader,
@@ -1269,3 +1510,40 @@ def validate(store, connection):
         WHERE c.use_id IS NULL LIMIT 1""").fetchone()
     if missing or connection.execute("PRAGMA foreign_key_check").fetchone():
         raise ClaimUseIntegrityError("missing current projection or invalid freshness foreign key")
+    if policy_origin is not None:
+        _validate_activation(store, connection, policy_origin)
+
+
+def _policy_origin(connection, registration_origin, maximum):
+    """Validate the independent policy activation singleton and attributed migration boundary."""
+    rows = list(connection.execute("SELECT singleton,event_watermark FROM claim_use_policy_origin LIMIT 2"))
+    if (len(rows) != 1 or type(rows[0][0]) is not int or rows[0][0] != 1
+            or type(rows[0][1]) is not int or not registration_origin <= rows[0][1] <= maximum):
+        raise ClaimUseIntegrityError("invalid policy freshness origin")
+    origin = rows[0][1]
+    migration = connection.execute("SELECT source_schema FROM migration_history WHERE target_schema=5").fetchone()
+    if migration is None:
+        if origin != 0:
+            raise ClaimUseIntegrityError("fresh schema-5 policy origin must be zero")
+    elif migration != (4,):
+        raise ClaimUseIntegrityError("policy activation requires matching 4-to-5 migration")
+    if origin and connection.execute("SELECT 1 FROM audit_events WHERE event_id=?", (origin,)).fetchone() is None:
+        raise ClaimUseIntegrityError("policy activation watermark lacks scientific event")
+    return origin
+
+
+def _validate_activation(store, connection, watermark):
+    """Stream independent schema-5 boundary inspections without inventing transitions.
+
+    Seeking the first later event avoids watermark-plus-one overflow and excludes
+    every later revision/registration from each activation account. No lifetime
+    Python collection or aggregate admission account spans these independent roots.
+    """
+    row = connection.execute("SELECT event_id FROM audit_events WHERE event_id>? ORDER BY event_id LIMIT 1",
+                             (watermark,)).fetchone()
+    cutoff = row[0] if row else None
+    limits = ClaimUseInspectionLimits(512, 1024, 8192, 1024, 64*1024*1024, 4*1024*1024)
+    for identity, in connection.execute("""SELECT use_id FROM claim_use_bindings
+            WHERE registration_event<=? GROUP BY use_id ORDER BY use_id""", (watermark,)):
+        reader = Reader(store, connection, limits=limits, cutoff=cutoff, policy=True)
+        _inspection(reader, identity, limits)

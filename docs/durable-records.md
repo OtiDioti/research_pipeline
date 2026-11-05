@@ -57,7 +57,7 @@ normalize to six fractional digits. This is attributed creation information,
 not authenticated execution or a database commit timestamp.
 
 Schema 1 supports `research_context`, `claim`, `justification`, `evidence`, and
-`task_specification`. New stores default to schema2; explicit schema3/4 support the same kinds. Schema2 also supports `project`, `run`,
+`task_specification`. New stores default to schema2; explicit schema3/4/5 support the same kinds. Schema2 also supports `project`, `run`,
 `corpus_manifest`, `branch`, `source`, `work_product_manifest`, `tool_release`,
 `tool_assessment`, `issue`, `review`, `promotion_eligibility`, `decision`, `attempt`,
 `tool_execution`, and `event`. All twenty use the same immutable envelope, opaque
@@ -273,7 +273,9 @@ group/other-accessible database files are rejected. Runtime data must stay outsi
 software source; relative paths use the caller's working directory.
 
 Creation defaults to version2; `RecordStore.create(root, schema_version=3)` opts
-into version3; `schema_version=4` explicitly adds claim-use freshness. Each commits its fixed DDL and version in one explicit transaction.
+into version3; `schema_version=4` adds Review/Issue claim-use freshness and
+`schema_version=5` additionally enables explicit policy-head freshness. Each commits
+its fixed DDL and version in one explicit transaction.
 Invalid types or unsupported versions fail before destination reservation. There is no public legacy-creation option. Schema 1 remains
 supported for reads, old-kind append, receipts, retries and backups without rewriting.
 Opening first rejects any `.restore-incomplete` entry without repair or removal.
@@ -545,3 +547,16 @@ and lifecycle-control formats retain their separate fresh-commit restrictions.
 ## Explicit schema-4 claim-use bindings
 
 [Claim-use freshness](claim-use-freshness.md) defines a discriminated passive `promotion_eligibility` contract registered through ordinary `submit_typed`; generic recognized content receives identical checks. It adds coherent bounded current/history APIs without changing historical reads or receipts. Schema 4 requires coherent local generic Review/Issue content and synchronously coalesces relevant assertion changes into ineligible reassessment generations inside the same submission transaction. Its explicit 3→4 restore migration retains a source event origin and never interprets pre-feature generic documents as registered bindings. Positive authorization remains unavailable; R-015 and R-077 remain PARTIAL.
+
+## Explicit schema-5 policy freshness
+
+Creation defaults to schema 2; ordinary integer `schema_version=5` opts into
+[transactional policy freshness](claim-use-freshness.md#schema-5-policy-freshness-and-activation).
+Only explicit policy dependencies give successor Decisions mechanical impact.
+Generic, typed binding/assertion and dedicated operating-decision writers share
+one insertion transaction. Current version-2 inspection distinguishes exact bound
+and observed policies and derived mismatch reasons; history/receipts and ClaimUse
+wire version remain unchanged. Eligible remains false. Schema 4 keeps its original
+policy-head-no-invalidation semantics, including chronological replay. Verified
+explicit 4→5 backup migration preserves all rows and records a separate policy
+activation origin; default format-5 restore preserves exact metadata bytes.

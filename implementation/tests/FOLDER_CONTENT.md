@@ -66,7 +66,7 @@ Immediate files and child directories only.
 - [test_resource_example.py](test_resource_example.py) — Execute the exact published resource example with candidate-local imports.
 - [test_resource_ledger.py](test_resource_ledger.py) — Real schema3 hierarchical/protected capacity, identity and detached inspection tests.
 - [test_resource_recovery.py](test_resource_recovery.py) — Real transaction contention, original-ID recovery, process loss and hot journals.
-- [test_resource_schema.py](test_resource_schema.py) — Schema3 creation, unknown-version guards, verified migrations, immutable tampering and scientific compatibility.
+- [test_resource_schema.py](test_resource_schema.py) — Schema-3–5 resource creation, unknown-version guards, migrations, tampering and scientific compatibility.
 - [test_resource_usage.py](test_resource_usage.py) — Strict usage evidence, cumulative settlement, exact overflow and sticky admission boundaries.
 - [test_resource_usage_integrity.py](test_resource_usage_integrity.py) — Rehashed live/immutable histories must retain evidence identity and historical admission semantics.
 - [test_resource_usage_recovery.py](test_resource_usage_recovery.py) — Real observation/settlement interruption and synchronized serial transaction outcomes.
@@ -140,5 +140,8 @@ Immediate files and child directories only.
 - [test_claim_use_store.py](test_claim_use_store.py) — Synchronous Review/Issue freshness, direct binding targets, historical pins, forward registration observations, rollback and projection integrity.
 - [test_claim_use_bounds.py](test_claim_use_bounds.py) — Exact registration membership, binding observation seeds, temporal query/instruction bounds, independent accounts and atomic propagation ceilings.
 - [test_claim_use_recovery.py](test_claim_use_recovery.py) — Concurrent Review/direct-Issue snapshots, rollback/lost acknowledgment, exact restoration, chronological corruption, migration and schema-4 capabilities.
+- [test_claim_use_policy.py](test_claim_use_policy.py) — Schema-5 selective policy impact, exact origins, conjunctions/alternatives, historical rebinding and prospective views.
+- [test_claim_use_policy_bounds.py](test_claim_use_policy_bounds.py) — Shallow marked-policy no-dispatch regressions, local/aggregate scratch guards, exact metadata validation, legacy classification, independent ceilings, temporal queries and corrupt projections.
+- [test_claim_use_policy_recovery.py](test_claim_use_policy_recovery.py) — Policy atomicity, coherent threads, original receipts, verified migration/restore and auxiliary schema-5 capabilities.
 - [test_claim_use_example.py](test_claim_use_example.py) — Execute the exact self-contained product-only claim-use guide.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

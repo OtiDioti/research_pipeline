@@ -591,4 +591,4 @@ and metadata-only exact retries return original fixed dates without current-cloc
 checks. Capture neither reserves nor settles resources and
 cannot turn preparation's unknown account declarations into an earlier known fact.
 
-Schema 4 retains the complete schema-3 resource contract alongside [claim-use freshness](claim-use-freshness.md). New resource snapshots identify their actual schema and `_schema_identity(4)`; historical schema-3 snapshots remain accepted unchanged. Administrative history validation uses that actual schema, including valid consecutive suffixes through 3→4. Report/control/lifecycle-source resource capture remains available on both versions.
+Schemas 4 and 5 retain the complete schema-3 resource contract alongside [claim-use freshness](claim-use-freshness.md). New resource snapshots identify their actual schema and registry-derived `_schema_identity(version)`; historical schema-3/4 snapshots remain accepted unchanged. Administrative history validation uses that actual schema, including valid consecutive suffixes through 3→4→5. Report/control/lifecycle-source resource capture remains available on all three resource-capable versions.

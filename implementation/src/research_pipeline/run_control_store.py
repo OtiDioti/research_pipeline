@@ -478,7 +478,7 @@ def _anchors(reader, preparation):
         anchor = allocation[name]
         if 'account_id' not in anchor:
             continue
-        if reader.store._schema_version not in (3, 4):
+        if reader.store._schema_version not in (3, 4, 5):
             raise RunControlStateError('schema 2 requires explicitly unavailable resource accounts')
         raw = _row(reader, 'resource_operations', 'sequence operation_id receipt_id request_json fingerprint result_json committed_at',
             'operation_id=?', (anchor['operation_id'],), integers=('sequence',))

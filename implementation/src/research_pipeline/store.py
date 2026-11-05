@@ -260,14 +260,14 @@ class RecordStore:
 
     @classmethod
     def create(cls, root, *, schema_version=2) -> "RecordStore":
-        """Create an absent schema2 (default) or explicit schema3/4 store and sync its layout.
+        """Create an absent schema2 (default) or explicit schema3/4/5 store and sync its layout.
 
-        Only ordinary integer versions 2, 3 and 4 are accepted, before root reservation.
+        Only ordinary integer versions 2, 3, 4 and 5 are accepted, before root reservation.
         Existing roots are rejected unchanged. Failed creation may leave an
         incomplete root, which is retained rather than erased or repaired.
         """
-        if type(schema_version) is not int or schema_version not in (2, 3, 4):
-            raise StoreLayoutError("creation requires ordinary integer schema_version 2, 3 or 4")
+        if type(schema_version) is not int or schema_version not in (2, 3, 4, 5):
+            raise StoreLayoutError("creation requires ordinary integer schema_version 2, 3, 4 or 5")
         try:
             artifacts = ArtifactStore.create(root)
             path = artifacts._root / "metadata.sqlite3"
@@ -279,8 +279,10 @@ class RecordStore:
                     connection.execute("BEGIN IMMEDIATE")
                     for statement in _VERSIONS[schema_version][0]:
                         connection.execute(statement)
-                    if schema_version == 4:
+                    if schema_version in (4, 5):
                         connection.execute("INSERT INTO claim_use_origin VALUES (1,0)")
+                    if schema_version == 5:
+                        connection.execute("INSERT INTO claim_use_policy_origin VALUES (1,0)")
                     connection.execute(f"PRAGMA user_version={schema_version}")
                     connection.execute("COMMIT")
                 finally:
@@ -316,14 +318,14 @@ class RecordStore:
                                          connection.execute("SELECT digest,size FROM artifacts").fetchall())
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
                         raise StoreLayoutError(f"invalid migration history: {error}") from error
-                if version in (3, 4):
+                if version in (3, 4, 5):
                     from research_pipeline.resource_ledger import validate_ledger
                     try:
                         # Read all live invariants in one snapshot only after the
                         # operational connection has recovered legitimate journals.
                         connection.execute("BEGIN")
                         validate_ledger(connection)
-                        if version == 4:
+                        if version in (4, 5):
                             _claim_uses.validate(cls(artifacts, connection, version), connection)
                         connection.execute("COMMIT")
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
@@ -598,7 +600,7 @@ class RecordStore:
                                for record in submission.records):
                 raise DomainValidationError("operating decisions require commit_operating_decision")
             validate_request_kinds(submission, self._schema_version)
-            if self._schema_version != 4:
+            if self._schema_version not in (4, 5):
                 _claim_uses.prepare(self, connection, submission, decoded=decoded)
             if budget is None:
                 self._check_batch(connection, submission)
@@ -681,7 +683,7 @@ class RecordStore:
             validate_request_kinds(submission, self._schema_version)
             # Fresh schema admission follows canonical receipt reconciliation, but
             # precedes target availability/CAS checks on stores without freshness.
-            if self._schema_version != 4:
+            if self._schema_version not in (4, 5):
                 _claim_uses.prepare(self, connection, submission, decoded=decoded)
             if assessment_budget is None:
                 self._check_batch(connection, submission)
@@ -710,6 +712,13 @@ class RecordStore:
         """
         if _prepared_plan is None:
             _prepared_plan = _claim_uses.prepare(self, connection, submission)
+        if self._schema_version == 5:
+            # SQLite otherwise falls back to random lower ROWIDs at exhaustion,
+            # which would reverse chronological freshness/activation semantics.
+            maximum = connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
+            watermark = connection.execute("SELECT event_watermark FROM claim_use_policy_origin WHERE singleton=1").fetchone()[0]
+            if maximum >= _MAX_INTEGER or maximum < watermark:
+                raise ClaimUseLimitError("event_id: scientific event sequence exhausted or below activation")
         _fault("before_metadata")
         connection.execute("INSERT INTO submissions VALUES (?, ?, ?)", (submission.submission_id, canonical, fingerprint))
         for ordinal, record in enumerate(submission.records):
@@ -729,9 +738,9 @@ class RecordStore:
         connection.execute("INSERT INTO audit_events(submission_id,event_type,committed_at,provenance_json) VALUES (?, 'submission_committed', ?, ?)",
                            (submission.submission_id, committed_at, _snapshot(submission.provenance.to_dict(), "provenance")))
         receipt = self._receipt(connection, submission.submission_id)
-        # Index all schema-4 submissions at this shared seam, even without a
+        # Index all schema-4/5 submissions at this shared seam, even without a
         # freshness plan. Only the actual event belongs in temporal projections.
-        if self._schema_version == 4:
+        if self._schema_version in (4, 5):
             _claim_uses.index_submission(connection, submission, receipt)
         _claim_uses.apply(connection, _prepared_plan, receipt)
         _fault("after_claim_use_updates")
@@ -1212,13 +1221,17 @@ class RecordStore:
         return RecordEnvelope(record_id, revision, row[0], json.loads(row[1]), CreationProvenance.from_dict(json.loads(row[2])),
                               references, artifacts, row[3], row[4])
 
-    def _snapshot_record(self, connection, key, limits, remaining_metadata, remaining_references, *, _source_budget=None):
+    def _snapshot_record(self, connection, key, limits, remaining_metadata, remaining_references, *, _source_budget=None, _classify=True):
         """Preflight one exact revision before fetching JSON/links; return bounded detached metadata.
 
         Counts include repeated record/artifact links. BLOB lengths count UTF-8
         bytes, including variable-width links and commit metadata. This private
         capture path leaves admission and existing public read semantics unchanged.
         The private source budget checks complete framing before reconstruction.
+        Private metadata-only readers may disable classification while retaining
+        all validation and bounds. Their entries omit classification and must not
+        be included in public DetachedSnapshot documents. The default retains
+        existing typed classification and accounting.
         """
         if _source_budget is not None:
             _source_budget.preflight_record(connection, key, remaining_references, limits)
@@ -1282,8 +1295,9 @@ class RecordStore:
             envelope_json = _bounded_json(envelope.to_dict(), limits.max_record_bytes, "envelope")
             entry = {"record_id": key[0], "revision": key[1], "content_json": raw[0],
                      "provenance_json": raw[1], "envelope_json": envelope_json,
-                     "classification": _classification(envelope, _decode_typed_envelope),
                      "commit": commit, "fetched_bytes": fetched}
+            if _classify:
+                entry["classification"] = _classification(envelope, _decode_typed_envelope)
             _bounded_json(entry, min(limits.max_record_bytes, remaining_metadata - fetched), "record metadata")
             return envelope, entry, fetched, reference_count
         except (DomainValidationError, TypeError, KeyError, RecursionError) as error:

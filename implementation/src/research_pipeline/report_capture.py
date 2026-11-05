@@ -33,8 +33,8 @@ def _require_schema(store):
     """Preserve closed-handle errors and require explicit migration from schema 1."""
     from research_pipeline.store import StoreLayoutError
     store._require_open()
-    if store._schema_version not in (2, 3, 4):
-        raise StoreLayoutError("committed reports require explicit migration to schema 2, 3 or 4")
+    if store._schema_version not in (2, 3, 4, 5):
+        raise StoreLayoutError("committed reports require explicit migration to schema 2, 3, 4 or 5")
 
 
 def _result(event, receipt):
@@ -490,7 +490,7 @@ def commit_report(store, request):
                 raise ReportScopeError("start baseline must be an earlier saved report")
             baseline = {"reference": baseline, "observation": _read(store, connection, prior[1]["operation_id"],
                          maximum=request["limits"]["max_source_bytes"]).to_dict()}
-        if store._schema_version in (3, 4):
+        if store._schema_version in (3, 4, 5):
             complete = _inspect(connection, ResourceInspectionLimits(**request["limits"]["resources"])).to_dict()
             resources = reports._project_resources(complete, request)
             for item in resources["operations"]:

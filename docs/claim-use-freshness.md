@@ -3,8 +3,8 @@
 `research_pipeline.claim_use` defines passive exact bindings. Register them with
 `RecordStore.submit_typed(Submission(...))`, using `encode_envelope`; the result is
 an unchanged `SubmissionReceipt`. Generic `submit` recognizes the same explicit
-content and enforces the same registration and freshness rules. Neither path
-produces positive scientific eligibility, promotion or authorized disposition.
+content and enforces the same registration and freshness rules. Policy-head freshness requires opt-in schema 5; schema 4 retains its original
+Review/Issue semantics. Neither path produces positive scientific eligibility, promotion or authorized disposition.
 
 ## Values and wire contract
 
@@ -95,8 +95,9 @@ its historical targets as well as new targets, so removing links cannot erase
 relevance. Pinned Review/Issue identities have watches even if a successor changes
 scope. This history union invalidates conservatively; it never replaces a pin or
 certifies support. An independent Review in another context does not affect an
-old-scope use merely by naming the same claim. Policy-head advancement alone,
-unrelated contexts and unrelated global events do not increment generations.
+old-scope use merely by naming the same claim. Under the historical schema-4
+contract, policy-head advancement alone does not increment generations. Unrelated
+contexts and unrelated global events do not increment generations on either schema.
 
 Reverse explicit upstream edges propagate affected binding nodes to completion.
 Historical binding nodes remain traversable: D pinning U@1 still receives relevant
@@ -116,7 +117,7 @@ persisted inspection; applicable assertion and registration reasons share genera
 Planning, ordinary typed admission, record/head/link/receipt/event insertion and
 freshness application occur under the same owning `BEGIN IMMEDIATE` transaction.
 The shared insertion seam covers report, control, source and operating writers.
-It indexes every schema-4 revision/event and selected original association-link
+It indexes every schema-4/5 revision/event and selected original association-link
 occurrence after the actual receipt exists, even when no freshness plan is needed.
 These navigation projections share the owning transaction and exact-retry behavior.
 No worker, post-commit scan or second commit exists. Any planning/application
@@ -178,6 +179,7 @@ immutable use snapshots independently of current generations.
 | Distinct exact metadata records | 1,024 |
 | Record/artifact reference occurrences | 8,192 |
 | Assertion revisions | 1,024 |
+| Exact policy Decision revisions (schema 5, independent of assertions) | 1,024 |
 | Visited use bindings | 512 |
 | Examined freshness index rows | 8,192 |
 | Current-use transitions | 128 |
@@ -290,9 +292,144 @@ actual schema 4 and its exact schema identity, while saved schema-3 documents st
 unchanged. Generic readable snapshots remain historical metadata projections,
 not the current claim-use API.
 
-Positive authorization, promotion/Apply disposition, policy-change invalidation,
-full support-sufficiency judgment, remaining task/fencing/report obligations,
-M0-S, live evaluation and human scientific/release acceptance remain future work.
+## Schema-5 policy freshness and activation
+
+Create with ordinary integer `RecordStore.create(root, schema_version=5)` for
+transactional policy freshness. The default remains schema 2; explicit schema 3
+and schema 4 remain supported without silent upgrade. ClaimUse content/envelopes,
+SubmissionReceipt, both inspection/history method signatures, and the six-field
+`ClaimUseInspectionLimits` constructor are unchanged. Schema-4 inspection remains
+its exact version-1 document and its chronological events retain their original
+causes, preparation and accounting. History still uses its version-1 structure.
+
+Only a registered binding's explicit `policy_declared` dependency makes a Decision
+identity a policy for this mechanism. Every newly admitted successor revision is
+potentially material, including prose-only changes and identical declarations.
+First creation is not an advancement. Kind, Review successor declarations, Issue
+associations, arbitrary links and favorable values cannot infer a policy role.
+Generic Decision JSON objects (including `{}`) remain valid shallow declarations;
+policy resolution validates canonical JSON objects and exact complete envelopes
+without scientific or operating-policy decoding. Recognized `format`/`version`
+markers remain ordinary attributed JSON even when the declaration does not satisfy
+the corresponding typed schema. No new policy-content schema or authority
+interpretation exists. Generic Decisions use `submit`; new authenticated operating
+decisions use `commit_operating_decision`.
+`submit_typed` still rejects opaque Decisions and authenticated-operation bypasses.
+
+Direct discovery seeks the policy identity/kind/role equality prefix of the existing
+watch index, then its registration-event range and full suffix. It includes exact
+historical bindings and same-batch dependency rows, without scanning registrations
+or lifetime policy history. Each required bound Decision, visible preceding head
+and proposed successor must resolve as coherent exact metadata. Direct attachment
+bytes are unnecessary for observation and propagation; ordinary new-submission
+artifact admission remains enforced. Missing/wrong-kind targets, damaged envelopes
+or JSON, and unavailable required metadata fail explicitly rather than dropping impact.
+
+A direct cause has exactly `type="policy_changed"`, `binding`,
+`dependency_ordinal`, `bound_policy`, `previous_policy`, and `new_policy`. Each
+policy is an exact Decision pin (`record_id`, `revision`, `target_kind`);
+`binding` is the exact originating use pin. `previous_policy` is the head visible
+before this submission, independently of the immutable bound pin. The owning
+transition supplies the actual submission/event attribution. Schema-5
+`assertion_changed` additionally carries its originating exact `binding`;
+`binding_affected` retains that field. Downstream transitions retain all distinct
+originating policy/assertion causes as well as immediate `upstream_affected` edge
+reasons. A bounded delta worklist carries origins that arrive after a node's first
+expansion, without enumerating complete paths. Registration alone never invalidates
+upstream consumers. Repeated edges, matching occurrences and attempted cause
+additions count before canonical deduplication.
+
+Historical U@1 remains traversable after U@2 becomes current. A consumer pinned to
+U@1/P observes P's successor and receives its origin causes, while current U@2/Q
+changes only for U@2's own dependencies. Rebinding never repoints a downstream
+pin. Policy, Review/Issue and rebinding changes are seeded together and coalesced
+into one generation for each final current binding. First registration is generation
+1; otherwise the generation advances exactly once, with overflow rejecting the
+whole transaction. A same-batch binding may pin the old or the new policy revision.
+
+Schema-5 current inspection is version 2 and adds:
+
+- `observed_policies`, ordered by binding identity/revision and dependency ordinal.
+  Each occurrence contains `binding`, `dependency_ordinal`, `bound_policy`,
+  `observed_policy`, shallow `observed_content`, `attributed=true`, and `superseded`
+  (observed revision greater than bound revision). Historical upstream policies
+  participate without substituting current upstream bindings.
+- `policy_freshness={"available":true,"activation_event_watermark":...}`.
+- `mechanical_freshness.last_transition` remains the exact immutable stored row.
+  Its `reasons` are the canonical union of stored causes and current derived
+  `policy_pin_superseded` reasons, each containing `binding`, `dependency_ordinal`,
+  `bound_policy`, and `observed_policy`. Derived observations create no transition.
+
+Registration against an already advanced head therefore exposes the old bound pin
+and current exact successor immediately, even if its only stored cause is
+`binding_registered`. A head older than its bound pin is an integrity failure.
+All transitioning current uses receive a complete maximum-limit prospective
+inspection before insertion, including policy successor contents, historical
+upstream pins and same-batch forward registrations. Independent per-root work also
+counts against the aggregate write account; only the private future-event width
+reservation differs from the committed view. There is no fabricated public receipt.
+All planning, heads, revisions, links, events, receipts, temporal indexing and
+freshness updates share the owning transaction and existing fault seams. Signed
+64-bit scientific event exhaustion rejects the entire schema-5 write before
+SQLite can allocate a lower fallback event. Original canonical request reconciliation
+still precedes fresh-state checks. A point existence probe only bypasses newly
+introduced policy preflight for a used, safely validated ID; it does not acknowledge
+or compare the request and never reads its targets or attachments.
+
+Schema 5 adds only `claim_use_policy_origin` and expanded ordered migration history;
+scientific/resource/freshness DDL and indexes are shared unchanged with schema 4.
+Fresh stores initialize both origins to zero. Verified format/schema `(5,5)`
+backups restore exactly by default, preserving metadata bytes, both origins and
+receipts without another migration row. The sole forward step is explicit
+`restore_backup(schema4_backup, destination, target_schema=5,
+migration_provenance=...)`; older stores take the existing 1→2→3→4 steps first.
+There are no skipped or in-place upgrades. In the unpublished copy's single
+`BEGIN IMMEDIATE`, SQL copies all six administrative columns, appends the attributed
+4→5 source-backup/manifest row, and records the source's exact maximum scientific
+event as policy activation watermark. Every existing scientific/freshness row is
+preserved. No submission replay, receipt regeneration, generation or scientific
+event occurs. The durable `.restore-incomplete` marker covers transformation,
+commit and publication failures.
+
+The policy singleton must be correctly typed; fresh schema 5 requires zero. A
+migrated origin requires the matching 4→5 administrative step, cannot precede the
+registration origin or exceed the scientific maximum, and must name an existing
+event when nonzero. This is separate from the schema-4 registration origin.
+For example, migrating a U@1/P@1 binding when P@2 is head retains its exact
+generation/history but inspection exposes P@2 as superseding P@1. A later P@3
+causes one P@2→P@3 transition while retaining bound P@1. Migration never invents a
+P@2 transition.
+
+Open/backup chronological validation uses precisely legacy schema-4 preparation,
+output and accounts at/below policy activation, and schema-5 semantics only for
+later events. It independently compares complete transitions, causes and all
+projections. Activation validation streams the registered identities visible at
+the watermark and runs an independent complete schema-5 boundary inspection for
+each. It uses the first later scientific event as a strict cutoff (or the current
+snapshot when none exists), avoiding watermark-plus-one overflow and excluding
+later history from earlier accounts. A source whose required policy metadata or
+complete boundary views exceed the limits cannot migrate and remains unchanged.
+Lifetime streaming belongs only to integrity and activation verification; ordinary
+admission uses exact bounded indexed ranges. New policy reads and result processing
+consume the existing independent accounts and the additional 1,024 exact-policy
+revision ceiling; separate prospective-root resolutions charge the aggregate write.
+Excess raises `ClaimUseLimitError` naming the dimension and rolls back the write.
+Projection inconsistencies use `ClaimUseIntegrityError` and existing public layout
+translations; target, CAS, conflict and artifact errors retain their meanings.
+
+Resources, reports, operating decisions, controls and lifecycle sources retain
+existing capabilities on schema 5. New snapshots use actual schema 5 and the
+registry-derived identity; historical schema-2/3/4 documents retain exact bytes
+and interpretation. Policy declarations, sufficient/favorable reports and
+mechanical freshness never establish policy authority, scientific truth, route
+certification, independence or disposition. `eligible=false`,
+`requires_reassessment=true` and `authorized_disposition.available=false` remain.
+
+Positive authorization, promotion/Apply disposition, policy authority,
+full support-sufficiency and sufficient-alternative certification, active-context
+changes and context transfer, remaining task/fencing/report obligations, M0-S,
+live evaluation and human scientific/release acceptance remain future work. D02
+remains **PARTIAL**.
 R-015 and R-077 remain **PARTIAL**.
 
 ## Executable synthetic example
@@ -342,7 +479,7 @@ def review(candidate, route):
         [], [], [], "synthetic")
 
 
-def use(candidate, declarations):
+def use(candidate, declarations, policy="policy"):
     """Keep alternatives separate and each route's premise support explicit."""
     return ClaimUse(pin(candidate, "candidate_claim", "claim"), pin("scope", "target_context", "research_context"),
         [ClaimUseRoute(pin(route, "support_route", "justification"),
@@ -350,17 +487,17 @@ def use(candidate, declarations):
           None if upstream is None else pin(upstream, "premise_use", "promotion_eligibility"))],
          [pin(assessment, "support_assessment", "review")])
          for route, premise, assessment, upstream in declarations], [],
-        [pin("policy", "authorization_policy", "decision")], ["Synthetic only"])
+        [pin(policy, "authorization_policy", "decision")], ["Synthetic only"])
 
 
 with TemporaryDirectory() as temporary:
-    root = Path(temporary) / "schema4"
-    with RecordStore.create(root, schema_version=4) as store:
+    root = Path(temporary) / "schema5"
+    with RecordStore.create(root, schema_version=5) as store:
         store.submit(request("generic", [RecordEnvelope(identity, 1, kind, {}, provenance)
-            for identity, kind in (("policy", "decision"), ("manifest", "work_product_manifest"))]))
+            for identity, kind in (("policy", "decision"), ("other-policy", "decision"), ("manifest", "work_product_manifest"))]))
         context = ResearchContext("Synthetic scope", [], [], [], [], [], [], [], [], [], [])
         records = [encode_envelope("scope", 1, context, provenance)]
-        for identity in ("candidate", "premise-a", "premise-b", "downstream"):
+        for identity in ("candidate", "premise-a", "premise-b", "downstream", "independent"):
             records.append(encode_envelope(identity, 1, Claim(identity, "synthetic", [],
                 pin("scope", "context", "research_context"), [], [], []), provenance))
         for route, premise, candidate, assessment in (
@@ -378,7 +515,8 @@ with TemporaryDirectory() as temporary:
             ("route-b", "premise-b", "review-b", None)]), provenance)
         downstream = encode_use("downstream-use", 1, use("downstream", [
             ("route-d", "candidate", "review-d", "use")]), provenance)
-        saved = request("register", [downstream, binding])  # forward use reference
+        independent = encode_use("independent-use", 1, use("independent", [], "other-policy"), provenance)
+        saved = request("register", [downstream, independent, binding])  # forward use reference
         original_receipt = store.submit_typed(saved)
         old_binding = store.get_typed_revision("use", 1)
         assert store.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 1
@@ -395,12 +533,31 @@ with TemporaryDirectory() as temporary:
             current = store.inspect_claim_use(identity, limits=limits).to_dict()
             assert current["generation"] == 4 and current["eligible"] is False
             assert current["status"] == "requires_reassessment"
+        # Rebind the current use to Q, retaining D's exact historical U@1/P pin.
+        store.submit_typed(request("rebind", [encode_use("use", 2,
+            use("candidate", [], "other-policy"), provenance)]))
+        store.submit(request("policy-prose", [RecordEnvelope("policy", 2, "decision",
+            {"declaration": "Prose-only change; no new authority"}, provenance)]))
+        current = store.inspect_claim_use("use", limits=limits).to_dict()
+        downstream_view = store.inspect_claim_use("downstream-use", limits=limits).to_dict()
+        assert current["generation"] == 5  # Q is unrelated to this P successor
+        assert downstream_view["generation"] == 5
+        assert store.inspect_claim_use("independent-use", limits=limits).to_dict()["generation"] == 1
+        observed = next(p for p in downstream_view["observed_policies"]
+                        if p["binding"]["record_id"] == "use")
+        assert observed["binding"]["revision"] == 1
+        assert observed["bound_policy"]["revision"] == 1
+        assert observed["observed_policy"]["revision"] == 2 and observed["superseded"]
+        assert downstream_view["eligible"] is False
+        store.submit(request("other-policy-prose", [RecordEnvelope("other-policy", 2, "decision", {}, provenance)]))
+        assert store.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 6
+        assert store.inspect_claim_use("downstream-use", limits=limits).to_dict()["generation"] == 5
         assert store.head("candidate") == 1
         assert store.get_typed_revision("use", 1) == old_binding
         assert store.get_typed_revision("review-a", 1)[1].route_assessments[0].outcome == "sufficient"
         assert store.submit_typed(saved) == original_receipt
-        assert len(store.claim_use_history("use", limits=limits).to_dict()["transitions"]) == 4
+        assert len(store.claim_use_history("use", limits=limits).to_dict()["transitions"]) == 6
     with RecordStore.open(root) as reopened:
-        assert reopened.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 4
+        assert reopened.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 6
         assert reopened.submit_typed(saved) == original_receipt
 ```

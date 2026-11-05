@@ -22,7 +22,7 @@ FORMAT = "research_pipeline.claim_use_content"
 WRITE_LIMITS = MappingProxyType(dict(
     routes=16, premises=256, direct_references=512, request_bytes=8*1024*1024,
     record_bytes=1024*1024, metadata_bytes=64*1024*1024, records=1024,
-    references=8192, assertion_revisions=1024, bindings=512, index_rows=8192,
+    references=8192, assertion_revisions=1024, policy_revisions=1024, bindings=512, index_rows=8192,
     transitions=128, causes=8192, support_depth=64, artifacts=256,
     artifact_bytes=64*1024*1024,
 ))

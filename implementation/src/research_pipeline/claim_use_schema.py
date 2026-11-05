@@ -77,3 +77,10 @@ FRESHNESS_DDL = (
     )""",
     "CREATE INDEX claim_use_association_target ON claim_use_association_links(target_id,target_revision,event_id,relationship,record_id,revision,ordinal)",
 )
+
+# Policy activation is independent of registration activation: migrating preserves
+# every previously stored transition and only enables new policy events.
+POLICY_ORIGIN_DDL = """CREATE TABLE claim_use_policy_origin (
+        singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+        event_watermark INTEGER NOT NULL CHECK(typeof(event_watermark) = 'integer' AND event_watermark >= 0)
+    )"""

@@ -95,8 +95,11 @@ from `research_pipeline.domain`, `research_pipeline.artifacts` and
 `research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
 low-level generic graph submission/append/reopen/retry example. Select runtime
 directories explicitly outside software source. Creation rejects existing roots; opening gates fixed
-schema versions 1, 2, 3 and 4 before normal rollback-journal recovery. Creation defaults to
-schema 2; `RecordStore.create(root, schema_version=3)` explicitly enables the resource ledger; legacy stores retain old-kind operations without rewriting. SQLite uses DELETE/EXTRA,
+schema versions 1, 2, 3, 4 and 5 before normal rollback-journal recovery. Creation defaults to
+schema 2; `schema_version=3` explicitly enables the resource ledger, schema 4 adds
+Review/Issue claim-use reassessment, and schema 5 adds explicit policy-head
+freshness with preserved historical activation. Legacy stores retain old-kind
+operations without rewriting. SQLite uses DELETE/EXTRA,
 foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
 exact submission retries return original metadata-only receipts even after head
 advancement or later artifact damage. Record/history exposure verifies attached bytes.
@@ -150,14 +153,14 @@ paper fixture adds no research CLI command or runtime/persistence capability.
 
 The explicit `research_pipeline.backup` API captures consistent SQLite snapshots,
 verifies historical artifact inventories and restores independent stores exactly.
-Supported backup format/schema pairs are `(1, 1)`, `(2, 2)`, `(3, 3)` and `(4, 4)`; default restore
+Supported backup format/schema pairs are `(1, 1)`, `(2, 2)`, `(3, 3)`, `(4, 4)` and `(5, 5)`; default restore
 preserves the source version. Schema 2 admits twenty generic kinds while retaining
 claim/task state rules; all fifteen additions require null canonical states.
 Legacy new-kind requests fail with a migration-required error. The separate
 schema-2 administrative history format is validated and preserved; fresh creation
 invents none. `restore_backup(root, destination, *, target_schema=None,
-migration_provenance=None)` supports explicit v1→v2, v2→v3 or v3→v4 migration with ordinary
-integer next target `2`, `3` or `4` and caller-supplied `CreationProvenance`. Schema3 retains
+migration_provenance=None)` supports explicit next-step v1→v2→v3→v4→v5 migration with ordinary
+integer next target `2`, `3`, `4` or `5` and caller-supplied `CreationProvenance`. Schema3 retains
 ordered administrative history and includes all outstanding resource liabilities in exact backups. Both defaults select
 exact restoration. Migration preserves historical values and original receipts
 and records the verified source identity/digest separately under the existing
@@ -293,4 +296,4 @@ inert bytes and demonstrates reopen/inspection and atomic mismatched-pair refusa
 Local inspection/classification establishes coherence only; authentication,
 permission, qualification, scientific sufficiency and execution remain separate.
 
-[Claim-use freshness](../docs/claim-use-freshness.md) documents explicit schema 4, exact versioned bindings, bounded current/history reads and synchronous Review/Issue reassessment. Generic schema-4 assertion writes require coherent local content. Eligible remains false; R-015 and R-077 remain PARTIAL.
+[Claim-use freshness](../docs/claim-use-freshness.md) documents explicit schemas 4/5, exact versioned bindings and bounded current/history reads. Schema 5 adds synchronous explicit policy-head reassessment alongside Review/Issue changes, complete historical downstream propagation and version-2 bound/observed policy inspection. Verified 4→5 migration preserves old transitions/receipts behind a separate activation watermark; schema 4 retains its original semantics. Generic schema-4 assertion writes require coherent local content. Eligible remains false; R-015 and R-077 remain PARTIAL.

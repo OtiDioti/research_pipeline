@@ -6,7 +6,7 @@ Immediate files and child directories only.
 - [__main__.py](__main__.py) — Source-local entry point for bounded foundation CLI operations.
 - [artifacts.py](artifacts.py) — Owned local POSIX artifact storage with verified, durable no-overwrite publication.
 - [assessment.py](assessment.py) — Pure attributed assessment contracts; declarations confer no scientific authority.
-- [backup.py](backup.py) — Explicit local snapshots, metadata-only temporal backfill on schema-4 migration and durable completeness markers.
+- [backup.py](backup.py) — Verified snapshots, exact format-5 restore, schema-4 temporal backfill and schema-5 policy activation with durable markers.
 - [checkout.py](checkout.py) — Bounded, inert local copies with durable publication and untrusted base descriptors.
 - [cli.py](cli.py) — Source-local argv, bounded results and acknowledgement for inspection, saved work products, readable views and passive Tools.
 - [cli_controls.py](cli_controls.py) — Strict bounded controls, shared version-one configuration and retained no-follow observations.
@@ -20,23 +20,23 @@ Immediate files and child directories only.
 - [lifecycle_report_binding.py](lifecycle_report_binding.py) — Bounded offline lifecycle intent consistency; never persistence or work authority.
 - [lifecycle_report_rendering.py](lifecycle_report_rendering.py) — Pure bounded rendering of detached first-capture facts, never storage authentication.
 - [lifecycle_report_source.py](lifecycle_report_source.py) — Bounded detached lifecycle source facts; consistency never establishes permission.
-- [lifecycle_source_capture.py](lifecycle_source_capture.py) — Connection-owned first lifecycle sources, durable objects and original-ID recovery.
+- [lifecycle_source_capture.py](lifecycle_source_capture.py) — Connection-owned first lifecycle sources on schema-3–5 stores, durable objects and original-ID recovery.
 - [operating_authority.py](operating_authority.py) — Detached local operating declarations and explicit host-only HMAC trust.
-- [operating_authority_store.py](operating_authority_store.py) — Bounded authority operations on the existing immutable SQLite submission store.
+- [operating_authority_store.py](operating_authority_store.py) — Bounded authenticated authority operations on schema-2–5 stores through the shared submission seam.
 - [project.py](project.py) — Pure versioned intake dossiers; attributed readiness proposals grant no authority.
-- [report_capture.py](report_capture.py) — Atomic report source capture on existing scientific, artifact and resource transactions.
+- [report_capture.py](report_capture.py) — Atomic schema-2–5 report source capture over scientific, artifact and resource transactions.
 - [report_view.py](report_view.py) — Explicit v2 readable projections of exact committed report history, without store access.
-- [reports.py](reports.py) — Strict committed report declarations and deterministic, inert saved-state rendering.
-- [resource_ledger.py](resource_ledger.py) — Canonical resource admissions and historical invariants on the store's SQLite boundary.
+- [reports.py](reports.py) — Strict committed report declarations, schema-2–5 resource interpretations and inert saved-state rendering.
+- [resource_ledger.py](resource_ledger.py) — Canonical schema-3–5 resource admissions, registry-derived snapshots and historical invariants.
 - [resources.py](resources.py) — Strict, detached controller resource declarations; these confer no execution authority.
 - [run_control.py](run_control.py) — Detached prepared-control facts and pending report intent, never execution authority.
-- [run_control_store.py](run_control_store.py) — Connection-owned durable control history and bounded metadata-only recovery.
-- [schema.py](schema.py) — Fixed schema-1–4 metadata/backup contracts and pure consistency validation.
+- [run_control_store.py](run_control_store.py) — Connection-owned schema-3–5 durable control history and bounded metadata-only recovery.
+- [schema.py](schema.py) — Fixed schema-1–5 metadata/backup contracts and ordered administrative history validation.
 - [scientific.py](scientific.py) — Pure versioned scientific descriptions and coherent links, without scientific authority.
 - [snapshot.py](snapshot.py) — Bounded detached navigation and local typed classification, without artifact availability or admission claims.
 - [source.py](source.py) — Pure bounded source declarations and exact capture links, without acquisition or parsing.
 - [source_capture.py](source_capture.py) — Explicit bounded local Source preparation and pure saved requests; never implicit commit.
-- [store.py](store.py) — Atomic revision submissions, reconciliation before fresh schema admission, ordered assessment/freshness safeguards, unconditional schema-4 temporal indexing, passive Tool assessments and exact metadata history with guarded Source predecessor parsing and a shared connection-owned exact typed read over SQLite and immutable bytes.
+- [store.py](store.py) — Atomic revision submissions, original-request reconciliation, schema-4/5 temporal indexing and policy freshness, guarded assessment/Source admission and bounded metadata reconstruction with optional private classification bypass.
 - [tool_assessment.py](tool_assessment.py) — Passive attributed tool assessments; local validity conveys no permission or truth.
 - [tool_assessment_codec.py](tool_assessment_codec.py) — Private finite codec adapters and public ceilings for passive tool assessments.
 - [tool_assessment_envelope.py](tool_assessment_envelope.py) — Pure bounded assessment envelopes; projections and provenance remain unauthenticated data.
@@ -54,7 +54,7 @@ Immediate files and child directories only.
 - [work_product.py](work_product.py) — Pure versioned multi-file declarations; paths and kind labels confer no authority.
 - [work_product_import.py](work_product_import.py) — Bounded draft previews and pure frozen proposals; explicit typed submission commits.
 - [tool_assessment_store.py](tool_assessment_store.py) — Bounded assessment and supplied-reader reconstruction, deferred scalar semantics and control/request scratch accounting; transactions remain store-owned.
-- [claim_use.py](claim_use.py) — Exact passive claim-use bindings, immutable limits and detached observations.
-- [claim_use_schema.py](claim_use_schema.py) — Fixed schema-4 freshness DDL, temporal navigation projections and event-range reverse indexes.
-- [claim_use_store.py](claim_use_store.py) — Indexed exact-binding Issue impact, bounded temporal propagation, complete prospective inspection and independent chronological verification accounts.
+- [claim_use.py](claim_use.py) — Passive exact bindings, six-field inspection limits and independent policy/write ceilings.
+- [claim_use_schema.py](claim_use_schema.py) — Unchanged schema-4 freshness DDL and the independent schema-5 policy origin.
+- [claim_use_store.py](claim_use_store.py) — Bounded shallow policy resolution without typed dispatch, independent processing accounts, assertion planning, origin-delta propagation, prospective inspection and chronological/activation verification.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.
