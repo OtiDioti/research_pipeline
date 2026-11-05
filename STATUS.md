@@ -1,5 +1,11 @@
 # Development status
 
+## Resumed coordination; support-context freshness prelaunch — 2026-11-05
+
+The human explicitly resumed top-level development under AUTH-2026-10-30-001 revision7, superseding prior session shutdowns without new permission or reset. Fresh native status/diagnose of all48 retained histories confirms34final receipts,33exact integrated sources,one deliberately superseded acceptance and14terminal incomplete histories. No live matching process,lease,quarantine or pending integration remains. Latest final receipt/source and target-log digests match their run record; implementation/ and docs/ are unchanged from accepted0da0dd0f. Specification digest matches the grant; backend remains clean bcb7ad24.
+
+[REQ-D02-010](development/requests/REQ-D02-010.md) scopes conservative freshness for explicit selected support-context dependencies, retaining historical scope and no positive eligibility/transfer authority. Fresh pinned parser/ChatGPT authentication checks pass; catalog fetched22:28:36Z advertises approved models/high/xhigh. ProcessFD4096 and unchanged stable environment remain required. Continuous47/100 consumed before launch; counted start48 leaves52. CWIrepairs43,coordinator18,backend3/3/0; all exhausted families and scientific/live/human gates persist. No new acceptance or requirement credit is claimed. Local fresh evidence:local/resume-20261105-next/.
+
 ## Graceful shutdown complete — approved context-freshness salvage integrated, 2026-11-05
 
 The human superseded continuation with shutdown during current final validation. [REQ-D02-009-R1/run c0bffb7b](development/runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) finished normally and is finally accepted/exact-integrated on main at **0da0dd0fcc29e0be6cc219baa270a197b633327a**,tree587c07b15321004667e41c66155bb1690633a637. Final receipt SHA256 **946676ab3cdead5b3fc1fa960da03b2ef232f44997f7bdd4e42ef7b7af6315c3** binds1511/1511 final tests,both passing checks and accepting complete-diff review,no open findings/obligations or detected recording gaps. One CWI repair resolved obsolete schema-version coverage and migration-guide inconsistency. Required integrated-target check ran once: **1511/1511**,zero other outcomes,in **1347.689698s**; all dispositions match CWI final. Log SHA256 **ac155c86b53f61cec4bae93a1fc3d71c9c23fcf571cd8b9f500738cc30ad78be**. This is engineering evidence,not scientific validation.
@@ -70,4 +76,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-In a fresh human-started session, perform read-only reconciliation of local/live.md,STATUS,the effective AUTHORIZATION and later human instructions,exact Git identities and supported CWI evidence before deciding any further development. Preserve history,frozen configurations and consumed limits; do not automatically resume a terminal run.
+Launch the committed REQ-D02-010 once through CWI from its clean recorded main base, with the unchanged stable launch map, FD4096, all eight approved role flags and both literal-base checks; count start48 before execution and record the actual UUID locally.

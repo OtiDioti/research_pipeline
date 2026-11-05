@@ -1,5 +1,9 @@
 # Development environment contract
 
+## Support-context prelaunch readiness — 2026-11-05
+
+Fresh native status/diagnose of48histories and host inspection show no live owner/lease/quarantine or pending integration. Latest acceptance/source/target log verified. Backend clean bcb7ad24 and pinned Codex0.166.0/SHA256b8a11fed unchanged. Fresh actual parser/authentication probes22:28:48Z pass with ChatGPT login; catalog fetched22:28:36Z advertises both exact approved identifiers and high/xhigh. No live model call/server-model/quota attestation. Stable nonsecret launch map unchanged; process-onlyFD4096,2700s,one milestone,repairs2/6,two ordered checks,no--merge persist. No dependencies/auth/config/backend/security change. Evidence:local/resume-20261105-next/.
+
 Historical commissioning observations from 2026-10-30 appear in the first table; later dated evidence supersedes its initial specification/run/effort observations. The stable launch map remains operative and unchanged. This is local evidence, not the starter-kit template. Product live/scientific execution remains separately gated. Private commissioning outputs are under ignored `local/readiness-2026-10-30/`.
 
 | Field | Observation / launch contract |

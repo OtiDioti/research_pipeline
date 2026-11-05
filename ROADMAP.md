@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Support-context freshness prepared — 2026-11-05
+
+[REQ-D02-010](development/requests/REQ-D02-010.md) is the next independent D02 engineering slice under DEV-086, extending the accepted context contract to explicitly selected support-context occurrences. Prior REQ-D02-009-R1 acceptance/integration remains exact; D02 and broader obligations remain partial. STATUS owns launch readiness/counters and next action; no feature is claimed by preparation.
+
 ## Context-freshness salvage delivered; human-directed shutdown — 2026-11-05
 
 [REQ-D02-009-R1/run c0bffb7b](development/runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) finally accepted/exact-integrated0da0dd0f,final/target1511/1511. Explicit schema6 target-context activation/migration,selective historical downstream freshness and bound/observed inspection extend partial R-011/R-014/R-015/R-017/R-019/R-077 engineering. Active-project-context adoption,scientific transfer,authenticated sufficiency/positive disposition/promotion,Task/lifecycle/report and scientific/live/human obligations remain. Failed Task/B1 recovery holds persist. Latest human instruction stops after the current checkpoint; no next request/phase is selected or started. STATUS owns counters and the one next safe action.

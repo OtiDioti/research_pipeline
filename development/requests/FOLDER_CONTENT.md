@@ -17,6 +17,7 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [REQ-D02-007.md](REQ-D02-007.md) — REQ-D02-007 — Transactional claim-use freshness and reassessment
 - [REQ-D02-008.md](REQ-D02-008.md) — Transactional policy freshness for registered claim uses
 - [REQ-D02-009.md](REQ-D02-009.md) — Transactional target-context freshness for registered claim uses
+- [REQ-D02-010.md](REQ-D02-010.md) — Transactional support-context freshness for registered claim uses
 - [REQ-D03-001.md](REQ-D03-001.md) — REQ-D03-001 — Versioned source captures and bounded local ingestion
 - [REQ-D03-002.md](REQ-D03-002.md) — REQ-D03-002 — Immutable seed inventories over exact source captures
 - [REQ-D03-003.md](REQ-D03-003.md) — REQ-D03-003 — Versioned project setup and attributed intake dossiers
