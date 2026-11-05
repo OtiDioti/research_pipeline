@@ -16,6 +16,12 @@ Three completed role transports add 5752271 input tokens (5435264 cached), 89908
 
 REQ-D04-010 earns no new requirement credit. D02/D03/D04/D05/M0-E and the product remain partial. Task persistence, D04 B1/B2/008/009, all 13 FOLLOWON criteria and all 94 requirements remain mandatory; M0-S, live evaluation and human scientific acceptance are pending. [DEV-079](DECISIONS.md) identifies R-015 current eligibility/invalidation as an independent engineering candidate from accepted Review/Issue contracts, subject to a fresh bounded request and prerequisite check. No automatic restart supervisor is installed.
 
+## 2026-11-05 autonomous resumption and prelaunch request
+
+The human resumed autonomous coordination. Fresh read-only Git, host and CWI inspection confirms clean `main` at `2175d83d22e81118e21c530015405bac1bce617c`, clean backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`, no live CWI process/lease/quarantine and no accepted result awaiting integration. Current CWI confirms 8cef23e2 remains STOPPED_INCOMPLETE, no receipt or milestone. Earlier schema-1 runs require their original backend for CWI CLI inspection; the retained historical reconciliation and Git ancestry evidence are preserved. The account catalog fetched 2026-11-05T10:05:41Z advertises both approved models and high/xhigh; pinned Codex 0.166.0 SHA-256 and ChatGPT login are unchanged. No new product start has yet been counted.
+
+[REQ-D02-007](development/requests/REQ-D02-007.md) is a bounded, conservative R-015 freshness and reassessment slice from accepted Review/Issue and transaction contracts. It cannot authorize positive scientific eligibility or promotion. The unaccepted Task draft is excluded; all prior limits, missing science/live permissions and obligations persist. This is the committed prelaunch state, not implementation or acceptance.
+
 ## Exactly one next safe action
 
-Scope and commit a bounded R-015 current-eligibility/invalidation request from accepted source and specification, without adopting REQ-D04-010's unaccepted draft or resetting its exhausted recovery limit.
+From this clean committed baseline, record continuous start 44/100 locally and launch REQ-D02-007 once with the documented stable environment, eight approved role flags and both exact-base checks.

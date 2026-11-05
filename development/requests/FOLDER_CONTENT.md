@@ -14,6 +14,7 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [REQ-D02-005-R1.md](REQ-D02-005-R1.md) — REQ-D02-005-R1 — Attributed reviews and issues over durable records
 - [REQ-D02-005.md](REQ-D02-005.md) — REQ-D02-005 — Attributed reviews and issues over durable records
 - [REQ-D02-006.md](REQ-D02-006.md) — REQ-D02-006 — Versioned work-product bundles and safe draft round trips
+- [REQ-D02-007.md](REQ-D02-007.md) — REQ-D02-007 — Transactional claim-use freshness and reassessment
 - [REQ-D03-001.md](REQ-D03-001.md) — REQ-D03-001 — Versioned source captures and bounded local ingestion
 - [REQ-D03-002.md](REQ-D03-002.md) — REQ-D03-002 — Immutable seed inventories over exact source captures
 - [REQ-D03-003.md](REQ-D03-003.md) — REQ-D03-003 — Versioned project setup and attributed intake dossiers
