@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Transactional target-context freshness accepted and integrated — 2026-11-05
+
+[REQ-D02-009-R1/run c0bffb7b](development/runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) finally accepted and exact-integrated **0da0dd0fcc29e0be6cc219baa270a197b633327a**. Schema6 adds explicit context-freshness activation/migration,complete recorded historical downstream impact,coherent bound/observed scope and atomic metadata-only retry/recovery behavior,without granting scientific transfer or positive eligibility. Initial1510/1511 exposed obsolete invalid-version6 coverage; one prescribed repair corrected that coverage and the backup guide. Revised/final/required target **1511/1511**,zero other outcomes,and accepting complete-diff review support the delivered scope. The original cancelled run/draft remains unaccepted evidence with separate fresh R1 acceptance. Human-directed graceful shutdown follows this administrative checkpoint; no subsequent implementation request/phase started.
+
 ## Interrupted context-freshness work preserved; recovery prepared — 2026-11-05
 
 Human-reported accidental cancellation left [REQ-D02-009](development/runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) without controller acceptance. After orphan Writer completion/quiescence, supported reconciliation safely stopped it without replay. All33 unaccepted changed files remain recoverable, with frozen reference patch/hash manifest for the single human-authorized REQ-D02-009-R1 replacement. This administrative checkpoint changes no product/backend source and claims no delivered context-freshness feature; latest accepted product remains REQ-D02-008 at ba6bdf39.

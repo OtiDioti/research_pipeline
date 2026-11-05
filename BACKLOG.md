@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Approved salvage completed; existing holds preserved — 2026-11-05
+
+[REQ-D02-009-R1](development/runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) is accepted/exact-integrated0da0dd0f with final/target1511/1511. F-001/F-002 are resolved,with no new open CWI finding or pending integration. The expressly authorized additional salvage1/1 is consumed; historical2/2salvage/orphan-permission/Writer-deadline and all other consumed limits remain. Original dc1e5d73 and failed Task/B1 source/evidence remain recoverable and unaccepted in their original histories. Broader context selection/transfer,positive authority/sufficiency/promotion,Task persistence/admission,D04B1/B2/008/009,all13FOLLOWON/all94requirements and M0-S/live/human gates remain mandatory. Human-directed shutdown supersedes continuation; no new engineering request is selected.
+
 ## Narrowly authorized context-freshness salvage — 2026-11-05
 
 The human explicitly permits one additional salvage attempt only for [REQ-D02-009](development/runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) after accidental coordinator cancellation. Original run is safely terminal/noresume;33-file draft preserved without acceptance. REQ-D02-009-R1 is the one permitted replacement, subject to all original acceptance gates. Historical interrupted-salvage2/2 stays exhausted, this separate exception is one-use, and Task/B1/Writer-deadline/orphan-permission and other holds remain. No root-product defect is inferred from unaccepted worktree changes; broader implementation/scientific gaps remain mandatory.

@@ -51,3 +51,4 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [f746e33a-7475-44dc-b8bf-4613130fba79.md](f746e33a-7475-44dc-b8bf-4613130fba79.md) — REQ-D03-002 corpus inventory — f746e33a-7475-44dc-b8bf-4613130fba79
 - [f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md](f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md) — REQ-D04-006 — Unaccepted source candidate; correctness recovery prepared
 - [dc1e5d73-1712-4cab-bd32-57c7bf35270f.md](dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) — REQ-D02-009 — Accidental interruption; completed draft unaccepted
+- [c0bffb7b-f83d-4b19-aeef-752f925671e9.md](c0bffb7b-f83d-4b19-aeef-752f925671e9.md) — REQ-D02-009-R1 — Authorized salvage accepted/exact-integrated; shutdown

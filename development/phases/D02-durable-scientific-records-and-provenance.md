@@ -99,3 +99,7 @@ After REQ-D02-008 exact integration and required1470/1470 target evidence, [REQ-
 ## Target-context request interrupted; one replacement authorized — 2026-11-05
 
 [REQ-D02-009/run dc1e5d73](../runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) stopped unaccepted after accidental cancellation; baseline1470/1470, zero candidate/review/receipt/integration. Human authorized one extra salvage attempt; [REQ-D02-009-R1](../requests/REQ-D02-009-R1.md) preserves all criteria and complete fresh CWI gates, using exact frozen unaccepted reference. D02/M0-E and product remain partial; no new requirement/scientific credit or broader recovery reset.
+
+## Target-context freshness accepted and integrated — 2026-11-05
+
+[REQ-D02-009-R1/run c0bffb7b](../runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) finally accepted/exact-integrated0da0dd0f,final/target1511/1511,one prescribed CWI repair closingF-001/F-002. Explicit schema6 context activation/migration and conservative selective historical downstream freshness advance bounded R-011/R-014/R-015/R-017/R-019/R-077 evidence. D02/M0-E/product remain PARTIAL;broader applicability/active-context adoption,scientific transfer,sufficient alternatives,positive authority/promotion and scientific/live/human gates remain mandatory. Original dc1e5d73 remains terminal unaccepted with source/evidence preserved. Human stopped this session after current bounded completion; no next request/phase selected.
