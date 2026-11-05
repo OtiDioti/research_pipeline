@@ -1,5 +1,13 @@
 # Development status
 
+## Graceful shutdown checkpoint — REQ-D02-008 integrated, 2026-11-05
+
+The human superseded autonomous continuation with graceful shutdown. [REQ-D02-008 / run c255a52f](development/runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md) is finally accepted and exact-integrated on main at `ba6bdf39f713cdafab476985c8738267fc9b7dcc`, tree `4b1ca3e62938e9bb702b3b0b28585b66ad2bf961`. Final receipt SHA-256 `5be9d34d000352813c74a9f6c6bcf3ad98e3a3036b74d2d5405acc0c9c6d7fc4` binds 1470/1470 final tests, both passing checks and accepting complete-diff review with no open findings. The required integrated-target check also passed 1470/1470 once, zero skips/failures/errors, in 1201.476886 seconds. Its log SHA-256 is `542903da3f469ba6ebe2bcc3cc85d9aefd73177c0c70c386e406b516dbbed46b`. This is engineering evidence, not scientific validation.
+
+The accepted source and latest run worktree are clean; backend remains clean bcb7ad24. No controller, Writer, validator, lease, quarantine or in-flight operation remains; CWI historical ACCEPTED_UNMERGED state is preserved after external integration. No accepted result awaits integration. All 46 histories are terminal: 33 final receipts, 32 exact final sources integrated, one deliberately superseded validator acceptance, 13 incomplete histories. Forty-seven retained worktrees/evidence remain intact.
+
+Continuous starts **45/100**, 55 remain; CWI repairs **42**, coordinator interventions **16**, backend **3/3/0**. Exhausted recovery families and failed Task/B1 evidence remain unchanged. AUTH-2026-10-30-001 revision7 persists without new permission or reset; this session is stopped. D02/D03/D04/D05/M0-E/product remain partial; all 94 requirements, 13 FOLLOWON criteria and scientific/live/human gates remain mandatory. The run record owns detailed evidence and resource reconciliation. [local/live.md](local/live.md) is the self-contained shutdown handoff. No subsequent request/phase or automatic restart is claimed.
+
 ## Resumed coordination and policy-freshness prelaunch — 2026-11-05
 
 The human resumed CONTINUOUS coordination under the unchanged revision7 grant, superseding prior session shutdowns. Fresh Git/CWI inspection reconciles 45 retained runs: 32 final receipts, 31 exact final sources integrated, one deliberately superseded validator acceptance and 13 incomplete histories. No live owner, lease, quarantine or pending integration remains; historical terminal operation markers and recording findings stay preserved. Latest receipt/source and integrated-target log match the REQ-D02-007 record. Specification digest matches the grant. Main is at documentation checkpoint46a2ecf before this prelaunch record; backend remains clean bcb7ad24.
@@ -42,4 +50,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Launch the committed REQ-D02-008 once through CWI after the final clean-base check, then inspect its Designer scope and terminal acceptance evidence.
+In a future human-started session, read the current instruction, effective grant and local/live.md, then reconcile fresh Git/CWI ownership, acceptance/integration evidence and cumulative limits before selecting any authorized work.

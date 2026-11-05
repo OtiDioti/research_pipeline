@@ -27,9 +27,9 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [7b46536e-42ac-4537-a720-beaaa5a34490.md](7b46536e-42ac-4537-a720-beaaa5a34490.md) — REQ-D03-001 source capture — 7b46536e-42ac-4537-a720-beaaa5a34490
 - [7d05376e-aabf-4c5a-9481-91205611eb0c.md](7d05376e-aabf-4c5a-9481-91205611eb0c.md) — REQ-D04-006-R1 — Committed lifecycle sources integrated
 - [7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md) — REQ-D03-004-R1 readable snapshots — 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e
-- [8dc45005-5187-4be0-a009-dece7c493f2b.md](8dc45005-5187-4be0-a009-dece7c493f2b.md) — REQ-D02-005-R1 attributed reviews/issues — 8dc45005-5187-4be0-a009-dece7c493f2b
 - [8715d97e-341b-450a-8281-4760a34ba2cb.md](8715d97e-341b-450a-8281-4760a34ba2cb.md) — REQ-D02-007 — Transactional claim-use freshness accepted and integrated
 - [8cef23e2-42cf-4580-b7f3-8d29520fccf7.md](8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) — REQ-D04-010 — interrupted, unaccepted Task contracts
+- [8dc45005-5187-4be0-a009-dece7c493f2b.md](8dc45005-5187-4be0-a009-dece7c493f2b.md) — REQ-D02-005-R1 attributed reviews/issues — 8dc45005-5187-4be0-a009-dece7c493f2b
 - [9af6f133-62d8-4348-b8f2-7d95cbb84928.md](9af6f133-62d8-4348-b8f2-7d95cbb84928.md) — REQ-D02-004 first attempt — 9af6f133-62d8-4348-b8f2-7d95cbb84928
 - [9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md](9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) — REQ-D05-003 — Passive Tool-release registration integrated
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This navigation index.
@@ -37,6 +37,7 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md](b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md) — REQ-D04-005-R1 — Offline lifecycle-report binding integrated
 - [b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md](b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md) — REQ-D04-002-R2 — Validated candidate; Reviewer context limit
 - [b7952877-c4a8-4a38-ab2e-daa9419e60c3.md](b7952877-c4a8-4a38-ab2e-daa9419e60c3.md) — REQ-D04-007-A — Shared lifecycle rendering and repeated-root repair
+- [c255a52f-4034-46dd-b2ff-69e046e7814a.md](c255a52f-4034-46dd-b2ff-69e046e7814a.md) — REQ-D02-008 — Policy freshness accepted and integrated
 - [c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md](c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md) — REQ-D03-005 preserved successor refresh — c62af399-bf8c-4b25-8ef7-ec1947fad6ae
 - [c9055f4c-f63c-4815-ab5e-670116ce1333.md](c9055f4c-f63c-4815-ab5e-670116ce1333.md) — Development run — c9055f4c-f63c-4815-ab5e-670116ce1333
 - [cd93ad37-6dec-4631-98aa-d10032c64552.md](cd93ad37-6dec-4631-98aa-d10032c64552.md) — REQ-DEV-VALIDATION-001 — Accepted implementation; integration declined for fixture defect

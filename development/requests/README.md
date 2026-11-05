@@ -90,3 +90,7 @@ qualification and uses no failed B1 source. STATUS owns readiness and counters.
 - [REQ-D04-010](REQ-D04-010.md) — READY/unlaunched pure immutable TaskSpecification contracts after integrated Tool CLI; no admission or exhausted-path recovery.
 
 - [REQ-D02-008](REQ-D02-008.md) — Prepared conservative transactional policy freshness, following exact-integrated REQ-D02-007; STATUS owns launch/consumption evidence.
+
+## Shutdown checkpoint — 2026-11-05
+
+REQ-D02-008 is finally accepted/exact-integrated; [run evidence](../runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md). Its frozen request is unchanged. REQ-D04-010 remains terminal unaccepted with recovery exhausted; older READY labels are historical. No new request/phase started after human shutdown.

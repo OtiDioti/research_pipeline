@@ -69,3 +69,5 @@ Store concise sanitized evidence and references, not full private logs. Exact re
 
 
 - [0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) — REQ-D05-006 finally accepted/exact-integrated53be2755; final/target1372/1372,one fixture repair,no coordinator recovery/backend change.
+
+- [c255a52f-4034-46dd-b2ff-69e046e7814a — REQ-D02-008](c255a52f-4034-46dd-b2ff-69e046e7814a.md): policy freshness finally accepted/exact-integrated ba6bdf39; final/target1470/1470, one CWI repair, human-directed shutdown.

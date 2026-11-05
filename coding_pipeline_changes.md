@@ -399,3 +399,7 @@ with exact matching final dispositions. Original backend and failed evidence rem
 ## 2026-11-05 — REQ-D02-007 and graceful shutdown; backend unchanged
 
 REQ-D02-007/run `8715d97e-341b-450a-8281-4760a34ba2cb` used clean supported backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66` with its frozen schema-2 role settings. Three CWI product repairs, two final-review rounds and the post-integration validation environment correction did not edit backend source, controller state, receipts or historical evidence. No backend maintenance candidate, attempt, adoption or reversion occurred; cumulative backend counts remain **3/3/0**. The original backend revision remains preserved for old schema-1 inspection. The human directed shutdown after the exact product integration/checkpoint, without another CWI start.
+
+## 2026-11-05 — REQ-D02-008; backend unchanged
+
+Run `c255a52f-4034-46dd-b2ff-69e046e7814a` used unchanged clean backend bcb7ad24f83ff5193345f3d4fa72122ea53a4e66 and eight approved recorded role pairs. One CWI product repair, final/target validation and external exact integration did not change backend/controller/evidence. No maintenance attempt/adoption/reversion; cumulative3/3/0. Preserved original backend and historical configurations remain intact.
