@@ -88,3 +88,5 @@ qualification and uses no failed B1 source. STATUS owns readiness and counters.
 
 
 - [REQ-D04-010](REQ-D04-010.md) — READY/unlaunched pure immutable TaskSpecification contracts after integrated Tool CLI; no admission or exhausted-path recovery.
+
+- [REQ-D02-008](REQ-D02-008.md) — Prepared conservative transactional policy freshness, following exact-integrated REQ-D02-007; STATUS owns launch/consumption evidence.

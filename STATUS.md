@@ -1,5 +1,11 @@
 # Development status
 
+## Resumed coordination and policy-freshness prelaunch — 2026-11-05
+
+The human resumed CONTINUOUS coordination under the unchanged revision7 grant, superseding prior session shutdowns. Fresh Git/CWI inspection reconciles 45 retained runs: 32 final receipts, 31 exact final sources integrated, one deliberately superseded validator acceptance and 13 incomplete histories. No live owner, lease, quarantine or pending integration remains; historical terminal operation markers and recording findings stay preserved. Latest receipt/source and integrated-target log match the REQ-D02-007 record. Specification digest matches the grant. Main is at documentation checkpoint46a2ecf before this prelaunch record; backend remains clean bcb7ad24.
+
+[REQ-D02-008](development/requests/REQ-D02-008.md) selects conservative transactional policy freshness from the accepted claim-use mechanism. It grants no scientific authority or positive eligibility. Pinned Codex parser/auth probes pass with ChatGPT login; current catalog fetched15:50:26Z advertises both exact models and high/xhigh. Stable environment and process FD4096 remain prerequisites. Continuous44/100 starts are consumed before launch (next45 leaves55); CWIrepairs41, coordinator16, backend3/3/0 and all exhausted recovery limits persist. No product start or new requirement credit is claimed by preparation.
+
 ## Documentation handoff checkpoint — 2026-11-05
 
 The human requested Markdown reorganization and a clean commit, expressly excluding every file in the separate `coding_pipeline/` checkout and any further product development in this task. [DEV-081](DECISIONS.md) records the information-owner layout: `AGENTS.md` owns current coordinator boundaries, `DEVELOPMENT.md` maps records, and the continuation prompt reads current evidence selectively. [CHANGELOG.md](CHANGELOG.md) records this administrative change separately from the prior REQ-D02-007 product integration. The former verbose local handoff is retained under ignored `local/handoffs/`; [local/live.md](local/live.md) is the short current handoff.
@@ -36,4 +42,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-In a future human-started session, read the current human instruction, this checkpoint, the effective grant and [local/live.md](local/live.md), then reconcile fresh Git/CWI evidence and cumulative limits before deciding whether any development action is authorized.
+Launch the committed REQ-D02-008 once through CWI after the final clean-base check, then inspect its Designer scope and terminal acceptance evidence.

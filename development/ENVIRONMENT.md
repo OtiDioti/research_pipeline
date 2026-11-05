@@ -432,3 +432,7 @@ Both bounded target checks pass; post-target host07:29:38Z finds no execution ow
 No duplicate successful full checks or broad timing claim. Fresh exact readiness
 remains required before a future start43; all consumed/unknown liabilities persist.
 Evidence:local/attempts/D05-006-attempt-001/.
+
+## Policy freshness readiness — 2026-11-05
+
+Fresh reconciliation in ignored local/resume-20261105-policy/ uses native schema2 and preserved CP-002 schema1 status/diagnose. All45 retained histories are terminal; historical read-only operation PIDs are absent, no lease/quarantine/live owner. Receipt d82f8e0e and accepted1296c93 ancestry match; integrated target log SHA25606f7774d matches prior required1435/1435 evidence. Backend bcb7ad24 and pinned Codex0.166.0/SHA256b8a11fed remain unchanged. Actual adapter parser and authentication probes pass; ChatGPT login, harmless read-only PATH alias warning. Catalog fetched2026-11-05T15:50:26.631837123Z advertises both approved models and high/xhigh; no server attestation/quota claim. Stable non-secret launch map remains unchanged; process-only soft FD4096. No install/config/backend/auth changes, no live experiment or new spending authority.
