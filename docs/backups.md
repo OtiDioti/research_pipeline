@@ -1,7 +1,7 @@
 # Verified local backup and restoration
 
 `research_pipeline.backup` provides an explicit trusted-controller boundary for
-schema-1, schema-2 and schema-3 `RecordStore` data. Import directly from this submodule. Imports are
+schema-1, schema-2, schema-3 and schema-4 `RecordStore` data. Import directly from this submodule. Imports are
 inert; there is no CLI, dependency, environment-selected location, scheduler,
 worker endpoint or general SQL interface. Callers select paths outside software
 source, relative to their working directory or absolute, under existing parents.
@@ -11,7 +11,7 @@ Parent-traversal components and symlinked ancestors are rejected, not resolved.
 | --- | --- |
 | `create_backup(source: RecordStore, destination) -> BackupInfo` | Capture an open, owning-thread source without an active transaction into an absent destination. |
 | `inspect_backup(root) -> BackupInfo` | Verify a complete backup without recovery, writes, permission changes or sidecars. |
-| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate v1→v2 or v2→v3. Return an independent handle after publication barriers. Close it or use a context manager. |
+| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate v1→v2, v2→v3 or v3→v4. Return an independent handle after publication barriers. Close it or use a context manager. |
 
 `BackupInfo` is frozen and contains `backup_id: str`, `format_version: int`,
 `schema_version: int`, `metadata: ArtifactReference`, and
@@ -43,7 +43,7 @@ manifest field set is:
 {"format_version":1,"schema_version":1,"metadata":{"digest":"<64 lowercase hex characters>","size":123},"artifacts":[{"digest":"<64 lowercase hex characters>","size":456}]}
 ```
 
-Only `(format_version, schema_version)` pairs `(1, 1)`, `(2, 2)` and `(3, 3)` are supported.
+Only `(format_version, schema_version)` pairs `(1, 1)`, `(2, 2)`, `(3, 3)` and `(4, 4)` are supported.
 The example shows the historical format-1 representation; format 2 has the same
 four exact fields and reference shapes with both version values set to 2.
 Schema3 uses the same shape with both versions set to 3 and includes its entire ledger.
@@ -116,8 +116,8 @@ all twenty generic kinds. Neither path changes the backup or source.
 ## Explicit verified migration
 
 Supported migrations are verified format-1/schema-1 backups into absent schema2
-runtimes and verified format-2/schema-2 backups into absent schema3 runtimes.
-Supply the next `target_schema` (`2` or `3`) and
+runtimes, verified format-2/schema-2 backups into absent schema3 runtimes, and verified format-3/schema-3 backups into absent schema4 runtimes.
+Supply the next `target_schema` (`2`, `3` or `4`) and
 `migration_provenance=CreationProvenance(actor, created_at, details)` explicitly.
 The actor and UTC timestamp are caller supplied; details may be `{}`. Attribution
 is reconstructed and validated at the API boundary and serialized canonically.
@@ -125,9 +125,9 @@ No operator, timestamp, migration request or scientific authority is inferred.
 
 Both options default to `None`, selecting exact restoration. `BackupLayoutError`
 rejects provenance without a target, missing or malformed attribution with a
-target, and targets other than ordinary integers `2` and `3` (including booleans,
+target, and targets other than ordinary integers `2`, `3` and `4` (including booleans,
 strings and floats). Direct 1→3, same-version migrations, downgrades and every
-explicit target on a schema3 source are rejected. Invalid options and damaged backups
+explicit non-next target on a schema3/4 source are rejected. Invalid options and damaged backups
 fail before destination reservation. There is no live in-place migration,
 automatic upgrade on open, public v1 creation option or general conversion API.
 
@@ -391,7 +391,7 @@ checks, not authentication of a coherent hostile-owner rewrite.
 
 General migrations, periodic scheduling, complete D02/R-019/R-017 fulfillment,
 research-run/session/job recovery, scientific validation, full scientific schemas,
-assessment freshness/eligibility, attempt lifecycle, worker isolation and live-provider work
+positive scientific eligibility, attempt lifecycle, worker isolation and live-provider work
 remain outstanding. M0-S and the original historical fixture/provenance are unchanged.
 
 ## Operating authority and external current trust
@@ -417,3 +417,24 @@ meaning after later object loss; a verified source read and a healthy backup req
 all required bytes. A schema-2 source retains its original schema-2 resource-unavailable
 observation after an allowed migration. Restoring a source never grants current
 permission, discharges an obligation, publishes output or establishes restart readiness.
+
+## Schema-4 freshness preservation
+
+Exact format/schema `(4,4)` restores retain all freshness rows and original
+metadata bytes. The only new migration is explicit 3→4 on the verified unpublished
+copy: SQL copies administrative text, extends consecutive migration history,
+installs empty binding/dependency/upstream/generation/current-use state and the
+exact source-event origin, and backfills temporal revision/event and selected
+association-link navigation from all original revisions and links without decoding
+or registration. It records explicit source backup/provenance, validates, and
+publishes under the existing incomplete marker. No submission replay or receipt
+regeneration occurs.
+
+Live open and immutable backup inspection validate exact temporal navigation
+against original metadata, dependency/upstream rows and registration events,
+current heads, contiguous generations and chronological canonical causes,
+detecting missing as well as extra transitions. Open and reconciliation do not
+require old artifact availability; healthy backup retains its complete
+historical-byte verification. Resource liabilities and saved schema-3
+report/control/source documents retain their meaning.
+See [claim-use freshness](claim-use-freshness.md).

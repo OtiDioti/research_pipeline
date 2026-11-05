@@ -44,17 +44,17 @@ class ResourceSchemaTests(unittest.TestCase):
 
     def test_creation_defaults_invalid_options_and_old_schema_resource_rejection(self):
         """Invalid schema choices never reserve roots and old resource calls cannot migrate implicitly."""
-        for i, version in enumerate((None, True, False, 1, 0, 4, -1, "3", 3.0, [], {})):
+        for i, version in enumerate((None, True, False, 1, 0, 5, -1, "3", 3.0, [], {})):
             root = self.parent / f"invalid-{i}"
             with self.assertRaises(StoreLayoutError):
                 RecordStore.create(root, schema_version=version)
             self.assertFalse(root.exists())
-        for version in (1, 2, 3):
+        for version in (1, 2, 3, 4):
             root = self.parent / str(version)
             creator = create_legacy if version == 1 else RecordStore.create
-            with creator(root, **({"schema_version": 3} if version == 3 else {})) as store:
+            with creator(root, **({"schema_version": version} if version in (3, 4) else {})) as store:
                 self.assertEqual(store._schema_version, version)
-                if version == 3:
+                if version in (3, 4):
                     self.assertEqual(store.inspect_resources(limits=LIMITS).to_dict()["operations"], [])
                     continue
                 before = (root / "metadata.sqlite3").read_bytes()

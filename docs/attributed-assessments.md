@@ -394,7 +394,9 @@ declarations, ToolExecution references, completed tasks and policy references
 certify neither independence, execution nor authority. Review dimensions and Issue
 dispositions never update candidate history or create eligibility, permission,
 endorsement or decision records; generic decision references are caller declarations.
-Current eligibility/freshness, Apply disposition, scientific qualification and M0-S
+[Explicit schema-4 claim-use freshness](claim-use-freshness.md) now tracks passive bindings and synchronous reassessment. Positive scientific authorization, Apply disposition, scientific qualification and M0-S
 remain future work. This infrastructure neither completes D02 nor authorizes a
 scientific pilot or release. Local checks are advisory; the unchanged controller
 validator remains `/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py`.
+
+Schema-4 generic Review/Issue submissions must carry supported coherent local content for complete freshness impact extraction. This preserves shallow graph admission and does not certify route sufficiency. Pinned assertions stay historical; current observations identify successor revisions separately. Earlier schemas retain their generic admission contract.

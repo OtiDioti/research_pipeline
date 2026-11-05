@@ -3,8 +3,8 @@
 Schema3 provides durable ceilings, immutable purpose allocations, reservations,
 cumulative usage observations and explicit settlement in the canonical `metadata.sqlite3`. It does not execute jobs.
 `RecordStore.create(root)` still creates schema2; use
-`RecordStore.create(root, schema_version=3)` explicitly. Only ordinary integers 2
-and 3 are accepted, before reserving the absent destination. Schema1/2 resource
+`RecordStore.create(root, schema_version=3)` explicitly. Only ordinary integers 2, 3
+and 4 are accepted, before reserving the absent destination. Schema1/2 resource
 calls raise migration-required `StoreLayoutError` without changing metadata.
 
 Reservations retain liability until explicit reconciliation. Bounded actual usage
@@ -329,7 +329,7 @@ read transaction. `snapshot_id` is the SHA-256 of the complete canonical documen
 without that field. Snapshots contain no capture timestamp and expose detached data.
 
 The complete version-2 snapshot has exactly `format="research_pipeline.resource_snapshot"`,
-`version=2`, `schema_version=3`, `schema_identity`, `resource_sequence`,
+`version=2`, actual `schema_version=3` or `4`, `schema_identity`, `resource_sequence`,
 `administrative_history`, `operations`, `accounts`, `allocations`, `reservations`,
 `reservation_usage`, `breaches`, `balances`, `snapshot_id`. Declarations retain their
 original shapes. Operations retain every original request and receipt in sequence;
@@ -590,3 +590,5 @@ no omitted receipt dates offline and disclose no private payload. Equality succe
 and metadata-only exact retries return original fixed dates without current-clock
 checks. Capture neither reserves nor settles resources and
 cannot turn preparation's unknown account declarations into an earlier known fact.
+
+Schema 4 retains the complete schema-3 resource contract alongside [claim-use freshness](claim-use-freshness.md). New resource snapshots identify their actual schema and `_schema_identity(4)`; historical schema-3 snapshots remain accepted unchanged. Administrative history validation uses that actual schema, including valid consecutive suffixes through 3→4. Report/control/lifecycle-source resource capture remains available on both versions.

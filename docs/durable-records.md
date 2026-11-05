@@ -57,7 +57,7 @@ normalize to six fractional digits. This is attributed creation information,
 not authenticated execution or a database commit timestamp.
 
 Schema 1 supports `research_context`, `claim`, `justification`, `evidence`, and
-`task_specification`. New stores default to schema2; explicit schema3 supports the same kinds. Schema2 also supports `project`, `run`,
+`task_specification`. New stores default to schema2; explicit schema3/4 support the same kinds. Schema2 also supports `project`, `run`,
 `corpus_manifest`, `branch`, `source`, `work_product_manifest`, `tool_release`,
 `tool_assessment`, `issue`, `review`, `promotion_eligibility`, `decision`, `attempt`,
 `tool_execution`, and `event`. All twenty use the same immutable envelope, opaque
@@ -273,7 +273,7 @@ group/other-accessible database files are rejected. Runtime data must stay outsi
 software source; relative paths use the caller's working directory.
 
 Creation defaults to version2; `RecordStore.create(root, schema_version=3)` opts
-into version3. Either commits its fixed DDL and version in one explicit transaction.
+into version3; `schema_version=4` explicitly adds claim-use freshness. Each commits its fixed DDL and version in one explicit transaction.
 Invalid types or unsupported versions fail before destination reservation. There is no public legacy-creation option. Schema 1 remains
 supported for reads, old-kind append, receipts, retries and backups without rewriting.
 Opening first rejects any `.restore-incomplete` entry without repair or removal.
@@ -320,7 +320,7 @@ still take precedence, and exact retries recover the original receipt even when
 heads have advanced or artifact bytes are damaged. Opening never upgrades a store.
 Explicit [verified restore-time migration](backups.md#explicit-verified-migration)
 accepts a v1 backup with ordinary integer `target_schema=2`, or a v2 backup
-with `target_schema=3`, and caller-supplied `CreationProvenance`, into a new absent runtime.
+with `target_schema=3`, or a v3 backup with `target_schema=4`, and caller-supplied `CreationProvenance`, into a new absent runtime.
 Direct 1→3, same-version migration and in-place migration remain rejected. Default restore remains exact.
 The private transformation is transactional under `.restore-incomplete`; failures
 retain the marker and files for diagnosis, and retries require a new absent path.
@@ -434,8 +434,8 @@ remain authoritative, and implementation submission is separate from acceptance.
 
 ## Remaining scope
 
-Remaining typed payloads, assessment/support
-freshness, eligibility and promotion, actual worker isolation, attempt leases and
+Remaining typed payloads, positive scientific
+eligibility and promotion, actual worker isolation, attempt leases and
 fencing, general migrations, periodic
 scheduling, research-run/session/job recovery, distributed execution and research execution remain unsupported.
 Schema3 supplies [controller resource accounting](resource-accounting.md), with
@@ -504,7 +504,7 @@ handoff provisioning bounds, exact purpose arithmetic and COMMIT recovery.
 
 [Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3 submission transaction.
+and original-operation recovery in the existing schema-2/3/4 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -541,3 +541,7 @@ actors, permission, qualification, scientific sufficiency or execution. Reported
 decision/execution/dependency slots and ToolRelease reported_qualification remain
 shallow exact existence/kind checks. Dedicated authenticated operating decisions
 and lifecycle-control formats retain their separate fresh-commit restrictions.
+
+## Explicit schema-4 claim-use bindings
+
+[Claim-use freshness](claim-use-freshness.md) defines a discriminated passive `promotion_eligibility` contract registered through ordinary `submit_typed`; generic recognized content receives identical checks. It adds coherent bounded current/history APIs without changing historical reads or receipts. Schema 4 requires coherent local generic Review/Issue content and synchronously coalesces relevant assertion changes into ineligible reassessment generations inside the same submission transaction. Its explicit 3→4 restore migration retains a source event origin and never interprets pre-feature generic documents as registered bindings. Positive authorization remains unavailable; R-015 and R-077 remain PARTIAL.

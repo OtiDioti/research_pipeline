@@ -56,8 +56,8 @@ structural admission boundary; generic `submit` is not a scientific admission ga
 independent reported dimensions, route judgments, exact envelopes and durable
 admission/read alongside the four scientific kinds. Its executed synthetic example
 retains disagreeing reviewers and separate Issue revisions through reopen and exact
-restore. Exact route membership is structural; current eligibility/freshness,
-Apply disposition and scientific qualification remain future work.
+restore. Exact route membership is structural; positive scientific authorization,
+Apply disposition and scientific qualification remain future work. See [claim-use freshness](claim-use-freshness.md) for schema-4 passive binding registration, bounded coherent inspection/history and atomic reassessment.
 
 [Work-product manifests](work-products.md) documents immutable multi-file bundles,
 portable path and alias rules, strict codecs, exact optional supersession and typed
@@ -121,7 +121,7 @@ controller declarations do not admit research or authenticate operating grants.
 [Committed run-report observations](committed-run-reports.md) provide strict saved declarations,
 coherent bounded scientific/resource capture, deterministic inert report/continuation
 bytes and original-operation reconciliation through existing artifacts/submissions.
-Schema 2 explicitly lacks resource accounting; schema 3 reports retain the complete
+Schema 2 explicitly lacks resource accounting; schema 3/4 reports retain the complete
 selected project tree without exposing other projects' ledger payloads. The executed
 guide covers empty setup, saved baseline, uncertain partial work, authoritative
 settlement, reopened late-usage liability and resettlement, reopen and exact restoration. Exact report publication adds a version-2 readable plan, offline evidence navigation,

@@ -372,7 +372,7 @@ assert record.scientific_disposition == "provisional"
 PY
 ```
 
-Verification of assessment sufficiency, promotion/eligibility, Apply disposition,
+Verification of assessment sufficiency, positive scientific eligibility/promotion, Apply disposition,
 authentic tool receipts, remaining typed §5.1 payloads and scientific validation
 remain later work. This contract does not
 complete D02 or authorize a scientific pilot or release.
@@ -436,3 +436,5 @@ actors, permission, qualification, scientific sufficiency or execution. Reported
 decision/execution/dependency slots and ToolRelease reported_qualification remain
 shallow exact existence/kind checks. Dedicated authenticated operating decisions
 and lifecycle-control formats retain their separate fresh-commit restrictions.
+
+[ClaimUse](claim-use-freshness.md) is an additional exact typed dispatch contract using `promotion_eligibility` with an explicit format discriminator. Schema-4 registration pins complete conjunctive routes and attributed assertions, starts ineligible, and maintains synchronous reassessment generations. Generic recognized content cannot bypass registration checks. `get_typed_revision` exposes immutable ClaimUse snapshots; the separate current inspection distinguishes historical pins from current observations and grants no scientific authority.

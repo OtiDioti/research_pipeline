@@ -3,9 +3,9 @@
 Immediate files and child directories only.
 
 - [README.md](README.md) — Product documentation.
-- [architecture.md](architecture.md) — Foundation architecture.
+- [architecture.md](architecture.md) — Foundation architecture, transactional freshness and indexed temporal navigation.
 - [attributed-assessments.md](attributed-assessments.md) — Durable attributed reviews and issues.
-- [backups.md](backups.md) — Verified local backup and restoration.
+- [backups.md](backups.md) — Verified local backup, exact restoration and metadata-only temporal migration backfill.
 - [checkout.md](checkout.md) — Safe durable work-product checkout.
 - [committed-lifecycle-sources.md](committed-lifecycle-sources.md) — Committed lifecycle sources.
 - [committed-run-reports.md](committed-run-reports.md) — Committed run-report observations.
@@ -32,4 +32,5 @@ Immediate files and child directories only.
 - [work-product-import.md](work-product-import.md) — Work-product preview and explicit import.
 - [work-products.md](work-products.md) — Versioned work-product manifests.
 - [tool-assessment-persistence.md](tool-assessment-persistence.md) — Passive assessment admission, bounded history/control/request accounting with predecessor and supplied-reader guards, inspection and original-ID recovery.
+- [claim-use-freshness.md](claim-use-freshness.md) — Exact passive bindings, event-range traversal, complete admission bounds, independent verification accounts and schema-4 temporal backfill.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

@@ -176,9 +176,15 @@ _RESOURCE_DDL = (
     "CREATE INDEX resource_reservation_account ON resource_reservations(account_id)",
 )
 _SCHEMA_V3 = (*_SCHEMA_V2[:-1], _HISTORY_V3, *_RESOURCE_DDL)
+from research_pipeline.claim_use_schema import FRESHNESS_DDL
+_HISTORY_V4 = _HISTORY_V3.replace(
+    "(source_schema = 2 AND target_schema = 3)",
+    "(source_schema = 2 AND target_schema = 3) OR (source_schema = 3 AND target_schema = 4)")
+_SCHEMA_V4 = (*_SCHEMA_V2[:-1], _HISTORY_V4, *_RESOURCE_DDL, *FRESHNESS_DDL)
 _VERSIONS = MappingProxyType({1: (_SCHEMA_V1, _LEGACY_KINDS, 1),
                               2: (_SCHEMA_V2, _KINDS, 2),
-                              3: (_SCHEMA_V3, _KINDS, 3)})
+                              3: (_SCHEMA_V3, _KINDS, 3),
+                              4: (_SCHEMA_V4, _KINDS, 4)})
 
 
 class ManifestLayoutError(ValueError):
@@ -261,8 +267,12 @@ def validate_history(rows, registrations, version=2):
     Inputs are detached SQLite rows and artifact registrations; no data is rewritten.
     """
     transitions = [tuple(row[:3]) for row in rows]
-    allowed = ([], [(1, 1, 2)]) if version == 2 else ([], [(1, 2, 3)], [(1, 1, 2), (2, 2, 3)])
-    if type(version) is not int or version not in (2, 3) or transitions not in allowed:
+    allowed = [[]]
+    if type(version) is int and version in (2, 3, 4):
+        for start in range(1, version):
+            allowed.append([(i + 1, source, source + 1)
+                            for i, source in enumerate(range(start, version))])
+    if type(version) is not int or version not in (2, 3, 4) or transitions not in allowed:
         raise ValueError("migration history: invalid ordered schema transitions")
     for migration_id, source, target, backup_id, manifest_text, provenance_text in rows:
         if any(type(value) is not int for value in (migration_id, source, target)):

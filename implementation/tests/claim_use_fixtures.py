@@ -1,0 +1,93 @@
+"""Setup-only synthetic acyclic two-route and downstream claim-use graph."""
+
+from dataclasses import replace
+from research_pipeline.domain import CreationProvenance, RecordEnvelope, RecordReference, Submission
+from research_pipeline.scientific import Claim, ResearchContext, Justification, Evidence, encode_envelope
+from research_pipeline.assessment import (
+    IndependenceDeclaration, SubstantiveAssessment, SupportRouteAssessment, Review, Issue,
+    encode_envelope as assessment_envelope,
+)
+from research_pipeline.claim_use import ClaimUse, ClaimUsePremise, ClaimUseRoute, ClaimUseInspectionLimits
+from research_pipeline.claim_use import encode_envelope as use_envelope
+
+PROVENANCE = CreationProvenance("synthetic", "2026-11-05T00:00:00Z")
+LIMITS = ClaimUseInspectionLimits(512, 1024, 8192, 1024, 64*1024*1024, 4*1024*1024)
+
+
+def ref(identity, role, kind, revision=1):
+    """Declare an exact target without suggesting authority or resolving it."""
+    return RecordReference(identity, revision, role, kind)
+
+
+def batch(identity, records, heads=None):
+    """Build an ordinary attributed batch with explicit expected-head CAS."""
+    return Submission(identity, PROVENANCE, records,
+                      {r.record_id: r.revision-1 for r in records} if heads is None else heads)
+
+
+def review(candidate="candidate", route="route-a", scope="scope"):
+    """Report favorable synthetic scope without authenticating execution or sufficiency."""
+    return Review(ref(candidate, "candidate_claim", "claim"), ref(scope, "target_context", "research_context"),
+                  "synthetic reviewer", IndependenceDeclaration("candidate_aware_audit", "candidate_aware_audit",
+                  [], [], [], [], [], [], []), ref("manifest", "context_manifest", "work_product_manifest"),
+                  ref("policy", "authorization_policy", "decision"), [],
+                  SubstantiveAssessment("under_review", "supported_within_scope", ["analytical"],
+                  "applicable", "unassessed", "Attributed only", [], [], []),
+                  [SupportRouteAssessment(ref(route, "assessed_route", "justification"),
+                  "sufficient", "Unverified", [], [])], [], [], [], "synthetic")
+
+
+def issue(affected="route-a", kind="justification"):
+    """Declare an open blocking issue over an exact shallow association target."""
+    return Issue("Synthetic objection", [ref(affected, "affected_record", kind)], "Unverified objection",
+                 "blocking", "Inspect", "open", "Attributed only", [], [], [], "synthetic")
+
+
+def binding(candidate="candidate", routes=("route-a", "route-b"), assessments=("review-a", "review-b"),
+            premises=("premise-a", "premise-b"), upstream=None, issues=()):
+    """Bind separate routes and complete conjunctions with explicit optional upstream pins."""
+    return ClaimUse(ref(candidate, "candidate_claim", "claim"), ref("scope", "target_context", "research_context"),
+                    [ClaimUseRoute(ref(route, "support_route", "justification"),
+                    [ClaimUsePremise(ref(premise, "premise", "claim"),
+                    None if upstream is None else ref(upstream, "premise_use", "promotion_eligibility"))],
+                    [ref(assessment, "support_assessment", "review")])
+                    for route, assessment, premise in zip(routes, assessments, premises)],
+                    [ref(i, "relevant_issue", "issue") for i in issues],
+                    [ref("policy", "authorization_policy", "decision")], [])
+
+
+def populate(store, *, uses=True):
+    """Store real exact declarations and an acyclic scientific graph with two alternatives."""
+    store.submit(batch("declarations", [RecordEnvelope(identity, 1, kind, {}, PROVENANCE)
+                 for identity, kind in (("manifest", "work_product_manifest"), ("policy", "decision"))]))
+    context = ResearchContext("Synthetic scope", [], [], [], [], [], [], [], [], [], [])
+    records = [encode_envelope("scope", 1, context, PROVENANCE),
+               encode_envelope("other-scope", 1, replace(context, question="Independent scope"), PROVENANCE)]
+    for identity in ("candidate", "premise-a", "premise-b", "downstream", "unrelated"):
+        records.append(encode_envelope(identity, 1, Claim(identity, "synthetic", [],
+                       ref("scope", "context", "research_context"), [], [], []), PROVENANCE))
+    artifact = store.put_artifact(b"synthetic direct evidence")
+    evidence = Evidence([artifact], ref("scope", "context", "research_context"), "Synthetic property",
+                        [], "Synthetic method", [], [], [], "Unverified", [], [], "synthetic")
+    records.append(encode_envelope("evidence", 1, evidence, PROVENANCE))
+    for route, premise, candidate in (("route-a", "premise-a", "candidate"),
+                                      ("route-b", "premise-b", "candidate"),
+                                      ("route-d", "candidate", "downstream")):
+        value = Justification(ref("scope", "context", "research_context"),
+                              [ref(premise, "premise", "claim")], [], route,
+                              [ref(candidate, "conclusion", "claim")],
+                              [ref("evidence", "evidence", "evidence")], [])
+        records.append(encode_envelope(route, 1, value, PROVENANCE))
+    records.extend(assessment_envelope(identity, 1, value, PROVENANCE) for identity, value in (
+        ("review-a", review()), ("review-b", review(route="route-b")),
+        ("review-d", review("downstream", "route-d"))))
+    store.submit_typed(batch("scientific", records))
+    if uses:
+        upstream = use_envelope("use", 1, binding(), PROVENANCE)
+        downstream = use_envelope("downstream-use", 1,
+                    binding("downstream", ("route-d",), ("review-d",), ("candidate",), "use"), PROVENANCE)
+        independent = use_envelope("unrelated-use", 1,
+                    binding("unrelated", (), (), ()), PROVENANCE)
+        initial = batch("register", [downstream, independent, upstream])
+        return artifact, initial, store.submit_typed(initial)
+    return artifact

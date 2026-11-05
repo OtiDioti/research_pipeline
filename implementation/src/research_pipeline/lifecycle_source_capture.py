@@ -555,7 +555,7 @@ class _ResourceBudget:
         self.scan(connection, 'artifacts', 'digest size', integers=('size',))
         self.scan(connection, 'sqlite_master', 'sql', where=' WHERE sql IS NOT NULL')
         version = connection.execute('PRAGMA user_version').fetchone()[0]
-        if type(version) is not int or version != 3:
+        if type(version) is not int or version not in (3, 4):
             raise LifecycleSourceIntegrityError('resource schema mismatch')
         self.rows += 1
         self.bytes += len(str(version))

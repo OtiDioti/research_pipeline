@@ -120,19 +120,19 @@ bound unsafe filesystem handling. Failure can retain objects or staging entries;
 the API does not sweep or repair them.
 
 `research_pipeline.store` uses the artifact layout plus a private mode-0600
-`metadata.sqlite3`. It creates schema2 by default or explicit schema3 in absent roots and gates opening on the fixed
-version-1, version-2 or version-3 schema through a read-only immutable preflight, before allowing normal
+`metadata.sqlite3`. It creates schema2 by default or explicit schema3/4 in absent roots and gates opening on the fixed
+version-1, version-2, version-3 or version-4 schema through a read-only immutable preflight, before allowing normal
 SQLite rollback-journal recovery. This preflight is solely for fixed schema/version,
 never live data or integrity conclusions. Operational connections require DELETE
 journaling, EXTRA synchronization, foreign keys and a 5000 ms busy timeout.
 
-`research_pipeline.schema` owns a fixed three-entry DDL/kind/backup-format registry
+`research_pipeline.schema` owns a fixed four-entry DDL/kind/backup-format registry
 and pure manifest/history validation, depending only on domain values and the
 standard library. It owns no SQLite connections or filesystem work. Schema 1's
 exact five-kind DDL remains supported; schema 2 extends the kind checks and state
 trigger and adds a singleton administrative history table, empty on fresh creation.
 Operational connections validate administrative rows after journal recovery.
-Explicit restore-time v1→v2 and v2→v3 migration lives only in `backup.py`, transforming a
+Explicit restore-time v1→v2, v2→v3 and v3→v4 migration lives only in `backup.py`, transforming a
 verified private copy transactionally under the existing incomplete marker.
 Store creation/opening and generic/typed submission do not migrate. See [version contracts](durable-records.md)
 for kind mappings and [backup pairs](backups.md) for exact-copy verification.
@@ -153,8 +153,8 @@ existing contracts without adding a generic submission or execution endpoint. Th
 give exact APIs, errors, ordering/fingerprint semantics, trusted-owner assumptions,
 retained-orphan behavior and acknowledgment recovery by original submission ID.
 Real subprocess exits exercise hot-journal rollback and post-commit receipt recovery.
-Remaining typed payloads and state machines, support/assessment
-freshness, eligibility/promotion, worker isolation, leases/fencing, general migrations,
+Remaining typed payloads and state machines, positive scientific
+eligibility/promotion, worker isolation, leases/fencing, general migrations,
 periodic scheduling, distributed execution and research execution remain
 unsupported. Schema3 adds controller-private immutable allocation and reservation accounting
 with cumulative usage, explicit settlement, sticky breaches and exact operation retries;
@@ -308,7 +308,7 @@ Automatic reporting hooks and admission enforcement remain mandatory subsequent 
 
 [Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3 submission transaction.
+and original-operation recovery in the existing schema-2/3/4 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -321,3 +321,28 @@ or M0-S validation is added. Resource usage and uncertain liabilities remain unc
 submission per transition. The same connection-owned authority evaluator checks fresh
 preparation/continuation; metadata-only reductions do not require current external
 bytes or trust. No schema, worker, task admission or reporting engine is added.
+
+## Transactional claim-use freshness
+
+Schema 4 preserves schema-3 resource/scientific DDL and adds immutable
+binding/dependency/upstream and generation history projections plus a mutable
+current projection. Temporal revision/event and selected association-link
+projections support event-range navigation; dependency/upstream entries include
+the owning registration event. Equality prefixes followed by event ranges and
+complete index suffixes bound both query passes before payload reconstruction,
+excluding later events from historical discovery. Record/event and use/event
+indexes seek historical heads and generations. All submissions maintain temporal
+navigation at the shared receipt insertion seam; explicit 3→4 migration backfills
+it from original metadata without registering historical generic documents.
+
+`claim_use_store.py` plans complete bounded indexed propagation before insertion
+and applies it at the shared insertion seam within the owning transaction.
+Historical upstream bindings remain indexed after rebinding. Connection-owned
+readers separate exact scoped impact association from support traversal, with
+historical assertion-target unions and no inferred authority. Current reads own
+one metadata-only snapshot; open and backup stream exact temporal correspondence
+and verify chronological projections. Complete prospective admission retains
+independent root and aggregate accounts; subsequent stored-record and binding
+comparisons use independent validation accounts, so verification cannot add a
+stricter combined admission limit. See [the exact contract](claim-use-freshness.md).
+Positive authorization remains absent; R-015 and R-077 remain PARTIAL.

@@ -95,7 +95,7 @@ from `research_pipeline.domain`, `research_pipeline.artifacts` and
 `research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
 low-level generic graph submission/append/reopen/retry example. Select runtime
 directories explicitly outside software source. Creation rejects existing roots; opening gates fixed
-schema versions 1, 2 and 3 before normal rollback-journal recovery. Creation defaults to
+schema versions 1, 2, 3 and 4 before normal rollback-journal recovery. Creation defaults to
 schema 2; `RecordStore.create(root, schema_version=3)` explicitly enables the resource ledger; legacy stores retain old-kind operations without rewriting. SQLite uses DELETE/EXTRA,
 foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
 exact submission retries return original metadata-only receipts even after head
@@ -106,7 +106,7 @@ Real disk and fresh-process tests cover ordering/canonical fingerprints, stale a
 conflicting writes, retained orphans, hot-journal recovery, post-commit interruption,
 and later artifact integrity failures. Local test results are advisory to controller
 validation. Remaining typed payloads and state machines,
-support/assessment freshness, eligibility/promotion, worker isolation, attempt leases/fencing, general migrations, periodic scheduling, distributed
+positive scientific eligibility/promotion, worker isolation, attempt leases/fencing, general migrations, periodic scheduling, distributed
 execution and research execution remain unsupported. Schema3 provides immutable allocations and atomic conservative reservations with exact retries;
 [resource accounting](../docs/resource-accounting.md) documents cumulative usage, explicit authoritative/conservative settlement, sticky project-wide breaches, version-2 inspection and original-ID recovery. Artifact identity and completed task state confer no
 scientific support; no overall M0-E, M0-S, M1, D02 or full-product completion follows.
@@ -128,7 +128,7 @@ or scientific truth. Durable assessment admission checks constrained targets and
 exact route-conclusion membership under the existing write transaction. Generic
 manifest/policy/execution/affected roles remain shallow. The executed persistence
 example retains disagreements and separate Issue revisions through reopen/restore,
-without changing candidate history. Current eligibility/freshness, Apply disposition
+without changing candidate history. [Claim-use freshness](../docs/claim-use-freshness.md) adds explicit schema-4 passive bindings and transactional reassessment; positive authorization, Apply disposition
 and scientific qualification remain future work.
 
 The [synthetic oscillator walkthrough](../docs/synthetic-oscillator.md) documents
@@ -150,14 +150,14 @@ paper fixture adds no research CLI command or runtime/persistence capability.
 
 The explicit `research_pipeline.backup` API captures consistent SQLite snapshots,
 verifies historical artifact inventories and restores independent stores exactly.
-Supported backup format/schema pairs are `(1, 1)`, `(2, 2)` and `(3, 3)`; default restore
+Supported backup format/schema pairs are `(1, 1)`, `(2, 2)`, `(3, 3)` and `(4, 4)`; default restore
 preserves the source version. Schema 2 admits twenty generic kinds while retaining
 claim/task state rules; all fifteen additions require null canonical states.
 Legacy new-kind requests fail with a migration-required error. The separate
 schema-2 administrative history format is validated and preserved; fresh creation
 invents none. `restore_backup(root, destination, *, target_schema=None,
-migration_provenance=None)` supports explicit v1→v2 or v2→v3 migration with ordinary
-integer next target `2` or `3` and caller-supplied `CreationProvenance`. Schema3 retains
+migration_provenance=None)` supports explicit v1→v2, v2→v3 or v3→v4 migration with ordinary
+integer next target `2`, `3` or `4` and caller-supplied `CreationProvenance`. Schema3 retains
 ordered administrative history and includes all outstanding resource liabilities in exact backups. Both defaults select
 exact restoration. Migration preserves historical values and original receipts
 and records the verified source identity/digest separately under the existing
@@ -243,7 +243,7 @@ Existing materialization, capture/planning, checkout and explicit import remain 
 [Committed run-report observations](../docs/committed-run-reports.md) provide strict saved declarations,
 coherent bounded scientific/resource capture, deterministic inert report/continuation
 bytes and original-operation reconciliation through existing artifacts/submissions.
-Schema 2 explicitly lacks resource accounting; schema 3 reports retain the complete
+Schema 2 explicitly lacks resource accounting; schema 3/4 reports retain the complete
 selected project tree without exposing other projects' ledger payloads. The executed
 guide covers empty setup, saved baseline, uncertain partial work, authoritative
 settlement, reopened late-usage liability and resettlement, reopen and exact restoration. Exact report publication adds a version-2 readable plan, offline evidence navigation,
@@ -255,7 +255,7 @@ Automatic reporting hooks and admission enforcement remain mandatory subsequent 
 
 [Local operating decisions](../docs/operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3 submission transaction.
+and original-operation recovery in the existing schema-2/3/4 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -292,3 +292,5 @@ processing and original-ID recovery. Its self-contained executed example stages
 inert bytes and demonstrates reopen/inspection and atomic mismatched-pair refusal.
 Local inspection/classification establishes coherence only; authentication,
 permission, qualification, scientific sufficiency and execution remain separate.
+
+[Claim-use freshness](../docs/claim-use-freshness.md) documents explicit schema 4, exact versioned bindings, bounded current/history reads and synchronous Review/Issue reassessment. Generic schema-4 assertion writes require coherent local content. Eligible remains false; R-015 and R-077 remain PARTIAL.

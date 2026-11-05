@@ -66,7 +66,7 @@ Immediate files and child directories only.
 - [test_resource_example.py](test_resource_example.py) — Execute the exact published resource example with candidate-local imports.
 - [test_resource_ledger.py](test_resource_ledger.py) — Real schema3 hierarchical/protected capacity, identity and detached inspection tests.
 - [test_resource_recovery.py](test_resource_recovery.py) — Real transaction contention, original-ID recovery, process loss and hot journals.
-- [test_resource_schema.py](test_resource_schema.py) — Schema3 creation, verified migrations, immutable tampering and scientific compatibility.
+- [test_resource_schema.py](test_resource_schema.py) — Schema3 creation, unknown-version guards, verified migrations, immutable tampering and scientific compatibility.
 - [test_resource_usage.py](test_resource_usage.py) — Strict usage evidence, cumulative settlement, exact overflow and sticky admission boundaries.
 - [test_resource_usage_integrity.py](test_resource_usage_integrity.py) — Rehashed live/immutable histories must retain evidence identity and historical admission semantics.
 - [test_resource_usage_recovery.py](test_resource_usage_recovery.py) — Real observation/settlement interruption and synchronized serial transaction outcomes.
@@ -135,4 +135,10 @@ Immediate files and child directories only.
 - [test_tool_assessment_persistence_bounds.py](test_tool_assessment_persistence_bounds.py) — Exact scalar-error precedence, control/fingerprint scratch boundaries, Source predecessor/supplied-reader allocation-order regressions and historical shallow diagnostics.
 - [test_tool_assessment_persistence_recovery.py](test_tool_assessment_persistence_recovery.py) — Direct artifacts, atomic rollback, real SQLite contention and process-exit recovery.
 - [test_tool_assessment_persistence_example.py](test_tool_assessment_persistence_example.py) — Execute the exact self-contained passive persistence guide in candidate Python.
+- [claim_use_fixtures.py](claim_use_fixtures.py) — Setup-only acyclic synthetic routes, assertions and explicit downstream bindings.
+- [test_claim_use.py](test_claim_use.py) — Strict passive claim-use codecs, projections, detachment and contract limits.
+- [test_claim_use_store.py](test_claim_use_store.py) — Real-store synchronous freshness, historical pins, bounds, rollback, persistence and temporal-projection corruption.
+- [test_claim_use_bounds.py](test_claim_use_bounds.py) — Retained-shell safety, temporal scalar/payload query plans and instruction bounds, historical predecessor seeks, complete prospective accounting and atomic ceilings.
+- [test_claim_use_recovery.py](test_claim_use_recovery.py) — Concurrent snapshots, process loss, near-ceiling reopen/backup/restore, unconditional temporal indexing, migration backfill, rehashed corruption and schema-4 capabilities.
+- [test_claim_use_example.py](test_claim_use_example.py) — Execute the exact self-contained product-only claim-use guide.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

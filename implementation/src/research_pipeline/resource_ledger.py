@@ -28,7 +28,7 @@ def require_schema(store):
     """Preserve closed-handle errors and reject old schemas before resource API effects."""
     from research_pipeline.store import StoreLayoutError
     store._require_open()
-    if store._schema_version != 3:
+    if store._schema_version not in (3, 4):
         raise StoreLayoutError("resource accounting requires explicit migration to schema 3")
 
 
@@ -450,7 +450,8 @@ def validate_ledger(connection):
         validate_schema(connection.execute("PRAGMA user_version").fetchone()[0],
                         [row[0] for row in connection.execute("SELECT sql FROM sqlite_master WHERE sql IS NOT NULL")])
         validate_history(connection.execute("SELECT * FROM migration_history ORDER BY migration_id").fetchall(),
-                         connection.execute("SELECT digest,size FROM artifacts").fetchall(), 3)
+                         connection.execute("SELECT digest,size FROM artifacts").fetchall(),
+                         connection.execute("PRAGMA user_version").fetchone()[0])
         if connection.execute("PRAGMA foreign_key_check").fetchall():
             raise ResourceIntegrityError("ledger foreign key violation")
         state, operations, links = _empty_state(), [], []
@@ -642,8 +643,8 @@ def _inspect(connection, limits, *, _source_budget=None):
             if size > limits.max_metadata_bytes:
                 raise ResourceInspectionLimitError("inspection metadata preflight limit exceeded")
     state, operations = validate_ledger(connection)
-    body = {"format": "research_pipeline.resource_snapshot", "version": 2, "schema_version": 3,
-            "schema_identity": _schema_identity(3), "resource_sequence": len(operations),
+    body = {"format": "research_pipeline.resource_snapshot", "version": 2, "schema_version": connection.execute("PRAGMA user_version").fetchone()[0],
+            "schema_identity": _schema_identity(connection.execute("PRAGMA user_version").fetchone()[0]), "resource_sequence": len(operations),
             "administrative_history": _history(connection), "operations": operations,
             **_projections(state), "balances": _balances(state)}
     if _source_budget is not None:
@@ -663,8 +664,8 @@ def validate_snapshot(value):
     """
     fields(value, "format version schema_version schema_identity resource_sequence administrative_history operations accounts allocations reservations reservation_usage breaches balances snapshot_id", "resource snapshot")
     if (value["format"] != "research_pipeline.resource_snapshot" or type(value["version"]) is not int
-            or value["version"] != 2 or type(value["schema_version"]) is not int or value["schema_version"] != 3
-            or canonical(value["schema_identity"]) != canonical(_schema_identity(3))):
+            or value["version"] != 2 or type(value["schema_version"]) is not int or value["schema_version"] not in (3, 4)
+            or canonical(value["schema_identity"]) != canonical(_schema_identity(value["schema_version"]))):
         raise ResourceValidationError("unsupported resource snapshot identity")
     quantity(value["resource_sequence"], "resource sequence")
     for key in ("operations", "accounts", "allocations", "reservations", "reservation_usage", "breaches", "balances", "administrative_history"):
@@ -706,7 +707,7 @@ def validate_snapshot(value):
             old = registrations.setdefault(artifact["digest"], artifact["size"])
             if old != artifact["size"]:
                 raise ResourceValidationError("inconsistent source artifact size")
-    validate_history(history, list(registrations.items()), 3)
+    validate_history(history, list(registrations.items()), value["schema_version"])
     body = {key: item for key, item in value.items() if key != "snapshot_id"}
     if hashlib.sha256(canonical(body).encode("ascii")).hexdigest() != value["snapshot_id"]:
         raise ResourceValidationError("resource snapshot digest mismatch")

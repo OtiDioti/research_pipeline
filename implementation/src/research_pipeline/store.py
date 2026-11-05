@@ -25,6 +25,11 @@ from research_pipeline.domain import (
     RecordEnvelope, RecordReference, Submission, SubmissionReceipt,
     _identifier, _integer, _snapshot, _MAX_INTEGER,
 )
+from research_pipeline.claim_use import (
+    ClaimUse, ClaimUseLimitError, ClaimUseIntegrityError, ClaimUseInspection,
+    ClaimUseHistoryPage, ClaimUseInspectionLimits,
+)
+from research_pipeline import claim_use_store as _claim_uses
 from research_pipeline.assessment import (
     AssessmentContent, Issue, Review, decode_envelope as _decode_assessment_envelope,
 )
@@ -98,19 +103,21 @@ class StoreDatabaseError(StoreError):
 def _fault(boundary: str) -> None:
     """Private submission and capture observation seam, never a caller callback.
 
-    Submission boundaries are before_metadata, after_first_revision and after_commit.
+    Submission boundaries are before_metadata, after_first_revision, after_claim_use_updates
+    (before COMMIT) and after_commit. Claim-use inspection also exposes
+    claim_use_inspection_after_binding within its coherent read transaction.
     Capture boundaries are snapshot_after_first_read and snapshot_after_head_resolution.
     Tests may coordinate independent handles or inject failures at these points;
     no operational setting or worker capability exposes this seam.
     """
 
 
-def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | ToolAssessment | SignedOperatingDecision | RunControlTransition | RunReportObligation":
+def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | ToolAssessment | SignedOperatingDecision | RunControlTransition | RunReportObligation | ClaimUse":
     """Decode checked retained metadata using one explicit format, without inference or fallback.
 
     Missing markers retain NotTypedContentError; other format/codec failures raise
     DomainValidationError. Scientific, assessment, work-product, Source, corpus,
-    project, ToolRelease and ToolAssessment codecs validate states and ordered links. Signed operating decisions additionally
+    project, ToolRelease, ToolAssessment and ClaimUse codecs validate states and ordered links. Signed operating decisions additionally
     recompute derived provenance. Control codecs also verify complete local projections;
     this dispatch certifies neither historical pairing nor current permission.
     """
@@ -129,6 +136,8 @@ def _decode_typed_envelope(envelope: RecordEnvelope) -> "ScientificContent | Ass
     if type(discriminator) is str:
         if discriminator == "research_pipeline.scientific_content":
             return _decode_scientific_envelope(envelope)
+        if discriminator == "research_pipeline.claim_use_content":
+            return _claim_uses.decode_envelope(envelope)
         if discriminator == "research_pipeline.assessment_content":
             return _decode_assessment_envelope(envelope)
         if discriminator == "research_pipeline.work_product_content":
@@ -251,14 +260,14 @@ class RecordStore:
 
     @classmethod
     def create(cls, root, *, schema_version=2) -> "RecordStore":
-        """Create an absent schema2 (default) or explicit schema3 store and sync its layout.
+        """Create an absent schema2 (default) or explicit schema3/4 store and sync its layout.
 
-        Only ordinary integer versions 2 and 3 are accepted, before root reservation.
+        Only ordinary integer versions 2, 3 and 4 are accepted, before root reservation.
         Existing roots are rejected unchanged. Failed creation may leave an
         incomplete root, which is retained rather than erased or repaired.
         """
-        if type(schema_version) is not int or schema_version not in (2, 3):
-            raise StoreLayoutError("creation requires ordinary integer schema_version 2 or 3")
+        if type(schema_version) is not int or schema_version not in (2, 3, 4):
+            raise StoreLayoutError("creation requires ordinary integer schema_version 2, 3 or 4")
         try:
             artifacts = ArtifactStore.create(root)
             path = artifacts._root / "metadata.sqlite3"
@@ -270,6 +279,8 @@ class RecordStore:
                     connection.execute("BEGIN IMMEDIATE")
                     for statement in _VERSIONS[schema_version][0]:
                         connection.execute(statement)
+                    if schema_version == 4:
+                        connection.execute("INSERT INTO claim_use_origin VALUES (1,0)")
                     connection.execute(f"PRAGMA user_version={schema_version}")
                     connection.execute("COMMIT")
                 finally:
@@ -290,7 +301,7 @@ class RecordStore:
 
     @classmethod
     def open(cls, root) -> "RecordStore":
-        """Gate fixed schema, recover legitimate journals, then validate history and schema3 ledger."""
+        """Gate fixed schema, recover journals and validate coherent resource/freshness projections."""
         try:
             artifacts = ArtifactStore.open(root)
             path = artifacts._root / "metadata.sqlite3"
@@ -305,13 +316,15 @@ class RecordStore:
                                          connection.execute("SELECT digest,size FROM artifacts").fetchall())
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
                         raise StoreLayoutError(f"invalid migration history: {error}") from error
-                if version == 3:
+                if version in (3, 4):
                     from research_pipeline.resource_ledger import validate_ledger
                     try:
                         # Read all live invariants in one snapshot only after the
                         # operational connection has recovered legitimate journals.
                         connection.execute("BEGIN")
                         validate_ledger(connection)
+                        if version == 4:
+                            _claim_uses.validate(cls(artifacts, connection, version), connection)
                         connection.execute("COMMIT")
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
                         raise StoreLayoutError(f"invalid resource ledger: {error}") from error
@@ -374,6 +387,15 @@ class RecordStore:
             if isinstance(error, sqlite3.Error):
                 raise _database_error(error, committing=committing, reconciliation_id=reconciliation_id) from error
             raise
+
+    def inspect_claim_use(self, use_id: str, *, limits: ClaimUseInspectionLimits) -> ClaimUseInspection:
+        """Inspect one coherent bounded current binding; metadata conveys no authorization."""
+        return _claim_uses.inspect(self, use_id, limits=limits)
+
+    def claim_use_history(self, use_id: str, *, after_generation: int = 0, limit: int = 256,
+                          limits: ClaimUseInspectionLimits) -> ClaimUseHistoryPage:
+        """Read immutable generation transitions with a bounded explicit continuation cursor."""
+        return _claim_uses.history(self, use_id, after_generation=after_generation, limit=limit, limits=limits)
 
     def create_resource_account(self, request):
         """Declare a project ceiling atomically; return its original ResourceReceipt on exact retry."""
@@ -518,22 +540,29 @@ class RecordStore:
     def submit(self, submission: Submission) -> SubmissionReceipt:
         """Append a trusted generic batch, or return an identical request's old receipt.
 
-        This checks generic storage contracts, not scientific target content.
+        This checks generic storage contracts. Schema-4 assertions require coherent
+        local content for freshness impact, and recognized ClaimUse bindings receive
+        the same bounded registration checks as typed submission. Neither grants
+        scientific authority.
         Reconcile acknowledgment/COMMIT uncertainty using the original submission_id
         after reopening. Never substitute a new identity to resolve that uncertainty.
         """
         if type(self) is not RecordStore:
             raise DomainValidationError("store: expected exact RecordStore")
         self._require_open()
+        # Assessment originals retain their own shell/error precedence. Freshness
+        # only sees their checked detached request, including mixed assertion batches.
         if _assessment_store._assessment_request(submission):
             normalized, _, budget = _assessment_store._prepare(submission)
+            normalized = _claim_uses.preflight(self, normalized)
             return self._commit_submission(normalized, (), assessment_budget=budget)
+        submission = _claim_uses.preflight(self, submission)
         return self._commit_submission(self._normalize_submission(submission), ())
 
     def submit_typed(self, submission: Submission) -> SubmissionReceipt:
         """Atomically admit scientific and passive descriptive typed batches.
 
-        Supported values include Review/Issue, work products, Source, corpus,
+        Supported values include ClaimUse, Review/Issue, work products, Source, corpus,
         project, ToolRelease and ToolAssessment alongside scientific content.
 
         Reconstruct and decode every member before reconciliation; malformed members
@@ -569,11 +598,17 @@ class RecordStore:
                                for record in submission.records):
                 raise DomainValidationError("operating decisions require commit_operating_decision")
             validate_request_kinds(submission, self._schema_version)
+            if self._schema_version != 4:
+                _claim_uses.prepare(self, connection, submission, decoded=decoded)
             if budget is None:
                 self._check_batch(connection, submission)
             else:
                 self._check_batch(connection, submission, assessment_budget=budget)
-            if budget is None:
+            plan = _claim_uses.prepare(self, connection, submission, decoded=decoded)
+            if plan is not None:
+                self._check_typed_targets(connection, submission, decoded, authority_reader=plan.reader,
+                                          assessment_budget=budget)
+            elif budget is None:
                 self._check_typed_targets(connection, submission, decoded)
             else:
                 self._check_typed_targets(connection, submission, decoded, assessment_budget=budget)
@@ -582,18 +617,22 @@ class RecordStore:
     def _prepare_typed_submission(self, submission):
         """Decode retained assessment originals before normalization can repair forged fields.
 
-        Non-assessment requests retain their established normalization and codec path.
+        Assessment originals retain independent guards and error precedence; freshness
+        preflight receives their detached result. Other relevant requests receive
+        safe freshness shell checks before ordinary normalization and typed decoding.
         The returned private budget accompanies this request into its owner's transaction.
         """
         self._require_open()
         if _assessment_store._assessment_request(submission):
-            return _assessment_store._prepare(submission, _decode_typed_envelope)
+            normalized, decoded, budget = _assessment_store._prepare(submission, _decode_typed_envelope)
+            return _claim_uses.preflight(self, normalized), decoded, budget
         normalized = self._normalize_submission(submission)
         return normalized, tuple(_decode_typed_envelope(record) for record in normalized.records), None
 
     def _normalize_submission(self, submission):
         """Detach a request and reject forged nested values before either commit entry point."""
         self._require_open()
+        submission = _claim_uses.preflight(self, submission)
         if type(submission) is not Submission:
             raise DomainValidationError("submission: expected Submission")
         try:
@@ -604,7 +643,7 @@ class RecordStore:
             raise DomainValidationError("submission: malformed nested typed value") from error
         return submission
 
-    def _commit_submission(self, submission, decoded: "tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | ToolAssessment | SignedOperatingDecision | RunControlTransition | RunReportObligation, ...]", *, assessment_budget=None):
+    def _commit_submission(self, submission, decoded: "tuple[ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | ToolAssessment | SignedOperatingDecision | RunControlTransition | RunReportObligation | ClaimUse, ...]", *, assessment_budget=None):
         """Commit a normalized request and its ordered decoded values via one algorithm.
 
         Generic requests supply an empty tuple; typed requests supply one immutable
@@ -640,25 +679,37 @@ class RecordStore:
                                for record in submission.records):
                 raise DomainValidationError("operating decisions require commit_operating_decision")
             validate_request_kinds(submission, self._schema_version)
+            # Fresh schema admission follows canonical receipt reconciliation, but
+            # precedes target availability/CAS checks on stores without freshness.
+            if self._schema_version != 4:
+                _claim_uses.prepare(self, connection, submission, decoded=decoded)
             if assessment_budget is None:
                 self._check_batch(connection, submission)
             else:
                 self._check_batch(connection, submission, assessment_budget=assessment_budget)
-            if assessment_budget is None:
+            plan = _claim_uses.prepare(self, connection, submission, decoded=decoded)
+            if plan is not None and decoded:
+                self._check_typed_targets(connection, submission, decoded, authority_reader=plan.reader,
+                                          assessment_budget=assessment_budget)
+            elif assessment_budget is None:
                 self._check_typed_targets(connection, submission, decoded)
             else:
                 self._check_typed_targets(connection, submission, decoded, assessment_budget=assessment_budget)
-            receipt = self._insert_submission(connection, submission, canonical, fingerprint)
+            receipt = self._insert_submission(connection, submission, canonical, fingerprint, _prepared_plan=plan)
         # A failure here is lost acknowledgment, not a rolled-back submission.
         _fault("after_commit")
         return receipt
 
-    def _insert_submission(self, connection, submission, canonical, fingerprint):
+    def _insert_submission(self, connection, submission, canonical, fingerprint, *, _prepared_plan=None):
         """Insert a fully checked batch and receipt within an already-owned write transaction.
 
         Callers must reconcile, check CAS/targets and sync all objects first. This
         shared algorithm neither begins nor commits and leaves rollback to its owner.
+        Mandatory freshness planning and temporal indexing also cover dedicated
+        report/control/source writers, including batches with no freshness plan.
         """
+        if _prepared_plan is None:
+            _prepared_plan = _claim_uses.prepare(self, connection, submission)
         _fault("before_metadata")
         connection.execute("INSERT INTO submissions VALUES (?, ?, ?)", (submission.submission_id, canonical, fingerprint))
         for ordinal, record in enumerate(submission.records):
@@ -678,6 +729,12 @@ class RecordStore:
         connection.execute("INSERT INTO audit_events(submission_id,event_type,committed_at,provenance_json) VALUES (?, 'submission_committed', ?, ?)",
                            (submission.submission_id, committed_at, _snapshot(submission.provenance.to_dict(), "provenance")))
         receipt = self._receipt(connection, submission.submission_id)
+        # Index all schema-4 submissions at this shared seam, even without a
+        # freshness plan. Only the actual event belongs in temporal projections.
+        if self._schema_version == 4:
+            _claim_uses.index_submission(connection, submission, receipt)
+        _claim_uses.apply(connection, _prepared_plan, receipt)
+        _fault("after_claim_use_updates")
         return receipt
 
     def _check_batch(self, connection, submission, *, assessment_budget=None):
@@ -732,6 +789,8 @@ class RecordStore:
         ToolAssessment preserves the codec occurrence order within each partition;
         dependencies, reported decisions and executions stay shallow.
         """
+        if type(value) is ClaimUse:
+            return tuple(r for r in _claim_uses._links(value) if r.relationship != "authorization_policy"), value.policies
         if type(value) is ResearchContext:
             return (), ()
         if type(value) is Claim:
@@ -922,6 +981,8 @@ class RecordStore:
                         if previous_key not in processed:
                             worklist.append(previous_key)
                 except (RecordNotFoundError, ValueError, TypeError, RecursionError, OverflowError) as error:
+                    if isinstance(error, (ClaimUseLimitError, ClaimUseIntegrityError)):
+                        raise
                     if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
                         raise
                     raise ReferenceResolutionError(f"{diagnostic}: invalid typed history: {error}") from error
@@ -962,6 +1023,8 @@ class RecordStore:
                     if previous_key not in processed:
                         worklist.append(previous_key)
                 except (RecordNotFoundError, ValueError, TypeError, RecursionError, OverflowError) as error:
+                    if isinstance(error, (ClaimUseLimitError, ClaimUseIntegrityError)):
+                        raise
                     if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
                         raise
                     raise ReferenceResolutionError(f"{diagnostic}: invalid typed history: {error}") from error
@@ -1015,6 +1078,8 @@ class RecordStore:
                     except RecordNotFoundError as error:
                         raise ReferenceResolutionError(f"{diagnostic}: absent") from error
                     except (ValueError, TypeError, RecursionError, OverflowError) as error:
+                        if isinstance(error, (ClaimUseLimitError, ClaimUseIntegrityError)):
+                            raise
                         if authority_reader is not None and isinstance(error, (AuthorityLimitError, AuthorityIntegrityError)):
                             raise
                         raise ReferenceResolutionError(f"{diagnostic}: invalid metadata: {error}") from error
@@ -1025,6 +1090,8 @@ class RecordStore:
                     try:
                         values[target_key] = decode_metadata(target)
                     except DomainValidationError as error:
+                        if isinstance(error, (ClaimUseLimitError, ClaimUseIntegrityError)):
+                            raise
                         raise ReferenceResolutionError(f"{diagnostic}: invalid typed content: {error}") from error
                 # Role-specific checks belong to each incoming edge, not the cache fill.
                 if type(value) is ToolRelease or type(value) is ToolAssessment:
@@ -1390,7 +1457,7 @@ class RecordStore:
         with self._transaction() as connection:
             return self._envelope(connection, record_id, revision)
 
-    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | ToolAssessment | SignedOperatingDecision | RunControlTransition | RunReportObligation]":
+    def get_typed_revision(self, record_id: str, revision: int) -> "tuple[RecordEnvelope, ScientificContent | AssessmentContent | WorkProductManifest | Source | CorpusManifest | ProjectSetup | ToolRelease | ToolAssessment | SignedOperatingDecision | RunControlTransition | RunReportObligation | ClaimUse]":
         """Return an exact detached envelope and decoded value, verifying direct artifacts.
 
         Preserve missing-revision/artifact errors; absent discriminators raise

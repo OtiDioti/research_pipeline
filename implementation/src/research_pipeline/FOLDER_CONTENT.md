@@ -6,7 +6,7 @@ Immediate files and child directories only.
 - [__main__.py](__main__.py) — Source-local entry point for bounded foundation CLI operations.
 - [artifacts.py](artifacts.py) — Owned local POSIX artifact storage with verified, durable no-overwrite publication.
 - [assessment.py](assessment.py) — Pure attributed assessment contracts; declarations confer no scientific authority.
-- [backup.py](backup.py) — Explicit local snapshots with strict verification and durable completeness markers.
+- [backup.py](backup.py) — Explicit local snapshots, metadata-only temporal backfill on schema-4 migration and durable completeness markers.
 - [checkout.py](checkout.py) — Bounded, inert local copies with durable publication and untrusted base descriptors.
 - [cli.py](cli.py) — Source-local argv, bounded results and acknowledgement for inspection, saved work products, readable views and passive Tools.
 - [cli_controls.py](cli_controls.py) — Strict bounded controls, shared version-one configuration and retained no-follow observations.
@@ -31,12 +31,12 @@ Immediate files and child directories only.
 - [resources.py](resources.py) — Strict, detached controller resource declarations; these confer no execution authority.
 - [run_control.py](run_control.py) — Detached prepared-control facts and pending report intent, never execution authority.
 - [run_control_store.py](run_control_store.py) — Connection-owned durable control history and bounded metadata-only recovery.
-- [schema.py](schema.py) — Fixed metadata/backup version contracts and pure consistency validation.
+- [schema.py](schema.py) — Fixed schema-1–4 metadata/backup contracts and pure consistency validation.
 - [scientific.py](scientific.py) — Pure versioned scientific descriptions and coherent links, without scientific authority.
 - [snapshot.py](snapshot.py) — Bounded detached navigation and local typed classification, without artifact availability or admission claims.
 - [source.py](source.py) — Pure bounded source declarations and exact capture links, without acquisition or parsing.
 - [source_capture.py](source_capture.py) — Explicit bounded local Source preparation and pure saved requests; never implicit commit.
-- [store.py](store.py) — Atomic revision submissions, passive Tool assessments and exact metadata history with guarded Source predecessor parsing and a shared connection-owned exact typed read over SQLite and immutable bytes.
+- [store.py](store.py) — Atomic revision submissions, reconciliation before fresh schema admission, ordered assessment/freshness safeguards, unconditional schema-4 temporal indexing, passive Tool assessments and exact metadata history with guarded Source predecessor parsing and a shared connection-owned exact typed read over SQLite and immutable bytes.
 - [tool_assessment.py](tool_assessment.py) — Passive attributed tool assessments; local validity conveys no permission or truth.
 - [tool_assessment_codec.py](tool_assessment_codec.py) — Private finite codec adapters and public ceilings for passive tool assessments.
 - [tool_assessment_envelope.py](tool_assessment_envelope.py) — Pure bounded assessment envelopes; projections and provenance remain unauthenticated data.
@@ -54,4 +54,7 @@ Immediate files and child directories only.
 - [work_product.py](work_product.py) — Pure versioned multi-file declarations; paths and kind labels confer no authority.
 - [work_product_import.py](work_product_import.py) — Bounded draft previews and pure frozen proposals; explicit typed submission commits.
 - [tool_assessment_store.py](tool_assessment_store.py) — Bounded assessment and supplied-reader reconstruction, deferred scalar semantics and control/request scratch accounting; transactions remain store-owned.
+- [claim_use.py](claim_use.py) — Exact passive claim-use bindings, immutable limits and detached observations.
+- [claim_use_schema.py](claim_use_schema.py) — Fixed schema-4 freshness DDL, temporal navigation projections and event-range reverse indexes.
+- [claim_use_store.py](claim_use_store.py) — Bounded temporal propagation, unconditional submission navigation indexing, complete prospective inspection and independent chronological verification accounts.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.
