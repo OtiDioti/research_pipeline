@@ -172,3 +172,18 @@ Fresh actual Git/CWI/host evidence verifies the prior accepted/integrated source
 [REQ-D04-007-B1/run2bc3d843](../runs/2bc3d843-0c94-41b2-8344-636a48853805.md) stopped at2700-second Writer timeout, without candidate/review/acceptance/integration. Baseline1130/1130 is unchanged-product evidence only.17unaccepted files and104unchanged predecessors are preserved; final owners/lease/quarantine resolved. B-013deadline recovery2/2 was already exhausted, so no renamed/split recovery or increased limit is authorized. B1/B2/008/009 and all13original criteria remain mandatory; every phase completion box stays unchecked.
 
 Independent passive D05Tool-release contracts may proceed under DEV-072 from evidenced domain/reference/work-product conventions. They grant no execution/readiness/worker admission and consume no failed draft. Remaining D04queue/attempt/fencing/reservations/isolation/context/model/reporting and scientific/live obligations persist. STATUS owns counters and one next action.
+
+
+## Independent passive Task contracts prepared — 2026-11-05
+
+After actual D05-006 acceptance/integration/1372-test target validation,
+[REQ-D04-010](../requests/REQ-D04-010.md) is READY for pure immutable TaskSpecification
+values,strict finite codecs and exact task-envelope conversion. DEV078 records the
+choice before persistence,attempts or scheduler admission. This consumes accepted
+identity/reference/resource conventions,not failed B1 source or an exhausted
+recovery. A declaration authenticates no grant or target availability,allocates no
+resources and opens no ordinary-work gate. Typed Task persistence,queue/attempt/
+fencing,actual admission/isolation/model/tool/context enforcement and all original
+13FOLLOWON/report/restart obligations remain mandatory. No new implementation
+credit or phase box is granted by preparation; B013deadline2/2 and scientific/live
+holds remain. STATUS owns counters and one next safe action.

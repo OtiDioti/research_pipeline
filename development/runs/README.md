@@ -66,3 +66,6 @@ Store concise sanitized evidence and references, not full private logs. Exact re
   Continuous start40/100; no backend or authority change.
 
 - [5bad636b — REQ-D05-005](5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md): passive assessment persistence finally accepted/exact-integrated `9f6cd171`,final/target1326/1326,two CWI product repairs/four resolved findings,no coordinator recovery/backend change;continuous start41/100.
+
+
+- [0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) — REQ-D05-006 finally accepted/exact-integrated53be2755; final/target1372/1372,one fixture repair,no coordinator recovery/backend change.

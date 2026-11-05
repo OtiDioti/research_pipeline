@@ -1,5 +1,22 @@
 # Development roadmap
 
+## Passive Tool CLI delivered; independent Task contracts ready — 2026-11-05
+
+[REQ-D05-006 / run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) finally accepted and exactly
+integrated `53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`,receipt`538f6cb41ecbf655b7cbd4eb192474ac0c644f8b5c58dd33be238d617a9ffe7e`; final/target1372/1372,
+zero other outcomes/mutation and matching dispositions. Explicit passive batch
+submission and exact typed inspection are usable through the existing CLI.
+One CWI repair closed F001; all128 predecessors remain,134 protected now.
+
+[REQ-D04-010](development/requests/REQ-D04-010.md) is READY for pure immutable
+TaskSpecification contracts,codecs and exact envelopes. DEV078 selects this
+independent declared-task boundary before typed persistence,attempts or admission;
+a coupled scheduler and authenticated Tool enablement need additional contracts.
+No failed B1 source or exhausted recovery is consumed. D04B1/B2/008/009,
+all13FOLLOWONcriteria,all94requirements,M0-E/M0-S and scientific/live/human gates
+remain mandatory. No phase or product completion follows. STATUS owns counters
+and the one next safe action; this session reaches a context checkpoint.
+
 ## Assessment persistence delivered; passive Tool CLI ready — 2026-11-05
 
 [REQ-D05-005 / run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](development/runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted and

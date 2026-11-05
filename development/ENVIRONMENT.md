@@ -411,3 +411,24 @@ consumed before attempted42; all recoveries, unknown liabilities and scientific/
 live/human gates persist. Readiness consumes no new start or recovery. Private
 evidence:local/reconciliation-20261105-cli/. The actual clean committed launch
 SHA must be substituted after this administrative checkpoint.
+
+
+## Passive Tool CLI integration and target evidence — 2026-11-05
+
+REQ-D05-006/run0c046a57 used unchanged clean backendbcb7ad24,pinnedCodex0.166.0/
+SHA256b8a11fed,stablemapb674ef72/validationdigest46f63a41,FD4096,one milestone,
+repairs2/6,2700s invocation/check limits,two ordered checks,no--merge. All8actual
+invocations match revision7 role pairs. No installation,dependency,auth/config,
+provider,security/backend change or historical migration. No server-model/quota
+attestation. Preserved original schema1 backend remains available.
+
+Baseline1326/1326/1002.179217s;initialcandidate1371/1372with1new-fixtureerror/
+760.898013s;repairedcandidate1372/1372/862.166406s;final1372/1372/1137.878969s.
+Formatting passes and no source mutation at every stage. One CWI repair resolves
+F001; failed evidence is retained. ExactFF07:07:46.351757Z integrated53be2755 before
+tracked edits. Target1372/1372/1136.975935s ended07:27:58.584518Z,empty stderr,
+stdoutSHA256`ba066efc4b0f8184a944c2e8d1d1d2f91bb6f68bba3b1054f7e164c543c6f625`; all final/target dispositions match and source stays clean.
+Both bounded target checks pass; post-target host07:29:38Z finds no execution owner.
+No duplicate successful full checks or broad timing claim. Fresh exact readiness
+remains required before a future start43; all consumed/unknown liabilities persist.
+Evidence:local/attempts/D05-006-attempt-001/.

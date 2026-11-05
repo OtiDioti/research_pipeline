@@ -85,3 +85,6 @@ is finally accepted, exactly integrated and target-validated1276/1276. Its froze
 request remains unchanged. [REQ-D05-005](REQ-D05-005.md) is READY but unlaunched
 for passive typed persistence/history/target pairing. It grants no permission or
 qualification and uses no failed B1 source. STATUS owns readiness and counters.
+
+
+- [REQ-D04-010](REQ-D04-010.md) — READY/unlaunched pure immutable TaskSpecification contracts after integrated Tool CLI; no admission or exhausted-path recovery.

@@ -1,5 +1,15 @@
 # Blocked, paused, and deferred work
 
+## Tool CLI integrated; existing holds unchanged — 2026-11-05
+
+[Run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) finally accepted/exact-integrated`53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`,
+final/target1372/1372. One CWI fixture repair explicitly resolved F001; no new
+unresolved defect,coordinator recovery or backend issue. B013Writerdeadline2/2
+still holds the failed B1 path; B010/B011 retain dependent scientific/live holds.
+REQ-D04-010 is independent pure Task-declaration work,without failed-draft reuse,
+admission or allowance reset. All broader obligations remain. STATUS owns actual
+counters and exactly one next safe action.
+
 ## Assessment persistence integrated; existing holds unchanged — 2026-11-05
 
 [Run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](development/runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted/exact-integrated `9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb`,

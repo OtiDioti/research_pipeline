@@ -1,0 +1,49 @@
+# Directory contents
+
+Navigation only. Immediate project-controlled children; frozen scope and permissions take precedence.
+
+- [0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md](0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) — REQ-D05-006 — Passive Tool-record CLI integrated
+- [153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md](153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md) — REQ-D04-004-R2 — Prepared control and ordered report obligations
+- [1c313198-868b-4bbb-bd2f-7e7c0d3cec60.md](1c313198-868b-4bbb-bd2f-7e7c0d3cec60.md) — REQ-DEV-VALIDATION-001-R1 — Corrected concurrent validation accepted and integrated
+- [25e5020e-e398-4998-b901-5268cd580778.md](25e5020e-e398-4998-b901-5268cd580778.md) — REQ-D02-004-R1 schema evolution — 25e5020e-e398-4998-b901-5268cd580778
+- [2b6ed304-5044-45b5-adcd-a8be9c3e314d.md](2b6ed304-5044-45b5-adcd-a8be9c3e314d.md) — REQ-D02-006 work-product round trips — 2b6ed304-5044-45b5-adcd-a8be9c3e314d
+- [2b89ca22-5cae-4535-aa48-c16d07b3cff6.md](2b89ca22-5cae-4535-aa48-c16d07b3cff6.md) — REQ-D05-004 — Passive attributed assessments integrated
+- [2bc3d843-0c94-41b2-8344-636a48853805.md](2bc3d843-0c94-41b2-8344-636a48853805.md) — REQ-D04-007-B1 — Writer deadline; no acceptance or integration
+- [2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md](2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md) — REQ-D02-002 backups — 2d82f186-4cf2-4fb7-9f96-f0ea8db10340
+- [32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md](32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md) — REQ-D03-004 — terminal missing validation evidence
+- [33db2c31-2248-425c-9de3-8c553d2dbd47.md](33db2c31-2248-425c-9de3-8c553d2dbd47.md) — REQ-D05-001 — Passive Tool-release contracts accepted and integrated
+- [34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md](34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md) — REQ-D01-002 mock — 34bcb77d-1cbc-4432-ba5e-e419e930ad2f
+- [46114120-06d0-47ea-8e16-4a02066a1d0a.md](46114120-06d0-47ea-8e16-4a02066a1d0a.md) — REQ-D02-005 Writer timeout — 46114120-06d0-47ea-8e16-4a02066a1d0a
+- [47d6ef06-c251-4a0d-bb2c-da2059d9360f.md](47d6ef06-c251-4a0d-bb2c-da2059d9360f.md) — REQ-D01-001 commissioning — 47d6ef06-c251-4a0d-bb2c-da2059d9360f
+- [4c1833ef-8ef9-4b07-9f33-79acb6f7e8b0.md](4c1833ef-8ef9-4b07-9f33-79acb6f7e8b0.md) — Development run — 4c1833ef-8ef9-4b07-9f33-79acb6f7e8b0
+- [528cf918-2619-45c8-a6b6-ee35ed42fb3e.md](528cf918-2619-45c8-a6b6-ee35ed42fb3e.md) — REQ-D04-002-R3 — Committed reports and publication recovery
+- [5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md](5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) — REQ-D05-005 — Passive assessment persistence integrated
+- [5f304a70-d68b-422b-ac31-6d006d8a1825.md](5f304a70-d68b-422b-ac31-6d006d8a1825.md) — REQ-D04-003 — Terminal provider-capacity failure after green candidate
+- [63f0416b-b04a-4a2a-9173-d59716ec6741.md](63f0416b-b04a-4a2a-9173-d59716ec6741.md) — REQ-D03-006 local CLI — 63f0416b-b04a-4a2a-9173-d59716ec6741
+- [6ae8ca11-0df2-48e2-abc8-65d51adaa187.md](6ae8ca11-0df2-48e2-abc8-65d51adaa187.md) — REQ-D04-002 — Human-requested graceful shutdown
+- [6eaf6f92-ec81-4d73-b83d-9b97a30cfb02.md](6eaf6f92-ec81-4d73-b83d-9b97a30cfb02.md) — Development run — 6eaf6f92-ec81-4d73-b83d-9b97a30cfb02
+- [7632b4e0-7877-4e25-b23f-33d66232ebf1.md](7632b4e0-7877-4e25-b23f-33d66232ebf1.md) — REQ-D04-005 — Terminal prescription blockers, no product change
+- [77ab31a1-a7c2-4185-a26b-f9ed52da1593.md](77ab31a1-a7c2-4185-a26b-f9ed52da1593.md) — REQ-D02-001 durable storage — 77ab31a1-a7c2-4185-a26b-f9ed52da1593
+- [7b46536e-42ac-4537-a720-beaaa5a34490.md](7b46536e-42ac-4537-a720-beaaa5a34490.md) — REQ-D03-001 source capture — 7b46536e-42ac-4537-a720-beaaa5a34490
+- [7d05376e-aabf-4c5a-9481-91205611eb0c.md](7d05376e-aabf-4c5a-9481-91205611eb0c.md) — REQ-D04-006-R1 — Committed lifecycle sources integrated
+- [7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md) — REQ-D03-004-R1 readable snapshots — 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e
+- [8dc45005-5187-4be0-a009-dece7c493f2b.md](8dc45005-5187-4be0-a009-dece7c493f2b.md) — REQ-D02-005-R1 attributed reviews/issues — 8dc45005-5187-4be0-a009-dece7c493f2b
+- [9af6f133-62d8-4348-b8f2-7d95cbb84928.md](9af6f133-62d8-4348-b8f2-7d95cbb84928.md) — REQ-D02-004 first attempt — 9af6f133-62d8-4348-b8f2-7d95cbb84928
+- [9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md](9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) — REQ-D05-003 — Passive Tool-release registration integrated
+- [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This navigation index.
+- [README.md](README.md) — Development run records
+- [b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md](b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md) — REQ-D04-005-R1 — Offline lifecycle-report binding integrated
+- [b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md](b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md) — REQ-D04-002-R2 — Validated candidate; Reviewer context limit
+- [b7952877-c4a8-4a38-ab2e-daa9419e60c3.md](b7952877-c4a8-4a38-ab2e-daa9419e60c3.md) — REQ-D04-007-A — Shared lifecycle rendering and repeated-root repair
+- [c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md](c62af399-bf8c-4b25-8ef7-ec1947fad6ae.md) — REQ-D03-005 preserved successor refresh — c62af399-bf8c-4b25-8ef7-ec1947fad6ae
+- [c9055f4c-f63c-4815-ab5e-670116ce1333.md](c9055f4c-f63c-4815-ab5e-670116ce1333.md) — Development run — c9055f4c-f63c-4815-ab5e-670116ce1333
+- [cd93ad37-6dec-4631-98aa-d10032c64552.md](cd93ad37-6dec-4631-98aa-d10032c64552.md) — REQ-DEV-VALIDATION-001 — Accepted implementation; integration declined for fixture defect
+- [d343c0af-b495-431d-a903-0cabbb520bf6.md](d343c0af-b495-431d-a903-0cabbb520bf6.md) — REQ-D04-002-R1 — Capture accepted; publication Writer timeout
+- [d4513360-8b98-4b8d-9bdc-91835d40a323.md](d4513360-8b98-4b8d-9bdc-91835d40a323.md) — REQ-D05-002 — Passive Tool-release envelopes integrated
+- [d7e765f5-9c2a-4d83-9703-73102ffb5891.md](d7e765f5-9c2a-4d83-9703-73102ffb5891.md) — REQ-D02-003 typed records — d7e765f5-9c2a-4d83-9703-73102ffb5891
+- [d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md](d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md) — REQ-D04-004-R1 — Interrupted controller; completed draft preserved without acceptance
+- [db2829bc-fca9-48d7-b2c1-b9e99348c197.md](db2829bc-fca9-48d7-b2c1-b9e99348c197.md) — REQ-D03-003 project intake — db2829bc-fca9-48d7-b2c1-b9e99348c197
+- [e83c7165-ab29-48f5-8942-581617895c2a.md](e83c7165-ab29-48f5-8942-581617895c2a.md) — REQ-D04-004 — Terminal prescription blockers; no implementation accepted
+- [f14139d7-a856-4b5a-986a-df5014792800.md](f14139d7-a856-4b5a-986a-df5014792800.md) — REQ-D04-003-R1 — Authenticated local operating authority accepted and integrated
+- [f746e33a-7475-44dc-b8bf-4613130fba79.md](f746e33a-7475-44dc-b8bf-4613130fba79.md) — REQ-D03-002 corpus inventory — f746e33a-7475-44dc-b8bf-4613130fba79
+- [f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md](f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md) — REQ-D04-006 — Unaccepted source candidate; correctness recovery prepared

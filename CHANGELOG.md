@@ -1,5 +1,20 @@
 # Integrated development history
 
+## Passive Tool-record CLI integrated — 2026-11-05
+
+[REQ-D05-006 / run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) finally accepted and exact-integrated
+`53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`,tree`cd177c89f8ca43eee1833d1e8c38848231840b33`,receipt`538f6cb41ecbf655b7cbd4eb192474ac0c644f8b5c58dd33be238d617a9ffe7e`.
+Adds explicit passive Tool batch submission and exact typed inspection through
+existing private controls/transactions,finite caller/output limits and original-ID
+recovery. Six additive test/helper files add46 methods; all128 predecessor blobs/
+modes remain. The product/stdlib guide is executed verbatim. One CWI repair fixes
+an invalid new replacement-pair fixture; fresh milestone/final reviews accept the
+full change and close F001. Final and target1372/1372,zero other outcomes/mutation,
+matching dispositions. Target ended07:27:58.584518Z after exact FF07:07:46.351757Z.
+No permission,qualification credit,execution,scientific validation or backend change.
+Administrative checkpoint reconciles resources,adds navigation indexes and readies
+independent REQ-D04-010; it does not consume start43 or alter frozen006 bytes.
+
 ## Passive transactional Tool-assessment persistence integrated — 2026-11-05
 
 [REQ-D05-005 / run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](development/runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md) finally accepted and

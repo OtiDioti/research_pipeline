@@ -354,3 +354,24 @@ complete standalone interfaces before its CWI Writer implements. This is an
 ordinary coordinator choice within the existing grant, not human scientific
 approval or a reset. Session context requires a safe handoff with this committed
 request ready; no new implementation start is claimed.
+
+
+## DEV-078 — Declare immutable task assignments before admission
+
+After exact passive Tool CLI integration and required1372/1372 target validation,
+select REQ-D04-010 for complete pure TaskSpecification values,finite codecs and
+exact task envelopes. Existing generic task identities and shallow task references
+do not yet supply this §5.1 contract. A coupled scheduler would consume unfinished
+report/fencing/isolation gates; authenticated Tool enablement introduces a separate
+current-authority/assessment boundary. Pure declarations commission a useful
+independent M0-E subset without either dependency.
+
+The contract preserves exact inputs,expected work products/completion,declared
+visibility/tools and allocation constraints while separating actual attempt/worker
+identity,availability,permission,resources and scientific support. Architect owns
+complete standalone representation/limits/errors using actual accepted APIs; only
+CWI Writer implements. Future typed persistence/history/original-ID recovery and
+actual queue/admission/fencing/report/isolation remain mandatory. Preserve134
+predecessor blobs/modes and1372 tests. No failed B1 source,third deadline recovery,
+scientific judgment,scope reduction or authority reset. This is the coordinator's
+ordinary technical choice under the existing grant,not human design approval.

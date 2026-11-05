@@ -383,3 +383,15 @@ role invocations match revision7. No maintenance candidate or historical migrati
 was attempted. Counts remain3/3/0. Original backend/evidence are preserved.
 Read-only coordinator audit-helper assumptions were corrected without mutating
 source/state/receipts or consuming recovery. Required target verification passed.
+
+
+## 2026-11-05 — Passive Tool CLI; backend unchanged
+
+REQ-D05-006/run0c046a57 finally accepted/exact-integrated53be2755,
+receipt538f6cb4,final/target1372/1372. One CWI fixture repair closes F001; it is not
+backend maintenance or coordinator recovery. Backend stayed cleanbcb7ad24,
+pinnedCodex/map/security unchanged;all8actual role invocations match revision7.
+No maintenance candidate,state/evidence rewrite or historical migration. Counts
+remain3/3/0. Read-only audit-helper syntax/log-source assumptions were corrected
+without mutating evidence or consuming recovery. Required target check ran once,
+with exact matching final dispositions. Original backend and failed evidence remain.
