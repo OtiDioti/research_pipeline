@@ -91,3 +91,7 @@ REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251
 ## Policy freshness checkpoint — 2026-11-05
 
 [REQ-D02-008/run c255a52f](../runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md) accepted/exact-integrated `ba6bdf39f713cdafab476985c8738267fc9b7dcc`, final/target1470/1470. Explicit schema5 activation/migration, selective historical downstream policy impact and coherent metadata inspection extend R-015/R-077 engineering only. Authority, positive eligibility, sufficient alternatives, active-context transfer, promotion and scientific evaluation remain pending. D02 remains PARTIAL. Human-directed shutdown; no new request/phase started.
+
+## Target-context freshness selected — 2026-11-05
+
+After REQ-D02-008 exact integration and required1470/1470 target evidence, [REQ-D02-009](../requests/REQ-D02-009.md) is the next bounded engineering slice: explicitly pinned target-context successor impact, historical downstream propagation and coherent bound/observed pins. It is prepared, not implemented/accepted. Broader context dependency/active-context selection, scientific transfer, sufficient alternatives, authority and promotion remain mandatory. D02 stays PARTIAL.

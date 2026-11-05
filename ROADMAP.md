@@ -305,3 +305,7 @@ not grant revocation, scientific completion or an automatic restart.
 ## Policy freshness integrated; human-directed shutdown
 
 [REQ-D02-008](development/runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md) delivers conservative schema-5 transactional policy freshness, exact-integrated `ba6bdf39f713cdafab476985c8738267fc9b7dcc`, final/target1470/1470. Active-context transfer, policy authority and promotion remain pending; D02/M0-E and product stay partial. Existing failed Task/B1 paths and all full-specification/scientific/live obligations remain. The human directed shutdown; no next phase/request started.
+
+## Current bounded selection — 2026-11-05
+
+[REQ-D02-009](development/requests/REQ-D02-009.md) is prepared for transactional target-context revision freshness from accepted ClaimUse contracts. [DEV-083](DECISIONS.md) records its scope choice; STATUS owns execution state and counters. D02 and all broader mandatory obligations remain partial.

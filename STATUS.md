@@ -1,5 +1,11 @@
 # Development status
 
+## Resumed coordination; target-context freshness prelaunch — 2026-11-05
+
+The human resumed CONTINUOUS coordination under AUTH-2026-10-30-001 revision7, superseding prior session shutdowns without new permission or reset. Fresh native Git/CWI evidence reconciles46 terminal histories:33final receipts,32exact final sources integrated,one deliberately superseded validator acceptance and13incomplete histories. No live owner, lease, quarantine or pending integration remains; historical markers/findings are preserved. Latest receipt and target-log hashes match [REQ-D02-008 evidence](development/runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md); accepted source ba6bdf39 is unchanged in clean main. Specification digest matches the grant; backend remains clean bcb7ad24.
+
+[REQ-D02-009](development/requests/REQ-D02-009.md) selects conservative target-context revision freshness from accepted ClaimUse contracts (DEV-083). Historical contexts remain exact; no positive eligibility, scientific transfer or active-context approval is granted. Fresh pinned Codex parser/auth probes pass with ChatGPT login; catalog fetched18:48:01Z advertises both approved models and high/xhigh. Process FD4096 and the stable environment remain prerequisites. Continuous45/100 starts consumed before launch; attempted46 leaves54. CWIrepairs42, coordinator16, backend3/3/0 and all exhausted recovery families persist. No new acceptance or requirement credit is claimed. Private fresh evidence:local/resume-20261105-context/.
+
 ## Graceful shutdown checkpoint — REQ-D02-008 integrated, 2026-11-05
 
 The human superseded autonomous continuation with graceful shutdown. [REQ-D02-008 / run c255a52f](development/runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md) is finally accepted and exact-integrated on main at `ba6bdf39f713cdafab476985c8738267fc9b7dcc`, tree `4b1ca3e62938e9bb702b3b0b28585b66ad2bf961`. Final receipt SHA-256 `5be9d34d000352813c74a9f6c6bcf3ad98e3a3036b74d2d5405acc0c9c6d7fc4` binds 1470/1470 final tests, both passing checks and accepting complete-diff review with no open findings. The required integrated-target check also passed 1470/1470 once, zero skips/failures/errors, in 1201.476886 seconds. Its log SHA-256 is `542903da3f469ba6ebe2bcc3cc85d9aefd73177c0c70c386e406b516dbbed46b`. This is engineering evidence, not scientific validation.
@@ -50,4 +56,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-In a future human-started session, read the current instruction, effective grant and local/live.md, then reconcile fresh Git/CWI ownership, acceptance/integration evidence and cumulative limits before selecting any authorized work.
+Commit the bounded REQ-D02-009 prelaunch records, then count and launch exactly one CWI attempt with the approved explicit role flags and frozen meaningful checks after confirming the clean committed base.
