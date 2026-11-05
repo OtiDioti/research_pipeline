@@ -1,5 +1,10 @@
 # Passive versioned Tool releases
 
+The [passive Tool-record CLI guide](tool-record-cli.md) documents explicit exact typed
+inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
+private controls, original-ID recovery and a self-contained executable example.
+These operations grant no authentication, permission, qualification or execution.
+
 `research_pipeline.tool_release` describes one exact reusable release. Its pure
 content codecs and `research_pipeline.tool_release_envelope` conversion establish
 local consistency, without reading records or bytes. `RecordStore.submit_typed`

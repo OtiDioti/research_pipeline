@@ -1,5 +1,10 @@
 # Transactional passive Tool-assessment persistence
 
+The [passive Tool-record CLI guide](tool-record-cli.md) documents explicit exact typed
+inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
+private controls, original-ID recovery and a self-contained executable example.
+These operations grant no authentication, permission, qualification or execution.
+
 `RecordStore.submit_typed(Submission)` admits explicit version-one
 `research_pipeline.tool_assessment_content` envelopes alongside existing typed
 content. Import `ToolAssessment` and its envelope codec directly from their

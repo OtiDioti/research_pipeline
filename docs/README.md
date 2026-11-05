@@ -1,5 +1,10 @@
 # Product documentation
 
+The [passive Tool-record CLI guide](tool-record-cli.md) documents explicit exact typed
+inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
+private controls, original-ID recovery and a self-contained executable example.
+These operations grant no authentication, permission, qualification or execution.
+
 Architecture, interfaces, operational guidance, and user documentation belong here as the product is implemented. The existing [project description](../project_description.md) remains the requirements reference.
 
 Development control records are under [development/](../development/README.md). Scientific investigation notes belong in research project vaults, not in this folder by default.

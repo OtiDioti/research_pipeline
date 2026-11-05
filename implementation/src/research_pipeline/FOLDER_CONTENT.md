@@ -8,10 +8,11 @@ Immediate files and child directories only.
 - [assessment.py](assessment.py) — Pure attributed assessment contracts; declarations confer no scientific authority.
 - [backup.py](backup.py) — Explicit local snapshots with strict verification and durable completeness markers.
 - [checkout.py](checkout.py) — Bounded, inert local copies with durable publication and untrusted base descriptors.
-- [cli.py](cli.py) — Source-local inspection and explicit work-product round trips with bounded acknowledgment semantics.
-- [cli_controls.py](cli_controls.py) — Strict bounded local CLI controls; none of these values conveys scientific authority.
+- [cli.py](cli.py) — Source-local argv, bounded results and acknowledgement for inspection, saved work products, readable views and passive Tools.
+- [cli_controls.py](cli_controls.py) — Strict bounded controls, shared version-one configuration and retained no-follow observations.
 - [cli_inspection.py](cli_inspection.py) — Bounded exact CLI metadata reconstruction and offline original-checkout observation.
 - [cli_proposals.py](cli_proposals.py) — Strict saved work-product packages, offline observations and private publication.
+- [cli_tools.py](cli_tools.py) — Closed passive Tool batches, selected snapshot bounds and original-ID submission recovery.
 - [cli_views.py](cli_views.py) — Bounded CLI admission and observations for the existing immutable readable-view APIs.
 - [corpus.py](corpus.py) — Pure immutable seed inventories over exact Source captures; declarations confer no authority.
 - [domain.py](domain.py) — Validated storage envelopes; descriptive JSON never grants scientific authority.
@@ -35,7 +36,7 @@ Immediate files and child directories only.
 - [snapshot.py](snapshot.py) — Bounded detached navigation and local typed classification, without artifact availability or admission claims.
 - [source.py](source.py) — Pure bounded source declarations and exact capture links, without acquisition or parsing.
 - [source_capture.py](source_capture.py) — Explicit bounded local Source preparation and pure saved requests; never implicit commit.
-- [store.py](store.py) — Atomic revision submissions, passive Tool assessments and exact metadata history with guarded Source predecessor parsing over SQLite and immutable bytes.
+- [store.py](store.py) — Atomic revision submissions, passive Tool assessments and exact metadata history with guarded Source predecessor parsing and a shared connection-owned exact typed read over SQLite and immutable bytes.
 - [tool_assessment.py](tool_assessment.py) — Passive attributed tool assessments; local validity conveys no permission or truth.
 - [tool_assessment_codec.py](tool_assessment_codec.py) — Private finite codec adapters and public ceilings for passive tool assessments.
 - [tool_assessment_envelope.py](tool_assessment_envelope.py) — Pure bounded assessment envelopes; projections and provenance remain unauthenticated data.

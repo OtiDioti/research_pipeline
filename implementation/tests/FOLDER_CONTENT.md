@@ -18,6 +18,12 @@ Immediate files and child directories only.
 - [test_assessment_store.py](test_assessment_store.py) — Durable synthetic assessments: exact admission, retained disagreement and real recovery.
 - [test_backup.py](test_backup.py) — Real snapshot, independent restore, corruption and publication recovery evidence.
 - [test_checkout.py](test_checkout.py) — Real bounded checkout publication, substitution, interruption and inert-content tests.
+- [tool_cli_fixtures.py](tool_cli_fixtures.py) — Setup-only private Tool runtimes, literal provenance, strict controls and candidate subprocess helpers.
+- [test_cli_tools.py](test_cli_tools.py) — Real mixed Tool CLI commits, exact historical reads, replacement-pair and closure refusals, and original receipts.
+- [test_cli_tool_controls.py](test_cli_tool_controls.py) — Canonical argv, closed batch schemas and independent caller-limit refusal gates.
+- [test_cli_tool_bounds.py](test_cli_tool_bounds.py) — Selected SQL preflight, sufficient output reservation and real single-snapshot consistency.
+- [test_cli_tool_failures.py](test_cli_tool_failures.py) — Held control observations, real SQLite contention, process exit and physical stdout loss.
+- [test_cli_tool_example.py](test_cli_tool_example.py) — Execute the delimited passive Tool CLI guide verbatim in a fresh candidate interpreter.
 - [test_cli.py](test_cli.py) — Exercise the candidate CLI and observed import behavior in isolated processes.
 - [test_cli_operations.py](test_cli_operations.py) — Candidate-local subprocess evidence for bounded exact CLI inspection and checkout.
 - [test_cli_proposals.py](test_cli_proposals.py) — Saved-package codecs, binding gates and retained publication evidence using real private files.

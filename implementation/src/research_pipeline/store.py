@@ -1405,21 +1405,30 @@ class RecordStore:
         _identifier(record_id, "record_id")
         _integer(revision, "revision", 1)
         with self._transaction() as connection:
-            row = connection.execute("""SELECT i.kind='tool_assessment' OR
-                (substr(r.content_json,1,17)='{"assessment_id":' AND
-                 instr(r.content_json,'"format":"research_pipeline.tool_assessment_content"')>0)
-                FROM revisions r JOIN identities i USING(record_id)
-                WHERE r.record_id=? AND r.revision=?""", (record_id, revision)).fetchone()
-            if row is not None and row[0] == 1:
-                budget = _assessment_store._Budget()
-                envelope = budget.read(connection, (record_id, revision))
-                for reference in envelope.artifact_references:
-                    self._artifacts.verify(reference)
-                value = budget.decode(envelope, _decode_typed_envelope)
-                with budget.temporary(6 * budget.sizes[(record_id, revision)]):
-                    return _assessment_store._owned(envelope), value
-            envelope = self._envelope(connection, record_id, revision)
-            return envelope, _decode_typed_envelope(envelope)
+            return self._get_typed_revision(connection, record_id, revision)
+
+    def _get_typed_revision(self, connection, record_id, revision):
+        """Read exact typed content inside an already owned read snapshot.
+
+        The caller owns transaction lifetime and validates the selection. This
+        shared body verifies direct artifacts and returns detached local values;
+        it neither admits records nor traverses their targets or history.
+        """
+        row = connection.execute("""SELECT i.kind='tool_assessment' OR
+            (substr(r.content_json,1,17)='{"assessment_id":' AND
+             instr(r.content_json,'"format":"research_pipeline.tool_assessment_content"')>0)
+            FROM revisions r JOIN identities i USING(record_id)
+            WHERE r.record_id=? AND r.revision=?""", (record_id, revision)).fetchone()
+        if row is not None and row[0] == 1:
+            budget = _assessment_store._Budget()
+            envelope = budget.read(connection, (record_id, revision))
+            for reference in envelope.artifact_references:
+                self._artifacts.verify(reference)
+            value = budget.decode(envelope, _decode_typed_envelope)
+            with budget.temporary(6 * budget.sizes[(record_id, revision)]):
+                return _assessment_store._owned(envelope), value
+        envelope = self._envelope(connection, record_id, revision)
+        return envelope, _decode_typed_envelope(envelope)
 
     def history(self, record_id: str) -> tuple[RecordEnvelope, ...]:
         """Return revision-ascending verified history; an absent identity has empty history."""

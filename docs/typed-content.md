@@ -1,5 +1,10 @@
 # Typed provisional scientific content
 
+The [passive Tool-record CLI guide](tool-record-cli.md) documents explicit exact typed
+inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
+private controls, original-ID recovery and a self-contained executable example.
+These operations grant no authentication, permission, qualification or execution.
+
 `research_pipeline.scientific` supplies pure frozen values, strict version-1
 codecs and exact `RecordEnvelope` conversion. Import directly from this submodule;
 there are no package re-exports or CLI commands. Imports perform no filesystem,

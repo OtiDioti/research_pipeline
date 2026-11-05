@@ -1,5 +1,10 @@
 # Passive attributed Tool assessments
 
+The [passive Tool-record CLI guide](tool-record-cli.md) documents explicit exact typed
+inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
+private controls, original-ID recovery and a self-contained executable example.
+These operations grant no authentication, permission, qualification or execution.
+
 `research_pipeline.tool_assessment` declares a supplied assessment of an exact
 ToolRelease record revision and its supplied release identity. Pure content and
 `research_pipeline.tool_assessment_envelope` conversion check local consistency.

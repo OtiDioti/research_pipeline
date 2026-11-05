@@ -37,18 +37,29 @@ def _number(token, *, floating=False):
     return value
 
 
+def _batch_integer(token):
+    """Reject the integer negative-zero alias before bounded batch numeric conversion."""
+    if token == "-0":
+        raise DomainValidationError("negative zero integer alias")
+    return _number(token)
+
+
 def _float(token):
     """Apply the same finite token budget to JSON floats as to integers."""
     return _number(token, floating=True)
 
 
-def strict_json(data):
-    """Decode bounded UTF-8 controls with depth/scalar checks, accepting whitespace and key order."""
+def strict_json(data, *, reject_negative_zero=False):
+    """Decode bounded UTF-8 controls with depth/scalar checks and optional integer-alias refusal.
+
+    Tool batches reject integer -0; predecessor controls retain their numeric
+    behavior. Whitespace and object ordering remain insignificant.
+    """
     try:
         text = data.decode("utf-8", errors="strict")
         _check_json_depth(text, 64)
         value = json.loads(text, object_pairs_hook=_unique_object, parse_constant=_reject_constant,
-                           parse_int=_number, parse_float=_float)
+                           parse_int=_batch_integer if reject_negative_zero else _number, parse_float=_float)
         _validate_json(value, "control", set())
         return value
     except (ValueError, TypeError, RecursionError, OverflowError) as error:
@@ -118,7 +129,11 @@ def read_config(path, maximum):
         if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
             raise CliError(5, "invalid_input", "Configuration file or parent is missing.") from error
         raise
-    value = strict_json(data)
+    return _config_value(strict_json(data))
+
+
+def _config_value(value):
+    """Decode the unchanged version-one configuration after a caller-owned stable read."""
     _fields(value, {"format", "version", "store", "protected_roots"}, set(), "CLI configuration")
     if (value["format"] != "research_pipeline.cli_config"
             or type(value["version"]) is not int or value["version"] != 1):

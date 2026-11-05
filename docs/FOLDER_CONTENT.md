@@ -10,10 +10,10 @@ Immediate files and child directories only.
 - [committed-lifecycle-sources.md](committed-lifecycle-sources.md) — Committed lifecycle sources.
 - [committed-run-reports.md](committed-run-reports.md) — Committed run-report observations.
 - [corpus.md](corpus.md) — Immutable seed inventories.
-- [durable-records.md](durable-records.md) — Durable revisions, artifacts and atomic submissions.
+- [durable-records.md](durable-records.md) — Durable revisions, artifacts, atomic submissions and explicit CLI boundaries.
 - [lifecycle-report-binding.md](lifecycle-report-binding.md) — Offline lifecycle-report bindings.
 - [lifecycle-report-rendering.md](lifecycle-report-rendering.md) — Pure lifecycle report rendering.
-- [local-cli.md](local-cli.md) — Local inspection and explicit work-product round trips.
+- [local-cli.md](local-cli.md) — Local inspection, explicit saved work-product round trips and navigation to passive Tool commands.
 - [operating-authority.md](operating-authority.md) — Authenticated local operating decisions.
 - [project-intake.md](project-intake.md) — Versioned project setup and attributed intake.
 - [readable-refresh.md](readable-refresh.md) — Preserved readable refresh.
@@ -25,9 +25,10 @@ Immediate files and child directories only.
 - [sources.md](sources.md) — Versioned source captures.
 - [synthetic-oscillator.md](synthetic-oscillator.md) — Synthetic harmonic/quartic paper walkthrough.
 - [test-validation.md](test-validation.md) — Development test validation.
+- [tool-record-cli.md](tool-record-cli.md) — Passive Tool CLI argv, exact controls/results/limits, original-ID recovery and executable private-store example.
 - [tool-assessments.md](tool-assessments.md) — Passive attributed Tool assessments.
 - [tool-releases.md](tool-releases.md) — Passive versioned Tool releases.
-- [typed-content.md](typed-content.md) — Typed provisional scientific content.
+- [typed-content.md](typed-content.md) — Typed provisional scientific content and navigation to passive Tool CLI access.
 - [work-product-import.md](work-product-import.md) — Work-product preview and explicit import.
 - [work-products.md](work-products.md) — Versioned work-product manifests.
 - [tool-assessment-persistence.md](tool-assessment-persistence.md) — Passive assessment admission, bounded history/control/request accounting with predecessor and supplied-reader guards, inspection and original-ID recovery.

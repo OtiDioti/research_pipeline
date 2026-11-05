@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import sys
 
-from research_pipeline import __version__, checkout, cli_proposals, cli_views, work_product_import
+from research_pipeline import __version__, checkout, cli_proposals, cli_tools, cli_views, work_product_import
 from research_pipeline.artifacts import ArtifactError
 from research_pipeline.cli_controls import CliError, causes, path_value, read_config, read_request, source_root
 from research_pipeline.cli_inspection import exact_record, exact_receipt, local_checkout
@@ -38,6 +38,13 @@ _LIMITS = {
     "max_files": (128, 1, 1024, "logical files"),
     "max_file_bytes": (16777216, 0, 1073741824, "bytes per file"),
     "max_total_bytes": (67108864, 0, 4294967296, "logical file bytes"),
+    "max_envelope_bytes": (2097152, 1, 4194304, "canonical ASCII bytes per complete Tool envelope"),
+    "max_content_bytes": (1048576, 0, 1048576, "canonical ASCII bytes per Tool content document"),
+    "max_provenance_bytes": (262144, 1, 1048576, "canonical ASCII bytes per complete provenance"),
+    "max_provenance_depth": (24, 1, 24, "provenance details container nesting; details object is depth one"),
+    "max_batch_bytes": (2097152, 1, 16777216, "actual UTF-8 batch bytes including whitespace"),
+    "max_records": (128, 1, 4096, "submitted envelope occurrences"),
+    "max_receipt_bytes": (262144, 1, 16777216, "complete canonical ASCII receipt bytes excluding outer result/LF"),
 }
 
 
@@ -53,7 +60,11 @@ class _Parser(argparse.ArgumentParser):
                 failure = CliError(6, "output_failed", "Text output failed; no complete acknowledgment is claimed.")
                 context = dict(store=None, destination=None, record_id=None, revision=None,
                                submission_id=None, next_action="Repeat the same help or version request.")
-                _diagnostic(None, failure, context)
+                command = getattr(self, "_tool_command", None)
+                if command is not None:
+                    context = dict.fromkeys(cli_tools.CONTEXT_FIELDS)
+                    context["next_action"] = "Repeat the same help request; discard partial output."
+                _diagnostic(command, failure, context)
                 self.exit(6)
         else:
             super()._print_message(message, file)
@@ -85,6 +96,13 @@ def _decimal(value):
     return value
 
 
+def _canonical_decimal(value):
+    """Require canonical ASCII argv integers without converting unbounded tokens."""
+    if re.fullmatch(r"0|[1-9][0-9]*", value) is None:
+        raise argparse.ArgumentTypeError("expected canonical ASCII decimal integer syntax")
+    return value
+
+
 def _parser():
     """Build the explicit operations; every parser disables option abbreviation."""
     parser = _Parser(prog="python -m research_pipeline", allow_abbrev=False,
@@ -108,10 +126,26 @@ def _parser():
         "inspect-readable-view": "Observe an explicit readable view offline without historical acknowledgment.",
         "inspect-readable-refresh": "Observe exact retained refresh evidence offline; never replay or repair.",
     })
+    descriptions.update(cli_tools.DESCRIPTIONS)
     for command, description in descriptions.items():
         sub = subparsers.add_parser(command, description=description, help=description, allow_abbrev=False)
         limits = ["max_output_bytes"]
-        if command in cli_views.COMMANDS:
+        if command in cli_tools.COMMANDS:
+            sub._tool_command = command
+            sub.add_argument("--config", required=True, action=_Once, metavar="FILE",
+                             help="Explicit private version-one configuration; existing runtime only.")
+            limits += list(cli_tools.COMMON_LIMITS)
+            if command == "submit-tool-records":
+                sub.add_argument("--batch", required=True, action=_Once, metavar="FILE",
+                                 help="Saved nonempty ordered Tool batch; original-ID identical retry only.")
+                limits += list(cli_tools.SUBMIT_LIMITS)
+            else:
+                sub.add_argument("--kind", required=True, action=_Once,
+                                 metavar="tool_release|tool_assessment", help="Exact selected Tool kind.")
+                sub.add_argument("--record-id", required=True, action=_Once, metavar="ID", help="Explicit stable record ID.")
+                sub.add_argument("--revision", required=True, action=_Once, type=_canonical_decimal,
+                                 metavar="N", help="Exact positive revision 1..9223372036854775807; never a head.")
+        elif command in cli_views.COMMANDS:
             for option in ("config", "limits"):
                 sub.add_argument("--" + option, required=True, action=_Once, metavar="FILE")
             limits += ["max_control_bytes"]
@@ -165,7 +199,10 @@ def _parser():
             if name == "max_control_bytes" and command in (
                     "prepare-work-product", "inspect-proposal", "submit-work-product"):
                 unit = "bytes per config/package manifest (manifest also capped at 16384 bytes)"
-            sub.add_argument("--" + name.replace("_", "-"), action=_Once, type=_decimal,
+            if command in cli_tools.COMMANDS:
+                unit = cli_tools.LIMIT_UNITS.get(name, unit)
+            sub.add_argument("--" + name.replace("_", "-"), action=_Once,
+                             type=_canonical_decimal if command in cli_tools.COMMANDS else _decimal,
                              default=default, metavar="N",
                              help=f"{unit}; default {default}; range {minimum}..{maximum}")
     return parser
@@ -185,6 +222,9 @@ def _number(value, minimum, maximum):
 
 def _validate(arguments):
     """Validate every selected value before opening controls or any dependent resource."""
+    if arguments.command in cli_tools.COMMANDS and hasattr(arguments, "kind"):
+        if arguments.kind not in ("tool_release", "tool_assessment"):
+            raise DomainValidationError("kind requires tool_release or tool_assessment")
     for name, (_, minimum, maximum, _) in _LIMITS.items():
         if hasattr(arguments, name):
             setattr(arguments, name, _number(getattr(arguments, name), minimum, maximum))
@@ -199,7 +239,7 @@ def _validate(arguments):
         if value is not None and re.fullmatch(r"[0-9a-f]{64}", value) is None:
             raise DomainValidationError("identity requires lowercase SHA-256")
     for name in ("config", "destination", "checkout", "request", "proposal", "limits", "selection",
-                 "prior_view", "baseline_manifest", "view", "attempt"):
+                 "prior_view", "baseline_manifest", "view", "attempt", "batch"):
         if hasattr(arguments, name):
             setattr(arguments, name, path_value(getattr(arguments, name)))
 
@@ -242,6 +282,8 @@ def _checkout_preflight(arguments, envelope):
 def _execute(arguments, context, effects):
     """Dispatch one operation and close inputs/store/held paths before returning bounded output."""
     command = arguments.command
+    if command in cli_tools.COMMANDS:
+        return cli_tools.execute(arguments, context, effects)
     if command in cli_views.COMMANDS:
         return cli_views.execute(arguments, context, effects)
     if command in ("prepare-work-product", "inspect-proposal", "submit-work-product"):
@@ -458,6 +500,8 @@ def _emit(data):
 def _classify(error, effects):
     """Map failures using types and chained errno, never parsing publication-message wording."""
     operation = effects.get("operation")
+    if operation in cli_tools.COMMANDS:
+        return cli_tools.classify(error, effects)
     if operation in cli_views.COMMANDS:
         return cli_views.classify(error, effects)
     if operation in ("prepare-work-product", "submit-work-product"):
@@ -513,7 +557,7 @@ def _diagnostic(command, error, context):
     # Two 4096-byte paths need at most 49152 ASCII bytes after escaping. Fixed
     # identity/guidance fields and this message cap fit in the remaining allowance.
     message = str(error)[:1000]
-    if command in cli_views.COMMANDS:
+    if command in cli_views.COMMANDS or command in cli_tools.COMMANDS:
         # Bound explanatory text by escaped ASCII bytes, keeping exact recovery
         # paths/identities intact even when each path expands sixfold in JSON.
         while len(json.dumps(message, ensure_ascii=True).encode("ascii")) > 1024:
@@ -539,10 +583,16 @@ def main(argv=None):
                    submission_id=None, next_action=None)
     if arguments.command in cli_views.COMMANDS:
         context = dict.fromkeys(cli_views.CONTEXT_FIELDS)
+    if arguments.command in cli_tools.COMMANDS:
+        context = dict.fromkeys(cli_tools.CONTEXT_FIELDS)
     effects = {"begun": False, "operation": arguments.command}
     try:
         _validate(arguments)
-        if arguments.command not in cli_views.COMMANDS:
+        if arguments.command in cli_tools.COMMANDS:
+            for name in ("config", "batch", "kind", "record_id", "revision"):
+                value = getattr(arguments, name, None)
+                context[name] = str(value) if isinstance(value, Path) else value
+        if arguments.command not in cli_views.COMMANDS and arguments.command not in cli_tools.COMMANDS:
             for name in ("record_id", "revision", "submission_id"):
                 context[name] = getattr(arguments, name, None)
         if hasattr(arguments, "view"):
@@ -561,10 +611,17 @@ def main(argv=None):
                            "Output write, flush or close failed; no complete acknowledgment is claimed.") from error
         return status
     except (Exception, KeyboardInterrupt) as error:
+        if arguments.command in cli_tools.COMMANDS:
+            for name in ("config", "batch"):
+                value = getattr(arguments, name, None)
+                if isinstance(value, Path):
+                    context[name] = str(value)
         failure = _classify(error, effects)
         if effects.get("verified") is not None:
             _proposal_identity(effects["verified"], context, effects)
-        if arguments.command in cli_views.COMMANDS:
+        if arguments.command in cli_tools.COMMANDS:
+            context["next_action"] = cli_tools.guidance(arguments.command, failure)
+        elif arguments.command in cli_views.COMMANDS:
             context["next_action"] = cli_views.guidance(arguments.command, failure)
         elif arguments.command in ("prepare-work-product", "submit-work-product"):
             identity = effects.get("proposal_sha256")

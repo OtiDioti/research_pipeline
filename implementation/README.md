@@ -1,5 +1,10 @@
 # Research workbench foundation
 
+The [passive Tool-record CLI guide](../docs/tool-record-cli.md) documents explicit exact typed
+inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
+private controls, original-ID recovery and a self-contained executable example.
+These operations grant no authentication, permission, qualification or execution.
+
 This directory contains the `theoretical-research-pipeline` distribution and its
 `research_pipeline` import package. It provides package identity, bounded exact
 CLI inspection/checkout and saved-proposal preparation, review and separate submission,

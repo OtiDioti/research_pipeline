@@ -21,7 +21,9 @@ not a scientific admission gate: generic submission resolves
 locators and declared kinds but does not validate typed target content or semantic
 content/link agreement.
 Imports are inert. Use direct submodule imports; no installation or package-level
-re-exports are needed. The CLI still provides only help/version.
+re-exports are needed. The [local CLI](local-cli.md) provides bounded explicit operations; the
+[passive Tool CLI](tool-record-cli.md) adds exact typed inspection and mixed
+ToolRelease/ToolAssessment submission with original-ID recovery.
 
 ## Domain API
 
@@ -239,7 +241,9 @@ rows. Envelopes are reconstructed from normalized relational rows through domain
 constructors; no separately stored envelope can disagree with its link tables.
 The SQLite connection and SQL operations are private. Each handle uses SQLite's
 ordinary same-thread restriction; open independent handles on their owning threads.
-There is no worker endpoint, generic write operation, policy grant or research CLI.
+There is no worker endpoint, generic CLI write operation, policy grant or research
+execution CLI. Explicit saved work-product and passive Tool submissions use the
+existing typed store boundary.
 
 All metadata failures derive from `StoreError`:
 
