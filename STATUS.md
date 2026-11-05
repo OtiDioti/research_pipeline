@@ -55,13 +55,17 @@ D02/D03/D04/D05/M0-E and the product remain partial. D04B1/B2/008/009,
 all13FOLLOWONcriteria,all94requirements and scientific/live/human gates remain.
 B010/B011 gate dependent scientific/live work only. [REQ-D05-006](development/requests/REQ-D05-006.md)
 is READY/unlaunched for explicit passive Tool-record CLI submission/inspection;
-DEV077 records this ordinary independent scope choice. No new start or recovery
-was consumed by preparation. This long recovery/two-repair session reaches a
-context checkpoint. CONTINUOUS persists; no automatic restart supervisor exists.
+DEV077 records this ordinary independent scope choice. Fresh-session recovery on
+2026-11-05 confirms all42 terminal runs,29 integrated exact final sources and the
+deliberately superseded validator acceptance. Native status/diagnose find no lease,
+quarantine or pending integration; host inspection finds only the coordinator's
+read-only status inspection. Exact model/catalog/parser/ChatGPT login readiness,
+clean backend and stable environment identities are refreshed in ENVIRONMENT.md.
+No new start, recovery, implementation change or usage was consumed by readiness.
+CONTINUOUS persists; no automatic restart supervisor exists.
 
 ## Exactly one next safe action
 
-Refresh Git/CWI/host ownership, exact model/environment readiness and budget evidence,
-then launch REQ-D05-006 once from its actual committed clean baseline through the
+Launch REQ-D05-006 once from this actual committed clean baseline through the
 supported backend with all eight role flags,both literal-base checks and existing
 bounds. Count attempted start42 locally before invocation.

@@ -385,3 +385,29 @@ match and source stayed clean. Post-target host inspection finds no surviving
 controller/role/validator. No broad performance claim or extra suite rerun.
 Fresh readiness remains required before a future start42; launch settings and
 all consumed/unknown liabilities persist. Evidence:local/attempts/D05-005-attempt-001/.
+
+## Passive Tool CLI readiness — 2026-11-05 05:05 UTC
+
+Fresh native status/diagnose, using the preserved original backend for schema1,
+reconcile all42 retained runs:30 final receipts,29 exact integrated final sources,
+the deliberately superseded cd93ad37 validator acceptance and12 incomplete
+histories. No lease, quarantine or pending integration exists. Read-only host
+inspection found only the coordinator's concurrent historical status command;
+no implementation controller, role or target validator was observed.
+
+Backend remains clean bcb7ad24f83ff5193345f3d4fa72122ea53a4e66. Codex0.166.0 at
+the recorded path retains executable SHA256b8a11fed; exact adapter compatibility
+and ChatGPT login pass. Catalog fetched2026-11-05T05:03:14.045708215Z advertises
+gpt-6-astra and gpt-6.1-sol with high/xhigh. These are readiness observations,
+not server effective-model attestation or a remaining-quota measurement.
+Stable launch-map SHA256b674ef72 is unchanged. Current nofile1024/1048576 supports
+the prescribed launch-process-only soft4096. No install, dependency, auth/config,
+provider, backend or security change occurred.
+
+REQ-D05-006 retains all eight revision7 role flags, one milestone, repairs2/6,
+2700-second invocation/check limits, permanent full validation plus literal
+committed-base formatting check, and no--merge. Continuous41/100 starts remain
+consumed before attempted42; all recoveries, unknown liabilities and scientific/
+live/human gates persist. Readiness consumes no new start or recovery. Private
+evidence:local/reconciliation-20261105-cli/. The actual clean committed launch
+SHA must be substituted after this administrative checkpoint.
