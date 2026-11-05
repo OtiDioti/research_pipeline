@@ -297,3 +297,7 @@ subsequent mandatory typed registration. All94requirements/13FOLLOWONcriteria,
 D04B1deadline2/2 hold and scientific/live gates remain. Continuous37/100used63remain;
 STATUS owns the single next safe action. This is a long-session context checkpoint,
 not grant revocation, scientific completion or an automatic restart.
+
+## Conservative claim-use freshness integrated; human-directed shutdown — 2026-11-05
+
+[REQ-D02-007/run 8715d97e](development/runs/8715d97e-341b-450a-8281-4760a34ba2cb.md) finally accepted and exact-integrated `1296c93f1bffa306d04a7b240241a5b85275335b`; CWI final and documented-environment target validators each passed 1435/1435. Explicit claim-use bindings and synchronous affected-use reassessment are delivered as a partial R-015/R-077 engineering step, without positive scientific eligibility, policy-change invalidation or promotion. The previous REQ-D04-010 Task attempt remains terminal unaccepted, with same-blocker salvage exhausted; B1 output commitment and dependent B2/008/009 report work remain held/pending. All 94 requirements and 13 FOLLOWON criteria retain their full specification obligations; D02/D03/D04/D05/M0-E/product remain partial, M0-S and live/human scientific gates pending. The human superseded autonomous continuation with graceful shutdown after this checkpoint. No next request or phase was started. STATUS and local/live.md own the current next safe action and handoff.

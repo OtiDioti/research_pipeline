@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** PARTIAL; downstream Source/corpus/project-intake contracts are integrated at d8dffdd/7d6dd624/9373860 with ten typed kinds and396/396 target tests; latest phase-specific REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
+**State:** PARTIAL; downstream Source/corpus/project-intake contracts are integrated at d8dffdd/7d6dd624/9373860 with ten typed kinds and396/396 target tests; latest phase-specific REQ-D02-007 INTEGRATED at 1296c93f1bffa306d04a7b240241a5b85275335b; REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -83,3 +83,7 @@ REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251
 ## Project/intake engineering checkpoint — 2026-10-31
 
 [REQ-D03-003 evidence](../runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md) records exact project history, corpus/document/location coherence and proposal-only readiness at9373860,396/396 target tests. Existing storage/reconciliation/CAS/backup/migration contracts remain intact; meaningful process-fault and retry cases cover the new kind. D02 stays PARTIAL: current eligibility, authority/fencing/resources and full core lifecycle remain required. Next REQ-D03-004 consumes consistent read/storage contracts for local readable snapshots; scientific holds remain unchanged.
+
+## Transactional claim-use freshness checkpoint — 2026-11-05
+
+[REQ-D02-007 / run 8715d97e](../runs/8715d97e-341b-450a-8281-4760a34ba2cb.md) is finally accepted, exact-integrated and target-validated at `1296c93f1bffa306d04a7b240241a5b85275335b`, 1435/1435. Its explicitly registered use bindings and synchronous Review/Issue-driven reassessment generations advance the phase's atomic freshness gate; exact historical pins and backup/migration/recovery remain preserved. It does not certify positive eligibility, an alternative route's sufficiency, policy/context-change freshness or promotion. The phase stays PARTIAL, and the unchecked withdrawal/independent-support obligation above remains open for authenticated sufficiency and full alternative semantics. M0-S, full core records, operational authority and scientific evaluation remain pending. The human directed shutdown after this checkpoint; no new phase/request was started.

@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Human-directed shutdown after integrated freshness slice — 2026-11-05
+
+[REQ-D02-007](development/runs/8715d97e-341b-450a-8281-4760a34ba2cb.md) is accepted, exact-integrated and target-validated at `1296c93f1bffa306d04a7b240241a5b85275335b`. It is partial R-015/R-077 engineering evidence: positive scientific disposition, policy-change invalidation, approved sufficiency, full promotion and human/live scientific gates remain. The human directed this session to stop after its checkpoint; no next request/phase was started and the CONTINUOUS grant was not revoked. Existing D04 B1 Writer-deadline 2/2 and D04-010 failed-draft salvage 2/2 holds persist, with B2/008/009, Task persistence and all 13 FOLLOWON report criteria still mandatory. STATUS owns the single next safe action.
+
 ## Interrupted Task-contract attempt held — 2026-11-05
 
 [REQ-D04-010/run 8cef23e2](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after its controller exited during Writer work. The orphaned Writer later exited; its 17 changed files remain unaccepted and locally preserved. CWI has no final receipt, validation, review, accepted product change, lease or quarantine. Its final response changed after an earlier evidence digest was recorded; preserve the mismatch. Historical interrupted-workflow salvage recovery 2/2 was already exhausted, so a renamed replacement adopting this draft is **BLOCKED for same-blocker recovery** under the current grant. No backend defect is established. D04-010's Task contracts and all broader D04 duties remain mandatory; independent work may proceed only through an actually ready, separate request. STATUS owns the single next safe action.

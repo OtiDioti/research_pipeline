@@ -322,3 +322,7 @@ Exact FF preceded all tracked checkpoint edits; no backend/schema/dependency/pro
 CLI/runtime-prompt change. The administrative checkpoint books start37/100,two
 repairs/eleven completed turns once and prepares REQ-D05-002. All94requirements,
 partial phases, blocked lifecycle path and scientific/live acceptance remain.
+
+## 2026-11-05 — Transactional claim-use freshness integrated; shutdown checkpoint
+
+[REQ-D02-007/run 8715d97e](development/runs/8715d97e-341b-450a-8281-4760a34ba2cb.md) finally accepted and exact-fast-forward integrated at `1296c93f1bffa306d04a7b240241a5b85275335b`, tree `8bee63a609689abbf5ce70c7cd35872992aeecb0`, final receipt SHA-256 `d82f8e0e8600002121d38974b50b098af3b5b13e439d1635a29b21000e2d76ca`. One milestone and a final-review repair closed all findings across three CWI repairs. CWI final 1435/1435 and complete-diff review accepted; a first target check under inherited FD1024/default sandbox failed, then the documented stable environment and FD4096 target check passed 1435/1435 in 1220.596157 seconds with zero other outcomes. The full passing target log is retained under ignored local evidence. The new conservative claim-use freshness contract does not confer positive scientific eligibility or complete R-015/R-077. Continuous start 44/100 and cumulative CWI repairs 41 are booked; backend and coordinator recovery counts remain unchanged. The human directed graceful shutdown after this administrative checkpoint; no subsequent implementation request or phase began.

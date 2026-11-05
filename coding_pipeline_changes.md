@@ -395,3 +395,7 @@ No maintenance candidate,state/evidence rewrite or historical migration. Counts
 remain3/3/0. Read-only audit-helper syntax/log-source assumptions were corrected
 without mutating evidence or consuming recovery. Required target check ran once,
 with exact matching final dispositions. Original backend and failed evidence remain.
+
+## 2026-11-05 — REQ-D02-007 and graceful shutdown; backend unchanged
+
+REQ-D02-007/run `8715d97e-341b-450a-8281-4760a34ba2cb` used clean supported backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66` with its frozen schema-2 role settings. Three CWI product repairs, two final-review rounds and the post-integration validation environment correction did not edit backend source, controller state, receipts or historical evidence. No backend maintenance candidate, attempt, adoption or reversion occurred; cumulative backend counts remain **3/3/0**. The original backend revision remains preserved for old schema-1 inspection. The human directed shutdown after the exact product integration/checkpoint, without another CWI start.
