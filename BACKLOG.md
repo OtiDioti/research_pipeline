@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Narrowly authorized context-freshness salvage — 2026-11-05
+
+The human explicitly permits one additional salvage attempt only for [REQ-D02-009](development/runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) after accidental coordinator cancellation. Original run is safely terminal/noresume;33-file draft preserved without acceptance. REQ-D02-009-R1 is the one permitted replacement, subject to all original acceptance gates. Historical interrupted-salvage2/2 stays exhausted, this separate exception is one-use, and Task/B1/Writer-deadline/orphan-permission and other holds remain. No root-product defect is inferred from unaccepted worktree changes; broader implementation/scientific gaps remain mandatory.
+
 ## Human-directed shutdown after integrated freshness slice — 2026-11-05
 
 [REQ-D02-007](development/runs/8715d97e-341b-450a-8281-4760a34ba2cb.md) is accepted, exact-integrated and target-validated at `1296c93f1bffa306d04a7b240241a5b85275335b`. It is partial R-015/R-077 engineering evidence: positive scientific disposition, policy-change invalidation, approved sufficiency, full promotion and human/live scientific gates remain. The human directed this session to stop after its checkpoint; no next request/phase was started and the CONTINUOUS grant was not revoked. Existing D04 B1 Writer-deadline 2/2 and D04-010 failed-draft salvage 2/2 holds persist, with B2/008/009, Task persistence and all 13 FOLLOWON report criteria still mandatory. STATUS owns the single next safe action.

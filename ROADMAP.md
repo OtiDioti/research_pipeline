@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Context-freshness interruption reconciled; approved recovery — 2026-11-05
+
+[REQ-D02-009/run dc1e5d73](development/runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) is terminal unaccepted after accidental coordinator cancellation; completed Writer reference is preserved, not integrated. Human authorized exactly one additional salvage attempt. [REQ-D02-009-R1](development/requests/REQ-D02-009-R1.md) retains original D02 criteria and fresh CWI gates. D02/M0-E/product and all94requirements/13FOLLOWON/scientific obligations remain partial/pending. No failed Task/B1 path is reopened. STATUS owns execution/counters/next action.
+
 ## Task-contract attempt stopped; independent obligations remain — 2026-11-05
 
 [REQ-D04-010/run 8cef23e2](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after controller interruption; zero candidate validation, review, acceptance or integration. The orphaned Writer has exited and its source is preserved only as unaccepted local evidence. The pre-existing interrupted-workflow salvage limit 2/2 is exhausted; no replacement adopting that draft is authorized. Task contracts, typed persistence, attempts and all original D04 and scientific obligations remain. The integrated product remains REQ-D05-006 at `53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`. Independent requirements may proceed under the continuous grant only after a separate bounded request is scoped. STATUS owns the next safe action.

@@ -51,3 +51,4 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [REQ-D05-006.md](REQ-D05-006.md) — REQ-D05-006 — Passive Tool-record CLI submission and inspection
 - [REQ-DEV-VALIDATION-001-R1.md](REQ-DEV-VALIDATION-001-R1.md) — REQ-DEV-VALIDATION-001-R1 — Preserve import-time unittest module cleanup semantics
 - [REQ-DEV-VALIDATION-001.md](REQ-DEV-VALIDATION-001.md) — REQ-DEV-VALIDATION-001 — Safe automatic concurrent unittest validation
+- [REQ-D02-009-R1.md](REQ-D02-009-R1.md) — One explicitly authorized interrupted-context-freshness salvage

@@ -1,5 +1,9 @@
 # Specification-to-evidence crosswalk
 
+## Target-context interruption and approved replacement — 2026-11-05
+
+[REQ-D02-009/run dc1e5d73](runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) is STOPPED_INCOMPLETE with baseline1470/1470 only; no candidate/review/acceptance/integration or new R-011/R-014/R-015/R-017/R-019/R-077 credit. Human authorized exactly one extra salvage, prepared as REQ-D02-009-R1 with unchanged product criteria and all94requirements/13FOLLOWON/scientific obligations retained. The33-file draft is unaccepted reference only; fresh CWI acceptance and required target validation remain mandatory. Existing REQ-D02-008 evidence is unchanged.
+
 ## Policy freshness partial engineering evidence — 2026-11-05
 
 [REQ-D02-008/run c255a52f](runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md) finally accepted/exact-integrated `ba6bdf39f713cdafab476985c8738267fc9b7dcc`, final/target1470/1470. Twelve accepted criteria add synchronous explicitly pinned policy-identity impact, exact historical downstream causes, coalesced generations, coherent bound/observed pins, finite fail-closed propagation, atomic retries and verified schema5 activation/backup/recovery. This advances bounded R-014/R-015/R-017/R-019/R-077 evidence only. Policy-change freshness is now evidenced within this passive contract; active-context transfer, authenticated sufficiency/alternatives, positive eligibility, policy authority, promotion and full remaining obligations stay pending. R-015/R-077 and D02 remain PARTIAL; all94requirements/13FOLLOWONcriteria/M0-S/live/human gates persist. No failed Task/B1 credit is added.

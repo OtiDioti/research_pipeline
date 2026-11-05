@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Interrupted context-freshness work preserved; recovery prepared — 2026-11-05
+
+Human-reported accidental cancellation left [REQ-D02-009](development/runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) without controller acceptance. After orphan Writer completion/quiescence, supported reconciliation safely stopped it without replay. All33 unaccepted changed files remain recoverable, with frozen reference patch/hash manifest for the single human-authorized REQ-D02-009-R1 replacement. This administrative checkpoint changes no product/backend source and claims no delivered context-freshness feature; latest accepted product remains REQ-D02-008 at ba6bdf39.
+
 ## Coordinator documentation reorganized — 2026-11-05
 
 [DEV-081](DECISIONS.md) consolidates current operating rules under `AGENTS.md`, turns the continuation prompt into a selective evidence path, and makes the runbook and navigation pages refer to their information owners. It removes a duplicate paragraph from the optional single-prompt template and distinguishes live handoffs from safe checkpoint pointers. The local handoff is shortened while its previous snapshot remains under ignored `local/handoffs/`. This is an administrative documentation commit, distinct from CWI accepted source. No product code, backend file, grant, CWI run or validation result changed.

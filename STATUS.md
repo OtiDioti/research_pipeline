@@ -1,5 +1,11 @@
 # Development status
 
+## Accidental interruption reconciled; one authorized salvage — 2026-11-05
+
+Human reports accidental cancellation, directs repair and renewed implementation, and explicitly authorizes **one additional salvage attempt** for REQ-D02-009, preserving all safeguards and the100-start cap. The session shutdown is superseded. [Original run](development/runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) is STOPPED_INCOMPLETE/noresume after one supported reconciliation under exact frozen backend/environment, following actual Writer quiescence. No candidate, milestone, review, receipt or integration exists; baseline1470/1470 only. All33 unaccepted changed files are preserved in a hashed203814-byte reference patch, never installed into main. No owner/lease/quarantine/pending integration remains. All47 histories terminal:33receipts/32integrated sources/one deliberately superseded acceptance/14incomplete;48worktrees preserved. Latest accepted product remains ba6bdf39, final/target1470/1470.
+
+[REQ-D02-009-R1](development/requests/REQ-D02-009-R1.md) preserves all original product criteria and gives the draft only to a new CWI Writer via frozen supported context. No requirement credit is added. Before launch continuous46/100 (54remain); the single approved replacement consumes47/100 (53remain). CWIrepairs42, coordinator18 (reconciliation17, separately authorized salvage preparation18), backend3/3/0. Historical salvage2/2 and all other exhausted limits persist; this one-attempt exception does not reopen Task/B1. Backend remains clean bcb7ad24. Fresh parser/auth probes pass;19:49:35Z catalog advertises both approved models/high/xhigh, exact Codex hash unchanged. Current grant is revision7 plus the narrow amendment below; no scientific/service/spending expansion. No implementation correctness is inferred from the old Writer's completion.
+
 ## Resumed coordination; target-context freshness prelaunch — 2026-11-05
 
 The human resumed CONTINUOUS coordination under AUTH-2026-10-30-001 revision7, superseding prior session shutdowns without new permission or reset. Fresh native Git/CWI evidence reconciles46 terminal histories:33final receipts,32exact final sources integrated,one deliberately superseded validator acceptance and13incomplete histories. No live owner, lease, quarantine or pending integration remains; historical markers/findings are preserved. Latest receipt and target-log hashes match [REQ-D02-008 evidence](development/runs/c255a52f-4034-46dd-b2ff-69e046e7814a.md); accepted source ba6bdf39 is unchanged in clean main. Specification digest matches the grant; backend remains clean bcb7ad24.
@@ -56,4 +62,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Commit the bounded REQ-D02-009 prelaunch records, then count and launch exactly one CWI attempt with the approved explicit role flags and frozen meaningful checks after confirming the clean committed base.
+After verifying the clean committed prelaunch base, count and launch exactly one approved REQ-D02-009-R1 CWI salvage attempt with frozen reference context, all eight role-specific flags and both meaningful checks. No old-run resume or direct source transplant.

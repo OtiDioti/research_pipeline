@@ -403,3 +403,7 @@ REQ-D02-007/run `8715d97e-341b-450a-8281-4760a34ba2cb` used clean supported back
 ## 2026-11-05 — REQ-D02-008; backend unchanged
 
 Run `c255a52f-4034-46dd-b2ff-69e046e7814a` used unchanged clean backend bcb7ad24f83ff5193345f3d4fa72122ea53a4e66 and eight approved recorded role pairs. One CWI product repair, final/target validation and external exact integration did not change backend/controller/evidence. No maintenance attempt/adoption/reversion; cumulative3/3/0. Preserved original backend and historical configurations remain intact.
+
+## 2026-11-05 — REQ-D02-009 accidental interruption; no backend change
+
+Original controller cancellation left a live orphan Writer. Coordinator preserved execution, waited for actual completion/quiescence, then performed one supported resume under unchanged bcb7ad24/environment. It reconciled STOPPED_INCOMPLETE/noresume/completed response requiring explicit adoption; historical observational uncertain_shutdown/logging_incomplete findings are preserved. No backend defect, repair candidate, source/config/prompt/executable/environment/state/receipt/log/lease/quarantine edit or automatic-approval rejection. Attempts/adoptions/reversions remain3/3/0; all previous failed candidates/patches/backups remain. Human explicitly authorizes one additional product salvage attempt, REQ-D02-009-R1, preserving normal acceptance gates. That is not backend maintenance or old-run replay authority.

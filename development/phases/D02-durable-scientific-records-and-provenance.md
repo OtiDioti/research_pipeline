@@ -95,3 +95,7 @@ REQ-D03-002 is accepted/exact-integrated at 7d6dd6246e47ace09ff44a1decef14c93251
 ## Target-context freshness selected — 2026-11-05
 
 After REQ-D02-008 exact integration and required1470/1470 target evidence, [REQ-D02-009](../requests/REQ-D02-009.md) is the next bounded engineering slice: explicitly pinned target-context successor impact, historical downstream propagation and coherent bound/observed pins. It is prepared, not implemented/accepted. Broader context dependency/active-context selection, scientific transfer, sufficient alternatives, authority and promotion remain mandatory. D02 stays PARTIAL.
+
+## Target-context request interrupted; one replacement authorized — 2026-11-05
+
+[REQ-D02-009/run dc1e5d73](../runs/dc1e5d73-1712-4cab-bd32-57c7bf35270f.md) stopped unaccepted after accidental cancellation; baseline1470/1470, zero candidate/review/receipt/integration. Human authorized one extra salvage attempt; [REQ-D02-009-R1](../requests/REQ-D02-009-R1.md) preserves all criteria and complete fresh CWI gates, using exact frozen unaccepted reference. D02/M0-E and product remain partial; no new requirement/scientific credit or broader recovery reset.
