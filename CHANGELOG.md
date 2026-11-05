@@ -1,5 +1,13 @@
 # Integrated development history
 
+## Coordinator documentation reorganized — 2026-11-05
+
+[DEV-081](DECISIONS.md) consolidates current operating rules under `AGENTS.md`, turns the continuation prompt into a selective evidence path, and makes the runbook and navigation pages refer to their information owners. It removes a duplicate paragraph from the optional single-prompt template and distinguishes live handoffs from safe checkpoint pointers. The local handoff is shortened while its previous snapshot remains under ignored `local/handoffs/`. This is an administrative documentation commit, distinct from CWI accepted source. No product code, backend file, grant, CWI run or validation result changed.
+
+## Transactional claim-use freshness integrated — 2026-11-05
+
+[REQ-D02-007 / run 8715d97e](development/runs/8715d97e-341b-450a-8281-4760a34ba2cb.md) was finally accepted and exact-integrated at `1296c93f1bffa306d04a7b240241a5b85275335b`. It adds conservative current-use bindings and synchronous reassessment on Review/Issue changes. Final CWI and documented post-integration validation each passed 1435/1435 tests; the initial target attempt failed under different descriptor and sandbox settings, as recorded in the run record. Positive scientific eligibility, promotion, policy-change freshness and human validation remain outstanding. This entry records an earlier integrated product outcome; the documentation reorganization above does not implement it.
+
 ## Unaccepted REQ-D04-010 attempt recorded — 2026-11-05
 
 [Run 8cef23e2](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after controller interruption. No product change was accepted or integrated; the original checkout remains at administrative `08fb9a0b85d621986d9e4ceb5500e53fde1233b5`, with latest integrated product REQ-D05-006 at `53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`. The orphaned Writer exited; its changed files remain unaccepted and locally preserved. The historical interrupted-workflow salvage limit remains exhausted. This entry records a failed attempt, not a delivered feature.

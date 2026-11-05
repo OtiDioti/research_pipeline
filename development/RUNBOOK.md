@@ -103,9 +103,7 @@ Every new start must pass all eight role flags shown below. No model-selection e
 
 The launch examples are templates for new, unfrozen requests after readiness and authority checks. Do not relaunch the historical commissioning request or reuse a frozen request's old model envelope. The 2026-11-04 maintenance session ended at its documented checkpoint without starting product development; later sessions follow their current human instructions and recorded grant.
 
-Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
-
-Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+Apply the replacement/removal and CWI review-delegation boundaries in [AGENTS.md](../AGENTS.md) §2 while following these operational steps. The runbook supplies commands and checks, not a second copy of the standing coordinator policy.
 
 ## 5. Commit the prelaunch state
 

@@ -114,11 +114,13 @@ CWI's authoritative state is a fourth storage location controlled by CWI, not by
 | Resource consumption | Reconciled attempt/run records, including failed starts | STATUS cumulative summary |
 | Integrated changes | Git plus verified integration record | `CHANGELOG.md` |
 
+For a continuation, start with the current `STATUS.md` checkpoint, the effective human grant and later amendments or revocations in `development/AUTHORIZATION.md`, the local live handoff when present, and actual Git/CWI evidence. Open the active request/run, requirement rows and original specification sections needed for the next action. Verify the authorized specification digest; expand to the full specification if it changed or the crosswalk or evidence is uncertain. Historical records, old decisions, phase plans and product guides are read on demand, not as a blanket startup bundle.
+
+For future checkpoints, keep detailed run identities, validation and review evidence in the run record. Use `STATUS.md` for the current checkpoint and one next action, `ROADMAP.md` for planned scope, `BACKLOG.md` for unresolved/deferred conditions, `REQUIREMENTS.md` for requirement evidence and `CHANGELOG.md` for concise integrated outcomes. Link to the owning record instead of copying its full narrative into every index. Preserve existing historical and frozen evidence.
+
 Do not create separate `CURRENT_STEP.md`, `NEXT_STEP.md`, and `HANDOFF.md` files that all independently assert current state. `STATUS.md` contains the current checkpoint and one next action; the run record and optional local handoff carry detail. This reduces contradictions without losing the requested visibility.
 
-Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
-
-Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+The replacement/removal and CWI review-delegation boundaries are authoritative in [AGENTS.md](AGENTS.md) §2. Apply them when using this development map; this file owns architecture and information ownership, not a second copy of those operating rules.
 
 ## 5. Development units and their relationships
 

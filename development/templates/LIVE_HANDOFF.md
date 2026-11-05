@@ -14,6 +14,8 @@ Store a working copy at `local/live.md`; do not commit it during an active CWI r
 
 On restart, verify these observations against CWI evidence and Git before acting. Transfer only safe, meaningful summaries into tracked records after the active source-binding constraints have ended.
 
+After a terminal, safely recorded checkpoint, the current `local/live.md` may become a concise pointer to `STATUS.md`, the effective grant and exact run record. Preserve its former detailed version under ignored `local/handoffs/` when shortening it. A live or base-bound run still needs the complete recovery details below.
+
 ## Continuous-development additions
 
 - Actual authorization ID/revision and mode; local pending human approval if integration has not occurred.

@@ -39,9 +39,7 @@ The grant must identify the repository, target branch, applicable specification 
 
 A material architecture choice is not automatically a human decision: the coordinator may choose reversible internal details within the specification and document the rationale. Changes to mandatory requirements, scientific intent, data disclosure, external costs, security boundaries, or the operating grant require authorization. Keep this distinction so autonomy does not collapse into questions about every function name.
 
-Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
-
-Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+Apply the replacement/removal and CWI review-delegation boundaries in [AGENTS.md](../AGENTS.md) §2. This file describes the continuous loop and its limits; it does not restate those standing rules.
 
 ## 4. The continuous loop
 
