@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Interrupted Task-contract attempt held — 2026-11-05
+
+[REQ-D04-010/run 8cef23e2](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after its controller exited during Writer work. The orphaned Writer later exited; its 17 changed files remain unaccepted and locally preserved. CWI has no final receipt, validation, review, accepted product change, lease or quarantine. Its final response changed after an earlier evidence digest was recorded; preserve the mismatch. Historical interrupted-workflow salvage recovery 2/2 was already exhausted, so a renamed replacement adopting this draft is **BLOCKED for same-blocker recovery** under the current grant. No backend defect is established. D04-010's Task contracts and all broader D04 duties remain mandatory; independent work may proceed only through an actually ready, separate request. STATUS owns the single next safe action.
+
 ## Tool CLI integrated; existing holds unchanged — 2026-11-05
 
 [Run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) finally accepted/exact-integrated`53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`,

@@ -375,3 +375,7 @@ actual queue/admission/fencing/report/isolation remain mandatory. Preserve134
 predecessor blobs/modes and1372 tests. No failed B1 source,third deadline recovery,
 scientific judgment,scope reduction or authority reset. This is the coordinator's
 ordinary technical choice under the existing grant,not human design approval.
+
+## DEV-079 — Hold failed Task draft; scope independent current eligibility
+
+REQ-D04-010/run8cef23e2 stopped without acceptance after controller interruption and an orphaned Writer. The resulting source is unaccepted, and prior interrupted-workflow salvage recovery 2/2 is exhausted. Do not relabel a replacement, transplant the draft, alter CWI evidence or treat its completed response as an accepted implementation. CWI's later final-response digest mismatch is preserved. With the old process exited and parent clean, independent engineering may proceed. R-015 synchronous current eligibility/invalidation is a candidate because accepted typed Review/Issue and exact transaction contracts exist; it does not consume Task declarations or the failed D04 B1 source. First scope a bounded request against the actual accepted APIs and original §5.5/§7.5 requirements. If a required dependency or scientific decision is missing, record that instead of silently weakening the criterion. This is an operational choice within the existing grant, not a recovery-limit or scientific-authority amendment.

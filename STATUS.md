@@ -1,74 +1,17 @@
 # Development status
 
-## Passive Tool-record CLI integrated — 2026-11-05 Europe/Berlin
+## REQ-D04-010 interrupted without acceptance — 2026-11-05 Europe/Berlin
 
-[REQ-D05-006 / run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) is finally accepted,
-exactly integrated and target-validated at **53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e**,
-tree `cd177c89f8ca43eee1833d1e8c38848231840b33`. Final receipt SHA256 `538f6cb41ecbf655b7cbd4eb192474ac0c644f8b5c58dd33be238d617a9ffe7e`.
-Exact fast-forward from `8a5d4365476c672e8a4e550d275a23bbecf9f90d` completed
-2026-11-05T07:07:46.351757Z before tracked checkpoint edits. Required target
-validation completed 2026-11-05T07:27:58.584518Z: **1372/1372**, zero other outcomes,
-1136.975935 validator seconds, empty stderr, both frozen checks passed, source clean.
-All final/target test dispositions match. Target stdout SHA256 `ba066efc4b0f8184a944c2e8d1d1d2f91bb6f68bba3b1054f7e164c543c6f625`.
+[REQ-D04-010 / run 8cef23e2-42cf-4580-b7f3-8d29520fccf7](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) is STOPPED_INCOMPLETE. The controller exited during Writer work. One supported resume with the frozen backend/environment reconciled the operation and reported `resume_allowed=false`, `new_run_after_manual_salvage`. There is no accepted milestone, candidate validation, final review, final receipt or integration. The later orphaned Writer response differs from the earlier bound digest; retained CWI evidence is preserved, not repaired or replayed. Host inspection at 2026-11-05T09:20:26Z found the orphaned PID 3603993 and matching controller/validation processes absent. CWI reports no lease or quarantine. Seventeen changed run-worktree files are locally preserved with hashes as **unaccepted** evidence; no product files were transplanted.
 
-The source-local CLI now supports exact typed passive Tool inspection and explicit
-nonempty ToolRelease/ToolAssessment batches through existing private controls and
-RecordStore transactions. Original-ID recovery, finite bounds, attribution and
-uncertain acknowledgment remain explicit. This grants no current permission,
-authenticated assessment, qualification credit, scientific support or execution.
-The [executed product guide](docs/tool-record-cli.md) documents the boundary.
+Original main remains clean at administrative commit `08fb9a0b85d621986d9e4ceb5500e53fde1233b5`, tree `3ea24af14620f459172c8d0da12ee760f5c22c21`; the backend remains clean at `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`. Latest finally accepted and integrated product is [REQ-D05-006](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) commit `53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`, receipt SHA256 `538f6cb41ecbf655b7cbd4eb192474ac0c644f8b5c58dd33be238d617a9ffe7e`, final and target 1372/1372. No accepted result awaits integration. All 44 retained runs are terminal: 31 final receipts, 30 exact final sources integrated, one deliberately superseded validator acceptance and 13 incomplete histories.
 
-One internal CWI repair fixed a new replacement-pair fixture that failed before
-its intended CLI checks. Fresh review explicitly closed F-001 and accepted all
-14 milestone criteria; final review accepted the complete change. Initial failing
-candidate and validation remain historical. Forty-six new methods preserve all
-128 predecessor test/helper/fixture/validator blobs and Git modes, all1326 prior
-IDs and the exposed evaluation fixture. There are now134 protected paths,
-excluding navigation indexes. No coordinator recovery or backend change occurred.
+AUTH-2026-10-30-001 revision 7 CONTINUOUS persists. Commissioning 1/3 closed; continuous **43/100 starts used, 57 remain**, including this failed start. CWI repairs 38; backend attempted/adopted/reverted 3/3/0. One additional supported coordinator reconciliation brings interventions to 16; the previously exhausted interrupted-workflow salvage 2/2, orphan-response-permission 2/2, Writer-deadline 2/2 and other consumed families do not reset. A new workflow adopting this failed Task draft is not authorized as a third same-blocker salvage. No backend defect or authorization expansion is established.
 
-All43 retained CWI runs are terminal:31 final receipts,30 exact final sources
-integrated,one validator acceptance deliberately superseded,12 incomplete histories.
-Post-target host inspection finds no controller/role/validator. No current lease,
-quarantine,pending integration or open finding remains. Historical recording
-findings and external ACCEPTED_UNMERGED labels remain preserved. Original schema1
-backend remains available; no historical resume or migration occurred.
+Three completed role transports add 5752271 input tokens (5435264 cached), 89908 output (29266 reasoning) once. Cumulative reported lower bound is **391445594 input (359512960 cached), 3740589 output (1200960 reasoning)** across 339 known turns. Historical interrupted usage, provider quota and invoice remain unknown. Existing ChatGPT development allowance only; no API, purchase, product-live, scientific, push, publication or deployment grant exists.
 
-AUTH-2026-10-30-001 revision7 **CONTINUOUS** persists. Continuous **42/100 starts
-used;58 remain**. Next attempted43 leaves57, including failed preflight.
-Commissioning1/3 closed; cumulative CWI repairs38,coordinator recoveries15,
-backend attempted/adopted/reverted3/3/0. All consumed/exhausted families persist,
-especially B013 Writerdeadline2/2; no failed B1 source was used.
-Eight completed turns add13,664,899input(12,767,616cached),116,597output
-(49,850reasoning) once at this checkpoint. Cumulative reported lower bound:
-**385,693,323input(354,077,696cached),3,650,681output(1,171,694reasoning)**,
-336 known turns. Nested categories included; five historical interrupted roles,
-backend/coordinator,quota/invoice liabilities remain unknown. Existing ChatGPT
-development allowance only; no API,purchase,new service/data,product-live/scientific,
-push,publication/deployment permission is added.
-
-Clean backendbcb7ad24f83ff5193345f3d4fa72122ea53a4e66,pinnedCodex0.166.0/SHA256b8a11fed,
-stable mapb674ef72/validationdigest46f63a41,FD4096,2700-second invocation/check
-limits,one milestone,repairs2/6,two ordered checks,no--merge stayed fixed.
-All8 actual invocations match the eight flags in
-[MODEL_POLICY.md](development/MODEL_POLICY.md). No server effective-model or quota
-attestation. Coordinator checked Designer understanding,bound review/validation/
-receipt/Git identities and integration safety; no routine Writer code/test/diff
-review or duplicate full check. Only the specific failed controller trace was
-read to classify F-001; CWI owned its correction. Read-only audit-helper mistakes
-were corrected without source/state/evidence mutation or recovery consumption.
-
-D02/D03/D04/D05/M0-E and product remain partial. D04B1/B2/008/009,
-all13 FOLLOWON criteria,all94 requirements and scientific/live/human gates remain.
-B010/B011 gate their dependent work. [REQ-D04-010](development/requests/REQ-D04-010.md)
-is READY/unlaunched for pure immutable Task-specification contracts. DEV078 records
-this independent choice; no attempt43 exists. Typed persistence,queue,attempts,
-admission/fencing,isolation and actual execution remain later mandatory work.
-This long recovery/implementation/repair session reaches a safe context checkpoint.
-CONTINUOUS persists; no automatic restart supervisor exists.
+REQ-D04-010 earns no new requirement credit. D02/D03/D04/D05/M0-E and the product remain partial. Task persistence, D04 B1/B2/008/009, all 13 FOLLOWON criteria and all 94 requirements remain mandatory; M0-S, live evaluation and human scientific acceptance are pending. [DEV-079](DECISIONS.md) identifies R-015 current eligibility/invalidation as an independent engineering candidate from accepted Review/Issue contracts, subject to a fresh bounded request and prerequisite check. No automatic restart supervisor is installed.
 
 ## Exactly one next safe action
 
-Refresh Git/CWI/host ownership, exact model/environment readiness and budget evidence,
-then launch REQ-D04-010 once from the actual committed clean baseline through the
-supported backend, all eight role flags, both literal-base checks and existing
-bounds. Count attempted start43 locally before invocation.
+Scope and commit a bounded R-015 current-eligibility/invalidation request from accepted source and specification, without adopting REQ-D04-010's unaccepted draft or resetting its exhausted recovery limit.

@@ -28,6 +28,7 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [7d05376e-aabf-4c5a-9481-91205611eb0c.md](7d05376e-aabf-4c5a-9481-91205611eb0c.md) — REQ-D04-006-R1 — Committed lifecycle sources integrated
 - [7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md) — REQ-D03-004-R1 readable snapshots — 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e
 - [8dc45005-5187-4be0-a009-dece7c493f2b.md](8dc45005-5187-4be0-a009-dece7c493f2b.md) — REQ-D02-005-R1 attributed reviews/issues — 8dc45005-5187-4be0-a009-dece7c493f2b
+- [8cef23e2-42cf-4580-b7f3-8d29520fccf7.md](8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) — REQ-D04-010 — interrupted, unaccepted Task contracts
 - [9af6f133-62d8-4348-b8f2-7d95cbb84928.md](9af6f133-62d8-4348-b8f2-7d95cbb84928.md) — REQ-D02-004 first attempt — 9af6f133-62d8-4348-b8f2-7d95cbb84928
 - [9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md](9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) — REQ-D05-003 — Passive Tool-release registration integrated
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This navigation index.

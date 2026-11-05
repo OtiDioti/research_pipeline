@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Unaccepted REQ-D04-010 attempt recorded — 2026-11-05
+
+[Run 8cef23e2](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after controller interruption. No product change was accepted or integrated; the original checkout remains at administrative `08fb9a0b85d621986d9e4ceb5500e53fde1233b5`, with latest integrated product REQ-D05-006 at `53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`. The orphaned Writer exited; its changed files remain unaccepted and locally preserved. The historical interrupted-workflow salvage limit remains exhausted. This entry records a failed attempt, not a delivered feature.
+
 ## Passive Tool-record CLI integrated — 2026-11-05
 
 [REQ-D05-006 / run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) finally accepted and exact-integrated

@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Task-contract attempt stopped; independent obligations remain — 2026-11-05
+
+[REQ-D04-010/run 8cef23e2](development/runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after controller interruption; zero candidate validation, review, acceptance or integration. The orphaned Writer has exited and its source is preserved only as unaccepted local evidence. The pre-existing interrupted-workflow salvage limit 2/2 is exhausted; no replacement adopting that draft is authorized. Task contracts, typed persistence, attempts and all original D04 and scientific obligations remain. The integrated product remains REQ-D05-006 at `53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`. Independent requirements may proceed under the continuous grant only after a separate bounded request is scoped. STATUS owns the next safe action.
+
 ## Passive Tool CLI delivered; independent Task contracts ready — 2026-11-05
 
 [REQ-D05-006 / run 0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](development/runs/0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) finally accepted and exactly
