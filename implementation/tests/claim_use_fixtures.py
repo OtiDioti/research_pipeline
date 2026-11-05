@@ -91,3 +91,45 @@ def populate(store, *, uses=True):
         initial = batch("register", [downstream, independent, upstream])
         return artifact, initial, store.submit_typed(initial)
     return artifact
+
+
+def target_context_graph(store):
+    """Store disjoint target scopes, a conjunctive alternative and historical downstream pins.
+
+    Candidate/route/premise/evidence contexts deliberately remain `scope`; only
+    explicit ClaimUse target scopes establish the new identity watches. Returned
+    requests and values are setup data, never expected freshness calculations.
+    """
+    artifact = populate(store, uses=False)
+    scope = ResearchContext(question="Old target question", equations=["d2x/dt2 = -x"],
+                            definitions=["x is displacement"], units=["time in seconds"],
+                            conventions=["real coordinates"], mathematical_domains=["x in R"],
+                            boundary_conditions=["periodic boundary"], initial_conditions=[],
+                            parameter_regime=["weak coupling"], approximations=["linear order"],
+                            limit_ordering=["volume before time"])
+    records = [encode_envelope(identity, 1, replace(scope, question=identity), PROVENANCE)
+               for identity in ("target-a", "target-b", "target-d", "target-i")]
+    route = Justification(ref("scope", "context", "research_context"),
+        [ref(p, "premise", "claim") for p in ("premise-a", "premise-b")], [], "Conjunction",
+        [ref("candidate", "conclusion", "claim")], [ref("evidence", "evidence", "evidence")], [])
+    records.append(encode_envelope("conjunction", 1, route, PROVENANCE))
+    records.extend(assessment_envelope(identity, 1, review(candidate, route, context), PROVENANCE)
+        for identity, candidate, route, context in (
+            ("context-review-a", "candidate", "conjunction", "target-a"),
+            ("context-review-alt", "candidate", "route-b", "target-a"),
+            ("context-review-d", "downstream", "route-d", "target-d")))
+    store.submit_typed(batch("target-science", records))
+    upstream = replace(binding(), target_context=ref("target-a", "target_context", "research_context"),
+        routes=[ClaimUseRoute(ref("conjunction", "support_route", "justification"),
+            [ClaimUsePremise(ref(p, "premise", "claim"), None) for p in ("premise-a", "premise-b")],
+            [ref("context-review-a", "support_assessment", "review")]),
+            ClaimUseRoute(ref("route-b", "support_route", "justification"),
+            [ClaimUsePremise(ref("premise-b", "premise", "claim"), None)],
+            [ref("context-review-alt", "support_assessment", "review")])])
+    downstream = replace(binding("downstream", ("route-d",), ("context-review-d",), ("candidate",), "use"),
+                         target_context=ref("target-d", "target_context", "research_context"))
+    independent = replace(binding("unrelated", (), (), ()),
+                          target_context=ref("target-i", "target_context", "research_context"))
+    request = batch("target-register", [use_envelope(i, 1, v, PROVENANCE) for i, v in
+                    (("downstream-use", downstream), ("unrelated-use", independent), ("use", upstream))])
+    return artifact, request, store.submit_typed(request), upstream, downstream, independent

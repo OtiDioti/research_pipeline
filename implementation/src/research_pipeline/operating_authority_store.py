@@ -121,11 +121,11 @@ def _ref(envelope, role):
 
 
 def _require_store(store):
-    """Preserve closed/layout errors and require the existing schema-2/3/4/5 record model."""
+    """Preserve closed/layout errors and require the existing schema-2/3/4/5/6 record model."""
     from research_pipeline.store import StoreLayoutError
     store._require_open()
-    if store._schema_version not in (2, 3, 4, 5):
-        raise StoreLayoutError("operating decisions require explicit migration to schema 2, 3, 4 or 5")
+    if store._schema_version not in (2, 3, 4, 5, 6):
+        raise StoreLayoutError("operating decisions require explicit migration to schema 2, 3, 4, 5 or 6")
 
 
 class _Reader:

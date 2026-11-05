@@ -7,6 +7,12 @@ rendered report, continuation output, publication, acknowledgment, restart
 readiness, or worker admission. The accepted offline binding remains structural
 evidence; capture verifies its persisted origin independently.
 
+Schema support extends through explicit schema 6, using the actual registry-derived
+schema identity in new captures and retaining original-operation reconciliation,
+authentication/guards and resource liabilities. Old saved documents retain exact
+bytes and interpretation. Target-context freshness shares the existing insertion
+transaction; it grants no work admission or scientific authority.
+
 ## Public boundary and identities
 
 Import contracts/codecs/errors from `research_pipeline.lifecycle_report_source`.

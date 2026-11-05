@@ -3,8 +3,10 @@
 `research_pipeline.claim_use` defines passive exact bindings. Register them with
 `RecordStore.submit_typed(Submission(...))`, using `encode_envelope`; the result is
 an unchanged `SubmissionReceipt`. Generic `submit` recognizes the same explicit
-content and enforces the same registration and freshness rules. Policy-head freshness requires opt-in schema 5; schema 4 retains its original
-Review/Issue semantics. Neither path produces positive scientific eligibility, promotion or authorized disposition.
+content and enforces the same registration and freshness rules. Policy-head
+freshness requires opt-in schema 5; target-context freshness requires opt-in schema 6. Schema 4 retains its original Review/Issue semantics and schema 5
+retains its original policy semantics and version-2 inspection. Neither path
+produces positive scientific eligibility, promotion or authorized disposition.
 
 ## Values and wire contract
 
@@ -97,7 +99,8 @@ scope. This history union invalidates conservatively; it never replaces a pin or
 certifies support. An independent Review in another context does not affect an
 old-scope use merely by naming the same claim. Under the historical schema-4
 contract, policy-head advancement alone does not increment generations. Unrelated
-contexts and unrelated global events do not increment generations on either schema.
+contexts and unrelated global events do not increment generations.
+Schema 6 watches only explicitly pinned target contexts, as described below.
 
 Reverse explicit upstream edges propagate affected binding nodes to completion.
 Historical binding nodes remain traversable: D pinning U@1 still receives relevant
@@ -117,7 +120,7 @@ persisted inspection; applicable assertion and registration reasons share genera
 Planning, ordinary typed admission, record/head/link/receipt/event insertion and
 freshness application occur under the same owning `BEGIN IMMEDIATE` transaction.
 The shared insertion seam covers report, control, source and operating writers.
-It indexes every schema-4/5 revision/event and selected original association-link
+It indexes every schema-4/5/6 revision/event and selected original association-link
 occurrence after the actual receipt exists, even when no freshness plan is needed.
 These navigation projections share the owning transaction and exact-retry behavior.
 No worker, post-commit scan or second commit exists. Any planning/application
@@ -180,10 +183,12 @@ immutable use snapshots independently of current generations.
 | Record/artifact reference occurrences | 8,192 |
 | Assertion revisions | 1,024 |
 | Exact policy Decision revisions (schema 5, independent of assertions) | 1,024 |
+| Exact required target-context revisions (schema 6) | 1,024 |
+| Target-context observation occurrences (schema 6) | 512 |
 | Visited use bindings | 512 |
 | Examined freshness index rows | 8,192 |
 | Current-use transitions | 128 |
-| Retained cause entries | 8,192 |
+| Attempted cause entries, before deduplication | 8,192 |
 | Explicit support depth | 64 |
 | Distinct verified direct artifacts | 256 |
 | Aggregate verified direct artifact sizes | 64 MiB |
@@ -432,6 +437,153 @@ live evaluation and human scientific/release acceptance remain future work. D02
 remains **PARTIAL**.
 R-015 and R-077 remain **PARTIAL**.
 
+## Schema-6 target-context freshness and activation
+
+Create with ordinary integer `RecordStore.create(root, schema_version=6)` to opt in.
+Creation still defaults to schema 2; opening schemas 1–5 never upgrades them.
+ClaimUse content/envelopes remain version 1, receipts and public method signatures
+are unchanged, and `ClaimUseInspectionLimits` still has exactly six fields.
+Schema 4 keeps its exact version-1 inspection and Review/Issue behavior; schema 5
+keeps its exact version-2 inspection and policy behavior, without context fields
+or context-driven transitions.
+
+Only a registered binding's explicit `ClaimUse.target_context` dependency, stored
+with role `context`, watches ResearchContext identity successors. Candidate,
+route, premise, evidence, assessment and arbitrary links, prose, record kind and
+unregistered generic promotion documents do not create watches. Every admitted
+successor is potentially material, including prose-only and identical declarations;
+first creation is not an advancement. Unwatched generic research_context records
+retain generic admission semantics. A required watched scope must have supported,
+complete, canonical ResearchContext content and coherent ordered projection.
+Missing, wrong-kind, malformed, unsupported or temporally unavailable required
+metadata fails explicitly; incomplete impact is never silently omitted.
+
+Discovery seeks exact target identity/kind/role through `claim_use_dependency_watch`,
+then the visible registration-event range and complete index suffix. It includes
+historical bindings and same-batch dependency occurrences without scanning context
+revision histories or registrations. Bound scope, preceding visible head without
+the proposed overlay, and proposed successor resolve independently; the preceding
+head must be successor revision minus one. Propagation never reads historical
+attachment bytes. Ordinary new typed registration and new-submission artifact
+checks retain their existing guarantees.
+
+Each direct cause has exactly:
+
+- `type="target_context_changed"`, `binding`, `dependency_ordinal`,
+  `bound_context`, `previous_context`, `new_context`.
+
+`binding` is the originating exact promotion_eligibility pin. Each context is an
+exact `{record_id, revision, target_kind:"research_context"}` pin.
+`previous_context` is the actual pre-submission head, independently of the bound
+revision. Same-batch bindings pinning either an old revision or the successor
+participate. Each matched occurrence and attempted cause is charged before
+canonical deduplication. Context, policy, Review and Issue origins enter the same
+delta worklist once; downstream transitions retain all distinct originating causes
+and immediate `upstream_affected` reasons, including late arrivals in diamonds.
+Historical nodes remain traversable after rebinding: D pinned to U@1/A follows A
+after current U@2/B, while U@2 changes only through its own dependencies. Pins
+never redirect. Registration alone does not invalidate downstream uses. All effects
+coalesce into generation 1 for first registration, otherwise one increment per
+affected final current identity in the owning submission transaction.
+
+Schema-6 current inspection is version 3, retaining every version-2 field and adding:
+
+- `observed_target_contexts`, ordered by binding identity, binding revision and
+  dependency ordinal. Every visited exact root/upstream binding's role=context
+  occurrence contains exactly `binding`, `dependency_ordinal`, `bound_context`,
+  `observed_context`, `bound_content`, `observed_content`, `attributed=true`, and
+  `superseded`. Both content values are complete supported ResearchContext
+  declarations, including equations, domains, boundary conditions, approximations
+  and limit ordering. Historical upstream contexts remain visible even after the
+  upstream identity rebinds. `superseded` means observed revision > bound revision;
+  an absent head or a head older than the bound pin is an integrity failure.
+- `target_context_freshness={"available":true,"activation_event_watermark":...}`.
+
+The existing `context`, binding, support and Review pins remain immutable.
+`mechanical_freshness.last_transition` is the exact stored transition; `reasons`
+is the canonical deduplicated union of stored causes, derived policy reasons and
+`target_context_pin_superseded` reasons. Each context supersession reason contains
+only `type`, `binding`, `dependency_ordinal`, `bound_context`, `observed_context`.
+Derived observations neither write rows nor increment generations. Registration
+against an already advanced head immediately exposes supersession without inventing
+an earlier transition. History retains its version-1 page structure and original
+stored transitions. Every transitioning current root receives a complete maximum-limit
+prospective inspection before insertion, including proposed heads and forward
+registrations; independent root work also charges the aggregate write account.
+
+The immutable `WRITE_LIMITS` adds `context_revisions=1024` and
+`context_observations=512`, independent of policy/assertion accounts and without new
+public limit parameters. Every distinct required bound, previous, proposed or
+observed exact scope resolution counts once per Reader; independent prospective
+readers also charge the aggregate write account. Observations count before each
+emitted occurrence, including repeated root preparations. Other candidate/route/
+premise contexts alone do not consume these semantic accounts. Both full content
+representations consume metadata and result capacity. Rejected candidates,
+repeated edges, attempted duplicate causes, repeated output, serialization and
+codec scratch count before allocation. All existing numerical ceilings remain;
+there is no truncation. `ClaimUseLimitError` names the exhausted dimension and
+aborts the entire write. Generation overflow and scientific event exhaustion
+reject atomically, including scientific writes with no freshness effects.
+
+Exact format/schema `(6,6)` backups restore metadata bytes and all three origins
+unchanged by default. The sole new migration is explicit
+`restore_backup(schema5_backup, absent_destination, target_schema=6,
+migration_provenance=...)`; older stores take consecutive 1→2→3→4→5 steps first.
+Skipped, backward, in-place and malformed options fail before reservation. Within
+the unpublished copy's single transaction, SQL copies all six administrative
+columns, appends the attributed 5→6 source-backup/manifest row, and creates
+`claim_use_context_origin` at the exact maximum source scientific event ID (zero
+when empty). All requests, fingerprints, scientific revisions, heads, ordered
+links, events, resources, bindings, generations, causes, timestamps, receipts and
+earlier origins stay unchanged. No replay, backfilled transition or rewritten
+scientific evidence occurs. Integrity and independent activation inspections run
+before commit/publication. `.restore-incomplete` remains through transformation,
+committed-unpublished and publication failures; recovery requires a new absent
+destination and leaves source stores/backups unchanged.
+
+The context singleton requires exact integer scalar types, uniqueness, zero for
+fresh schema 6 and a matching 5→6 migration when activated. Origins satisfy
+registration ≤ policy ≤ context ≤ current scientific maximum; a nonzero watermark
+must name an existing event. Inconsistencies are rejected, never repaired.
+Chronological verification enables policy semantics only strictly after policy
+activation and context semantics only strictly after context activation. At/below
+each boundary, its preceding preparation, output, causes and accounts remain exact.
+ResearchContext submissions enter freshness selection only under active context
+semantics. Independent policy boundary inspections always use schema-5 semantics
+with context disabled; context boundary inspections use schema-6 semantics.
+Each pass streams registered identities at its watermark and seeks the first later
+event as a strict cutoff, or uses the current snapshot when none exists. It never
+uses watermark+1 or charges later heads, bindings, assertions or index occurrences
+against earlier views. Boundary roots have independent accounts. Unusable required
+metadata or oversized complete boundary views rejects migration before publication.
+
+For requests newly relevant only because of policy/context processing, a safely
+validated submission-ID existence probe bypasses new preflight restrictions on
+completed IDs. The owning transaction still compares the complete canonical
+request and returns the original receipt before CAS, target resolution, planning
+or artifact checks. Conflicting reuse still raises `SubmissionConflictError`.
+Typed retries may locally decode the saved request, but perform no fresh target or
+artifact admission. Large unrelated historical generic context declarations
+legitimately admitted under schema 5 remain preservable and retryable.
+
+Resource snapshots and new report/control/lifecycle captures use actual schema 6
+and its registry-derived identity; old saved documents retain exact interpretation
+and bytes. Dedicated operating/report/control/source writers retain authentication,
+guards, shared insertion and original-operation reconciliation. Resource liabilities
+remain intact; typed Decision admission and authority boundaries are unchanged.
+
+Context advancement is a conservative reassessment signal. It does not assert
+falsity, inapplicability, scientific sufficiency, policy authority, support transfer
+or adoption of an active project context. Support/applicability reports remain
+attributed; alternatives and complete conjunctions retain their original scope and
+unresolved transfer limitations. `eligible=false`, `requires_reassessment=true`
+and `authorized_disposition.available=false` remain permanent in this slice.
+D02, R-015, R-077 and the product remain **PARTIAL**. Broader context applicability
+and project active-context selection, explicit scientific transfer, authenticated
+sufficient alternatives/policy authority, positive eligibility/promotion/disposition,
+remaining task/lifecycle/report obligations, all 94 requirements and 13 FOLLOWON
+criteria, M0-S, live evaluation and human scientific/release signoff remain mandatory.
+
 ## Executable synthetic example
 
 This block uses only the standard library and product APIs. It is executed
@@ -467,9 +619,9 @@ def request(identity, records):
     return Submission(identity, provenance, records, {r.record_id: r.revision-1 for r in records})
 
 
-def review(candidate, route):
+def review(candidate, route, scope="scope"):
     """Report favorable synthetic scope; this grants no positive authorization."""
-    return Review(pin(candidate, "candidate_claim", "claim"), pin("scope", "target_context", "research_context"),
+    return Review(pin(candidate, "candidate_claim", "claim"), pin(scope, "target_context", "research_context"),
         "synthetic reviewer", IndependenceDeclaration("candidate_aware_audit", "candidate_aware_audit",
         [], [], [], [], [], [], []), pin("manifest", "context_manifest", "work_product_manifest"),
         pin("policy", "authorization_policy", "decision"), [],
@@ -479,46 +631,53 @@ def review(candidate, route):
         [], [], [], "synthetic")
 
 
-def use(candidate, declarations, policy="policy"):
+def use(candidate, declarations, policy="policy", scope="scope"):
     """Keep alternatives separate and each route's premise support explicit."""
-    return ClaimUse(pin(candidate, "candidate_claim", "claim"), pin("scope", "target_context", "research_context"),
+    return ClaimUse(pin(candidate, "candidate_claim", "claim"), pin(scope, "target_context", "research_context"),
         [ClaimUseRoute(pin(route, "support_route", "justification"),
          [ClaimUsePremise(pin(premise, "premise", "claim"),
-          None if upstream is None else pin(upstream, "premise_use", "promotion_eligibility"))],
+          None if upstream is None else pin(upstream, "premise_use", "promotion_eligibility"))
+          for premise, upstream in premises],
          [pin(assessment, "support_assessment", "review")])
-         for route, premise, assessment, upstream in declarations], [],
+         for route, premises, assessment in declarations], [],
         [pin(policy, "authorization_policy", "decision")], ["Synthetic only"])
 
 
 with TemporaryDirectory() as temporary:
-    root = Path(temporary) / "schema5"
-    with RecordStore.create(root, schema_version=5) as store:
+    root = Path(temporary) / "schema6"
+    with RecordStore.create(root, schema_version=6) as store:
         store.submit(request("generic", [RecordEnvelope(identity, 1, kind, {}, provenance)
             for identity, kind in (("policy", "decision"), ("other-policy", "decision"), ("manifest", "work_product_manifest"))]))
-        context = ResearchContext("Synthetic scope", [], [], [], [], [], [], [], [], [], [])
-        records = [encode_envelope("scope", 1, context, provenance)]
+        context = ResearchContext(question="Synthetic scope", equations=["d2x/dt2 = -x"],
+            definitions=[], units=[], conventions=[], mathematical_domains=["x in R"],
+            boundary_conditions=["periodic"], initial_conditions=[], parameter_regime=[],
+            approximations=["linear"], limit_ordering=["volume before time"])
+        records = [encode_envelope(identity, 1, context, provenance) for identity in
+                   ("scope", "downstream-scope", "independent-scope", "rebound-scope")]
         for identity in ("candidate", "premise-a", "premise-b", "downstream", "independent"):
             records.append(encode_envelope(identity, 1, Claim(identity, "synthetic", [],
                 pin("scope", "context", "research_context"), [], [], []), provenance))
-        for route, premise, candidate, assessment in (
-            ("route-a", "premise-a", "candidate", "review-a"),
-            ("route-b", "premise-b", "candidate", "review-b"),
-            ("route-d", "candidate", "downstream", "review-d")):
+        for route, premises, candidate, assessment in (
+            ("route-a", ("premise-a", "premise-b"), "candidate", "review-a"),
+            ("route-b", ("premise-b",), "candidate", "review-b"),
+            ("route-d", ("candidate",), "downstream", "review-d")):
             records.extend([
                 encode_envelope(route, 1, Justification(pin("scope", "context", "research_context"),
-                    [pin(premise, "premise", "claim")], [], route,
+                    [pin(premise, "premise", "claim") for premise in premises], [], route,
                     [pin(candidate, "conclusion", "claim")], [], []), provenance),
-                encode_assessment(assessment, 1, review(candidate, route), provenance)])
+                encode_assessment(assessment, 1, review(candidate, route, "downstream-scope" if candidate == "downstream" else "scope"), provenance)])
         store.submit_typed(request("science", records))
         binding = encode_use("use", 1, use("candidate", [
-            ("route-a", "premise-a", "review-a", None),
-            ("route-b", "premise-b", "review-b", None)]), provenance)
+            ("route-a", [("premise-a", None), ("premise-b", None)], "review-a"),
+            ("route-b", [("premise-b", None)], "review-b")]), provenance)
         downstream = encode_use("downstream-use", 1, use("downstream", [
-            ("route-d", "candidate", "review-d", "use")]), provenance)
-        independent = encode_use("independent-use", 1, use("independent", [], "other-policy"), provenance)
+            ("route-d", [("candidate", "use")], "review-d")], scope="downstream-scope"), provenance)
+        independent = encode_use("independent-use", 1, use("independent", [], "other-policy", "independent-scope"), provenance)
         saved = request("register", [downstream, independent, binding])  # forward use reference
         original_receipt = store.submit_typed(saved)
         old_binding = store.get_typed_revision("use", 1)
+        initial = store.inspect_claim_use("use", limits=limits).to_dict()
+        assert len(initial["routes"]) == 2 and len(initial["routes"][0]["premises"]) == 2
         assert store.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 1
         withdrawn = replace(review("candidate", "route-a"), route_assessments=[
             SupportRouteAssessment(pin("route-a", "assessed_route", "justification"),
@@ -535,7 +694,7 @@ with TemporaryDirectory() as temporary:
             assert current["status"] == "requires_reassessment"
         # Rebind the current use to Q, retaining D's exact historical U@1/P pin.
         store.submit_typed(request("rebind", [encode_use("use", 2,
-            use("candidate", [], "other-policy"), provenance)]))
+            use("candidate", [], "other-policy", "rebound-scope"), provenance)]))
         store.submit(request("policy-prose", [RecordEnvelope("policy", 2, "decision",
             {"declaration": "Prose-only change; no new authority"}, provenance)]))
         current = store.inspect_claim_use("use", limits=limits).to_dict()
@@ -552,12 +711,32 @@ with TemporaryDirectory() as temporary:
         store.submit(request("other-policy-prose", [RecordEnvelope("other-policy", 2, "decision", {}, provenance)]))
         assert store.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 6
         assert store.inspect_claim_use("downstream-use", limits=limits).to_dict()["generation"] == 5
+        # A changes only historical U@1 and its recorded consumer; current U@2 pins B.
+        store.submit_typed(request("old-context-successor", [encode_envelope("scope", 2,
+            replace(context, question="Prose-only successor"), provenance)]))
+        downstream_view = store.inspect_claim_use("downstream-use", limits=limits).to_dict()
+        assert downstream_view["version"] == 3 and downstream_view["generation"] == 6
+        assert store.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 6
+        observed_scope = next(c for c in downstream_view["observed_target_contexts"]
+                              if c["binding"]["record_id"] == "use")
+        assert observed_scope["binding"]["revision"] == 1
+        assert observed_scope["bound_context"]["revision"] == 1
+        assert observed_scope["observed_context"]["revision"] == 2 and observed_scope["superseded"]
+        assert observed_scope["bound_content"]["boundary_conditions"] == ["periodic"]
+        assert observed_scope["bound_content"]["limit_ordering"] == ["volume before time"]
+        causes = downstream_view["mechanical_freshness"]["last_transition"]["causes"]
+        assert any(c["type"] == "target_context_changed" and c["binding"]["revision"] == 1 for c in causes)
+        store.submit(request("current-context-successor", [encode_envelope("rebound-scope", 2, context, provenance)]))
+        current = store.inspect_claim_use("use", limits=limits).to_dict()
+        assert current["generation"] == 7 and current["eligible"] is False
+        assert current["authorized_disposition"]["available"] is False
+        assert store.inspect_claim_use("downstream-use", limits=limits).to_dict()["generation"] == 6
         assert store.head("candidate") == 1
         assert store.get_typed_revision("use", 1) == old_binding
         assert store.get_typed_revision("review-a", 1)[1].route_assessments[0].outcome == "sufficient"
         assert store.submit_typed(saved) == original_receipt
-        assert len(store.claim_use_history("use", limits=limits).to_dict()["transitions"]) == 6
+        assert len(store.claim_use_history("use", limits=limits).to_dict()["transitions"]) == 7
     with RecordStore.open(root) as reopened:
-        assert reopened.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 6
+        assert reopened.inspect_claim_use("use", limits=limits).to_dict()["generation"] == 7
         assert reopened.submit_typed(saved) == original_receipt
 ```

@@ -1,4 +1,7 @@
-"""Exact schema-4 freshness projections, installed only by creation or explicit migration."""
+"""Exact freshness projections and independent registration, policy and context origins.
+
+Only explicit creation or verified forward migration installs these contracts.
+"""
 
 FRESHNESS_DDL = (
     """CREATE TABLE claim_use_origin (
@@ -81,6 +84,12 @@ FRESHNESS_DDL = (
 # Policy activation is independent of registration activation: migrating preserves
 # every previously stored transition and only enables new policy events.
 POLICY_ORIGIN_DDL = """CREATE TABLE claim_use_policy_origin (
+        singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
+        event_watermark INTEGER NOT NULL CHECK(typeof(event_watermark) = 'integer' AND event_watermark >= 0)
+    )"""
+
+# Target-context activation is independent of earlier registration/policy events.
+CONTEXT_ORIGIN_DDL = """CREATE TABLE claim_use_context_origin (
         singleton INTEGER PRIMARY KEY CHECK(singleton = 1),
         event_watermark INTEGER NOT NULL CHECK(typeof(event_watermark) = 'integer' AND event_watermark >= 0)
     )"""

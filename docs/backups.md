@@ -1,7 +1,7 @@
 # Verified local backup and restoration
 
 `research_pipeline.backup` provides an explicit trusted-controller boundary for
-schema-1, schema-2, schema-3, schema-4 and schema-5 `RecordStore` data. Import directly from this submodule. Imports are
+schema-1, schema-2, schema-3, schema-4, schema-5 and schema-6 `RecordStore` data. Import directly from this submodule. Imports are
 inert; there is no CLI, dependency, environment-selected location, scheduler,
 worker endpoint or general SQL interface. Callers select paths outside software
 source, relative to their working directory or absolute, under existing parents.
@@ -11,7 +11,7 @@ Parent-traversal components and symlinked ancestors are rejected, not resolved.
 | --- | --- |
 | `create_backup(source: RecordStore, destination) -> BackupInfo` | Capture an open, owning-thread source without an active transaction into an absent destination. |
 | `inspect_backup(root) -> BackupInfo` | Verify a complete backup without recovery, writes, permission changes or sidecars. |
-| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate one step through v1→v2→v3→v4→v5. Return an independent handle after publication barriers. Close it or use a context manager. |
+| `restore_backup(root, destination, *, target_schema=None, migration_provenance=None) -> RecordStore` | Verify before reserving an absent runtime; restore exactly by default or explicitly migrate one step through v1→v2→v3→v4→v5→v6. Return an independent handle after publication barriers. Close it or use a context manager. |
 
 `BackupInfo` is frozen and contains `backup_id: str`, `format_version: int`,
 `schema_version: int`, `metadata: ArtifactReference`, and
@@ -43,10 +43,10 @@ manifest field set is:
 {"format_version":1,"schema_version":1,"metadata":{"digest":"<64 lowercase hex characters>","size":123},"artifacts":[{"digest":"<64 lowercase hex characters>","size":456}]}
 ```
 
-Only `(format_version, schema_version)` pairs `(1, 1)`, `(2, 2)`, `(3, 3)`, `(4, 4)` and `(5, 5)` are supported.
+Only `(format_version, schema_version)` pairs `(1, 1)`, `(2, 2)`, `(3, 3)`, `(4, 4)`, `(5, 5)` and `(6, 6)` are supported.
 The example shows the historical format-1 representation; format 2 has the same
 four exact fields and reference shapes with both version values set to 2.
-Schemas 3, 4 and 5 use the same shape with both versions set to the schema
+Schemas 3, 4, 5 and 6 use the same shape with both versions set to the schema
 version, including the entire resource ledger and applicable freshness metadata.
 Legacy canonical serialization and `backup_id` hashing are unchanged. Crossed
 pairs, unknown versions and disagreement with the actual database are rejected.
@@ -118,9 +118,10 @@ all twenty generic kinds. Neither path changes the backup or source.
 
 Supported migrations are verified format-1/schema-1 backups into absent schema2
 runtimes, verified format-2/schema-2 backups into absent schema3 runtimes, verified
-format-3/schema-3 backups into absent schema4 runtimes, and verified
-format-4/schema-4 backups into absent schema5 runtimes.
-Supply the next `target_schema` (`2`, `3`, `4` or `5`) and
+format-3/schema-3 backups into absent schema4 runtimes, verified
+format-4/schema-4 backups into absent schema5 runtimes, and verified
+format-5/schema-5 backups into absent schema6 runtimes.
+Supply the next `target_schema` (`2`, `3`, `4`, `5` or `6`) and
 `migration_provenance=CreationProvenance(actor, created_at, details)` explicitly.
 The actor and UTC timestamp are caller supplied; details may be `{}`. Attribution
 is reconstructed and validated at the API boundary and serialized canonically.
@@ -128,10 +129,11 @@ No operator, timestamp, migration request or scientific authority is inferred.
 
 Both options default to `None`, selecting exact restoration. `BackupLayoutError`
 rejects provenance without a target, missing or malformed attribution with a
-target, and targets other than ordinary integers `2`, `3`, `4` and `5` (including booleans,
-strings and floats). Direct 1→3, same-version migrations, downgrades and every
-explicit non-next target on a schema3/4/5 source are rejected. Invalid options and damaged backups
-fail before destination reservation. There is no live in-place migration,
+target, and targets other than ordinary integers `2`, `3`, `4`, `5` and `6` (including
+booleans, strings and floats). The target must also be the verified source schema's
+immediate successor. Skipped steps such as direct 1→3, same-version requests and
+downgrades are rejected. Invalid options and damaged backups fail before destination
+reservation. There is no live in-place migration,
 automatic upgrade on open, public v1 creation option or general conversion API.
 
 After full read-only source verification, restore reserves the destination and
@@ -467,3 +469,28 @@ inspection seeks the first later event as its strict cutoff so later history nev
 changes activation accounts. Required policy metadata or complete views exceeding
 finite limits reject migration before publication. See the exact causes, bounds
 and trust limits in [claim-use freshness](claim-use-freshness.md).
+
+## Explicit target-context activation (schema 6)
+
+Default format/schema `(6,6)` restore preserves metadata bytes and all three origins.
+Only `target_schema=6` with explicit `migration_provenance` transforms a verified
+schema-5 source into a new absent destination. Earlier versions require consecutive
+steps; skipped, backward, malformed and in-place options fail before reservation.
+The unpublished copy's owning transaction SQL-copies all six administrative
+columns, appends its attributed 5→6 source-backup/manifest row and creates
+`claim_use_context_origin` at the exact source scientific maximum, zero if empty.
+All other stored values, including earlier origins, resources, liabilities,
+scientific revisions, requests, generations, causes and receipts remain unchanged.
+There is no submission replay or context-transition backfill. Schema/application,
+ledger and chronological freshness checks plus independent activation inspections
+run before commit and publication. Required malformed or oversized context
+metadata/views reject activation. The existing `.restore-incomplete` marker covers
+transformation, committed-unpublished and publication failure; retry recovery uses
+a new absent destination and leaves the original store/backup unchanged.
+
+Context events at/below activation retain schema-5 interpretation. Version-3
+inspection may derive supersession of an old pin without claiming a historical
+transition. The next successor records the actual pre-submission context head.
+Independent policy boundary inspections remain context-disabled; each activation
+pass seeks the first later scientific event as its strict cutoff, never watermark+1.
+See [the complete temporal, cause and limit contract](claim-use-freshness.md#schema-6-target-context-freshness-and-activation).

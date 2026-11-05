@@ -25,7 +25,7 @@ explicit structural admission boundary over durable storage; `submit` remains a
 trusted generic persistence API, not a scientific admission gate. Generic
 submission of a typed-looking envelope does not establish typed target validation.
 Scientific wire version 1 and its four codecs remain unchanged. New metadata
-stores use schema 2 and backup format 2; existing schema-1 stores and format-1
+stores default to schema 2 and backup format 2; explicit versions through 6 are supported; existing schema-1 stores and format-1
 backups remain supported unchanged. Original generic history and the oscillator
 fixture's v1.3 provenance are unchanged.
 
@@ -438,3 +438,11 @@ shallow exact existence/kind checks. Dedicated authenticated operating decisions
 and lifecycle-control formats retain their separate fresh-commit restrictions.
 
 [ClaimUse](claim-use-freshness.md) is an additional exact typed dispatch contract using `promotion_eligibility` with an explicit format discriminator. Schema-4 registration pins complete conjunctive routes and attributed assertions, starts ineligible, and maintains synchronous reassessment generations. Generic recognized content cannot bypass registration checks. `get_typed_revision` exposes immutable ClaimUse snapshots; the separate current inspection distinguishes historical pins from current observations and grants no scientific authority.
+
+Schema 6 extends registered ClaimUse freshness only for its explicit target_context
+identity. Required scope reads use supported complete ResearchContext envelopes
+and verify canonical content and ordered projections; generic context kind alone
+requires no typed interpretation. Version-3 inspection retains both full immutable
+bound scope and observed head declarations, including historical upstream bindings.
+This adds no scientific transfer, active-context adoption or typed Decision authority.
+Schema 4/5 retain their exact historical contracts. See [target-context freshness](claim-use-freshness.md#schema-6-target-context-freshness-and-activation).

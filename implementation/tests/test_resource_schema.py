@@ -1,4 +1,4 @@
-"""Schema3 creation, verified migrations, immutable tampering and scientific compatibility."""
+"""Schema-3–6 resource creation, verified migrations, tampering and scientific compatibility."""
 
 import hashlib
 import json
@@ -43,18 +43,18 @@ class ResourceSchemaTests(unittest.TestCase):
         self.addCleanup(restore_directories, self.parent)
 
     def test_creation_defaults_invalid_options_and_old_schema_resource_rejection(self):
-        """Invalid schema choices never reserve roots and old resource calls cannot migrate implicitly."""
-        for i, version in enumerate((None, True, False, 1, 0, 6, -1, "3", 3.0, [], {})):
+        """Verify supported creation, rejection before reservation and older-store migration requirements."""
+        for i, version in enumerate((None, True, False, 1, 0, 7, -1, "3", 3.0, [], {})):
             root = self.parent / f"invalid-{i}"
             with self.assertRaises(StoreLayoutError):
                 RecordStore.create(root, schema_version=version)
             self.assertFalse(root.exists())
-        for version in (1, 2, 3, 4, 5):
+        for version in (1, 2, 3, 4, 5, 6):
             root = self.parent / str(version)
             creator = create_legacy if version == 1 else RecordStore.create
-            with creator(root, **({"schema_version": version} if version in (3, 4, 5) else {})) as store:
+            with creator(root, **({"schema_version": version} if version in (3, 4, 5, 6) else {})) as store:
                 self.assertEqual(store._schema_version, version)
-                if version in (3, 4, 5):
+                if version in (3, 4, 5, 6):
                     self.assertEqual(store.inspect_resources(limits=LIMITS).to_dict()["operations"], [])
                     continue
                 before = (root / "metadata.sqlite3").read_bytes()

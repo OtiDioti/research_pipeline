@@ -7,6 +7,12 @@ Existing generic `run` records remain descriptive. Authority eligibility is a
 current-policy evaluation; prepared control is an immutable record of one such
 evaluation plus a pending report obligation. Neither is an admission token.
 
+Schema support extends through explicit schema 6, using the actual registry-derived
+schema identity in new captures and retaining original-operation reconciliation,
+authentication/guards and resource liabilities. Old saved documents retain exact
+bytes and interpretation. Target-context freshness shares the existing insertion
+transaction; it grants no work admission or scientific authority.
+
 ## Python boundary
 
 `research_pipeline.run_control` contains detached contracts, codecs, identities,

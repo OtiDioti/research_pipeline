@@ -27,10 +27,10 @@ from research_pipeline.snapshot import (
 
 
 def require_schema(store):
-    """Require registration schema 4 or 5 without upgrading older metadata."""
+    """Require registration schema 4, 5 or 6 without upgrading older metadata."""
     from research_pipeline.store import StoreLayoutError
     store._require_open()
-    if store._schema_version not in (4, 5):
+    if store._schema_version not in (4, 5, 6):
         raise StoreLayoutError("claim-use registration and inspection require explicit migration to schema 4")
 
 
@@ -42,8 +42,8 @@ def _raw(value, name):
         raise DomainValidationError(f"{name}: missing retained field") from error
 
 
-def relevant_request(submission, *, policy=False):
-    """Validate retained shells and select legacy work or active policy Decisions."""
+def relevant_request(submission, *, policy=False, context=False):
+    """Validate retained shells and select legacy work or active policy/context members."""
     if type(submission) is not Submission:
         raise DomainValidationError("submission: expected exact Submission")
     records = _raw(submission, "records")
@@ -56,7 +56,7 @@ def relevant_request(submission, *, policy=False):
         kind, text = _raw(record, "kind"), _raw(record, "_content_json")
         if type(kind) is not str or type(text) is not str:
             raise DomainValidationError("record: malformed retained kind/content")
-        if kind in ("review", "issue", "promotion_eligibility") or FORMAT in text or (policy and kind == "decision"):
+        if kind in ("review", "issue", "promotion_eligibility") or FORMAT in text or (policy and kind == "decision") or (context and kind == "research_context"):
             found = True
     return found
 
@@ -116,18 +116,19 @@ def _request_shell(submission):
 
 
 def preflight(store, submission):
-    """Return safe retained shells after applicable schema-4/5 admission bounds.
+    """Return safe retained shells after applicable schema-4/5/6 admission bounds.
 
     Older schemas retain generic normalization and original-receipt reconciliation;
     only fresh admission in prepare requires schema 4. Assessment originals must
     first pass their independent preparation, before entering this boundary.
     """
     legacy = relevant_request(submission)
-    if store._schema_version not in (4, 5) or not (legacy or (
-            store._schema_version == 5 and relevant_request(submission, policy=True))):
+    if store._schema_version not in (4, 5, 6) or not (legacy or (
+            store._schema_version in (5, 6) and relevant_request(
+                submission, policy=True, context=store._schema_version == 6))):
         return submission
     if not legacy:
-        # Existence only bypasses *new* policy preflight. It neither acknowledges
+        # Existence only bypasses *new* policy/context preflight. It neither acknowledges
         # nor compares a request; the owning write transaction does both later.
         identity = _raw(submission, "submission_id")
         _identifier(identity, "submission_id")
@@ -190,7 +191,7 @@ def bounded(value, maximum, dimension):
 
 
 def _cause_key(reader, cause):
-    """Encode an active schema-5 cause within remaining scratch before retaining its key.
+    """Encode an active policy/context cause within remaining scratch before retaining its key.
 
     Callers charge attempted cause occurrences separately, before deduplication.
     Reusing this bounded canonical text avoids a second unaccounted encoding; the
@@ -223,16 +224,17 @@ class Reader:
     The history hook deliberately preserves ordinary scientific admission rules.
     """
 
-    def __init__(self, store, connection, proposed=(), limits=None, cutoff=None, *, overlay=None, aggregate=None, policy=None):
+    def __init__(self, store, connection, proposed=(), limits=None, cutoff=None, *, overlay=None, aggregate=None, policy=None, context=None):
         """Retain independent caches/counters, optionally viewing a private prospective plan.
 
         Overlay readers charge proposed values on demand as persisted metadata would
         be charged. Their work also accrues to the owning write's aggregate account.
-        The private policy selection matches the event's activation semantics;
-        legacy readers never resolve policies or construct schema-5 output.
+        The private policy/context selections match the event's activation semantics;
+        Legacy feature selections preserve preceding output and accounting exactly.
         """
         self.store, self.connection, self.cutoff = store, connection, cutoff
-        self.policy_active = store._schema_version == 5 if policy is None else policy
+        self.policy_active = store._schema_version in (5, 6) if policy is None else policy
+        self.context_active = store._schema_version == 6 if context is None else context
         self.overlay, self.aggregate = overlay, aggregate
         self.caps = dict(WRITE_LIMITS)
         if limits is not None:
@@ -243,6 +245,8 @@ class Reader:
         self.seen_records, self.typed_keys, self.assertions = set(), set(), set()
         self.policies = set()
         self.policy_values = {}
+        self.contexts = set()
+        self.context_values = {}
         self.binding_keys = set()
         self.cache = {}
         self.values = {}
@@ -494,6 +498,38 @@ class Reader:
         self.policy_values[key] = content
         return content
 
+    def context(self, key):
+        """Resolve an exact supported target scope from metadata, never attachment bytes.
+
+        Count distinct required context revisions independently of assertions and
+        policies. Reserve codec scratch before the scientific decoder and cache
+        only canonical, complete envelopes with coherent ordered projections.
+        Independent prospective readers also charge the aggregate write account.
+        """
+        from research_pipeline.store import ReferenceResolutionError
+        from research_pipeline.scientific import decode_envelope as decode_context
+        if key not in self.contexts:
+            self.charge("context_revisions")
+            self.contexts.add(key)
+        self.charge("references")
+        envelope = self.read(key, classify=False)
+        if envelope.kind != "research_context":
+            raise ReferenceResolutionError(f"target context {key}: expected ResearchContext")
+        if key in self.context_values:
+            return self.context_values[key]
+        # Another role may already have decoded this envelope through typed().
+        # This independent semantic cache still allocates its own codec and
+        # canonicalization representations, so shared typed_keys cannot discount it.
+        self.charge("metadata_bytes", 6 * len(envelope._content_json))
+        try:
+            value = decode_context(envelope)
+            if type(value) is not ResearchContext or _canonical(value.to_dict()) != envelope._content_json:
+                raise DomainValidationError("noncanonical or unsupported ResearchContext")
+        except DomainValidationError as error:
+            raise ReferenceResolutionError(f"target context {key}: complete impact requires coherent content: {error}") from error
+        self.context_values[key] = value
+        return value
+
     def assertion(self, key):
         """Require coherent local assertion content under a separate exact-revision ceiling."""
         from research_pipeline.store import ReferenceResolutionError, _decode_typed_envelope
@@ -598,8 +634,9 @@ class Plan:
 def dependencies(reader, key, value):
     """Derive immutable ordered exact anchors, retaining roles, context and occurrences.
 
-    Shallow roles stay shallow. Context-scoped Review anchors cannot invalidate an
-    unrelated context merely because a claim identity is shared.
+    Shallow roles stay shallow. Only target_context produces the context watch;
+    other scope roles stay immutable descriptive pins. Context-scoped Review anchors
+    cannot invalidate an unrelated context merely because a claim identity is shared.
     """
     result, upstreams = [], []
     scope = pin(value.target_context)[:2]
@@ -611,7 +648,10 @@ def dependencies(reader, key, value):
         result.append((len(result), *pin(reference), role, *context, route, premise))
 
     candidate = reader.typed(value.candidate_claim, Claim)
-    reader.typed(value.target_context, ResearchContext)
+    if reader.context_active:
+        reader.context(pin(value.target_context)[:2])
+    else:
+        reader.typed(value.target_context, ResearchContext)
     add(value.candidate_claim, "candidate", scope)
     add(value.target_context, "context")
     for i, route in enumerate(value.routes):
@@ -830,7 +870,7 @@ def observed(reader, deps, *, binding_keys):
     return relevant
 
 
-def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=True, policy=None):
+def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=True, policy=None, context=None):
     """Prepare registrations, affected transitions and complete baseline views before insertion.
 
     Same-batch forward edges resolve through proposed values. Rebinding an upstream
@@ -839,23 +879,24 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
     indexed membership and prospective rows consume bounded work before propagation.
     Unsupported schemas reject fresh root discriminators only here, after the
     owner's original-request reconciliation. No helper starts a transaction.
-    The private policy selection preserves pre-activation schema-4 preparation,
+    Independent private policy/context selections preserve pre-activation preparation,
     output and accounting during chronological verification, never a public switch.
     """
     from research_pipeline.store import ReferenceResolutionError
-    policy_active = store._schema_version == 5 if policy is None else policy
-    if not relevant_request(submission, policy=policy_active):
+    policy_active = store._schema_version in (5, 6) if policy is None else policy
+    context_active = store._schema_version == 6 if context is None else context
+    if not relevant_request(submission, policy=policy_active, context=context_active):
         return None
-    if store._schema_version not in (4, 5):
+    if store._schema_version not in (4, 5, 6):
         if any(r.content.get("format") == FORMAT for r in submission.records):
             require_schema(store)
         return None
-    if not any(r.kind in ("review", "issue") or (policy_active and r.kind == "decision") or r.content.get("format") == FORMAT
+    if not any(r.kind in ("review", "issue") or (policy_active and r.kind == "decision") or (context_active and r.kind == "research_context") or r.content.get("format") == FORMAT
                or (r.kind == "promotion_eligibility" and connection.execute(
                    "SELECT 1 FROM claim_use_current WHERE use_id=?", (r.record_id,)).fetchone() is not None)
                for r in submission.records):
         return None
-    reader = Reader(store, connection, submission.records, cutoff=cutoff, policy=policy_active)
+    reader = Reader(store, connection, submission.records, cutoff=cutoff, policy=policy_active, context=context_active)
     plan = Plan(reader, submission_id=submission.submission_id)
     assertions = []
     for record in submission.records:
@@ -951,6 +992,8 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
                 affected.setdefault(key, {})[text] = cause
     if policy_active:
         _policy_impact(plan, affected)
+        if context_active:
+            _context_impact(plan, affected)
         _propagate_origins(plan, affected)
     else:
         queue = deque(sorted(affected))
@@ -999,7 +1042,7 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
     roots = sorted(plan.transitions) if policy_active else [key[0] for key in sorted(plan.bindings)]
     for identity in roots:
         baseline = Reader(store, connection, submission.records, limits, cutoff,
-                          overlay=plan, aggregate=reader, policy=policy_active)
+                          overlay=plan, aggregate=reader, policy=policy_active, context=context_active)
         _inspection(baseline, identity, limits)
     return plan
 
@@ -1057,6 +1100,59 @@ def _policy_impact(plan, affected):
                     add(key, dep[0], dep[2])
 
 
+def _context_impact(plan, affected):
+    """Seed exact target-context-change causes through temporal identity watches, never history scans.
+
+    Only successor ResearchContexts matching explicit context occurrences matter.
+    A preceding head is resolved without the new-head overlay; the bound pin may
+    independently be older or the same-batch successor. Every occurrence is charged
+    before canonical cause deduplication, including prospective watch occurrences.
+    """
+    reader = plan.reader
+    from research_pipeline.store import ReferenceResolutionError
+    visible_maximum = reader.connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
+    for changed, envelope in reader.proposed.items():
+        if envelope.kind != "research_context" or changed[1] == 1:
+            continue
+        temporal = " AND d.registration_event<?" if reader.cutoff is not None else " AND d.registration_event<=?"
+        boundary = reader.cutoff if reader.cutoff is not None else visible_maximum
+        args = (changed[0], "research_context", "context", boundary)
+        candidates = reader.rows("""SELECT d.use_id,d.binding_revision,d.ordinal,d.target_revision,d.registration_event
+            FROM claim_use_dependencies d INDEXED BY claim_use_dependency_watch
+            WHERE d.target_id=? AND d.target_kind=? AND d.role=?""" + temporal +
+            " ORDER BY d.registration_event,d.use_id,d.binding_revision,d.ordinal", args)
+        previous = None
+        def add(key, ordinal, revision):
+            """Resolve the three exact context pins and retain one charged direct occurrence."""
+            nonlocal previous
+            reader.binding(key)
+            reader.charge("references")
+            reader.charge("causes")
+            if previous is None:
+                previous = reader.head(changed[0], proposed=False)
+                if type(previous) is not int or previous != changed[1] - 1:
+                    raise ReferenceResolutionError("context successor lacks its visible preceding head")
+            bound = changed[0], revision
+            reader.context(bound)
+            reader.context((changed[0], previous))
+            reader.context(changed)
+            cause = dict(type="target_context_changed", binding=keypin(key), dependency_ordinal=ordinal,
+                         bound_context=keypin(bound, "research_context"),
+                         previous_context=keypin((changed[0], previous), "research_context"),
+                         new_context=keypin(changed, "research_context"))
+            affected.setdefault(key, {})[_cause_key(reader, cause)] = cause
+        for identity, revision, ordinal, bound_revision, event in candidates:
+            add((identity, revision), ordinal, bound_revision)
+        for key, deps in plan.dependencies.items():
+            for dep in deps:
+                reader.charge("references")
+                if dep[1] == changed[0] and dep[3:5] == ("research_context", "context"):
+                    reader.charge("index_rows")
+                    reader.charge("metadata_bytes", 8 * (len(key[0]) + sum(len(str(n)) for n in
+                                  (key[1], dep[0], dep[2], _MAX_INTEGER))))
+                    add(key, dep[0], dep[2])
+
+
 def _propagate_origins(plan, affected):
     """Propagate bounded origin-cause deltas through cached exact historical upstream edges.
 
@@ -1105,7 +1201,7 @@ def _propagate_origins(plan, affected):
 
 
 def index_submission(connection, submission, receipt):
-    """Index every schema-4/5 submission's original revisions and selected link occurrences.
+    """Index every schema-4/5/6 submission's original revisions and selected link occurrences.
 
     The caller supplies the actual receipt inside its owning transaction, after
     all revisions and links exist. This metadata-only helper never commits; any
@@ -1232,8 +1328,9 @@ def _inspection(reader, use_id, limits):
     roots with no routes and historical upstream bindings whose heads have changed.
     The same traversal, limitations, output and scratch charges govern public reads
     and pre-insertion baseline admission. Neither path owns a transaction here.
-    Policy declarations, including retained-output measurements, use shallow exact
-    envelope reads without format-driven classification or authority interpretation.
+    Policy declarations use shallow exact reads without format-driven classification.
+    Active target contexts use the scientific scope codec and retain complete bound
+    and observed declarations; neither grants transfer or active-context authority.
     """
     from research_pipeline.store import RecordNotFoundError, _fault
     current = reader.current(use_id)
@@ -1242,6 +1339,7 @@ def _inspection(reader, use_id, limits):
     root = use_id, current[0]
     todo, seen, bindings, deps = [root], set(), [], []
     policy_occurrences = []
+    context_occurrences = []
     limitations = ["Positive scientific authorization is unavailable; eligible is always false.",
                     "Attribution, independence and execution are unverified.",
                     "Policy and provenance references are declarations, never verified authority."]
@@ -1268,6 +1366,11 @@ def _inspection(reader, use_id, limits):
                 reader.charge("references")
                 if dep[4] == "policy_declared":
                     policy_occurrences.append((key, dep[0], dep[1], dep[2]))
+        if reader.context_active:
+            for dep in own_deps:
+                reader.charge("references")
+                if dep[4] == "context":
+                    context_occurrences.append((key, dep[0], dep[1], dep[2]))
         bindings.append(dict(binding=keypin(key), envelope=envelope.to_dict(), content=value.to_dict()))
         candidate = reader.typed(value.candidate_claim, Claim)
         if pin(candidate.context) != pin(value.target_context):
@@ -1340,6 +1443,41 @@ def _inspection(reader, use_id, limits):
         maximum = reader.connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
         watermark = _policy_origin(reader.connection, registration[0], maximum)
         result["policy_freshness"] = dict(available=True, activation_event_watermark=watermark)
+        result["mechanical_freshness"]["reasons"] = [reasons[k] for k in sorted(reasons)]
+    if reader.context_active:
+        contexts, reasons = [], {}
+        for cause in result["mechanical_freshness"]["reasons"]:
+            reader.charge("causes")
+            reasons[_cause_key(reader, cause)] = cause
+        for key, ordinal, identity, revision in sorted(context_occurrences):
+            # Occurrences remain work even when exact scope resolutions are cached.
+            reader.charge("context_observations")
+            bound = reader.context((identity, revision))
+            head = reader.head(identity)
+            if type(head) is not int or head < revision:
+                raise ClaimUseIntegrityError("visible target context head is absent or older than bound pin")
+            observed_context = reader.context((identity, head))
+            common = dict(binding=keypin(key), dependency_ordinal=ordinal,
+                          bound_context=keypin((identity, revision), "research_context"),
+                          observed_context=keypin((identity, head), "research_context"))
+            # Both complete scope representations consume work and result capacity,
+            # including repeated content when bound and observed are the same pin.
+            for context_key in ((identity, revision), (identity, head)):
+                reader.charge("metadata_bytes", 6 * len(reader.read(context_key, classify=False)._content_json))
+            contexts.append(dict(**common, bound_content=bound.to_dict(),
+                                 observed_content=observed_context.to_dict(), attributed=True,
+                                 superseded=head > revision))
+            if head > revision:
+                reader.charge("causes")
+                cause = dict(type="target_context_pin_superseded", **common)
+                reasons[_cause_key(reader, cause)] = cause
+        result["version"] = 3
+        result["observed_target_contexts"] = contexts
+        registration = reader.connection.execute("SELECT event_watermark FROM claim_use_origin WHERE singleton=1").fetchone()
+        maximum = reader.connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
+        policy_watermark = _policy_origin(reader.connection, registration[0], maximum)
+        watermark = _context_origin(reader.connection, policy_watermark, maximum)
+        result["target_context_freshness"] = dict(available=True, activation_event_watermark=watermark)
         result["mechanical_freshness"]["reasons"] = [reasons[k] for k in sorted(reasons)]
     remaining = (reader.caps["metadata_bytes"] - reader.counts["metadata_bytes"]) // 6
     if reader.aggregate is not None:
@@ -1436,8 +1574,10 @@ def validate(store, connection):
     Per-event bounded plans detect missing as well as extra transitions. Total
     lifetime history is streamed and is not subject to a lifetime generation cap.
     Independent per-record/binding verification accounts never recharge a completed
-    admission plan. The origin excludes pre-feature generic registration semantics.
+    admission plan. Independent origins select preceding registration, policy and
+    context interpretation without fabricating transitions at activation boundaries.
     """
+    from research_pipeline.store import RecordNotFoundError, ReferenceResolutionError
     _validate_temporal_projections(connection)
     origin_rows = list(connection.execute("SELECT singleton,event_watermark FROM claim_use_origin LIMIT 2"))
     if len(origin_rows) != 1 or origin_rows[0][0] != 1 or type(origin_rows[0][1]) is not int or origin_rows[0][1] < 0:
@@ -1449,15 +1589,24 @@ def validate(store, connection):
     maximum = connection.execute("SELECT coalesce(max(event_id),0) FROM audit_events").fetchone()[0]
     if origin > maximum:
         raise ClaimUseIntegrityError("freshness origin exceeds scientific event watermark")
-    policy_origin = _policy_origin(connection, origin, maximum) if store._schema_version == 5 else None
+    if store._schema_version == 6:
+        # Older schemas retain their exact validation contract; schema 6 also
+        # requires every nonzero activation boundary to name an actual event.
+        if type(origin_rows[0][0]) is not int or (migration is not None and migration != (3,)):
+            raise ClaimUseIntegrityError("invalid registration activation boundary")
+        if origin and connection.execute("SELECT 1 FROM audit_events WHERE event_id=?", (origin,)).fetchone() is None:
+            raise ClaimUseIntegrityError("registration activation watermark lacks scientific event")
+    policy_origin = _policy_origin(connection, origin, maximum) if store._schema_version in (5, 6) else None
+    context_origin = _context_origin(connection, policy_origin, maximum) if store._schema_version == 6 else None
     if connection.execute("SELECT 1 FROM claim_use_bindings WHERE registration_event<=? LIMIT 1", (origin,)).fetchone():
         raise ClaimUseIntegrityError("pre-origin generic document was registered")
     count_bindings, count_transitions = 0, 0
     for event, sid in connection.execute("SELECT event_id,submission_id FROM audit_events WHERE event_id>? ORDER BY event_id", (origin,)):
         policy_active = policy_origin is not None and event > policy_origin
+        context_active = context_origin is not None and event > context_origin
         selected = connection.execute("""SELECT 1 FROM revisions r JOIN identities i USING(record_id)
             WHERE r.submission_id=? AND (i.kind IN ('review','issue','promotion_eligibility')
-            OR (? AND i.kind='decision')) LIMIT 1""", (sid, policy_active)).fetchone()
+            OR (? AND i.kind='decision') OR (? AND i.kind='research_context')) LIMIT 1""", (sid, policy_active, context_active)).fetchone()
         if selected is None:
             plan = None
         else:
@@ -1470,13 +1619,28 @@ def validate(store, connection):
             submission = Submission.from_dict(doc["submission"])
             if _canonical({"fingerprint_version": 1, "submission": submission.to_dict()}) != text:
                 raise ClaimUseIntegrityError("noncanonical freshness request")
-            plan = prepare(store, connection, submission, cutoff=event, verify=False, policy=policy_active)
+            try:
+                plan = prepare(store, connection, submission, cutoff=event, verify=False,
+                               policy=policy_active, context=context_active)
+            except (RecordNotFoundError, ReferenceResolutionError) as error:
+                if not context_active:
+                    raise
+                # New context admission errors are corruption when reconstructing
+                # already committed history; preserve preceding feature errors.
+                raise ClaimUseIntegrityError(f"event {event}: incoherent required freshness metadata: {error}") from error
             if plan is not None:
                 # Preparation already consumed its complete admission account.
                 # Each stored-record comparison has an independent bounded reader,
                 # without proposed cache, overlay or aggregate parent.
                 for proposed in submission.records:
-                    actual = Reader(store, connection).read((proposed.record_id, proposed.revision))
+                    comparison = Reader(store, connection)
+                    # This independent phase compares exact envelopes, not scope
+                    # semantics. Unwatched generic contexts must not gain a codec
+                    # requirement merely by entering chronological selection.
+                    if context_active and proposed.kind == "research_context":
+                        actual = comparison.read((proposed.record_id, proposed.revision), classify=False)
+                    else:
+                        actual = comparison.read((proposed.record_id, proposed.revision))
                     if actual != proposed:
                         raise ClaimUseIntegrityError("stored revision differs from canonical freshness submission")
         expected_bindings = {} if plan is None else plan.bindings
@@ -1512,6 +1676,8 @@ def validate(store, connection):
         raise ClaimUseIntegrityError("missing current projection or invalid freshness foreign key")
     if policy_origin is not None:
         _validate_activation(store, connection, policy_origin)
+    if context_origin is not None:
+        _validate_activation(store, connection, context_origin, context=True)
 
 
 def _policy_origin(connection, registration_origin, maximum):
@@ -1532,18 +1698,46 @@ def _policy_origin(connection, registration_origin, maximum):
     return origin
 
 
-def _validate_activation(store, connection, watermark):
-    """Stream independent schema-5 boundary inspections without inventing transitions.
+def _context_origin(connection, policy_origin, maximum):
+    """Validate the independent target-context activation singleton and attributed migration boundary."""
+    rows = list(connection.execute("SELECT singleton,event_watermark FROM claim_use_context_origin LIMIT 2"))
+    if (len(rows) != 1 or type(rows[0][0]) is not int or rows[0][0] != 1
+            or type(rows[0][1]) is not int or not policy_origin <= rows[0][1] <= maximum):
+        raise ClaimUseIntegrityError("invalid target-context freshness origin")
+    origin = rows[0][1]
+    migration = connection.execute("SELECT source_schema FROM migration_history WHERE target_schema=6").fetchone()
+    if migration is None:
+        if origin != 0:
+            raise ClaimUseIntegrityError("fresh schema-6 context origin must be zero")
+    elif migration != (5,):
+        raise ClaimUseIntegrityError("target-context activation requires matching 5-to-6 migration")
+    if origin and connection.execute("SELECT 1 FROM audit_events WHERE event_id=?", (origin,)).fetchone() is None:
+        raise ClaimUseIntegrityError("target-context activation watermark lacks scientific event")
+    return origin
+
+
+def _validate_activation(store, connection, watermark, *, context=False):
+    """Stream independent policy or context boundary inspections without inventing transitions.
 
     Seeking the first later event avoids watermark-plus-one overflow and excludes
     every later revision/registration from each activation account. No lifetime
     Python collection or aggregate admission account spans these independent roots.
+    Policy activation always disables context interpretation, even on schema 6;
+    context activation enables both features for an independent version-3 view.
     """
+    from research_pipeline.store import RecordNotFoundError, ReferenceResolutionError
     row = connection.execute("SELECT event_id FROM audit_events WHERE event_id>? ORDER BY event_id LIMIT 1",
                              (watermark,)).fetchone()
     cutoff = row[0] if row else None
     limits = ClaimUseInspectionLimits(512, 1024, 8192, 1024, 64*1024*1024, 4*1024*1024)
     for identity, in connection.execute("""SELECT use_id FROM claim_use_bindings
             WHERE registration_event<=? GROUP BY use_id ORDER BY use_id""", (watermark,)):
-        reader = Reader(store, connection, limits=limits, cutoff=cutoff, policy=True)
-        _inspection(reader, identity, limits)
+        reader = Reader(store, connection, limits=limits, cutoff=cutoff, policy=True, context=context)
+        try:
+            _inspection(reader, identity, limits)
+        except (RecordNotFoundError, ReferenceResolutionError) as error:
+            if not context:
+                raise
+            # Activation is an integrity check of an unpublished copy, not fresh
+            # reference admission. The publisher must retain its incomplete marker.
+            raise ClaimUseIntegrityError(f"context activation: incoherent required metadata: {error}") from error

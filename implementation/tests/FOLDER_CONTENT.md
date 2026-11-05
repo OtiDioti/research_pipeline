@@ -66,7 +66,7 @@ Immediate files and child directories only.
 - [test_resource_example.py](test_resource_example.py) — Execute the exact published resource example with candidate-local imports.
 - [test_resource_ledger.py](test_resource_ledger.py) — Real schema3 hierarchical/protected capacity, identity and detached inspection tests.
 - [test_resource_recovery.py](test_resource_recovery.py) — Real transaction contention, original-ID recovery, process loss and hot journals.
-- [test_resource_schema.py](test_resource_schema.py) — Schema-3–5 resource creation, unknown-version guards, migrations, tampering and scientific compatibility.
+- [test_resource_schema.py](test_resource_schema.py) — Schema-3–6 resource creation, unknown-version guards, migrations, tampering and scientific compatibility.
 - [test_resource_usage.py](test_resource_usage.py) — Strict usage evidence, cumulative settlement, exact overflow and sticky admission boundaries.
 - [test_resource_usage_integrity.py](test_resource_usage_integrity.py) — Rehashed live/immutable histories must retain evidence identity and historical admission semantics.
 - [test_resource_usage_recovery.py](test_resource_usage_recovery.py) — Real observation/settlement interruption and synchronized serial transaction outcomes.
@@ -135,7 +135,7 @@ Immediate files and child directories only.
 - [test_tool_assessment_persistence_bounds.py](test_tool_assessment_persistence_bounds.py) — Exact scalar-error precedence, control/fingerprint scratch boundaries, Source predecessor/supplied-reader allocation-order regressions and historical shallow diagnostics.
 - [test_tool_assessment_persistence_recovery.py](test_tool_assessment_persistence_recovery.py) — Direct artifacts, atomic rollback, real SQLite contention and process-exit recovery.
 - [test_tool_assessment_persistence_example.py](test_tool_assessment_persistence_example.py) — Execute the exact self-contained passive persistence guide in candidate Python.
-- [claim_use_fixtures.py](claim_use_fixtures.py) — Setup-only acyclic synthetic routes, assertions and explicit downstream bindings.
+- [claim_use_fixtures.py](claim_use_fixtures.py) — Setup-only routes, conjunctive alternatives, disjoint target contexts and explicit downstream bindings.
 - [test_claim_use.py](test_claim_use.py) — Strict passive claim-use codecs, projections, detachment and contract limits.
 - [test_claim_use_store.py](test_claim_use_store.py) — Synchronous Review/Issue freshness, direct binding targets, historical pins, forward registration observations, rollback and projection integrity.
 - [test_claim_use_bounds.py](test_claim_use_bounds.py) — Exact registration membership, binding observation seeds, temporal query/instruction bounds, independent accounts and atomic propagation ceilings.
@@ -143,5 +143,8 @@ Immediate files and child directories only.
 - [test_claim_use_policy.py](test_claim_use_policy.py) — Schema-5 selective policy impact, exact origins, conjunctions/alternatives, historical rebinding and prospective views.
 - [test_claim_use_policy_bounds.py](test_claim_use_policy_bounds.py) — Shallow marked-policy no-dispatch regressions, local/aggregate scratch guards, exact metadata validation, legacy classification, independent ceilings, temporal queries and corrupt projections.
 - [test_claim_use_policy_recovery.py](test_claim_use_policy_recovery.py) — Policy atomicity, coherent threads, original receipts, verified migration/restore and auxiliary schema-5 capabilities.
+- [test_claim_use_context.py](test_claim_use_context.py) — Schema-6 exact target-context causes, immutable scope observations, historical rebinding, complete mixed cause sets and unequal diamonds.
+- [test_claim_use_context_bounds.py](test_claim_use_context_bounds.py) — Exact context codecs, independent resolution/observation accounts, cached-read scratch reservations, index seeks, prospective overflow and corrupt metadata rejection.
+- [test_claim_use_context_recovery.py](test_claim_use_context_recovery.py) — Atomic context writes, coherent concurrent readers, process death, original retries, near-ceiling admissions across activation, verified restoration and schema-6 capabilities.
 - [test_claim_use_example.py](test_claim_use_example.py) — Execute the exact self-contained product-only claim-use guide.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

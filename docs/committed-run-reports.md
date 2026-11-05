@@ -4,7 +4,8 @@
 dated state observation and commits its source plus deterministic `report.md` and
 `continuation.json` artifacts. It returns `ReportCommitResult`, meaning **source
 committed**. It makes no filesystem publication claim. Reports work on schema 2
-(resource accounting explicitly unavailable) and schema 3. Schema 1 requires an
+(resource accounting explicitly unavailable) and schemas 3–6. New captures identify the actual schema; older saved
+documents retain exact bytes and interpretation. Schema 1 requires an
 explicit existing migration. Schema identities, default creation at 2, backup
 formats, generic/typed admission and previous readable formats remain unchanged.
 

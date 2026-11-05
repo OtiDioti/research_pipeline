@@ -206,7 +206,7 @@ at the canonical stream fails closed, with no older-approval fallback.
 
 ## Store operations and results
 
-All methods are on `RecordStore`; they use schema 2 or 3, with no new tables.
+All methods are on `RecordStore`; they use schemas 2–6, with no new tables.
 
 | Method | Result and boundary |
 | --- | --- |

@@ -95,10 +95,11 @@ from `research_pipeline.domain`, `research_pipeline.artifacts` and
 `research_pipeline.store`, exact signatures/errors, and a runnable temporary-store
 low-level generic graph submission/append/reopen/retry example. Select runtime
 directories explicitly outside software source. Creation rejects existing roots; opening gates fixed
-schema versions 1, 2, 3, 4 and 5 before normal rollback-journal recovery. Creation defaults to
+schema versions 1, 2, 3, 4, 5 and 6 before normal rollback-journal recovery. Creation defaults to
 schema 2; `schema_version=3` explicitly enables the resource ledger, schema 4 adds
 Review/Issue claim-use reassessment, and schema 5 adds explicit policy-head
-freshness with preserved historical activation. Legacy stores retain old-kind
+freshness with preserved historical activation. Schema 6 adds explicit target-context
+freshness, immutable bound/observed scope and a separate activation watermark. Legacy stores retain old-kind
 operations without rewriting. SQLite uses DELETE/EXTRA,
 foreign keys and a 5000 ms busy timeout. Independent handles compare relevant heads;
 exact submission retries return original metadata-only receipts even after head
@@ -153,14 +154,14 @@ paper fixture adds no research CLI command or runtime/persistence capability.
 
 The explicit `research_pipeline.backup` API captures consistent SQLite snapshots,
 verifies historical artifact inventories and restores independent stores exactly.
-Supported backup format/schema pairs are `(1, 1)`, `(2, 2)`, `(3, 3)`, `(4, 4)` and `(5, 5)`; default restore
+Supported backup format/schema pairs are `(1, 1)`, `(2, 2)`, `(3, 3)`, `(4, 4)`, `(5, 5)` and `(6, 6)`; default restore
 preserves the source version. Schema 2 admits twenty generic kinds while retaining
 claim/task state rules; all fifteen additions require null canonical states.
 Legacy new-kind requests fail with a migration-required error. The separate
 schema-2 administrative history format is validated and preserved; fresh creation
 invents none. `restore_backup(root, destination, *, target_schema=None,
-migration_provenance=None)` supports explicit next-step v1→v2→v3→v4→v5 migration with ordinary
-integer next target `2`, `3`, `4` or `5` and caller-supplied `CreationProvenance`. Schema3 retains
+migration_provenance=None)` supports explicit next-step v1→v2→v3→v4→v5→v6 migration with ordinary
+integer next target `2`, `3`, `4`, `5` or `6` and caller-supplied `CreationProvenance`. Schema3 retains
 ordered administrative history and includes all outstanding resource liabilities in exact backups. Both defaults select
 exact restoration. Migration preserves historical values and original receipts
 and records the verified source identity/digest separately under the existing
@@ -246,7 +247,7 @@ Existing materialization, capture/planning, checkout and explicit import remain 
 [Committed run-report observations](../docs/committed-run-reports.md) provide strict saved declarations,
 coherent bounded scientific/resource capture, deterministic inert report/continuation
 bytes and original-operation reconciliation through existing artifacts/submissions.
-Schema 2 explicitly lacks resource accounting; schema 3/4 reports retain the complete
+Schema 2 explicitly lacks resource accounting; schema 3/4/5/6 reports retain the complete
 selected project tree without exposing other projects' ledger payloads. The executed
 guide covers empty setup, saved baseline, uncertain partial work, authoritative
 settlement, reopened late-usage liability and resettlement, reopen and exact restoration. Exact report publication adds a version-2 readable plan, offline evidence navigation,
@@ -258,7 +259,7 @@ Automatic reporting hooks and admission enforcement remain mandatory subsequent 
 
 [Local operating decisions](../docs/operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3/4 submission transaction.
+and original-operation recovery in the existing schema-2/3/4/5/6 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -296,4 +297,15 @@ inert bytes and demonstrates reopen/inspection and atomic mismatched-pair refusa
 Local inspection/classification establishes coherence only; authentication,
 permission, qualification, scientific sufficiency and execution remain separate.
 
-[Claim-use freshness](../docs/claim-use-freshness.md) documents explicit schemas 4/5, exact versioned bindings and bounded current/history reads. Schema 5 adds synchronous explicit policy-head reassessment alongside Review/Issue changes, complete historical downstream propagation and version-2 bound/observed policy inspection. Verified 4→5 migration preserves old transitions/receipts behind a separate activation watermark; schema 4 retains its original semantics. Generic schema-4 assertion writes require coherent local content. Eligible remains false; R-015 and R-077 remain PARTIAL.
+[Claim-use freshness](../docs/claim-use-freshness.md) documents explicit schemas 4/5/6,
+exact versioned bindings and bounded coherent inspection/history. Schema 6 adds
+synchronous target-context successor impact, complete historical downstream origins
+and version-3 bound/observed scientific scope. Verified 5→6 activation preserves
+old transitions and receipts; schema 4 retains Review/Issue semantics and schema 5
+retains policy semantics. All effects share the owning metadata transaction.
+Context advancement confers no scientific transfer or project active-context adoption.
+Eligible remains false; D02, R-015, R-077 and the product remain PARTIAL. Broader
+context applicability, scientific transfer, authenticated sufficient alternatives
+and policy authority, disposition/promotion, task/lifecycle/report work, all 94
+requirements and 13 FOLLOWON criteria, M0-S, live evaluation and human signoff
+remain mandatory.

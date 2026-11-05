@@ -57,7 +57,7 @@ normalize to six fractional digits. This is attributed creation information,
 not authenticated execution or a database commit timestamp.
 
 Schema 1 supports `research_context`, `claim`, `justification`, `evidence`, and
-`task_specification`. New stores default to schema2; explicit schema3/4/5 support the same kinds. Schema2 also supports `project`, `run`,
+`task_specification`. New stores default to schema2; explicit schema3/4/5/6 support the same kinds. Schema2 also supports `project`, `run`,
 `corpus_manifest`, `branch`, `source`, `work_product_manifest`, `tool_release`,
 `tool_assessment`, `issue`, `review`, `promotion_eligibility`, `decision`, `attempt`,
 `tool_execution`, and `event`. All twenty use the same immutable envelope, opaque
@@ -322,7 +322,9 @@ still take precedence, and exact retries recover the original receipt even when
 heads have advanced or artifact bytes are damaged. Opening never upgrades a store.
 Explicit [verified restore-time migration](backups.md#explicit-verified-migration)
 accepts a v1 backup with ordinary integer `target_schema=2`, or a v2 backup
-with `target_schema=3`, or a v3 backup with `target_schema=4`, and caller-supplied `CreationProvenance`, into a new absent runtime.
+with `target_schema=3`, a v3 backup with `target_schema=4`, a v4 backup with
+`target_schema=5`, or a v5 backup with `target_schema=6`, and caller-supplied
+`CreationProvenance`, into a new absent runtime.
 Direct 1→3, same-version migration and in-place migration remain rejected. Default restore remains exact.
 The private transformation is transactional under `.restore-incomplete`; failures
 retain the marker and files for diagnosis, and retries require a new absent path.
@@ -506,7 +508,7 @@ handoff provisioning bounds, exact purpose arithmetic and COMMIT recovery.
 
 [Local operating decisions](operating-authority.md) add externally configured HMAC-SHA256
 operator authentication, immutable exact dossier bindings, bounded current eligibility
-and original-operation recovery in the existing schema-2/3/4 submission transaction.
+and original-operation recovery in the existing schema-2/3/4/5/6 submission transaction.
 Keys and current trust remain host-only; generic records and local typed decoding
 do not authenticate permission. Current eligibility must be recomputed with trusted
 time and current external policy inside the later admitting write transaction.
@@ -560,3 +562,19 @@ wire version remain unchanged. Eligible remains false. Schema 4 keeps its origin
 policy-head-no-invalidation semantics, including chronological replay. Verified
 explicit 4→5 backup migration preserves all rows and records a separate policy
 activation origin; default format-5 restore preserves exact metadata bytes.
+
+## Explicit schema-6 target-context freshness
+
+Ordinary integer `schema_version=6` opts into synchronous successor freshness for
+registered ClaimUse.target_context identities. Creation still defaults to 2;
+opening older stores never upgrades them. Version-3 inspection retains exact
+bound/observed full ResearchContext declarations and historical upstream pins.
+Schema 4 keeps version-1 inspection and schema 5 keeps version-2 policy semantics.
+Verified explicit 5→6 migration adds an independent context activation watermark
+without changing requests, scientific history, generations or original receipts.
+Exact format-6 restore preserves metadata bytes and all three origins. Completed
+canonical retries remain metadata-only before CAS, planning, target and artifact
+checks. See [the exact contract](claim-use-freshness.md#schema-6-target-context-freshness-and-activation)
+for causes, temporal integrity and fixed independent budgets. Eligibility and
+scientific authorization remain unavailable; D02, R-015, R-077 and the product
+remain PARTIAL.
