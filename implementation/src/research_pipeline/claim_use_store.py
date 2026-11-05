@@ -672,12 +672,15 @@ def matches(dependency, anchor):
     return dependency[1:4] == anchor[:3] and (anchor[3:] == ("", 0) or dependency[5:7] == anchor[3:])
 
 
-def observed(reader, deps):
+def observed(reader, deps, *, binding_keys):
     """Discover complete current assertion associations through bounded reverse-link indexes.
 
     Historical links seed identity watches; a successor changing scope is exposed,
     with attribution, without replacing any bound historical pin. Proposed matching
     links reserve the same reverse-index scalar work as their persisted counterparts.
+    binding_keys contains exact registered roots/upstreams already visited by the
+    caller; each is both a queue seed and an Issue relevance anchor. Independent
+    reader ceilings reject incomplete discovery rather than truncating the view.
     """
     found, expanded = set(), set()
     bound_routes = set()
@@ -687,7 +690,9 @@ def observed(reader, deps):
             candidate = dependency[1:4]
         elif dependency[4] == "route" and candidate is not None:
             bound_routes.add((candidate, dependency[1:4], dependency[5:7]))
+    binding_anchors = {(*key, "promotion_eligibility") for key in binding_keys}
     queue = deque((d[1], d[2]) for d in deps)
+    queue.extend(sorted(a[:2] for a in binding_anchors))
     visited = set()
     while queue:
         target = queue.popleft()
@@ -726,7 +731,8 @@ def observed(reader, deps):
         keys = reader.assertion_history(identity)
         anchors, _ = impact(reader, keys)
         watch = any(d[1] == identity and d[4] in ("assessment_watch", "issue_watch") for d in deps)
-        if watch or any(matches(d, a) for d in deps for a in anchors):
+        if (watch or any(matches(d, a) for d in deps for a in anchors)
+                or any(a[:3] in binding_anchors for a in anchors)):
             head = reader.head(identity)
             if head is not None:
                 value = reader.assertion((identity, head))
@@ -745,6 +751,8 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
 
     Same-batch forward edges resolve through proposed values. Rebinding an upstream
     never repoints downstream pins; propagation follows historical binding nodes.
+    Exact registered bindings are Issue anchors independently of dependency rows;
+    indexed membership and prospective rows consume bounded work before propagation.
     Unsupported schemas reject fresh root discriminators only here, after the
     owner's original-request reconciliation. No helper starts a transaction.
     """
@@ -801,6 +809,24 @@ def prepare(store, connection, submission, *, decoded=(), cutoff=None, verify=Tr
         # excluded by the seek, before either pass examines or charges candidates.
         temporal = " AND d.registration_event<?" if cutoff is not None else ""
         for anchor in sorted(anchors):
+            if anchor[2] == "promotion_eligibility":
+                key = anchor[:2]
+                membership_temporal = " AND registration_event<?" if cutoff is not None else ""
+                direct = [row[:2] for row in reader.rows("""SELECT use_id,binding_revision,registration_event
+                    FROM claim_use_bindings WHERE use_id=? AND binding_revision=?""" + membership_temporal,
+                    (*key, cutoff) if cutoff is not None else key)]
+                if key in plan.bindings:
+                    reader.charge("index_rows")
+                    reader.charge("metadata_bytes", 8 * (len(key[0]) + len(str(key[1]))
+                                                         + len(str(_MAX_INTEGER))))
+                    direct.append(key)
+                for binding_key in direct:
+                    # Membership, not the generic record kind, establishes an
+                    # affected use. Charge every occurrence before cause deduplication.
+                    reader.charge("causes")
+                    cause = dict(type="binding_affected", assertion=keypin(changed, reader.proposed[changed].kind),
+                                 binding=keypin(binding_key))
+                    affected.setdefault(binding_key, {})[_canonical(cause)] = cause
             for row in reader.rows("""SELECT d.use_id,d.binding_revision,d.ordinal,d.target_id,d.target_revision,
                     d.target_kind,d.role,d.context_id,d.context_revision,d.route_ordinal,d.premise_ordinal,d.registration_event
                     FROM claim_use_dependencies d INDEXED BY claim_use_dependency_target
@@ -1005,6 +1031,8 @@ def _inspection(reader, use_id, limits):
 
     A private overlay supplies proposed exact bindings and the coalesced transition;
     historical upstream pins still resolve by exact revision, never current heads.
+    Every visited binding is itself an exact Issue observation anchor, including
+    roots with no routes and historical upstream bindings whose heads have changed.
     The same traversal, limitations, output and scratch charges govern public reads
     and pre-insertion baseline admission. Neither path owns a transaction here.
     """
@@ -1057,7 +1085,7 @@ def _inspection(reader, use_id, limits):
                     todo.append(upstream_key)
         limitations.extend(value.limitations)
     _fault("claim_use_inspection_after_binding")
-    observations = observed(reader, deps)
+    observations = observed(reader, deps, binding_keys=seen)
     transition = _transition(reader, use_id, current[1])
     binding = next(b for b in bindings if b["binding"] == keypin(root))
     value = reader.values[root]

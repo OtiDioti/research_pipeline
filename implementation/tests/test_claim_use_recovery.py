@@ -19,7 +19,7 @@ from research_pipeline.backup import create_backup, restore_backup, inspect_back
 from research_pipeline.claim_use import ClaimUsePremise, ClaimUseRoute, encode_envelope as use_envelope
 from research_pipeline.scientific import encode_envelope
 from tests.claim_use_fixtures import (
-    populate, review, binding, ref, batch, LIMITS, PROVENANCE, assessment_envelope,
+    populate, review, issue, binding, ref, batch, LIMITS, PROVENANCE, assessment_envelope,
 )
 from tests.test_claim_use_store import metadata
 
@@ -46,7 +46,21 @@ class ClaimUseRecoveryTests(unittest.TestCase):
         return result.stdout
 
     def test_concurrent_readers_observe_complete_old_or_new_state(self):
-        """Coordinate at the actual post-freshness/pre-COMMIT seam without sleeps."""
+        """Review updates expose old or new assertions and both complete generations."""
+        self.assert_concurrent_snapshots(batch("concurrent", [assessment_envelope("review-a", 2,
+            replace(review(), reviewer="New assertion"), PROVENANCE)]), "review-a", [1, 2])
+
+    def test_concurrent_direct_issue_updates_both_generations_with_its_observation(self):
+        """Direct Issue impact shares the same pre-COMMIT snapshot barrier as Review impact."""
+        self.assert_concurrent_snapshots(batch("concurrent-direct", [assessment_envelope("direct-issue", 1,
+            issue("use", "promotion_eligibility"), PROVENANCE)]), "direct-issue", [None, 1])
+
+    def assert_concurrent_snapshots(self, request, assertion_id, revisions):
+        """Hold one writer before COMMIT; independent handles see complete old/new use views.
+
+        Assert both current generations and the selected assertion revision for the
+        root and its downstream binding. Events synchronize readers without sleeps.
+        """
         mutated, observed, committed = threading.Event(), threading.Event(), threading.Event()
         failures, results = [], []
         def reader():
@@ -54,10 +68,12 @@ class ClaimUseRecoveryTests(unittest.TestCase):
             try:
                 self.assertTrue(mutated.wait(10))
                 with RecordStore.open(self.root) as store:
-                    results.append(store.inspect_claim_use("use", limits=LIMITS).to_dict())
+                    results.append([store.inspect_claim_use(identity, limits=LIMITS).to_dict()
+                                    for identity in ("use", "downstream-use")])
                     observed.set()
                     self.assertTrue(committed.wait(10))
-                    results.append(store.inspect_claim_use("use", limits=LIMITS).to_dict())
+                    results.append([store.inspect_claim_use(identity, limits=LIMITS).to_dict()
+                                    for identity in ("use", "downstream-use")])
             except BaseException as error:
                 failures.append(error)
                 observed.set()
@@ -70,17 +86,104 @@ class ClaimUseRecoveryTests(unittest.TestCase):
         thread.start()
         try:
             with patch("research_pipeline.store._fault", barrier):
-                self.store.submit_typed(batch("concurrent", [assessment_envelope("review-a", 2,
-                    replace(review(), reviewer="New assertion"), PROVENANCE)]))
+                self.store.submit_typed(request)
         finally:
             committed.set()
             mutated.set()
             thread.join(15)
         self.assertFalse(thread.is_alive())
         self.assertEqual(failures, [])
-        self.assertEqual([r["generation"] for r in results], [1, 2])
-        self.assertEqual([next(x["pin"]["revision"] for x in r["observed_assertions"]
-                               if x["pin"]["record_id"] == "review-a") for r in results], [1, 2])
+        self.assertEqual([[r["generation"] for r in snapshot] for snapshot in results], [[1, 1], [2, 2]])
+        for snapshot, revision in zip(results, revisions):
+            for view in snapshot:
+                self.assertEqual(next((x["pin"]["revision"] for x in view["observed_assertions"]
+                                       if x["pin"]["record_id"] == assertion_id), None), revision)
+
+    def test_direct_issue_rollback_lost_ack_reopen_and_exact_restore(self):
+        """Direct/downstream effects roll back together and survive committed retry and recovery."""
+        request = batch("direct-recovery", [assessment_envelope("direct-issue", 1,
+                        issue("use", "promotion_eligibility"), PROVENANCE)])
+        for boundary in ("before_metadata", "after_first_revision", "after_claim_use_updates"):
+            before = metadata(self.root)
+
+            def fail(point):
+                """Raise at the selected existing barrier before SQLite COMMIT."""
+                if point == boundary:
+                    raise RuntimeError(point)
+
+            with self.subTest(boundary=boundary), patch("research_pipeline.store._fault", fail), \
+                    self.assertRaisesRegex(RuntimeError, boundary):
+                self.store.submit_typed(request)
+            self.assertEqual(metadata(self.root), before)
+
+        def lost(point):
+            """Simulate acknowledgment loss after the sole metadata transaction commits."""
+            if point == "after_commit":
+                raise RuntimeError("lost direct acknowledgment")
+
+        with patch("research_pipeline.store._fault", lost), self.assertRaisesRegex(RuntimeError, "lost direct"):
+            self.store.submit_typed(request)
+        receipt = self.store.get_submission(request.submission_id)
+        self.assertIsNotNone(receipt)
+        views = {identity: self.store.inspect_claim_use(identity, limits=LIMITS)
+                 for identity in ("use", "downstream-use", "unrelated-use")}
+        histories = {identity: self.store.claim_use_history(identity, limits=LIMITS) for identity in views}
+        self.assertEqual([view.to_dict()["generation"] for view in views.values()], [2, 2, 1])
+        for identity in ("use", "downstream-use"):
+            view = views[identity].to_dict()
+            self.assertEqual(view["mechanical_freshness"]["last_transition"]["event_id"], receipt.event_id)
+            self.assertIn("direct-issue", {a["pin"]["record_id"] for a in view["observed_assertions"]})
+            self.assertIn("binding_affected" if identity == "use" else "upstream_affected",
+                          {c["type"] for c in view["mechanical_freshness"]["reasons"]})
+        committed = metadata(self.root)
+        with RecordStore.open(self.root) as reopened:
+            self.assertEqual(reopened.submit(request), receipt)
+            for identity in views:
+                self.assertEqual(reopened.inspect_claim_use(identity, limits=LIMITS), views[identity])
+                self.assertEqual(reopened.claim_use_history(identity, limits=LIMITS), histories[identity])
+        self.assertEqual(metadata(self.root), committed)
+        backup = self.parent/"direct-backup"
+        info = create_backup(self.store, backup)
+        self.assertEqual(inspect_backup(backup), info)
+        restored_root = self.parent/"direct-restored"
+        with restore_backup(backup, restored_root) as restored:
+            self.assertEqual((restored_root/"metadata.sqlite3").read_bytes(), (backup/"snapshot.sqlite3").read_bytes())
+            self.assertEqual(restored.submit_typed(request), receipt)
+            self.assertEqual(metadata(restored_root), committed)
+            for identity in views:
+                self.assertEqual(restored.inspect_claim_use(identity, limits=LIMITS), views[identity])
+                self.assertEqual(restored.claim_use_history(identity, limits=LIMITS), histories[identity])
+
+    def test_missing_direct_transition_rejected_even_when_downstream_history_remains(self):
+        """Chronological open and rehashed-backup checks reject a locally consistent stale root."""
+        self.store.submit_typed(batch("direct-corruption", [assessment_envelope("direct-issue", 1,
+                               issue("use", "promotion_eligibility"), PROVENANCE)]))
+        create_backup(self.store, self.parent/"direct-backup")
+        damaged = self.parent/"direct-damaged"
+        shutil.copytree(self.root, damaged)
+        targets = (damaged/"metadata.sqlite3", self.parent/"direct-backup/snapshot.sqlite3")
+        for target in targets:
+            target.chmod(0o600)
+            with sqlite3.connect(target) as connection:
+                connection.execute("DELETE FROM claim_use_generations WHERE use_id='use' AND generation=2")
+                connection.execute("""UPDATE claim_use_current SET generation=1,
+                    last_event=(SELECT event_id FROM claim_use_generations WHERE use_id='use' AND generation=1)
+                    WHERE use_id='use'""")
+                self.assertEqual(connection.execute("SELECT generation FROM claim_use_current WHERE use_id='use'").fetchone(), (1,))
+                self.assertEqual(connection.execute("SELECT generation FROM claim_use_current WHERE use_id='downstream-use'").fetchone(), (2,))
+        with self.assertRaisesRegex(StoreLayoutError, "missing or extra generation transition"):
+            RecordStore.open(damaged)
+        snapshot = targets[1]
+        snapshot.chmod(0o400)
+        manifest = self.parent/"direct-backup/manifest.json"
+        doc = json.loads(manifest.read_text())
+        data = snapshot.read_bytes()
+        doc["metadata"] = dict(digest=hashlib.sha256(data).hexdigest(), size=len(data))
+        manifest.chmod(0o600)
+        manifest.write_text(json.dumps(doc, sort_keys=True, separators=(",", ":")))
+        manifest.chmod(0o400)
+        with self.assertRaisesRegex(BackupError, "missing or extra generation transition"):
+            inspect_backup(self.parent/"direct-backup")
 
     def test_real_process_exit_recovery_and_fresh_process_inspection(self):
         """Real exits before/after freshness and COMMIT preserve atomicity and original receipts."""
@@ -223,12 +326,12 @@ with RecordStore.open(sys.argv[1]) as store:
             reader = freshness.Reader(self.store, connection)
             deps = [(0, "generic-target", 1, "decision", "policy_declared", "", 0, -1, -1)]
             reader.caps["index_rows"] = 2
-            self.assertEqual(freshness.observed(reader, deps), [])
+            self.assertEqual(freshness.observed(reader, deps, binding_keys=()), [])
             self.assertEqual(reader.counts["index_rows"], 2)
             reader = freshness.Reader(self.store, connection)
             reader.caps["index_rows"] = 1
             with self.assertRaisesRegex(freshness.ClaimUseLimitError, "index_rows"):
-                freshness.observed(reader, deps)
+                freshness.observed(reader, deps, binding_keys=())
         with RecordStore.open(self.root) as reopened:
             self.assertEqual(reopened.get_submission(request.submission_id), receipt)
 

@@ -137,8 +137,8 @@ Immediate files and child directories only.
 - [test_tool_assessment_persistence_example.py](test_tool_assessment_persistence_example.py) — Execute the exact self-contained passive persistence guide in candidate Python.
 - [claim_use_fixtures.py](claim_use_fixtures.py) — Setup-only acyclic synthetic routes, assertions and explicit downstream bindings.
 - [test_claim_use.py](test_claim_use.py) — Strict passive claim-use codecs, projections, detachment and contract limits.
-- [test_claim_use_store.py](test_claim_use_store.py) — Real-store synchronous freshness, historical pins, bounds, rollback, persistence and temporal-projection corruption.
-- [test_claim_use_bounds.py](test_claim_use_bounds.py) — Retained-shell safety, temporal scalar/payload query plans and instruction bounds, historical predecessor seeks, complete prospective accounting and atomic ceilings.
-- [test_claim_use_recovery.py](test_claim_use_recovery.py) — Concurrent snapshots, process loss, near-ceiling reopen/backup/restore, unconditional temporal indexing, migration backfill, rehashed corruption and schema-4 capabilities.
+- [test_claim_use_store.py](test_claim_use_store.py) — Synchronous Review/Issue freshness, direct binding targets, historical pins, forward registration observations, rollback and projection integrity.
+- [test_claim_use_bounds.py](test_claim_use_bounds.py) — Exact registration membership, binding observation seeds, temporal query/instruction bounds, independent accounts and atomic propagation ceilings.
+- [test_claim_use_recovery.py](test_claim_use_recovery.py) — Concurrent Review/direct-Issue snapshots, rollback/lost acknowledgment, exact restoration, chronological corruption, migration and schema-4 capabilities.
 - [test_claim_use_example.py](test_claim_use_example.py) — Execute the exact self-contained product-only claim-use guide.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

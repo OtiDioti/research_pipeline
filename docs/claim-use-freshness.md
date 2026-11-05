@@ -86,7 +86,11 @@ premises/evidence, selected assertions and their declared references. Premises
 retain both their Claim context and a different use context. Review impact uses
 exact candidate/context and assessed-route/context pairs. Issue impact follows
 exact affected records; an affected Review/Issue is inspected for association.
-Other target kinds remain shallow anchors. A changed assertion identity includes
+An exact explicitly registered binding is itself an Issue-impact anchor:
+an Issue affecting `U@1/promotion_eligibility` marks U@1 and propagates through
+recorded downstream uses even when U@1 has no routes or incoming references.
+A generic `promotion_eligibility` record without registration does not become a
+use. Other target kinds remain shallow anchors. A changed assertion identity includes
 its historical targets as well as new targets, so removing links cannot erase
 relevance. Pinned Review/Issue identities have watches even if a successor changes
 scope. This history union invalidates conservatively; it never replaces a pin or
@@ -98,8 +102,16 @@ Reverse explicit upstream edges propagate affected binding nodes to completion.
 Historical binding nodes remain traversable: D pinning U@1 still receives relevant
 changes to U@1 after U@2 becomes current. Rebinding U alone neither repoints D nor
 invalidates it. Only current binding nodes receive current-use transitions.
-Causes retain matched dependencies and immediate upstream bindings, rather than
-exponentially enumerating every possible full path.
+An Issue targeting U@1 after U@2 is registered still reaches D pinned to U@1,
+but does not advance U@2 solely from that old target. Current U@2 inspection does
+not observe that Issue unless its own recorded dependencies establish relevance.
+Causes include `binding_registered` for registration, `binding_affected` with the
+changed assertion's exact pin and the directly affected binding's exact pin,
+`assertion_changed` with matched dependency details, and `upstream_affected` with
+the immediate upstream binding. Direct and dependency reasons coexist and are
+coalesced canonically within one transition, without enumerating every full path.
+A forward same-batch Issue targeting a new use appears in its prospective and
+persisted inspection; applicable assertion and registration reasons share generation 1.
 
 Planning, ordinary typed admission, record/head/link/receipt/event insertion and
 freshness application occur under the same owning `BEGIN IMMEDIATE` transaction.
@@ -136,6 +148,11 @@ transition and structured reasons; `authorized_disposition.available` is false.
 attribution/independence/execution, plus unrecorded premise support and unresolved
 context transfers where present. `attachment_availability` explicitly states
 `not_checked_metadata_only`. Unchanged alternatives remain recorded possibilities.
+Observation discovery includes the inspected root and every exact upstream
+binding visited by support traversal, as well as recorded dependencies and
+assessment/issue watches. Direct Issues remain attributed observations after
+resolution, reopening or target removal through the assertion's historical union;
+historical upstream pins are never substituted with current heads.
 
 `store.claim_use_history(use_id, *, after_generation=0, limit=256, limits)
 -> ClaimUseHistoryPage` returns generation-ordered transitions with binding,
@@ -162,7 +179,7 @@ immutable use snapshots independently of current generations.
 | Record/artifact reference occurrences | 8,192 |
 | Assertion revisions | 1,024 |
 | Visited use bindings | 512 |
-| Dependency/upstream index rows | 8,192 |
+| Examined freshness index rows | 8,192 |
 | Current-use transitions | 128 |
 | Retained cause entries | 8,192 |
 | Explicit support depth | 64 |
@@ -183,6 +200,14 @@ Later lifetime history remains invisible to the historical range and cannot
 exhaust an earlier operation's account. Historical head and current-generation
 lookups seek the visible predecessor through use/record and event indexes.
 Context rejection and cause deduplication do not hide examined occurrences.
+Direct binding discovery uses at-most-one-row membership lookups in the existing
+binding table's exact `(use_id, binding_revision)` indexes, with registration events
+strictly before the historical cutoff. Same-batch registrations reserve equivalent
+index/byte work, including the full future event width. The binding keys also seed
+the existing reverse-association indexes for inspection, and remain exact relevance
+anchors in its assertion filter. No lifetime registration scan or persisted
+self-dependency projection is added; schema-4 DDL and dependency ordinals stay
+unchanged. Each direct cause is charged before canonical deduplication.
 Assessment originals
 pass their independent retained-shell and raw-field guards before freshness checks;
 instance serializers cannot bypass either boundary.

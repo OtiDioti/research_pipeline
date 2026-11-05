@@ -32,5 +32,5 @@ Immediate files and child directories only.
 - [work-product-import.md](work-product-import.md) — Work-product preview and explicit import.
 - [work-products.md](work-products.md) — Versioned work-product manifests.
 - [tool-assessment-persistence.md](tool-assessment-persistence.md) — Passive assessment admission, bounded history/control/request accounting with predecessor and supplied-reader guards, inspection and original-ID recovery.
-- [claim-use-freshness.md](claim-use-freshness.md) — Exact passive bindings, event-range traversal, complete admission bounds, independent verification accounts and schema-4 temporal backfill.
+- [claim-use-freshness.md](claim-use-freshness.md) — Exact passive bindings as Issue anchors, current/historical relevance, bounded propagation/inspection, reason contracts and schema-4 persistence.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

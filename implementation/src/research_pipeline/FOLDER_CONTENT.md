@@ -56,5 +56,5 @@ Immediate files and child directories only.
 - [tool_assessment_store.py](tool_assessment_store.py) — Bounded assessment and supplied-reader reconstruction, deferred scalar semantics and control/request scratch accounting; transactions remain store-owned.
 - [claim_use.py](claim_use.py) — Exact passive claim-use bindings, immutable limits and detached observations.
 - [claim_use_schema.py](claim_use_schema.py) — Fixed schema-4 freshness DDL, temporal navigation projections and event-range reverse indexes.
-- [claim_use_store.py](claim_use_store.py) — Bounded temporal propagation, unconditional submission navigation indexing, complete prospective inspection and independent chronological verification accounts.
+- [claim_use_store.py](claim_use_store.py) — Indexed exact-binding Issue impact, bounded temporal propagation, complete prospective inspection and independent chronological verification accounts.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

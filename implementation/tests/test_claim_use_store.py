@@ -123,6 +123,111 @@ class ClaimUseStoreTests(unittest.TestCase):
         self.assertEqual(view["context"]["record_id"], "scope")
         self.assertFalse(view["eligible"])
 
+    def test_direct_issue_updates_use_and_downstream_on_both_submission_paths(self):
+        """Exact use targets advance atomically, remain observed after removal, and retry once."""
+        for typed in (False, True):
+            root = self.parent/f"direct-{typed}"
+            with self.subTest(typed=typed), RecordStore.create(root, schema_version=4) as store:
+                populate(store)
+                original = store.get_typed_revision("use", 1)
+                candidate = store.get_typed_revision("candidate", 1)
+                value = issue("use", "promotion_eligibility")
+                request = batch("direct", [assessment_envelope("use-issue", 1, value, PROVENANCE)])
+                submit = store.submit_typed if typed else store.submit
+                receipt = submit(request)
+                direct = dict(type="binding_affected", assertion=claim_use_store.keypin(("use-issue", 1), "issue"),
+                              binding=claim_use_store.keypin(("use", 1)))
+                downstream = dict(type="upstream_affected", upstream_binding=claim_use_store.keypin(("use", 1)))
+                for identity in ("use", "downstream-use", "unrelated-use"):
+                    view = store.inspect_claim_use(identity, limits=LIMITS).to_dict()
+                    self.assertEqual(view["generation"], 1 if identity == "unrelated-use" else 2)
+                    self.assertFalse(view["eligible"])
+                    self.assertFalse(view["authorized_disposition"]["available"])
+                    if identity != "unrelated-use":
+                        transition = view["mechanical_freshness"]["last_transition"]
+                        self.assertEqual(transition["event_id"], receipt.event_id)
+                        self.assertIn(direct if identity == "use" else downstream, transition["causes"])
+                        observation = next(a for a in view["observed_assertions"] if a["pin"]["record_id"] == "use-issue")
+                        self.assertEqual(observation, dict(pin=claim_use_store.keypin(("use-issue", 1), "issue"),
+                            content=value.to_dict(), attributed=True, still_assesses_bound_route=None))
+                self.assertEqual(submit(request), receipt)
+                self.assertEqual(store.inspect_claim_use("use", limits=LIMITS).to_dict()["generation"], 2)
+                # Resolution, target removal and reopening retain the established
+                # exact binding relevance through the assertion history union.
+                for revision, disposition in ((2, "resolved"), (3, "open")):
+                    successor = replace(value, affected_records=[ref("unrelated", "affected_record", "claim")],
+                                        disposition=disposition)
+                    submit(batch(f"successor-{revision}", [assessment_envelope("use-issue", revision, successor, PROVENANCE)]))
+                    for identity in ("use", "downstream-use"):
+                        view = store.inspect_claim_use(identity, limits=LIMITS).to_dict()
+                        self.assertEqual(view["generation"], revision+1)
+                        self.assertIn(claim_use_store.keypin(("use-issue", revision), "issue"),
+                                      [a["pin"] for a in view["observed_assertions"]])
+                self.assertEqual(submit(request), receipt)
+                for identity in ("use", "downstream-use"):
+                    self.assertEqual(store.inspect_claim_use(identity, limits=LIMITS).to_dict()["generation"], 4)
+                self.assertEqual(store.get_typed_revision("use", 1), original)
+                self.assertEqual(store.get_typed_revision("candidate", 1), candidate)
+                self.assertEqual(store.head("candidate"), 1)
+
+    def test_direct_issue_needs_only_registration_not_routes_or_incoming_edges(self):
+        """A leaf binding is its own anchor; a generic promotion document never registers a use."""
+        _, receipt = self.append("leaf-issue", issue("unrelated-use", "promotion_eligibility"))
+        view = self.inspect("unrelated-use")
+        self.assertEqual(view["routes"], [])
+        self.assertEqual(view["generation"], 2)
+        self.assertEqual(view["mechanical_freshness"]["last_transition"]["event_id"], receipt.event_id)
+        self.assertIn("leaf-issue", {a["pin"]["record_id"] for a in view["observed_assertions"]})
+        self.assertEqual((self.generation(), self.generation("downstream-use")), (1, 1))
+        self.store.submit(batch("generic", [RecordEnvelope("opaque", 1, "promotion_eligibility", {}, PROVENANCE)]))
+        before = metadata(self.root)
+        self.append("generic-issue", issue("opaque", "promotion_eligibility"))
+        after = metadata(self.root)
+        for table in ("claim_use_bindings", "claim_use_current", "claim_use_generations"):
+            self.assertEqual(after[table], before[table])
+        with self.assertRaises(RecordNotFoundError):
+            self.inspect("opaque")
+
+    def test_direct_historical_binding_target_leaves_replacement_unaffected(self):
+        """Old U@1 remains an impact/observation anchor only in views that actually visit it."""
+        self.store.submit_typed(batch("rebind-direct", [use_envelope("use", 2, binding("unrelated", (), (), ()), PROVENANCE)]))
+        self.append("old-binding-issue", issue("use", "promotion_eligibility"))
+        current, downstream = self.inspect(), self.inspect("downstream-use")
+        self.assertEqual((current["generation"], downstream["generation"], self.generation("unrelated-use")), (2, 2, 1))
+        self.assertNotIn("old-binding-issue", {a["pin"]["record_id"] for a in current["observed_assertions"]})
+        self.assertIn("old-binding-issue", {a["pin"]["record_id"] for a in downstream["observed_assertions"]})
+        self.assertEqual(downstream["upstream_bindings"][0]["binding"], claim_use_store.keypin(("use", 1)))
+        self.assertEqual(self.store.get_typed_revision("use", 1)[1], binding())
+
+    def test_forward_same_batch_issue_binding_has_identical_prospective_view(self):
+        """Forward direct targets coalesce registration and assertion causes at generation one."""
+        views, accounts = {}, {}
+        original = claim_use_store._inspection
+
+        def capture(reader, identity, limits):
+            """Retain the actual prospective result and its independent bounded work account."""
+            result = original(reader, identity, limits)
+            views[identity], accounts[identity] = result.to_dict(), dict(reader.counts)
+            return result
+
+        request = batch("forward-direct", [assessment_envelope("forward-issue", 1,
+                        issue("forward-use", "promotion_eligibility"), PROVENANCE),
+                        use_envelope("forward-use", 1, binding("unrelated", (), (), ()), PROVENANCE)])
+        with patch.object(claim_use_store, "_inspection", capture):
+            receipt = self.store.submit_typed(request)
+        prospective, prospective_account = views["forward-use"], accounts["forward-use"]
+        with patch.object(claim_use_store, "_inspection", capture):
+            persisted = self.inspect("forward-use")
+        self.assertEqual(prospective["mechanical_freshness"]["last_transition"]["event_id"], 2**63-1)
+        prospective["mechanical_freshness"]["last_transition"]["event_id"] = receipt.event_id
+        self.assertEqual(prospective, persisted)
+        self.assertEqual(persisted["generation"], 1)
+        self.assertEqual({c["type"] for c in persisted["mechanical_freshness"]["reasons"]},
+                         {"binding_registered", "binding_affected"})
+        self.assertIn("forward-issue", {a["pin"]["record_id"] for a in persisted["observed_assertions"]})
+        for dimension in ("metadata_bytes", "index_rows", "assertion_revisions"):
+            self.assertGreaterEqual(prospective_account[dimension], accounts["forward-use"][dimension])
+
     def test_unrelated_context_policy_and_events_do_not_advance(self):
         """Independent context reports and generic policy/global changes confer no freshness effect."""
         self.append("independent-review", replace(review(), target_context=ref("other-scope", "target_context", "research_context")))
@@ -274,13 +379,15 @@ class ClaimUseStoreTests(unittest.TestCase):
                 method("missing", limits=LIMITS)
 
     def test_inspection_independent_bounds_and_generation_overflow(self):
-        """Every read bound fails explicitly, with no mutation or silently shortened view."""
+        """Read bounds and Review/direct-Issue generation overflow fail without metadata effects."""
         for field in ("max_bindings", "max_records", "max_references", "max_metadata_bytes", "max_result_bytes"):
             with self.subTest(field=field), self.assertRaises(ClaimUseLimitError):
                 self.store.inspect_claim_use("downstream-use", limits=replace(LIMITS, **{field: 1}))
         with sqlite3.connect(self.root/"metadata.sqlite3") as connection:
             connection.execute("UPDATE claim_use_current SET generation=? WHERE use_id='use'", (2**63-1,))
         self.reject(batch("overflow", [assessment_envelope("review-a", 2, review(), PROVENANCE)]), ClaimUseLimitError)
+        self.reject(batch("direct-overflow", [assessment_envelope("direct-issue", 1,
+                    issue("use", "promotion_eligibility"), PROVENANCE)]), ClaimUseLimitError)
 
     def test_index_work_transition_and_cause_limits_fail_before_metadata(self):
         """Independent planner ceilings reject whole writes rather than truncating propagation."""

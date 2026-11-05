@@ -9,7 +9,7 @@ from unittest.mock import patch
 from research_pipeline.claim_use import ClaimUseLimitError, encode_envelope as use_envelope
 from research_pipeline.domain import ArtifactReference, RecordEnvelope
 from research_pipeline.store import RecordStore
-from tests.claim_use_fixtures import populate, binding, batch, review, ref, PROVENANCE, LIMITS, assessment_envelope
+from tests.claim_use_fixtures import populate, binding, batch, review, issue, ref, PROVENANCE, LIMITS, assessment_envelope
 from tests.test_claim_use_store import metadata
 
 
@@ -123,6 +123,183 @@ class ClaimUseBoundsTests(unittest.TestCase):
         with RecordStore.open(self.root) as reopened:
             self.assertEqual(reopened.inspect_claim_use("u-0", limits=LIMITS).to_dict()["generation"], 2)
 
+    def test_direct_target_transition_and_cause_deficits_reject_every_table_effect(self):
+        """Direct and dependency causes coexist; both affected currents must fit one transaction."""
+        from research_pipeline import claim_use_store as freshness
+
+        request = batch("direct-bounds", [assessment_envelope("direct-issue", 1,
+                        issue("use", "promotion_eligibility"), PROVENANCE)])
+        before = metadata(self.root)
+        for dimension, ceiling in (("transitions", 1), ("causes", 2)):
+            with self.subTest(dimension=dimension), \
+                    patch.object(freshness, "WRITE_LIMITS", {**freshness.WRITE_LIMITS, dimension: ceiling}), \
+                    self.assertRaisesRegex(ClaimUseLimitError, dimension):
+                self.store.submit(request)
+            self.assertEqual(metadata(self.root), before)
+            self.assertIsNone(self.store.get_submission(request.submission_id))
+        with patch.object(freshness, "WRITE_LIMITS", {**freshness.WRITE_LIMITS, "transitions": 2, "causes": 3}):
+            receipt = self.store.submit(request)
+        for identity in ("use", "downstream-use"):
+            view = self.store.inspect_claim_use(identity, limits=LIMITS).to_dict()
+            self.assertEqual(view["generation"], 2)
+            self.assertEqual(view["mechanical_freshness"]["last_transition"]["event_id"], receipt.event_id)
+        reasons = self.store.inspect_claim_use("downstream-use", limits=LIMITS).to_dict()["mechanical_freshness"]["reasons"]
+        self.assertEqual({c["type"] for c in reasons}, {"assertion_changed", "upstream_affected"})
+
+    def test_direct_membership_is_an_exact_bounded_temporal_index_lookup(self):
+        """Registration lookup preflights one row and never scans later unrelated bindings.
+
+        An isolated in-memory navigation fixture disables foreign keys as in the
+        existing range probes; no synthetic metadata is written to the real store.
+        """
+        import sqlite3
+        from contextlib import closing
+        from research_pipeline import claim_use_store as freshness
+
+        queries = []
+        original = freshness.Reader.rows
+
+        def capture(reader, sql, args=(), dimension="index_rows"):
+            """Capture only the production exact membership query for independent execution."""
+            if "FROM claim_use_bindings WHERE" in sql:
+                queries.append((sql, args))
+            yield from original(reader, sql, args, dimension)
+
+        request = batch("membership", [assessment_envelope("membership-issue", 1,
+                        issue("use", "promotion_eligibility"), PROVENANCE)])
+        with self.store._transaction() as connection, patch.object(freshness.Reader, "rows", capture):
+            for cutoff in (None, 50):
+                freshness.prepare(self.store, connection, request, cutoff=cutoff)
+        self.assertEqual(len(queries), 2)
+        before = metadata(self.root)
+        with closing(sqlite3.connect(":memory:")) as connection:
+            self.store._connection.backup(connection)
+            connection.execute("DELETE FROM claim_use_bindings")
+            connection.execute("INSERT INTO claim_use_bindings VALUES ('use',1,49)")
+            connection.executemany("INSERT INTO claim_use_bindings VALUES (?,1,100)",
+                                   [(f"unrelated-{i}",) for i in range(20000)])
+            for sql, args in queries:
+                statements = []
+                connection.set_trace_callback(statements.append)
+                ticks = 0
+
+                def progress():
+                    """Fail a lifetime scan using an instruction allowance independent of population."""
+                    nonlocal ticks
+                    ticks += 100
+                    return int(ticks > 22500)
+
+                connection.set_progress_handler(progress, 100)
+                try:
+                    reader = freshness.Reader(self.store, connection)
+                    reader.caps["index_rows"] = 1
+                    expected_bytes = 8 * (len("use") + len("1") + len("49"))
+                    reader.caps["metadata_bytes"] = expected_bytes
+                    self.assertEqual(list(reader.rows(sql, args)), [("use", 1, 49)])
+                    self.assertEqual(reader.counts["index_rows"], 1)
+                    self.assertEqual(reader.counts["metadata_bytes"], expected_bytes)
+                finally:
+                    connection.set_progress_handler(None, 0)
+                    connection.set_trace_callback(None)
+                self.assertEqual(len(statements), 2)
+                for statement in statements:
+                    plan = " ".join(r[-1] for r in connection.execute("EXPLAIN QUERY PLAN " + statement))
+                    self.assertIn("SEARCH claim_use_bindings", plan)
+                    self.assertIn("use_id=? AND binding_revision=?", plan)
+                    self.assertNotIn("SCAN", plan)
+                for dimension, ceiling in (("index_rows", 0), ("metadata_bytes", expected_bytes-1)):
+                    reader = freshness.Reader(self.store, connection)
+                    reader.caps[dimension] = ceiling
+                    with self.assertRaisesRegex(ClaimUseLimitError, dimension):
+                        list(reader.rows(sql, args))
+                if len(args) == 3:
+                    for event in (50, 51):
+                        connection.execute("UPDATE claim_use_bindings SET registration_event=? WHERE use_id='use'", (event,))
+                        reader = freshness.Reader(self.store, connection)
+                        reader.caps["index_rows"] = reader.caps["metadata_bytes"] = 0
+                        self.assertEqual(list(reader.rows(sql, args)), [])
+                        self.assertEqual(reader.counts["index_rows"], 0)
+        self.assertEqual(metadata(self.root), before)
+
+    def test_binding_observation_seeds_keep_independent_limits_and_temporal_cutoff(self):
+        """A root without dependencies observes direct Issues through bounded association indexes."""
+        from research_pipeline import claim_use_store as freshness
+
+        receipt = self.store.submit_typed(batch("seed-issue", [assessment_envelope("seed-issue", 1,
+                         issue("unrelated-use", "promotion_eligibility"), PROVENANCE)]))
+        with self.store._transaction() as connection:
+            reader = freshness.Reader(self.store, connection)
+            expected = freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)])
+            self.assertEqual([a["pin"]["record_id"] for a in expected], ["seed-issue"])
+            self.assertEqual(freshness.observed(freshness.Reader(self.store, connection), [], binding_keys=()), [])
+            counts = dict(reader.counts)
+            for dimension in ("index_rows", "assertion_revisions"):
+                self.assertGreater(counts[dimension], 0)
+                for deficit in (0, 1):
+                    reader = freshness.Reader(self.store, connection)
+                    reader.caps[dimension] = counts[dimension]-deficit
+                    if deficit:
+                        with self.assertRaisesRegex(ClaimUseLimitError, dimension):
+                            freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)])
+                    else:
+                        self.assertEqual(freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)]), expected)
+            # Record reconstruction also reserves transient scratch, so its peak
+            # byte requirement can exceed the final charged total. Measure that
+            # admission boundary rather than assuming the two are equal.
+            rejected, admitted = 0, reader.caps["metadata_bytes"]
+            while admitted-rejected > 1:
+                ceiling = (admitted+rejected)//2
+                reader = freshness.Reader(self.store, connection)
+                reader.caps["metadata_bytes"] = ceiling
+                try:
+                    actual = freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)])
+                except ClaimUseLimitError as error:
+                    self.assertIn("metadata_bytes", str(error))
+                    rejected = ceiling
+                else:
+                    self.assertEqual(actual, expected)
+                    admitted = ceiling
+            reader = freshness.Reader(self.store, connection)
+            reader.caps["metadata_bytes"] = admitted
+            self.assertEqual(freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)]), expected)
+            reader = freshness.Reader(self.store, connection)
+            reader.caps["metadata_bytes"] = rejected
+            with self.assertRaisesRegex(ClaimUseLimitError, "metadata_bytes"):
+                freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)])
+            reader = freshness.Reader(self.store, connection, cutoff=receipt.event_id)
+            reader.caps["index_rows"] = reader.caps["metadata_bytes"] = 0
+            self.assertEqual(freshness.observed(reader, [], binding_keys=[("unrelated-use", 1)]), [])
+
+    def test_proposed_direct_membership_reserves_the_full_future_event_width(self):
+        """A forward registration consumes indexed membership bytes and its cause before propagation."""
+        from research_pipeline import claim_use_store as freshness
+
+        original = freshness.Reader.rows
+        membership_accounts, deltas = {}, []
+
+        def measure(reader, sql, args=(), dimension="index_rows"):
+            """Measure the proposed row's charges between membership and dependency lookups."""
+            if "FROM claim_use_dependencies d INDEXED BY claim_use_dependency_target" in sql \
+                    and args[:3] == ("future-use", 1, "promotion_eligibility"):
+                before = membership_accounts.pop(id(reader))
+                deltas.append({name: reader.counts[name]-before[name]
+                               for name in ("index_rows", "metadata_bytes", "causes")})
+            yield from original(reader, sql, args, dimension)
+            if "FROM claim_use_bindings WHERE" in sql:
+                membership_accounts[id(reader)] = dict(reader.counts)
+
+        request = batch("future-register", [assessment_envelope("future-issue", 1,
+                        issue("future-use", "promotion_eligibility"), PROVENANCE),
+                        use_envelope("future-use", 1, binding("unrelated", (), (), ()), PROVENANCE)])
+        before = metadata(self.root)
+        with self.store._transaction() as connection, patch.object(freshness.Reader, "rows", measure):
+            plan = freshness.prepare(self.store, connection, request)
+        self.assertEqual(deltas, [dict(index_rows=1, metadata_bytes=8*(len("future-use")+1+19), causes=1)])
+        self.assertEqual(plan.transitions["future-use"][1], 1)
+        self.assertEqual({c["type"] for c in plan.transitions["future-use"][2]},
+                         {"binding_registered", "binding_affected"})
+        self.assertEqual(metadata(self.root), before)
+
     def test_retained_shells_reject_without_dispatch_on_all_preparation_paths(self):
         """Exact shell guards precede hostile containers/scalars for generic, typed and mixed writes."""
         from research_pipeline.domain import DomainValidationError
@@ -215,7 +392,7 @@ class ClaimUseBoundsTests(unittest.TestCase):
             for cutoff in (None, 50):
                 freshness.prepare(self.store, connection, request, cutoff=cutoff)
                 reader = freshness.Reader(self.store, connection, cutoff=cutoff)
-                freshness.observed(reader, freshness._dependencies(reader, ("use", 1)))
+                freshness.observed(reader, freshness._dependencies(reader, ("use", 1)), binding_keys=[("use", 1)])
         indexes = ("claim_use_dependency_target", "claim_use_dependency_watch", "claim_use_upstream_target",
                    "claim_use_association_target", "claim_use_revision_event")
         probes = {}
@@ -468,7 +645,7 @@ class ClaimUseBoundsTests(unittest.TestCase):
             with self.store._transaction() as owned:
                 reader = freshness.Reader(self.store, owned, cutoff=100)
                 deps = freshness._dependencies(reader, ("use", 1))
-                freshness.observed(reader, deps)
+                freshness.observed(reader, deps, binding_keys=[("use", 1)])
         finally:
             connection.set_trace_callback(None)
         reverse = {sql for sql in statements if "FROM claim_use_association_links l INDEXED BY claim_use_association_target" in sql}
