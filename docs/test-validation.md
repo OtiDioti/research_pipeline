@@ -305,6 +305,16 @@ on the same candidate. Use per-unit inventories to distinguish prior test work f
 added regression cost; never filter or disable either in full validation. Report
 wave-barrier idle time, resource/platform fallbacks, instability and contention.
 Synthetic gates prove overlap and isolation, not representative acceleration.
+
+The socket-independent overlap fixture observes the two named PID files only
+after each contains a positive ASCII decimal PID followed by exactly one newline.
+That newline marks complete publication; empty files and numeric prefixes cannot
+authorize the external release gate. Deterministic publication steps exercise the
+shared observer through empty, partial, unframed and complete records without real
+sleeps. Deadline, exit and malformed-record regressions accompany real unfinished
+publication and controlled-crash cleanup cases, including an inherited descendant.
+Separate complete setup acknowledgements certify cleanup evidence, never release.
+
 Acceptance, independent review, receipt, exact integration, full post-integration
 validation, representative benchmarks and the administrative checkpoint/STOP remain
 controller/coordinator-owned gates.

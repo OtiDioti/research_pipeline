@@ -24,7 +24,7 @@ Immediate files and child directories only.
 - [source-capture.md](source-capture.md) — Bounded local Source capture.
 - [sources.md](sources.md) — Versioned source captures.
 - [synthetic-oscillator.md](synthetic-oscillator.md) — Synthetic harmonic/quartic paper walkthrough.
-- [test-validation.md](test-validation.md) — Development test validation.
+- [test-validation.md](test-validation.md) — Development validation, complete-record overlap gates and deterministic incomplete-publication coverage.
 - [tool-record-cli.md](tool-record-cli.md) — Passive Tool CLI argv, exact controls/results/limits, original-ID recovery, exact direct-byte verification and metadata-only claim-use navigation.
 - [tool-assessments.md](tool-assessments.md) — Passive attributed Tool assessments.
 - [tool-releases.md](tool-releases.md) — Passive versioned Tool releases.

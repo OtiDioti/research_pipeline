@@ -9,8 +9,128 @@ import subprocess
 import sys
 import time
 import unittest
+from unittest import mock
 
-from tests.validation_fixtures import CandidateFixture, PASSING, four_cpu_sample
+from tests.validation_fixtures import (
+    CandidateFixture, PASSING, four_cpu_sample, wait_for_pid_announcements,
+)
+
+
+class PidReadinessTests(CandidateFixture, unittest.TestCase):
+    """Control publication steps deterministically against the real shared observer."""
+
+    def test_incomplete_publication_cannot_release_workers(self):
+        """Empty files, numeric prefixes and unframed PIDs cannot advance the controller."""
+        paths = [self.parent / name for name in ('0', '1')]
+        for path in paths:
+            path.write_bytes(b'')
+        # A directory entry outside the expected paths has no readiness meaning.
+        (self.parent / 'unrelated').write_bytes(b'not a PID\n')
+        release = self.parent / 'release'
+        stages = [(b'1', b'4'), (b'123', b'456'),
+                  (b'123\n', b'456'), (b'123\n', b'456\n')]
+        published = []
+
+        def publish_next(interval):
+            """Replace polling sleep with one publication step, refusing extra polling."""
+            self.assertEqual(interval, 0.01)
+            self.assertFalse(release.exists())
+            self.assertLess(len(published), len(stages), 'unexpected additional poll')
+            stage = stages[len(published)]
+            for path, record in zip(paths, stage):
+                path.write_bytes(record)
+            published.append(stage)
+
+        process = mock.Mock()
+        process.poll.return_value = None
+        with mock.patch('tests.validation_fixtures.time.sleep', side_effect=publish_next), \
+                mock.patch('tests.validation_fixtures.time.monotonic', return_value=0):
+            pids = wait_for_pid_announcements(process, paths, deadline=1)
+            # Only returning from the actual observer permits this continuation.
+            self.assertEqual(published, stages)
+            self.assertEqual(pids, [123, 456])
+            self.assertFalse(release.exists())
+            release.touch()
+        self.assertTrue(release.exists())
+
+    def test_unfinished_publication_expires_at_absolute_deadline(self):
+        """A missing record and an unframed numeric PID stay pending until expiry."""
+        paths = [self.parent / name for name in ('0', '1')]
+        paths[0].write_bytes(b'123')
+        now = [10]
+
+        def reach_deadline(interval):
+            """Advance the controlled clock once instead of sleeping or retrying forever."""
+            self.assertEqual(interval, 0.01)
+            self.assertEqual(now[0], 10, 'unexpected additional poll')
+            now[0] = 11
+
+        def current_time():
+            """Expose only the explicitly advanced monotonic test clock."""
+            return now[0]
+
+        process = mock.Mock()
+        process.poll.return_value = None
+        with mock.patch('tests.validation_fixtures.time.sleep', side_effect=reach_deadline), \
+                mock.patch('tests.validation_fixtures.time.monotonic', side_effect=current_time):
+            with self.assertRaisesRegex(AssertionError, 'PID readiness deadline expired'):
+                wait_for_pid_announcements(process, paths, deadline=11)
+        self.assertEqual(now[0], 11)
+
+    def test_process_exit_before_readiness_fails(self):
+        """Neither a zero nor nonzero exit can excuse an incomplete announcement."""
+        path = self.parent / '0'
+        path.write_bytes(b'123')
+        for status in (0, 23):
+            with self.subTest(status=status):
+                process = mock.Mock()
+                process.poll.side_effect = [None, None, status]
+                with mock.patch('tests.validation_fixtures.time.sleep') as sleep, \
+                        mock.patch('tests.validation_fixtures.time.monotonic', return_value=0):
+                    with self.assertRaisesRegex(AssertionError, f'exited with status {status}'):
+                        wait_for_pid_announcements(process, [path], deadline=1)
+                    sleep.assert_called_once_with(0.01)
+
+    def test_final_process_and_deadline_checks_prevent_return(self):
+        """Complete records still cannot pass after subprocess exit or deadline expiry."""
+        path = self.parent / '0'
+        path.write_bytes(b'123\n')
+        for status, ticks, diagnostic in ((0, [0], 'exited with status 0'),
+                                           (None, [0, 1], 'deadline expired')):
+            with self.subTest(diagnostic=diagnostic):
+                process = mock.Mock()
+                process.poll.side_effect = [None, status]
+                with mock.patch('tests.validation_fixtures.time.monotonic', side_effect=ticks), \
+                        mock.patch('tests.validation_fixtures.time.sleep') as sleep:
+                    with self.assertRaisesRegex(AssertionError, diagnostic):
+                        wait_for_pid_announcements(process, [path], deadline=1)
+                    sleep.assert_not_called()
+
+    def test_malformed_completed_records_fail_with_path(self):
+        """Completed nonpositive, non-ASCII or extra-content records fail without retry."""
+        path = self.parent / '0'
+        process = mock.Mock()
+        process.poll.return_value = None
+        for record in (b'\n', b'0\n', b'-1\n', b' 12\n', b'12\r\n',
+                       b'12\n\n', b'12x\n', '１２\n'.encode(), b'\xff\n'):
+            with self.subTest(record=record):
+                path.write_bytes(record)
+                with mock.patch('tests.validation_fixtures.time.monotonic', return_value=0), \
+                        mock.patch('tests.validation_fixtures.time.sleep', side_effect=AssertionError(
+                            'unexpected polling after completed record')) as sleep:
+                    with self.assertRaisesRegex(AssertionError, 'malformed completed PID') as failure:
+                        wait_for_pid_announcements(process, [path], deadline=1)
+                    self.assertIn(str(path), str(failure.exception))
+                    sleep.assert_not_called()
+
+    def test_read_errors_are_not_pending_publication(self):
+        """An existing unreadable-as-a-file path propagates its real filesystem error."""
+        path = self.parent / '0'
+        path.mkdir()
+        process = mock.Mock()
+        process.poll.return_value = None
+        with self.assertRaises(IsADirectoryError):
+            wait_for_pid_announcements(process, [path], deadline=time.monotonic() + 1)
 
 
 class DiscoveryExecutionTests(CandidateFixture, unittest.TestCase):
@@ -591,42 +711,150 @@ v.sample_resources = changing_sample
         self.assertIn('Wave 2: A=2 T=1 C=0 concurrency=1', output)
         self.assertEqual(len(self.inventories(output)['completed']), 5)
 
-    def test_pipe_gated_overlap(self):
-        """Prove concurrent readiness with an external controller and no socket prerequisite."""
+    def write_gated_workers(self, fault=None):
+        """Build two bounded external-gate workers and return their observation paths.
+
+        The explicit test-only faults leave worker zero's announcement unfinished;
+        crash additionally starts an inherited descendant and awaits a control gate.
+        Complete setup acknowledgements certify written cleanup evidence and fault
+        setup only: they never grant permission to release either worker.
+        """
         ready = self.parent / 'announcements'
         ready.mkdir()
         release = self.parent / 'release'
+        setup = self.parent / 'setup'
+        setup.mkdir()
+        evidence = [self.parent / f'worker-{index}.json' for index in (0, 1)]
+        crash = self.parent / 'crash'
         for index, name in enumerate(('test_example.py', 'test_peer.py')):
-            self.write(name, f'''import os, time, unittest
+            unfinished = index == 0 and fault in ('unfinished', 'crash')
+            crashing = index == 0 and fault == 'crash'
+            ending = '' if unfinished else '\n'
+            self.write(name, f'''import json, os, subprocess, sys, tempfile, time, unittest
 from pathlib import Path
 class Gated(unittest.TestCase):
     """Wait for an external controller after announcing a live worker."""
     def test_body(self):
-        """Fail boundedly if two live workers never coexist at the gate."""
-        Path({str(ready / str(index))!r}).write_text(str(os.getpid()))
+        """Publish cleanup/setup records, then await release boundedly or crash on control."""
+        descendant = None
+        if {crashing!r}:
+            descendant = subprocess.Popen([sys.executable, '-B', '-c',
+                                           'import time; time.sleep(60)'])
+        # Only a newline completes readiness; the fault deliberately omits it.
+        Path({str(ready / str(index))!r}).write_text(str(os.getpid()) + {ending!r})
+        Path({str(evidence[index])!r}).write_text(json.dumps(dict(
+            pid=os.getpid(), temporary=tempfile.gettempdir(),
+            descendant=descendant.pid if descendant is not None else None)))
+        # Setup acknowledgement certifies prior evidence writes, never release.
+        Path({str(setup / str(index))!r}).write_text(str(os.getpid()) + '\\n')
         deadline = time.monotonic() + 10
         while not Path({str(release)!r}).exists():
+            if {crashing!r} and Path({str(crash)!r}).exists():
+                os._exit(31)
             if time.monotonic() > deadline:
                 self.fail('external gate was not released')
             time.sleep(0.01)
 ''')
+        return ([ready / str(index) for index in (0, 1)], release,
+                [setup / str(index) for index in (0, 1)], evidence, crash)
+
+    def finish_gated_validator(self, process, before, evidence):
+        """Reap within twelve seconds, retain failure diagnostics and verify owned cleanup.
+
+        Unfinished validators receive SIGTERM so their existing Invocation.cleanup
+        owns descendant termination and directory removal. Evidence is read only
+        after subprocess termination; streams close even when cleanup fails.
+        """
+        active_error = sys.exc_info()[1]
+        try:
+            if process.poll() is None:
+                process.send_signal(signal.SIGTERM)
+            stdout, stderr = process.communicate(timeout=12)
+            output = stdout + stderr
+            if active_error is not None:
+                active_error.add_note(output)
+            self.assertEqual(self.snapshot(), before, 'validator mutated candidate source')
+            for path in evidence:
+                record = json.loads(path.read_text())
+                for pid in (record['pid'], record['descendant']):
+                    if pid is not None:
+                        self.assertFalse(Path('/proc', str(pid)).exists(), (record, output))
+                self.assertFalse(Path(record['temporary']).exists(), (record, output))
+            return output
+        finally:
+            process.stdout.close()
+            process.stderr.close()
+
+    def test_pipe_gated_overlap(self):
+        """Prove two live, nondead workers await complete PID readiness without sockets."""
+        paths, release, _, evidence, _ = self.write_gated_workers()
+        before = self.snapshot()
         command, environment = self.command(prelude=four_cpu_sample())
         process = subprocess.Popen(command, env=environment, cwd=self.parent,
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         try:
-            deadline = time.monotonic() + 10
-            while len(list(ready.iterdir())) < 2 and time.monotonic() < deadline and process.poll() is None:
-                time.sleep(0.01)
-            files = list(ready.iterdir())
-            self.assertEqual(len(files), 2, 'both workers must announce before release')
-            pids = [int(path.read_text()) for path in files]
+            pids = wait_for_pid_announcements(process, paths, deadline=time.monotonic() + 10)
             self.assertEqual(len(set(pids)), 2)
             self.assertTrue(all(Path('/proc', str(pid)).exists() for pid in pids))
+            for pid in pids:
+                status = Path('/proc', str(pid), 'stat').read_text().rsplit(')', 1)[1].split()[0]
+                self.assertNotIn(status, ('Z', 'X', 'x'))
+            # Both bodies require this external gate, which has not been opened.
+            self.assertFalse(release.exists())
             release.touch()
             stdout, stderr = process.communicate(timeout=12)
             self.assertEqual(process.returncode, 0, stdout + stderr)
-            self.assertEqual(self.inventories(stdout)['discovered'], self.inventories(stdout)['completed'])
+            inventories = self.inventories(stdout)
+            self.assertEqual(inventories['discovered'], inventories['completed'])
+            expected = ['tests.test_example.Gated.test_body', 'tests.test_peer.Gated.test_body']
+            for name, inventory in inventories.items():
+                self.assertEqual(inventory, expected, name)
         finally:
-            if process.poll() is None:
-                process.terminate()
-            process.communicate(timeout=12)
+            self.finish_gated_validator(process, before, evidence)
+
+    def assert_gated_readiness_failure(self, fault):
+        """Exercise a real unfinished/crashing worker, asserting failure and complete cleanup."""
+        paths, release, setup, evidence, crash = self.write_gated_workers(fault)
+        before = self.snapshot()
+        command, environment = self.command(prelude=four_cpu_sample())
+        process = subprocess.Popen(command, env=environment, cwd=self.parent,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        try:
+            pids = wait_for_pid_announcements(process, setup, deadline=time.monotonic() + 10)
+            self.assertEqual(len(set(pids)), 2)
+            # Complete control acknowledgements establish that these records and
+            # the deliberately unfinished announcement have already been written.
+            records = [json.loads(path.read_text()) for path in evidence]
+            self.assertEqual([record['pid'] for record in records], pids)
+            self.assertTrue(all(Path('/proc', str(pid)).exists() for pid in pids))
+            self.assertEqual(paths[0].read_bytes(), str(pids[0]).encode('ascii'))
+            self.assertFalse(release.exists())
+            if fault == 'crash':
+                self.assertIsNotNone(records[0]['descendant'])
+                self.assertTrue(Path('/proc', str(records[0]['descendant'])).exists())
+                crash.touch()
+                diagnostic = 'validator exited with status'
+                deadline = time.monotonic() + 10
+            else:
+                diagnostic = 'PID readiness deadline expired'
+                # Start this short bound only after both setup acknowledgements.
+                deadline = time.monotonic() + 0.15
+            with self.assertRaisesRegex(AssertionError, diagnostic):
+                wait_for_pid_announcements(process, paths, deadline=deadline)
+            self.assertFalse(release.exists())
+        finally:
+            output = self.finish_gated_validator(process, before, evidence)
+        self.assertNotEqual(process.returncode, 0, output)
+        self.assertFalse(release.exists())
+        self.assertIn('successful=0', output)
+        self.assertEqual(self.inventories(output)['completed'], [])
+        self.assertTrue(all('success' not in item['events'] for item in self.dispositions(output)), output)
+        self.assertIn('exited abnormally' if fault == 'crash' else 'SIGTERM', output)
+
+    def test_unfinished_pid_publication_cleanup(self):
+        """Never completing a PID record fails readiness and cleans both held workers."""
+        self.assert_gated_readiness_failure('unfinished')
+
+    def test_crash_during_pid_publication_cleanup(self):
+        """A controlled crash before PID completion cleans its descendant and held peer."""
+        self.assert_gated_readiness_failure('crash')

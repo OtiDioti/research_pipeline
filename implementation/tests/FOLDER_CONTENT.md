@@ -104,7 +104,7 @@ Immediate files and child directories only.
 - [test_tool_release_example.py](test_tool_release_example.py) — Execute the exact product/stdlib-only Tool-release guide with candidate-local imports.
 - [test_typed_store.py](test_typed_store.py) — Typed admission over real durable stores, exact history, recovery and backups.
 - [test_validation.py](test_validation.py) — Test the real validator on tiny disposable suites, never recursively on this suite.
-- [test_validation_concurrent.py](test_validation_concurrent.py) — Real tiny candidate suites exercise automatic scheduling and intact sequential semantics.
+- [test_validation_concurrent.py](test_validation_concurrent.py) — Tiny candidate scheduling, complete PID overlap gates, deterministic publication regressions and bounded failure cleanup.
 - [test_validation_lifecycle.py](test_validation_lifecycle.py) — Bounded fresh-process failure regressions for validator-owned workers and descendants.
 - [test_validation_module_cleanups.py](test_validation_module_cleanups.py) — Compare shared module-cleanup transitions with stock unittest in fresh candidates.
 - [test_validation_resources.py](test_validation_resources.py) — Pure resource and protocol regression cases; no host limits or affinity are changed.
@@ -127,7 +127,7 @@ Immediate files and child directories only.
 - [tool_registration_fixtures.py](tool_registration_fixtures.py) — Real-store fixtures for passive registration, independent wire identities and damage tests.
 - [tool_release_envelope_fixtures.py](tool_release_envelope_fixtures.py) — Independent envelope fixtures and ordered expectations, never production projections.
 - [tool_release_fixtures.py](tool_release_fixtures.py) — Independent complete passive declarations and stdlib-only wire/count oracles.
-- [validation_fixtures.py](validation_fixtures.py) — Setup-only fixtures for tiny standalone validator processes; no repository-suite recursion.
+- [validation_fixtures.py](validation_fixtures.py) — Tiny standalone validator setup and focused complete-record PID readiness observation; no repository-suite recursion.
 - [view_capture_fixtures.py](view_capture_fixtures.py) — Private candidate-local fixtures for bounded capture and pure preservation tests.
 - [view_refresh_fixtures.py](view_refresh_fixtures.py) — Disposable refresh fixtures reusing accepted capture/prior-state helpers.
 - [tool_assessment_store_fixtures.py](tool_assessment_store_fixtures.py) — Real private-store assessment declarations and independently specified projections.

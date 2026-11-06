@@ -1,4 +1,4 @@
-"""Setup-only fixtures for tiny standalone validator processes; no repository-suite recursion."""
+"""Tiny standalone validator setup and complete PID readiness observation; no suite recursion."""
 
 import importlib.util
 import json
@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 VALIDATOR = Path(__file__).resolve().parents[1] / 'scripts' / 'validate.py'
 PASSING = '''import unittest
@@ -17,6 +18,45 @@ class Example(unittest.TestCase):
         """Prove genuine execution."""
         self.assertEqual(2 + 2, 4)
 '''
+
+
+def wait_for_pid_announcements(process, paths, *, deadline):
+    """Return ordered positive PIDs only after all named records end in one newline.
+
+    Observe a validator subprocess and external paths until the absolute monotonic
+    deadline. Missing, empty and unframed records remain pending; completed malformed
+    data, process exit or expiry raise AssertionError. Other read errors propagate.
+    This observer never releases workers or signals the subprocess.
+    """
+    paths = tuple(paths)
+    while True:
+        status = process.poll()
+        if status is not None:
+            raise AssertionError(f'validator exited with status {status} before PID readiness: {paths}')
+        if time.monotonic() >= deadline:
+            raise AssertionError(f'PID readiness deadline expired: {paths}')
+        pids = []
+        for path in paths:
+            try:
+                record = path.read_bytes()
+            except FileNotFoundError:
+                continue
+            # The final newline is the publication completion marker. Even a
+            # numerically valid prefix must never authorize worker release.
+            if not record.endswith(b'\n'):
+                continue
+            digits = record[:-1]
+            if not digits.isdigit() or int(digits) <= 0:
+                raise AssertionError(f'malformed completed PID announcement at {path}: {record!r}')
+            pids.append(int(digits))
+        status = process.poll()
+        if status is not None:
+            raise AssertionError(f'validator exited with status {status} before PID readiness: {paths}')
+        if time.monotonic() >= deadline:
+            raise AssertionError(f'PID readiness deadline expired: {paths}')
+        if len(pids) == len(paths):
+            return pids
+        time.sleep(0.01)
 
 
 def load_validator():
