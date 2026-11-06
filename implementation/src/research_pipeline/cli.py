@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import sys
 
-from research_pipeline import __version__, checkout, cli_proposals, cli_tools, cli_views, work_product_import
+from research_pipeline import __version__, checkout, cli_claim_use, cli_proposals, cli_tools, cli_views, work_product_import
 from research_pipeline.artifacts import ArtifactError
 from research_pipeline.cli_controls import CliError, causes, path_value, read_config, read_request, source_root
 from research_pipeline.cli_inspection import exact_record, exact_receipt, local_checkout
@@ -64,6 +64,11 @@ class _Parser(argparse.ArgumentParser):
                 if command is not None:
                     context = dict.fromkeys(cli_tools.CONTEXT_FIELDS)
                     context["next_action"] = "Repeat the same help request; discard partial output."
+                claim_command = getattr(self, "_claim_use_command", None)
+                if claim_command is not None:
+                    command = claim_command
+                    context = dict.fromkeys(cli_claim_use.CONTEXT_FIELDS)
+                    context["next_action"] = "Repeat the same help request; discard partial output."
                 _diagnostic(command, failure, context)
                 self.exit(6)
         else:
@@ -104,7 +109,7 @@ def _canonical_decimal(value):
 
 
 def _parser():
-    """Build the explicit operations; every parser disables option abbreviation."""
+    """Build explicit operations with command-specific numeric accounts and no option abbreviation."""
     parser = _Parser(prog="python -m research_pipeline", allow_abbrev=False,
                      description="Research workbench foundation: research execution is unavailable.")
     parser.add_argument("--version", action="version", version=__version__)
@@ -127,10 +132,18 @@ def _parser():
         "inspect-readable-refresh": "Observe exact retained refresh evidence offline; never replay or repair.",
     })
     descriptions.update(cli_tools.DESCRIPTIONS)
+    descriptions.update(cli_claim_use.DESCRIPTIONS)
     for command, description in descriptions.items():
         sub = subparsers.add_parser(command, description=description, help=description, allow_abbrev=False)
         limits = ["max_output_bytes"]
-        if command in cli_tools.COMMANDS:
+        if command in cli_claim_use.COMMANDS:
+            sub._claim_use_command = command
+            sub.add_argument("--config", required=True, action=_Once, metavar="FILE",
+                             help="Explicit private version-one configuration; existing runtime only.")
+            sub.add_argument("--use-id", required=True, action=_Once, metavar="ID",
+                             help="Registered use ID: 1..128 ASCII letters/digits/_/-, starting with a letter or digit.")
+            limits = list(cli_claim_use.specifications(command))
+        elif command in cli_tools.COMMANDS:
             sub._tool_command = command
             sub.add_argument("--config", required=True, action=_Once, metavar="FILE",
                              help="Explicit private version-one configuration; existing runtime only.")
@@ -195,14 +208,15 @@ def _parser():
                 sub.add_argument("--destination", required=True, action=_Once, metavar="PATH")
                 limits += ["max_descriptor_bytes", "max_files", "max_file_bytes", "max_total_bytes"]
         for name in limits:
-            default, minimum, maximum, unit = _LIMITS[name]
+            specifications = cli_claim_use.specifications(command) if command in cli_claim_use.COMMANDS else _LIMITS
+            default, minimum, maximum, unit = specifications[name]
             if name == "max_control_bytes" and command in (
                     "prepare-work-product", "inspect-proposal", "submit-work-product"):
                 unit = "bytes per config/package manifest (manifest also capped at 16384 bytes)"
             if command in cli_tools.COMMANDS:
                 unit = cli_tools.LIMIT_UNITS.get(name, unit)
             sub.add_argument("--" + name.replace("_", "-"), action=_Once,
-                             type=_canonical_decimal if command in cli_tools.COMMANDS else _decimal,
+                             type=_canonical_decimal if command in cli_tools.COMMANDS | cli_claim_use.COMMANDS else _decimal,
                              default=default, metavar="N",
                              help=f"{unit}; default {default}; range {minimum}..{maximum}")
     return parser
@@ -220,8 +234,11 @@ def _number(value, minimum, maximum):
     return value
 
 
-def _validate(arguments):
-    """Validate every selected value before opening controls or any dependent resource."""
+def _validate(arguments, context=None):
+    """Validate selections before resource access, retaining established claim-use context when supplied."""
+    if arguments.command in cli_claim_use.COMMANDS:
+        cli_claim_use.validate(arguments, context)
+        return
     if arguments.command in cli_tools.COMMANDS and hasattr(arguments, "kind"):
         if arguments.kind not in ("tool_release", "tool_assessment"):
             raise DomainValidationError("kind requires tool_release or tool_assessment")
@@ -282,6 +299,8 @@ def _checkout_preflight(arguments, envelope):
 def _execute(arguments, context, effects):
     """Dispatch one operation and close inputs/store/held paths before returning bounded output."""
     command = arguments.command
+    if command in cli_claim_use.COMMANDS:
+        return cli_claim_use.execute(arguments, context, effects)
     if command in cli_tools.COMMANDS:
         return cli_tools.execute(arguments, context, effects)
     if command in cli_views.COMMANDS:
@@ -500,6 +519,8 @@ def _emit(data):
 def _classify(error, effects):
     """Map failures using types and chained errno, never parsing publication-message wording."""
     operation = effects.get("operation")
+    if operation in cli_claim_use.COMMANDS:
+        return cli_claim_use.classify(error, effects)
     if operation in cli_tools.COMMANDS:
         return cli_tools.classify(error, effects)
     if operation in cli_views.COMMANDS:
@@ -557,7 +578,7 @@ def _diagnostic(command, error, context):
     # Two 4096-byte paths need at most 49152 ASCII bytes after escaping. Fixed
     # identity/guidance fields and this message cap fit in the remaining allowance.
     message = str(error)[:1000]
-    if command in cli_views.COMMANDS or command in cli_tools.COMMANDS:
+    if command in cli_views.COMMANDS | cli_tools.COMMANDS | cli_claim_use.COMMANDS:
         # Bound explanatory text by escaped ASCII bytes, keeping exact recovery
         # paths/identities intact even when each path expands sixfold in JSON.
         while len(json.dumps(message, ensure_ascii=True).encode("ascii")) > 1024:
@@ -585,14 +606,16 @@ def main(argv=None):
         context = dict.fromkeys(cli_views.CONTEXT_FIELDS)
     if arguments.command in cli_tools.COMMANDS:
         context = dict.fromkeys(cli_tools.CONTEXT_FIELDS)
+    if arguments.command in cli_claim_use.COMMANDS:
+        context = dict.fromkeys(cli_claim_use.CONTEXT_FIELDS)
     effects = {"begun": False, "operation": arguments.command}
     try:
-        _validate(arguments)
+        _validate(arguments, context)
         if arguments.command in cli_tools.COMMANDS:
             for name in ("config", "batch", "kind", "record_id", "revision"):
                 value = getattr(arguments, name, None)
                 context[name] = str(value) if isinstance(value, Path) else value
-        if arguments.command not in cli_views.COMMANDS and arguments.command not in cli_tools.COMMANDS:
+        if arguments.command not in cli_views.COMMANDS | cli_tools.COMMANDS | cli_claim_use.COMMANDS:
             for name in ("record_id", "revision", "submission_id"):
                 context[name] = getattr(arguments, name, None)
         if hasattr(arguments, "view"):
@@ -619,7 +642,9 @@ def main(argv=None):
         failure = _classify(error, effects)
         if effects.get("verified") is not None:
             _proposal_identity(effects["verified"], context, effects)
-        if arguments.command in cli_tools.COMMANDS:
+        if arguments.command in cli_claim_use.COMMANDS:
+            context["next_action"] = cli_claim_use.guidance(arguments.command, failure)
+        elif arguments.command in cli_tools.COMMANDS:
             context["next_action"] = cli_tools.guidance(arguments.command, failure)
         elif arguments.command in cli_views.COMMANDS:
             context["next_action"] = cli_views.guidance(arguments.command, failure)

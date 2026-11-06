@@ -8,8 +8,9 @@ Immediate files and child directories only.
 - [assessment.py](assessment.py) — Pure attributed assessment contracts; declarations confer no scientific authority.
 - [backup.py](backup.py) — Verified snapshots, exact format-7 restore, original-time support backfill and independent policy/context activation with durable markers.
 - [checkout.py](checkout.py) — Bounded, inert local copies with durable publication and untrusted base descriptors.
-- [cli.py](cli.py) — Source-local argv, bounded results and acknowledgement for inspection, saved work products, readable views and passive Tools.
-- [cli_controls.py](cli_controls.py) — Strict bounded controls, shared version-one configuration and retained no-follow observations.
+- [cli.py](cli.py) — Source-local argv, bounded results and acknowledgement for exact/current claim-use inspection, history, saved work products, readable views and passive Tools.
+- [cli_claim_use.py](cli_claim_use.py) — Complete metadata-only current-use/history CLI adapters with independent accounts and read-only acknowledgement.
+- [cli_controls.py](cli_controls.py) — Strict bounded controls, version-one configuration, shared ancestor probes and held no-follow observations distinguishing initially unsafe directories from later ownership/permission changes.
 - [cli_inspection.py](cli_inspection.py) — Bounded exact CLI metadata reconstruction and offline original-checkout observation.
 - [cli_proposals.py](cli_proposals.py) — Strict saved work-product packages, offline observations and private publication.
 - [cli_tools.py](cli_tools.py) — Closed passive Tool batches, selected snapshot bounds and original-ID submission recovery.

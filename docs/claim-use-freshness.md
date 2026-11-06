@@ -1,5 +1,10 @@
 # Transactional claim-use freshness
 
+The [current claim-use CLI guide](claim-use-cli.md) exposes these complete API
+documents through explicit bounded metadata-only commands and includes a
+self-contained executable private-store example. Exact `inspect-record` remains a
+separate historical envelope selection.
+
 `research_pipeline.claim_use` defines passive exact bindings. Register them with
 `RecordStore.submit_typed(Submission(...))`, using `encode_envelope`; the result is
 an unchanged `SubmissionReceipt`. Generic `submit` recognizes the same explicit

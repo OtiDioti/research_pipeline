@@ -1,5 +1,10 @@
 # Research workbench foundation
 
+The [current claim-use CLI guide](../docs/claim-use-cli.md) covers explicit current
+operational snapshots and generation-history pages over immutable scientific pins,
+independent limits, private held controls and a candidate-local executable example.
+These metadata-only reads do not verify historical attachments or confer scientific authority.
+
 The [passive Tool-record CLI guide](../docs/tool-record-cli.md) documents explicit exact typed
 inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
 private controls, original-ID recovery and a self-contained executable example.

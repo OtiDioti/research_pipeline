@@ -136,6 +136,12 @@ Immediate files and child directories only.
 - [test_tool_assessment_persistence_recovery.py](test_tool_assessment_persistence_recovery.py) — Direct artifacts, atomic rollback, real SQLite contention and process-exit recovery.
 - [test_tool_assessment_persistence_example.py](test_tool_assessment_persistence_example.py) — Execute the exact self-contained passive persistence guide in candidate Python.
 - [claim_use_fixtures.py](claim_use_fixtures.py) — Setup-only routes, conjunctive alternatives, disjoint target/support/candidate scopes, excluded links and exact downstream bindings.
+- [test_claim_use_cli.py](test_claim_use_cli.py) — Full subprocess/API equivalence, canonical bytes, schema versions, immutable pins, pages and metadata-only nonmutation.
+- [test_claim_use_cli_controls.py](test_claim_use_cli_controls.py) — Strict argv/configuration, initial directory mode/stat/fstat ownership refusals, private leaves, early-access witnesses, filesystem overlap and errno refusals.
+- [test_claim_use_cli_bounds.py](test_claim_use_cli_bounds.py) — Independent real-graph/work/representation boundaries, diagnostic bounds and physical stdout acknowledgement.
+- [test_claim_use_cli_failures.py](test_claim_use_cli_failures.py) — Held-control substitutions and post-close directory permission/stat/fstat ownership changes, checked closes, failed later acquisitions, required metadata corruption and schema/busy refusals.
+- [test_claim_use_cli_concurrency.py](test_claim_use_cli_concurrency.py) — Coordinated independent-process snapshots across genuine prepared/committed transactions for both operations.
+- [test_claim_use_cli_example.py](test_claim_use_cli_example.py) — Execute the exact product/stdlib-only published private-store CLI example with candidate imports.
 - [test_claim_use.py](test_claim_use.py) — Strict passive claim-use codecs, projections, detachment and contract limits.
 - [test_claim_use_store.py](test_claim_use_store.py) — Synchronous Review/Issue freshness, direct binding targets, historical pins, forward registration observations, rollback and projection integrity.
 - [test_claim_use_bounds.py](test_claim_use_bounds.py) — Exact registration membership, binding observation seeds, temporal query/instruction bounds, independent accounts and atomic propagation ceilings.

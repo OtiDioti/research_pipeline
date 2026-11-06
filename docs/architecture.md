@@ -22,7 +22,14 @@ the package does not read installed distribution or repository metadata.
 exact record and original-receipt inspection, historical work-product checkout and
 offline original-descriptor inspection, bounded saved preparation, offline proposal
 review and separate explicit submission. `cli_controls` enforces strict bounded
-configuration and authored request reads; `cli_inspection` reuses bounded metadata
+configuration and authored request reads, shared fixed-name ancestor checks and
+retained no-follow leaf/directory observations through checked closes.
+`cli_claim_use` delegates current-use inspection and paged history to the existing
+coherent public APIs, preserving complete nested documents and independent work,
+metadata, domain-result and CLI-output accounts. These read-only operations use
+metadata without verifying historical attachments; exact Tool inspection retains
+its selected direct-byte verification. See the [claim-use CLI guide](claim-use-cli.md).
+`cli_inspection` reuses bounded metadata
 and checkout codecs. `cli_proposals` binds exact proposal/summary bytes to a strict
 fixed package inventory, verifies saved comparisons and reuses checkout's exclusive
 private-destination/incomplete-marker protocol. Marker removal is logical publication,

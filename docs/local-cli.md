@@ -1,6 +1,6 @@
 # Local inspection and explicit work-product round trips
 
-The source-local foundation provides thirteen bounded operations. Research execution
+The source-local foundation provides fifteen bounded operations. Research execution
 is unavailable. Declared provenance and author names are attribution, not
 authenticated authorship, scientific support or permission. Full R-082, creation
 and intake, other draft kinds, runtime administration
@@ -9,7 +9,10 @@ existing [preview and import APIs](work-product-import.md). The separate
 `submit-work-product` and `submit-tool-records` commands submit metadata; inspection, checkout and preparation create no canonical submission.
 The [passive Tool-record CLI guide](tool-record-cli.md) specifies exact typed
 inspection and mixed passive Tool batches, independent limits and original-ID
-recovery, with an executable private-store example.
+recovery, with an executable private-store example. The
+[current claim-use CLI guide](claim-use-cli.md) specifies complete metadata-only
+current operational snapshots over immutable pins and paged generation history,
+with an independent executable private-store example.
 
 Put the executing candidate's `implementation/src` first on `PYTHONPATH`, using an
 absolute path when changing working directories. No installation is required:
@@ -20,6 +23,8 @@ python3 -B -m research_pipeline --help
 python3 -B -m research_pipeline --version
 python3 -B -m research_pipeline inspect-record --config /private/cli/config.json --record-id bundle --revision 1
 python3 -B -m research_pipeline inspect-receipt --config /private/cli/config.json --submission-id initial
+python3 -B -m research_pipeline inspect-claim-use --config /private/cli/config.json --use-id U
+python3 -B -m research_pipeline inspect-claim-use-history --config /private/cli/config.json --use-id U --after-generation 0 --page-limit 1
 python3 -B -m research_pipeline checkout-work-product --config /private/cli/config.json --record-id bundle --revision 1 --destination /private/drafts/note
 python3 -B -m research_pipeline inspect-checkout --checkout /private/drafts/note
 python3 -B -m research_pipeline prepare-work-product --config /private/cli/config.json --checkout /private/drafts/note --request /private/cli/edit.json --destination /private/proposals/edit-1
@@ -29,13 +34,18 @@ python3 -B -m research_pipeline submit-work-product --config /private/cli/config
 
 No arguments prints help. Every command has `--help`, including units and defaults.
 Identifiers and exact revisions are mandatory for exact record operations. Readable-view
-selection controls alone permit explicit null for current head; omission never selects it. There is no
+selection controls permit explicit null for current head; omission never selects it.
+The two claim-use operations explicitly select a registered current use by mandatory
+`--use-id`, with no revision option; history additionally selects an exclusive
+generation cursor and page size. There is no
 positional shortcut, environment-selected store, stdin control, response-file
 expansion, generic execution command, plugin or user-selected module. Unknown or
 abbreviated options, missing arguments, repeated singleton options and malformed
 numeric option syntax are usage errors. Numeric options use ASCII decimal digits.
-The two Tool commands additionally require canonical spelling without leading
-zeros or signs.
+The two Tool and two claim-use commands additionally require canonical spelling
+`0` or `[1-9][0-9]*`, without leading zeros, signs, whitespace or numeric aliases.
+Malformed spelling is a usage error; canonical oversized/out-of-range values are
+`limit_exceeded` before control access. Older commands retain their syntax.
 All options are validated before opening controls, stores or destinations.
 
 The four [immutable readable-view commands](readable-view-cli.md) add generation,
@@ -108,12 +118,20 @@ limits do not bound SQLite opening, schema validation or recovery work.
 ## Finite limits
 
 All ranges are inclusive. Counts/bytes include repeated logical occurrences.
-Limits do not authorize writes or certify content.
+Limits do not authorize writes or certify content. The table below retains the
+predecessor work-product/exact-inspection contracts; the
+[Tool guide](tool-record-cli.md#independent-caller-limits) and
+[claim-use guide](claim-use-cli.md#independent-allowances-and-selections) specify
+their command-specific accounts. Claim-use defaults differ: `max_records` is
+1024 (range 1..1024), `max_metadata_bytes` is 67108864 (1..67108864) and
+`max_output_bytes` is 8388608 (1..16777216). Its other required API dimensions are
+independent binding/reference/assertion-revision work and complete domain-result
+bytes (at most 4194304); config bytes and full output including LF are separate.
 
 | Option | Applicable commands | Default | Range and units |
 | --- | --- | ---: | --- |
 | `--max-control-bytes` | Config and saved-package commands | 65536 | 1..1048576 bytes per config or package manifest; manifest also capped at 16384 |
-| `--max-output-bytes` | All operations | 2097152 | 1..16777216 ASCII bytes, including LF |
+| `--max-output-bytes` | Operations in this table | 2097152 | 1..16777216 ASCII bytes, including LF |
 | `--max-metadata-bytes` | Record/receipt inspection, checkout, preparation | 2097152 | 1..16777216 selected metadata bytes |
 | `--max-links` | Record inspection, checkout, preparation | 4096 | 0..65536 record/artifact link occurrences together |
 | `--max-receipt-records` | Receipt inspection, preparation | 1024 | 1..65536 ordered membership occurrences |
@@ -158,14 +176,19 @@ have exactly `format: "research_pipeline.cli_result"`, `version: 1`, `command`,
 | --- | --- |
 | `inspect-record` | `record_id`, `revision`, complete `envelope`, `commit` with `submission_id`, `committed_at`, `fingerprint`; envelope/commit both null when absent |
 | `inspect-receipt` | `submission_id`, original complete `receipt` (`null` when absent) |
+| `inspect-claim-use` | normalized absolute `store`, `use_id`, complete API `inspection` (`null` when absent) |
+| `inspect-claim-use-history` | normalized absolute `store`, `use_id`, `after_generation`, `page_limit`, complete API `history` (`null` when absent) |
 | `checkout-work-product` | normalized absolute `destination`, complete exact `base`, `descriptor: ".work-product/checkout.json"` |
 | `inspect-checkout` | normalized absolute `checkout`, original complete `base` and `envelope`, `observation: "published_descriptor"`, `historical_durability: "unknown"` |
 | `prepare-work-product` | normalized absolute `destination`, `proposal_sha256`, `submission_id`, complete exact `base`, `proposed_revision` |
 | `inspect-proposal` | normalized absolute `destination`, `state`, `proposal_sha256`, `submission_id`, complete `base`, `proposed_revision`, complete decoded `proposal` and `summary`, `historical_durability: "unknown"` |
 | `submit-work-product` | normalized absolute `destination`, `proposal_sha256`, `submission_id`, exact returned complete `receipt` |
 
-There are no inferred dates, current heads, artifact bytes or mutable status
-summaries. Both presence and absence obey output limits. Serialization is bounded
+Exact record/receipt and saved-product results contain no inferred dates, current
+heads, artifact bytes or mutable status summaries. The explicit claim-use commands
+pass through complete current-use/history API documents without reconstructing
+status views. A registered empty history page is successful and differs from an
+absent unregistered use. All nested versions, fields, arrays and causes are retained. Both presence and absence obey output limits. Serialization is bounded
 incrementally, including JSON escape expansion and LF. Checkout prepares its
 predictable output before reserving the destination; too-small output budgets
 cannot create a draft. Output is never intentionally truncated.
@@ -174,7 +197,7 @@ cannot create a draft. Output is never intentionally truncated.
 | ---: | --- |
 | 0 | Complete acknowledged result, help or version |
 | 2 | CLI usage error |
-| 3 | Absent store root, exact base/record revision, original submission or selected package |
+| 3 | Absent store root, exact base/record revision, original submission, selected package or missing/unregistered claim use |
 | 4 | Destination collision, stale expected head, used/different submission ID or conflicting saved evidence |
 | 5 | Unsafe/invalid controls or layouts, malformed requested values or exceeded limits |
 | 6 | Operational failure, corrupt canonical metadata/artifacts, or read-only output failure |
@@ -190,8 +213,17 @@ partial JSON, or bytes from a failed flush/close, as successful acknowledgment.
 Diagnostics are one ASCII-escaped JSON line on stderr, at most 65536 bytes, with
 exactly `format: "research_pipeline.cli_diagnostic"`, `version: 1`, `command`,
 `code`, `message`, `context`. The command may be null. Context has exactly `store`,
-`destination`, `record_id`, `revision`, `submission_id`, `next_action`; unavailable
-values are null. Codes are `missing`, `conflict`, `invalid_input`, `unsafe_layout`,
+`destination`, `record_id`, `revision`, `submission_id`, `next_action` for the
+work-product/exact-inspection commands above; unavailable values are null. Tool
+and readable-view contexts are specified in their guides. Claim-use context has
+exactly `config`, `use_id`, `after_generation`, `page_limit`, `next_action`; current
+inspection has null cursor/page fields. Only established normalized paths and
+validated selections survive refusals. Its limit errors precede generic domain
+validation; unsupported schemas are `unsafe_layout`, recognized wrapped metadata
+corruption/changed held observations are `integrity_error`, and true chained
+EACCES/EIO and database/busy/close failures remain `operational_error`. Claim-use
+commands are read-only and never report exit-7 submission uncertainty. Codes are
+`missing`, `conflict`, `invalid_input`, `unsafe_layout`,
 `limit_exceeded`, `integrity_error`, `operational_error`, `output_failed`, and
 `effects_uncertain`. Recovery identities are preserved without dumping private
 artifact content or tracebacks. Usage errors retain bounded escaped argparse text.

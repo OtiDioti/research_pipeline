@@ -1,5 +1,9 @@
 # Product documentation
 
+The [current claim-use CLI guide](claim-use-cli.md) documents complete metadata-only
+current snapshots over immutable pins, paged generation causes, independent work
+and representation limits, read-only acknowledgement and an executable private-store example.
+
 The [passive Tool-record CLI guide](tool-record-cli.md) documents explicit exact typed
 inspection and nonempty ordered ToolRelease/ToolAssessment batches, bounded
 private controls, original-ID recovery and a self-contained executable example.

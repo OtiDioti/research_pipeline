@@ -6,14 +6,13 @@ Tool, stages bytes, selects a head, or authenticates supplied declarations.
 
 from contextlib import ExitStack
 import errno
-from pathlib import Path
 import re
 
-from research_pipeline import checkout, cli_proposals, vault
+from research_pipeline import checkout, vault
 from research_pipeline.artifacts import ArtifactIntegrityError, ArtifactNotFoundError, ArtifactLayoutError
 from research_pipeline.cli_controls import (
     CliError, _ObservedDirectories, _config_value, causes,
-    read_observed_control, source_root, strict_json,
+    _ancestors, _read_control, _check, source_root, strict_json,
 )
 from research_pipeline.domain import (
     CreationProvenance, DomainValidationError, Submission, SubmissionReceipt, _fields, _identifier, _integer, _kind, _timestamp,
@@ -205,50 +204,6 @@ def decode_batch(data, arguments):
                 item["content"], arguments.max_content_bytes, "supplied content"):
             raise DomainValidationError("incomplete or coercive Tool content")
     return submission
-
-
-def _ancestors(directories, runtime=None):
-    """Reject fixed-name control/storage ancestors, allowing only the selected runtime internals."""
-    for _, _, fd, _, _, _, location in directories.bindings:
-        path = Path(location)
-        cli_proposals.not_proposal(fd, path)
-        if runtime is not None and path in (runtime, runtime / "objects", runtime / ".staging"):
-            markers = ("snapshot.sqlite3", ".backup-incomplete", ".restore-incomplete", ".work-product",
-                       "manifest.json", "intent.json", "ready.json", "published.json", "refresh.json")
-            if any(vault._present(fd, name) for name in markers):
-                raise checkout.CheckoutLayoutError("runtime overlaps recognizable control layout")
-        else:
-            vault._not_layout(fd, path)
-
-
-def _read_control(directories, observations, path, maximum, *, config=False):
-    """Read and close a private leaf while retaining its initial parent-relative signature."""
-    try:
-        parent = directories.traverse(path.parent, private=True, exact=True)
-        _ancestors(directories)
-        before = checkout._stat(parent, path.name)
-    except Exception as error:
-        directories.check()
-        if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
-            raise CliError(5 if config else 3, "invalid_input" if config else "missing",
-                           "Configuration is missing." if config else "Explicit batch is missing.") from error
-        raise
-    # Register before the reader so failures cannot discard an established pin.
-    observations.append((parent, path.name, before))
-    data, _ = read_observed_control(parent, path.name, path, maximum, modes=(0o400, 0o600), before=before)
-    return data
-
-
-def _check(directories, observations):
-    """Recheck all established leaf signatures and held bindings on success and failure paths."""
-    directories.check()
-    for parent, name, before in observations:
-        try:
-            current = checkout._stat(parent, name)
-        except FileNotFoundError as error:
-            raise checkout.CheckoutIntegrityError("observed control disappeared") from error
-        if checkout._signature(current) != checkout._signature(before):
-            raise checkout.CheckoutIntegrityError("observed control changed")
 
 
 def _receipt_reservation(arguments, submission, runtime):

@@ -226,6 +226,16 @@ _READABLE_SCALARS = frozenset(("max_entries", "max_files", "max_directories", "m
 class _ObservedDirectories(checkout._Directories):
     """Retain CLI directory observations while sharing checkout traversal and descriptor ownership."""
 
+    def __init__(self, stack):
+        """Track private bindings only after both entry and descriptor pass their initial check.
+
+        Held descriptors identify bindings throughout this operation: the caller's
+        ExitStack owns them until observation ends, so they cannot be reused here.
+        A binding appended by open() may still fail its first safety check.
+        """
+        super().__init__(stack)
+        self._established_private = set()
+
     def open(self, name, parent=None, *, private=False, exact=False, path=None):
         """Acquire a directory without adopting replacement after its first no-follow observation.
 
@@ -267,9 +277,30 @@ class _ObservedDirectories(checkout._Directories):
         return descriptor
 
     def check(self):
-        """Verify held bindings, translating missing observed ancestors into integrity failure."""
+        """Recheck held bindings, distinguishing initial unsafe layout from later safety changes.
+
+        Only successful private checks establish a binding; failure-path rechecks
+        must preserve an unchanged initial layout violation and actual I/O causes.
+        """
         try:
-            super().check()
+            for parent, name, descriptor, original, private, exact, path in self.bindings:
+                with checkout._operation("check directory binding", path):
+                    current, opened = checkout._stat(parent, name), os.fstat(descriptor)
+                    if (not stat.S_ISDIR(current.st_mode) or not stat.S_ISDIR(opened.st_mode)
+                            or checkout._identity(current) != checkout._identity(original)
+                            or checkout._identity(opened) != checkout._identity(original)):
+                        raise checkout.CheckoutIntegrityError(
+                            f"check directory binding {path}: replaced or changed type")
+                    if private:
+                        try:
+                            checkout._private_directory(current, path, exact)
+                            checkout._private_directory(opened, path, exact)
+                        except checkout.CheckoutLayoutError as error:
+                            if descriptor in self._established_private:
+                                raise checkout.CheckoutIntegrityError(
+                                    f"observed directory {path}: ownership or permissions changed") from error
+                            raise
+                        self._established_private.add(descriptor)
         except checkout.CheckoutIntegrityError:
             raise
         except Exception as error:
@@ -411,3 +442,49 @@ def read_readable_limits(path, maximum, command):
             successor_limits=_snapshot_limits(refresh["successor_limits"]),
             **_readable_integers(refresh, _READABLE_SCALARS, ("max_file_bytes", "max_total_bytes")))
     return result
+
+
+def _ancestors(directories, runtime=None):
+    """Reject fixed-name control/storage ancestors, allowing only the selected runtime internals."""
+    from research_pipeline import cli_proposals, vault
+
+    for _, _, fd, _, _, _, location in directories.bindings:
+        path = Path(location)
+        cli_proposals.not_proposal(fd, path)
+        if runtime is not None and path in (runtime, runtime / "objects", runtime / ".staging"):
+            markers = ("snapshot.sqlite3", ".backup-incomplete", ".restore-incomplete", ".work-product",
+                       "manifest.json", "intent.json", "ready.json", "published.json", "refresh.json")
+            if any(vault._present(fd, name) for name in markers):
+                raise checkout.CheckoutLayoutError("runtime overlaps recognizable control layout")
+        else:
+            vault._not_layout(fd, path)
+
+
+def _read_control(directories, observations, path, maximum, *, config=False):
+    """Read and close a private leaf while retaining its initial parent-relative signature."""
+    try:
+        parent = directories.traverse(path.parent, private=True, exact=True)
+        _ancestors(directories)
+        before = checkout._stat(parent, path.name)
+    except Exception as error:
+        directories.check()
+        if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
+            raise CliError(5 if config else 3, "invalid_input" if config else "missing",
+                           "Configuration is missing." if config else "Explicit batch is missing.") from error
+        raise
+    # Register before the reader so failures cannot discard an established pin.
+    observations.append((parent, path.name, before))
+    data, _ = read_observed_control(parent, path.name, path, maximum, modes=(0o400, 0o600), before=before)
+    return data
+
+
+def _check(directories, observations):
+    """Recheck all established leaf signatures and held bindings on success and failure paths."""
+    directories.check()
+    for parent, name, before in observations:
+        try:
+            current = checkout._stat(parent, name)
+        except FileNotFoundError as error:
+            raise checkout.CheckoutIntegrityError("observed control disappeared") from error
+        if checkout._signature(current) != checkout._signature(before):
+            raise checkout.CheckoutIntegrityError("observed control changed")

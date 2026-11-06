@@ -1,5 +1,10 @@
 # Passive Tool-record CLI
 
+For current operational claim-use snapshots and generation-history pages, see
+[the claim-use CLI guide](claim-use-cli.md). Those wrappers are metadata-only and
+do not verify historical attachments; this guide’s exact selected Tool inspection
+continues to verify direct bytes. Neither operation confers scientific authority.
+
 These two source-local operations expose passive Tool metadata through the existing
 RecordStore. Put the candidate's `implementation/src` on `PYTHONPATH`; no
 installation is needed. Research execution is unavailable.
