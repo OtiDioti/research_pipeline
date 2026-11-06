@@ -4,7 +4,7 @@ Indexes actual backend repairs and their evidence; unchanged-backend product obs
 
 ## Current backend
 
-Separate ignored clone `coding_pipeline/`,revision`bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`. Cumulative attempts/adoptions/reversions:**3/3/0**. This migration changes no backend source,guards,evidence or launch environment.
+Separate ignored clone `coding_pipeline/`, revision `66f10ff82c54af103583ba8963c1bd12c9254e24`. Cumulative attempts/adoptions/reversions: **5/4/0**, including the unadopted and corrected CP-004 source candidates. Product development remains stopped; older run configurations and evidence are unchanged.
 
 ## Adopted changes
 
@@ -13,6 +13,7 @@ Separate ignored clone `coding_pipeline/`,revision`bcb7ad24f83ff5193345f3d4fa721
 | CP-001 | Private final-response preparation | `c74df0b09b4883776b1889b859b2df065f0b2fe4` | [Audit](development/backend_changes/CP-001.md) |
 | CP-002 | Targeted Reviewer diagnostics;full controller gates retained | `b6a2e05283f92f2bb42402d49e4a274225b43f6a` | [Audit](development/backend_changes/CP-002.md) |
 | CP-003 | Authorized role/prompt modernization | `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66` | [Audit](development/backend_changes/CP-003.md) |
+| CP-004 | One controller-owned final test pass; inspection-only milestones and restricted agent tools | `66f10ff82c54af103583ba8963c1bd12c9254e24` | [Audit](development/backend_changes/CP-004.md) |
 
 ## Recording rule
 
