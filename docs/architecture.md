@@ -29,6 +29,14 @@ coherent public APIs, preserving complete nested documents and independent work,
 metadata, domain-result and CLI-output accounts. These read-only operations use
 metadata without verifying historical attachments; exact Tool inspection retains
 its selected direct-byte verification. See the [claim-use CLI guide](claim-use-cli.md).
+`cli_source` guards saved-file representations before delegating to the unchanged
+pure Source codec, then inspects offline or calls `submit_typed` once after complete
+receipt/output reservation. Config is mandatory for exclusions even when inspection's
+runtime is unavailable. Shared `cli_controls` receipt validation checks returned raw
+fields before conversion; Tool-specific limits/framing remain in `cli_tools`.
+Source SHA-256 observes file bytes separately from the store-compatible semantic
+fingerprint. No Source input/reference/artifact preread precedes submission;
+original-ID reconciliation remains store-owned. See the [saved Source guide](source-capture-cli.md).
 `cli_inspection` reuses bounded metadata
 and checkout codecs. `cli_proposals` binds exact proposal/summary bytes to a strict
 fixed package inventory, verifies saved comparisons and reuses checkout's exclusive
@@ -37,8 +45,9 @@ not atomic visibility of the directory. Saved inputs are synchronized, reverifie
 and closed before the unchanged typed submission/reconciliation boundary.
 No arguments prints help; unknown or abbreviated arguments exit with status 2.
 The [local CLI guide](local-cli.md) defines paths, limits, output and recovery.
-Library preview/import APIs remain valid; CLI submission requires the coherent saved
-package. Research execution is unavailable. The
+Library preview/import APIs remain valid; work-product CLI submission requires
+the coherent saved package. Tool submission uses its saved batch; Source submission
+uses an ordinary saved Source wrapper. Research execution is unavailable. The
 package has no third-party runtime dependencies. Setuptools is solely
 build tooling, and no installation is needed for the documented source commands.
 Linux is the initially verified platform. See the [implementation guide](../implementation/README.md)

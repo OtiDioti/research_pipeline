@@ -1,5 +1,10 @@
 # Research workbench foundation
 
+The [saved Source-proposal CLI guide](../docs/source-capture-cli.md) documents offline saved-file
+inspection, explicit existing-store submission, complete bounded results and
+original-ID recovery. Source preparation is library-only and durable ordinary-file
+saving remains caller-controlled; full CLI/intake/readiness work remains open.
+
 The [current claim-use CLI guide](../docs/claim-use-cli.md) covers explicit current
 operational snapshots and generation-history pages over immutable scientific pins,
 independent limits, private held controls and a candidate-local executable example.
@@ -51,7 +56,7 @@ from another checkout. See the [local CLI guide](../docs/local-cli.md) for exact
 record/receipt inspection, historical writable checkout, strict trusted controls,
 limits and retained-output recovery. Preparation saves a complete private package
 without metadata submission; offline inspection recomputes its summary. Separate
-submission requires that exact published package and preserves original-ID receipt
+`submit-work-product` submission requires that exact published package and preserves original-ID receipt
 reconciliation after acknowledgment uncertainty. Existing library APIs remain valid.
 Publication removes an incomplete marker; current presence never proves historical
 durability. Broader R-082, scientific/M0-S and runtime obligations remain incomplete.

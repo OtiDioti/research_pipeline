@@ -1,10 +1,12 @@
 # Bounded local Source capture
 
 `research_pipeline.source_capture` is an explicit library boundary. Import it
-directly; there is no CLI or package-level re-export. Preparation captures inert
-selected bytes and checks admission, but only an explicit `store.submit_typed`
-commits. The [Source codec](sources.md), existing typed-history rules, generic
-payloads and work-product proposal format remain unchanged.
+directly; preparation remains library-only, with no package-level re-export.
+The [saved Source CLI](source-capture-cli.md) inspects and explicitly submits a
+caller-saved ordinary proposal. Preparation captures inert selected bytes and
+checks admission; commit requires explicit `store.submit_typed` or saved-file CLI
+submission. Saving/publication remains caller-controlled. The [Source codec](sources.md),
+existing typed-history rules, generic payloads and work-product proposal format remain unchanged.
 
 ```python
 prepare_source_capture(

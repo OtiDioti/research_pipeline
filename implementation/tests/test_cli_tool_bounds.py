@@ -179,12 +179,13 @@ class ToolCliReservationTests(ToolCliCase):
 
     def test_returned_receipt_raw_bounds_precede_conversion(self):
         """Unexpected returned membership/provenance is uncertain before generic receipt copying."""
+        from research_pipeline.cli_controls import receipt_document
         from research_pipeline.domain import CreationProvenance, SubmissionReceipt, DomainValidationError
         receipt = self.store.submit_typed(self.saved)
         arguments = cli._parser().parse_args(self.args())
         cli._validate(arguments)
         size = cli_tools._receipt_reservation(arguments, self.saved, self.root)
-        self.assertEqual(cli_tools._receipt_dict(receipt, self.saved, arguments, size), receipt.to_dict())
+        self.assertEqual(receipt_document(receipt, self.saved, arguments.max_receipt_bytes, size), receipt.to_dict())
         for field, value in (("revisions", receipt.revisions * 10000),
                              ("provenance", CreationProvenance("different", "2026-11-05T10:00:00.000000Z", {"x": "a" * 200000})),
                              ("committed_at", "x" * 10000)):
@@ -192,7 +193,7 @@ class ToolCliReservationTests(ToolCliCase):
             object.__setattr__(changed, field, value)
             with patch.object(SubmissionReceipt, "to_dict", side_effect=AssertionError("unbounded conversion")):
                 with self.assertRaises(DomainValidationError):
-                    cli_tools._receipt_dict(changed, self.saved, arguments, size)
+                    receipt_document(changed, self.saved, arguments.max_receipt_bytes, size)
 
 
 

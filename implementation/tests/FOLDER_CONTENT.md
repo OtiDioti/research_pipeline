@@ -21,11 +21,11 @@ Immediate files and child directories only.
 - [tool_cli_fixtures.py](tool_cli_fixtures.py) — Setup-only private Tool runtimes, literal provenance, strict controls and candidate subprocess helpers.
 - [test_cli_tools.py](test_cli_tools.py) — Real mixed Tool CLI commits, exact historical reads, replacement-pair and closure refusals, and original receipts.
 - [test_cli_tool_controls.py](test_cli_tool_controls.py) — Canonical argv, closed batch schemas and independent caller-limit refusal gates.
-- [test_cli_tool_bounds.py](test_cli_tool_bounds.py) — Selected SQL preflight, sufficient output reservation and real single-snapshot consistency.
+- [test_cli_tool_bounds.py](test_cli_tool_bounds.py) — Selected Tool limits and shared receipt-document bounds/regressions.
 - [test_cli_tool_failures.py](test_cli_tool_failures.py) — Held control observations, real SQLite contention, process exit and physical stdout loss.
 - [test_cli_tool_example.py](test_cli_tool_example.py) — Execute the delimited passive Tool CLI guide verbatim in a fresh candidate interpreter.
 - [test_cli.py](test_cli.py) — Exercise the candidate CLI and observed import behavior in isolated processes.
-- [test_cli_operations.py](test_cli_operations.py) — Candidate-local subprocess evidence for bounded exact CLI inspection and checkout.
+- [test_cli_operations.py](test_cli_operations.py) — Candidate-local subprocess evidence for bounded exact CLI inspection, checkout, and help/version acknowledgement and shutdown.
 - [test_cli_proposals.py](test_cli_proposals.py) — Saved-package codecs, binding gates and retained publication evidence using real private files.
 - [test_cli_readable_controls.py](test_cli_readable_controls.py) — Strict complete authored controls, independent numeric ceilings and bounded diagnostic encoding.
 - [test_cli_saved_work_product.py](test_cli_saved_work_product.py) — Fresh-process CLI draft round trips, exact retries and real interrupted acknowledgment.
@@ -157,4 +157,11 @@ Immediate files and child directories only.
 - [test_claim_use_support_context_bounds.py](test_claim_use_support_context_bounds.py) — Shared finite accounts, preallocation, temporal index seeks, metadata/projection corruption, complete output and atomic exhaustion.
 - [test_claim_use_support_context_recovery.py](test_claim_use_support_context_recovery.py) — Schema-7 atomic snapshots, lost acknowledgments, process interruption, original-time backfill, exact restore and retained ancillary capabilities/documents.
 - [test_claim_use_support_context_example.py](test_claim_use_support_context_example.py) — Execute the literal self-contained schema-7 support-context example in fresh candidate Python.
+- [source_cli_fixtures.py](source_cli_fixtures.py) — Setup-only rich Source requests, private stores and candidate-first child helpers.
+- [test_source_cli.py](test_source_cli.py) — Complete Source subprocess/API equivalence, offline isolation, schemas, history and original-ID retries.
+- [test_source_cli_controls.py](test_source_cli_controls.py) — Source argv/JSON/private-control/exclusion refusal and protected-access witnesses.
+- [test_source_cli_bounds.py](test_source_cli_bounds.py) — Independent exact-fit/deficit representation accounts and raw receipt validation.
+- [test_source_cli_failures.py](test_source_cli_failures.py) — Held controls, substantive errno, checked closes, real transaction loss and stdout acknowledgement faults.
+- [test_source_cli_concurrency.py](test_source_cli_concurrency.py) — Readiness-pipe coordinated independent-process Source CAS and duplicate-delivery races.
+- [test_source_cli_example.py](test_source_cli_example.py) — Execute the exact self-contained saved Source CLI documentation example.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

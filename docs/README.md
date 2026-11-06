@@ -1,5 +1,10 @@
 # Product documentation
 
+The [saved Source-proposal CLI guide](source-capture-cli.md) documents offline saved-file
+inspection, explicit existing-store submission, complete bounded results and
+original-ID recovery. Source preparation is library-only and durable ordinary-file
+saving remains caller-controlled; full CLI/intake/readiness work remains open.
+
 The [current claim-use CLI guide](claim-use-cli.md) documents complete metadata-only
 current snapshots over immutable pins, paged generation causes, independent work
 and representation limits, read-only acknowledgement and an executable private-store example.

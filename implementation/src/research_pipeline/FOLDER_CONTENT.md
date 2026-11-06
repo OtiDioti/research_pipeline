@@ -8,12 +8,12 @@ Immediate files and child directories only.
 - [assessment.py](assessment.py) — Pure attributed assessment contracts; declarations confer no scientific authority.
 - [backup.py](backup.py) — Verified snapshots, exact format-7 restore, original-time support backfill and independent policy/context activation with durable markers.
 - [checkout.py](checkout.py) — Bounded, inert local copies with durable publication and untrusted base descriptors.
-- [cli.py](cli.py) — Source-local argv, bounded results and acknowledgement for exact/current claim-use inspection, history, saved work products, readable views and passive Tools.
+- [cli.py](cli.py) — Source-local argv, bounded results and checked acknowledgement for seventeen operations.
 - [cli_claim_use.py](cli_claim_use.py) — Complete metadata-only current-use/history CLI adapters with independent accounts and read-only acknowledgement.
-- [cli_controls.py](cli_controls.py) — Strict bounded controls, version-one configuration, shared ancestor probes and held no-follow observations distinguishing initially unsafe directories from later ownership/permission changes.
+- [cli_controls.py](cli_controls.py) — Strict bounded private controls, ancestor observations including stable uid/gid/mode, and shared raw receipt validation/reservation.
 - [cli_inspection.py](cli_inspection.py) — Bounded exact CLI metadata reconstruction and offline original-checkout observation.
 - [cli_proposals.py](cli_proposals.py) — Strict saved work-product packages, offline observations and private publication.
-- [cli_tools.py](cli_tools.py) — Closed passive Tool batches, selected snapshot bounds and original-ID submission recovery.
+- [cli_tools.py](cli_tools.py) — Passive Tool batches and selected reads using shared complete receipt validation.
 - [cli_views.py](cli_views.py) — Bounded CLI admission and observations for the existing immutable readable-view APIs.
 - [corpus.py](corpus.py) — Pure immutable seed inventories over exact Source captures; declarations confer no authority.
 - [domain.py](domain.py) — Validated storage envelopes; descriptive JSON never grants scientific authority.
@@ -58,4 +58,5 @@ Immediate files and child directories only.
 - [claim_use.py](claim_use.py) — Passive exact bindings, six-field inspection limits and shared target/support-context and independent policy/write ceilings.
 - [claim_use_schema.py](claim_use_schema.py) — Unchanged schema-4/5/6 DDL, new schema-7 immutable support occurrences/watch index and fourth activation origin.
 - [claim_use_store.py](claim_use_store.py) — Bounded policy/target/support resolution, occurrence provenance, shared finite accounts, exact historical propagation and independent temporal activation verification.
+- [cli_source.py](cli_source.py) — Offline complete saved Source proposals, independent representation accounts and explicit original-ID typed submission.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This immediate directory navigation index.

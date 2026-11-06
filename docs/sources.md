@@ -21,8 +21,10 @@ Restrictions are explained declarations, not operational grants or a broader
 policy enforcement system. Empty limitations certify nothing. Scientific readiness,
 source acquisition/processing permission enforcement remain separate work.
 [Bounded local capture and saved Source proposals](source-capture.md) are available
-through a separate explicit library boundary; this pure codec introduces no network
-acquisition, parser, OCR or execution.
+through a separate explicit library boundary. The [saved Source CLI](source-capture-cli.md)
+inspects an already saved ordinary proposal offline and explicitly submits its exact
+request, preserving original-ID recovery. Preparation and saving remain library/caller
+operations; neither interface introduces network acquisition, parsing, OCR or execution.
 
 ## Required constructors
 

@@ -12,10 +12,10 @@ from research_pipeline import checkout, vault
 from research_pipeline.artifacts import ArtifactIntegrityError, ArtifactNotFoundError, ArtifactLayoutError
 from research_pipeline.cli_controls import (
     CliError, _ObservedDirectories, _config_value, causes,
-    _ancestors, _read_control, _check, source_root, strict_json,
+    _ancestors, _read_control, _check, source_root, strict_json, receipt_document, receipt_reservation_value,
 )
 from research_pipeline.domain import (
-    CreationProvenance, DomainValidationError, Submission, SubmissionReceipt, _fields, _identifier, _integer, _kind, _timestamp,
+    DomainValidationError, Submission, _fields, _identifier, _integer, _kind, _timestamp,
 )
 from research_pipeline.operating_authority_store import _object_bytes, _text_bound
 from research_pipeline.report_capture import _text_length, _integer_length
@@ -214,47 +214,11 @@ def _receipt_reservation(arguments, submission, runtime):
     """
     from research_pipeline.cli import _result
     _budget(len(submission.records), arguments.max_receipt_records, "receipt membership")
-    receipt = dict(submission_id=submission.submission_id, provenance=submission.provenance.to_dict(),
-        revisions=[[item.record_id, item.revision] for item in submission.records],
-        fingerprint="0" * 64, event_id=9223372036854775807, committed_at="9999-12-31T23:59:59.999999Z")
+    receipt = receipt_reservation_value(submission)
     size = len(_bounded_json(receipt, arguments.max_receipt_bytes, "receipt reservation"))
     result = dict(store=str(runtime), batch=str(arguments.batch), submission_id=submission.submission_id, receipt=receipt)
     _result(arguments.command, result, arguments.max_output_bytes)
     return size
-
-
-def _receipt_dict(receipt, submission, arguments, reserved):
-    """Validate returned raw fields before bounded receipt conversion after acknowledgement.
-
-    Comparing provenance's retained strings first avoids parsing/copying unexpected
-    details. Ordered membership is checked before to_dict allocates its list. Any
-    failure here is post-return uncertainty, never evidence of rollback.
-    """
-    if type(receipt) is not SubmissionReceipt:
-        raise CliError(7, "effects_uncertain", "Invalid returned receipt contract.")
-    if type(receipt.submission_id) is not str or receipt.submission_id != submission.submission_id:
-        raise CliError(7, "effects_uncertain", "Returned receipt has a different original ID.")
-    if type(receipt.fingerprint) is not str or re.fullmatch(r"[0-9a-f]{64}", receipt.fingerprint) is None:
-        raise DomainValidationError("invalid returned fingerprint")
-    _integer(receipt.event_id, "returned event ID", 1)
-    if (type(receipt.committed_at) is not str or len(receipt.committed_at) != 27
-            or _timestamp(receipt.committed_at) != receipt.committed_at):
-        raise DomainValidationError("invalid returned timestamp")
-    if type(receipt.provenance) is not CreationProvenance:
-        raise DomainValidationError("invalid returned provenance")
-    for name in ("actor", "created_at", "_details_json"):
-        actual = object.__getattribute__(receipt.provenance, name)
-        if type(actual) is not str or actual != object.__getattribute__(submission.provenance, name):
-            raise DomainValidationError("returned provenance differs from saved request")
-    if type(receipt.revisions) is not tuple or len(receipt.revisions) != len(submission.records):
-        raise DomainValidationError("invalid returned membership")
-    for pair, record in zip(receipt.revisions, submission.records):
-        if (type(pair) is not tuple or len(pair) != 2 or type(pair[0]) is not str or type(pair[1]) is not int
-                or pair != (record.record_id, record.revision)):
-            raise DomainValidationError("returned membership differs from saved request")
-    actual = receipt.to_dict()
-    _bounded_json(actual, min(reserved, arguments.max_receipt_bytes), "returned receipt")
-    return actual
 
 
 def execute(arguments, context, effects):
@@ -313,7 +277,7 @@ def execute(arguments, context, effects):
                     # Return is an acknowledgement boundary even if conversion or
                     # held observation/close subsequently fails after COMMIT.
                     effects["returned"] = True
-                    actual = _receipt_dict(receipt, submission, arguments, reserved)
+                    actual = receipt_document(receipt, submission, arguments.max_receipt_bytes, reserved)
                     output = _result(arguments.command, dict(store=str(runtime), batch=str(arguments.batch),
                         submission_id=submission.submission_id, receipt=actual), arguments.max_output_bytes)
                     status = 0

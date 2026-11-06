@@ -1,18 +1,24 @@
 # Local inspection and explicit work-product round trips
 
-The source-local foundation provides fifteen bounded operations. Research execution
+The source-local foundation provides seventeen bounded operations. Research execution
 is unavailable. Declared provenance and author names are attribution, not
 authenticated authorship, scientific support or permission. Full R-082, creation
 and intake, other draft kinds, runtime administration
-and research execution remain incomplete. The explicit saved-proposal route uses the
+and research execution remain incomplete. The work-product saved-proposal route uses the
 existing [preview and import APIs](work-product-import.md). The separate
-`submit-work-product` and `submit-tool-records` commands submit metadata; inspection, checkout and preparation create no canonical submission.
+`submit-work-product`, `submit-tool-records` and `submit-source-capture` commands submit metadata;
+inspection, checkout and preparation create no canonical submission.
 The [passive Tool-record CLI guide](tool-record-cli.md) specifies exact typed
 inspection and mixed passive Tool batches, independent limits and original-ID
 recovery, with an executable private-store example. The
 [current claim-use CLI guide](claim-use-cli.md) specifies complete metadata-only
 current operational snapshots over immutable pins and paged generation history,
 with an independent executable private-store example.
+
+The [saved Source-proposal guide](source-capture-cli.md) specifies offline
+`inspect-source-proposal` and explicit `submit-source-capture`, required config/proposal
+controls, six independent accounts, complete result and diagnostic fields, and
+original-ID recovery. Source preparation remains library-only.
 
 Put the executing candidate's `implementation/src` first on `PYTHONPATH`, using an
 absolute path when changing working directories. No installation is required:
@@ -23,6 +29,8 @@ python3 -B -m research_pipeline --help
 python3 -B -m research_pipeline --version
 python3 -B -m research_pipeline inspect-record --config /private/cli/config.json --record-id bundle --revision 1
 python3 -B -m research_pipeline inspect-receipt --config /private/cli/config.json --submission-id initial
+python3 -B -m research_pipeline inspect-source-proposal --config /private/cli/config.json --proposal /private/cli/source.json
+python3 -B -m research_pipeline submit-source-capture --config /private/cli/config.json --proposal /private/cli/source.json
 python3 -B -m research_pipeline inspect-claim-use --config /private/cli/config.json --use-id U
 python3 -B -m research_pipeline inspect-claim-use-history --config /private/cli/config.json --use-id U --after-generation 0 --page-limit 1
 python3 -B -m research_pipeline checkout-work-product --config /private/cli/config.json --record-id bundle --revision 1 --destination /private/drafts/note
@@ -42,7 +50,7 @@ positional shortcut, environment-selected store, stdin control, response-file
 expansion, generic execution command, plugin or user-selected module. Unknown or
 abbreviated options, missing arguments, repeated singleton options and malformed
 numeric option syntax are usage errors. Numeric options use ASCII decimal digits.
-The two Tool and two claim-use commands additionally require canonical spelling
+The two Source, two Tool and two claim-use commands additionally require canonical spelling
 `0` or `[1-9][0-9]*`, without leading zeros, signs, whitespace or numeric aliases.
 Malformed spelling is a usage error; canonical oversized/out-of-range values are
 `limit_exceeded` before control access. Older commands retain their syntax.
@@ -93,7 +101,8 @@ or caller exclusions is refused in either direction. Checkout also refuses
 bidirectional overlap with the runtime, source, exclusions and config file itself.
 External Git administration, backups and other control trees must be supplied as
 explicit additional exclusions. No config or environment override removes source
-protection. The store must already exist; inspection never creates it.
+protection. Commands that open a store require it to exist and never create it.
+Offline Source inspection does not test runtime availability.
 
 The store retains its established private owned runtime, objects, staging,
 database and rollback-journal restrictions. Checkout requires an existing owned
@@ -120,7 +129,8 @@ limits do not bound SQLite opening, schema validation or recovery work.
 All ranges are inclusive. Counts/bytes include repeated logical occurrences.
 Limits do not authorize writes or certify content. The table below retains the
 predecessor work-product/exact-inspection contracts; the
-[Tool guide](tool-record-cli.md#independent-caller-limits) and
+[Tool guide](tool-record-cli.md#independent-caller-limits),
+[Source guide](source-capture-cli.md#independent-finite-accounts) and
 [claim-use guide](claim-use-cli.md#independent-allowances-and-selections) specify
 their command-specific accounts. Claim-use defaults differ: `max_records` is
 1024 (range 1..1024), `max_metadata_bytes` is 67108864 (1..67108864) and
@@ -176,6 +186,8 @@ have exactly `format: "research_pipeline.cli_result"`, `version: 1`, `command`,
 | --- | --- |
 | `inspect-record` | `record_id`, `revision`, complete `envelope`, `commit` with `submission_id`, `committed_at`, `fingerprint`; envelope/commit both null when absent |
 | `inspect-receipt` | `submission_id`, original complete `receipt` (`null` when absent) |
+| `inspect-source-proposal` | normalized absolute `proposal_path`, actual-file `proposal_sha256`, semantic `submission_fingerprint`, complete canonical `proposal` wrapper |
+| `submit-source-capture` | normalized absolute `store` and `proposal_path`, `proposal_sha256`, `submission_fingerprint`, complete actual returned `receipt` |
 | `inspect-claim-use` | normalized absolute `store`, `use_id`, complete API `inspection` (`null` when absent) |
 | `inspect-claim-use-history` | normalized absolute `store`, `use_id`, `after_generation`, `page_limit`, complete API `history` (`null` when absent) |
 | `checkout-work-product` | normalized absolute `destination`, complete exact `base`, `descriptor: ".work-product/checkout.json"` |
@@ -197,7 +209,7 @@ cannot create a draft. Output is never intentionally truncated.
 | ---: | --- |
 | 0 | Complete acknowledged result, help or version |
 | 2 | CLI usage error |
-| 3 | Absent store root, exact base/record revision, original submission, selected package or missing/unregistered claim use |
+| 3 | Absent store root, exact base/record revision, original submission, selected package/proposal or missing/unregistered claim use |
 | 4 | Destination collision, stale expected head, used/different submission ID or conflicting saved evidence |
 | 5 | Unsafe/invalid controls or layouts, malformed requested values or exceeded limits |
 | 6 | Operational failure, corrupt canonical metadata/artifacts, or read-only output failure |
@@ -215,7 +227,11 @@ exactly `format: "research_pipeline.cli_diagnostic"`, `version: 1`, `command`,
 `code`, `message`, `context`. The command may be null. Context has exactly `store`,
 `destination`, `record_id`, `revision`, `submission_id`, `next_action` for the
 work-product/exact-inspection commands above; unavailable values are null. Tool
-and readable-view contexts are specified in their guides. Claim-use context has
+and readable-view contexts are specified in their guides. [Source context and
+recovery](source-capture-cli.md#diagnostics-and-original-id-recovery) have exactly
+`config`, `proposal`, `record_id`, `revision`, `submission_id`, `proposal_sha256`,
+`submission_fingerprint`, `next_action`, without runtime or legacy destination.
+Claim-use context has
 exactly `config`, `use_id`, `after_generation`, `page_limit`, `next_action`; current
 inspection has null cursor/page fields. Only established normalized paths and
 validated selections survive refusals. Its limit errors precede generic domain
@@ -528,3 +544,11 @@ with TemporaryDirectory(prefix="local-cli-example-") as temporary:
     assert cli("inspect-record", "--config", str(config), "--record-id", "bundle", "--revision", "1") == original
     assert cli("inspect-receipt", "--config", str(config), "--submission-id", "initial")["receipt"] == receipt.to_dict()
 ```
+
+Source's complete results and [diagnostics/recovery](source-capture-cli.md#diagnostics-and-original-id-recovery)
+use the same outer envelopes above. Config establishes exclusions for offline
+inspection even when runtime is unavailable. Only explicit saved submission opens
+the existing runtime. The complete Source wrapper is an ordinary private file;
+`submit-work-product` retains its separate package contract. Preparation and
+caller-controlled saving remain separate from the Source CLI; full R-082 and
+broader readiness work remain open.

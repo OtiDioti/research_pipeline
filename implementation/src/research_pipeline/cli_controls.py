@@ -4,13 +4,14 @@ from contextlib import ExitStack
 import json
 import math
 import os
+import re
 from pathlib import Path
 import stat
 
 from research_pipeline import checkout
 from research_pipeline.domain import DomainValidationError, _fields, _validate_json
-from research_pipeline.domain import ArtifactReference, CreationProvenance, RecordReference, Submission, _snapshot
-from research_pipeline.snapshot import _check_json_depth, SnapshotLimitError
+from research_pipeline.domain import ArtifactReference, CreationProvenance, RecordReference, Submission, SubmissionReceipt, _integer, _timestamp, _snapshot
+from research_pipeline.snapshot import _check_json_depth, SnapshotLimitError, _bounded_json
 from research_pipeline.work_product import _unique_object, _reject_constant
 
 
@@ -227,14 +228,14 @@ class _ObservedDirectories(checkout._Directories):
     """Retain CLI directory observations while sharing checkout traversal and descriptor ownership."""
 
     def __init__(self, stack):
-        """Track private bindings only after both entry and descriptor pass their initial check.
+        """Track safety tuples only after entry and descriptor pass their initial checks.
 
         Held descriptors identify bindings throughout this operation: the caller's
         ExitStack owns them until observation ends, so they cannot be reused here.
         A binding appended by open() may still fail its first safety check.
         """
         super().__init__(stack)
-        self._established_private = set()
+        self._established_safety = {}
 
     def open(self, name, parent=None, *, private=False, exact=False, path=None):
         """Acquire a directory without adopting replacement after its first no-follow observation.
@@ -279,8 +280,9 @@ class _ObservedDirectories(checkout._Directories):
     def check(self):
         """Recheck held bindings, distinguishing initial unsafe layout from later safety changes.
 
-        Only successful private checks establish a binding; failure-path rechecks
-        must preserve an unchanged initial layout violation and actual I/O causes.
+        Only successful initial checks establish safety tuples; failure-path rechecks
+        preserve unchanged initial layout violations and actual I/O causes. Even a
+        later permitted uid/gid/mode tuple differs from the established observation.
         """
         try:
             for parent, name, descriptor, original, private, exact, path in self.bindings:
@@ -291,16 +293,25 @@ class _ObservedDirectories(checkout._Directories):
                             or checkout._identity(opened) != checkout._identity(original)):
                         raise checkout.CheckoutIntegrityError(
                             f"check directory binding {path}: replaced or changed type")
+                    safety = (current.st_uid, current.st_gid, current.st_mode)
+                    opened_safety = (opened.st_uid, opened.st_gid, opened.st_mode)
+                    established = self._established_safety.get(descriptor)
+                    # A permitted new tuple is still a change to an established
+                    # observation. Directory size/mtime are deliberately excluded.
+                    if established is not None and (safety != established or opened_safety != established):
+                        raise checkout.CheckoutIntegrityError("observed directory ownership or permissions changed")
                     if private:
                         try:
                             checkout._private_directory(current, path, exact)
                             checkout._private_directory(opened, path, exact)
                         except checkout.CheckoutLayoutError as error:
-                            if descriptor in self._established_private:
+                            if established is not None:
                                 raise checkout.CheckoutIntegrityError(
                                     f"observed directory {path}: ownership or permissions changed") from error
                             raise
-                        self._established_private.add(descriptor)
+                    if safety != opened_safety:
+                        raise checkout.CheckoutIntegrityError("directory safety changed during initial observation")
+                    self._established_safety[descriptor] = opened_safety
         except checkout.CheckoutIntegrityError:
             raise
         except Exception as error:
@@ -460,8 +471,12 @@ def _ancestors(directories, runtime=None):
             vault._not_layout(fd, path)
 
 
-def _read_control(directories, observations, path, maximum, *, config=False):
-    """Read and close a private leaf while retaining its initial parent-relative signature."""
+def _read_control(directories, observations, path, maximum, *, config=False, label="batch"):
+    """Read/close a private leaf and retain its signature; label names an initially missing input.
+
+    Configuration absence remains invalid input; other authored controls use the
+    missing category. Register observations before reading so failures retain pins.
+    """
     try:
         parent = directories.traverse(path.parent, private=True, exact=True)
         _ancestors(directories)
@@ -470,7 +485,7 @@ def _read_control(directories, observations, path, maximum, *, config=False):
         directories.check()
         if any(isinstance(cause, FileNotFoundError) for cause in causes(error)):
             raise CliError(5 if config else 3, "invalid_input" if config else "missing",
-                           "Configuration is missing." if config else "Explicit batch is missing.") from error
+                           "Configuration is missing." if config else f"Explicit {label} is missing.") from error
         raise
     # Register before the reader so failures cannot discard an established pin.
     observations.append((parent, path.name, before))
@@ -488,3 +503,50 @@ def _check(directories, observations):
             raise checkout.CheckoutIntegrityError("observed control disappeared") from error
         if checkout._signature(current) != checkout._signature(before):
             raise checkout.CheckoutIntegrityError("observed control changed")
+
+
+def receipt_reservation_value(submission):
+    """Size a complete receipt from an exact request without querying canonical state.
+
+    Maximum timestamp/event values and a fixed-width fingerprint are sizing
+    placeholders only; callers must emit the actual validated returned receipt.
+    """
+    return dict(submission_id=submission.submission_id, provenance=submission.provenance.to_dict(),
+        revisions=[[item.record_id, item.revision] for item in submission.records],
+        fingerprint="0" * 64, event_id=9223372036854775807, committed_at="9999-12-31T23:59:59.999999Z")
+
+
+def receipt_document(receipt, submission, maximum, reserved):
+    """Validate returned raw fields before bounded receipt conversion after acknowledgement.
+
+    The receipt must match submission's exact identity, provenance and ordered
+    membership; maximum and reserved are independent canonical ASCII byte ceilings.
+    Comparing provenance's retained strings first avoids parsing/copying unexpected
+    details. Ordered membership is checked before to_dict allocates its list. Any
+    failure here is post-return uncertainty, never evidence of rollback.
+    """
+    if type(receipt) is not SubmissionReceipt:
+        raise CliError(7, "effects_uncertain", "Invalid returned receipt contract.")
+    if type(receipt.submission_id) is not str or receipt.submission_id != submission.submission_id:
+        raise CliError(7, "effects_uncertain", "Returned receipt has a different original ID.")
+    if type(receipt.fingerprint) is not str or re.fullmatch(r"[0-9a-f]{64}", receipt.fingerprint) is None:
+        raise DomainValidationError("invalid returned fingerprint")
+    _integer(receipt.event_id, "returned event ID", 1)
+    if (type(receipt.committed_at) is not str or len(receipt.committed_at) != 27
+            or _timestamp(receipt.committed_at) != receipt.committed_at):
+        raise DomainValidationError("invalid returned timestamp")
+    if type(receipt.provenance) is not CreationProvenance:
+        raise DomainValidationError("invalid returned provenance")
+    for name in ("actor", "created_at", "_details_json"):
+        actual = object.__getattribute__(receipt.provenance, name)
+        if type(actual) is not str or actual != object.__getattribute__(submission.provenance, name):
+            raise DomainValidationError("returned provenance differs from saved request")
+    if type(receipt.revisions) is not tuple or len(receipt.revisions) != len(submission.records):
+        raise DomainValidationError("invalid returned membership")
+    for pair, record in zip(receipt.revisions, submission.records):
+        if (type(pair) is not tuple or len(pair) != 2 or type(pair[0]) is not str or type(pair[1]) is not int
+                or pair != (record.record_id, record.revision)):
+            raise DomainValidationError("returned membership differs from saved request")
+    actual = receipt.to_dict()
+    _bounded_json(actual, min(reserved, maximum), "returned receipt")
+    return actual

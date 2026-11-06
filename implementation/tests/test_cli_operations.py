@@ -876,24 +876,36 @@ checkout._fault = fail
         self.assertNotIn(b"\x1b", result.stderr)
 
     def test_help_version_output_failure_has_documented_status(self):
-        """Help/version flush failures use status 6 and cannot escape through Python shutdown status 120."""
-        prelude = '''
+        """Witness complete buffered help/version drains after redirection, with status 6 and no output."""
+        for index, arguments in enumerate(([], ["--help"], ["--version"], ["inspect-record", "--help"])):
+            normal = self.invoke(arguments).stdout
+            witness = self.parent / f"help-output-{index}.bin"
+            prelude = f'''
+import io
 import sys
+from pathlib import Path
 original = sys.stdout
 class Output:
-    """Fail text acknowledgments at the same real flush boundary as machine output."""
-    buffer = property(lambda self: original.buffer)
+    """Buffer complete text independently of stdout capacity, then fail its acknowledgment."""
+    def __init__(self):
+        """Hold all emitted bytes until cleanup tests recipient redirection by draining them."""
+        self.buffer = io.BytesIO()
     def fileno(self):
         """Expose the recipient descriptor for failed-buffer redirection."""
         return original.fileno()
     def flush(self):
-        """Inject a flush failure after the help text has been buffered."""
+        """Inject failure after the complete help/version document enters the private buffer."""
         raise OSError("help flush failed")
     def close(self):
-        """Close only after the failed output channel has been redirected."""
+        """Drain to the real stream, close it, then witness bytes; redirection must precede this."""
+        pending = self.buffer.getvalue()
+        original.buffer.write(pending)
         original.close()
+        Path({str(witness)!r}).write_bytes(pending)
 sys.stdout = Output()
 '''
-        for arguments in ([], ["--help"], ["--version"], ["inspect-record", "--help"]):
             result = self.invoke(arguments, prelude=prelude, expected=6)
             self.diagnostic(result, "output_failed")
+            payload = witness.read_bytes()
+            self.assertTrue(payload)
+            self.assertEqual(payload, normal)

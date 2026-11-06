@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import sys
 
-from research_pipeline import __version__, checkout, cli_claim_use, cli_proposals, cli_tools, cli_views, work_product_import
+from research_pipeline import __version__, checkout, cli_claim_use, cli_proposals, cli_source, cli_tools, cli_views, work_product_import
 from research_pipeline.artifacts import ArtifactError
 from research_pipeline.cli_controls import CliError, causes, path_value, read_config, read_request, source_root
 from research_pipeline.cli_inspection import exact_record, exact_receipt, local_checkout
@@ -69,6 +69,12 @@ class _Parser(argparse.ArgumentParser):
                     command = claim_command
                     context = dict.fromkeys(cli_claim_use.CONTEXT_FIELDS)
                     context["next_action"] = "Repeat the same help request; discard partial output."
+                source_command = getattr(self, "_source_command", None)
+                if source_command is not None:
+                    command = source_command
+                    context = dict.fromkeys(cli_source.CONTEXT_FIELDS)
+                    context["next_action"] = ("Repeat the same help request; discard partial output. "
+                                              "Help has no canonical submission effect.")
                 _diagnostic(command, failure, context)
                 self.exit(6)
         else:
@@ -131,12 +137,18 @@ def _parser():
         "inspect-readable-view": "Observe an explicit readable view offline without historical acknowledgment.",
         "inspect-readable-refresh": "Observe exact retained refresh evidence offline; never replay or repair.",
     })
+    descriptions.update(cli_source.DESCRIPTIONS)
     descriptions.update(cli_tools.DESCRIPTIONS)
     descriptions.update(cli_claim_use.DESCRIPTIONS)
     for command, description in descriptions.items():
         sub = subparsers.add_parser(command, description=description, help=description, allow_abbrev=False)
         limits = ["max_output_bytes"]
-        if command in cli_claim_use.COMMANDS:
+        if command in cli_source.COMMANDS:
+            sub._source_command = command
+            for name in ("config", "proposal"):
+                sub.add_argument("--" + name, required=True, action=_Once, metavar="FILE")
+            limits = list(cli_source.SPECIFICATIONS)
+        elif command in cli_claim_use.COMMANDS:
             sub._claim_use_command = command
             sub.add_argument("--config", required=True, action=_Once, metavar="FILE",
                              help="Explicit private version-one configuration; existing runtime only.")
@@ -208,7 +220,8 @@ def _parser():
                 sub.add_argument("--destination", required=True, action=_Once, metavar="PATH")
                 limits += ["max_descriptor_bytes", "max_files", "max_file_bytes", "max_total_bytes"]
         for name in limits:
-            specifications = cli_claim_use.specifications(command) if command in cli_claim_use.COMMANDS else _LIMITS
+            specifications = (cli_source.SPECIFICATIONS if command in cli_source.COMMANDS else
+                              cli_claim_use.specifications(command) if command in cli_claim_use.COMMANDS else _LIMITS)
             default, minimum, maximum, unit = specifications[name]
             if name == "max_control_bytes" and command in (
                     "prepare-work-product", "inspect-proposal", "submit-work-product"):
@@ -216,7 +229,7 @@ def _parser():
             if command in cli_tools.COMMANDS:
                 unit = cli_tools.LIMIT_UNITS.get(name, unit)
             sub.add_argument("--" + name.replace("_", "-"), action=_Once,
-                             type=_canonical_decimal if command in cli_tools.COMMANDS | cli_claim_use.COMMANDS else _decimal,
+                             type=_canonical_decimal if command in cli_tools.COMMANDS | cli_claim_use.COMMANDS | cli_source.COMMANDS else _decimal,
                              default=default, metavar="N",
                              help=f"{unit}; default {default}; range {minimum}..{maximum}")
     return parser
@@ -235,7 +248,10 @@ def _number(value, minimum, maximum):
 
 
 def _validate(arguments, context=None):
-    """Validate selections before resource access, retaining established claim-use context when supplied."""
+    """Validate command-specific argv before resource access, retaining established diagnostic context."""
+    if arguments.command in cli_source.COMMANDS:
+        cli_source.validate(arguments, context)
+        return
     if arguments.command in cli_claim_use.COMMANDS:
         cli_claim_use.validate(arguments, context)
         return
@@ -301,6 +317,8 @@ def _execute(arguments, context, effects):
     command = arguments.command
     if command in cli_claim_use.COMMANDS:
         return cli_claim_use.execute(arguments, context, effects)
+    if command in cli_source.COMMANDS:
+        return cli_source.execute(arguments, context, effects)
     if command in cli_tools.COMMANDS:
         return cli_tools.execute(arguments, context, effects)
     if command in cli_views.COMMANDS:
@@ -521,6 +539,8 @@ def _classify(error, effects):
     operation = effects.get("operation")
     if operation in cli_claim_use.COMMANDS:
         return cli_claim_use.classify(error, effects)
+    if operation in cli_source.COMMANDS:
+        return cli_source.classify(error, effects)
     if operation in cli_tools.COMMANDS:
         return cli_tools.classify(error, effects)
     if operation in cli_views.COMMANDS:
@@ -578,7 +598,7 @@ def _diagnostic(command, error, context):
     # Two 4096-byte paths need at most 49152 ASCII bytes after escaping. Fixed
     # identity/guidance fields and this message cap fit in the remaining allowance.
     message = str(error)[:1000]
-    if command in cli_views.COMMANDS | cli_tools.COMMANDS | cli_claim_use.COMMANDS:
+    if command in cli_views.COMMANDS | cli_tools.COMMANDS | cli_claim_use.COMMANDS | cli_source.COMMANDS:
         # Bound explanatory text by escaped ASCII bytes, keeping exact recovery
         # paths/identities intact even when each path expands sixfold in JSON.
         while len(json.dumps(message, ensure_ascii=True).encode("ascii")) > 1024:
@@ -608,6 +628,8 @@ def main(argv=None):
         context = dict.fromkeys(cli_tools.CONTEXT_FIELDS)
     if arguments.command in cli_claim_use.COMMANDS:
         context = dict.fromkeys(cli_claim_use.CONTEXT_FIELDS)
+    if arguments.command in cli_source.COMMANDS:
+        context = dict.fromkeys(cli_source.CONTEXT_FIELDS)
     effects = {"begun": False, "operation": arguments.command}
     try:
         _validate(arguments, context)
@@ -615,7 +637,7 @@ def main(argv=None):
             for name in ("config", "batch", "kind", "record_id", "revision"):
                 value = getattr(arguments, name, None)
                 context[name] = str(value) if isinstance(value, Path) else value
-        if arguments.command not in cli_views.COMMANDS | cli_tools.COMMANDS | cli_claim_use.COMMANDS:
+        if arguments.command not in cli_views.COMMANDS | cli_tools.COMMANDS | cli_claim_use.COMMANDS | cli_source.COMMANDS:
             for name in ("record_id", "revision", "submission_id"):
                 context[name] = getattr(arguments, name, None)
         if hasattr(arguments, "view"):
@@ -624,7 +646,7 @@ def main(argv=None):
             context["attempt_path"] = str(arguments.attempt)
         if hasattr(arguments, "destination"):
             context["destination"] = str(arguments.destination)
-        if hasattr(arguments, "proposal"):
+        if hasattr(arguments, "proposal") and arguments.command not in cli_source.COMMANDS:
             context["destination"] = str(arguments.proposal)
         output, status = _execute(arguments, context, effects)
         try:
@@ -642,7 +664,9 @@ def main(argv=None):
         failure = _classify(error, effects)
         if effects.get("verified") is not None:
             _proposal_identity(effects["verified"], context, effects)
-        if arguments.command in cli_claim_use.COMMANDS:
+        if arguments.command in cli_source.COMMANDS:
+            context["next_action"] = cli_source.guidance(arguments.command, failure)
+        elif arguments.command in cli_claim_use.COMMANDS:
             context["next_action"] = cli_claim_use.guidance(arguments.command, failure)
         elif arguments.command in cli_tools.COMMANDS:
             context["next_action"] = cli_tools.guidance(arguments.command, failure)
