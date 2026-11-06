@@ -1,5 +1,11 @@
 # Development status
 
+## Read-only claim-use CLI prelaunch — 2026-11-06
+
+[REQ-D03-009](development/requests/REQ-D03-009.md) is prepared under DEV-088 for current claim-use and generation-history inspection through existing APIs and private CLI controls. Prior REQ-D02-010 is finally accepted/exact-integrated0668007 and target-validated1544/1544,with checkpoint1014014 and unchanged product paths. Fresh supported CWI/Git evidence shows49terminal histories,no owner/lease/quarantine/pending integration;host00:54:44Z finds no controller/target process. Specification digest and clean backendbcb7ad24/pinnedCodex hash match.
+
+Fresh parser/ChatGPT auth00:53:51Z pass;catalog fetched00:53:00Z advertises exact approved models and high/xhigh. No new service,dependency,auth/config or scientific authority. Continuous48/100 used before launch;counted49 leaves51. CWIrepairs43,coordinator18,backend3/3/0;all exhausted/partial families remain. No new implementation/acceptance/requirement credit is claimed by preparation. Evidence:local/resume-20261106-claimuse-cli/.
+
 ## Support-context freshness accepted, integrated and target-validated — 2026-11-06
 
 [REQ-D02-010/run b4a385e8](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) is finally accepted/exact-integrated at **0668007ed7234910d19f0a7a27f5e81ae47961af**,treebed9c43460723b845e075273a6bc64dc27668eef. Final receipta676a20898f2b68003bd1ec0133ecc45b2fa459e8fd6a812deefffb02950a9af binds both final checks and accepting complete-diff review,without open findings/obligations. Candidate/final/required target each **1544/1544**,zero other outcomes;target ran once in1347.767252s,all dispositions match CWI final. No repair or recovery. Explicit schema7 support-context activation and complete historical scope/cause inspection add partial engineering evidence;no positive scientific eligibility/transfer follows.
@@ -82,4 +88,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Prepare and commit REQ-D03-009 for bounded read-only current claim-use and generation-history CLI,using accepted APIs,fresh model/account readiness and unchanged grant/counters. No new run may start before that clean prelaunch checkpoint.
+Launch the committed REQ-D03-009 once through CWI from its recorded clean main base,with unchanged stable environment,FD4096,all eight approved role flags and both literal-base checks;count start49 before execution and record its actual UUID locally.

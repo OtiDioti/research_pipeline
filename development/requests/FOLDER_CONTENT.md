@@ -27,6 +27,7 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [REQ-D03-006.md](REQ-D03-006.md) — REQ-D03-006 — Local CLI for exact inspection and explicit work-product draft round trips
 - [REQ-D03-007.md](REQ-D03-007.md) — REQ-D03-007 — CLI for immutable readable views and preserved refresh
 - [REQ-D03-008.md](REQ-D03-008.md) — REQ-D03-008 — Correct observed directory mutation diagnostics in readable commands
+- [REQ-D03-009.md](REQ-D03-009.md) — Read-only current claim-use and generation-history CLI.
 - [REQ-D04-001.md](REQ-D04-001.md) — REQ-D04-001 — Durable controller resource accounting
 - [REQ-D04-002-R1.md](REQ-D04-002-R1.md) — REQ-D04-002-R1 — Recover and complete deterministic committed run reports
 - [REQ-D04-002-R2.md](REQ-D04-002-R2.md) — REQ-D04-002-R2 — Complete and verify preserved committed-report publication

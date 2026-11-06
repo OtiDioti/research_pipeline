@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Read-only claim-use/history CLI prepared — 2026-11-06
+
+[REQ-D03-009](development/requests/REQ-D03-009.md) is the next bounded R-082 slice after verified support-context integration/checkpoint. It exposes complete existing current/history API documents through protected read-only CLI operations;submission,disposition,execution and scientific approval remain outside this slice. D03/R-082 and the product remain partial;all mandatory obligations and held failed-draft paths remain. STATUS owns prelaunch readiness,counters and one next action.
+
 ## Support-context freshness delivered; read-only claim-use CLI candidate — 2026-11-06
 
 [REQ-D02-010](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) is accepted,exact-integrated0668007 and target-validated1544/1544. D02 remains PARTIAL;R-011/R-014/R-015/R-017/R-019/R-077 gain bounded engineering evidence. R-082 still lacks dedicated CLI current-use and generation-history inspection despite existing APIs. A bounded read-only REQ-D03-009 is the next candidate after fresh prelaunch readiness. Positive authority/sufficiency/promotion,active-context adoption,Task/lifecycle/report and scientific/live/human obligations remain mandatory. STATUS owns counters and next action.
