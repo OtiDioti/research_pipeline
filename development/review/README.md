@@ -1,5 +1,7 @@
 # Review of the supplied coding-pipeline snapshot
 
+Preserves historical backend inspection or verification evidence and its original limitations.
+
 - [PIPELINE_REVIEW.md](../PIPELINE_REVIEW.md): integration findings, scope and limitations.
 - [FILE_INVENTORY.md](FILE_INVENTORY.md): every regular file in the supplied archive, with identity and static coverage.
 - [TEST_RESULTS.md](TEST_RESULTS.md): test execution, failures, follow-up experiments and limits.

@@ -1,0 +1,103 @@
+# Directory contents
+
+Lists immediate project-controlled children and their purpose; use this index to select relevant files.
+
+- [ADR-010-continuous-development.md](ADR-010-continuous-development.md) — ADR-010 — Bounded continuous development with a narrow backend-repair exception.
+- [ADR-063-lifecycle-report-decomposition.md](ADR-063-lifecycle-report-decomposition.md) — ADR-063 — Separate executable lifecycle-report bindings from capture and publication.
+- [ADR-094-development-records.md](ADR-094-development-records.md) — DEV-094 — Separate current development state from history.
+- [DEV-001.md](DEV-001.md) — DEV-001 — Outer Codex coordinator; all implementation through CWI.
+- [DEV-002.md](DEV-002.md) — DEV-002 — Markdown-only repository root; implementation in `implementation/`.
+- [DEV-003.md](DEV-003.md) — DEV-003 — Ignored nested `coding_pipeline/` clone, not a submodule.
+- [DEV-004.md](DEV-004.md) — DEV-004 — One scoped CWI run at a time; explicit phase boundaries.
+- [DEV-005.md](DEV-005.md) — DEV-005 — Root status is a committed checkpoint; live observations are local.
+- [DEV-006.md](DEV-006.md) — DEV-006 — Python 3.11+ with stdlib unittest for the first foundation.
+- [DEV-007.md](DEV-007.md) — DEV-007 — No CWI automatic merge; first result normally held for human review.
+- [DEV-008.md](DEV-008.md) — DEV-008 — Stable, minimal launch environment.
+- [DEV-009.md](DEV-009.md) — DEV-009 — Research data/vaults separated from development state.
+- [DEV-010.md](DEV-010.md) — DEV-010 — Continuous bounded requests after commissioning, with durable authority.
+- [DEV-011.md](DEV-011.md) — DEV-011 — Focused direct backend repair exception, separate from product implementation.
+- [DEV-012.md](DEV-012.md) — DEV-012 — Requested Astra 6.1, verified identifier; explicit effort at or below xhigh.
+- [DEV-013.md](DEV-013.md) — DEV-013 — Session continuation is separate from an external supervisor.
+- [DEV-014.md](DEV-014.md) — DEV-014 — Preserve the initial M0 scientific prerequisite.
+- [DEV-015.md](DEV-015.md) — DEV-015 — Place minimum reporting and resource contracts in D04.
+- [DEV-016.md](DEV-016.md) — DEV-016 — Preserve the inspected backend until a diagnosed repair.
+- [DEV-017.md](DEV-017.md) — DEV-017 — Pin supported Git for worktree operations.
+- [DEV-018.md](DEV-018.md) — DEV-018 — Use explicit coordinator Git identity.
+- [DEV-019.md](DEV-019.md) — DEV-019 — Authorize only a synthetic oscillator mock.
+- [DEV-020.md](DEV-020.md) — DEV-020 — Record commissioning and retire the bootstrap exemption.
+- [DEV-021.md](DEV-021.md) — DEV-021 — Hold scientific dependencies after the mock.
+- [DEV-022.md](DEV-022.md) — DEV-022 — Separate M0 engineering and scientific readiness.
+- [DEV-023.md](DEV-023.md) — DEV-023 — Settle transactional SQLite and immutable artifact contracts.
+- [DEV-024.md](DEV-024.md) — DEV-024 — Preserve specification and fixture provenance.
+- [DEV-025.md](DEV-025.md) — DEV-025 — Select explicit model and effort for the new storage run.
+- [DEV-026.md](DEV-026.md) — DEV-026 — Consistent backup/restoration next.
+- [DEV-027.md](DEV-027.md) — DEV-027 — Typed scientific content without reinterpreting history.
+- [DEV-028.md](DEV-028.md) — DEV-028 — Explicit schema evolution with preserved v1 restoration.
+- [DEV-029.md](DEV-029.md) — DEV-029 — Preserve controller validation ownership after observed sandbox mismatch.
+- [DEV-030.md](DEV-030.md) — DEV-030 — Attributed reports before current assessment authority.
+- [DEV-031.md](DEV-031.md) — DEV-031 — Human deadline extension and preserved-draft recovery.
+- [DEV-032.md](DEV-032.md) — DEV-032 — Work-product/draft infrastructure as the next independent slice.
+- [DEV-033.md](DEV-033.md) — DEV-033 — Preserve sources before seeded intake and readable views.
+- [DEV-034.md](DEV-034.md) — DEV-034 — Immutable corpus baseline before project readiness.
+- [DEV-035.md](DEV-035.md) — DEV-035 — Explicit process descriptor prerequisite.
+- [DEV-036.md](DEV-036.md) — DEV-036 — Preserve exact acceptance while recording one cosmetic diagnostic.
+- [DEV-037.md](DEV-037.md) — DEV-037 — Project/intake dossier before readable vault generation.
+- [DEV-038.md](DEV-038.md) — DEV-038 — Consistent immutable reading snapshots before refresh.
+- [DEV-039.md](DEV-039.md) — DEV-039 — Freeze every required check and reuse preserved CWI drafts.
+- [DEV-040.md](DEV-040.md) — DEV-040 — Publish protected generations within one parent and preserve operational errors.
+- [DEV-041.md](DEV-041.md) — DEV-041 — Preserve edits through immutable successor refresh.
+- [DEV-042.md](DEV-042.md) — DEV-042 — Bound complete refresh evidence at final observation gates.
+- [DEV-043.md](DEV-043.md) — DEV-043 — Expose a narrow explicit CLI authoring path before research execution.
+- [DEV-044.md](DEV-044.md) — DEV-044 — Keep saved proposals and uncertain acknowledgments explicit.
+- [DEV-045.md](DEV-045.md) — DEV-045 — Expose existing views with an independent historical baseline.
+- [DEV-046.md](DEV-046.md) — DEV-046 — Preserve exact accepted work and repair the remaining observed-directory diagnostic.
+- [DEV-047.md](DEV-047.md) — DEV-047 — Close observed-directory diagnostics with exact-source evidence — 2026-11-01.
+- [DEV-048.md](DEV-048.md) — DEV-048 — Resource accounting before controlled admission — 2026-11-01.
+- [DEV-049.md](DEV-049.md) — DEV-049 — Derive only provable cumulative invocation breaches — 2026-11-01.
+- [DEV-050.md](DEV-050.md) — DEV-050 — Minimum reporting before admitted execution — 2026-11-01.
+- [DEV-051.md](DEV-051.md) — DEV-051 — Preserve cancelled report candidate without implying acceptance — 2026-11-01.
+- [DEV-052.md](DEV-052.md) — DEV-052 — Resume by fresh CWI acceptance of preserved report work — 2026-11-02.
+- [DEV-053.md](DEV-053.md) — DEV-053 — Reuse terminal report draft within the final deadline-recovery allowance.
+- [DEV-054.md](DEV-054.md) — DEV-054 — Freeze source identities instead of duplicating source bodies in review context.
+- [DEV-055.md](DEV-055.md) — DEV-055 — Authenticate operator decisions before admission.
+- [DEV-056.md](DEV-056.md) — DEV-056 — Recover a nonreplayable capacity-failed review through fresh CWI acceptance.
+- [DEV-057.md](DEV-057.md) — DEV-057 — Separate durable run/report obligations from publication and later task admission.
+- [DEV-058.md](DEV-058.md) — DEV-058 — Freeze a complete compatible control contract and split lifecycle delivery.
+- [DEV-059.md](DEV-059.md) — DEV-059 — Preserve a completed orphan draft through explicit fresh acceptance.
+- [DEV-060.md](DEV-060.md) — DEV-060 — Secure child output before supervision can disappear.
+- [DEV-061.md](DEV-061.md) — DEV-061 — Reconcile an existing final acceptance before starting lifecycle reporting.
+- [DEV-062.md](DEV-062.md) — DEV-062 — Complete automatic reports through compatible binding and verified acknowledgment.
+- [DEV-063.md](DEV-063.md) — DEV-063 — Narrow lifecycle reporting after coupled prescription failures.
+- [DEV-064.md](DEV-064.md) — DEV-064 — Actual human raises continuous CWI starts50→100.
+- [DEV-065.md](DEV-065.md) — DEV-065 — Commit source facts before rendering and publication.
+- [DEV-066.md](DEV-066.md) — DEV-066 — Repair retained source invariants through fresh CWI acceptance.
+- [DEV-067.md](DEV-067.md) — DEV-067 — Share pure rendering before durable output plans.
+- [DEV-068.md](DEV-068.md) — DEV-068 — Recover the existing renderer before the focused validator optimization.
+- [DEV-069.md](DEV-069.md) — DEV-069 — Decline a finally accepted source when independent fixture evidence contradicts it.
+- [DEV-070.md](DEV-070.md) — DEV-070 — Adopt corrected full-suite concurrency and limit duplicate Reviewer diagnostics.
+- [DEV-071.md](DEV-071.md) — DEV-071 — Commit authentic lifecycle output before complete-history plans — 2026-11-04.
+- [DEV-072.md](DEV-072.md) — DEV-072 — Respect exhausted deadline recovery and select independent Tool-release contracts.
+- [DEV-073.md](DEV-073.md) — DEV-073 — Exact Tool-release envelopes before typed registration.
+- [DEV-074.md](DEV-074.md) — DEV-074 — Reuse transactional typed admission for passive Tool releases.
+- [DEV-075.md](DEV-075.md) — DEV-075 — Passive attributed assessments before admission and enablement.
+- [DEV-076.md](DEV-076.md) — DEV-076 — Passive transactional assessment admission before enablement.
+- [DEV-077.md](DEV-077.md) — DEV-077 — Expose passive Tool records through the existing CLI.
+- [DEV-078.md](DEV-078.md) — DEV-078 — Declare immutable task assignments before admission.
+- [DEV-079.md](DEV-079.md) — DEV-079 — Hold failed Task draft; scope independent current eligibility.
+- [DEV-080.md](DEV-080.md) — DEV-080 — Conservative transactional freshness before positive promotion.
+- [DEV-081.md](DEV-081.md) — DEV-081 — One owner for current coordinator rules and selective restart reading.
+- [DEV-082.md](DEV-082.md) — DEV-082 — Explicit policy-freshness boundary and shutdown.
+- [DEV-083.md](DEV-083.md) — DEV-083 — Conservative target-context revision freshness.
+- [DEV-084.md](DEV-084.md) — DEV-084 — Preserve completed orphan output; recover through fresh CWI acceptance.
+- [DEV-085.md](DEV-085.md) — DEV-085 — Explicit context activation accepted; checkpoint after bounded salvage.
+- [DEV-086.md](DEV-086.md) — DEV-086 — Explicit support-context dependencies before active-context adoption.
+- [DEV-087.md](DEV-087.md) — DEV-087 — Support-context activation accepted; expose existing current views next.
+- [DEV-088.md](DEV-088.md) — DEV-088 — Read-only claim-use/history CLI before new scientific authority.
+- [DEV-089.md](DEV-089.md) — DEV-089 — Preserve late-observation error meaning; expose frozen Sources before capture publication.
+- [DEV-090.md](DEV-090.md) — DEV-090 — Reuse the exact saved Source wrapper at the CLI boundary.
+- [DEV-091.md](DEV-091.md) — DEV-091 — Preserve the failed baseline and hold the scoped fixture repair.
+- [DEV-092.md](DEV-092.md) — DEV-092 — One authorized PID-fixture repair, then graceful shutdown.
+- [DEV-093.md](DEV-093.md) — DEV-093 — Accepted fixture repair completes the shutdown scope.
+- [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — Immediate-child navigation index.
+- [M0-contract-and-scientific-review.md](M0-contract-and-scientific-review.md) — M0 contract and scientific decision packet — revision 12.
+- [README.md](README.md) — Individual development decisions.

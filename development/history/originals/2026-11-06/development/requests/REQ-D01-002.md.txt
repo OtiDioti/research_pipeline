@@ -1,0 +1,50 @@
+# REQ-D01-002 — Synthetic harmonic/quartic development example
+
+**Phase:** D01/M0 preparation. **Readiness:** READY after commissioning integration/checkpoint. **Milestones:** one. **Requirements:** narrow partial R-004 and demonstration of R-005 distinctions; no completion of R-001–R-003 or production R-008–R-019.
+
+## Goal and authority
+
+Create the mock the human requested: “create your mock for this example,” responding to the proposed harmonic/quartic-oscillator scenario in specification §13.1. Make it a deterministic, reviewable development fixture and complete paper walkthrough for future schema and workflow tests. It must distinguish simulated expected records from actual calculations, reviews, expert judgments and production behavior.
+
+The foundation is accepted/integrated at `7d5acab359e404cbb81d94aa3213971468764d01`. Read original §§5.1–5.5, 11.2–11.5, 12.3 M0 and 13.1, AGENTS.md, D01 plan, and AUTHORIZATION.md revision 3. The spec SHA-256 remains `13d2ed9198916b7af3a3f9c3522745b0b6882b5492c9e27ccdc0c46114137ab7`.
+
+## Inputs, scope and public boundary
+
+Use only supplied specification content and synthetic local data. Implement fixture artifacts under `implementation/evaluations/`, focused loader/validation code inside the research_pipeline package, deterministic tests under implementation/tests/, and readable documentation in docs/ and implementation/README.md. The Architect chooses a small public fixture-loading interface and its concrete data representation, documenting it for future requests. Keep it independent of an installed package, current working directory and mutable shared fixture state.
+
+The fixture is data, not an implemented research controller or a fabricated execution transcript. Importing/loading it performs no tool/model/network invocation or canonical-state write. Do not add dependencies, live physics solver, database, provider adapter, agent orchestration, runtime prompts, generic schema framework or new CLI research command. Preserve CLI's honest maturity description; no acceptance claims by delegated roles.
+
+## Required mock narrative and provenance
+
+1. Label the collection and every assessment/evidence execution claim as synthetic development material, not expert-audited or held-out. Record scenario source `project_description.md` §13.1, mock version, exact fixture-local IDs/revisions and simulated role attribution. No invented real reviewer, publication, measurement, tool receipt, authorization, cost or scientific confidence.
+2. Include a substantive synthetic seed and a context specifying full real-line domain, positive mass/frequency, quartic-coefficient sign regimes, ground-state observable, assumptions versus existence obligations, and finite-truncation limitations. Readiness in the walkthrough is simulated; this is not product intake implementation.
+3. Represent baseline harmonic-limit/basis checks, a provisional both-signs ground-state candidate, its analytical and finite-matrix justifications, frozen candidate and declared outstanding existence/approximation obligations. Symbolic descriptions suffice; do not fabricate numerical benchmarks. If formulas are added, provide derivation/context and test only their declared deterministic scope.
+4. Represent an expected failed existence check for negative coefficient using the supplied translated fixed-width trial-state argument. Distinguish refutation of the negative-coefficient full-line ground-state interpretation from invalidating finite-matrix diagonalization or all algebraic work. Preserve exact historical candidate and evidence references.
+5. Include a separate positive-coefficient narrower candidate with its own revision/context, unresolved obligations and pending review. No transfer of old review authority or automatic scientific endorsement. Metastability/resonance is only a proposed new question with new scope, not silently substituted for ground state.
+6. Keep operational task completion, work stage, scientific disposition, support type, applicability and novelty distinct. Record expected before/after states and why, clearly as a fixture oracle for review. A synthetic issue/review is not authentic execution evidence or expert assessment. State expected independence limitations rather than claiming real independent reviewers.
+7. Provide a human-readable complete walkthrough that traces seed/context → candidate/justifications → failed check/issue → historical preservation and narrower pending candidate → partial-result report with outstanding work and next discriminating action. Its mock stopped-run/resource fields must not assert real usage, zero liability or live tool success.
+
+## Fixture checks and acceptance criteria
+
+- AC-MOCK-01: A fixture version, provenance/visibility/classification and exact internal references make the example replayable as data. Loader validates required schema/version/classification fields and rejects malformed input, unsupported versions, duplicate identities/revisions and dangling exact references, with useful errors. Missing inputs fail explicitly; it never downloads a replacement.
+- AC-MOCK-02: Demonstrate the supplied scenario end-to-end with stable expected snapshots. Tests distinguish a completed finite-matrix task from full-line support; preserve negative-branch refutation, original historical algebra/evidence, and unendorsed narrower positive branch. Check context/existence/approximation obligations survive the mock narrative.
+- AC-MOCK-03: Mutation tests reject corrupt fixture cases that would erase mock provenance, treat mock checks as expert/live evidence, conflate task completion and scientific support, or reuse a frozen review for the different positive candidate. Implement a focused validator of this fixture contract, not a general scientific truth engine. Avoid tests merely asserting file presence or literal constants.
+- AC-MOCK-04: Loading/validation is deterministic and inert (no files/models/network/tools), independent loads cannot silently share mutated fixture state, and tests import the actual candidate worktree. Positive and adverse fixture tests join the existing meaningful test suite without weakening the permanent validator.
+- AC-MOCK-05: Documentation identifies synthetic source/provenance, exact loader/test commands, all limitations, the expected scientific distinctions and what an expert must review. Include a small review checklist for the human to correct candidate scope, reference argument and expected dispositions. Do not call this an expert-audited evaluation set, live validation, complete M0, or production persistence/promotion/recovery.
+- AC-MOCK-06: Final review inspects complete fixture content and meaningful adverse cases, not just a green test count. Every check/execution claim in the mock is visibly simulated. Original specification, administrative grants/status/plans/frozen request, root layout and backend remain unchanged.
+
+## Validation, budget and integration
+
+Use the existing Python 3.11 stdlib environment; no installs. Explicit frozen check from repository root:
+
+`/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py`
+
+Baseline 19/19 tests passed after commissioning integration. The final prelaunch documentation commit is the exact new base; repeat validator and cleanliness checks before start. No bootstrap exception applies.
+
+AUTH-2026-10-30-001 revision 3 activated CONTINUOUS at the post-integration checkpoint. This is continuous start 1 of at most 50, separately from commissioning 1/3. One product run, one internal milestone, maximum 2 repairs/review and 6/run, 900-second agent and validation deadlines, at most 2 evidence-based recoveries for the same blocker. `--model gpt-6-astra --reasoning medium` explicitly; medium fits a bounded deterministic fixture and its validation. The pair is frozen across all roles; ceiling xhigh. Existing ChatGPT Codex allowance only; no API cap or new purchases/services/data access/live scientific experiments.
+
+No CWI --merge. Final acceptance is followed by coordinator receipt/source/full-diff/branch/base/cleanliness inspection, authorized exact fast-forward and target validation, then a safe administrative checkpoint. Delegated Writer implements directly in its assigned CWI worktree and never invokes CWI or Git/controller operations. Backend maintenance is coordinator-only under the separate policy.
+
+## Completion and stopping
+
+Report implementation submitted and actual checks/limitations; CWI owns final acceptance. Coordinator owns integration and requirement evidence. Stop for unavailable resources, contradictions, unsafe/unresolved effects or exhausted bounds; never fabricate expert review or relax gates. A successful mock supports further independent M0 preparation, but the original expert-audit/pilot/protocol prerequisites still govern D02. No routine human permission is needed merely to finish this authorized mock request.

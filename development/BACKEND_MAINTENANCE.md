@@ -1,5 +1,7 @@
 # Necessary coding_pipeline repairs
 
+Defines the narrow backend-maintenance exception and its evidence requirements; dated additional authority remains limited to its original task.
+
 ## 1. Narrow exception, not a second implementation route
 
 The human explicitly permits the **top-level development coordinator** to edit the separately cloned `coding_pipeline/` source when an observed defect prevents correct operation. This avoids requiring a broken implementation backend to repair itself.

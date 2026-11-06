@@ -1,5 +1,7 @@
 # REQ-D03-004-R1 readable snapshots — 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e
 
+Records this CWI run’s source, checks, acceptance/integration and unresolved limits; authoritative controller evidence remains separately preserved.
+
 ## Identity and outcome
 
 | Field | Observed value |

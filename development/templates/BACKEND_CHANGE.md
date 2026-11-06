@@ -1,5 +1,7 @@
 # CP-nnn — Focused backend repair
 
+Provides a reusable backend change record format; placeholders are not execution evidence or authority.
+
 **Disposition:** DIAGNOSING / CANDIDATE / ADOPTED / REVERTED / BLOCKED. **Event time:** actual timestamp. **Recorded in parent:** actual later checkpoint if delayed.
 
 ## Cause and scope

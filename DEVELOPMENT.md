@@ -1,5 +1,7 @@
 # Development architecture and operating plan
 
+Explains the development architecture, workflow and information ownership used to coordinate this repository.
+
 ## 1. Goal
 
 Build the research workbench specified in [project_description.md](project_description.md) through a series of bounded, verifiable coding-pipeline runs. Make every restart intelligible to a human or a fresh Codex session: what is implemented, what is accepted, what is integrated, what is blocked, and what the next safe action is.
@@ -116,6 +118,8 @@ CWI's authoritative state is a fourth storage location controlled by CWI, not by
 
 For a continuation, start with the current `STATUS.md` checkpoint, the effective human grant and later amendments or revocations in `development/AUTHORIZATION.md`, the local live handoff when present, and actual Git/CWI evidence. Open the active request/run, requirement rows and original specification sections needed for the next action. Verify the authorized specification digest; expand to the full specification if it changed or the crosswalk or evidence is uncertain. Historical records, old decisions, phase plans and product guides are read on demand, not as a blanket startup bundle.
 
+Current views are replaced in place, not extended with dated run narratives. Read [history](development/history/FOLDER_CONTENT.md) only when needed. Historical authority sources are individually indexed under development/history/authorization/; the raw-input manifest preserves exact original text. Decision rationale lives in individual development/decisions/ records. Do not append routine product outcomes to AUTHORIZATION or ENVIRONMENT when their owned facts did not change.
+
 For future checkpoints, keep detailed run identities, validation and review evidence in the run record. Use `STATUS.md` for the current checkpoint and one next action, `ROADMAP.md` for planned scope, `BACKLOG.md` for unresolved/deferred conditions, `REQUIREMENTS.md` for requirement evidence and `CHANGELOG.md` for concise integrated outcomes. Link to the owning record instead of copying its full narrative into every index. Preserve existing historical and frozen evidence.
 
 Do not create separate `CURRENT_STEP.md`, `NEXT_STEP.md`, and `HANDOFF.md` files that all independently assert current state. `STATUS.md` contains the current checkpoint and one next action; the run record and optional local handoff carry detail. This reduces contradictions without losing the requested visibility.
@@ -230,16 +234,3 @@ These coordination rules are instructions, not an implemented supervisor or an O
 Use the scope/evidence gate in [AUTONOMY.md](development/AUTONOMY.md). All mandatory in-scope requirements need exact integrated-source evidence, whole-product verification, accurate documentation, and required live/scientific/human assessment. A completed foundation or mock-only research demonstration is not full-project completion.
 
 When implementation can proceed but D10 needs unapproved live resources or expert review, record the exact remaining obligation and report the narrower delivered scope. Do not waive it, impersonate the expert, or keep making unrelated changes merely to avoid reporting a blocker. The [completion report template](development/templates/COMPLETION.md) separates these verdicts.
-
-## Current continuous-start envelope — 2026-11-03
-
-Actual human AUTHrevision6 increases the continuous CWI start allowance to100 across active settings and startup prompts. Consumption persists; STATUS and AUTHORIZATION own current counters/evidence. Historical50-start envelopes remain historical records, not current settings. This administrative amendment changes no backend runtime knob, other recovery/repair/model/deadline bounds, scientific requirement or service/data/publication permission.
-
-
-## Full validation scheduling and Reviewer diagnostics — 2026-11-03
-
-The permanent command remains `python3 -B implementation/scripts/validate.py`. It discovers all standard tests and automatically schedules safe fixture groups in supervised isolated processes, using effective available CPUs and exact `C=min(T//2,max(0,A-2))`, at most2*C concurrent units, with safe intact sequential fallback. All baseline/candidate/final and post-integration full checks remain mandatory. Add ordinary `implementation/tests/test_*.py` tests normally; no scheduler registration or worker assignment is needed. Exceptional shared dependencies, global cleanup/custom-suite behavior, source checks, result coverage and platform limits are described in the [validator guide](docs/test-validation.md). The additive `--sequential` option still executes the entire suite and is useful for equivalent-source comparisons.
-
-The separately requested Reviewer prompt policy uses exact current-candidate controller results as full-suite evidence. A Reviewer does not rerun the complete suite; optional permitted diagnostics address concrete uncertainties in affected behavior, callers, dependencies, shared helpers/fixtures and regression paths. Report actual selection/outcomes as advisory evidence, preserving complete review scope and all required gates; do not substitute stale results or invent validation IDs. Clarification remains non-executing. [Exact product/backend audit](coding_pipeline_changes.md) and [measured full-suite benchmark](development/benchmarks/concurrent-validation-20261103.md) record the implemented limits and evidence. The prompt policy itself has no measured acceleration/compliance claim.
-
-The focused optimization and added prompt instruction are complete at this session's safe checkpoint. Stop here as explicitly instructed; the existing CONTINUOUS grant can be recovered in a new session, without resetting consumption or automatically restarting.

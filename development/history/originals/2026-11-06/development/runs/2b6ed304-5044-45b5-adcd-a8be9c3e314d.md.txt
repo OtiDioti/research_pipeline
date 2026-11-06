@@ -1,0 +1,70 @@
+# REQ-D02-006 work-product round trips — 2b6ed304-5044-45b5-adcd-a8be9c3e314d
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / attempt | REQ-D02-006 / D02-006-attempt-001; continuous start9/50 |
+| Specification / authority | v1.4 SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f; AUTH revision 5 |
+| Request base / target | 8b1ed841376a09d6bf0cf4089fde1768b8347c34 / main |
+| Request SHA-256 | d40c5e65bb9c8868e2d1ae40372a379a1651f32824fcbe1d381c303b608bad99 |
+| Backend / model | Clean unchanged 1f68060b5a5a9964c91811a53d3a515e0b01a073; gpt-6-astra/high; Codex 0.166.0; stable recorded environment |
+| Frozen bounds | Three milestones; repairs 2/review, 6/run; agent/validation 2700 seconds; no CWI --merge |
+| Start / return | 2026-10-30T15:19:35Z / 16:43:19Z; exit0 |
+| Final CWI state | ACCEPTED_UNMERGED;3/3 milestones; zero repairs, protocol corrections or infrastructure retries; no owners/lease/quarantine/provisional source/findings/obligations/recording gaps |
+| Accepted / integrated source | a56111f3e531b392ac997a6689944ec0820f151a |
+| Accepted tree | 6f60e33bac43da5569ffb2b2313c68667ec22bc1 |
+| Exact integration | 2026-10-30T16:45:34.273986+00:00; no intervening tracked commit |
+| Target validation | 291/291, zero skips/failures/errors, 138.378 seconds; clean unchanged source |
+
+## Delivered behavior and inspected acceptance
+
+Seventeen product implementation/documentation files deliver strict versioned multi-file WorkProductManifest records, durable independent writable checkout, bounded preview/capture and saved proposals for visibly separate typed commit. The coordinator inspected complete source/tests/docs and each milestone diff, then verified the full base-to-final diff against the receipt. All sixteen original test files, validator, schema/backup implementation, dependencies, specification and oscillator provenance remained unchanged.
+
+The manifest keeps portable path identity distinct from titles, rejects conservative Unicode/case/device/prefix aliases, preserves repeated bytes at separate paths, and projects exact semantic/artifact links. Its local states are null. Context/claim/supersession references are constrained typed edges; task/branch/run/source/build links and Review context-manifest declarations remain shallow. Optional supersession, when present, is the same identity's immediate predecessor. No label or favorable attribution confers scientific or execution authority.
+
+Checkout uses caller-pinned exact canonical records, explicit trusted exclusion roots, required byte/count limits, no-follow held directory bindings and independent private writable copies. Direct artifacts are verified without executing content or traversing dependencies. A synchronized incomplete marker precedes construction; verified files/descriptors and directory barriers precede publication. Failures retain partial output; post-removal failures report uncertain acknowledgment. Read-only inspection reports an untrusted original-base descriptor and does not authenticate a hostile owner or certify subsequently edited bytes.
+
+Preparation compares that descriptor with the caller-pinned canonical base, verifies all original direct bytes, captures explicit selections under finite budgets, reports meaningful byte/metadata/provenance/order changes and bounded opaque unselected material, and changes no application metadata. A narrow read-snapshot helper reuses typed admission checks; it cannot promise future commit. A detached strictly serialized Submission pins supersession and expected head. Explicit submit_typed alone commits; it does not reread the draft. Existing original-ID-first retry order remains unchanged.
+
+| Acceptance area | Executed evidence |
+| --- | --- |
+| Manifest/admission | 15 pure and14 durable methods cover strict wire/envelope/path rules, mixed exact references, preserved history/provenance, CAS/retry, direct damage, shallow targets, backup/restoration, v1 refusal and migrated compatibility |
+| Checkout | 29 methods cover text/binary/empty/repeated bytes, independent inodes/modes, bounded streams, path/type substitutions, short writes, actual fsync/unlink/close failures, real process exits and fresh inspection on both sides of publication |
+| Preview/import | 29 methods cover deterministic detached summaries/proposals, all-table immutability, originals/selected-file damage, actual changing files/ancestors, opaque bounded enumeration, competing drafts, saved proposal commit after edits/deletion, original-ID retries after head advance/damage, real transaction exits/hot journals, backup/exact restore and restart |
+| Inertness/documentation | Script/configuration/notebook bytes remain inert; fresh module imports have audit guards; exact manifest, checkout and durable-save/import documentation examples execute in candidate-source interpreters |
+| Whole request | Baseline204; milestones233,262,291; final291 and target 291; zero skips/source mutation in authoritative checks. All three milestone reviews and final review accepted without findings |
+
+Writer-local checks honestly retained literal-/tmp restrictions and an AF_UNIX fixture bind restriction. The final Writer-local run executed291, with 245 successes,44 /tmp errors,1 /tmp failure and1 socket-bind error. Its other28 new tests passed. The controller host and integrated-target environments executed all291 successfully, including that socket fixture. Local fixture ID/permission corrections and nested-proposal validation were Writer implementation work before submission, not controller repair cycles or backend changes. No acceptance/security check was weakened.
+
+Transient status recording observations during in-flight roles were reconciled against the actual host controller and subsequent completed operations. Final status/diagnose have no recording gaps or unresolved conditions. No competing controller, resume or recovery action was used; no controller/account state was edited.
+
+## Evidence identities
+
+Paths are relative to /home/francesco/.local/state/cwi/runs/2b6ed304-5044-45b5-adcd-a8be9c3e314d. Local launch/report/inspection/guards/usage/validation evidence lives under local/attempts/D02-006-attempt-001; Git alone does not preserve those files.
+
+| Evidence | SHA-256 / source |
+| --- | --- |
+| Milestone1 source | a9b854aab1967bd86bd305e236069d96f937eb63; tree 8bb8db5c6e544d9b510e46c824dcf083ff1d7835 |
+| Milestone2 source | 05f267148ea40d7f4cf9d9ee6cefa65514db8c9e; treebfc7fefc9bcc49f27fcb5c12ebcb1904a341d0a8 |
+| artifacts/receipts/milestone-typed-work-product-manifests.json | 0e8f8d4b046fe20b2e76b73500307f5c456898176ae0c50fcfe63ed904ff0edd |
+| artifacts/receipts/milestone-safe-durable-checkout.json | 3e543a34f66386ed6be99cf632625907b8c15ed5bd9b07f80fa07d10b0b1b725 |
+| artifacts/receipts/milestone-preview-and-explicit-import.json | 024621b7b8e77891e83303cbeb3b96ccc1719be30b3c8b0f2b98619c14f0c500 |
+| artifacts/receipts/final.json | 86b9c3b48fd0d7dad16379078259fa401289b22a7ac42ede6a6c12c236c00151 |
+| Final validation 6c2aed55-531d-4c86-a2a3-45f25e9151da | cdc584bc96b7192a4c22b4a9694436ae4f04e6087ee10ac42208b6b983438299 |
+| Final validation stdout | 421d45a97aaac9daef90488aa235d68b6c9faa85272b2035aeba0b5d4ba39feb |
+| artifacts/diffs/final-0.patch | b24de5b56a35f624a07b429de6cb626f396efd989278a8bd402bb840bd4d62f2 |
+| Final reviewer 1e69b52c-6a9c-4807-b482-6a3e267ed8b0 | 02a2e62199b26d7e75beb2736cee8f0b0d38facbfcaa1ce8d0a13329285bbc5d |
+| Local post-integration-validation.log | 78be60616be9511fc53a949fc1add3a76a7e771cc31b7fa16e3051f36300640c |
+
+Twenty-six receipt/state-linked artifact references were checked against bytes, ordered milestone sources form the base-to-final chain, and the exact Git binary diff equals the final bound patch. All 17 final file hashes match inspected source. Parent/candidate cleanliness, main/exact base, ancestry, new-path collisions, inactive hooks, final ownership/lease and unchanged backend/Codex/specification were checked; the host controller PID was absent at integration. This was coordinator exercise of recorded preauthorization, not a claimed human review. CWI's historical ACCEPTED_UNMERGED state is preserved after external integration.
+
+## Consumption and remaining obligations
+
+Eleven completed role invocations report 8,881,947 input (8,043,392 cached), 138,869 output (34,701 reasoning). Cumulative reported lower bound 33,659,926 input (29,035,776 cached), 525,801 output (106,441 reasoning), PLUS unknown timed-out Writer usage from46114120. Cached/reasoning categories are nested, not extra charges. Quota/invoice/account liabilities remain unknown; existing ChatGPT allowance only, no API cap or purchases.
+
+Commissioning 1/3 (closed); continuous 9/50 consumed (41 remaining); cumulative CWI repairs 2, coordinator recoveries 2 (one validation-context/one deadline), backend 0. This run used zero of those repair/recovery allowances. Prior nonresumable failures9af6f133 and 46114120 remain preserved; eight of ten relevant actual runs are accepted/exact-integrated, two terminal failures. No live/unresolved owner/effect remains.
+
+R-008/R-019/R-028/R-030 gain partial executable evidence. Full record semantics, current eligibility/invalidation, authority/fencing/resources, intake/views/direct-generated-edit protection, other draft kinds, retention/tombstones, live research and scientific evaluation remain required. M0-E overall, M0-S/R-001–003, D02/D03 and the research product remain incomplete. No exposed fixture becomes held-out evidence.
+
+**Exactly one next safe action:** verify the committed REQ-D03-001 baseline and launch its bounded local-source-capture request under the existing grant.

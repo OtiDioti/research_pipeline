@@ -1,0 +1,65 @@
+# REQ-D02-005-R1 attributed reviews/issues — 8dc45005-5187-4be0-a009-dece7c493f2b
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / attempt | REQ-D02-005-R1 / D02-005-attempt-002; continuous start 8/50 |
+| Specification / authority | v1.4 SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f; AUTH revision 5 |
+| Request base / target | b08960fbf3b4e26fe077a35d527c3b99f2e7c809 / main |
+| Request SHA-256 | 218ddd7aac047d7fc8ce58265c26c592624719ad33a8a51c440ff2d5435807cd |
+| Backend / model | Clean unchanged 1f68060b5a5a9964c91811a53d3a515e0b01a073; gpt-6-astra/high; Codex 0.166.0; stable recorded environment |
+| Frozen bounds | Two milestones; repairs 2/review, 6/run; agent/validation 2700 seconds; no CWI --merge |
+| Start / return | 2026-10-30T13:48:00Z / 14:33:27Z; exit 0 |
+| Final CWI state | ACCEPTED_UNMERGED; 2/2 milestones; one resolved repair; no open findings/obligations, owners, lease, quarantine, provisional source or recording gaps |
+| Accepted / integrated source | a5bba690a6c7e7113a92f34cc99efffc7a8c5656 |
+| Accepted tree | 5d1226d725fd37f01722497c3bee41f4f892e6d2 |
+| Integration | 2026-10-30T15:10:03.898938+00:00; coordinator exact fast-forward; no intervening tracked commit |
+| Target validation | 204/204, zero skips/failures/errors, 68.759s; clean source |
+
+## Delivered behavior and inspected acceptance
+
+Thirteen product files, 2,579 insertions/90 deletions. Strict immutable Review/Issue codecs use a separate assessment-content version, independent reported status dimensions, explicit per-route judgments, exact ordered envelope links, conditions/obligations and synthetic/unverified provenance. Requested/reported visibility, policy and execution references are attributed declarations, never proof of authority, isolation or scientific correctness.
+
+One typed dispatch/commit boundary admits all six scientific/assessment kinds. It traverses constrained exact references under BEGIN IMMEDIATE, terminates descriptive cycles and keeps generic roles shallow. Every submitted Review route must contain its exact candidate among typed Justification conclusions, regardless of reported outcome; candidate/route/target contexts may differ. Missing/malformed/wrong-kind targets, direct artifact damage, stale heads and conflicting IDs fail atomically. Identical original-ID reconciliation precedes current admission/availability, preserving existing generic-original semantics without retroactive certification. Public typed reads validate the selected envelope, not past graph admission.
+
+| Criterion | Executed evidence |
+| --- | --- |
+| AC-REVIEW-01 | 17 pure assessment tests cover strict enum/type/version/Unicode, nested forged values, ordered references, detached snapshots and canonical state separation; prior scientific codecs unchanged |
+| AC-REVIEW-02 | Mixed forward graphs preserve two disagreeing reviewers, two alternate routes, conditional obligations, old contexts and separate Issue revisions through reopen/fresh processes, without changing provisional candidate history |
+| AC-REVIEW-03 | All application tables compared on negative admission; wrong candidate/revision, malformed historical/deep targets, opaque generic roles, direct artifacts and independent-handle CAS covered |
+| AC-REVIEW-04 | Real pre-metadata/mid-write/post-COMMIT process exits, actual hot journal, lost acknowledgment and original-ID retry; backup/exact restore and explicit v1→v2 migration retain original histories/receipts |
+| AC-REVIEW-05 | Unchanged validator executes the actual documented persistence block; milestone/final reviews inspect complete source/diff/traversal/transaction/trust boundaries; 204/204 final and target checks |
+
+Baseline 169/169; milestone one 186/186; milestone two/final/target 204/204. The 35 new methods comprise 17 pure and 18 durable tests. No original test or fixture removed. Schema, backup formats, scientific codecs, dependencies and validator remain unchanged.
+
+The first milestone-two validation executed 204 tests: 203 passed, one error, zero skips. New generic-role fixtures already created generic-issue/generic-review before typed consumers reused those identities. CAS correctly rejected them before intended assertions. Reviewer F-001 required distinct consumer IDs; the Writer renamed just those two IDs and the read assertion, preserving all opaque targets and subsequent negative checks. Independent re-review resolved F-001 with 204/204. One CWI product repair, no coordinator recovery or backend change for this fixture defect.
+
+The earlier terminal run 46114120 remains unaccepted and nonresumable with its original state/index/worktree. Eight frozen context files (seven exact CWI-authored draft files plus administrative SALVAGE.md) supplied reference data. The replacement Writer implemented/reviewed its new worktree; the coordinator did not transplant product code. Its own complete final acceptance, not the failed attempt's advisory 184 tests, establishes this result. The human's 2700-second amendment was frozen at start; no old controller was resumed or hot-patched.
+
+## Evidence identities
+
+Paths below are relative to /home/francesco/.local/state/cwi/runs/8dc45005-5187-4be0-a009-dece7c493f2b. Local launch, guards, full report, source-inspection hashes, usage and post-integration evidence remain under local/attempts/D02-005-attempt-002; Git alone does not preserve those files.
+
+| Evidence | SHA-256 / source |
+| --- | --- |
+| Milestone attributed-contracts source | d95d3796a32b1969c0677843c3b1e5f00c6e4b0d; tree a7c390050c095706abda9de2ab246a6409f5027f |
+| artifacts/receipts/milestone-attributed-contracts.json | b323da5999898b7c59a446600b68e73fef22b03efa4d019250e4a5830be21b9b |
+| artifacts/receipts/milestone-durable-attributed-records.json | 8a4e63d1b0d0d6fa789737f9a4f4eb768768e2baf74ce500873842ebaa9f0f46 |
+| artifacts/receipts/final.json | 03fbd341c182c60fdddd172db2b2f7787e278555cf7542a85fa14ebf39a8322c |
+| artifacts/validation/validation-fa499e75-5901-4bb6-82b8-bc902af359ae.json | a4c6d5c88b354f3109f7a876e5eb6396cd433a509629427d7f77441ad7ac7934 |
+| artifacts/diffs/final-1.patch | b0e0f47b7dc28307208c94d669f13fb23fe9c058a8854d175061b97c9b299da2 |
+| Final reviewer 91ce4d21-1d83-45ef-97cc-decba8e8900e | 5d0780230b39c30ff5c2de7a99cc3ecc2ff217c6ad37398c1c1a9745a26dbcff |
+| Local post-integration-validation.log | 61ecb89ba3e08779a3476c9328d1beddf674cbce629f6347233bff860e07e7cc |
+
+Receipt-linked artifact digests were checked against bytes; Git's complete binary base-to-final diff equals the final bound patch. Complete changed source/tests/docs were inspected, including the repair. Exact base/branch, clean target/candidate, ancestry, new-path collisions, inactive hooks, absent controller/lease and unchanged backend/Codex/specification were checked. An initial inspection assumed final-0.patch; actual digest-bound final-1.patch was discovered and verified before integration. This was a read-only filename correction, not a recovery or altered evidence. No controller state or receipt was edited. Historical ACCEPTED_UNMERGED remains accurate for CWI's no-merge outcome; integration is separately evidenced here.
+
+## Consumption and limits
+
+Eleven invocation telemetry receipts: 6,759,470 input (5,757,568 cached), 76,492 output (14,795 reasoning). Cumulative reported lower bound: 24,777,979 input (20,992,384 cached), 386,932 output (71,740 reasoning), PLUS unknown timed-out Writer usage from 46114120. Nested categories are not additional charges. Quota, invoice and account liabilities remain unknown; existing ChatGPT allowance only, no API cap.
+
+Commissioning 1/3 (closed); continuous 8/50 (42 remain); CWI repairs 2 cumulative; coordinator recoveries 2 cumulative, one each for validation-context mismatch and Writer deadline exhaustion; at most one further action per same blocker. Backend candidates 0. No protocol correction/infrastructure retry in this run. Successful recovery does not reset counters.
+
+R-004/R-005/R-008/R-013/R-014/R-017/R-019 gain partial record/infrastructure evidence. Current eligibility and synchronous invalidation R-015, authority/fencing/resources, other payloads, vault/intake and run recovery remain required. M0-E overall, M0-S/R-001–R-003, D02 and the research product remain incomplete. No scientific sufficiency, approved pilot/audit, held-out evidence, actual scientific calculation or live qualification is claimed.
+
+**Exactly one next safe action:** verify the committed REQ-D02-006 baseline and launch its bounded work-product/draft round-trip request under the unchanged grant.

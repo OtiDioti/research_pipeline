@@ -1,0 +1,9 @@
+# Recorded evidence: Evidence ledger — Source captures and local ingestion, 2026-10-31
+
+Preserves this requirement-evidence checkpoint and its original limits; it does not independently establish current completion or authority.
+
+Source: [complete evidence history](../development-REQUIREMENTS.md#evidence-ledger--source-captures-and-local-ingestion-2026-10-31). Current obligations remain in [REQUIREMENTS](../../REQUIREMENTS.md).
+
+## Evidence ledger — Source captures and local ingestion, 2026-10-31
+
+REQ-D03-001 / [run 7b46536e-42ac-4537-a720-beaaa5a34490](../../runs/7b46536e-42ac-4537-a720-beaaa5a34490.md), accepted/exact-integrated d8dffdd248495fb18627f3740e77111cbe13a438, final receipt 8299e6456fe392feb32ef5d2a9caa684d6dc16524ee605e2b28833e651acbf1d; controller 343/343 and clean target 343/343 under soft descriptor limit 4096. R-008 gains an eighth strict typed kind with source/report/upstream identities, coherent exact references and retained histories. R-019 extends real restart/backup/exact restore and receipt preservation. R-021 gains original local bytes/modes/path mapping and truthful provenance; R-022 gains attributed partial/unknown coverage and distinct versions; R-024 gains inert explicit local selections/configuration and exact declared locators; R-029 gains confined selected-file handling and retained restriction/license/data declarations. All are PARTIAL: complete corpus/intake/readiness, actual link discovery/exposure enforcement, archive confinement, faithful extraction, future disclosure policy and vault publication remain unimplemented. Stored declarations confer no permission or scientific support. Fifty-two new methods preserve all 291 prior tests. Two repairs resolved documented API union and real mutation-test setup/assertions; initial target descriptor-limit failure is preserved. REQ-D03-002 prepares immutable inventory/history; no implementation evidence exists for it yet. M0-S/R-001–003 remain pending.

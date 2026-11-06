@@ -1,0 +1,9 @@
+# Recorded evidence: Project/intake dossier engineering evidence — 2026-10-31
+
+Preserves this requirement-evidence checkpoint and its original limits; it does not independently establish current completion or authority.
+
+Source: [complete evidence history](../development-REQUIREMENTS.md#projectintake-dossier-engineering-evidence--2026-10-31). Current obligations remain in [REQUIREMENTS](../../REQUIREMENTS.md).
+
+## Project/intake dossier engineering evidence — 2026-10-31
+
+[Run db2829bc](../../runs/db2829bc-fca9-48d7-b2c1-b9e99348c197.md), accepted/exact-integrated 937386035ffa90d587bc5c29d6d1c5d18f4ce02d, final receiptcc9abbca254b9eaab2ca2d4a164fea7446238f054e38b8c876c7014d9f390f6c, controller/target396/396 with zero skips/errors/failures. R-004/R-008 gain the tenth strict typed contract and exact project/corpus/brief/intake-report/location relationships. R-019/R-017/R-018 gain real CAS, process-fault, lost-acknowledgment, original-retry, fresh-process and healthy backup/exact-restore evidence. R-020–023 gain explicit incomplete setup, nonempty inspected-subset prerequisites for an attributed proposal, exact original selection and source-linked authored brief/report/context; R-024/R-029 retain unknowns, restrictions and inert imported content through exact Sources. These are PARTIAL recording/engineering subsets: no actual authorized ready state, authenticated judgment, task admission, scientific interpretation or policy enforcement is claimed. Full vault layout/generation/edit protection, other lifecycle/authority/resource contracts, acquisition/archive/extraction, disclosure/exposure enforcement and M0-S remain mandatory. All369 predecessor tests and27 new methods execute; one fixture/example provenance/mode repair left guards and assertions intact. Complete-diff formatting passes and resolves the earlier cosmetic debt. REQ-D03-004 is prepared for local readable snapshots; preparation supplies no implementation evidence.

@@ -1,0 +1,43 @@
+# REQ-D04-002 — Human-requested graceful shutdown
+
+- Run: `6ae8ca11-0df2-48e2-abc8-65d51adaa187`; attempt `local/attempts/D04-002-attempt-001/`.
+- Start: 2026-11-01T03:36:16.405162Z; clean main base `0806e24fc0f4105eea36a70ee318178a1b178903`, tree `f8ab3457404164696e38bf4eda756b246baa1bab`.
+- Provisional source: `2e4343890e519075915e2d25b4bf18875d2ef8a9`, tree `02efc1498d375c7a70ee9a9ec9228a2d5f841559`, Git-state digest `36040523bf0cdc4e123c9b3807cea25f1bfc8eda1af5dcb12b346829dd093492`.
+- No accepted milestones, final receipt, integration, or publication milestone. Prior accepted product remains b13fff0.
+
+## Execution and preservation
+
+REQ-D04-002 / CWI 6ae8ca11-0df2-48e2-abc8-65d51adaa187 was stopped at the human’s explicit resource-conservation request. Provisional 2e4343890e519075915e2d25b4bf18875d2ef8a9 passed 806/806 controller tests and the complete-base diff check; first-milestone Reviewer was cancelled, zero milestones/final receipts exist, and nothing from this request was integrated. STOPPED_INCOMPLETE, no lease/quarantine/live execution; retained pending_authoritative_operation is a recovery record, not a running process. CWI says resume_allowed=false and new_run_after_manual_salvage. Preserve the candidate and all old work; do not replay/resume or start another workflow in this session.
+
+SIGTERM was sent only to identity-verified controller PID1145042 at 04:21:53.665788Z. The existing CLI signal handler invokes bounded cancellation/reaping; Reviewer1153640 exited -15, its code host1153740 exited, wrapper1145016 and shell1145015 exited. CWI returned1 at04:21:53.761937Z; outer exec session76127 closed. No stronger coordinator signal, backend patch, state cleanup, resume or new start occurred. Phase STOPPED_INCOMPLETE revision34, active_sessions empty, original cancelled Reviewer operation reviewer-862c59dc-758e-4205-9bf6-3625546a4f1e retained. Diagnosis marks pending_authoritative_operation and disallows replay/resume. Host independently proved termination; this does not fabricate a Reviewer verdict or clear authoritative state.
+
+All21 retained statuses were inspected:17 historical ACCEPTED_UNMERGED already integrated,4 STOPPED_INCOMPLETE; no lease/quarantine. Host scan at04:22:44.614344Z matched no project execution across314 recorded identities/groups, private/repository paths and coordinator descendants. User interfaces/idle terminals were identity-verified and preserved. All22 worktrees were inspected; only old46114120 has seven staged files. Current candidate, main and backend were clean. Shutdown admin checkpoint is safe after terminal nonresumable state/owner exit; no exact-base integration awaits it. Frozen run artifacts and refs remain untouched.
+
+## Evidence established before cancellation
+
+Baseline778/778 in497.037s, ended03:44:34.544152Z. Candidate806/806 in510.389s, ended04:21:03.336696Z; no skips/failures/errors/source mutation. Both completed before shutdown cancellation, and were only read/hash-verified during shutdown; no new suite was run for shutdown.
+
+- Candidate check1 result `17a0843577398b4a9e0cf0fc60631f08a37c38ddf53993e238eec0ee447bc45b`; stdout `8a516935363e526abc3ebb45ca868fa7d683957813032824fe6d1973628b4080`; empty stderr.
+- Complete-base diff check result `653a2fb5eeeec47f4be71bd3595a96dbd5b290411c20e5a0279dc36d1395c151`; empty stdout/stderr.
+- Candidate incremental/full patch `6e2de489e3acd7c32e545d613ce292c1749817a191cb74ba340338d9308c2409`; path gate `c9bee48bc9e5be4e553e08facf31c9c19051db52def86fdaf7b548a9e8a77d1e`; all219 blobs/modes and unchanged validator verified.
+- Coordinator reviewed all16 changed source/test/doc paths. One transaction spans exact original-ID reconciliation, coherent capture, immutable artifacts and metadata. Separate project resource projection follows complete ledger validation. Seven report groups, unknowns, exact evidence, history and original receipts are preserved. No schema change; publication remains absent.
+- Independent disposable exact-candidate late-usage probe passed before shutdown: post-settlement usage reopens liability, preserves sticky breach/block and old report bytes; later settlement/reopen retain identities. A persistent report-specific post-settlement late-usage regression remains a coverage question for later review.
+- Earlier Writer broad advisory failures are retained, including a real early syntax defect and fixture/environment failures; they are not relabeled acceptance. First raw779-test log retained; second805-test full raw log unavailable after Writer removal, exact count transport retained. Final806 controller evidence supersedes those development states, not the cancelled review.
+
+## Frozen configuration and resources
+
+Original request SHA `fae8ef7906042d2d5d410169f2ab1977299b7a6dd81aa2e247be08d23ece9ae1`; config `22fbbea54edd19125a70dab795e8c69ca0271bef5089c89a11de96001e2150ca`; profile `8991478525cb5e9c6881f9659d8a5899168a237d6fca7cf3fcab3fe52b3168c0`; launch environment `46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09`. Roadmap `3d259b0acfed357f972fe4dd44274c9cd8640ee455e0c49b3bc01c2d4e75589c`; first prescription raw `abec1e48757b45bb0a7ff8a663267d2c49ae6042801aa47f3db52d251a0dbaed`, canonical `61434d951747ae24de0703e2702086bdca9d233e5ad2e2effd5f08a08948f59e`.
+
+Model gpt-6-astra/high, maximum xhigh;2milestones,2repairs/review,6/run;2700-second deadlines,4096/1048576FD; no --merge. Both frozen checks: `python3 -B implementation/scripts/validate.py` and `git diff --check 0806e24fc0f4105eea36a70ee318178a1b178903 HEAD --`. Backend clean1f68060b5a5a9964c91811a53d3a515e0b01a073. Codex0.166.0 executable `/home/francesco/.codex/packages/standalone/releases/0.166.0-x86_64-unknown-linux-musl/bin/codex`, SHA `b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8`. Nonsecret environment saved in local attempt; no model substitution or server-attestation claim.
+
+Commissioning 1/3 closed; continuous 20/50 used, 30 remain; cumulative CWI repairs 19, coordinator recoveries 4, backend attempted/adopted/reverted 0/0/0. No shutdown recovery attempt or new start is counted. Twenty-one runs: 17 finally accepted/integrated, 4 preserved terminal incomplete runs. Current three completed successful roles report 8,931,914 input (8,695,424 cached), 81,918 output (20,520 reasoning); the cancelled Reviewer has no usage receipt and is unknown. Added once, cumulative reported lower bound is 186,669,562 input (171,284,480 cached), 1,881,568 output (554,132 reasoning), plus unknown historical 46114120 Writer and current cancelled Reviewer usage. Nested categories are included; quota/invoice/liabilities remain unknown.
+
+## Recovery boundary
+
+Read local/live.md first. Preserve authoritative `/home/francesco/.local/state/cwi/runs/6ae8ca11-0df2-48e2-abc8-65d51adaa187/`, its clean worktree/branch, immutable artifacts and `workflow_logs/6ae8ca11-0df2-48e2-abc8-65d51adaa187/`. Reinspect status/diagnose, process ownership, exact candidate/base/diff and original evidence. Do not resume, rebase/cherry-pick/integrate unaccepted work or edit state to force continuation. After a future session reconciles the terminal boundary, a bounded replacement must commission only a CWI Writer to reuse the exact preserved draft, obtain full fresh acceptance and finish publication. No replacement is prepared or launched during shutdown. Future resource authorization remains; present execution is halted.
+
+## New-session read-only reconciliation — 2026-11-02
+
+The human explicitly resumed continuous development. Fresh status/diagnose still show STOPPED_INCOMPLETE, zero accepted milestones/final receipt, no lease/quarantine and resume disallowed; the retained cancelled operation is unchanged. Host inspection independently confirms no development owner. All 219 candidate blobs/modes, 16 changed-file hashes, full patch and retained validation identities match shutdown evidence. Clean main is 98c1547, all 17 historical accepted sources are integrated and no integration is pending. Historical seven-file draft worktree 46114120 remains untouched. Evidence: local/reconciliation-20261102-report-recovery/.
+
+REQ-D04-002-R1 prepares a fresh workflow with byte-exact draft context and full original acceptance criteria. Only its Writer may reuse the draft; no old turn is resumed or accepted retroactively. Preparing salvage consumes one recovery for this condition (five cumulative), with starts still 20/50 until actual replacement launch. Original usage/unknown cancelled-reviewer liability and all frozen evidence remain preserved.

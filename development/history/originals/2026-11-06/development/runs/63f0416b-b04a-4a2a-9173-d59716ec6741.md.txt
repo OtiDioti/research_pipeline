@@ -1,0 +1,67 @@
+# REQ-D03-006 local CLI — 63f0416b-b04a-4a2a-9173-d59716ec6741
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / attempt | REQ-D03-006 / D03-006-attempt-001; continuous start 16/50 |
+| Target / launch base | main / 9b7c0c9bdabe9297222681e7b071f9caede7512b |
+| Base tree | 5bbce70c732e6d0d742e5899431aec7b230f0ada |
+| Request SHA-256 | efc215a39c8f3afae242e771411af1dbcd48577da332a069988c96bbaf4263aa |
+| Specification | v1.4, SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f |
+| Accepted and integrated product | 0a875dd4c822465a297ff3e6757f69962823aea0 |
+| Accepted tree / Git state | 6f96028ae1aebf1d6364dfb826ee2303b9610517 / e1bcc5d61b1e6657cabff8913a9ce5d98018378f3fe1f799cfb6051409b878ba |
+| Final receipt SHA-256 | 47d590a746f85829a76570100486aef363448687005959e9c8d2536e0545e3c8 |
+| Whole accepted binary diff SHA-256 | 07b45697e20a579b40874d69699452ec72b6064a19cb2a51f075b0315d1249ac |
+| Outcome | Finally ACCEPTED_UNMERGED in retained CWI state; outer coordinator exact-integrated under existing CONTINUOUS authority |
+| Run times | Started 2026-10-31T20:32:54.212679Z; wrapper exit0 at22:13:35.246841Z |
+| Integration | Guarded exact fast-forward at2026-10-31T22:17:39.136271Z, no intervening tracked commit |
+| Controller final | 657/657,421.260 test seconds; zero skips/errors/failures/source mutation; both required checks passed |
+| Integrated target | 657/657,422.364 test seconds,zero skips/errors/failures; clean unchanged source |
+| Milestones / repairs | 2/2 accepted;2 CWI repairs; all3 finding IDs resolved; no coordinator recovery/backend change |
+
+## Frozen execution and observed model evidence
+
+Explicit gpt-6-astra/high was frozen across all roles; human correction of the original Astra6.1 preference remains authoritative, ceiling xhigh. The same clean separate backend1f68060b5a5a9964c91811a53d3a515e0b01a073 and selected Codex0.166.0 executable SHA-256 b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8 were retained. Stable non-secret environment and process-local soft/hard descriptors4096/1048576,2700-second agent/check deadlines,2 milestones,2 repairs/review and6/run; no --merge or --context. All14 completed role invocation configurations and archived transport usage were inspected; no independent server-side attestation is claimed. Existing ChatGPT development allowance only.
+
+Frozen config SHA-256 e60bb0b278b815f8f4be1348cf774f6c8c7a1a2e871893ec4a7f20872a9d0afa; validation profile115e64a122441a985beef765cd20fcf28873b8d2347dd472f4a53e7802653a3f; validation environment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09. Ordered checks were `python3 -B implementation/scripts/validate.py` and `git diff --check 9b7c0c9bdabe9297222681e7b071f9caede7512b HEAD --`. Baseline579/579 passed in383.536 seconds, with both checks and no mutation. Roadmap SHA-256 eb876c73a986551c41499139f8e4ba7c825501df3916f9bb97ccfb41ec6afea0 fixed10 first-milestone and12 second-milestone criteria.
+
+## Milestone and repair evidence
+
+M1 exact inspection/checkout accepted edd316695e5fd48dac0d177acbe52ece8e07a06c, receipt9c06b0fda4d8603f05b9638b5897a7f7e052051f3cec790630bd5ed6d2390a5f;611/611 in401.183 seconds and both checks passed, no repair. Review artifact826fbe35034373d38c6c7a88d2a422f266ca14d4035be05c58c23f7423992c71, bindingca7aba627b455af76caea8ca231f393f3c1cee643e9b014f0fb7ceecfe41d786. It adds bounded exact-record/original-receipt reads, historical checkout, offline checkout inspection, strict private controls and acknowledged output handling.
+
+M2 initial c674c9ce6f2a3f758e5fabdaf8b5062bf552b734 ran644 tests:643 succeeded and1 failed,417.250 seconds. F-001 was a newly selected fixture file lacking explicit0600 mode, causing the real safety guard to reject preparation. F-002 was incorrect ordinary-absence classification after a package directory had already been observed and then disappeared. Reviewer artifact4f84e0e1bc8d7ca1600b7b8a0d400b083d5fde7a4efeae362a5b147481a3d5c9 required repair.
+
+Repair1 ba5290ca7b7d4a0f5ecb5d49386b278acc2ed154 fixed only the fixture mode and retained original directory observations through delegated opens. Nine regressions exercise directory/ancestor loss and substitution, initial absence, operational errors, actual CLI effects and publication uncertainty.653/653 in419.848 seconds and both checks passed. Review resolved F-001/F-002, but F-003 found that an already observed saved leaf disappearing inside a wrapped CheckoutOperationalError/ENOENT still returned unsafe-layout5 instead of conflict4. Reviewer artifact816c719c741b82fbae4d15f6f09ec4ffdb77c0cc81d72fbe3cf2d176e38ee998; this green candidate was never finally accepted or integrated.
+
+Repair2 produced final0a875dd: observed saved-leaf disappearance is conflict4; genuine permission/I/O failures remain operational and post-publication failures remain uncertain7. Four new test methods cover three saved controls at two read boundaries, ordinary/durable readers, EACCES/EIO, actual CLI renames, unchanged drafts/metadata and retained post-publication evidence.657/657 in424.885 seconds, both checks passed. Repair-only diff SHA-256 b5668850333d0dba667bd58954777112485d68d860e2b13dcdef2d108d9b661e. M2 receipt0d0c6576f7c2e4bc92499bae3570a012400de8b00c2aab2701f5eca15f207f44; reviewer artifact22dfcc405ee27998c4dfa440561bedeed9e0b6958f9bb723b6801472faa0148d and binding1820eef58a79592cafd004d80f32e8bcb0b873ec4ecfacc60fa713348f1391b9 resolved all12 criteria/all findings.
+
+Writer-local source/temp/socket sandbox restrictions were preserved as advisory failures. Authoritative host controller checks executed the actual cases; no guard, old assertion, meaningful check or environment was weakened. All579 prelaunch tests remain, except the request's explicitly authorized unknown-command diagnostic wording;78 new tests were added. The permanent validator is unchanged. A coordinator provisional diagnostic-bound concern was resolved by a current-shape probe; two overstrict read-only integration-audit assertions were corrected against actual evidence. These were not product defects, backend changes, new starts or recovery consumption.
+
+## Final acceptance and exact integration
+
+Final validation ran22:04:46.848355–22:11:48.531848Z on the exact accepted source. Check1 validation-cd5d8310-9be2-4abb-ad7c-334eddabe178 result SHA-256 ea1056c9c1c53bea94706f6a3497dcf5d04e9b810fe24bb9a5f3b998b1c7c82b; stdout6fec2ff6b2cce52757259b9b26aca7154470025c09f7747675f677ba495a3fed. Check2 validation-5fa0ac3c-c702-45f3-822a-2482614eb887 result95e4e439979b55a234997e5ab6772a739bbcfa0a83f14b1e703c825a30653ed1. All referenced output/result digests were independently verified.
+
+Final reviewer deda1e6a-4802-49b3-98d3-61960ecbe871 accepted the complete request, ordered milestone history and full source diff: artifact5d770613459c417345429752a0e7d68b493185b1646a94381ce6e0f715c9ceb2; binding80e006aa9d037e046d5c67af407a34626c91f815196c4ca943b4e6b4d5d52dfd. Final receipt above binds base, source/tree/Git-state, request, ordered milestone receipts and both final checks. Its merge_authorized=false is the frozen CWI no--merge setting; coordinator integration used the separate effective CONTINUOUS grant.
+
+Coordinator inspected all17 changed files and final repair deltas,185 tracked blobs/modes,32 referenced immutable artifacts, clean base/source, exact ancestry, added-path collisions, hooks/attributes and unchanged backend/executable. Git LFS filter configuration exists globally but no tracked path has an applicable attribute; there are no executable hooks or collision paths. Final status/diagnose shows no owner/lease/inflight/quarantine/recording gaps/open findings. Host probe at22:16:03.584286Z confirmed wrapper1058923/controller1058931 and descendants absent. Guarded exact fast-forward succeeded, and all185 target bytes/modes matched accepted source. No controller state was rewritten. preintegration-final.json/whole-accepted.patch supersede provisional ba5290c whole-candidate evidence.
+
+Integrated-target validation on exact0a875dd4c822465a297ff3e6757f69962823aea0:657/657 in422.364 test seconds,zero skips/errors/failures/source mutation; completed2026-10-31T22:26:56.729486+00:00; stdout SHA-256d62420d88da32b38a7d5d42fe3664dfebb7219e2a239348a9708866fdc8bcd4f, empty stderr. The recorded stable environment and4096/1048576 descriptor limits were retained; main stayed clean at the accepted tree.
+
+Authoritative retained records: /home/francesco/.local/state/cwi/runs/63f0416b-b04a-4a2a-9173-d59716ec6741/; observational workflow_logs/63f0416b-b04a-4a2a-9173-d59716ec6741/. Coordinator evidence: local/attempts/D03-006-attempt-001/, including final receipt/review/validation, candidate and repair snapshots, preintegration-final.json, whole-accepted.patch, owners-before-integration.json, integration-result.json, target-validation-result.json and usage-final.json. Raw logs/account state remain untracked.
+
+## Delivered scope and remaining obligations
+
+Seven source-local commands expose exact record/receipt inspection, historical work-product checkout, offline checkout inspection, preparation, offline saved-proposal inspection and separate explicit submission. Trusted runtime/protected roots remain distinct from authored metadata; source-root protection is derived. Strict bounded UTF-8 JSON and stable no-follow private controls reject coercion/unknown fields, unsafe types and mutation. Missing stores are never implicitly created; existing opens retain journal recovery semantics.
+
+Preparation saves the exact narrow typed proposal and meaningful recomputed change summary in a private package, with0400 payloads and manifest. Exclusive incomplete-marker preparation, complete checks/syncs and final marker removal distinguish incomplete/complete-unpublished/published evidence; this is not a whole-directory atomic visibility claim. Offline inspection never invents historical durability acknowledgment or repairs retained work. Explicit submit validates/durably reads the saved request, preserves the original submission ID and delegates to existing CAS. Identical retries can reconcile after head movement or loss of unrelated draft/object material; conflicting ID reuse/stale heads preserve history and both authors' work. Output write/flush/close failure after effects remains uncertain with concrete recovery identities.
+
+An executed synthetic guide uses APIs only to seed the initial bundle, then actual CLI commands for edit/preparation/review/commit/history/conflict/recovery. Real process, pipe, filesystem, output and mutation cases support R-082's bounded authoring/inspection subset and R-004/R-019/R-028/R-092 contracts. This is engineering evidence, not scientific qualification or authenticated authority. Creation/intake, view commands, research/policy/tools/reports and other R-082 families remain mandatory. D03/M0-E remain partial; M0-S, live-resource authorization and expert acceptance remain pending.
+
+## Resources and continuation
+
+Fourteen completed roles report14,455,746 input tokens (13,261,184 cached),154,118 output (50,637 reasoning), cache-write0. Cumulative reported lower bound134,430,264 input (121,964,032 cached),1,422,432 output (395,871 reasoning), plus unknown old46114120 timed-out Writer usage. Nested categories are included, not extra charges; quota/invoice/liabilities remain unknown.
+
+Commissioning1/3 closed; continuous16/50 used,34 remain; cumulative CWI repairs14 (2 this run), coordinator recoveries4 (each distinct blocker1/2), backend attempted/adopted/reverted0/0/0. Seventeen actual runs:14 accepted/integrated and3 preserved terminal failures. No grant, limit, model, backend, scientific or service/data/billing permission changed.
+
+After target validation and the administrative checkpoint, launch bounded REQ-D03-007 once to expose existing immutable readable views and preserved successor refresh through the CLI. Require an independently retained historical baseline and reuse accepted publication/offline-recovery semantics. Continuous authority requires progression; no routine permission or automatic restart supervisor is implied.

@@ -1,0 +1,119 @@
+# REQ-D05-006 — Passive Tool-record CLI integrated
+
+Run `0c046a57-5e7f-42e4-a92f-d995c3ce0a3a`; frozen request SHA256
+`12e8771a737475ff85a50eda6cb02d7384d4385b5ad7f6308391b6567166e961`.
+Launch base `8a5d4365476c672e8a4e550d275a23bbecf9f90d`.
+Finally accepted and exact-integrated **53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e**,
+tree `cd177c89f8ca43eee1833d1e8c38848231840b33`.
+Final receipt SHA256 `538f6cb41ecbf655b7cbd4eb192474ac0c644f8b5c58dd33be238d617a9ffe7e`;
+milestone receipt SHA256 `5707d83e26122309f9af54ff83fada1563d199473da01e93d66eafc06f324d7d`.
+
+## Delivered boundary
+
+The source-local CLI exposes explicit exact typed Tool inspection and nonempty
+ordered passive ToolRelease/ToolAssessment batch submission. It reuses private
+configuration, bounded stable controls and existing typed transactions/recovery.
+A prescribed connection-owned typed-read seam preserves one inspection snapshot
+and smaller caller bounds. Supplied identities/provenance, generic-original
+acknowledgment, exact projections, original-ID recovery, output preflight and
+post-COMMIT uncertainty stay explicit. No trusted assessment, qualification,
+current permission, execution, scientific support or worker endpoint is created.
+The [guide](../../docs/tool-record-cli.md) includes a self-contained product/stdlib
+example executed verbatim by new tests.
+
+Twenty-three paths changed: four focused implementation files, six additive
+test/helper files, product documentation and indexes. All128 predecessor blobs/
+Git modes and the exposed evaluation fixture remain exact. Forty-six new methods
+bring1326 to1372;134 paths are protected next, excluding navigation indexes.
+No schema/DDL/migration/backup, dependency/build, runtime prompt, authority,
+resource ledger or backend change. Future Tool enablement/execution and all
+broader D04/D05/scientific obligations remain required.
+
+## Goal understanding and correction
+
+Designer14 criteria cover all7 request ACs without mismatch; Architect consultation
+was unnecessary. CWI owned prescriptions, implementation correctness and complete
+source reviews. Coordinator relied on bound reviews/results and Git metadata.
+
+Initial candidate `07136881b847444a4ba74483046c19a576d0f5b7` failed one newly added
+test: its replacement-pair fixture named the assessed exact release as replacement.
+The accepted codec rejected it before the intended CLI atomic-refusal sections.
+The full check executed1372 methods,1371 successful and1error,zero other outcomes.
+Formatting passed and source did not mutate. This is a concrete test-fixture defect,
+not backend failure or permission to weaken a codec. Original trace/evidence remain.
+
+Reviewer F-001 required a locally valid distinct replacement with a mismatched
+release identity so replacement,wrong-kind and hidden-history refusals execute
+with complete table-preservation assertions. One same-run CWI repair submitted
+`53be2755b2efcd5e58d2c8b5c0dee2bdee5ec10e`. Fresh review explicitly resolved F-001 and accepted all14 criteria.
+Final review accepted the complete base-to-source change, no new/retained findings
+or obligations. No coordinator reproduction/full-suite duplicate or product edit.
+
+| Stage | Successful/discovered | Validator seconds |
+| --- | --- | --- |
+| Baseline | 1326/1326 | 1002.179217 |
+| Initial candidate | 1371/1372;1error | 760.898013 |
+| Repaired milestone | 1372/1372 | 862.166406 |
+| Final | 1372/1372 | 1137.878969 |
+| Integrated target | 1372/1372 | 1136.975935 |
+
+Every stage passed formatting; successful stages have zero other outcomes and
+no source mutation. All1372 final/target dispositions match; all1326 baseline
+IDs remain. Both frozen ordered commands bind the executing worktree/source:
+`python3 -B implementation/scripts/validate.py` and
+`git diff --check 8a5d4365476c672e8a4e550d275a23bbecf9f90d HEAD --`.
+
+## Exact acceptance, integration and target evidence
+
+CWI exited0 at2026-11-05T07:03:39.390381Z. Native status/diagnose/reconstruct
+confirm terminal final acceptance,complete recording,no provisional source,
+open finding/obligation,in-flight operation,lease,quarantine or recovery condition.
+Receipt and both review bindings,16 referenced evidence files,all criterion
+indices and source identities were verified. Final review binds complete
+`artifacts/diffs/final-1.patch`,SHA256
+`59929cd1592a31e24f86c8c114b1d1874ee4b62f985755a795ef81ea8de94a59`.
+Terminal state clears transient fields; receipt-bound artifact identity is authoritative.
+
+Clean main/base,commit/tree,run ref/worktree,ancestry,128 predecessor blobs/modes,
+formatting,hook/filter and new-path collisions passed. Host07:07:17Z found no
+surviving CWI execution. Exact fast-forward completed2026-11-05T07:07:46.351757Z
+before tracked checkpoint edits. No rebase,cherry-pick,force,source adaptation or
+CWI state/receipt modification. Native ACCEPTED_UNMERGED remains historical.
+
+Required target check ran once under the same stable environment,FD4096,
+2700s per check and16MiB per stream. Completed2026-11-05T07:27:58.584518Z,
+source clean/exact,source-local imports,1372/1372,empty stderr,both checks passed.
+Stdout8,304,376bytes,SHA256`ba066efc4b0f8184a944c2e8d1d1d2f91bb6f68bba3b1054f7e164c543c6f625`.
+All final/target dispositions match. Host07:29:38Z found no execution owner.
+Read-only coordinator audit-helper syntax/log-location assumptions were corrected
+without mutating source,controller evidence or recovery consumption.
+
+## Settings, resources and continuation
+
+Clean backendbcb7ad24f83ff5193345f3d4fa72122ea53a4e66,Codex0.166.0/SHA256b8a11fed,
+stablemapb674ef72/validationdigest46f63a41,FD4096,one milestone,repairs2/6,
+2700s invocation/check,two ordered checks,no--merge remained fixed. All8 actual
+invocations match Designer gpt-6-astra/xhigh,Architect gpt-6.1-sol/xhigh,
+Writer/Reviewer gpt-6.1-sol/high. No independent server-model/quota attestation,
+installation,authentication/configuration,provider/security/backend change or
+historical state migration. Original schema1 backend remains preserved.
+
+Continuous start42/100 consumed;58remain. Commissioning1/3closed. One internal
+repair,zero coordinator recoveries/protocol corrections/infrastructure retries/
+backend attempts. Cumulative CWI38,coordinator15,backend3/3/0. Every consumed/
+exhausted family persists,especially B013deadline2/2. Eight completed turns add
+13,664,899input(12,767,616cached),116,597output(49,850reasoning) once here.
+Cumulative lowerbound385,693,323input(354,077,696cached),3,650,681output
+(1,171,694reasoning),336knownturns. Nested categories included; five historical
+interrupted roles,backend/coordinator,quota/invoice remain unknown. Existing
+ChatGPT development allowance only; no API/purchase/new service/data/live/
+scientific/push/publication/deployment permission.
+
+All43 retained runs terminal:31receipts,30exact final sources integrated,
+one validator acceptance deliberately superseded,12incomplete histories.
+D02/D03/D04/D05/M0-E/product remain partial. All94requirements,13FOLLOWONcriteria,
+D04B1/B2/008/009 and scientific/live/human gates remain. No failed B1 source used.
+[REQ-D04-010](../requests/REQ-D04-010.md) prepares independent pure Task contracts,
+not admission or recovery of held output work. The long session reaches a clean
+context checkpoint; CONTINUOUS persists without automatic restart. STATUS owns
+one next safe action. Private evidence: `local/attempts/D05-006-attempt-001/`.

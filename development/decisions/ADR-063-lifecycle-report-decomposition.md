@@ -1,5 +1,7 @@
 # ADR-063 — Separate executable lifecycle-report bindings from capture and publication
 
+Records this consequential development choice, its rationale, original status and supporting evidence.
+
 Date: 2026-11-03. Coordinator decision within existing revision-5 authority; no specification/scientific amendment.
 
 ## Cause and alternatives

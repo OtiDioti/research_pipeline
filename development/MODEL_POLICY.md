@@ -1,5 +1,7 @@
 # Development model and reasoning policy
 
+Defines approved development-role selections, reasoning limits, fresh-access verification and immutable historical settings.
+
 ## Effective decision — 2026-11-04
 
 The human explicitly authorized these selections for new CWI runs under [AUTHORIZATION.md](AUTHORIZATION.md) revision 7:

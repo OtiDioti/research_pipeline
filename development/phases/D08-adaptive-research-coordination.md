@@ -1,5 +1,7 @@
 # D08 — Adaptive research coordination
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 **State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
 
 **Goal:** Add multiple approaches only where they improve useful progress, while preserving isolation, budgets, and coherent state.

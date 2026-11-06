@@ -1,0 +1,51 @@
+# REQ-D04-002-R3 — Committed reports and publication recovery
+
+## Outcome and exact source
+
+Continuous start 23/50 launched 2026-11-02T09:37:39.521171Z and completed 10:30:01.701576Z, exit 0. CWI 528cf918-2619-45c8-a6b6-ee35ed42fb3e finally accepted one milestone and the whole change, with no findings or internal repairs. Base b166730570ee2bd2997aaf1a61604297057b6bf1, tree 3a087f6e473d1a0018b2b41c75e3170de56f9023. Exact accepted commit **7a1edeb8b604bd7acd9c90861f096e2e107e32f6**, tree **335b35d76b9a7a2fb5aaa7cf9149266174b04144**, Git-state digest 5474778da0818ea389cd69ab0b8324d087a5f490c3c9912d8b79632f458b7331.
+
+Final receipt **851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db**. Milestone receipt 580c89c2a815c019a94a7424394d28c68f4402ed3914a987b4e6950fdb0823a1. Independent milestone and final Reviewers accepted without findings; no scientific approval or full-phase completion is implied.
+
+Coordinator independently verified receipt/supporting hashes, exact source/tree/full diff, unchanged predecessor files, both final commands, branch/base/cleanliness, new-path/ancestor collisions, hooks/attributes and backend identity. Host inspection 2026-11-02T10:31:27.870946Z found no owners for any of 24 retained run worktrees and confirmed wrapper/controller/review/validation PIDs gone. CWI status/diagnose show no lease, quarantine, in-flight operation, recording gaps or unresolved conditions. Authorized exact fast-forward completed 10:31:46.788029Z; main equals the accepted commit/tree and remained clean. Historical CWI outcome correctly remains ACCEPTED_UNMERGED after external integration; no controller state was edited.
+
+Integrated target **845/845 in 958.769s**, zero skips/errors/failures and unchanged clean source; completed 2026-11-02T10:48:24.247315+00:00, stdout SHA-256 e62a74d73df7c3c135f081b7ec5097b1758ff8c752151ba159c9315a8af1c37d, empty stderr. Target wrapper/validator completed normally, exit 0; local target-validation-result.json and original streams retain the evidence.
+
+## Delivered boundary and independent inspection
+
+Strict versioned report request/observation/result contracts, coherent scientific/resource observation in one SQLite transaction, deterministic seven-group Markdown and continuation manifests, original-operation receipts/retries, historical report revisions, immutable readable publication/navigation, and original-plan offline publication/refresh recovery. Observation/plan v2 adds explicit historical report bindings and navigation while retaining report-v1 fixture and readable-plan-v1 bytes/meanings. Unknown resources and late post-settlement liabilities remain visible through subsequent dated reports, reopen and exact restore. Rendering does not infer scientific conclusions, new continuation plans or operating authority.
+
+Actual row/audit/link byte/count/storage-type preflights enforce independent record and shared history budgets before oversized decoding. All 17 metadata-bound regressions are retained. The prior independent probe on byte-identical report_capture.py rejects a 2,000,014-byte corrupt revision under 1,000,000-byte limits with SnapshotLimitError before any envelope reconstruction and leaves storage unchanged. Its evidence remains in the R2 attempt; the current fresh complete suite separately exercises the regression.
+
+The Writer verified all 26 immutable Git objects from unaccepted bdcbd67937890b01c1d75d348f3d5eb6ab6de4ef, tree d999cce41fe35911a491baf6da66f80d8687abbc, before installation. Coordinator independent comparison confirms 25 exact file blobs; the only departure is the prescribed guide validation-base replacement. All 59 predecessor test/validator blobs and modes remain unchanged. Complete diff: 26 product paths, 5,758 insertions and 183 deletions; SHA-256 f98e00bbd73ac34c2d3c0d09b9a04a36f069b0ed9b6b50ebe485318c5fe20cf3. No scratch/log/administrative files or backend modifications entered the candidate. Sixty-seven new test methods bring the suite from 778 to 845.
+
+Source review covered bounded report capture/receipt/history, pure render/version compatibility, exact report inventories/navigation, publication inode/token/control/durability boundaries, preserved edit/rename refresh recovery and full corruption/late-usage regressions. Final Reviewer independently checked complete request/roadmap/prescription/milestone/full diff/final evidence. Actual PID1219964 executable/argv on 10:10:01Z confirms gpt-6-astra/high and the frozen Codex binary; model self-report was not used as proof.
+
+## Fresh validation and immutable evidence
+
+Ordered commands: python3 -B implementation/scripts/validate.py; git diff --check b166730570ee2bd2997aaf1a61604297057b6bf1 HEAD --. Baseline 778/778 in497.642s, ended09:45:58.392252Z, stdout ad66182d4de4b9d77e9dff3a5d74ce8f3af93504bf2c4257e1c36437684add90. Candidate **845/845 in961.393s**, ended10:08:48.676529Z, stdout ea4e115a3e765b3254a77cd66aae99556a1841369a90032da7e18658220889fc. Final **845/845 in958.033s**, ended10:27:29.630366Z, stdout f729d4fbf9da63911abd0189e385535f5d96e3556c0ce08cfc7d02b25962737a. Both commands passed at every gate, zero skips/errors/failures and no source mutation. The exact executable guide and real interruption/recovery/restore cases ran.
+
+| Artifact relative to retained run | SHA-256 |
+| --- | --- |
+| artifacts/receipts/final.json | 851d915f2588097602250ddcfe671586a90e65d802165df72227057a02cb69db |
+| artifacts/receipts/milestone-committed-report-foundation.json | 580c89c2a815c019a94a7424394d28c68f4402ed3914a987b4e6950fdb0823a1 |
+| artifacts/validation/validation-3891bac3-db90-4cfe-9794-a32fe2360104.json | 7661186eb0c822e19151664fdfb43d2d069b9babb20ff18e8a043d4d677ccc87 |
+| artifacts/validation/validation-f0e71887-773b-4a45-8cb5-45475194673e.json | 477ad30dbf02d7ec738daf39458039fe1999cbc6f28afe12eca39744ff4aff7f |
+| artifacts/validation/validation-4f4f0dfd-c384-4042-a856-30dd70aca720.json | 5f49bc48034732d9dd39247d0b0c2135e9547f93f79fca639909684d50d08619 |
+| artifacts/validation/validation-07c3278d-a605-498e-b77d-38bc718c2421.json | 917f01c91e4460fe8937dcbb5c7a80fc67b1d8616f8c2013c30b105779a01d0b |
+| Designer00399519 final response | e51b941c50bd47aaac9fbcde3a5213e5b1fb1520e99cb4585ebcb3c95f029691 |
+| Architectadb8e68e final response | df5b44c5388b38c9770a53566c1d0b05f880a2dafa5fb75141145f04a3bef90c |
+| Writer3a0cc17b final response | 0535d827eec362e0d8b31ee04954d6cda36b117a9d7ea51eb5703723be160afc |
+| Reviewer051335a4 milestone response | 970c44247a30300fab7b0bcfc626dffe6129a4ee06677198d56dd2d2cca0ce52 |
+| Reviewer2bad77d5 final response | 0086b17582dd2364d8e36ba3105f8e842d4a2f1b2bf68369a91af644a1a778ba |
+
+Request d22728f31042b57bd0e507de966895def094303e6d92f7629d8220afbbe89007; config8bede5342fba066d60c699ded13bd65f5a2cd16a21b9548625b96fec4bf1398a; validation profile fb38b0fb25a9621f8ae499efde3849e82adfb26cf0344972aba6ff38011391be; stable environment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09. Explicit gpt-6-astra/high, one milestone, repairs2/review6/run,2700-second agent/check, FD4096/1048576, no --merge. Backend clean1f68060b5a5a9964c91811a53d3a515e0b01a073; Codex0.166.0 SHA b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8 unchanged.
+
+## Recovery, resources and outstanding obligations
+
+Compact frozen context contains SALVAGE.md/candidate-files.json, two files11,176 bytes identifying26 product blobs887,596 bytes. Read-only unchanged-composer diagnostic for the exact new request measured596,774 bytes with complete retained mandatory review evidence. Actual milestone prompt596,043 bytes; final591,401 bytes. Both reviews ran successfully without truncated evidence, raised guards or backend changes. This resolves B-018 through actual final acceptance/integration; earlier stopped run remains STOPPED_INCOMPLETE with its failed evidence intact. R1 timeout and R2 advisory failures remain failures; no receipt was rewritten. Writer-local current run executed five focused codec checks successfully; fresh controller checks own acceptance.
+
+Continuous23/50 used,27 remain; commissioning1/3 closed. Zero internal repairs here; cumulative20. Coordinator recoveries7: context-size1/2, Writer deadlines2/2 exhausted, four other historical conditions1/2. Success does not reset those counts. Backend attempted/adopted/reverted0/0/0. Five completed roles report4,889,929 input (4,286,208 cached),23,640 output (4,344 reasoning), added once. Cumulative reported lower bound**211,423,619 input (193,192,064 cached),1,986,937 output (584,855 reasoning)** plus three prior unknown interrupted roles. Nested categories included; quota/invoice/liabilities unknown. Existing ChatGPT development authority only.
+
+R-051–053 reporting primitives and supporting storage/readable-view/recovery subsets gain evidence; all broader obligations remain. Automatic initial/checkpoint/stop lifecycle hooks and pending-report restart gates, actual readiness/operating authority, queue/attempt/fencing/dispatch, context/models/tools/verification, richer synthesis/export and scientific qualification are still required. D02/D03/D04/M0-E remain partial; M0-S R-001–003 pending. No live-provider or expert evaluation is invented.
+
+Exactly one next safe action after target verification/checkpoint: launch the committed bounded REQ-D04-003 authority/readiness request through CWI with unchanged explicit model/environment/deadlines and both exact checks. Lifecycle/admission follows that foundation; no routine human permission is needed within the existing grant.

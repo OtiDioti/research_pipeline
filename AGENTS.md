@@ -1,5 +1,7 @@
 # Repository instructions
 
+Defines mandatory repository-specific coordination, implementation and stopping rules.
+
 ## 1. Determine your execution mode first
 
 **Delegated CWI mode:** If your task identifies you as the Codex Workflow Controller's Designer, Architect, Writer, or Reviewer, or supplies its authoritative frozen role context, you are already inside `coding_pipeline`.
@@ -72,6 +74,13 @@ Use frozen meaningful checks. The initial Markdown-only source uses `development
 
 Keep `implemented`, `accepted`, and `integrated` distinct. Completion requires final receipts, exact accepted/integrated source, relevant tests/reviews, requirement evidence, and truthful outstanding limits. A green unit suite or successful status command is insufficient. Product live-provider/scientific evaluation and any human signoff must actually happen where required.
 
-After safe integration/termination, reconcile the run, requirement map, phase, backlog, changelog, resource consumption, backend-change audit, and STATUS together. Count failed attempts and repeated blockers across sessions; do not reset counts by renaming work.
+After safe integration/termination, reconcile relevant `STATUS.md`, `ROADMAP.md`, `BACKLOG.md`, `DECISIONS.md`, `CHANGELOG.md`, `development/REQUIREMENTS.md`, phase/request/run/integration records, resource consumption and `coding_pipeline_changes.md` together. Record actual outcomes and outstanding work; count failed attempts and repeated blockers across sessions without resetting them by renaming work.
 
-Before ending, leave accurate evidence and exactly one next safe action. If still live or base-bound, write the handoff locally and leave tracked parent files unchanged. Otherwise create the administrative checkpoint. Follow diagnosis; never fabricate success, bypass a guard, replay an uncertain operation, or assert that future sessions will restart automatically without an installed supervisor.
+Update current views in place. Keep each execution narrative in its run record and each decision rationale in its decision record; other views link to those owners. Archive superseded checkpoints rather than prepending them to startup files. Authorization records change only for actual human authority changes; consumption belongs to run evidence and STATUS.
+
+**Coordinator stop procedure:** A human shutdown request overrides §3's continuation loop. Start no new implementation request or phase during shutdown.
+
+- Inspect actual Git/worktrees, host processes and CWI `status`/`diagnose`. Let current bounded work finish normally when safe; apply §4 to any integration. Never force termination for shutdown. If completion is unsafe, preserve exact recoverable execution without disruption.
+- Use `FOLDER_CONTENT.md` for navigation; update affected authorized indexes only when checkpointing is safe. Prepare a self-contained `local/live.md` for a fresh session: project objective/architecture/strategy/specification constraints; completed versus planned/blocked work and evidence; run/source/Git/worktree/process/log/recovery state; remaining checks, dependencies, decisions, defects and removals; backend/model/frozen configurations, non-secret environment, authority, budgets and unknowns; continuation files and exactly one next safe action with prerequisites and expected result. Carry §2's review/removal/preservation rules and §5's new-run selections into the handoff; reference the eight role-specific flags in `development/RUNBOOK.md`.
+- Verify the handoff against actual Git/CWI/process state and confirm progress, accepted work and unfinished-run recovery remain intact. While live or base-bound, leave tracked parent files unchanged and keep reconciliation local under §4; otherwise commit the verified administrative checkpoint. Add no optional improvements for shutdown.
+- Report shutdown status, latest accepted/integrated source, Git state, active operations, handoff location, remaining work and the single next safe action; then stop completely. Follow diagnosis; never fabricate success, bypass a guard, replay an uncertain operation, or promise automatic restart without an installed supervisor.

@@ -1,5 +1,7 @@
 # Local observations and scratch
 
+Explains the ignored local observation and handoff area and its limits as non-authoritative working storage.
+
 This README is tracked; other contents are locally excluded before any CWI run.
 
 Suggested local paths are `live.md`, `attempts/<local-attempt-id>/`, `context/<request-id>/`, and `research/`. Use them for transient handoffs, raw start/status reports, permitted extra context, and private sample vaults.

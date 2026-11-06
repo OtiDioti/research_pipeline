@@ -1,77 +1,9 @@
-# Development run records
+# CWI run records
 
-- [9bae8bd6 — REQ-DEV-VALIDATION-002](9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md): PID-readiness fixture finally accepted/exact-integratedb376faf;candidate/final/required target1585/1585,all target dispositions matching final,no findings/repairs. Continuous start51/100,first B-024corrective1/2/coordinator19;human-directed shutdown follows.
+Explains how to locate and interpret one development record per actual CWI run without reading the complete execution history.
 
-- [5d1adb23 — REQ-D03-010](5d1adb23-9348-458c-bba9-03f1d77c0a54.md): STOPPED_INCOMPLETE at full baseline,1577executed/1576successful/one fixture error; no roles, candidate, acceptance or integration. Continuous start50/100. B-024 and held REQ-DEV-VALIDATION-002; STATUS owns the human recovery decision.
+Use [FOLDER_CONTENT](FOLDER_CONTENT.md) to find a run by ID and subject. Each record owns its source identity, meaningful checks, review/receipt, integration, outstanding limits and consumption evidence. Failed attempts remain evidence; pre-UUID attempts belong in the ignored local attempt area.
 
-Actual runs are recorded below; templates are not execution evidence.
+CWI state/receipts are authoritative for acceptance; Git establishes the integrated source. A historical ACCEPTED_UNMERGED state may remain after external exact integration. Check the owning record and Git before deciding that integration is pending.
 
-- [47d6ef06 — REQ-D01-001](47d6ef06-c251-4a0d-bb2c-da2059d9360f.md): commissioning foundation finally accepted, exactly integrated and validated; one start, no repairs.
-- [34bcb77d — REQ-D01-002](34bcb77d-1cbc-4432-ba5e-e419e930ad2f.md): requested synthetic example finally accepted, exactly integrated and validated; continuous start 1/50, no repairs; required M0 scientific hold.
-
-Create one Markdown record per actual CWI run using [the run template](../templates/RUN.md). A failed attempt can be important evidence and must not be erased. While an active run binds the original checkout, keep observations in ignored `local/` storage; create or update the tracked summary only at a safe checkpoint.
-
-Store concise sanitized evidence and references, not full private logs. Exact retained controller state and final receipts remain the acceptance authority; these records make that evidence navigable.
-
-- [77ab31a1 — REQ-D02-001](77ab31a1-a7c2-4185-a26b-f9ed52da1593.md): durable records finally accepted, exactly integrated, 72/72 tests; continuous start 2/50; one resolved internal repair, no backend changes.
-
-- [2d82f186 — REQ-D02-002](2d82f186-4cf2-4fb7-9f96-f0ea8db10340.md): verified local backups finally accepted/exact integrated, 88/88 tests; continuous start 3/50, no repairs.
-
-- [d7e765f5 — REQ-D02-003](d7e765f5-9c2a-4d83-9703-73102ffb5891.md): typed provisional scientific records/admission accepted, exactly integrated and validated 116/116; continuous start 4/50, no repairs.
-
-- [9af6f133 — REQ-D02-004 first attempt](9af6f133-62d8-4348-b8f2-7d95cbb84928.md): stopped incomplete, no product changes/milestone receipt; passing controller baseline versus restricted Writer /tmp failure; terminal disposition resolved, replacement R1 prepared; continuous start 5/50.
-
-- [25e5020e — REQ-D02-004-R1](25e5020e-e398-4998-b901-5268cd580778.md): versioned schemas/backups and explicit migration accepted/integrated, 169/169; continuous start 6/50; successful bounded recovery, no repairs/backend changes.
-
-- [46114120 — REQ-D02-005](46114120-06d0-47ea-8e16-4a02066a1d0a.md): Writer timed out at 900 seconds after edits; zero accepted milestones; preserved draft passes advisory 184/184. Human extended future deadlines to 2700; R1 prepared, continuous start7 retained.
-
-- [8dc45005 — REQ-D02-005-R1](8dc45005-5187-4be0-a009-dece7c493f2b.md): attributed reviews/issues accepted/exact-integrated, 204/204; retained failed predecessor and one deadline recovery.
-- [2b6ed304 — REQ-D02-006](2b6ed304-5044-45b5-adcd-a8be9c3e314d.md): work-product bundles and safe draft round trips accepted/exact-integrated, 291/291.
-- [7b46536e — REQ-D03-001](7b46536e-42ac-4537-a720-beaaa5a34490.md): Source history/local capture accepted/exact-integrated d8dffdd, target 343/343 after documented descriptor-limit recovery; continuous start 10/50, two CWI repairs.
-
-- [f746e33a — REQ-D03-002](f746e33a-7475-44dc-b8bf-4613130fba79.md): immutable corpus inventory accepted/exact-integrated 7d6dd624, 369/369 target tests; one directory-fixture repair; continuous start 11/50.
-
-- [db2829bc — REQ-D03-003](db2829bc-fca9-48d7-b2c1-b9e99348c197.md): project/intake dossiers accepted/exact-integrated9373860,396/396 target tests; one provenance/file-mode fixture repair resolving two findings; continuous start12/50.
-
-- [32b61b7f — REQ-D03-004](32b61b7f-7d9b-475d-a44e-74e53d03c5a0.md): terminal STOPPED_INCOMPLETE, zero accepted milestones; provisional81ec2f3 passes432/432 after one syntax repair, but missing controller-bound diff-check evidence prevents acceptance. Continuous start13/50; exact draft preserved for bounded R1 recovery.
-
-- [7ee32819 — REQ-D03-004-R1](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md): protected offline readable snapshots finally accepted/exact-integrated c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests; two milestone repairs, both frozen checks passed, continuous start 14/50. Resolves the missing-check recovery while preserving its terminal predecessor; no backend change. Current safe session/context checkpoint has twelve integrated results and three terminal failures, no active run.
-
-- [6eaf6f92 — REQ-D04-001](6eaf6f92-ec81-4d73-b83d-9b97a30cfb02.md): resource accounting finally accepted/exact-integrated b13fff0; controller/target 778/778, continuousstart19/50, twointernalrepairs, no coordinator recovery/backend change.
-
-
-- [6ae8ca11 — REQ-D04-002 shutdown](6ae8ca11-0df2-48e2-abc8-65d51adaa187.md): human-requested cancellation during first-milestone review; provisional2e4343890e51,806/806 validation,zero acceptance/integration; nonresumable terminal state preserved; continuousstart20/50,30remaining.
-
-- [d838a2c8 — REQ-D04-004-R1 interrupted controller](d838a2c8-1f87-46d8-8e61-d90f34e9c60d.md): completed orphan draft preserved; terminal/noresume/no acceptance or integration; continuousstart27/50. One human-authorized exact response-mode correction allowed original-controller reconciliation. R2 requires fresh CWI-only acceptance.
-
-- [153bf4bf — REQ-D04-004-R2](153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md): prepared-control/ordered-report obligations finally accepted and exact-integrated at `771422b7`; final 946/946, integrated target passed 946/946 in 1146.754 seconds, zero skips/errors/failures/source mutation, ending 2026-11-02T20:54:40.836813Z (stdout SHA256 `0af73e8950f6ce1f59051b68cf134487e56610a1fae683b72bc47a9b3e38a243`, empty stderr); one internal bounds repair, continuous start 28/50.
-
-- [7632b4e0 — REQ-D04-005](7632b4e0-7877-4e25-b23f-33d66232ebf1.md): terminal/noresume, no candidate/change/milestone/final acceptance; baseline946/946, two prescription repairs, continuous start29/50. Original source/evidence preserved, final bounded prescription recovery prepared.
-
-- [b4dd25a5 — REQ-D04-005-R1](b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md): pure offline lifecycle binding finally accepted/exact-integrated091561b9, final/target978/978, no findings/repairs. Continuousstart30 launched under50; later actual human revision6 sets100, preserving30consumed/70remaining.
-
-- [7d05376e — REQ-D04-006-R1](7d05376e-aabf-4c5a-9481-91205611eb0c.md): corrected committed lifecycle
-  sources finally accepted/exact integrated b19e7ffa, final 1033/1033 and target 1033/1033
-  in 1769.410s, zero skips/errors/failures/mutation, no findings/repairs. Continuous
-  start 32/100; source facts leave publication/admission gates closed.
-
-- [2bc3d843 — REQ-D04-007-B1](2bc3d843-0c94-41b2-8344-636a48853805.md): baseline1130/1130, then Writer2700-second timeout after changes; no candidate/acceptance/integration, terminal/noresume/quiescent.17-file draft preserved; existing deadline recovery2/2 exhausted. Continuous start36/100. STATUS identifies the independent next request.
-
-
-- [33db2c31 — REQ-D05-001](33db2c31-2248-425c-9de3-8c553d2dbd47.md): passive Tool-release contracts finally
-  accepted/exact-integrated8cd859f7, final/target1165/1165; two genuine internal
-  repairs close DEL-byte sizing and metaclass-hook rejection. Continuousstart37/100;
-  no coordinator recovery/backend change. Exact envelopes are the next prepared
-  request; scientific/live/lifecycle holds remain.
-
-- [2b89ca22-5cae-4535-aa48-c16d07b3cff6 — REQ-D05-004](2b89ca22-5cae-4535-aa48-c16d07b3cff6.md): passive attributed
-  ToolAssessment contracts/codecs/envelopes finally accepted/exact-integrated
-  `150aa0ee3e9e5611c77eeb714f18b8484578235c`, final/target1276/1276, zero repairs/findings.
-  Continuous start40/100; no backend or authority change.
-
-- [5bad636b — REQ-D05-005](5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md): passive assessment persistence finally accepted/exact-integrated `9f6cd171`,final/target1326/1326,two CWI product repairs/four resolved findings,no coordinator recovery/backend change;continuous start41/100.
-
-
-- [0c046a57-5e7f-42e4-a92f-d995c3ce0a3a](0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) — REQ-D05-006 finally accepted/exact-integrated53be2755; final/target1372/1372,one fixture repair,no coordinator recovery/backend change.
-
-- [c255a52f-4034-46dd-b2ff-69e046e7814a — REQ-D02-008](c255a52f-4034-46dd-b2ff-69e046e7814a.md): policy freshness finally accepted/exact-integrated ba6bdf39; final/target1470/1470, one CWI repair, human-directed shutdown.
+Use [the run template](../templates/RUN.md) for new records. While live/base-bound, keep observations local under AGENTS.md. After safe integration/termination, update the owning record and only current views whose facts changed; do not copy its narrative across every index. Earlier index wording remains in the [verbatim original](../history/originals/2026-11-06/development/runs/README.md.txt).

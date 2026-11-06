@@ -1,14 +1,10 @@
 # Theoretical research pipeline
 
+Introduces the repository, its requirement source, development boundary and navigation.
+
 An evidence-oriented workbench for theoretical scientific research. The product requirements are in [project_description.md](project_description.md). This repository contains the **software that implements that workbench**; it is not itself a live scientific investigation.
 
-**Current maturity:** accepted engineering subsets include durable records/artifacts and backup/migration, scientific and work-product/source/corpus/intake contracts, protected readable views and local CLI, resource accounting, operator authority, prepared-control/report obligations, offline lifecycle bindings, and committed lifecycle sources. [STATUS.md](STATUS.md) records exact integrated versions, validation and unfinished work. Research execution and expert scientific evaluation remain pending; deterministic fixtures do not establish scientific validation. See [the mock walkthrough](docs/synthetic-oscillator.md) and [M0 decision packet](development/decisions/M0-contract-and-scientific-review.md).
-
-[Committed lifecycle sources](docs/committed-lifecycle-sources.md) provide bounded
-first-capture commitment and original-ID recovery for required control obligations.
-They preserve pending intent and a closed ordinary-work gate. Rendering, publication,
-acknowledgment and current-policy restart remain later ADR-063 work; this source
-stage makes no scientific or live-provider acceptance claim.
+Current engineering maturity,accepted source,validation and unfinished work are maintained in [STATUS](STATUS.md) and the [requirement crosswalk](development/REQUIREMENTS.md). Historical stage descriptions remain in the [preserved original](development/history/originals/2026-11-06/README.md.txt). Scientific execution and expert acceptance remain pending.
 
 ## Start here
 

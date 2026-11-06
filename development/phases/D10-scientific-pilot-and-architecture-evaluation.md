@@ -1,5 +1,7 @@
 # D10 — Scientific pilot and architecture evaluation
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 **State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
 
 **Goal:** Assess usefulness and reliability against a strong single-agent baseline before expanding autonomy.

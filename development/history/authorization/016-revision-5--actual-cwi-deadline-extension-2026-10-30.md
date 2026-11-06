@@ -1,0 +1,13 @@
+# Recorded authority: Revision 5 — actual CWI deadline extension, 2026-10-30
+
+Preserves this recorded grant, amendment or checkpoint as historical evidence; it is not an independent current permission.
+
+Source: [pre-restructure authorization record](../development-AUTHORIZATION.md#revision-5--actual-cwi-deadline-extension-2026-10-30). Consult [effective authority](../../AUTHORIZATION.md) before acting.
+
+## Revision 5 — actual CWI deadline extension, 2026-10-30
+
+The human explicitly instructed **“extend time limit of cwi to 2700 seconds”** after REQ-D02-005's Writer hit its frozen 900-second deadline. Apply **2,700-second per-agent and per-validation deadlines to new CWI runs**, passed explicitly as --agent-timeout 2700 and --validation-timeout 2700. This is a timeout amendment, not a whole-run wall-clock guarantee, monetary cap, acceptance waiver or backend modification. Do not change old frozen settings or resume a terminal run under different settings. No other scope, model, effort ceiling, start/repair/recovery count, integration, service, data, billing or purchase permission changes.
+
+REQ-D02-005 / 46114120 is terminal STOPPED_INCOMPLETE, outcome INCOMPLETE, nonresumable, with zero accepted milestones/final receipts. Parent main remains a797f1a (product 06fc133); seven CWI Writer draft files are preserved, including exact local evidence copies and patch. Actual owners/lease/quarantine/inflight are absent; source effects are confined to the retained failed worktree. Its host advisory 184/184 suite does not grant acceptance. A new bounded REQ-D02-005-R1 will use supported frozen --context material and revised deadlines; only its delegated Writer may implement the draft in its own worktree. This is evidence-based recovery action **1 for Writer deadline exhaustion**, alongside the previous **1 for validation-context mismatch** (cumulative 2, separate blockers); at most one further recovery action remains for each same blocker.
+
+Current commissioning **1/3**, continuous **7/50** (**43 remain before replacement**), cumulative CWI repairs **1**, backend candidates **0**. Replacement start counts as number 8, including failed preflight. This failed run has complete usage for Designer/Architect only: 320,153 input (242,432 cached), 6,822 output (685 reasoning). Writer timed out without a completed usage receipt, so its usage is **unknown**, not zero. Cumulative reported telemetry is a lower bound: **18,018,509 input** (**15,234,816 cached**), **310,440 output** (**56,945 reasoning**), plus the unknown Writer liability. Account quota/invoice liabilities remain unknown; existing ChatGPT allowance only and no API cap. Preserve unknown consumption across restarts.

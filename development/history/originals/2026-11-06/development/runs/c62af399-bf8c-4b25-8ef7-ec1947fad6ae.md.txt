@@ -1,0 +1,81 @@
+# REQ-D03-005 preserved successor refresh — c62af399-bf8c-4b25-8ef7-ec1947fad6ae
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / attempt | REQ-D03-005 / D03-005-attempt-001; continuous start 15/50 |
+| Target / frozen base | main / d4ddeb159aa1c1ae0547d8fe4500600fcfa4d4da |
+| Request SHA-256 | 4b8b4717a1625d1b35131e3abc273fd5addfbd05995541a377b29b639dc91672 |
+| Authority / specification | AUTH-2026-10-30-001 revision 5; v1.4, SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f |
+| Backend / executable | Clean unchanged 1f68060b5a5a9964c91811a53d3a515e0b01a073; Codex 0.166.0, SHA-256 b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8 |
+| Model / limits | Explicit gpt-6-astra/high; two milestones; repairs 2/review and 6/run; agent/validation 2700 seconds; no --merge; soft/hard RLIMIT_NOFILE 4096/1048576 |
+| Start / wrapper completion | 2026-10-31T17:39:09.966965Z / 2026-10-31T20:19:59.757722Z; exit 0 |
+| Historical controller outcome | ACCEPTED_UNMERGED; 2/2 accepted milestones, three repairs; all nine finding IDs resolved |
+| Accepted / integrated commit | 8cfb0357ccccff1f079c419eb1ca4b7f4d3b135c |
+| Accepted tree / Git state digest | f72dd7c5c21c7b8980aacd4509a14ff73dd633b7 / 06881798fc35dca0c335a9776204d26cfd2ae8bc6f252030693705b10e281076 |
+| Final receipt SHA-256 | 26f24a8d2104a4be214710522d991542794824da18667e8c6ea256171268d96a |
+| Whole binary diff SHA-256 | c76b2d3b69fcabbb151414a55f16173442a5a2d51980402f8b20fc7d0cfd6afe |
+| Exact fast-forward | 2026-10-31T20:22:20.374404Z; clean main from exact frozen base, scoped automatic approval, no intervening tracked commit |
+| Target validation | 579/579, zero skips/failures/errors, 382.974 test seconds; clean unchanged accepted source; completed 2026-10-31T20:29:18.551279Z; stdout SHA-256 a3fd79bdc352f9a1f28e0b4626d9920387d0c1e5c5f7a974fdca7776c7af3703 |
+
+Fresh session reconciliation first confirmed historical c57a621 was already integrated below administrative 7f3f081. Its receipt/source and historical target validation matched; no duplicate integration or commissioning occurred. Fifteen previous runs reconciled before this start. Historical CWI ACCEPTED_UNMERGED is retained after external integration; no managed state, receipt, worktree or failed evidence was edited.
+
+## Frozen inputs and meaningful checks
+
+Stable non-secret launch map: local/attempts/D03-005-attempt-001/launch-environment.json. Frozen configuration digest bf344cac3a95000f1c4e24481d591c08385126c42321c1a7fa3fea29eb7e3f84; validation profile 0b9217689f105ec6a0fcaeadb0f699cb43991733a3d29c9a14c43975ad945e83; validation environment 46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09. Actual prepared invocation configuration, unchanged executable/prompt hashes and completed transport evidence were inspected for all 17 roles; this is not independent server-side model attestation.
+
+1. `python3 -B implementation/scripts/validate.py`
+2. `git diff --check d4ddeb159aa1c1ae0547d8fe4500600fcfa4d4da HEAD --`
+
+Baseline passed 489/489 in 340.875 seconds plus the complete-diff check. Both checks ran for every candidate and final validation. All 489 prelaunch tests/assertions and the permanent validator remained unchanged; 90 substantive tests were added. The accepted first-milestone tests and historical renderer were also preserved through publication work.
+
+## Milestones and repairs
+
+| Stage | Exact source / observed validation |
+| --- | --- |
+| Capture candidate 1 | c59e2233768d6b04568c5e8a24df13516f1048dd; 531/531 in 352.922 seconds; reviewer requested F001/F002 repair |
+| Accepted bounded capture | 689ebf23f4f45849d2d9884a6a325a7dc170989b, tree 9e163d0894a53136a2e57da0bb378daf592277f8; 536/536 in 354.409 seconds; ten criteria accepted |
+| Publication candidate 1 | c91a6600d4b4b39ce7c28bc3e8e432982ae3c122; 565/565 in 371.771 seconds; reviewer requested F003–F007 repairs |
+| Publication candidate 2 | 119260c622b793d713b0224687eae2d6955f7195; 577/577 in 378.584 seconds; F006 remained, F008/F009 added |
+| Accepted publication | 8cfb0357ccccff1f079c419eb1ca4b7f4d3b135c; 579/579 in 382.792 seconds; all thirteen criteria accepted |
+| Final whole-request acceptance | Same 8cfb035; 579/579 in 382.826 seconds; complete-diff check and independent final review passed |
+
+Every row also passed the frozen complete-diff check. Passing tests did not substitute for review: the controller repaired concrete missing bounds and filesystem-observation gates before final acceptance.
+
+Capture repair narrowed external ancestor observations to stable bindings rather than sibling-sensitive directory content signatures, and bounded forged retained paths before constructing ancestry. Five regressions were added. Repair patch SHA-256 53f9ca530fa9ce6e102493a3f11f67e8bdee706b50bd96c2fbfe3bdd0430d441.
+
+Publication repair 1 added post-hashing offline file/directory checks, enforced outer limits before nested payload reads, counted actual edited-manifest metadata, strengthened incomplete fixed-control decoding and kept independent metadata budgets distinct from corruption. Twelve regressions were added. Patch fdd8a30480a2a7d68fb763cc614219615bd574f6e3ddcf66c2e630bf9d3f6dc5. Review resolved F003/F004/F005/F007, retaining the incomplete-control issue and identifying publication's final directory-check ordering.
+
+Publication repair 2 enforced post-hashing pinned-directory checks at the actual Writer publication gate and rejected directories occupying fixed control-file paths during incomplete inspection. Two substantial test groups cover seven fixed control paths and eight coordinated Writer mutation cases. Patch f8a87802e56a30c61d9158c955968b2e786ab8c6df23bf88aa82590e4b35f9ea. F006/F008/F009 resolved (F009 repeats part of F006; nine IDs represent eight distinct issues). Local test-reporter indentation and an incorrect test target were corrected by the same Writer before candidate validation; failed local evidence is retained. No assertion, production guard, environment or controller check was weakened. Writer-local sandbox limitations remained advisory only.
+
+## Acceptance and integration evidence
+
+Milestone receipt SHA-256 values:
+
+- 07ed6d6b477dbad21f183f1f85916816cab4deb7ce913ac0d275cbf05f170f6a
+- 01a7e4096e0fb7ae08af976fada1f823611b06498311f8dbf313183c9c7c3863
+
+Final reviewer 8cb9324a-56a7-4277-a033-8458840ec851 artifact be415df86e583e6affdcc4140242942060d5d277074c52f2e47d3e68f3e6f763 binds the whole ordered milestone history and complete request diff. Final review binding 8f23267fbfcb5a816a9dfd7a6b7fa4fa3f81b4d1e0fa2b94a9d53468d2cdc8a1. The final no_op candidate means no extra change after accepted milestones, not an empty request diff.
+
+Final check-1 validation-039b360a-ed8f-4944-a18b-3ba538d0c80c completed 20:17:44.988334Z; result SHA-256 684a5694a9e53e9362c7c34467b038bfd95e06f884eaaf48c8ae6058299500ba. Check-2 validation-865279d9-5f3f-421e-b919-9a4d93038644 completed 20:17:45.111803Z; result d9f02275a00196e35a9609120d92f310834acd718961930b0180c035b019bf86. Both bind the exact final source with no mutation, skips, errors or failures; referenced output hashes were independently verified.
+
+Coordinator inspected the complete 23-file product diff through full drafts and final deltas, verified all 175 tracked blobs/modes, 25 referenced immutable artifacts, request/receipt/review bindings, clean exact base and accepted worktree, ancestry, hooks/attributes/collisions and unchanged backend/executable. Final status/diagnose/reconstruct showed no findings, obligations, in-flight operation, lease, quarantine or recording gap. Host ownership probe at 20:21:00.676717Z confirmed wrapper 1031565/ controller 1031573 and related descendants gone. preintegration-final.json supersedes the provisional119260c preintegration-candidate.json. Scoped automatic approval allowed guarded exact fast-forward; all 175 materialized target files matched accepted bytes afterward. Historical controller state remains unchanged.
+
+Authoritative retained evidence: /home/francesco/.local/state/cwi/runs/c62af399-bf8c-4b25-8ef7-ec1947fad6ae/ and workflow_logs/c62af399-bf8c-4b25-8ef7-ec1947fad6ae/. Local coordinator evidence: local/attempts/D03-005-attempt-001/, including final-receipt.json, final-validation.json, milestone receipts/reviews/checks, full-product-final.patch, repair snapshots, preintegration-final.json, owner-resolution-final.json, integration-result.json, target-validation.json and usage-final.json. Raw logs and account state remain untracked.
+
+## Delivered scope and limits
+
+Bounded read-only capture compares a prior view against an independently selected canonical plan, retaining exact changed bytes, missing/added files, unambiguous file/directory renames and explicit ambiguity for duplicates or edited moves. An immutable complete successor package contains a new protected 0500/0400 generation and private independent 0700/0600 preservation, associated by strict manifests/reports. Prior tree and canonical history stay intact. Same-plan refresh remains explicit; edits are never silently adopted into canonical projections.
+
+Generated links are verified, exact old/new record mappings retained and stale/missing/ambiguous prior targets diagnosed. Arbitrary authored links are not certified or rewritten. The executed example demonstrates explicit existing checkout/preview/saved-proposal/submit and stale conflicts without scientific endorsement. Publication uses token-paired private evidence/preparation siblings, bounded no-follow pinned reads and no-replace same-parent rename; interruptions and uncertain acknowledgments retain offline inspectable evidence. No automatic replay, cleanup, rollback or inferred historical fsync acknowledgment. Same-owner/privileged external mutation and the interval after the final observation remain explicit trust limits.
+
+This supplies scoped R-004/R-019/R-026/R-027/R-028/R-031/R-092 engineering evidence. Full CLI/current-view management, branch/runtime/report/filtering layouts, authorized readiness, remaining lifecycle/eligibility/fences/resources, acquisition/extraction, orchestration/tools/context/verification and scientific evaluation remain mandatory. D02/D03 and M0-E remain partial; M0-S remains pending. A private successor view is not a backup or a redistributable export.
+
+## Resources and continuation
+
+Seventeen completed roles report 33,706,265 input tokens (31,991,552 cached), 245,458 output (91,368 reasoning), zero cache-write input. Cumulative reported lower bound: 119,974,518 input (108,702,848 cached), 1,268,314 output (345,234 reasoning), plus unknown timed-out 46114120 Writer usage. Nested categories are included, not extra charges; these are not invoice/quota measurements.
+
+Commissioning 1/3 closed; continuous 15/50 used, 35 remain; CWI repairs 12 (three this run), coordinator recoveries 4 (each distinct blocker1/2), backend attempted/adopted/reverted 0/0/0. Sixteen actual runs: thirteen accepted/integrated and three preserved terminal failures. No grant, counter, model, scientific or service/data/billing permission changed.
+
+After target validation and the administrative checkpoint, the next safe action is to launch bounded REQ-D03-006 once, for exact inspection and explicit work-product draft operations through the CLI. The existing continuous grant requires progression; no routine human approval or automatic restart supervisor is implied.

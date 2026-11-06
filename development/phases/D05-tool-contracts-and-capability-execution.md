@@ -1,5 +1,7 @@
 # D05 — Tool contracts and capability execution
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 ## Historical envelope checkpoint — 2026-11-04
 
 REQ-D05-002 / [run d4513360-8b98-4b8d-9bdc-91835d40a323](../runs/d4513360-8b98-4b8d-9bdc-91835d40a323.md) accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`; target 1189/1189. That slice supplied passive conversion and projections only. Registration and history were subsequently integrated below; assessment, permission and real execution remain required.

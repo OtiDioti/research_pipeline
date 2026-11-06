@@ -1,5 +1,7 @@
 # D01 — Testable product foundation
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 ## Fixture reliability repaired; shutdown checkpoint — 2026-11-06
 
 [REQ-DEV-VALIDATION-002/run9bae8bd6](../runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) accepted/exact-integratedb376faf,final/required target1585/1585,all target dispositions matching final. B-024 is resolved through complete readiness and eight regressions;production validator and all1577predecessor assertions remain. R-007 gains bounded engineering evidence,no phase/M0-E/scientific completion claim. This human-directed session stops after its administrative checkpoint;STATUS owns the single next safe action. The prior baseline failure below remains historical evidence.

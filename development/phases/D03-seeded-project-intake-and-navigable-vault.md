@@ -1,5 +1,7 @@
 # D03 — Seeded project intake and navigable vault
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 ## PID prerequisite repaired; Source feature remains unimplemented — 2026-11-06
 
 [REQ-DEV-VALIDATION-002/run9bae8bd6](../runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) resolves B-024 at exact-integratedb376faf,final/target1585/1585. No Source functionality was introduced and no D03 requirement credit follows. Original Source run5d1adb23/request remain frozen,incomplete before role execution and unimplemented. Current claim-use/history CLI remains accepted. The human-directed session stops without another request/phase;future Source work requires explicit resumption and fresh reconciliation against the repaired baseline. Capture preparation,seed/project/readiness/full CLI and scientific obligations remain mandatory;D03 stays partial. The hold described below is the historical pre-repair checkpoint.

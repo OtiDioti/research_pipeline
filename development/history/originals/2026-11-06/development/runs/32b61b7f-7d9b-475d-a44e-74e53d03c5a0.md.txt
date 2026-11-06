@@ -1,0 +1,37 @@
+# REQ-D03-004 — terminal missing validation evidence
+
+Run **32b61b7f-7d9b-475d-a44e-74e53d03c5a0**, continuous start13/50. Started2026-10-31T14:21:14.006429Z; controller exited1 at15:17:34.860207Z. Exact basecf01a35247abfb7a951c00c1d55fd6ffd8d073ab, tree98379e77187e1ac66f748036bbbaaa1759c90b19; requestSHAc989d9d7c810d930269ce65d007468611ce5a7f60fb33c4fe9471a16864e923a. Frozen gpt-6-astra/high, two milestones, repairs2/review and6/run, agent/validation2700seconds, no --merge, soft/hard descriptors4096/1048576. Backend1f68060 and Codex0.166.0/digestb8a11fed unchanged.
+
+## Actual outcome and preservation
+
+**STOPPED_INCOMPLETE; zero accepted milestones; no final receipt; no integration.** Provisional candidate81ec2f3a7ca09cb299d5d139823e56f1499d121d, tree881ca8b769fccbcfe5868faa043962b64c4d961e, remains on its original clean CWI branch/worktree. Main remained cleancf01a35 until this administrative checkpoint; latest accepted product remains9373860 with396 target tests. Neither run state nor source was rewritten.
+
+CWI status/diagnose/reconstruct after exit report no lease, quarantine, in-flight operation or recording gaps; resume_allowed=false, recovery_action=new_run_after_manual_salvage. Host-level process reconciliation at15:19:41Z confirms wrapper1006874/controller1006877/Writer1009077/validator1012671 gone and no matching controller/role/validator. A prior sandbox PID check could not see host owners; a scoped host check confirmed them alive at14:57:52Z. It was not a shutdown or recovery attempt. Tool session6565 was collected with exit1.
+
+## Source and validation evidence
+
+The first milestone produced bounded single-transaction detached metadata capture, a deterministic pure readable plan, exact records/mappings/manifests, generated navigation and new tests/docs. The second milestone (protected copies/publication/inspection/example) never started. Eleven changed files were reviewed and preserved as exact regular-file copies; all396 existing tests/assertions remain unchanged. New interfaces are unaccepted provisional work, not requirement completion.
+
+- Baseline396/396,306.619sec,no mutation; resultd81499d856948e4fdb0c71df5c24b60e3677c069c15659de8fcd9079d8cdeff4,stdoutc4a1ada351ab3b32f4503976a6545d84970168478deed8a95070a610af907772.
+- Initial candidatedcc5f0d4a1776d6e9a90c537c5560584b59592d7, tree535cfeb7b0d021c17b5f6130a17ca2d24de04872: validation-d48dc735-c287-46ee-8965-896cc237ab1c failed at15:07:57.572086Z.416discovered/415successful/1error/0skips or failures,308.839sec,no mutation. New test_view_plan.py line116 lacked a closing square bracket, preventing its17 methods from importing. All396 old and19 new snapshot methods passed. ResultSHA4485d46e0313ba4bb88798d76a9d62d2ca3f0a5833e15c72322b8d98facaab79; stdoutcf47c65231b9a740e7641423f4712205ef729fdb707c08778af8cf3cdd958867.
+- Reviewer1df60e54 requested F-001 syntax repair. Architect67aa4e66 prescribed only that correction. Writera92da7da added one bracket, preserving both manifest assertions and all production/docs/runner behavior. Repair patchSHA9903ab467b43b0f4f3590e3861bf7db5b50e5eb90c21396f68523681e6cb5045.
+- Repaired81ec2f3: validation-52421e53-22dc-44a4-8764-f610aa533ba9 passed432/432,330.373sec,zero skips/errors/failures/source mutation,15:10:00.902906→15:15:31.517363Z. ResultSHA227d1d77ef999b26a3d513ab0be1f09d0f7b18f4405b7289172084692e292c7e; stdout1586bb59c922a9151e67997d9279cb074048a0a438a98ada592264a707a29ad7.
+- Reviewerf628ab40 stopped because the Architect-required complete base-to-candidate diff check was absent from controller-owned validation evidence. The configured single check only invoked validate.py. Coordinator full-diff formatting passed, but is not the missing bound controller result. F-001 remains administratively open under stop despite its corrected syntax and passing test evidence; no acceptance is inferred.
+
+All immutable evidence remains under /home/francesco/.local/state/cwi/runs/32b61b7f-7d9b-475d-a44e-74e53d03c5a0. Local attempt D03-004-attempt-001 retains exact candidate snapshots, reviewed deltas, validation/repair observations, terminal status/diagnosis/reconstruction, process/usage evidence and preserved-candidate.json/.patch. Complete provisional patchSHA**1dc029fd59a45b1cacbdc05ccd98b51ae47fb63f7745f72059f3465dbda19a83**. Frozen replacement context contains the11 exact candidate files (293,929bytes) plus SALVAGE.md with per-file hashes; no coordinator implementation occurred.
+
+## Diagnosis and bounded recovery
+
+The required evidence was omitted from the coordinator's frozen validation configuration. Existing CWI supports repeated --check and frozen --context; no backend defect or repair is established. DEV-039 adds check-2 with literal exact new launch-base SHA to record complete `git diff --check BASE HEAD --` alongside unchanged meaningful check-1. No live profile/state mutation, resume, acceptance waiver or unaccepted-source merge occurs. REQ-D03-004-R1 preserves product scope, reuses this draft through its delegated Writer and requires fresh candidate/final checks and independent acceptance. Recovery1 for this distinct missing-check blocker; one further evidence-based action remains if needed. Old blocker counters do not reset.
+
+## Consumption and remaining work
+
+Commissioning1/3 closed; continuous13/50used,37remain; CWI repairs7 cumulative (one in this run), coordinator recoveries4 including selected evidence-profile recovery, backend candidates0. Eleven of14 actual runs accepted/integrated; three terminal failures preserved. Replacement start consumes14/50 and leaves36.
+
+Seven completed roles reported4,596,840 input(4,123,904cached),90,481output(29,706reasoning),cache-write0. Cumulative lower bound**69,858,981input(62,289,536cached),889,410output(205,034reasoning)**, plus unknown old46114120 Writer usage. Nested counts are not extra charges; quota/invoice/liabilities remain unknown. Same development allowance; no product-live/purchase/publication/scientific authority expansion. M0-S/full M0-E/D02/D03/product remain incomplete.
+
+**Next safe action:** verify the committed REQ-D03-004-R1 checkpoint and frozen draft context, then launch its two-check bounded replacement under the existing grant.
+
+## Subsequent recovery disposition — 2026-10-31
+
+Replacement [run 7ee32819-ee00-4b1b-bdba-ea26fb90cf3e](7ee32819-ee00-4b1b-bdba-ea26fb90cf3e.md) obtained fresh final acceptance and exact integration at c57a621c3e3f7806030de13b75b4fe2890b81cc7, 489/489 target tests, after freezing both required checks and providing this exact draft only as context for its delegated Writer. B-016 is resolved, with its recovery 1/2 consumption retained. This original run remains STOPPED_INCOMPLETE, zero accepted milestones and no final receipt; candidate 81ec2f3, worktree, failures and usage remain untouched. The replacement's acceptance never retroactively accepts this draft.

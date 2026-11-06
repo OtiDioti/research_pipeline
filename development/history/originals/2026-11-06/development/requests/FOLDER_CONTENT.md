@@ -1,0 +1,59 @@
+# Directory contents
+
+Lists verbatim pre-restructure source copies and navigation; original bytes are preserved without editing their contents.
+
+- [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — Immediate-child navigation index.
+- [FOLDER_CONTENT.md.txt](FOLDER_CONTENT.md.txt) — Verbatim pre-restructure copy: Directory contents.
+- [README.md.txt](README.md.txt) — Verbatim pre-restructure copy: Coding-pipeline requests.
+- [REQ-D01-001.md.txt](REQ-D01-001.md.txt) — Verbatim pre-restructure copy: REQ-D01-001 — Worktree-local product foundation.
+- [REQ-D01-002.md.txt](REQ-D01-002.md.txt) — Verbatim pre-restructure copy: REQ-D01-002 — Synthetic harmonic/quartic development example.
+- [REQ-D02-001.md.txt](REQ-D02-001.md.txt) — Verbatim pre-restructure copy: REQ-D02-001 — Durable revision and artifact submissions.
+- [REQ-D02-002.md.txt](REQ-D02-002.md.txt) — Verbatim pre-restructure copy: REQ-D02-002 — Consistent local backup and verified restoration.
+- [REQ-D02-003.md.txt](REQ-D02-003.md.txt) — Verbatim pre-restructure copy: REQ-D02-003 — Typed provisional scientific records over durable storage.
+- [REQ-D02-004-R1.md.txt](REQ-D02-004-R1.md.txt) — Verbatim pre-restructure copy: REQ-D02-004-R1 — Versioned core envelopes and verified backup migration.
+- [REQ-D02-004.md.txt](REQ-D02-004.md.txt) — Verbatim pre-restructure copy: REQ-D02-004 — Versioned core envelopes and verified backup migration.
+- [REQ-D02-005-R1.md.txt](REQ-D02-005-R1.md.txt) — Verbatim pre-restructure copy: REQ-D02-005-R1 — Attributed reviews and issues over durable records.
+- [REQ-D02-005.md.txt](REQ-D02-005.md.txt) — Verbatim pre-restructure copy: REQ-D02-005 — Attributed reviews and issues over durable records.
+- [REQ-D02-006.md.txt](REQ-D02-006.md.txt) — Verbatim pre-restructure copy: REQ-D02-006 — Versioned work-product bundles and safe draft round trips.
+- [REQ-D02-007.md.txt](REQ-D02-007.md.txt) — Verbatim pre-restructure copy: REQ-D02-007 — Transactional claim-use freshness and reassessment.
+- [REQ-D02-008.md.txt](REQ-D02-008.md.txt) — Verbatim pre-restructure copy: REQ-D02-008 — Transactional policy freshness for registered claim uses.
+- [REQ-D02-009-R1.md.txt](REQ-D02-009-R1.md.txt) — Verbatim pre-restructure copy: REQ-D02-009-R1 — Recover interrupted transactional target-context freshness.
+- [REQ-D02-009.md.txt](REQ-D02-009.md.txt) — Verbatim pre-restructure copy: REQ-D02-009 — Transactional target-context freshness for registered claim uses.
+- [REQ-D02-010.md.txt](REQ-D02-010.md.txt) — Verbatim pre-restructure copy: REQ-D02-010 — Transactional support-context freshness for registered claim uses.
+- [REQ-D03-001.md.txt](REQ-D03-001.md.txt) — Verbatim pre-restructure copy: REQ-D03-001 — Versioned source captures and bounded local ingestion.
+- [REQ-D03-002.md.txt](REQ-D03-002.md.txt) — Verbatim pre-restructure copy: REQ-D03-002 — Immutable seed inventories over exact source captures.
+- [REQ-D03-003.md.txt](REQ-D03-003.md.txt) — Verbatim pre-restructure copy: REQ-D03-003 — Versioned project setup and attributed intake dossiers.
+- [REQ-D03-004-R1.md.txt](REQ-D03-004-R1.md.txt) — Verbatim pre-restructure copy: REQ-D03-004-R1 — Recover and complete immutable readable vault snapshots.
+- [REQ-D03-004.md.txt](REQ-D03-004.md.txt) — Verbatim pre-restructure copy: REQ-D03-004 — Consistent immutable readable vault snapshots.
+- [REQ-D03-005.md.txt](REQ-D03-005.md.txt) — Verbatim pre-restructure copy: REQ-D03-005 — Refresh readable generations while preserving edits and renames.
+- [REQ-D03-006.md.txt](REQ-D03-006.md.txt) — Verbatim pre-restructure copy: REQ-D03-006 — Local CLI for exact inspection and explicit work-product draft round trips.
+- [REQ-D03-007.md.txt](REQ-D03-007.md.txt) — Verbatim pre-restructure copy: REQ-D03-007 — CLI for immutable readable views and preserved refresh.
+- [REQ-D03-008.md.txt](REQ-D03-008.md.txt) — Verbatim pre-restructure copy: REQ-D03-008 — Correct observed directory mutation diagnostics in readable commands.
+- [REQ-D03-009.md.txt](REQ-D03-009.md.txt) — Verbatim pre-restructure copy: REQ-D03-009 — Read-only current claim-use and generation-history CLI.
+- [REQ-D03-010.md.txt](REQ-D03-010.md.txt) — Verbatim pre-restructure copy: REQ-D03-010 — Saved Source-proposal inspection and explicit submission CLI.
+- [REQ-D04-001.md.txt](REQ-D04-001.md.txt) — Verbatim pre-restructure copy: REQ-D04-001 — Durable controller resource accounting.
+- [REQ-D04-002-R1.md.txt](REQ-D04-002-R1.md.txt) — Verbatim pre-restructure copy: REQ-D04-002-R1 — Recover and complete deterministic committed run reports.
+- [REQ-D04-002-R2.md.txt](REQ-D04-002-R2.md.txt) — Verbatim pre-restructure copy: REQ-D04-002-R2 — Complete and verify preserved committed-report publication.
+- [REQ-D04-002-R3.md.txt](REQ-D04-002-R3.md.txt) — Verbatim pre-restructure copy: REQ-D04-002-R3 — Fresh acceptance of preserved committed-report foundation.
+- [REQ-D04-002.md.txt](REQ-D04-002.md.txt) — Verbatim pre-restructure copy: REQ-D04-002 — Deterministic committed run-report snapshots.
+- [REQ-D04-003-R1.md.txt](REQ-D04-003-R1.md.txt) — Verbatim pre-restructure copy: REQ-D04-003-R1 — Fresh acceptance of preserved authenticated authority foundation.
+- [REQ-D04-003.md.txt](REQ-D04-003.md.txt) — Verbatim pre-restructure copy: REQ-D04-003 — Authenticated local operating decisions and exact readiness.
+- [REQ-D04-004-R1.md.txt](REQ-D04-004-R1.md.txt) — Verbatim pre-restructure copy: REQ-D04-004-R1 — Complete compatible contract for durable run-control foundation.
+- [REQ-D04-004-R2.md.txt](REQ-D04-004-R2.md.txt) — Verbatim pre-restructure copy: REQ-D04-004-R2 — Fresh acceptance of preserved durable run-control foundation.
+- [REQ-D04-004.md.txt](REQ-D04-004.md.txt) — Verbatim pre-restructure copy: REQ-D04-004 — Durable run control and mandatory report lifecycle foundation.
+- [REQ-D04-005-R1.md.txt](REQ-D04-005-R1.md.txt) — Verbatim pre-restructure copy: REQ-D04-005-R1 — Bounded offline lifecycle-report binding contracts.
+- [REQ-D04-005.md.txt](REQ-D04-005.md.txt) — Verbatim pre-restructure copy: REQ-D04-005 — Automatic lifecycle reporting and conservative restart inspection.
+- [REQ-D04-006-R1.md.txt](REQ-D04-006-R1.md.txt) — Verbatim pre-restructure copy: REQ-D04-006-R1 — Correct and revalidate retained lifecycle sources.
+- [REQ-D04-006.md.txt](REQ-D04-006.md.txt) — Verbatim pre-restructure copy: REQ-D04-006 — Coherent committed lifecycle-report sources.
+- [REQ-D04-007-A.md.txt](REQ-D04-007-A.md.txt) — Verbatim pre-restructure copy: REQ-D04-007-A — Pure shared lifecycle rendering.
+- [REQ-D04-007-B1.md.txt](REQ-D04-007-B1.md.txt) — Verbatim pre-restructure copy: REQ-D04-007-B1 — Authentic lifecycle report output commitment.
+- [REQ-D04-010.md.txt](REQ-D04-010.md.txt) — Verbatim pre-restructure copy: REQ-D04-010 — Passive immutable Task-specification contracts.
+- [REQ-D05-001.md.txt](REQ-D05-001.md.txt) — Verbatim pre-restructure copy: REQ-D05-001 — Passive versioned tool-release contracts.
+- [REQ-D05-002.md.txt](REQ-D05-002.md.txt) — Verbatim pre-restructure copy: REQ-D05-002 — Exact passive Tool-release envelopes.
+- [REQ-D05-003.md.txt](REQ-D05-003.md.txt) — Verbatim pre-restructure copy: REQ-D05-003 — Transactional passive Tool-release registration.
+- [REQ-D05-004.md.txt](REQ-D05-004.md.txt) — Verbatim pre-restructure copy: REQ-D05-004 — Passive attributed Tool-assessment contracts.
+- [REQ-D05-005.md.txt](REQ-D05-005.md.txt) — Verbatim pre-restructure copy: REQ-D05-005 — Transactional passive Tool-assessment persistence.
+- [REQ-D05-006.md.txt](REQ-D05-006.md.txt) — Verbatim pre-restructure copy: REQ-D05-006 — Passive Tool-record CLI submission and inspection.
+- [REQ-DEV-VALIDATION-001-R1.md.txt](REQ-DEV-VALIDATION-001-R1.md.txt) — Verbatim pre-restructure copy: REQ-DEV-VALIDATION-001-R1 — Preserve import-time unittest module cleanup semantics.
+- [REQ-DEV-VALIDATION-001.md.txt](REQ-DEV-VALIDATION-001.md.txt) — Verbatim pre-restructure copy: REQ-DEV-VALIDATION-001 — Safe automatic concurrent unittest validation.
+- [REQ-DEV-VALIDATION-002.md.txt](REQ-DEV-VALIDATION-002.md.txt) — Verbatim pre-restructure copy: REQ-DEV-VALIDATION-002 — Reliable PID readiness in the overlap fixture.

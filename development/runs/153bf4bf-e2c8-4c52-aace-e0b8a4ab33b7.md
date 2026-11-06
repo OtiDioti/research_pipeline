@@ -1,5 +1,7 @@
 # REQ-D04-004-R2 — Prepared control and ordered report obligations
 
+Records this CWI run’s source, checks, acceptance/integration and unresolved limits; authoritative controller evidence remains separately preserved.
+
 **Final disposition:** finally accepted, exactly integrated and target verified. No full phase or scientific completion is implied.
 
 **CWI:** `153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7`. **Accepted/integrated source:** `771422b7fcb0b13648c7d4763d50444f358b1de8`. **Tree:** `50d73b5dd00d0ed407b21f1b8ec6d5aa7aa0768d`. **Final receipt SHA256:** `71f34d429ce06530db9b5c27dd066a924785116b11eb62a35e4d479e16b99634`.

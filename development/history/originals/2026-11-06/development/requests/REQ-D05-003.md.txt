@@ -1,0 +1,163 @@
+# REQ-D05-003 — Transactional passive Tool-release registration
+
+**READY; one bounded milestone.** This request advances only the persistence subset
+of R-004/R-008/R-016/R-055/R-058/R-092/R-093. It grants no execution permission or
+scientific qualification. Only the delegated CWI Writer implements product changes.
+
+## Outcome and actual prerequisites
+
+Extend existing MetadataStore typed submission and exact local typed inspection to
+ToolRelease. Reuse its shared transaction, expected-head checks, immutable revisions,
+direct-artifact verification and original-submission reconciliation. Do not build a
+parallel registry/database, mutable current-release pointer or new admission receipt.
+
+REQ-D05-002 is finally accepted/exact-integrated at
+`0a6a01e2552b886232e2880d80123479b70a79e6`, tree
+`79612e4480809e4853459455a52688b5c7601472`, receipt SHA256
+`3343eb04ec738961585e6e8c4d4d0036856b6164d140a052601eb98ff8afabc4`;
+final/target1189/1189, no other outcomes/source mutation. Read its run record,
+REQ-D05-001/002 and actual tool_release.py, tool_release_codec.py,
+tool_release_envelope.py, store.py, domain.py, snapshot.py, schema.py,
+source.py/corpus.py/work_product.py and relevant tests/guide. No failed B1 source
+is an input. The consumed storage/envelope subset is accepted, integrated and
+tested; D04 worker/output gates are not needed for passive controller persistence.
+
+Read specification v1.4 §§2.2,4.1,5.1/5.5,6.7,9.1–9.5,10.1,10.6–10.8/M0-E,
+development/REQUIREMENTS.md, D05 phase and DEV-074. Architect must prescribe complete
+standalone dispatch, link classification, history rules, errors and tests before
+Writer implementation, using actual predecessor APIs rather than invented helpers.
+
+## Required behavior
+
+AC-REGISTER-01 (R-004/R-008/R-055): Explicitly dispatch the existing
+research_pipeline.tool_release_content format through the unchanged pure envelope
+decoder. submit_typed accepts exact locally valid ToolRelease envelopes and
+get_typed_revision returns the decoded ToolRelease with the existing detached
+envelope/direct-artifact checks. Preserve all existing format/error distinctions,
+null operational/scientific states, stable record_id==tool_id, and explicit positive
+revision. Unknown formats and malformed projections fail; no fallback to generic
+admission after typed rejection. Snapshot classification may recognize this newly
+supported local codec, with its existing authority limits intact.
+
+AC-REGISTER-02 (R-008/R-016/R-055): Fresh typed admission resolves every exact
+projected record occurrence using the same transaction connection and proposed-batch
+overlay. Constrained roles are implementation_source (typed Source or typed
+WorkProductManifest according to its declared kind), child_tool (typed ToolRelease),
+reported_evidence (typed Evidence), and reported_issue (typed Issue). Validate their
+existing outgoing constrained closure as well. Shallow roles are reported_provenance,
+build_dependency and reported_qualification: existence and exact declared kind only,
+even when they happen to name a supported typed kind. tool_assessment has no typed
+qualification contract yet; a generic row of that kind can be reported but cannot
+confer qualification. Preserve ordered occurrences; check each incoming role even
+when the target was cached by an earlier shallow/constrained occurrence. Wrong,
+missing or malformed constrained targets fail with ReferenceResolutionError.
+Descriptive cycles terminate through existing caches and confer no deductive support.
+
+AC-REGISTER-03 (R-008/R-055/R-058): Tool history uses existing append-only stable
+tool_id/revision and CAS. For a typed ToolRelease at revision N>1, validate the
+complete exact preceding chain 1..N-1 as typed ToolRelease envelopes for that same
+identity, using the same transaction/batch overlay. A missing, wrong-format,
+malformed or projection-inconsistent predecessor cannot be hidden by a coherent
+latest value or by generic persistence. Every historical release's constrained
+closure receives the same checks. Do not invent a supersedes field, rewrite old
+payloads/provenance, replace release_id with a label, or require monotonically
+changing content hashes. An unchanged declaration may have a new revision/provenance;
+changed content retains its independently derived exact release_id. Old exact
+releases remain readable after later revisions. Historical checks inspect metadata;
+preserve the existing rule against transitive artifact reads.
+
+AC-REGISTER-04 (R-008/R-016/R-055): Before a fresh commit, verify and synchronize
+all direct projected artifact bytes through existing ArtifactStore rules; repeated
+digests are verified consistently and size conflicts fail. Preserve all-or-nothing
+records/links/heads/audit/receipt effects. Exact original-submission reconciliation
+continues before CAS/target/availability checks, after local request normalization
+and decoding. Identical retries return the original receipt even after head
+advancement or loss/corruption of referenced target/artifact availability. A changed
+request using that ID fails SubmissionConflictError. Preserve the documented
+identical-generic-original retry behavior: acknowledgment is not retroactive typed
+certification. No extra marker, resource charge or status transition is introduced.
+
+AC-REGISTER-05 (R-016/R-055/R-058): Generic submit/get_revision behavior is
+unchanged. A generic persisted lookalike does not certify typed admission, history,
+permission, authorship, qualification or execution. Exact typed inspection checks
+selected-envelope coherence and direct bytes only; it does not certify transitive
+history or past route. A fresh typed consumer must revalidate constrained targets
+and histories even if they were originally stored through generic submit. Document
+this distinction and preserve original attribution versus reported tool declarations.
+
+AC-REGISTER-06 (R-007/R-092/R-093): Add meaningful new integration/fault tests with
+substantive local, opaque remote and composite ToolRelease values and real temporary
+SQLite/artifact stores. Cover same-batch forward targets, historical targets,
+each reference slot, repeated/cache-hit roles, shallow malformed typed targets,
+constrained generic lookalikes, descriptive cycles, malformed hidden predecessors,
+unchanged-content revisions, new release hashes, unrelated head changes, concurrent
+handles/CAS, missing/corrupt/size-inconsistent direct artifacts, rollback after the
+first inserted revision, and lost acknowledgment after COMMIT with reopen/original-ID
+recovery. Assert metadata/audit/receipt and source preservation on failures.
+Use existing private fault seams and new focused seams only if necessary; no public
+callback/injection capability. Tests must use independent expected values and real
+receipt/history observations, not only mock calls to new helpers. No live services.
+
+AC-REGISTER-07 (R-007/R-055/R-093): Update docs/tool-releases.md and relevant
+product documentation indexes with precise APIs, role/history rules, errors,
+reconciliation precedence and remaining authority/qualification/execution duties.
+Include a clearly delimited self-contained product/stdlib registration example
+executed by new tests in a private runtime; it stages real inert bytes, registers,
+inspects exact release identity/history, and demonstrates one refused invalid target.
+It must import no tests, execute no described tool and need no credentials/network.
+New/materially changed definitions have useful docstrings. Preserve all112 current
+predecessor test/helper/fixture/validator blobs and Git modes, the1189 tests, pure
+ToolRelease/envelope formats/limits and existing store/backup/migration behavior.
+
+## Scope, checks and retained obligations
+
+Allowed: focused store dispatch/reference/history integration and necessary type
+annotations, a small focused helper module if needed, new test/helper files and
+the Tool-release guide/product documentation indexes. Existing generic transaction
+ordering/errors, schema versions/DDL, persisted formats and pure release/envelope
+contracts are prerequisites. No changes to predecessor tests/helpers/fixtures/
+validator, dependency/build configuration, runtime prompts, grants/status/frozen
+request, backend/provider, schema/migration/backup format, CLI, resource ledger,
+worker/task/attempt admission, capture/install, current pointers, execution,
+permission/qualification decisions or delegation. No unrelated refactoring.
+
+Full unchanged controller baseline/candidate/final validator and literal-base
+complete-diff checks, independent milestone/final review, final receipt, coordinator
+exact-source inspection/integration and full target validation are mandatory.
+Writer extra checks focus on new/affected behavior; Reviewer uses current bound
+full results and necessary affected diagnostics without rerunning the full suite.
+
+D05 permission, qualification, actual isolated execution/receipts/recovery, optional
+real composite interoperability, D04 B1/B2/008/009, all13FOLLOWONcriteria and all94
+requirements remain mandatory. B-013 Writer-deadline recovery is exhausted2/2;
+no retry/adoption/renaming of its failed draft. M0-S, live permissions, audited
+scientific evaluation and human release acceptance remain pending. No phase or
+product completion follows from this persistence slice.
+
+## Execution envelope
+
+AUTH-2026-10-30-001 revision6 CONTINUOUS persists. Before launch38/100continuous
+starts used62remain; next39leaves61 including failed preflight. Commissioning1/3
+closed; CWIrepairs35,coordinator recoveries15,backend attempted/adopted/reverted2/2/0.
+All consumed/exhausted families persist. Reported lowerbound334874576input
+(306516736cached),3178785output(969784reasoning),307knowncompletedturns; interrupted
+historical/native backend/coordinator/quota/invoice amounts remain unknown.
+No new API spending/purchase/service/data/live scientific/push/publication grant.
+
+Use unchanged clean backendb6a2e05283f92f2bb42402d49e4a274225b43f6a, pinnedCodex0.166.0,
+stable launch map, processFD4096 within existing hard limit. Explicitgpt-6-astra/high
+for transactional closure/history/recovery reasoning; ceilingxhigh. One milestone,
+repairs2/review6/run,2700seconds per agent/check, no--merge. Refresh exact readiness
+and ownership, commit request/prelaunch checkpoint and launch once. Freeze ordered
+checks with the actual literal committed launch SHA:
+
+```text
+python3 -B implementation/scripts/validate.py
+git diff --check LITERAL_COMMITTED_LAUNCH_BASE HEAD --
+```
+
+Keep tracked parent files/backend/environment fixed while active or base-bound;
+record live observations under ignored local/. After safe exact integration/full
+target validation, reconcile requirements/phase/backlog/resources/audit/STATUS and
+continue ready independent authorized work. No ordinary success boundary ends the
+continuous grant; every handoff has exactly one next safe action.

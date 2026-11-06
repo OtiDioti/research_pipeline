@@ -1,0 +1,61 @@
+# REQ-D02-002 backups — 2d82f186-4cf2-4fb7-9f96-f0ea8db10340
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / attempt | REQ-D02-002 / D02-002-attempt-001; continuous start 3/50 |
+| Specification / authority | v1.4 SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f; AUTH revision 4 |
+| Request base / target | 6d30c101446012d71c9ead40edcdd985e9ef109c / main |
+| Request SHA-256 | 07b26acdc37e55b098fdf1cc273d125ffd5cfd7e12c37cf5339d336a96b014ab |
+| Backend / model | Unchanged clean 1f68060b5a5a9964c91811a53d3a515e0b01a073; gpt-6-astra/high frozen, selected Codex 0.166.0 and stable environment |
+| Started / returned | 2026-10-30T10:43:28Z / 11:07:41Z, exit 0 |
+| Final controller state | ACCEPTED_UNMERGED; 1/1 milestone, no open findings/obligations, owner, provisional source, quarantine, recording gaps or recovery action |
+| Accepted / integrated source | 645c118a9846b23a3c410bc1a9fe7742f58846bc |
+| Accepted tree | f2119ae956dda013bd602f572a55c2f04c6bb466 |
+| Integration | Coordinator exact fast-forward on main, 2026-10-30T11:16:46Z; no tracked commit between acceptance and integration |
+| Target validation | 88/88 successful, zero skips/failures/errors, 19.190s; source remained clean |
+| Documentation checkpoint | Subsequent administrative commit containing this record; not part of accepted product receipt |
+
+## Implemented scope and meaningful evidence
+
+Ten product files changed, 1,303 insertions/10 deletions. The new backup module captures with SQLite Connection.backup, derives historical artifact inventory from the captured database, verifies strict manifests/schema/relational/application state and bytes, and restores independent copies without rewriting original records or receipts. Durable incomplete markers prevent opening partial copies; post-publication acknowledgment failure remains explicit uncertainty. RecordStore now refuses incomplete restoration before SQLite access. Original tests remain with stronger import guards; sixteen backup tests are added.
+
+| Request gate | Inspected evidence |
+| --- | --- |
+| AC-BACKUP-01 | Multiple kinds, revisions and historical/ordered links round-trip; fresh-process inspection; original receipts/events and canonical retries preserved; restored appends use independent inodes without source/backup mutation |
+| AC-BACKUP-02 | Real incremental page capture with a genuinely separate committing connection; post-capture append excluded; captured historical objects remain complete; bounded actual SQLite busy callback |
+| AC-BACKUP-03 | Damaged metadata/artifacts and rehashed inconsistent databases, malformed/duplicate/unsafe manifest entries, unsupported versions, extra files, symlink/FIFO/nonregular objects, traversal and sentinel preservation fail closed |
+| AC-BACKUP-04 | Real short writes, selected-inode read/fsync faults, final marker-removal failure and uncertain final sync; abrupt subprocess interruption and fresh-process refusal for backup and restore |
+| AC-BACKUP-05 | Actual post-COMMIT/pre-ack process exit, original-ID reconciliation, backup/restore/exact retry with one original receipt/event; a real rolled-back submission's retained orphan is excluded |
+| AC-BACKUP-06 | Exact baseline 72/72 and candidate/final 88/88 controller checks; full diff and recovery paths independently reviewed; protected specification/admin/fixture/dependency/validator contents unchanged |
+
+Final controller validation on accepted source: 88/88, zero skips/failures/errors, 19.193s, source_mutated false, timed_out false. Target validation ran the same unchanged `/home/francesco/miniconda3/bin/python3 -B implementation/scripts/validate.py` and passed. Both reviewers accepted without findings; no repairs were needed.
+
+The delegated Writer could not start the standalone documentation example at literal /tmp inside its sandbox. After final acceptance, the coordinator executed the exact accepted docs/backups.md Bash block from the accepted worktree using literal /tmp; exit 0, no source mutation. Script SHA-256 f658709d3df8855262a60f622c1ab2f80a1b7f7b3e161afbdd78c9934a1981aa. This was execution of CWI-authored code, not coordinator implementation, and made no product provider call.
+
+## Receipt identities
+
+Paths are relative to account CWI runs/2d82f186-4cf2-4fb7-9f96-f0ea8db10340. Ignored local evidence resides in local/attempts/D02-002-attempt-001; Git alone does not preserve those files.
+
+| Artifact | SHA-256 |
+| --- | --- |
+| artifacts/receipts/final.json | 5f8c9774153fb6a71d9e8a1e3b851e7e6f4be25cbc41409b1f700fe28f5c162b |
+| artifacts/receipts/milestone-verified-local-backup-restore.json | 79b1ce0f81b8253e8c0ab129ebc42d29c85be1bbe2b919f0082b4d65566a2c83 |
+| artifacts/validation/validation-13081e7c-4cea-4590-b296-df8c384e3987.json | b155e35045728329d656f73e81e57d86c63165b7d4d100213d1506447178b95f |
+| Same validation .stdout | d11c621b205d9aedefc93a9c71f9bb663b79c770e10992317b24a7bc8905c699 |
+| artifacts/diffs/final-0.patch | 86bf4454f7dbc61053c9503506257a5440273cee061129bdb9d7cf2b0e479961 |
+| Final reviewer, reviewer-48ed202f-26ca-427d-9a1e-4d9e858a9dd7 | e6b8a7c85defdfae63f58ec3ec927256a17b73bf9443498a7b6fce15caf98614 |
+| Local post-integration-validation.log | 6b97d1d4cb1dd49a384c0d9e15ab1da369ffb5fe67b452ab8aaae2109431433e |
+
+Twelve referenced artifacts were checked against bytes. Milestone 0-0.patch and final-0.patch are identical for this one-milestone change; a read-only inspection assumption of a unique matching artifact was corrected. No state/receipt/backend alteration or recovery action occurred. Final no_op review means no change after milestone acceptance, not an empty change. Status/diagnose/reconstruction, full original start reports, frozen environment/argv, source hashes, example result and integration checks are retained locally.
+
+## Consumption, limits and continuation
+
+One milestone, zero CWI repairs, protocol corrections, infrastructure retries, coordinator recoveries or backend candidates in this run. Same 2 repairs/review, 6/run and 900-second deadlines; CWI --merge off. Coordinator verified clean exact base/branch, source/tree, ancestry, full diff, receipt bindings, no path collisions/hooks and resolved ownership before the exact fast-forward. Historical controller state remains ACCEPTED_UNMERGED after external integration.
+
+Five role invocations reported 2,064,069 input (1,773,440 cached) and 39,401 output (10,735 reasoning). Four-run totals: 8,768,378 input (7,347,584 cached), 177,484 output (33,557 reasoning). Nested categories are not extra charges. Commissioning 1/3; continuous 3/50 (47 remain); cumulative CWI product repairs 1, coordinator recoveries/backend candidates 0. Existing ChatGPT Codex allowance only; quota/invoice/account monetary liabilities unknown, no API cap/purchases/product live calls.
+
+R-019/R-017 gain scoped partial evidence. General migrations, periodic backup scheduling, full scientific record semantics/assessment freshness, authority/fencing/resources, and real research-run/session/job recovery remain pending. M0-S/R-001–R-003 remain pending, and neither D02 nor the research product is complete.
+
+**Exactly one next safe action:** prepare and commit the next bounded D02 engineering request (next unused ID REQ-D02-003) for typed scientific record contracts, preserving existing generic-history and backup compatibility.

@@ -1,0 +1,9 @@
+# Recorded evidence: REQ-D03-002 evidence — immutable corpus snapshots
+
+Preserves this requirement-evidence checkpoint and its original limits; it does not independently establish current completion or authority.
+
+Source: [complete evidence history](../development-REQUIREMENTS.md#req-d03-002-evidence--immutable-corpus-snapshots). Current obligations remain in [REQUIREMENTS](../../REQUIREMENTS.md).
+
+## REQ-D03-002 evidence — immutable corpus snapshots
+
+[Run f746e33a](../../runs/f746e33a-7475-44dc-b8bf-4613130fba79.md), accepted/exact-integrated 7d6dd6246e47ace09ff44a1decef14c93251f0ac, final receipt 47a10bdb59044535aba14572e86164abb22ed56c8704e6be7ea58146c6d53785; controller and target 369/369, zero skips/errors. R-004/R-008 gain a ninth strict typed contract with original baseline, exact Source selections, explicit replacements and complete coherent history. R-019 gains fresh-process/backup/exact-restore and original-receipt recovery evidence. R-021 gains corpus-level original path/locator/version preservation; R-022 gains attributed classification/partial inspection/contradictions and unknowns; R-024 gains explicit original/unresolved/external link declarations and candidate-bearing declarations without execution or authenticated exposure; R-029 gains retained restrictions/accompanying relationships, not enforcement. R-017/R-018 transactional rollback/lost-ack evidence extends to this contract. All remain PARTIAL. Actual project intake/brief/readiness/authorization, link discovery/archive/extraction, protected vault views, exposure enforcement, resources/controller execution and M0-S remain mandatory.26 new methods preserve 343 prior tests; one fixture/example directory-mode repair preserved every guard/assertion. Next REQ-D03-003 prepares project/intake records only; preparation is not evidence.

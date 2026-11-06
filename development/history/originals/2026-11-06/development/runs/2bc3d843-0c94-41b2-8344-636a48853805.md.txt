@@ -1,0 +1,83 @@
+# REQ-D04-007-B1 — Writer deadline; no acceptance or integration
+
+Run `2bc3d843-0c94-41b2-8344-636a48853805`, frozen request at
+`0ff9485b8a70feb583157061511f8aea808f0858`, tree `d1d646bb1a04f7d283fdfc45376f12d1f45d7ecd`.
+Backend `b6a2e05283f92f2bb42402d49e4a274225b43f6a`; explicit approved
+`gpt-6-astra/high`, one milestone, repairs2/review6/run,2700-second agent/check
+limits,FD4096,stable environment digest46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09.
+Pinned Codex0.166.0 executableSHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8.
+Two ordered checks; no --merge. Start36/100.
+
+## Actual result
+
+Controller baseline passed **1130/1130**, zero skipped/expected failures/failures/
+errors/unexpected successes/source mutation,06:15:06.091424–06:23:02.022261Z.
+StdoutSHA256d62d1e3aef5466425db33a7ccb7331db74c7166ba157839a1745e92125a955a1;
+empty stderr. Literal-base full-diff check also passed. Exact immutable artifacts
+and hashes are in local/attempts/D04-007-B1-attempt-001/baseline-audit.json. Temporary
+current-state validation_results is cleared at milestone selection; it does not
+erase those baseline results.
+
+Designer succeeded with one b1-authentic-output-commitment milestone. Architect
+succeeded with complete standalone37357-character instructions; canonical response
+SHA256c81d13d79a05f19d5ab324f3bf6839d1b4136867251de4d2a7abda7f31f6175e.
+Writer386a423f started06:39:52.435238Z and exhausted its frozen2700-second limit;
+CWI reports timeout/exit-15 after source changes. Outer command exited1.
+
+Final status **STOPPED_INCOMPLETE / INCOMPLETE**, zero accepted milestones,
+no provisional candidate, no candidate/final validation, no review/final receipt,
+no integration. accepted_head0ff9485 is the unchanged launch base, not a product
+acceptance. Resume is forbidden; diagnosis says new_run_after_manual_salvage only
+after effects/ownership resolution. Do not replay the Writer or merge its branch.
+
+## Preservation and checks
+
+Host07:27:06Z found no controller/role/validator owner; final status has no in-flight
+operation,lease,quarantine,open finding/obligation or recording gap. Parent main
+remained clean at0ff9485. All104predecessor test/helper/fixture/validator blobs/modes
+are unchanged. Seventeen intended source/test/guide files,531484bytes, are copied
+verbatim with modes/hash manifest under the ignored attempt's retained-draft/ and
+retained-draft-manifest.json. No excluded scratch file was adopted. Reviewable tracked
+patchSHA256073d27e610985fce3f2202428351c5c00466593f461e06d0026a88b9dd14498b;
+new file bodies are retained separately. Managed worktree, refs, logs, receipts and
+controller state are untouched. This is evidence preservation, not implementation
+submission or authorized recovery/adoption.
+
+Writer advisory test history includes genuine passes and failures, including a
+work-ledger equality failure followed by a passing targeted rerun after production
+accounting changes. Later edits occurred; no complete final draft pass is claimed.
+writer-advisory-checks.json indexes the immutable transport evidence. No assertion,
+acceptance criterion, guard, model, deadline or backend was weakened.
+
+Live recording reconstruction temporarily reported uncertain_shutdown/unresolved
+operation while the owner was active. Source inspection established that these
+labels follow an open recording session/invocation; timeline40 was process_started,
+not an actual shutdown. Supported final completion removes those live uncertainties.
+No source/state/log repair or backend defect was established.
+
+## Authority, resources and disposition
+
+Continuous36/100 used64remain; commissioning1/3closed. CWI repairs33 and coordinator
+recoveries15 unchanged; no internal repair/correction/retry here. The Writer-deadline
+family already consumed2/2 recovery actions (AUTH2026-11-02 report-publication entry).
+This recurrence reopens B-013 as **BLOCKED FOR THIS PATH**. No third deadline recovery,
+replacement/split adoption or higher timeout is authorized. Successful earlier work
+never reset that count. Merely preserving evidence consumes no replacement action.
+
+Two actual completed turns add2038827input(1825664cached),25514output(13320reasoning)
+once at this administrative reconciliation. Writer usage is unknown; now five
+interrupted-role amounts remain unknown. Cumulative reported lowerbound
+325277276input(298149632cached),3033096output(931105reasoning); nested categories
+included. Quota/invoice/coordinator/native backend review usage remain unknown.
+Backend attempted/adopted/reverted2/2/0; no backend modification/attempt here.
+
+All37retained runs reconcile25finallyaccepted:24exact sources integrated,initial
+cd93validator acceptance deliberately declined/superseded;12terminal incomplete.
+Current product remains ef3bfcf723a246750021cce32024cf6717eb5fa9. All94requirements,
+all13FOLLOWONcriteria,B1/B2/008/009 and broader partial engineering/scientific/live
+obligations persist. No output commitment is credited from this attempt.
+
+Independent engineering remains available: DEV-072 selects passive Tool-release
+contracts in REQ-D05-001 from accepted domain/reference/work-product contracts,
+without the failed output draft, registration, worker admission or live execution.
+STATUS owns the single next safe action. No automatic session restart is promised.

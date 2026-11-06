@@ -1,5 +1,7 @@
 # Local setup and CWI runbook
 
+Provides setup and operational commands for authorized CWI work, including current role-specific flags and exact integration controls.
+
 This runbook describes the current role-specific launch contract. The supplied-snapshot review and historical run records retain their original contract. Confirm the [review](PIPELINE_REVIEW.md), your actual clone revision, and `start --help` before using a materially different version. Replace the repository URL placeholders; do not execute them literally. Continuous progression, authority, model selection, and focused backend repair are defined in [AUTONOMY.md](AUTONOMY.md), [AUTHORIZATION.md](AUTHORIZATION.md), [MODEL_POLICY.md](MODEL_POLICY.md), and [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md).
 
 ## 1. Install the documentation without losing the specification

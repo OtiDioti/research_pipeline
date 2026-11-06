@@ -1,0 +1,58 @@
+# REQ-D01-001 commissioning — 47d6ef06-c251-4a0d-bb2c-da2059d9360f
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / phase | REQ-D01-001 / D01 foundation (R-007; R-006 partial) |
+| Attempt | D01-001-attempt-001; commissioning start 1 of 3 |
+| Request source / target base | `f5fea5009faa82262b9bb1d5a8c70f6ff3458ae0`, main |
+| Backend | `1f68060b5a5a9964c91811a53d3a515e0b01a073`, clean, no repairs |
+| Runtime | [ENVIRONMENT.md](../ENVIRONMENT.md), fixed map; Codex 0.166.0; gpt-6-astra / medium |
+| Started / controller returned | 2026-10-30T07:54:35Z / 08:05:59Z; exit 0 |
+| Final CWI state | ACCEPTED_UNMERGED; no owner, outstanding findings, obligations, provisional transaction, quarantine or integrity gaps |
+| Accepted / integrated commit | `7d5acab359e404cbb81d94aa3213971468764d01` |
+| Accepted tree | `f7fe8a02aa81f473e560c296703e65a32599140b` |
+| Integration | Exact coordinator fast-forward on main, 2026-10-30T08:09:00Z |
+| Authority | AUTH-2026-10-30-001 revision 2; explicit first-result preauthorization, not a completed human review |
+| Administrative checkpoint | Subsequent commit containing this record and AUTH revision 3; distinct from accepted product source |
+
+## Result and acceptance evidence
+
+Ten changed files, 754 insertions and 5 deletions, entirely in implementation/ and docs/. Package metadata, inert package import, help/version CLI, candidate-local validator, documentation and 19 meaningful tests were reviewed in the complete diff. No research engine, scientific result or runtime provider is implemented.
+
+| Request criterion | Observed evidence |
+| --- | --- |
+| AC-D01-01 | Required nested foundation files, Python 3.11+ metadata, allowed root layout; exact source/tree inspected |
+| AC-D01-02 | CLI help/version/invalid arguments, candidate import and hostile alternate-module checks; inert import test |
+| AC-D01-03 | Disposable suites exercise passing, missing, empty, skipped-only, expected-failure-only, failures, errors, unexpected successes and subtests; root files/symlinks and legitimate/malformed worktree pointers tested |
+| AC-D01-04 | Frozen bootstrap exact baseline admitted only original Markdown source; changed accepted candidate ran 19 tests plus permanent validator's 19 tests; no mutation/timeouts |
+| AC-D01-05 | Documentation describes actual commands and foundation limits; no mandatory runtime provider or scientific claim |
+| AC-D01-06 | Milestone and final independent CWI reviews accepted, no unresolved findings; full final report/receipt/source inspected by coordinator |
+
+There are **19 distinct test cases**, not 38 independent tests from repeating validation. Final frozen validation passed at 08:05:17–08:05:20Z. Post-integration permanent validation passed 19/19, zero skips/failures, in 1.576s and left main clean.
+
+Final receipt candidate_kind is `no_op` because the final review introduces no changes beyond the accepted milestone. The accepted milestone/source differs from the bootstrap base by the reviewed product diff; this is not an empty commissioning result.
+
+## Retained artifact identities
+
+Account CWI run directory is runs/47d6ef06-c251-4a0d-bb2c-da2059d9360f beneath the recorded account state root. Local evidence is in ignored local/attempts/D01-001-attempt-001. Git does not preserve these external/ignored files.
+
+| Artifact relative to run directory | SHA-256 |
+| --- | --- |
+| artifacts/receipts/final.json | `4031442b1886c2c3bce00ad60c778934c94fe031822029ab8492d00a8c0e74ff` |
+| artifacts/receipts/milestone-d01-worktree-foundation.json | `61055fb7a4c09e6a16bb6ea993122e27567a8cd47f0f1160c188b43c9569d030` |
+| artifacts/validation/validation-7a298d5d-c11e-412a-96e4-8839f1f29937.json | `c6cd7da2af8ed4a3175da37a1fa3a21ca697ab900c5f0d7b71d117a2f19eb67e` |
+| Final reviewer response, reviewer-5ac69c39-e125-4ad6-a05e-345c3ac21cd0 | `9f2fc06e87abe1c7b171ef2b5d4337330cda6fed1160b067d5bef69d7df66534` |
+
+Local post-integration validation log SHA-256: `ba3c989d077057b92a336e923eab7a41569e18fec105457d9e69388cd208b978`. Status, diagnose, reconstruct, original start stdout/stderr, exact launch argv/environment, usage and integration-inspection records are retained beside it. No controller state/receipt was altered to reflect the external integration.
+
+## Integration and resource accounting
+
+Verified clean main at exact original base, accepted ancestry, unchanged source/tree, receipt and artifact bindings, complete allowed diff, no ignored-path collision, no active Git hooks/custom hook path, and no source mutation. Ran `git merge --ff-only 7d5acab359e404cbb81d94aa3213971468764d01` before any new tracked administrative commit. Re-ran the permanent validator in the original checkout with the same recorded environment.
+
+One milestone; CWI repairs 0, protocol corrections 0, infrastructure retries 0; coordinator recoveries 0; backend repair candidates 0. Commissioning starts 1/3; continuous starts 0/50 before activation checkpoint. Reported role usage: 909,197 input (690,816 cached), 16,520 output (930 reasoning). No monetary cost/quota or unknown account-level liabilities are inferred from these counters. Existing ChatGPT allowance only; no API spending grant. Outer coordinator session identity not established.
+
+## Remaining work and next safe action
+
+D01/M0 still requires scientific contract and expert evidence. The human requested a synthetic harmonic/quartic example; it is development material, not expert audit. Next safe action: launch committed REQ-D01-002 from the new clean checkpoint under the activated grant and permanent validation profile.

@@ -1,5 +1,7 @@
 # First implementation run: a bounded bootstrap
 
+Documents the one-time meaningful validation bootstrap for a Markdown-only source; it does not apply to the existing implemented product.
+
 ## Why this is necessary
 
 The target starts with only Markdown. CWI's automatic admission cannot infer an existing suite or a supported test-free runner from that. The proposed nested `implementation/pyproject.toml` also requires explicit validation once it exists.

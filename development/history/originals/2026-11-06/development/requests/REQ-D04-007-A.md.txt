@@ -1,0 +1,77 @@
+# REQ-D04-007-A — Pure shared lifecycle rendering
+
+**D04, PREPARED. One independently reviewable milestone.** Dependency
+REQ-D04-006-R1/run7d05376e-aabf-4c5a-9481-91205611eb0c is finally accepted, exact integrated at
+`b19e7ffa82b490460225cfc1c0d5100355e2a5d6`/tree`93947f1b2c43dd83ec7e117f5eb759f5af535b2e`/final receipt
+`d790c2e53c3dda63789ff98604d7c73dc76732c5ff13396a516b971ffeb5640a` and target-validated. Candidate 1033/1033
+in 1730.199s; final 1033/1033 in 1740.418s; target 1033/1033 in 1769.410s, zero skips,
+errors, failures or source mutation. Both controller checks and independent
+milestone/final review passed without repairs/findings. Target ended
+2026-11-03T14:11:07.355675Z, stdout5dee8e19cf18a033f1b07902cf3be7c9bfdcb392235cd079a9a6b4e711b9e5c6.
+All 33 runs reconcile22 finally accepted/integrated and11 preserved terminal incomplete;
+no active owner/lease/quarantine or accepted result awaits integration. Host
+quiescence was verified after target completion. Commit this request/checkpoint,
+verify the clean literal launch base/readiness, then start once.
+
+## Outcome and requirements
+
+Provide a pure bounded deterministic renderer over the accepted detached lifecycle-source observation. Return the actual report.md and machine-readable continuation representation, reusing existing seven-group rendering machinery, with every work gate closed. This advances only rendering subsets of original FOLLOWON-02–04/09/11–13, R-004/R-009/R-049–053/R-092/R-093, and specification §§5.1,8.2–8.4,9.4,9.7,9.11,10.5/M2. All 94requirements/specification v1.4 remain. This is not automatic reporting, persisted output commitment, a readable plan, publication, acknowledgment/discharge, readiness/admission, richer synthesis or scientific validation.
+
+Inspect project_description.md relevant original sections, every original FOLLOWON-01–13 in REQ-D04-005, ADR-063, actual finally accepted source contracts and docs, existing reports._groups/_changes/render_report, view_plan inert literals, accepted report capture/planning/publication integration and tests. Do not consume excluded rejected blueprints or old role conversations. The Architect prescribes complete exact public types/formats/version/signatures/errors/stage accounting/compatibility and standalone tests before Writer work.
+
+## Required behavior
+
+
+AC-RENDER-01 (R-004/R-049/R-051–R-053/R-092): Exact-type source objects/retained values and public wire forms, if offered, are revalidated under independent explicit caller ceilings before nested reconstruction or grouping. Purely offline-consistent input proves structure, not persisted authenticity. Preserve accepted source/binding/control formats and identities; renderer cannot claim a store-verified source/receipt or current permission. The executed example may obtain a genuine store source, then detach and render without any store access.
+
+AC-RENDER-02 (R-004/R-009/R-052/R-093; FOLLOWON-02/04/12): Extract/reuse shared fact projection and inert framing with the accepted legacy renderer. Do not fabricate legacy ReportRequest/ReportObservation objects, map arbitrary saved-work baseline into an earlier-report baseline, duplicate seven projections, add a second renderer, or broadly refactor. Preserve historical v1/v2 source/output bytes, version behavior, labels, newlines, navigation, resource rules and all 93 predecessor test/fixture/validator blobs/modes. Supported frozen context at local/attempts/D04-007-A-attempt-001/context pins the accepted legacy renderer/fixture blobs and pre-extraction canonical-source/output hashes and exact sizes for both versions. Add a compatibility test for each fixed reference; never regenerate expected output from modified code. The new lifecycle continuation needs an explicit closed compatible version/format; all existing formats retain historical semantics.
+
+AC-RENDER-03 (R-005/R-009/R-041–R-043/R-045/R-049/R-051–R-053): Render all seven §10.5 groups, preserving exact original preparation/selected transition/obligation/declarations/selection, arbitrary saved-work baseline, snapshot/binding identities, actual later captured control disposition, scientific/resource watermarks and distinct original transition/capture dates. Attribute saved outcomes/checks/continuation and expose exact evidence labels, provisional/conditional/disputed states, assumptions, incomplete work, task/checkpoint/dependency pins and human/resource requirements where actually recorded. Missing interpretation, historical report comparison, next action, job status, charges and estimates remain explicitly unknown/unavailable. Empty results explicitly establishes no result. Later cancellation does not erase older intent, claim scientific success or certify process termination; later settlement is dated evidence.
+
+AC-RENDER-04 (R-016/R-040/R-049–R-050/R-052; FOLLOWON-03/04): report.md and continuation output contain meaningful exact inspection/reproduction routes without claiming not-yet-published navigation, manifests or filesystem targets. Authored text, link-like strings and identifiers stay inert literal data; the renderer never executes them or turns them into active authored Markdown/HTML or unsafe output paths. Fixed generated headings and navigation retain their documented meaning. Maintain ordinary_work_allowed=false and recheck_required=true; reading/rendering grants no readiness, restart, continuation or worker admission. No policy/clock/store/artifact/filesystem/environment/model/network/tool/TeX/inference access. A supplied result identity, if included, is only structural cross-consistency until the later store-backed output stage authenticates it.
+
+AC-RENDER-05 (R-004/R-052/R-092; FOLLOWON-09): Independent input/metadata/node/depth/representation/output-file/complete-bundle limits are explicit and enforced before the protected parse/reconstruction/closure/copy/escaped output allocation. Original embedded limits remain intent and never enlarge caller ceilings. Charge complete escaped UTF-8/canonical/inert-literal framing, repeated representations, simultaneous source/groups/outputs, fixed empty overhead and returned copies, not final sizes alone. Preserve the prior source.json+report.md+continuation.json complete-bundle output semantics even though pure rendering returns only the two generated outputs. Architect fixes exact accounting, minimum work, errors/precedence and permitted equality; no unbounded legacy closure fallback or unrelated planner/publication allowance.
+
+AC-RENDER-06 (R-004/R-019/R-041–R-043/R-045/R-049–R-053/R-092): Add genuine actual-store-to-detached-to-offline tests for schemas2/3, no results, delayed original intent after cancellation and settlement, arbitrary saved-work baseline, multiple original control revisions and unknown liabilities. Verify all seven groups and actual reference/typed labels plus exact deterministic repeat output independent of later store/clock/policy changes. Cover authored control characters/Unicode/escaping/path-like/link-like values, forged retained objects/subclasses/equal-valued bool/float aliases, malformed/rehashed contradictory source fields, and each independent ceiling with full-operation equality and one-unit deficit plus a sentinel before the protected stage. Preserve actual failures; do not edit predecessors or weaken guards/skips.
+
+AC-RENDER-07 (R-004/R-007/R-052/R-092/R-093; FOLLOWON-11–13): An executed self-contained product/stdlib guide captures a genuine source, closes the store and renders its detached state with the new public API; shows empty results, cancellation-delayed intent and saved continuation/unknowns; clearly identifies output as generated bytes, not publication or authorization. Documentation covers actual versions/signatures/errors/trust/limits and invariants. Full unchanged source-local validator plus literal committed-base diff check at controller baseline/candidate/final, independent milestone/final review/final receipt, coordinator exact integration and full target validation are mandatory.
+
+## Scope and subsequent mandatory ownership
+
+One independently reviewable milestone, focused lifecycle rendering plus minimal shared report extraction, new tests and guide/docs. No schema/dependency/CLI/config/runtime prompt/provider/service or backend change. Product code only by CWI Writer in its managed worktree, never recursive CWI/role Git writes/coordinator direct implementation.
+
+007-B still owns authentic original-source-to-separate-output O/X/M commitment, complete ordered-history immutable readable plans, independent bounded offline reconstruction/original-plan recovery, original-ID/CAS/failure/reopen/backup behavior and real navigation. 008 owns automatic ordinary lifecycle calls/ordered protected publication/preserved refresh/separate verified nonrecursive acknowledgment, including uncertain publication/ack reconciliation. 009 owns current supplied policy/dependencies/resources/pending restart/same-allocation continuation and final all 13 criteria audit. Every original FOLLOWON obligation persists; D04/M0-E and broader queue/attempt/fencing/admission/isolation/context/tool/model/access/qualification/synthesis/export plus M0-S/live duties remain partial/open.
+
+## Execution and resources
+
+AUTH-2026-10-30-001 revision6 CONTINUOUS only. Continuous 32/100 starts used68 remain;
+next 33leaves67 including failed preflight. Commissioning 1/3 closed. Global CWI repairs30,
+coordinator 14, backend attempted/adopted/reverted1/1/0. B-022 source correctness is
+resolved for the accepted source, but its1/2 remains consumed. Prescription,
+permission, interrupted-workflow salvage and Writer-deadline2/2 remain exhausted;
+capacity/context-size/validation-context/formatting/descriptor1/2 persist. Ordinary
+next-slice decomposition grants no new recovery or reset.
+
+Explicit approved gpt-6-astra/high, ceiling xhigh; one milestone, repairs2/review6/run,
+2700s per agent/check, process FD4096/hard1048576, unchanged backend c74df0b and
+Codex0.166.0/b8a11fed, recorded stable map46f63a41. At controller baseline/candidate/final, freeze these two ordered checks:
+
+```text
+python3 -B implementation/scripts/validate.py
+git diff --check LITERAL_COMMITTED_LAUNCH_BASE HEAD --
+```
+
+The coordinator substitutes the actual literal SHA after committing this request. No --merge. Use supported --context
+local/attempts/D04-007-A-attempt-001/context for the compact accepted references;
+no retained source installation or unavailable earlier prescription is needed.
+Every replacement Architect prescription must be complete and standalone for this
+whole milestone; a fresh Writer cannot depend on an earlier response/addendum.
+
+Focus Writer advisory checks on new renderer/compatibility/bounds/guide cases;
+controller full checks remain mandatory. Preserve genuine failed evidence and
+known Writer sandbox limitations without weakening guards or increasing deadlines.
+Cumulative reported lower bound297974794 input(273350784 cached),2752687 output
+(834861 reasoning); four older interrupted roles/native backend review/coordinator/
+quota/invoice remain unknown. Nested categories included. No API purchase, new
+service/data/push/publication/product-live/scientific authority. All 94requirements
+and original13FOLLOWONcriteria remain; broader phases and M0-S remain partial.

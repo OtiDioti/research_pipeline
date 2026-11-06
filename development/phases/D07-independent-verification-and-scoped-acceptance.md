@@ -1,5 +1,7 @@
 # D07 — Independent verification and scoped acceptance
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 **State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
 
 **Goal:** Make candidate acceptance depend on appropriately independent, claim-specific evidence and current support.

@@ -1,5 +1,7 @@
 # D00 — Specification and operating readiness
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 **State:** COMPLETE for operating readiness. Administrative reconciliation and local readiness checks completed on 2026-10-30; the launch transaction must repeat the exact committed bootstrap and cleanliness checks and obtain specific execution permission. Commissioning subsequently established actual CWI access and acceptance; see the run record.
 
 **Goal:** Reconcile the exact local product specification and establish an honest, reproducible development environment.

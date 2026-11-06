@@ -1,5 +1,7 @@
 # Continuous-development documentation update: verification
 
+Preserves historical backend inspection or verification evidence and its original limitations.
+
 **Date:** 2026-10-30. **Scope:** revised Markdown workflow documents and their compatibility with the supplied controller snapshot. This is not an authenticated Codex run, full backend regression rerun, product test, backend repair, or approval of the user's local environment.
 
 ## Inputs and changes

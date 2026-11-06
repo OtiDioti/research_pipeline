@@ -1,0 +1,181 @@
+# REQ-D05-001 — Passive versioned tool-release contracts
+
+**PREPARED. One independently reviewable milestone.** This is independent engineering
+under AUTH-2026-10-30-001 revision6, not recovery of REQ-D04-007-B1. The latter's
+Writer timed out in run2bc3d843-0c94-41b2-8344-636a48853805 without a candidate,
+acceptance or integration. Its draft is retained but must not be consumed, adopted,
+repaired or transplanted by this request. The exhausted deadline recovery2/2 stays
+exhausted; no renaming, subdivision or new allowance is implied.
+
+## Outcome and dependency decision
+
+Implement the complete passive, provider/tool-independent declaration for one exact
+reusable Tool release in specification §§5.1,10.6–10.8. Supply strict immutable pure
+contracts/codecs, meaningful independent tests and an executed self-contained guide.
+A supplied/bundled/generated tool can then be described consistently before the later
+registry, admission and execution work. This advances R-004/R-006/R-008/R-054/R-055,
+structural portions of R-057–R-059, R-092/R-093/R-094 only.
+
+The coordinator chooses this boundary because it needs no lifecycle output,
+publication or worker execution. Generic schema2/3 already recognizes tool_release;
+existing ArtifactReference/RecordReference and work-product/source conventions are
+integrated. This slice commissions a pure consumed M0-E contract without claiming
+D04/D05/M0-E completion. Actual registration, canonical typed admission, permission,
+qualification, execution, descendant enforcement and receipts remain later work.
+No RecordStore write integration is requested now. Do not expose the new declaration
+through submit_typed until its separate persistence/reference-validation request.
+
+Read project_description.md §§2.2,4.1,5.1,6.7,7.3,8.2,10.6–10.8,12/M0-E/M2/M5,
+14.1; development/REQUIREMENTS.md R-004/R-006/R-008/R-040/R-054–R-060/R-092–R-094;
+D05 phase; existing domain.py, source.py, work_product.py, scientific.py and resources.py
+contracts and tests. Inspect actual predecessor helpers; do not invent existing APIs.
+Do not read the excluded failed B1 draft or unrelated old role conversations.
+
+Architect owns exact complete standalone names/signatures, fields, formats/version,
+closed vocabularies, known/unavailable semantics, independent bounds, errors/precedence,
+canonical identities and test cases before Writer work. Every replacement prescription
+must stand alone. Keep this milestone focused on pure declaration, not registry or
+execution. Only CWI Writer changes product code/tests/docs in its assigned worktree.
+
+## Required behavior and acceptance
+
+AC-TOOL-01 (R-004/R-008/R-055): Define an immutable, versioned, closed Tool-release
+manifest and bounded canonical codecs covering all seven §10.6 contract areas:
+identity/origin; invocation; scientific meaning; effects/authority; resources/recovery;
+evidence/limitations; reproducibility. Pin stable tool and release identities, exact
+local adapter/configuration and available implementation identity separately from
+human display labels. A manifest is a declaration, not a registered capability or
+proof of availability, execution, scientific validity or permission. Unknown and
+unavailable facts must be explicit and distinguishable from known empty/no-effect
+values. Detached objects establish local consistency only.
+
+AC-TOOL-02 (R-006/R-054/R-055/R-058): Support bundled, researcher-supplied and research-
+generated origins without requiring a specific solver, package, model, provider,
+backend or supplied tool set. Cover local programs/callables, remote services and
+optional composite workflows descriptively. Preserve pinned local artifact/record
+references using existing exact reference classes. For opaque/mutable services,
+retain reported version, adapter/configuration identity and explicit observability,
+replay/access/license limits; do not claim a local hash pins remote implementation.
+An inaccessible tool can still be described truthfully. There is no installation,
+import, dependency resolution, discovery, network or execution in these APIs.
+
+AC-TOOL-03 (R-055/R-056/R-057): Scientific-meaning fields retain actual supplied
+statements about equations/transformation, units/conventions, input/output domains,
+regimes, approximation/error claims, success meaning and known failures. Structured
+input/output interface descriptions are inert data; do not implement a universal
+schema language or interpret arbitrary code. Keep interface shape, claimed semantic
+behavior, supporting evidence and qualified applicability separate. A builder's
+statement or self-test reference cannot self-qualify a tool or promote its output.
+No default trusted/qualified/enabled flag, support status, current-version pointer
+or scientific inference is allowed. Relevant evidence/issue references are reported
+links pending later store authentication and assessment.
+
+AC-TOOL-04 (R-040/R-043/R-044/R-055/R-059/R-060): Record requested filesystem read/write
+scope, network destinations, credential references, external effects, child tools
+and model/delegated activity as declarations only. Keep credential references
+separate from credential material: require no secret and generate/store no credential.
+Describe time/compute/memory/storage/output/model bounds, cancellation/checkpointing,
+replay safety, uncertain completion and nested-accounting/visibility limits. Reuse
+existing dimension/unit/reference conventions where applicable. A claimed hard
+service ceiling and a monitored target are distinct; missing enforceability is
+visible, not silently upgraded. Declared zero/no delegation differs from unknown
+or unobserved activity. No declaration grants fresh resources, bypasses a future
+parent envelope or certifies descendants have stopped.
+
+AC-TOOL-05 (R-004/R-008/R-055/R-093): Exact canonical version-one representation,
+closed required fields, strict ordinary scalar types, valid Unicode, duplicate-field
+and nonfinite-number rejection, explicit reference/identity semantics, ordered
+collections and deterministic round-trip. Revalidate nested/exact classes and
+bypass-mutated retained values at every public consumption boundary; do not trust
+subclass methods or cached hashes. Use existing safe logical paths for any declared
+bundle entry paths, without opening them. Preserve inert authored Markdown/HTML,
+link/path-like text and descriptive commands; none can become operating policy or
+execute through decoding. New release content has a different canonical identity;
+no mutable global registry or replacement of old releases is introduced.
+
+AC-TOOL-06 (R-004/R-055/R-092): Bound complete wire input and canonical output,
+strings/collections/references, nodes/depth and reconstruction work before protected
+parse/copy/normalization/serialization. Choose explicit documented finite constants
+or independently supplied limits appropriate to this pure manifest, with no silent
+truncation or limit enlargement. Count complete escaped representations, repetitions
+and empty framing; reject cycles safely. Original embedded declarations cannot
+relax processing ceilings. Equality/one-unit-deficit tests and sentinels must exercise
+all independently consumed ceilings with valid complete manifests. Expected canonical
+sizes, Unicode lengths and container counts use independent test-local stdlib oracles,
+not solely production sizing helpers. Do not add a persistence/history/ledger/work
+planner or copy the failed output pipeline's accounting machinery into this slice.
+
+AC-TOOL-07 (R-055/R-057–R-059/R-092/R-094): Add meaningful tests for all three origins,
+local pinned artifacts, opaque remote-version limitations, optional nested activity,
+no supplied tools, genuinely missing information and deliberate known empty values.
+Exercise exact type/subclass/bool/float aliases, retained forgery, malformed and
+rehashed contradictions, identity/content changes, canonical stability, all seven
+contract areas, inert authored strings and relevant path/reference failures. Spy on
+filesystem/environment/process/model/network/tool access to establish pure APIs do
+not perform it. Do not invent a live invocation, a provider usage receipt, execution
+permission or scientific qualification. Preserve every existing test/helper/fixture/
+validator blob and mode (104paths); add new modules/helpers and retain all prior
+format, schema, migration, backup, CLI, source/view/report/resource/authority behavior.
+
+AC-TOOL-08 (R-007/R-055/R-093): A self-contained product/stdlib guide executed by new
+automated coverage constructs a substantive supplied/local and opaque remote release,
+round-trips the canonical forms, shows exact identity/reference/unknown fields and
+explains what a later registry/executor must verify. It imports no tests, requires no
+service/credential/package installation and executes no declared program. Document
+actual public APIs, format/version, errors/precedence, finite bounds, trust limits
+and later integration responsibilities. New/materially changed functions/classes
+need useful docstrings. Update relevant product indexes only; preserve administrative
+operating grants, current status, frozen request and acceptance rules.
+
+AC-TOOL-09 (R-007/R-092/R-093): Controller unchanged full validator and literal
+committed-base diff check at baseline/candidate/final, independent milestone/final
+reviews, final receipt, exact coordinator inspection/integration and full target
+validation remain mandatory. Writer advisory checks focus on new manifest/codec/
+bounds/guide tests; no whole-suite rerun by Reviewer. No test result alone establishes
+acceptance, integration, full D05/M0-E completion, interoperability or science.
+
+## Explicit scope and remaining obligations
+
+Allowed: focused pure product module(s), optional explicit package export, new
+unit/guide tests/helpers and product documentation/indexes. Existing domain helpers
+may be reused; avoid broad refactors and new type support in existing store/CLI/view/
+report/backup/resource/authority operations. No schema, dependency/build, runtime
+prompt, provider, service, backend, model execution or behavior-changing configuration.
+No registry, persistence engine, permission/qualification decision, execution adapter,
+task/attempt admission or real delegated job. No B1 draft reuse.
+
+D05 must later implement canonical typed registration/reference/immutable history,
+separate permission/qualification/lifecycle assessments and bounded actual isolated
+local execution/receipts/recovery. Optional composite qualification requires real
+selected-backend evidence before compatibility claims. D04 B1 remains blocked by
+exhausted Writer-deadline recovery; B2/008/009, all13original FOLLOWON criteria and
+broader queue/attempt/fencing/admission/isolation/context/model work remain mandatory.
+M0-S/live permissions, real scientific qualification/evaluation and human release
+judgments remain pending. All94requirements/specificationv1.4 are preserved.
+
+## Execution envelope
+
+Continuous36/100starts used64remain before launch; next37leaves63 including failed
+preflight. Commissioning1/3closed; CWIrepairs33, coordinatorrecoveries15,
+backendattempted/adopted/reverted2/2/0. Prescription/permission/interrupted-workflow
+salvage/Writer-deadline2/2 remain exhausted; all partial historical recovery counts
+persist. This independent first request is not a recovery/reset and has no license
+to adopt the timed-out draft. Cumulative reported lowerbound325277276input
+(298149632cached),3033096output(931105reasoning); five interrupted-role amounts,
+native backend audits/coordinator/quota/invoice remain unknown. Nested categories
+included. Existing ChatGPT development allowance only; no API/purchase/new service/
+data/live scientific/push/publication authority.
+
+After committing this request/prelaunch records, recheck clean literal main/base,
+quiescence and current pinned readiness. Start once through supported direct-child
+CWI with explicitgpt-6-astra/high (strict identity/unknown/bounds contracts),ceilingxhigh,
+one milestone, repairs2perreview6perrun,2700s per agent/check,FD4096,stable environment,
+clean backendb6a2e052 and pinnedCodex0.166.0/b8a11fed. No --merge. No old-run resume.
+Freeze two ordered checks, replacing the placeholder with the committed launch SHA:
+
+```text
+python3 -B implementation/scripts/validate.py
+git diff --check LITERAL_COMMITTED_LAUNCH_BASE HEAD --
+```
+
+No failed-draft context is needed. Keep the parent unchanged while active/base-bound.

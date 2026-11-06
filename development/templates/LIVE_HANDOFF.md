@@ -1,5 +1,7 @@
 # Local live observation
 
+Provides a reusable live handoff record format; placeholders are not execution evidence or authority.
+
 Store a working copy at `local/live.md`; do not commit it during an active CWI run. This is an observation, not recovery or acceptance authority.
 
 - Observed at: actual timestamp and timezone.
@@ -14,7 +16,7 @@ Store a working copy at `local/live.md`; do not commit it during an active CWI r
 
 On restart, verify these observations against CWI evidence and Git before acting. Transfer only safe, meaningful summaries into tracked records after the active source-binding constraints have ended.
 
-After a terminal, safely recorded checkpoint, the current `local/live.md` may become a concise pointer to `STATUS.md`, the effective grant and exact run record. Preserve its former detailed version under ignored `local/handoffs/` when shortening it. A live or base-bound run still needs the complete recovery details below.
+After a terminal, safely recorded checkpoint, keep a concise self-contained project/execution/remaining-work summary with links to STATUS, effective authority and the exact run record, following AGENTS.md §7. Preserve its former detailed version under ignored `local/handoffs/` when shortening it. A live or base-bound run still needs the complete recovery details below.
 
 ## Continuous-development additions
 

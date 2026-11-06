@@ -1,5 +1,7 @@
 # D06 — Single-researcher vertical slice
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 **State:** NOT_STARTED. This plan is a proposed scope, not execution evidence.
 
 **Goal:** Execute one bounded research investigation from seeds to a scoped candidate and an explicitly provisional synthesis.

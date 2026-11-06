@@ -1,5 +1,7 @@
 # REQ-Dxx-nnn — Bounded result
 
+Provides a reusable request record format; placeholders are not execution evidence or authority.
+
 **Phase:** Dxx. **Readiness:** PROPOSED. **Request revision:** source commit to be captured at launch.
 
 ## Goal and source requirements

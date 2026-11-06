@@ -1,0 +1,121 @@
+# REQ-D05-005 — Passive assessment persistence integrated
+
+Run `5bad636b-0ef8-4b3e-a448-8bc51d1f8249`; frozen request SHA256
+`617e543eb33714c41e18d8bdbfffd30f04d5a2b523543a3a488b1709673aa04a`.
+Launch base `f53642af6dbb2a1483d3f13aa23cb178254323ed`.
+Finally accepted and exactly integrated source
+`9f6cd1711450b8b1a73c0eee3a4ba70dd4c65fdb`, tree
+`eac404c7e61d663a9ddab3a4154f1e240da528eb`.
+Final receipt SHA256
+`1c598a1ba845198a431794b9c0b879770423a441996ef4a87158f72f5553270e`.
+Milestone receipt SHA256
+`45a8c0814ad953b589495b7c5fdb6cc674bd341aa75a5ebde896635ad8269c02`.
+
+## Delivered boundary
+
+The existing typed store admits passive ToolAssessment envelopes in mixed batches,
+checks exact assessed/replacement release pairing and complete immutable metadata
+history, and preserves bounded constrained/shallow roles, direct-artifact checks,
+CAS, atomic metadata and original-ID reconciliation. Selected typed inspection
+returns detached locally consistent content and checks direct artifacts; it does
+not certify historical admission, target/history validity, authentic attribution,
+current permission, qualification or execution. Creator and assessor remain distinct.
+The [persistence guide](../../docs/tool-assessment-persistence.md) has an executed
+self-contained product/stdlib example.
+
+Twenty paths changed: focused store/snapshot/helper implementation, five additive
+test/helper files, product documentation and indexes. All123 predecessor test/helper/
+fixture/validator blobs and Git modes remain exact, as do the pure assessment
+contracts and exposed evaluation fixture. Fifty new methods bring1276 to1326;
+128 test/helper/fixture/validator paths are protected next, excluding indexes.
+No schema, DDL, migration, backup, CLI, dependency, authority or runtime-prompt change.
+
+The coordinator checked the Designer's17 criteria against all8 request ACs and
+found no goal mismatch. Architect consultation was unnecessary. CWI owned the
+prescriptions, substantive implementation review and full validation; coordinator
+inspection used review/receipt/source metadata and integration safety, without
+routine Writer code/test/substantive-diff inspection or duplicate full checks.
+
+## Reviews, corrections and exact validation
+
+The initial milestone Reviewer requested three corrections despite passing tests:
+F001 complete control/request scratch accounting, F002 assessment-specific scalar
+errors, and F003 owner/relationship context on historical shallow-read failures.
+The first CWI repair added boundary regressions. Fresh milestone review accepted
+all17 criteria, explicitly closed F001–3 and created no new findings.
+
+Initial final review then found F004: Source predecessor content parsing and a
+supplied-reader reconstruction could precede required scratch reservation. The
+second CWI repair corrected ordering and added two regressions. Fresh final review
+explicitly closed F004 and accepted the complete change, with no retained/new
+findings or obligations. Earlier failed reviews and source identities remain intact.
+
+| Stage | Successful/discovered | Validator seconds |
+| --- | --- | --- |
+| Baseline | 1276/1276 | 994.401890 |
+| Initial candidate | 1313/1313 | 995.361484 |
+| Milestone repair | 1324/1324 | 986.044321 |
+| Initial final check | 1324/1324 | 1002.712892 |
+| Final-review repair / accepted source | 1326/1326 | 1001.255034 |
+| Integrated target | 1326/1326 | 1002.703616 |
+
+Every stage passed both frozen ordered commands: permanent full validator and
+`git diff --check f53642af6dbb2a1483d3f13aa23cb178254323ed HEAD --`.
+All had zero skipped/expected-failure/failure/error/unexpected-success outcomes
+and no source mutation. All1326 final/target dispositions match; all1276 baseline
+IDs remain. Full checks ran against their executing worktree's source.
+
+## Acceptance and integration
+
+CWI exited0 at2026-11-04T23:01:34.102232Z. Native status/diagnose verified final
+acceptance, complete recording, no provisional source, open finding/obligation,
+in-flight operation, lease, quarantine or recovery condition. Final review binds
+the exact source, request, two results, milestone receipt and complete base-to-final
+diff `artifacts/diffs/final-2.patch`, SHA256
+`8da833f5d868237d8d8d74570cfb314af1d11dfcaca637ed6b02fed233ad6a98`.
+Referenced evidence was rehashed. Terminal state clears a transient diff field;
+the coordinator verified the retained artifact through its receipt-bound digest.
+An absolute frozen executable identity was hashed separately from relative artifact
+paths. These read-only audit-helper corrections changed no evidence/source and
+consumed no recovery.
+
+Exact branch/base/cleanliness, source commit/tree, run ref/worktree, two-commit
+accepted ancestry, protected blobs/modes, formatting, hooks, attributes and ignored
+collisions passed. Host inspection found no surviving controller/role/validator.
+Exact fast-forward completed2026-11-04T23:04:32.602262Z before tracked checkpoint edits.
+Required target validation exited0 at2026-11-04T23:21:42.462651Z, empty stderr,
+unchanged clean source, both commands passed. Stdout SHA256
+`f056150fc5670b11cb634c6144ee0c88306bc3a2f2da78727b537e6244ca433b`.
+Post-target host inspection again found no execution owner. CWI's historical
+ACCEPTED_UNMERGED label remains unchanged after external integration.
+
+## Configuration, resources and continuation
+
+Clean backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`, Codex0.166.0/executable
+SHA256b8a11fed, stable mapb674ef72, validation environment46f63a41, FD4096,
+one milestone, repairs2perreview6perrun,2700-second invocation/check deadlines,
+two ordered checks and no--merge remained fixed. All11 actual invocations match
+Designer gpt-6-astra/xhigh, Architect gpt-6.1-sol/xhigh, Writer/Reviewer
+gpt-6.1-sol/high. No server effective-model attestation or remaining-quota claim.
+No installation/auth/config/provider/security/backend change or historical migration.
+
+Continuous start41/100 consumed;59remain. Commissioning1/3closed. Two CWI product
+repairs, zero coordinator recoveries/protocol corrections/infrastructure retries/
+backend attempts. Cumulative CWIrepairs37,coordinator15,backend3/3/0. Eleven completed
+turns add25,792,371input(24,459,904cached),208,911output(109,845reasoning) once at
+this checkpoint. Cumulative lowerbound372,028,424input(341,310,080cached),3,534,084output
+(1,121,844reasoning),328known turns. Nested categories included; five older
+interrupted roles/native backend/coordinator/quota/invoice liabilities unknown.
+No API/purchase/new service/data/live/scientific/push/publication authority added.
+
+All42 retained runs are terminal:30 final receipts,29 integrated exact sources,
+one validator acceptance deliberately superseded,12 incomplete histories. Historical
+recording findings remain preserved; no pending integration exists. D02/D03/D04/
+D05/M0-E/product remain partial. B013deadline2/2, D04B1/B2/008/009,all13FOLLOWON
+criteria,all94 requirements and scientific/live/human obligations persist.
+No failed B1 source was used. Local evidence: `local/attempts/D05-005-attempt-001/`;
+canonical CWI evidence remains backend-owned.
+
+[REQ-D05-006](../requests/REQ-D05-006.md) is READY/unlaunched for a passive Tool CLI.
+The long reconstruction/two-repair session reaches a context checkpoint; CONTINUOUS
+persists without an installed restart supervisor. STATUS owns one next safe action.

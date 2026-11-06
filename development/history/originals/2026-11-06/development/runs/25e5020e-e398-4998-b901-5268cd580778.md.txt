@@ -1,0 +1,65 @@
+# REQ-D02-004-R1 schema evolution — 25e5020e-e398-4998-b901-5268cd580778
+
+## Identity and outcome
+
+| Field | Observed value |
+| --- | --- |
+| Request / attempt | REQ-D02-004-R1 / D02-004-attempt-002; continuous start 6/50 |
+| Specification / authority | v1.4 SHA-256 fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f; AUTH revision 4 |
+| Request base / target | af2d97ae48c2edb72e87fb4a1e21cea29d9685f3 / main |
+| Request SHA-256 | e99fc43dc5a3180a5eea30937030021fe331774f98a1cb33845f3ce456346a36 |
+| Backend / model | Clean unchanged 1f68060b5a5a9964c91811a53d3a515e0b01a073; gpt-6-astra/high frozen; unchanged Codex 0.166.0 and launch environment |
+| Start / return | 2026-10-30T12:30:18Z / 13:03:23Z; exit 0 |
+| Final CWI state | ACCEPTED_UNMERGED; 2/2 milestones, no repairs, open findings/obligations, owners, quarantine, provisional source or recording gaps |
+| Accepted / integrated | 06fc13396b24933f51d2054bd3e495bf6a7b3845 |
+| Accepted tree | d05c0760e54d13a81fa53b8fad5c1962e43097e2 |
+| Integration | Coordinator exact fast-forward on main at 13:04:43Z; no intervening tracked commit |
+| Target validation | 169/169, zero skips/failures/errors, 40.027s; clean source |
+| Documentation checkpoint | Subsequent administrative commit containing this record, outside product acceptance |
+
+## Scope and executed evidence
+
+Seventeen product files, 1,780 insertions/175 deletions. Schema 2 admits all twenty generic core envelope kinds; the fifteen additions have null canonical states and no authority. Fixed schema-1 DDL, old-kind append/retry, typed history and backup format 1 remain supported without rewriting. Strict version registry and backup pairs distinguish (1,1) and (2,2); default restoration preserves original metadata bytes/version.
+
+Explicit restore with ordinary integer target_schema=2 and CreationProvenance verifies a v1 backup before reserving an absent destination. It transforms only the private copy transactionally under the durable incomplete marker, preserving all seven historical tables and original requests, receipts, events and attribution. Changed tables/trigger use registered v2 DDL; a separate singleton history binds the canonical source manifest (including metadata digest/size), backup identity and caller attribution. Full schema/FK/application/history and artifact checks precede publication. Failed/interrupted copies remain refused; post-publication acknowledgment uncertainty remains explicit.
+
+| Criterion | Inspected substantive evidence |
+| --- | --- |
+| AC-EVOLVE-01 | Twenty-kind cyclic/forward-link graph, append/CAS failures, state separation and unchanged four typed codecs with generic inputs |
+| AC-EVOLVE-02 | Independent literal v1 DDL and manually seeded historical requests; old operations and canonical identities retained; new-kind/unknown/altered-DDL rejection without writes |
+| AC-EVOLVE-03 | Strict dual backup formats, actual metadata cross-checks, historical invariants and deliberately rehashed malformed history rejected; original regression tests rerun on authentic legacy stores |
+| AC-EVOLVE-04 | All seven original table values preserved; fresh-process retry/append/new kinds, unchanged source bytes, independent inodes, v2 recapture/exact restore with original events 11/22/33/44/55 and history |
+| AC-EVOLVE-05 | Real mid-DDL exception rollback and abrupt process exits; hot journal retained under incomplete marker; fresh public opens refuse without recovery/mutation; actual sync/marker faults and real post-COMMIT lost acknowledgment across migration |
+| AC-EVOLVE-06 | Exact documented synthetic migration example executed by full suite; independent milestone/final reviews; unchanged permanent validator and oscillator fixture |
+
+Exact baseline 116/116; milestone one 159/159; milestone two/final/integrated target 169/169. Compared with baseline, 21 new test methods and 32 additional executions of legacy storage/backup regression cases contribute 53 suite executions; do not call them 53 distinct new methods. Final check 40.017s, source_mutated false, timed_out false. No skips, expected failures, missing tests or relaxed assertions. Existing unsupported-version tests now use 99 because 2 is supported, with substantive independent v1/crossed-version coverage retained.
+
+The diagnosed Writer/controller validation-context mismatch is resolved by this bounded replacement, with every product check/security/environment unchanged. The failed run 9af6f133 and its passing controller baseline remain preserved and nonresumable. Known Writer-local literal-/tmp limitations remained advisory; actual controller checks and the host post-integration check are the execution evidence. No backend repair or permission expansion occurred. A transient read-only status crossed the running final review and was reread after completion; final status/diagnose have no uncertainty and require no recovery.
+
+## Evidence identities
+
+Paths are relative to the retained account CWI run directory. Local launch/report/guards/usage and source-read evidence remain in local/attempts/D02-004-attempt-002; Git alone does not preserve these local files.
+
+| Evidence | SHA-256 or identity |
+| --- | --- |
+| First accepted source | 62bfc38cbd5f3a8fb5fb842e3f6a43f4696548fc; tree 499a59b7045dee81bffd0945a7b803a71beb58c7 |
+| artifacts/receipts/milestone-versioned-core-and-backups.json | 369b8165b78924ef50a7ae538af18dedb948da409dcdd6cc459dcd621a467b1a |
+| artifacts/receipts/milestone-verified-restore-migration.json | c4e2b058eb71b418e8c2d981924abe9aab1ca7a5e7ca0489e0e2d8a824ae156d |
+| artifacts/receipts/final.json | c96fe5869358c030a25d74350fa3f5167fdb85602aaafbf905d5c88e56818454 |
+| artifacts/validation/validation-27004934-c1ca-4308-aa04-4cc327949006.json | 1d93436d97189ada7debdc294be1c2243a7be8bfae6fe15b1156d5120b07cae7 |
+| Same validation .stdout | 1c7a5041947bbf21616ff7525c01e418455d796dbe7598f843e9a210a3448ceb |
+| artifacts/diffs/final-0.patch | 95e23303a371a6e1ba61fd5295d158a2398092cf0f727f7bd6665b9151579256 |
+| Final reviewer 726474fd-bd86-46fe-9752-ef403ec9be81 | 60d25d83ced7888a6487eb2d536639e2ad4c8de772ec54dd2003fa66b214f8fb |
+| Local post-integration-validation.log | 26ff8c15c955c81b25874b809d0fd8db814cb67034c521fdb4e29fad67f6e5ed |
+
+Linked receipt/review/validation digests, final diff and source/tree were checked against bytes. Complete changed source/tests/docs were inspected. Parent main stayed exactly at af2d97a until authorized fast-forward, clean candidate, exact ancestry, no new-path collision or active hooks. Backend/spec/Codex hashes unchanged. No controller state or historical receipt was edited. Historical ACCEPTED_UNMERGED accurately describes CWI's no-merge outcome; external integration is separately recorded here.
+
+## Consumption and remaining scope
+
+Eight invocations: 4,669,107 input (4,057,344 cached), 58,890 output (12,538 reasoning). Seven-run cumulative telemetry: 17,698,356 input (14,992,384 cached), 303,618 output (56,260 reasoning). Nested categories are not additional charges or an invoice. Quota/account monetary liabilities remain unknown; existing ChatGPT allowance only, no API cap.
+
+Commissioning 1/3, continuous 6/50 (44 remain); CWI product repairs 1 cumulative; coordinator recovery 1 for the validation-context mismatch; backend candidates 0. This run consumed no repairs, protocol corrections or infrastructure retries. The correction's successful result does not reset the cumulative recovery count or same-blocker limit.
+
+R-008/R-019 gain partial generic-kind/migration evidence. Full typed operational/review records, assessment/eligibility freshness, authority/fencing/resources, periodic backups and full run/session/job recovery remain pending. M0-E overall, M0-S/R-001–R-003, D02 and the full research product remain incomplete. No scientific pilot, expert audit, actual scientific calculation, held-out evidence or live qualification is claimed.
+
+**Exactly one next safe action:** prepare and commit REQ-D02-005 for typed attributed review/issue records and durable exact admission, as a prerequisite to assessment/eligibility state transitions.

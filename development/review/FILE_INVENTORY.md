@@ -1,5 +1,7 @@
 # Complete supplied-file inventory
 
+Preserves historical backend inspection or verification evidence and its original limitations.
+
 Every regular archive member is listed below. All text files were decoded/inventoried; Python modules were parsed into a static index of imports, top-level symbols, docstrings and test methods. Integration-critical control paths, CLI, prompts, configuration, state/recovery, validation, Git operations and associated tests received detailed behavior review. This coverage is not a claim of a line-by-line correctness proof or complete security review.
 
 The archive contains 98 regular files and 50,420 text lines. SHA-256 identities below describe the original contents; those hashes remained unchanged after test execution. Directory entries are not counted as files. The archive has no independent remote-history attestation.

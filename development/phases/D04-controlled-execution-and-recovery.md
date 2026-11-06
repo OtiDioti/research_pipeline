@@ -1,5 +1,7 @@
 # D04 — Controlled execution and recovery
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 ## Task-contract interruption — 2026-11-05
 
 [REQ-D04-010/run 8cef23e2](../runs/8cef23e2-42cf-4580-b7f3-8d29520fccf7.md) stopped incomplete after controller loss during Writer work. The orphaned Writer exited; its 17 changed files are preserved locally as unaccepted evidence. No validation, review, receipt, integration, Task-specification credit or D04 acceptance box follows. CWI forbids resume and reports later final-response digest mismatch. The existing interrupted-workflow salvage allowance 2/2 is exhausted; no third draft-adoption workflow is authorized. Task contracts, typed persistence, queue/attempt/fencing/admission, isolation and original FOLLOWON01–13 remain mandatory. Independent engineering may proceed from the clean integrated product without consuming this draft.

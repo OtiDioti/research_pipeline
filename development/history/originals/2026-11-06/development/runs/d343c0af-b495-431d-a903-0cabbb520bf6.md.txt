@@ -1,0 +1,45 @@
+# REQ-D04-002-R1 — Capture accepted; publication Writer timeout
+
+## Terminal disposition
+
+Continuous start21/50, launched2026-11-02T06:26:35.967186Z, returned exit1 at08:15:13.435109Z. Base main5c98fbfea0e875938e02c1412c936c98febc9817, tree57fd919bd5bdaafc10d7cca59ec26847275024db, remained unchanged/clean through terminal reconciliation. Frozen gpt-6-astra/high, two milestones,2 repairs/review,6/run,2700-second agent/check deadlines,4096/1048576 descriptors; no --merge. Backend1f68060b5a5a9964c91811a53d3a515e0b01a073 and Codex0.166.0 unchanged.
+
+CWI STOPPED_INCOMPLETE/INCOMPLETE,1/2 milestones accepted, no final receipt, resume_allowed=false, recovery_action=new_run_after_manual_salvage. Publication Writer96872b35-de36-432a-882c-ec633fad00d3 started07:30:12.692564Z, timed out2700 seconds later with exit-15 after changes. No second-milestone controller candidate/validation/review exists. Capture accepted_head is not final acceptance and was not integrated. Last integrated product remains b13fff0a2e26acba9b4b9bad3dde430207e4eaab.
+
+Status/diagnose verify frozen evidence, no recording gaps/open findings/obligations, no lease/quarantine/in-flight operation. Host inspection08:17:12.882418Z: controller1188891 and wrapper1188884 absent, no process with this run's worktree cwd/argument remains. Preserve all controller state/logs/index/worktree; no resume, cleanup or altered refs. Terminal status/diagnose/process evidence and exact final index listing are under local/attempts/D04-002-R1-attempt-001/ and D04-002-R2-attempt-001/.
+
+## Capture milestone evidence and repair
+
+Baseline778/778 in496.988s, stdoutSHA25685038efb5537342264d0b92357bcb19666f794f1d48129cf397848deca44c760. First candidatec137e748bfc137b1aced499f22f9f4744cb70d79 passed809/809 in531.303s, stdoutSHA256eba6b6d8db840619b4785b5f323da7609d3d94993d7abad35bdba09412a07d82; complete-base diff passed. ReviewerF-001 found valid32-container request provenance requires33 in the commit-result wrapper. The CWI repair retained request32 and observation40 limits, allowed exactly33 result depth, and added successful capture/codec/retry/reopen boundary and overflow rejection tests.
+
+Capture milestone accepted adb1b43953d1993be963911adbc899f646250cc6, tree1a1eae377bd4c6bf8ba1b3d6f484a462fe097f6d. Controller811/811 in533.329s, ended07:20:29.233926Z, stdoutSHA256d121c4953fddba7a9cf66c7809da9a2526ff0a323ddf5f927f7c1b320d47ce80; check2 passed; no source mutation. Reviewer6f72f3d7-4772-4d53-914f-2873cb096e53 accepted all10 milestone criteria, resolvedF-001. All59 existing test/validator blobs remained unchanged in the first capture candidate.
+
+| Immutable evidence relative to retained run | SHA-256 |
+| --- | --- |
+| artifacts/receipts/milestone-committed-report-capture.json | 3277ba4bd016788b58fe9411ef40ad09cb4812dc624cfe365b4f7a9dda307004 |
+| artifacts/validation/validation-9008ddf5-bbe1-48eb-ae00-49237b312e41.json | a13070315045693ea339fe2638ec427f4f699acf39d3ee84a6b2c47f81d2352d |
+| artifacts/validation/validation-13b94666-a6bb-49c7-8a9f-81fff084a100.json | 7994aad98ff5e56e71af3e3b45cf48c0e99879346f8ee860a5e60f73dabede30 |
+| capture acceptance Reviewer response | a4462bfea75b3f99dcea57d8a8abc26f67849dfc07daa4bc6e64815dea7c5f81 |
+| publication Architect response | 7ef5c26974c605457803d45ae5de5472b5101882cd9d8b8fb0e90b00690190ca |
+
+Local milestone1-acceptance-audit.json verifies receipt/supporting artifacts/source/request/criteria. Frozen requestSHA2566781b3b37282a29c222bee32538bc5508a79b005fbc64fb84fd5cec9acf737b2; configuration0574d9da2a1bbcf7aa9bcf917b8a27d7004e27d092a7317dfd3d7ed05c71b0ac; validationprofilebc6588364824de43de1b33109c561ea6e2991491c50c7c71487def0fb4ce52e9; launch environment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09. Actual live Reviewer argv/executable confirmed gpt-6-astra/high; no self-report used as model proof.
+
+## Unaccepted publication and failed checks
+
+Retained draft adds explicit compatible report/readable-plan v2, exact complete history preparation, reports/runs/<actual-run-id>/<revision> paths, home/evidence navigation, protected offline publication/refresh inspection/recovery, late-usage publication and an executed example. These are implemented draft claims, not accepted product guarantees. Existing v1 identities are retained by a historical fixture. New guard tests were added after the first full publication advisory run.
+
+Failures remain recorded: initial27 report tests had one literal-spacing assertion failure, repaired; capture advisory809 tests581 successful52 failures181 errors; capture-repair advisory811 tests583 successful52 failures181 errors. Publication targeted40 tests initially had18 errors; a transient syntax error and ASCII fixture-decoding error were corrected; guide timed out at180 seconds, then passed193.279s with600-second subprocess limit. Full publication advisory826 tests in681.784s:598 successful52 failures181 errors,zero skips,48 report-test lines ok. Later17 focused publication tests passed83.085s, including two additional ancestor/control guards. A second full advisory suite remained incomplete at the Writer deadline. No controller validation exists for publication. Known restricted tmp/source/socket failures do not establish that every failure is environmental; no failures were waived.
+
+Full advisory output hashes: first capture2e05865b0711bfae2b3b04309c084457e812bdfaa203ce002bb811db43b6e08d; capture repair099ae61f281540eb51d39d1b406b5bc04b59d49aaff125bf8293e88bf4499e8b; first publicationf3fcad42985d0f9a63333c8e691ec7ad3d34d5e249ef97219cc43bb72e73cb4b. Transport retains failed attempts and incomplete second suite; no missing successful result is invented.
+
+Terminal index includes256 generated example files under committed-report-example-ketb0jap and implementation/.writer-validation.log (the latter has trailing whitespace), plus intended product changes. Old index/worktree remain untouched. Selectively preserved26 intended files854,550 bytes in the next request's ignored context, each hashed in candidate-files.json; exact product-only patchSHA256500d12846815c0e9f502bf1f95d9b63ea9ea4aa503d998757d82a966347eb6db. No scratch/log/database is a candidate fixture. The deliberate fixtures/report_v1.json remains.
+
+After quiescence a disposable real-store coordinator probe confirmed a draft bug: normal preparation succeeds with caller max_record_bytes=max_metadata_bytes1,000,000, but corrupt actual revision content2,000,014 bytes is decoded by _metadata_envelope before ReportIntegrityError. Exact report_capture.py SHA2563f3c1b4b55018bbe6cdcf3bb5d1c69918a1cf9ed28f3a0b067b73e4b975e40f7. The original-size-times-three reservation cannot bound corrupt actual metadata. Evidence local/attempts/D04-002-R2-attempt-001/metadata-bound-probe.json. No product code/test file was edited by the coordinator. Fresh CWI request must repair actual row/link/audit preflights and add meaningful regressions.
+
+## Consumption and next action
+
+One CWI product repair consumed; cumulative20. Continuous21/50 used,29 remain. Eight completed roles report13,001,443 input (11,723,520 cached),49,634 output (15,392 reasoning); timed-out publication Writer has no completed usage receipt and remains unknown. Cumulative reported lower bound199,671,005 input (183,008,000 cached),1,931,202 output (569,524 reasoning), plus three unknown old/current interrupted roles. Nested telemetry is included, quota/invoice unknown. No API/service/product-live/scientific authority expansion.
+
+Preparing REQ-D04-002-R2 consumes recovery2/2 for Writer deadline exhaustion, cumulative coordinator recoveries6. Historical46114120 consumed the first; renaming requests does not reset it. New evidence supports one-milestone reuse of the nearly complete draft, focused metadata repair and targeted advisory testing, while retaining full controller checks/review. No higher deadline, backend change or test waiver. Backend attempted/adopted/reverted0/0/0.22 retained runs:17 finally accepted/integrated,5 terminal incomplete. R-051–R-053/D04 remain partial; automatic lifecycle/report gates and scientific/live qualification remain outstanding.
+
+Exactly one next safe action: after committing the clean administrative request baseline, launch REQ-D04-002-R2 once through CWI with its frozen reference and both exact checks; count start22/50 before invocation.

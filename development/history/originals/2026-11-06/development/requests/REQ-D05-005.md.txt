@@ -1,0 +1,175 @@
+# REQ-D05-005 — Transactional passive Tool-assessment persistence
+
+**READY; one bounded milestone.**
+Only the delegated CWI Writer changes product implementation.
+
+## Outcome and evidenced dependencies
+
+Extend the existing RecordStore typed submission and selected inspection boundary
+to the accepted passive ToolAssessment contract. Reuse its pure codecs/envelopes,
+the existing canonical metadata/artifact transaction and original-ID recovery.
+This supplies persistence and exact target/release pairing, not authenticated
+permission, qualification credit, current lifecycle selection or execution.
+
+REQ-D05-004/run2b89ca22-5cae-4535-aa48-c16d07b3cff6 finally accepted exact
+150aa0ee3e9e5611c77eeb714f18b8484578235c,tree4229eb65f10367679bd080560e15ceec72a9e51e,
+final receiptSHA25643dd7b1cafa532949c4f28770bae437c19c6fdea768144915e41c5b2c98d8ff6.
+Candidate/final1276/1276,zero other outcomes/mutation and both frozen checks passed;
+all15milestone criteria and final whole-change review accepted with no findings.
+Its integrated target passed 1276/1276 in 991.977131 seconds, with zero other
+outcomes or mutation and identical final/target per-test dispositions. Target
+completed 2026-11-04T19:54:35.010598Z; stdout SHA256
+e161f3f8cd020dfd55f3f62ae5e845e1ac0aaa6a96b8a719a92387a07cda5312, empty stderr.
+
+Read specification v1.4 §§2.2,4.1,5.1/5.4/5.5,7.3,9.1–9.3,10.1,10.6–10.8/M0-E;
+development/REQUIREMENTS.md,D05phase,docs/tool-assessments.md,docs/tool-releases.md,
+existing store/snapshot/persistence guides and actual corresponding APIs/tests.
+Reuse tool_assessment.py,tool_assessment_codec.py,tool_assessment_envelope.py,
+ToolRelease envelopes and existing scientific/assessment/reference contracts.
+Architect must prescribe a complete standalone dispatch/role/history/error/limit/
+transaction/recovery contract before Writer implementation. Do not invent APIs.
+
+Choose the existing transaction over a parallel registry or new admission ledger.
+A separate authority/enablement layer remains mandatory later; coupling it here
+would obscure the distinction between passive data and authenticated decisions.
+No failed D04B1 draft, exhausted recovery or new scientific judgment is consumed.
+
+## Acceptance criteria
+
+AC-APERSIST-01 (R-004/R-008/R-016/R-055/R-057): Existing typed submission and selected
+typed inspection admit/reconstruct tool_assessment using the exact accepted pure
+contract. Generic submission remains generic. Snapshot classification may recognize
+locally consistent typed content but must not certify historic typed admission,
+authentic assessor identity, a granted permission or an executed/qualified check.
+Creator provenance and reported assessor attribution remain separate. No schema,
+DDL, migration, backup-format, pure-content-format or parallel registry change.
+
+AC-APERSIST-02 (R-008/R-055/R-057/R-058): In the same metadata transaction as
+submission, resolve each assessment’s exact target ToolRelease revision and check
+that its declared release_id agrees with that target’s canonically stored or same-batch
+proposed ToolRelease content. Structural decoding does not certify historical
+typed admission.
+Use the existing proposed overlay and connection-owned constrained validation;
+do not substitute current heads, perform independent reads that race the commit,
+or infer matching releases from actor names, timestamps or hashes alone.
+Explicit new assessment revisions retain their exact own targets; never transfer
+a pass or decision silently to a different release/environment.
+
+AC-APERSIST-03 (R-004/R-008/R-016/R-055): Architect fixes a complete ordered role
+matrix covering every accepted assessment reference/artifact slot. Preserve exact
+projections, target kinds, occurrence order and first-digest artifact accounting.
+The assessed ToolRelease is constrained through existing release validation.
+Other evidence/review/issue/decision/environment/dependency/replacement slots use
+explicit proportionate constrained or shallow checks justified by their existing
+contracts, without treating a generic payload as an authenticated receipt or
+policy. Every required target must exist as the exact declared kind/revision.
+No relationship confers permission, scientific sufficiency or qualification credit.
+ToolRelease reported_qualification links remain shallow and confer no such credit.
+
+AC-APERSIST-04 (R-008/R-017/R-018/R-058): Validate the complete immutable metadata
+predecessor history of each submitted or constrained-reached ToolAssessment under
+the same transaction. Missing revisions, malformed content/provenance, inconsistent
+identity/projections and invalid historical target/release pairings fail closed.
+Historical target validation is pinned to those revisions, not current heads.
+Preserve cycles allowed by existing descriptive shallow contracts and terminate
+constrained traversal with exact cached identities; cache hits cannot hide role,
+kind, history or equality failures. Do not read transitive artifact bytes merely
+to traverse metadata history or manufacture a historical admission certificate.
+
+AC-APERSIST-05 (R-017/R-018/R-055/R-092): Reuse existing direct artifact presence/
+size/hash synchronization, placement-before-metadata ordering, expected-head CAS,
+atomic rollback and commit receipt/event behavior. Preserve exact original-ID
+reconciliation after required local decoding and before fresh availability/CAS.
+An identical generic-original acknowledgement remains an acknowledgement, not
+retroactive typed certification. Conflicting duplicates fail without new effects.
+No auth, environment, filesystem, clock or remote discovery fills passive content.
+
+AC-APERSIST-06 (R-004/R-007/R-055/R-092): Revalidate exact inputs/receivers and
+retained forgeries at public boundaries with existing explicit finite caller
+limits. Preserve pure codec limits, error identities/precedence, canonical bytes
+and preallocation guards; do not expand smaller caller limits or dispatch hostile
+serializers, iteration or metaclass hooks. Architect explicitly fixes new bounded
+history/closure accounting and ordering before protected copying/traversal, if
+needed, reusing existing store bounds rather than inventing an unbounded graph.
+
+AC-APERSIST-07 (R-007/R-017/R-018/R-055/R-057/R-058/R-092): Meaningful new tests
+use actual SQLite/artifact stores and substantive mixed assessment fixtures.
+Cover target/release agreement and mismatch, all role slots with independent
+expected projections, proposed forward references, invalid hidden history,
+wrong/missing kinds/revisions, descriptive cycles, cache-hit ordering, corruption
+and missing/size-conflicting direct artifacts, schema gates, rollback, two-connection
+CAS/serialization and real process exit after COMMIT followed by original-ID recovery.
+Test creator/assessor distinction and generic lookalike/original acknowledgements
+without retroactive authenticity. Retain every current test/helper/fixture/validator
+blob/mode (123paths,excluding navigation FOLDER_CONTENT.md) and all1276tests.
+Do not weaken tests or safety guards, skip adverse paths, or claim scientific validity.
+
+AC-APERSIST-08 (R-007/R-055/R-057/R-093): Add a focused public persistence guide
+and execute its delimited self-contained product/stdlib example through new tests.
+Use real temporary private stores with explicit safe input modes and exact supplied
+provenance, a substantive assessment and target release, real typed commit/reopen
+inspection/original-ID recovery, and refusal of a mismatched release pairing.
+Import no tests; require no credentials, services or assessed-tool execution.
+Explain local consistency versus historical admission and all remaining
+authentication/permission/qualification/execution duties. Add useful docstrings
+to new/materially changed definitions and maintain affected documentation/indexes.
+
+## Scope and unchanged gates
+
+Allowed: focused existing store/snapshot dispatch and necessary connection-owned
+helpers, new tests/helpers, a new persistence guide and necessary product indexes.
+Predecessor pure contracts are imported unchanged; only an essential explicitly
+prescribed import/type export may change without altering behavior.
+
+No predecessor tests/helpers/fixtures/validator edits except navigation index
+maintenance; no schema/DDL/migration/backup/CLI/dependency/build/runtime-prompt,
+resource-ledger, authority grant, lifecycle enforcement, worker admission, provider,
+backend or scientific-product policy change. No failed B1 source. Backward
+compatibility is not required for obsolete paths, while current required behavior,
+safety, historical evidence and unfinished-run recovery remain protected.
+
+D04B1/B2/008/009,all13FOLLOWONcriteria,all94requirements,M0-E completeness,
+M0-S/live resources, authenticated scoped enablement/withdrawal, actual isolated
+execution/receipts/recovery and human scientific/release acceptance remain mandatory.
+No phase/product completion or permission follows from this passive persistence.
+
+Controller-owned full baseline/candidate/final checks and independent milestone/
+final reviews remain. Coordinator checks Designer goal understanding, consults
+Architect only when necessary, and verifies acceptance evidence/Git identities/
+integration safety without routine Writer artifact inspection or duplicate checks.
+Required full target validation follows exact authorized integration.
+
+## Execution envelope
+
+AUTH-2026-10-30-001 revision 7 CONTINUOUS persists. Before this next start, 40/100
+continuous starts are used and 60 remain; attempted start 41 leaves 59, including
+a failed preflight.
+Commissioning1/3closed,CWIrepairs35,coordinator15,backend3/3/0; all prior consumed/
+exhausted families persist,especially B013deadline2/2. No new recovery, API spending,
+purchase/service/data/live/scientific/push/publication/deployment authority.
+Current source/receipt/target evidence and exact usage are recorded in the preceding
+run checkpoint; session replacement resets nothing.
+
+Use clean backendbcb7ad24f83ff5193345f3d4fa72122ea53a4e66,pinnedCodex0.166.0,
+stable launch map,FD4096,one milestone,repairs2perreview6perrun,2700seconds per
+agent/check,no--merge. Fresh readiness and a clean committed baseline precede launch.
+All eight role flags are required, immutable in schema2, with ceilingxhigh:
+
+```text
+--designer-model gpt-6-astra --designer-reasoning xhigh
+--architect-model gpt-6.1-sol --architect-reasoning xhigh
+--writer-model gpt-6.1-sol --writer-reasoning high
+--reviewer-model gpt-6.1-sol --reviewer-reasoning high
+```
+
+Freeze the two ordered checks with the actual committed launch-base SHA:
+
+```text
+python3 -B implementation/scripts/validate.py
+git diff --check LITERAL_COMMITTED_LAUNCH_BASE HEAD --
+```
+
+Keep tracked parent/backend/environment fixed while active or base-bound.
+Reconcile final acceptance, exact integration, target evidence and records before
+subsequent work. Maintain applicable FOLDER_CONTENT.md indexes only within the
+authorized affected directories. No automatic session restart is installed.

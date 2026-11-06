@@ -1,5 +1,7 @@
 # Development phase plans
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress.
+
 One outcome-oriented plan per phase. These files define scope and acceptance obligations; STATUS is the current checkpoint. Detailed coding requests are prepared when dependencies are ready.
 
 - [D00 — Specification and operating readiness](D00-specification-and-operating-readiness.md)

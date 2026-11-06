@@ -1,0 +1,59 @@
+# Directory contents
+
+Lists immediate project-controlled children and their purpose; use this index to select relevant files.
+
+- [001-pid-fixture-reliability-accepted-and-integrated--2026-11-06.md](001-pid-fixture-reliability-accepted-and-integrated--2026-11-06.md) — Recorded evidence: PID-fixture reliability accepted and integrated — 2026-11-06.
+- [002-current-baseline-reliability-limitation--2026-11-06.md](002-current-baseline-reliability-limitation--2026-11-06.md) — Recorded evidence: Current baseline reliability limitation — 2026-11-06.
+- [003-currenthistory-claim-use-cli-partial-engineering-evidence--2026-11-06.md](003-currenthistory-claim-use-cli-partial-engineering-evidence--2026-11-06.md) — Recorded evidence: Current/history claim-use CLI partial engineering evidence — 2026-11-06.
+- [004-support-context-freshness-partial-engineering-evidence--2026-11-06.md](004-support-context-freshness-partial-engineering-evidence--2026-11-06.md) — Recorded evidence: Support-context freshness partial engineering evidence — 2026-11-06.
+- [005-target-context-freshness-partial-engineering-evidence--2026-11-05.md](005-target-context-freshness-partial-engineering-evidence--2026-11-05.md) — Recorded evidence: Target-context freshness partial engineering evidence — 2026-11-05.
+- [006-target-context-interruption-and-approved-replacement--2026-11-05.md](006-target-context-interruption-and-approved-replacement--2026-11-05.md) — Recorded evidence: Target-context interruption and approved replacement — 2026-11-05.
+- [007-policy-freshness-partial-engineering-evidence--2026-11-05.md](007-policy-freshness-partial-engineering-evidence--2026-11-05.md) — Recorded evidence: Policy freshness partial engineering evidence — 2026-11-05.
+- [008-claim-use-freshness-partial-engineering-evidence--2026-11-05.md](008-claim-use-freshness-partial-engineering-evidence--2026-11-05.md) — Recorded evidence: Claim-use freshness partial engineering evidence — 2026-11-05.
+- [009-req-d04-010-interrupted-without-requirement-credit--2026-11-05.md](009-req-d04-010-interrupted-without-requirement-credit--2026-11-05.md) — Recorded evidence: REQ-D04-010 interrupted without requirement credit — 2026-11-05.
+- [010-passive-tool-record-cli-evidence--2026-11-05.md](010-passive-tool-record-cli-evidence--2026-11-05.md) — Recorded evidence: Passive Tool-record CLI evidence — 2026-11-05.
+- [011-passive-assessment-persistence-evidence--2026-11-05.md](011-passive-assessment-persistence-evidence--2026-11-05.md) — Recorded evidence: Passive assessment persistence evidence — 2026-11-05.
+- [012-passive-toolassessment-contract-evidence--2026-11-04.md](012-passive-toolassessment-contract-evidence--2026-11-04.md) — Recorded evidence: Passive ToolAssessment contract evidence — 2026-11-04.
+- [013-transactional-tool-release-persistence-evidence--2026-11-04.md](013-transactional-tool-release-persistence-evidence--2026-11-04.md) — Recorded evidence: Transactional Tool-release persistence evidence — 2026-11-04.
+- [014-d05-envelope-evidence--2026-11-04.md](014-d05-envelope-evidence--2026-11-04.md) — Recorded evidence: D05 envelope evidence — 2026-11-04.
+- [015-evidence-ledger--commissioning-checkpoint-2026-10-30.md](015-evidence-ledger--commissioning-checkpoint-2026-10-30.md) — Recorded evidence: Evidence ledger — commissioning checkpoint 2026-10-30.
+- [016-evidence-ledger--durable-storage-2026-10-30.md](016-evidence-ledger--durable-storage-2026-10-30.md) — Recorded evidence: Evidence ledger — durable storage, 2026-10-30.
+- [017-evidence-ledger--local-backuprestoration-2026-10-30.md](017-evidence-ledger--local-backuprestoration-2026-10-30.md) — Recorded evidence: Evidence ledger — local backup/restoration, 2026-10-30.
+- [018-evidence-ledger--typed-provisional-scientific-records-2026-10-30.md](018-evidence-ledger--typed-provisional-scientific-records-2026-10-30.md) — Recorded evidence: Evidence ledger — typed provisional scientific records, 2026-10-30.
+- [019-evidence-ledger--versioned-core-identities-and-verified-migration-2026-10-30.md](019-evidence-ledger--versioned-core-identities-and-verified-migration-2026-10-30.md) — Recorded evidence: Evidence ledger — versioned core identities and verified migration, 2026-10-30.
+- [020-evidence-ledger--attributed-reviewsissues-2026-10-30.md](020-evidence-ledger--attributed-reviewsissues-2026-10-30.md) — Recorded evidence: Evidence ledger — attributed reviews/issues, 2026-10-30.
+- [021-evidence-ledger--work-product-round-trips-2026-10-30.md](021-evidence-ledger--work-product-round-trips-2026-10-30.md) — Recorded evidence: Evidence ledger — work-product round trips, 2026-10-30.
+- [022-evidence-ledger--source-captures-and-local-ingestion-2026-10-31.md](022-evidence-ledger--source-captures-and-local-ingestion-2026-10-31.md) — Recorded evidence: Evidence ledger — Source captures and local ingestion, 2026-10-31.
+- [023-req-d03-002-evidence--immutable-corpus-snapshots.md](023-req-d03-002-evidence--immutable-corpus-snapshots.md) — Recorded evidence: REQ-D03-002 evidence — immutable corpus snapshots.
+- [024-projectintake-dossier-engineering-evidence--2026-10-31.md](024-projectintake-dossier-engineering-evidence--2026-10-31.md) — Recorded evidence: Project/intake dossier engineering evidence — 2026-10-31.
+- [025-unaccepted-snapshot-candidate--2026-10-31.md](025-unaccepted-snapshot-candidate--2026-10-31.md) — Recorded evidence: Unaccepted snapshot candidate — 2026-10-31.
+- [026-readable-snapshot-engineering-evidence--2026-10-31.md](026-readable-snapshot-engineering-evidence--2026-10-31.md) — Recorded evidence: Readable-snapshot engineering evidence — 2026-10-31.
+- [027-refresh-request-prepared--2026-10-31.md](027-refresh-request-prepared--2026-10-31.md) — Recorded evidence: Refresh request prepared — 2026-10-31.
+- [028-preserved-refresh-integration-evidence--2026-10-31.md](028-preserved-refresh-integration-evidence--2026-10-31.md) — Recorded evidence: Preserved refresh integration evidence — 2026-10-31.
+- [029-accepted-exact-inspection-and-explicit-authoring-cli-evidence--2026-10-31.md](029-accepted-exact-inspection-and-explicit-authoring-cli-evidence--2026-10-31.md) — Recorded evidence: Accepted exact-inspection and explicit authoring CLI evidence — 2026-10-31.
+- [030-view-cli-integration-with-an-open-diagnostic-obligation--2026-11-01.md](030-view-cli-integration-with-an-open-diagnostic-obligation--2026-11-01.md) — Recorded evidence: View CLI integration with an open diagnostic obligation — 2026-11-01.
+- [031-2026-11-01--observed-directory-diagnostic-repair-evidence.md](031-2026-11-01--observed-directory-diagnostic-repair-evidence.md) — Recorded evidence: 2026-11-01 — Observed-directory diagnostic repair evidence.
+- [032-resource-accounting-evidence--2026-11-01.md](032-resource-accounting-evidence--2026-11-01.md) — Recorded evidence: Resource-accounting evidence — 2026-11-01.
+- [033-report-candidate-interrupted-before-acceptance--2026-11-01.md](033-report-candidate-interrupted-before-acceptance--2026-11-01.md) — Recorded evidence: Report candidate interrupted before acceptance — 2026-11-01.
+- [034-reporting-replacement-prepared--2026-11-02.md](034-reporting-replacement-prepared--2026-11-02.md) — Recorded evidence: Reporting replacement prepared — 2026-11-02.
+- [035-partial-report-milestone-final-acceptance-pending--2026-11-02.md](035-partial-report-milestone-final-acceptance-pending--2026-11-02.md) — Recorded evidence: Partial report milestone; final acceptance pending — 2026-11-02.
+- [036-complete-report-candidate-validated-but-unaccepted--2026-11-02.md](036-complete-report-candidate-validated-but-unaccepted--2026-11-02.md) — Recorded evidence: Complete report candidate validated but unaccepted — 2026-11-02.
+- [037-reporting-foundation-evidence--2026-11-02.md](037-reporting-foundation-evidence--2026-11-02.md) — Recorded evidence: Reporting foundation evidence — 2026-11-02.
+- [038-authenticated-authority-candidate-remains-unaccepted--2026-11-02.md](038-authenticated-authority-candidate-remains-unaccepted--2026-11-02.md) — Recorded evidence: Authenticated authority candidate remains unaccepted — 2026-11-02.
+- [039-authenticated-operating-decision-evidence--2026-11-02.md](039-authenticated-operating-decision-evidence--2026-11-02.md) — Recorded evidence: Authenticated operating-decision evidence — 2026-11-02.
+- [040-lifecycle-request-terminal-before-implementation--2026-11-02.md](040-lifecycle-request-terminal-before-implementation--2026-11-02.md) — Recorded evidence: Lifecycle request terminal before implementation — 2026-11-02.
+- [041-interrupted-run-control-draft--2026-11-02.md](041-interrupted-run-control-draft--2026-11-02.md) — Recorded evidence: Interrupted run-control draft — 2026-11-02.
+- [042-prepared-control-and-durable-report-obligation-evidence--2026-11-02.md](042-prepared-control-and-durable-report-obligation-evidence--2026-11-02.md) — Recorded evidence: Prepared-control and durable report-obligation evidence — 2026-11-02.
+- [043-reporting-run-terminal-contract-decomposition--2026-11-03.md](043-reporting-run-terminal-contract-decomposition--2026-11-03.md) — Recorded evidence: Reporting run terminal; contract decomposition — 2026-11-03.
+- [044-offline-lifecycle-binding-evidence--2026-11-03.md](044-offline-lifecycle-binding-evidence--2026-11-03.md) — Recorded evidence: Offline lifecycle-binding evidence — 2026-11-03.
+- [045-source-candidate-remains-unaccepted--2026-11-03.md](045-source-candidate-remains-unaccepted--2026-11-03.md) — Recorded evidence: Source candidate remains unaccepted — 2026-11-03.
+- [046-committed-lifecycle-source-evidence--2026-11-03.md](046-committed-lifecycle-source-evidence--2026-11-03.md) — Recorded evidence: Committed lifecycle-source evidence — 2026-11-03.
+- [047-shared-lifecycle-rendering-evidence-and-focused-validator-request--2026-11-03.md](047-shared-lifecycle-rendering-evidence-and-focused-validator-request--2026-11-03.md) — Recorded evidence: Shared lifecycle-rendering evidence and focused validator request — 2026-11-03.
+- [048-validator-candidate-acceptance-contradicted-by-independent-fixture-probe--2026-11-03.md](048-validator-candidate-acceptance-contradicted-by-independent-fixture-probe--2026-11-03.md) — Recorded evidence: Validator candidate acceptance contradicted by independent fixture probe — 2026-11-03.
+- [049-concurrent-full-validation-integrated-requirement-scope-preserved--2026-11-03.md](049-concurrent-full-validation-integrated-requirement-scope-preserved--2026-11-03.md) — Recorded evidence: Concurrent full validation integrated; requirement scope preserved — 2026-11-03.
+- [050-resumed-lifecycle-output-planning--2026-11-04.md](050-resumed-lifecycle-output-planning--2026-11-04.md) — Recorded evidence: Resumed lifecycle output planning — 2026-11-04.
+- [051-b1-timeout-passive-tool-release-contract-preparation--2026-11-04.md](051-b1-timeout-passive-tool-release-contract-preparation--2026-11-04.md) — Recorded evidence: B1 timeout; passive Tool-release contract preparation — 2026-11-04.
+- [052-passive-tool-release-structural-evidence-integrated--2026-11-04.md](052-passive-tool-release-structural-evidence-integrated--2026-11-04.md) — Recorded evidence: Passive Tool-release structural evidence integrated — 2026-11-04.
+- [053-transactional-tool-release-registration-prepared--2026-11-04.md](053-transactional-tool-release-registration-prepared--2026-11-04.md) — Recorded evidence: Transactional Tool-release registration prepared — 2026-11-04.
+- [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — Immediate-child navigation index.
+- [README.md](README.md) — Requirement evidence index.

@@ -1,0 +1,25 @@
+# REQ-D04-005 — Terminal prescription blockers, no product change
+
+CWI7632b4e0-7877-4e25-b23f-33d66232ebf1, continuous start29/50. Started2026-11-02T20:56:49.779919Z at main/base dbe1509eb3dd64ebe577a18d27927c0aa8e27b41/tree10d4ac8b7b24efe77876a37044dd1fa346ae66a2. Ended2026-11-02T21:54:12.103995Z, controller exit1. STOPPED_INCOMPLETE/INCOMPLETE: Writer blocker exhausted a repair budget. resume_allowed=false/new_run_after_manual_salvage.
+
+## Outcome and recovery
+
+Zero candidate/accepted milestones/final receipts; worktree clean/unchanged at base. accepted_head is the original baseline, not acceptance of reporting. No source integrated/salvaged. Prepared control771422b7 remains last accepted/integrated product source; all reporting follow-ons remain open.
+
+Fresh2026-11-03 status/diagnose verifies frozen inputs/recording integrity, no in-flight/lease/quarantine. Host inspection proves original controller1913069/Architect1916028/run descendants gone. All30runs reconcile20finallyaccepted ancestors of main/10terminal incomplete; all20finalreceipts rehashed. No acceptance awaiting integration, no resume/replay/signal/artifact edit/backend change. Historical managed worktree/state/evidence untouched.
+
+Both baseline checks passed:946/946 in1153.522seconds, zero skips/errors/failures/source mutation, ended2026-11-02T21:16:04.516836Z; stdoutSHA256b93a799023fb4b3374d8055b95146cf543a309af9524016493d126b804075a82, empty stderr. Result digests638bd7cf39f058e3f6c9f64e3ac5507fda7130b55921547b12e3c31911628c37/ecf59631422b04c79497872ab649ca085bfc9b34d83e151e5e68da2aa7c6c33b. No candidate/final checks or Reviewer verdict.
+
+Initial Architect30207bytes was followed by Writer8f06ee0c, which could not complete preallocation across resource replay/snapshot/rendering/planning and removed its draft before returning blocked (O-001). Replacement Architect31264bytes was followed by Writer73ccaada, which identified the missing public v3 offline-reconstruction signature/independent budget/error dispatch contract (O-002). Final Architect8734-byte supplement referenced unavailable preceding contracts; Writer2d63d54e correctly refused to invent them. All three blocks are preserved; no implementation submission. Two internal repair slots consumed. Final Architect responseSHA256a63208b6708e0cd2f0423601a06adeaab6cd1052191a40d19adc84af798872d3. Referenced state artifacts and baseline streams rehashed.
+
+Backend already requires complete prescriptions/current-only Writer context; no new backend defect demonstrated. [ADR-063](../decisions/ADR-063-lifecycle-report-decomposition.md) records narrowed pure-binding [R1](../requests/REQ-D04-005-R1.md) and explicit ownership of all original criteria. Preparation consumes prescription recovery2/2, cumulative coordinator13. No further same-blocker recovery is available without actual authority change.
+
+## Settings and consumption
+
+Explicitgpt-6-astra/high, backendc74df0b09b4883776b1889b859b2df065f0b2fe4, pinnedCodex0.166.0/SHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8, stableenvironment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09; FD4096/1048576,2700s deadlines,2milestones,repairs2/6,no--merge. Request58a6e391be14083d8622d9f520a8dae8f6e5baf6950c804d8f8fe256bd9b0426; config740d9417672d9e45db24cbf47130bab8a396668ae38c06be1339891ef63b9c4c; validationprofile796aefe5b28f81f33726a29e0ae85109e52b7ea6e15ce71e0534e048718c2054; no context packet. Earlier live argv/executable verified, no server-model attestation.
+
+Seven unique completed turns report7,156,073input(6,541,440cached),67,251output(26,877reasoning), booked exactly once replacing provisional Designer snapshot. Cumulative lower bound259,853,513input(237,466,752cached),2,453,239output(723,238reasoning). Four older interrupted roles unknown; native backend review outside CWI/quota/invoice unknown. Nested categories included. Commissioning1/3closed; continuous29/50used21remain; CWIrepairs28/coordinator13/backend1/1/0. No grants/limits reset.
+
+Evidence: immutable CWI run/workflow_logs, local/attempts/D04-005-attempt-001 original launch/exit/report/handoff, local/reconciliation-20261103 run-inventory/usage/totals/readiness/per-run status/diagnose. A read-only coordinator parser initially expected receipt.path rather than receipt.artifact.path; corrected without source/state mutation or recovery consumption. All94requirements remain; full D04/M0-E and scientific/live duties partial. STATUS owns one current next action.
+
+The first administrative checkpoint reversed the first two blocker episodes; this narrative is corrected from immutable invocation timestamps and obligation mappings at the safe post-integration checkpoint. All original artifacts/frozen inputs/source remain unchanged.

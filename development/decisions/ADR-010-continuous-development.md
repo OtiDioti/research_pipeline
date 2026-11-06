@@ -1,5 +1,7 @@
 # ADR-010 — Bounded continuous development with a narrow backend-repair exception
 
+Records this consequential development choice, its rationale, original status and supporting evidence.
+
 **State:** PROPOSED operating defaults; user-requested constraints identified below. **Prepared:** 2026-10-30. **Activation authority:** a real human grant, recorded separately. This document is not such a grant.
 
 ## Context

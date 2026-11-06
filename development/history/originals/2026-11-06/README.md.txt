@@ -1,0 +1,55 @@
+# Theoretical research pipeline
+
+An evidence-oriented workbench for theoretical scientific research. The product requirements are in [project_description.md](project_description.md). This repository contains the **software that implements that workbench**; it is not itself a live scientific investigation.
+
+**Current maturity:** accepted engineering subsets include durable records/artifacts and backup/migration, scientific and work-product/source/corpus/intake contracts, protected readable views and local CLI, resource accounting, operator authority, prepared-control/report obligations, offline lifecycle bindings, and committed lifecycle sources. [STATUS.md](STATUS.md) records exact integrated versions, validation and unfinished work. Research execution and expert scientific evaluation remain pending; deterministic fixtures do not establish scientific validation. See [the mock walkthrough](docs/synthetic-oscillator.md) and [M0 decision packet](development/decisions/M0-contract-and-scientific-review.md).
+
+[Committed lifecycle sources](docs/committed-lifecycle-sources.md) provide bounded
+first-capture commitment and original-ID recovery for required control obligations.
+They preserve pending intent and a closed ordinary-work gate. Rendering, publication,
+acknowledgment and current-policy restart remain later ADR-063 work; this source
+stage makes no scientific or live-provider acceptance claim.
+
+## Start here
+
+| Question | Read |
+| --- | --- |
+| What should the product do? | [Project description](project_description.md) |
+| What is happening, and what is the next action? | [STATUS.md](STATUS.md) |
+| What is the implementation sequence? | [ROADMAP.md](ROADMAP.md) |
+| How is development controlled? | [DEVELOPMENT.md](DEVELOPMENT.md) |
+| What is deferred, blocked, or deliberately paused? | [BACKLOG.md](BACKLOG.md) |
+| Why were important choices made? | [DECISIONS.md](DECISIONS.md) |
+| What has actually been integrated? | [CHANGELOG.md](CHANGELOG.md) |
+| What must Codex do? | [AGENTS.md](AGENTS.md) and [startup/activation/continuation prompts](development/CODEX_START.md) |
+| How does it continue across development steps? | [Continuous policy](development/AUTONOMY.md) and [actual authorization](development/AUTHORIZATION.md) |
+| Which model and effort does development use? | [Model policy](development/MODEL_POLICY.md) |
+| What happens if the coding backend breaks? | [Maintenance procedure](development/BACKEND_MAINTENANCE.md) and [change audit](coding_pipeline_changes.md) |
+| How do I apply this update to work already started? | [Update guide](development/UPDATE_GUIDE.md) |
+| How do I prepare and run the coding pipeline? | [Runbook](development/RUNBOOK.md) |
+| How does a repository with no tests get started? | [Bootstrap procedure](development/BOOTSTRAP.md) |
+| What was checked in the supplied coding pipeline? | [Repository review](development/PIPELINE_REVIEW.md) |
+
+## Development model
+
+A top-level Codex session acts as the **development coordinator**. [AGENTS.md](AGENTS.md) owns its role boundaries and [DEVELOPMENT.md](DEVELOPMENT.md) maps the workflow and information owners. Product implementation uses the separate coding pipeline; the coordinator maintains records and verifies controller acceptance and integration evidence.
+
+The recommended workflow holds the first accepted result for human review, then uses one continuous grant to proceed across requests and phases without repeated routine prompts. A separately selected preauthorization can remove the first review pause. Durable checkpoints support later sessions, but this kit installs no automatic restart supervisor.
+
+The local clone must be named `coding_pipeline/`, even if its remote repository has a different name. It remains an untracked, locally excluded development dependency, not a Git submodule and not a mandatory runtime tool of the research product.
+
+The detailed replacement/removal and delegated Writer rules are in [AGENTS.md](AGENTS.md).
+
+## Directory conventions
+
+Regular files at this repository's root are Markdown. Product implementation and configuration belong under [implementation/](implementation/README.md). Development requests, phase plans, reviews, and evidence summaries belong under [development/](development/README.md). Local transient information belongs under [local/](local/README.md).
+
+Git's own `.git` administration is an exception: it is normally a directory here and a Git-created pointer file in linked worktrees.
+
+## Important status distinction
+
+`implemented` is not `accepted`; `accepted` is not `integrated`.
+
+Only a completed coding-pipeline run with the required final acceptance evidence can establish coding-pipeline acceptance. The accepted commit must then be deliberately integrated. A checked box, successful inspection command, agent message, or branch name is not a substitute.
+
+This starter kit does not replace or reproduce your existing `project_description.md`. Preserve that file and reconcile the proposed roadmap against its exact contents before implementation.

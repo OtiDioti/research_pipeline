@@ -1,31 +1,31 @@
 # Development records
 
-This directory preserves the development plan and its evidence between Codex sessions. Start with [the operating plan](../DEVELOPMENT.md) and [current status](../STATUS.md).
+Explains the separation between current coordination, detailed evidence and historical records so sessions can read selectively.
 
-| Location | Contents |
+## Restart reading order
+
+1. Read current STATUS and effective AUTHORIZATION, plus the local handoff and applicable active run/request.
+2. Inspect actual Git/CWI/host ownership and verify the specification digest and cumulative limits.
+3. Read only the relevant requirement rows, specification sections, phase and decision records. Initial commissioning and changed/uncertain specification evidence retain AGENTS.md's full-reading requirements.
+
+The ownership map is in [DEVELOPMENT](../DEVELOPMENT.md#4-information-ownership-avoid-competing-status-files). [FOLDER_CONTENT](FOLDER_CONTENT.md) locates immediate children. Do not load the full history or changelog by default.
+
+## Record ownership
+
+| Information | Owner |
 | --- | --- |
-| [RUNBOOK.md](RUNBOOK.md) | Local setup and operational commands |
-| [BOOTSTRAP.md](BOOTSTRAP.md) | First implementation run from a Markdown-only repository |
-| [CODEX_START.md](CODEX_START.md) | Commissioning, activation and continuation prompts |
-| [CODEX_START_AUTONOMOUS.md](CODEX_START_AUTONOMOUS.md) | Optional one-prompt first-integration preauthorization and continuous execution |
-| [AUTONOMY.md](AUTONOMY.md) | Continuous loop, limits, stopping and completion gates |
-| [AUTHORIZATION.md](AUTHORIZATION.md) | Actual human operating grant, not a self-issued permission |
-| [MODEL_POLICY.md](MODEL_POLICY.md) | Four approved role selections, explicit launch flags, readiness and effort ceiling |
-| [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md) | Necessary focused repair exception and recovery |
-| [UPDATE_GUIDE.md](UPDATE_GUIDE.md) | Safe adoption without resetting existing work |
-| [backend_patches/](backend_patches/README.md) | Reviewed repair patches or protected backup references |
-| [REQUIREMENTS.md](REQUIREMENTS.md) | Product requirement ownership and evidence crosswalk |
-| [ENVIRONMENT.md](ENVIRONMENT.md) | Versions and stable non-secret environment contract |
-| [PIPELINE_REVIEW.md](PIPELINE_REVIEW.md) | Supplied-backend analysis and integration constraints |
-| [phases/](phases/README.md) | Coherent product outcomes and acceptance plans |
-| [requests/](requests/README.md) | Committed, bounded implementation requests |
-| [runs/](runs/README.md) | Run summaries tied to exact evidence |
-| [decisions/](decisions/README.md) | Consequential decisions with alternatives |
-| [review/](review/README.md) | Backend inventory and local verification evidence |
-| [templates/](templates/README.md) | Reusable record formats |
+| Current checkpoint and aggregate consumption | STATUS.md |
+| Actual human authority and source amendments | AUTHORIZATION.md and linked source records |
+| Stable setup and permitted commands | ENVIRONMENT.md, RUNBOOK.md, MODEL_POLICY.md |
+| Requirement obligations and evidence pointers | REQUIREMENTS.md |
+| Exact execution narrative | One runs/ record per actual CWI run |
+| Frozen implementation request | requests/; bodies stay unchanged after launch |
+| Consequential rationale | Individual decisions/ record; DECISIONS is the index |
+| Current phase scope and progress | phases/ and ROADMAP.md |
+| Superseded snapshots, dated checkpoints and preserved originals | history/ |
 
-Current operating policy is defined by [AGENTS.md](../AGENTS.md), [AUTONOMY.md](AUTONOMY.md) and [MODEL_POLICY.md](MODEL_POLICY.md). Dated historical entries and frozen requests describe their original behavior and are not current launch instructions.
+Update current views in place. Record detail once in its owner and link elsewhere. Human authority, Git and CWI receipts retain their evidentiary roles; summaries cannot create permissions or acceptance.
 
-No file here may turn an unaccepted candidate into an accepted result. The documents explain and point to evidence; CWI owns its run state and receipts.
+## Preservation and scope
 
-Backend change history lives at the root in [coding_pipeline_changes.md](../coding_pipeline_changes.md). Frozen controller evidence remains authoritative for execution; the human grant remains authoritative for permission. Neither Markdown state nor a run success can manufacture the other.
+[History](history/FOLDER_CONTENT.md) includes readable archival views and a hash manifest of every exact original input. Frozen requests/specification and product/CWI-owned files are unchanged; their purpose is described in navigation rather than inserted into hashed evidence. This administrative migration does not resume product development or reset any budget.

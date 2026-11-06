@@ -1,5 +1,7 @@
 # Dxx — Outcome
 
+Provides a reusable phase record format; placeholders are not execution evidence or authority.
+
 **State:** NOT_STARTED. **Dependencies:** identify completed prerequisite outcomes.
 
 ## Goal and specification

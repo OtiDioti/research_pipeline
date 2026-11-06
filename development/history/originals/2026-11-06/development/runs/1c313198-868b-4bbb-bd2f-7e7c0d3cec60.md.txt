@@ -1,0 +1,39 @@
+# REQ-DEV-VALIDATION-001-R1 — Corrected concurrent validation accepted and integrated
+
+Run `1c313198-868b-4bbb-bd2f-7e7c0d3cec60`, request committed at `4736d1d9cf3324ec8913d98993736346d5381cdd`. The CWI Writer alone adopted the exact retained eight-path implementation, corrected import/discovery-time global module cleanup handling, and added focused stock-unittest comparisons. The original source `7d2622c5` from [cd93ad37](cd93ad37-6dec-4631-98aa-d10032c64552.md) remains intentionally unmerged and superseded: its genuine CWI acceptance did not close the independently demonstrated duplicate-cleanup defect.
+
+Final accepted/integrated source **ef3bfcf723a246750021cce32024cf6717eb5fa9**, tree **777c79c5214e5042f2fb31bab605767d03cfe654**, final receipt SHA256 **2ecf76d54d7e85b60b25eb3a61ae1201e842cabbb4c54d0758ecba203ebee1de**. One milestone, no repairs or new findings. Both milestone and final reviews accepted the exact bound source. Explicit approvedgpt-6-astra/high, ceilingxhigh, Codex0.166.0/executableSHA256b8a11fedf24b2dfb59a70c9e52b030f9a508dcd49cd2dd0d41956f4c785156b8, backendc74df0b and stable environment46f63a41 stayed unchanged throughout. Actual Designer and final Reviewer arguments were inspected; no server-side model attestation is inferred. FD4096/1048576,2700-second agent/check limits, repairs2/review6/run, one milestone and no--merge remained frozen.
+
+| Stage | Successful / discovered | Seconds |
+| --- | --- | --- |
+| Original-validator baseline |1063/1063|2108.130 test time|
+| Corrected candidate |1130/1130|466.418689 total wall|
+| Repeated final |1130/1130|462.455221 total wall|
+| Integrated target automatic |1130/1130|472.709730 external wall|
+| Same integrated source sequential |1130/1130|2131.505420 external wall|
+
+Zero failures/errors/skips/expected failures/unexpected successes/source mutation at every stage. Frozen ordered commands were the full permanent validator followed by `git diff --check 4736d1d9cf3324ec8913d98993736346d5381cdd HEAD --`. The full benchmark modes have identical discovered/started/completed/accounted inventories and exact per-test dispositions, hash `2a1e409cdce13cb00130703fcf3a786222a7df809b97a8f7a458d0f0425a0639`. All1063 original IDs and1119 retained IDs remain; all98 original test/helper/fixture blobs/modes and56 previous regression assertions are preserved. Eleven added methods bring67 new regressions overall. Writer advisory78/79 retained tests included one sandbox-denied AF_UNIX bind; it was not removed or relaxed. All11 new regressions and real host full checks passed.
+
+The small predicate reads live stock CPython `unittest.case._module_cleanups` after inventory planning. Only an exact empty built-in list permits ordinary grouping; pending/unknown state reuses the intact original suite as one exclusive supervised unit. No ownership inference, callback clearing/transfer, discovery replay or accounting relaxation occurs. Independent fresh candidate probe confirms both modes now execute each import-time callback once, preserving order and genuine2/2success. The new module's independent stock oracle also verifies cross-module LIFO transitions, cleanup exception selection, setup skip/error and cleanup SkipTest outcomes, hook-time registration, unknown-state behavior, exact original-suite identity and real ordinary overlap. Existing F001–003 accounting/finalization/signal-mask repairs remain byte-identical.
+
+Modified product files, exactly:
+
+- `implementation/scripts/validate.py`
+- `implementation/tests/test_validation_concurrent.py`
+- `implementation/tests/test_validation_lifecycle.py`
+- `implementation/tests/test_validation_module_cleanups.py`
+- `implementation/tests/test_validation_resources.py`
+- `implementation/tests/validation_fixtures.py`
+- `implementation/README.md`
+- `docs/test-validation.md`
+- `docs/README.md`
+
+The9-path219057-byte full patch hashes to48132b19e5867a42b0238ae70bc6a50fc8ded0714aa7db92f0b040b3a20ddc0f;24 recursively referenced artifacts were rehashed. Branch/base/tree/current accepted source, clean index, unchanged predecessors, no executable hooks, applicable filters or collisions were verified. Host21:20:31Z found no CWI/role/known validation owners. Authorized exact FF4736d1d9→ef3bfcf7 integrated the source; all9 working files matched accepted bytes. No tracked commit intervened before FF. Both timed target groups terminated completely and source remained clean. Historical CWI ACCEPTED_UNMERGED is not rewritten after external integration.
+
+[Complete benchmark](../benchmarks/concurrent-validation-20261103.md): **4.5091× speedup /77.8227% less wall time** on identical1,130-test source, with about30% more total CPU and higher sampled aggregate memory. Formula/CPU affinity, resource isolation, protocol/cleanup bounds, startup latencies, output sizes, repetition and memory-measurement limitations are recorded there. Ordinary new tests are discovered automatically; exceptional shared dependencies serialize, unknown/custom evidence fails closed, and Linux/fresh-process/private-stdlib limitations remain explicit. No application/scientific source, schema, API, dependency, runtime prompt or resource authorization changed.
+
+The separate human follow-up requested targeted Reviewer diagnostics. It was implemented only after this run terminated, exact integration and both benchmarks completed: backendc74df0b→b6a2e05283f92f2bb42402d49e4a274225b43f6a changes only `cwi/prompts/reviewer.md`, preserving mandatory full controller/target checks. CP-002 tests/audit/adoption are in [coding_pipeline_changes.md](../../coding_pipeline_changes.md). The concurrent validator itself did not modify the controller. No old run was resumed under changed backend code.
+
+This run consumes continuous start35/100 (65remain),zero repairs; cumulative CWIrepairs33/coordinator15, B-023 cleanup recovery1/2 resolved without reset. Commissioning1/3closed; old exhausted/partial families persist. Five unique completed turns booked once at final checkpoint:3255197input(2787968cached),29617output(4777reasoning). Cumulative CWI lower bound323238449input(296323968cached),3007582output(917785reasoning); four older interrupted-role amounts, native backend audits, coordinator, quota and invoice remain unknown. Nested categories are included. Backend attempted/adopted/reverted2/2/0 after the separately requested CP-002; no permission, budget, service or scientific grant expanded.
+
+Evidence under ignored local/attempts/DEV-VALIDATION-001-R1-attempt-001/ includes baseline-results, prescription/roadmap, candidate/final audits, independent cleanup probe, actual flags, final-integrity, final-accepted.patch, host quiescence, integration and unique usage. Raw measurements are local/concurrent-validation-20261103/. Backend CP-002 retained separately. No automatic approval rejection, push, destructive cleanup or controller-state/receipt alteration. All94requirements/13FOLLOWONcriteria and broader partial phases remain. The human-priority optimization and added prompt request end at the final checkpoint; STOP without unrelated roadmap work. STATUS owns exactly one next safe action.

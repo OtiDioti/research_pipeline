@@ -1,5 +1,7 @@
 # Applying the continuous-development update
 
+Explains adoption of development guidance while preserving existing source, authority, counters and unfinished-run evidence.
+
 **Prepared:** 2026-10-30; current role-selection adoption guidance amended 2026-11-04. The original documentation package contains no product implementation, backend source patch, installed supervisor, or replacement for `project_description.md`. The separately authorized 2026-11-04 backend modernization and its evidence are recorded in [coding_pipeline_changes.md](../coding_pipeline_changes.md).
 
 ## 1. Choose the appropriate package

@@ -1,5 +1,7 @@
 # Record templates
 
+Provides a reusable readme record format; placeholders are not execution evidence or authority.
+
 Use these as short structured records, not as a requirement to duplicate the entire project description.
 
 - [PHASE](PHASE.md): outcome, dependencies, scope and completion.

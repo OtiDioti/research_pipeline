@@ -1,5 +1,7 @@
 # ADR-nnn — Decision
 
+Provides a reusable decision record format; placeholders are not execution evidence or authority.
+
 **State:** PROPOSED / ACCEPTED / SUPERSEDED. **Date:** actual decision date. **Authority:** who decided and within which authorization.
 
 ## Context

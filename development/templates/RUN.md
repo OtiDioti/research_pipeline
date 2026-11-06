@@ -1,5 +1,7 @@
 # Development run — actual CWI UUID
 
+Provides a reusable run record format; placeholders are not execution evidence or authority.
+
 ## Identity
 
 | Field | Value |

@@ -1,5 +1,7 @@
 # Single-prompt commissioning and continuous development
 
+Provides an optional initial-commissioning template; it is not a current grant or an instruction to recommission this repository.
+
 **Optional, explicit preauthorization.** This replaces the default human review of the first accepted result with coordinator inspection under the same acceptance gates. Use it only when deliberately choosing that policy. It does not pretend the human already reviewed future code, remove model/billing prerequisites, or install automatic session restarts.
 
 This is the ready-to-paste alternative to the commissioning-plus-activation sequence in [CODEX_START.md](CODEX_START.md). Do not issue both first-session alternatives for the same run. Existing projects with unfinished work should use the continuation prompt, not rerun commissioning.

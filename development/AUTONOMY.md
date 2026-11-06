@@ -1,5 +1,7 @@
 # Continuous development policy
 
+Defines the development loop, cumulative limits, stopping boundaries and completion gates under actual human authority.
+
 **Policy version:** 4, 2026-11-04. This is a workflow policy, not an authorization grant, an installed scheduler, or evidence of product completion.
 
 ## 1. Strategy: supervised commissioning, then bounded continuous execution

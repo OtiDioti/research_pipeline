@@ -1,5 +1,7 @@
 # Development completion report — named scope
 
+Provides a reusable completion record format; placeholders are not execution evidence or authority.
+
 **Verdict:** COMPLETE / IMPLEMENTATION_SCOPE_COMPLETE_WITH_EVALUATION_PENDING / INCOMPLETE / BLOCKED.
 
 ## Scope and authority

@@ -1,5 +1,7 @@
 # Concurrent validation benchmark — 2026-11-03
 
+Records the measured validation benchmark, exact source/environment and limits of the performance evidence.
+
 The accepted validator executed the same 1,130 tests successfully in both modes. Automatic execution took **472.710 seconds** versus **2,131.505 seconds** sequentially: **4.5091× faster, with 77.8227% less wall time**. Discovered, started, completed and accounted inventories, all per-test dispositions and every outcome counter match exactly. All original 1,063 IDs and all 1,119 IDs from the retained implementation remain present in their original relative order. No tests were cached, filtered or disabled.
 
 Accepted/integrated source: `ef3bfcf723a246750021cce32024cf6717eb5fa9`, tree `777c79c5214e5042f2fb31bab605767d03cfe654`; CWI run `1c313198-868b-4bbb-bd2f-7e7c0d3cec60`, final receipt SHA256 `2ecf76d54d7e85b60b25eb3a61ae1201e842cabbb4c54d0758ecba203ebee1de`. The original historical baseline source was `18678728106b3956f83766b5e5a008242ec183ff`; it has fewer tests and is not the denominator used for the claimed speedup.

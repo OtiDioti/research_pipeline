@@ -1,5 +1,7 @@
 # D02 — Durable scientific records and provenance
 
+Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
+
 **State:** PARTIAL; downstream Source/corpus/project-intake contracts are integrated at d8dffdd/7d6dd624/9373860 with ten typed kinds and396/396 target tests; latest phase-specific REQ-D02-010 INTEGRATED at 0668007ed7234910d19f0a7a27f5e81ae47961af,final/target1544/1544; REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.

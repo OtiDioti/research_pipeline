@@ -1,5 +1,7 @@
 # Reviewable backend repair patches
 
+Indexes preserved backend patches, backups and their audited adoption evidence.
+
 Store a sanitized, reviewable patch for a focused adopted/reverted backend maintenance event here when it is appropriate to track publicly. The actual backend remains a separate ignored repository. This folder need not contain a patch when none exists.
 
 Link each patch from [coding_pipeline_changes.md](../../coding_pipeline_changes.md), with backend base/result revisions and a digest. Preserve failed attempts too. Do not commit raw private logs, credentials, or large unreviewed bundles; use a protected backup reference instead when needed.

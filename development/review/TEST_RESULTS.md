@@ -1,5 +1,7 @@
 # Supplied-pipeline test results
 
+Preserves historical backend inspection or verification evidence and its original limitations.
+
 **Review date:** 2026-10-29. **Target:** the supplied archive, unchanged. **Environment:** Linux, Python 3.13.5, git version 2.47.3; no real Codex executable or authenticated service session available.
 
 ## Execution scope and aggregate result
