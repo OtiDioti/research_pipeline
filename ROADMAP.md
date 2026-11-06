@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Claim-use CLI delivered; saved Source proposals next — 2026-11-06
+
+[REQ-D03-009](development/runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) is accepted,exact-integrated6d023d5 and target-validated1577/1577. D03/R-082 remains PARTIAL. The next small candidate is offline saved Source-proposal inspection and exact explicit original-ID-first submission using existing codecs/API;new capture preparation/file publication stays separate mandatory work. Full creation/intake/lifecycle/reports and all scientific/live/human obligations remain. STATUS owns readiness,counters and next action.
+
 ## Read-only claim-use/history CLI prepared — 2026-11-06
 
 [REQ-D03-009](development/requests/REQ-D03-009.md) is the next bounded R-082 slice after verified support-context integration/checkpoint. It exposes complete existing current/history API documents through protected read-only CLI operations;submission,disposition,execution and scientific approval remain outside this slice. D03/R-082 and the product remain partial;all mandatory obligations and held failed-draft paths remain. STATUS owns prelaunch readiness,counters and one next action.

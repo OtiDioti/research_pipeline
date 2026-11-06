@@ -415,3 +415,7 @@ The expressly authorized one-use salvage completed through unchanged clean backe
 ## 2026-11-06 — REQ-D02-010 backend audit
 
 Runb4a385e8 accepted/exact-integrated0668007,final/target1544/1544. Backend remained unchanged cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66;no maintenance attempt,adoption or reversion. Cumulative3/3/0. Historical source,patches,backups and unfinished-run evidence remain preserved. Read-only metadata/namespace verifier clarifications were not backend changes or CWI recoveries.
+
+## 2026-11-06 — REQ-D03-009 backend audit
+
+Run45afcd6b accepted/exact-integrated6d023d5,final/target1577/1577. Backend stayed unchanged cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66;no maintenance attempt/adoption/reversion. Cumulative3/3/0. The one CWI product repair is not backend maintenance. Historical source,patches,backups and unfinished-run evidence remain preserved.

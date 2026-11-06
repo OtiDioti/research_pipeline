@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Read-only current claim-use/history CLI integrated — 2026-11-06
+
+[REQ-D03-009/run45afcd6b](development/runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) finally accepted/exact-integrated6d023d5. Two protected CLI commands expose complete existing current views and paged original generation causes,retaining historical scope,independent limits and scientific limitations. One CWI repair corrected late directory permission/ownership changes to integrity failures while preserving initial unsafe-layout behavior. Revised/final/required target1577/1577,zero other outcomes,all target dispositions match final. R-082 and the product remain partial;no scientific validation or authority follows.
+
 ## Selected support-context freshness integrated — 2026-11-06
 
 [REQ-D02-010/run b4a385e8](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) finally accepted/exact-integrated0668007. Explicit selected candidate,route,premise and Evidence context successors now synchronously trigger conservative recorded-use reassessment,with complete historical provenance and bound/observed scope. Opt-in schema7 activation/migration preserves old semantics. Baseline1511;candidate/final/required target1544/1544,zero other outcomes,no repairs;all target dispositions match final. This is partial engineering evidence,without scientific transfer,positive eligibility or phase/product completion.

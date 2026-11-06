@@ -54,3 +54,5 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [c0bffb7b-f83d-4b19-aeef-752f925671e9.md](c0bffb7b-f83d-4b19-aeef-752f925671e9.md) — REQ-D02-009-R1 — Authorized salvage accepted/exact-integrated; shutdown
 
 - [b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md](b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) — REQ-D02-010 support-context freshness accepted,integrated and target-validated.
+
+- [45afcd6b-0489-4e55-a807-a92ea9b15083.md](45afcd6b-0489-4e55-a807-a92ea9b15083.md) — REQ-D03-009 claim-use/history CLI accepted,integrated and target-validated.

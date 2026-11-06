@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Claim-use CLI accepted; current holds unchanged — 2026-11-06
+
+[REQ-D03-009](development/runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) is accepted/exact-integrated6d023d5,final/target1577/1577. Its one internal repair resolvedF-001;no unresolved new blocker/backend defect or coordinator recovery. Failed Task/B1 drafts and exhausted salvage/orphan/Writer-deadline families remain held. Saved Source-proposal inspect/submit is independent ordinary engineering from accepted APIs;capture preparation,full CLI,all94requirements/13FOLLOWON and M0-S/live/human duties remain mandatory.
+
 ## Support-context slice accepted; existing holds preserved — 2026-11-06
 
 [REQ-D02-010](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) is accepted/exact-integrated0668007,final/target1544/1544,no findings or repairs. No new blocker,backend defect or recovery allowance. Failed Task/B1 drafts and exhausted salvage/orphan/Writer-deadline families remain held without reset. Positive authority/sufficiency/promotion,active-context adoption,all94mandatory requirements/13FOLLOWON and M0-S/live/human gates remain controlling. Independent read-only claim-use CLI preparation may proceed under unchanged CONTINUOUS authority after this checkpoint.

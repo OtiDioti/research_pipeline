@@ -1,5 +1,11 @@
 # Development status
 
+## Claim-use CLI accepted, integrated and target-validated — 2026-11-06
+
+[REQ-D03-009/run45afcd6b](development/runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) is finally accepted/exact-integrated **6d023d56a8e80914911e163278db140225b65dbb**,treec06816e3823b880a797434760f5e3680ea6760d2. Final receiptd13f69e862865eeea40681f5fd4a20b23646f73621ee1b1775a139665e8e5ea8 binds both final checks and accepting complete-diff review,no open findings/obligations. Initial1576/1576 still required one CWI repair for late held-directory permission/ownership classification;Reviewer resolvedF-001. Revised/final/required target **1577/1577**,zero other outcomes;target ran once1151.012829s,all dispositions match CWI final. Protected complete current-use and generation-history CLI adds partial R-082 engineering evidence,without scientific authority.
+
+Main and accepted worktree are exact/clean before this administrative checkpoint;backend unchanged cleanbcb7ad24. No owner,validator,lease,quarantine,inflight,recording gap or pending integration.50terminal histories:36receipts,35exact integrated final sources,one deliberately superseded acceptance,14incomplete;51worktrees preserved. CONTINUOUS persists. Continuous **49/100used51remain**,CWIrepairs**44**,coordinator**18**,backend**3/3/0**;all exhausted/partial limits remain. Owning record reconciles evidence and usage. D02/D03/D04/D05/M0-E/product and scientific/live/human gates remain partial/pending. Next candidate:saved Source-proposal inspection and exact explicit submission;capture preparation remains separate mandatory work. No new run started.
+
 ## Read-only claim-use CLI prelaunch — 2026-11-06
 
 [REQ-D03-009](development/requests/REQ-D03-009.md) is prepared under DEV-088 for current claim-use and generation-history inspection through existing APIs and private CLI controls. Prior REQ-D02-010 is finally accepted/exact-integrated0668007 and target-validated1544/1544,with checkpoint1014014 and unchanged product paths. Fresh supported CWI/Git evidence shows49terminal histories,no owner/lease/quarantine/pending integration;host00:54:44Z finds no controller/target process. Specification digest and clean backendbcb7ad24/pinnedCodex hash match.
@@ -88,4 +94,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Launch the committed REQ-D03-009 once through CWI from its recorded clean main base,with unchanged stable environment,FD4096,all eight approved role flags and both literal-base checks;count start49 before execution and record its actual UUID locally.
+Prepare and commit bounded REQ-D03-010 for saved Source-proposal inspection and exact explicit submission,using accepted codecs/admission,fresh model/account/ownership readiness and unchanged grant/counters. Keep capture preparation as separate mandatory follow-up.

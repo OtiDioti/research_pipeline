@@ -1,6 +1,6 @@
 # D03 — Seeded project intake and navigable vault
 
-**State:** PARTIAL; accepted/exact-integrated storage/intake/snapshot/refresh/authoring and view CLI subsets at2643673035b5be43c3f12cbab1567dcce3377aa6,696/696 target tests. B-017 observed-directory diagnostics remain open for REQ-D03-008. Actual authorized readiness, full workspace and scientific obligations remain incomplete.
+**State:** PARTIAL; latest bounded claim-use/history CLI REQ-D03-009 is accepted/exact-integrated at6d023d56a8e80914911e163278db140225b65dbb,final/target1577/1577. Earlier storage/intake/vault/authoring evidence remains recorded below;B-017 is resolved in BACKLOG/DEV-047. Actual authorized readiness,full workspace,full CLI and scientific obligations remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 
@@ -109,3 +109,7 @@ B-017 is resolved. D03 remains partial: full current/home/branch/runtime/report/
 ## Read-only claim-use CLI preparation — 2026-11-06
 
 [REQ-D03-009](../requests/REQ-D03-009.md) is READY after accepted support-context source0668007 and required target1544/1544. It wraps existing current/history APIs under established private CLI controls,without submission or scientific authority. No R-082 completion/feature credit is claimed before CWI acceptance,integration and required target validation. Existing D03 and broader product/scientific obligations remain partial/pending.
+
+## Claim-use CLI engineering checkpoint — 2026-11-06
+
+[REQ-D03-009/run45afcd6b](../runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) is accepted,exact-integrated6d023d5 and target-validated1577/1577. One CWI repair resolved late directory permission/ownership classification;no open finding. R-082 remains partial. Next candidate is saved Source-proposal inspect/submit around accepted codecs/admission;capture preparation,file publication,seed/project/readiness and broader CLI/scientific duties remain mandatory. No next implementation is credited by preparation.
