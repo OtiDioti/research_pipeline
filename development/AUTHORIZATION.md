@@ -1,5 +1,11 @@
 # Development operating authorization
 
+## Repair fulfilled; human-directed shutdown — 2026-11-06
+
+The human's “perform the PID fixture before the sutdown” amendment is fulfilled by REQ-DEV-VALIDATION-002/run9bae8bd6,finally accepted/exact-integratedb376faf,final/mandatory target1585/1585. This session is STOPPED after its administrative checkpoint. No subsequent implementation request or phase is authorized in this session;the underlying revision7 CONTINUOUS grant persists for a future explicit human resumption without automatic restart or counter reset.
+
+Continuous51/100used49remain,commissioning1/3closed,CWIrepairs44,coordinator19,B-024corrective1/2,backend3/3/0. All prior consumed/exhausted families and unknown liabilities persist. Five completed transports add1939106input(1633920cached),34118output(17639reasoning) once:cumulative reported lowerbound486479850input(448540288cached),4488658output(1538709reasoning),390knownturns. Categories nested;older interrupted/native/coordinator usage,quota/invoice unknown. Existing ChatGPT development allowance only;all spending/service/data/live/scientific/publication/human-authority restrictions remain unchanged. Owning run record binds exact acceptance,integration,target/frozen settings and shutdown quiescence;STATUS owns the single next safe action.
+
 ## Human amendment — PID-fixture repair, then shutdown, 2026-11-06
 
 After requesting graceful shutdown with no new development, the human explicitly directs: “perform the PID fixture before the sutdown”. In context this authorizes the concrete held REQ-DEV-VALIDATION-002 repair through one fresh CWI start despite the known intermittent baseline failure. The complete unchanged baseline gate still executes and must pass before roles run; if it fails, stop without another start. Preserve all other model,scope,deadline,repair,acceptance,integration,service/data/scientific and spending limits. This is not a guard waiver, direct product coding permission, broader failed-draft recovery grant or counter reset.
@@ -14,7 +20,7 @@ Commissioning1/3closed,CWI repairs44,coordinator interventions18,backend3/3/0 un
 
 REQ-DEV-VALIDATION-002 is held under the request-template passing-baseline precondition. This checkpoint does not authorize an exception,launch,guard waiver or direct product fix. STATUS records the one human recovery decision needed before further development. Latest genuine integrated product remains6d023d5 with prior final/required target1577/1577; the later baseline error is preserved. CONTINUOUS is subject to this boundary,no automatic restart is installed or promised.
 
-**Current coordinator session: focused PID-fixture repair, then STOP under the human's 2026-11-06 direction above. The underlying revision7 CONTINUOUS grant persists for a future human-started session, without resetting limits; it does not override this session's shutdown boundary.**
+**Current coordinator session: STOPPED after the human-authorized PID-fixture repair and graceful checkpoint, 2026-11-06. The underlying revision7 CONTINUOUS grant persists for a future explicit human resumption without resetting limits; it does not override this session's shutdown boundary.**
 
 **Actual human grant: AUTH-2026-10-30-001, revision 7. State: CONTINUOUS, activated at checkpoint `af23c313d73edd8c6311e4364f3521605582d0ba`; fresh-session autonomous product coordination resumed by the human on 2026-11-04 after the completed backend-maintenance checkpoint.** Recorded from 2026-10-30 through the 2026-11-04 amendment. Source: the human's commissioning/continuous instructions in this conversation, repeated without expanded limits, and subsequent explicit model-selection/mock-example replies, the explicit M0-E/M0-S amendment, the subsequent instruction “extend time limit of cwi to 2700 seconds”, and the focused modernization instruction recorded below. The repetition and amendment do not reset any counters.
 

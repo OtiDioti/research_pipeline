@@ -2,6 +2,8 @@
 
 Navigation only. Immediate project-controlled children; frozen scope and permissions take precedence.
 
+- [9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md](9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) — PID-readiness fixture accepted,integrated and target-validated;shutdown.
+
 - [0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md](0c046a57-5e7f-42e4-a92f-d995c3ce0a3a.md) — REQ-D05-006 — Passive Tool-record CLI integrated
 - [153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md](153bf4bf-e2c8-4c52-aace-e0b8a4ab33b7.md) — REQ-D04-004-R2 — Prepared control and ordered report obligations
 - [1c313198-868b-4bbb-bd2f-7e7c0d3cec60.md](1c313198-868b-4bbb-bd2f-7e7c0d3cec60.md) — REQ-DEV-VALIDATION-001-R1 — Corrected concurrent validation accepted and integrated

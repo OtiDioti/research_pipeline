@@ -1,5 +1,7 @@
 # Development run records
 
+- [9bae8bd6 — REQ-DEV-VALIDATION-002](9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md): PID-readiness fixture finally accepted/exact-integratedb376faf;candidate/final/required target1585/1585,all target dispositions matching final,no findings/repairs. Continuous start51/100,first B-024corrective1/2/coordinator19;human-directed shutdown follows.
+
 - [5d1adb23 — REQ-D03-010](5d1adb23-9348-458c-bba9-03f1d77c0a54.md): STOPPED_INCOMPLETE at full baseline,1577executed/1576successful/one fixture error; no roles, candidate, acceptance or integration. Continuous start50/100. B-024 and held REQ-DEV-VALIDATION-002; STATUS owns the human recovery decision.
 
 Actual runs are recorded below; templates are not execution evidence.

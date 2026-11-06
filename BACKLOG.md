@@ -1,5 +1,11 @@
 # Blocked, paused, and deferred work
 
+## B-024 resolved — accepted PID-fixture repair; shutdown, 2026-11-06
+
+[REQ-DEV-VALIDATION-002/run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) is finally accepted,exact-integratedb376faf and target-validated1585/1585. Deterministic publication-window coverage and complete readiness remove the empty-PID defect while retaining all1577predecessors,live overlap and bounded cleanup. No remaining finding for this repair;no production-validator/backend change. First B-024corrective1/2 and coordinator19 remain consumed. The one-start human amendment is fulfilled;this session stops without further request/phase.
+
+Source run5d1adb23 remains genuinely incomplete before implementation,with frozen evidence unchanged. Its feature is planned,not delivered;future work must reconcile the repaired1585-test baseline after explicit human resumption. Historical failed Task/B1 recovery and exhausted salvage/orphan/Writer-deadline families remain held;B-010/B-011 scientific/live and all broader product gates persist. STATUS owns exactly one next safe action;no automatic restart.
+
 ## B-024 focused recovery authorized — 2026-11-06
 
 The human directs the existing PID-fixture repair before shutdown. DEV-092 and AUTHORIZATION record one fresh REQ-DEV-VALIDATION-002 attempt with the full baseline gate unchanged; if it fails again, stop without retry. Count first B-024corrective1/2/coordinator19/start51 before execution. Source request5d1adb23 remains incomplete, frozen and unimplemented; no failed source is adopted. No defect is marked fixed by preparation. Other exhausted recovery and scientific/live holds remain; no subsequent request/phase is authorized before shutdown.

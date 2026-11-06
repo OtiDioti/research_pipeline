@@ -1,5 +1,9 @@
 # coding_pipeline change audit
 
+## PID-fixture repair and shutdown audit — 2026-11-06
+
+REQ-DEV-VALIDATION-002/run9bae8bd6 accepted/exact-integratedb376faf,final/target1585/1585. The repaired defect was in the product's test fixture;only CWI Writer changed authorized fixture/helper/docs/index paths. Backend remains unchanged cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66;no maintenance attempt/adoption/reversion,cumulative3/3/0. Local coordinator evidence-checker assumptions about successful subtests and JSON status were corrected without changing product,backend,evidence,checks or counters. All historical patches/backups,configurations,receipts and unfinished-run state remain preserved. No hot patch,guard waiver or uncertain replay. The human-directed session stops after checkpoint.
+
 ## REQ-D03-010 baseline failure audit — 2026-11-06
 
 Run5d1adb23 stopped before role execution at full baseline:1577executed/1576successful/one incomplete-PID error in the product's concurrency test fixture. No backend defect or maintenance is established. Backend remains unchanged cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66; cumulative attempts/adoptions/reversions3/3/0. No guard,lease,state,receipt,log,environment or source edit; no test rerun. B-024/DEV-091 preserve diagnosis and the held product-test repair request through CWI. Historical patches/backups and all unfinished evidence remain intact.

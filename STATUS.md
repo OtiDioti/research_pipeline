@@ -1,5 +1,15 @@
 # Development status
 
+## Graceful shutdown complete after PID-fixture repair — 2026-11-06
+
+The human's focused repair-before-shutdown direction is fulfilled. [REQ-DEV-VALIDATION-002/run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) is finally accepted and exact-integrated **b376fafc33e4aded4932ca9c607b8f4c4a2abfc8**,tree **23a1eb49782eb75b994c11be6c350a50335b555b**,final receipt **38154ae50ac225b9ce794f88ca7b963e91a20b466e21f2bcd795db2251e899ab**. Reliable PID readiness and eight regressions resolve B-024 while retaining all1577predecessors and production-validator behavior. Baseline1577/1577,candidate/final/mandatory target **1585/1585**,zero other outcomes;all target dispositions match bound final. Target ran once1170.171067s,no source mutation or limit breach. No internal CWI repairs/findings.
+
+Main is clean at the exact integrated source before this administrative checkpoint;backend unchanged cleanbcb7ad24. Host/CWI07:23:18Z finds no controller,validator,fixture process,lease,quarantine,in-flight operation,recording gap or pending integration. All52histories terminal:37receipts,36exact integrated final sources,one deliberately superseded acceptance,15incomplete;53worktrees preserved. Historical ACCEPTED_UNMERGED states remain unchanged after external integration. No legitimate progress was discarded. Specification digest still matches the grant.
+
+**This coordinator session is STOPPED by human instruction.** The underlying revision7 grant persists for a future explicit human resumption;no automatic restart,Source feature or other request/phase follows this repair. Continuous **51/100 used,49 remain**,CWI repairs**44**,coordinator**19**,B-024corrective**1/2**,backend**3/3/0**;all historical exhausted/partial limits persist. Reported role lowerbound486479850input(448540288cached),4488658output(1538709reasoning),390knownturns,with unmeasured liabilities still unknown.
+
+Prior accepted/integrated support-context freshness0668007 and claim-use/history CLI6d023d5 remain preserved. Source run5d1adb23 remains incomplete before role execution and unimplemented;its frozen request/evidence are unchanged. Source proposals/capture preparation,seed/project/readiness/full CLI,Task/lifecycle/report and other mandatory product work remain. D01/D02/D03/D04/D05/M0-E/product are partial;scientific/live/M0-S/human acceptance remain pending. [local/live.md](local/live.md) is the self-contained shutdown handoff;the owning run record holds detailed evidence. Authorized administrative folder indexes are current.
+
 ## Human-authorized PID-fixture repair before shutdown — 2026-11-06
 
 The human directs the scoped [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) repair before graceful shutdown. This supersedes the earlier launch hold for exactly one fresh CWI attempt with the unchanged full baseline gate; if that baseline fails, stop without retry. No Source feature, other request or phase is authorized. After final acceptance and safe exact integration, perform required target validation, reconcile the shutdown handoff and STOP.
@@ -116,4 +126,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Launch and monitor the single human-authorized REQ-DEV-VALIDATION-002 CWI attempt from its committed clean base with unchanged full gates and approved role flags; count start51/coordinator19/B-024corrective1/2 first. Complete only this bounded repair and shutdown; if baseline fails, preserve evidence and stop without retry.
+On explicit human resumption, reconcile this shutdown checkpoint and local/live.md against the effective grant, specification digest and fresh Git/CWI/host evidence before selecting further work. Expected result: an authorized, clean, ownership-resolved starting state; no launch is scheduled by this shutdown.

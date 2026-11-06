@@ -1,5 +1,9 @@
 # D01 — Testable product foundation
 
+## Fixture reliability repaired; shutdown checkpoint — 2026-11-06
+
+[REQ-DEV-VALIDATION-002/run9bae8bd6](../runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) accepted/exact-integratedb376faf,final/required target1585/1585,all target dispositions matching final. B-024 is resolved through complete readiness and eight regressions;production validator and all1577predecessor assertions remain. R-007 gains bounded engineering evidence,no phase/M0-E/scientific completion claim. This human-directed session stops after its administrative checkpoint;STATUS owns the single next safe action. The prior baseline failure below remains historical evidence.
+
 ## Baseline reliability hold — 2026-11-06
 
 REQ-D03-010/run5d1adb23 executed1577 baseline tests with1576successful/one error in the existing live-overlap PID fixture,before any role ran. B-024/DEV-091 record the incomplete-publication diagnosis; [REQ-DEV-VALIDATION-002](../requests/REQ-DEV-VALIDATION-002.md) is a held focused CWI repair proposal. No product change or validation credit is claimed. Historical accepted validator evidence remains; current baseline reliability is limited until corrected and accepted. STATUS owns the recovery decision; phase and scientific gates remain partial/pending.

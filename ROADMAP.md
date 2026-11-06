@@ -1,5 +1,9 @@
 # Development roadmap
 
+## PID-fixture repair delivered; graceful shutdown — 2026-11-06
+
+[REQ-DEV-VALIDATION-002/run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) is accepted,exact-integratedb376faf and target-validated1585/1585. B-024 is resolved;R-007 gains bounded fixture-reliability evidence without production-validator or scientific scope change. The human-directed session stops here. No further request/phase is selected or started. Saved Source-proposal inspect/submit remains a future candidate after explicit resumption and fresh reconciliation against the new1585-test baseline;the prior frozen failed request stays preserved. Capture preparation,full CLI and every broader mandatory/scientific/live/human obligation remain. STATUS owns counters and the one next safe action.
+
 ## Focused PID-fixture repair before shutdown — 2026-11-06
 
 REQ-D03-010 stopped before implementation at the full baseline. B-024/DEV-091 preserve its incomplete-PID diagnosis. The human now authorizes only existing [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) through CWI before graceful shutdown, retaining the full baseline and all acceptance/integration/target gates. If the baseline fails again, stop without retry. Source-proposal and broader D03 work remain held; no additional request/phase starts. STATUS owns actual execution, counters and the single next action.

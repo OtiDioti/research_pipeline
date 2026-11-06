@@ -1,5 +1,11 @@
 # Development environment contract
 
+## PID repair integrated and shutdown quiescence — 2026-11-06
+
+REQ-DEV-VALIDATION-002/run9bae8bd6 accepted/exact-integratedb376faf,tree23a1eb4,final/required target1585/1585. All five invocation-prepared records match approved models/efforts,pinnedCodex0.166.0/SHA256b8a11fed and2700s. Backend unchanged cleanbcb7ad24,stable map/validation-env46f63a41/FD4096/full ordered checks unchanged. Mandatory target ran once07:02:52–07:22:22Z,test wall1170.171067s,9019193bytes,stderr empty,no limit/source mutation/forced termination;all1585dispositions match bound final,stdoutSHA256d2507714ff6cfc319f21f7515c45fc68c39e5befe86cc600f8b12f3bedacd964.
+
+Host/CWI07:23:18Z confirms no controller,validator,fixture process,lease,quarantine,in-flight operation,recording gap or pending integration. Main and retained relevant worktrees clean before administrative checkpoint;52terminal histories/53worktrees preserved. No dependency/authentication/configuration/security/environment/backend change. Terminal CWI may clear transient validation/diff pointers:resolve immutable final checks/review/diff through receipts rather than inferring missing evidence. Native status is JSON,diagnose is text;successful dispositions may include subtest_success events. Exact evidence is in local/attempts/DEV-VALIDATION-002-attempt-001/ and the owning run record. Future access/ownership must be reverified after explicit human resumption;no automatic restart.
+
 ## Authorized PID-fixture repair readiness — 2026-11-06
 
 Fresh05:39:45Z parser compatibility and ChatGPT authentication pass with unchanged pinnedCodex0.166.0/SHA256b8a11fed; catalog fetched05:38:36Z advertises approvedgpt-6-astra/gpt-6.1-sol with high/xhigh. Backend cleanbcb7ad24,main cleand863deb,51terminal histories and no host CWI/validator/fixture owner or pending integration. Specification hash matches. Both latest accepted and failed run supported status/diagnose verify retained evidence. Stable map,validation-env46f63a41,FD4096,2700s,one milestone,repairs2/6,all eight role flags,two full checks,no--merge remain. No model call,server effective-model/quota attestation,new dependency or environment change. Evidence local/shutdown-20261106-pid-repair/readiness.json and native reports.

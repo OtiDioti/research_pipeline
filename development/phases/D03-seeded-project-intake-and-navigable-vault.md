@@ -1,5 +1,9 @@
 # D03 — Seeded project intake and navigable vault
 
+## PID prerequisite repaired; Source feature remains unimplemented — 2026-11-06
+
+[REQ-DEV-VALIDATION-002/run9bae8bd6](../runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) resolves B-024 at exact-integratedb376faf,final/target1585/1585. No Source functionality was introduced and no D03 requirement credit follows. Original Source run5d1adb23/request remain frozen,incomplete before role execution and unimplemented. Current claim-use/history CLI remains accepted. The human-directed session stops without another request/phase;future Source work requires explicit resumption and fresh reconciliation against the repaired baseline. Capture preparation,seed/project/readiness/full CLI and scientific obligations remain mandatory;D03 stays partial. The hold described below is the historical pre-repair checkpoint.
+
 ## Source-proposal request held at baseline — 2026-11-06
 
 REQ-D03-010/run5d1adb23 is STOPPED_INCOMPLETE:1577executed/1576successful/one existing validator-fixture error,zero roles or Source changes. The frozen request remains unchanged; no acceptance/integration/requirement credit. Latest accepted/integrated Source-independent CLI source remains6d023d5 with prior final/target1577/1577. B-024 blocks new feature starts on the current baseline; the scoped fixture repair is held for the single human decision in STATUS. Capture preparation,seed/project/readiness/full CLI and scientific obligations remain mandatory; D03 stays partial.

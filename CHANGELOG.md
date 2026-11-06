@@ -1,5 +1,9 @@
 # Integrated development history
 
+## PID-readiness fixture repaired and integrated; shutdown — 2026-11-06
+
+[REQ-DEV-VALIDATION-002/run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) finally accepted/exact-integrated **b376faf**,receipt38154ae5. The overlap fixture waits for complete PID readiness;deterministic regressions preserve distinct live overlap,bounded failure/cleanup and all1577predecessors. Candidate/final/required target **1585/1585**,zero other outcomes,all target dispositions matching final. No CWI repair or production-validator/backend change. B-024 resolved;continuous start51/coordinator19/B-024corrective1/2 consumed. The human-directed session stops after this checkpoint;Source work and scientific validation remain pending.
+
 ## Source-proposal baseline failure checkpoint — 2026-11-06
 
 [REQ-D03-010/run5d1adb23](development/runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md) stopped before role execution:1577 tests ran,1576 succeeded,one existing concurrency fixture read an incomplete PID announcement. No Source implementation, acceptance, integration or requirement credit. B-024/DEV-091 preserve the diagnosis and a held CWI repair request; no test rerun, direct product edit or backend maintenance. Continuous50/100 consumed; repair/recovery counters unchanged. Latest accepted/integrated product remains6d023d5 with prior final/required target1577/1577. Human recovery decision is pending; scientific validation remains pending.

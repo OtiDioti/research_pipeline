@@ -1,5 +1,11 @@
 # Development decisions
 
+## DEV-093 — Accepted fixture repair completes the shutdown scope
+
+REQ-DEV-VALIDATION-002/run9bae8bd6 completed the human's focused amendment:complete PID readiness and eight deterministic/adverse regressions,all1577predecessors retained,production validator unchanged. CWI accepted all nine criteria and the complete change without findings/repairs;candidate/final/required target1585/1585. Exact FF integratedb376faf after receipt/Git/ownership safety checks;target ran once with all dispositions matching final. B-024 is resolved;first recovery1/2/coordinator19 remain consumed.
+
+Stop this coordinator session after reconciliation and administrative checkpoint. No Source request or phase follows. The failed Source baseline and all historical receipts/configurations/worktrees remain intact;future Source work needs explicit human resumption and current-baseline reconciliation. Preserve tool/provider independence,all94requirements/13FOLLOWON and scientific/live/human gates. Backward compatibility is unnecessary;the unsafe readiness path was superseded without retaining a compatibility branch. STATUS owns the single next safe action.
+
 ## DEV-092 — One authorized PID-fixture repair, then graceful shutdown
 
 The human's follow-up “perform the PID fixture before the sutdown” resolves the B-024 launch judgment for one fresh CWI repair attempt only. Update the previously unlaunched REQ-DEV-VALIDATION-002 with this actual authority; do not change its technical criteria or weaken the full baseline. The unchanged baseline must pass before roles run; a repeat failure ends the attempt without retry. After actual final acceptance, safe exact integration and mandatory target validation, checkpoint and stop. Do not begin Source-proposal or other work. Count start51/coordinator19/B-024corrective1/2 before execution; other limits and historical evidence remain intact. This is a narrow human amendment, not self-authorization or a reset.
