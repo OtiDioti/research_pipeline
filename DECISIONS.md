@@ -2,10 +2,11 @@
 
 Locates individual decision records and their rationale; it does not repeat execution histories or create operating authority.
 
-Current policy comes from [AGENTS](AGENTS.md),the specification and [effective human authority](development/AUTHORIZATION.md). Historical decisions may be superseded;consult their original status and applicable amendments. All93existing definitions are preserved,with DEV-094 documenting this restructuring.
+Current policy comes from [AGENTS](AGENTS.md),the specification and [effective human authority](development/AUTHORIZATION.md). Historical decisions may be superseded;consult their original status and applicable amendments. Original definitions remain preserved alongside subsequent decisions.
 
 | ID | Subject | Record |
 | --- | --- | --- |
+| DEV-095 | Maintain development records by owner and event | [Decision](development/decisions/ADR-095-documentation-maintenance.md) |
 | DEV-094 | Separate current development state from history | [Decision](development/decisions/ADR-094-development-records.md) |
 | DEV-093 | Accepted fixture repair completes the shutdown scope | [Decision](development/decisions/DEV-093.md) |
 | DEV-092 | One authorized PID-fixture repair, then graceful shutdown | [Decision](development/decisions/DEV-092.md) |

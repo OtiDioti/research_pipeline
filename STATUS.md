@@ -4,7 +4,7 @@ Provides the current coordination snapshot and one next safe action; detailed ex
 
 ## Current authority
 
-Product coordination remains **STOPPED** after the human-directed PID repair. The current task authorizes only administrative [role-reference cleanup](development/history/reference-cleanup-2026-11-06/README.md), completing the record restructuring. Revision7 persists without new permissions, counter resets or automatic restart; see [effective authority](development/AUTHORIZATION.md).
+Product coordination remains **STOPPED** after the human-directed PID repair. The current task authorizes administrative [documentation-maintenance guidance](development/decisions/ADR-095-documentation-maintenance.md) and its commit. Revision7 persists without new product permissions, counter resets or automatic restart; see [effective authority](development/AUTHORIZATION.md).
 
 ## Product and execution
 

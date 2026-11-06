@@ -8,7 +8,7 @@ Explains how to inspect past decisions, grants and execution checkpoints without
 - Topic snapshots retain the complete earlier narratives with rebased links and explicit historical labels.
 - authorization/ contains every original authority/amendment/checkpoint section separately; dates and actual supersession govern effect.
 - requirements/ indexes individual evidence checkpoints by topic and referenced requirement IDs.
-- changelog/ groups the original change entries by their heading dates.
+- changelog/ groups preserved and subsequent change entries by date, linking their owning evidence.
 - Individual DEV definitions live under development/decisions/ and are indexed by DECISIONS.md.
 - originals/2026-11-06/ retains all 164 initial Markdown inputs losslessly (163 plain-text originals and the specification in deterministic gzip form); MANIFEST.md records paths,bytes and SHA-256.
 

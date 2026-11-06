@@ -4,7 +4,7 @@ Records the effective human operating grant and links to original grants, amendm
 
 ## Current instruction and provenance
 
-The human currently authorizes only the [documentation-reference cleanup](history/reference-cleanup-2026-11-06/README.md), completing [DEV-094](decisions/ADR-094-development-records.md). Product coordination remains STOPPED after the completed PID-fixture repair. AUTH-2026-10-30-001 revision 7 persists for a future explicit human resumption; no start, recovery, budget, model, service/data or scientific allowance is reset or expanded.
+Product coordination remains STOPPED after the completed PID-fixture repair. AUTH-2026-10-30-001 revision 7 persists for a future explicit human resumption; no start, recovery, budget, model, service/data or scientific allowance is reset or expanded. Current administrative task scope is summarized in [STATUS](../STATUS.md) under actual human instructions; it does not reactivate product coordination.
 
 Actual human instructions are authoritative. This is a selective reading view, not an independent grant or substitute for source evidence. Activation checkpoint: af23c313d73edd8c6311e4364f3521605582d0ba. Original inspected source: dce9bedb998c8be4389d42627916911f4c25d336. Verify applicable source amendments and later restrictions before acting.
 

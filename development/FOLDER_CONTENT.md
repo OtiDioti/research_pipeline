@@ -25,4 +25,4 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [RUNBOOK.md](RUNBOOK.md) — Provides setup and operational commands for authorized CWI work, including current role-specific flags and exact integration controls.
 - [runs/](runs/FOLDER_CONTENT.md) — Project-controlled runs directory.
 - [templates/](templates/FOLDER_CONTENT.md) — Project-controlled templates directory.
-- [UPDATE_GUIDE.md](UPDATE_GUIDE.md) — Explains how to update current guidance and migrate records without losing authority, evidence, budgets or unfinished-run recoverability.
+- [UPDATE_GUIDE.md](UPDATE_GUIDE.md) — Explains which development records to update, when and how, without losing authority, evidence, budgets or unfinished-run recoverability.

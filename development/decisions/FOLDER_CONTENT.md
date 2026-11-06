@@ -5,6 +5,7 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [ADR-010-continuous-development.md](ADR-010-continuous-development.md) — ADR-010 — Bounded continuous development with a narrow backend-repair exception.
 - [ADR-063-lifecycle-report-decomposition.md](ADR-063-lifecycle-report-decomposition.md) — ADR-063 — Separate executable lifecycle-report bindings from capture and publication.
 - [ADR-094-development-records.md](ADR-094-development-records.md) — DEV-094 — Separate current development state from history.
+- [ADR-095-documentation-maintenance.md](ADR-095-documentation-maintenance.md) — DEV-095 — Maintain development records by owner and event.
 - [DEV-001.md](DEV-001.md) — DEV-001 — Outer Codex coordinator; all implementation through CWI.
 - [DEV-002.md](DEV-002.md) — DEV-002 — Markdown-only repository root; implementation in `implementation/`.
 - [DEV-003.md](DEV-003.md) — DEV-003 — Ignored nested `coding_pipeline/` clone, not a submodule.
