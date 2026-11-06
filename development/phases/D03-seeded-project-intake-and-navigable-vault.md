@@ -113,3 +113,7 @@ B-017 is resolved. D03 remains partial: full current/home/branch/runtime/report/
 ## Claim-use CLI engineering checkpoint — 2026-11-06
 
 [REQ-D03-009/run45afcd6b](../runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) is accepted,exact-integrated6d023d5 and target-validated1577/1577. One CWI repair resolved late directory permission/ownership classification;no open finding. R-082 remains partial. Next candidate is saved Source-proposal inspect/submit around accepted codecs/admission;capture preparation,file publication,seed/project/readiness and broader CLI/scientific duties remain mandatory. No next implementation is credited by preparation.
+
+## Saved Source-proposal CLI preparation — 2026-11-06
+
+[REQ-D03-010](../requests/REQ-D03-010.md) is READY after accepted6d023d5,final/target1577/1577 and checkpointbad7a10. It wraps existing strict saved-Source codecs and exact explicit admission;capture preparation/file publication remains separate mandatory work. No Source-preparation/readiness/scientific authority or new requirement completion is claimed. D03/R-082 and broader duties remain partial;all failed-draft/exhausted-limit holds persist.
