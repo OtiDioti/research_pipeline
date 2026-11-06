@@ -4,24 +4,25 @@ Provides the current coordination snapshot and one next safe action; detailed ex
 
 ## Current authority
 
-Product coordination remains **STOPPED** after the human-directed PID repair. The current task authorizes administrative [documentation-maintenance guidance](development/decisions/ADR-095-documentation-maintenance.md) and its commit. Revision7 persists without new product permissions, counter resets or automatic restart; see [effective authority](development/AUTHORIZATION.md).
+Product coordination is **CONTINUOUS**, explicitly resumed by the human under unchanged revision 7 authority; see [effective authority](development/AUTHORIZATION.md). No permissions or limits reset.
 
 ## Product and execution
 
 - Accepted/integrated source: `b376fafc33e4aded4932ca9c607b8f4c4a2abfc8`;tree `23a1eb49782eb75b994c11be6c350a50335b555b`.
 - Final receipt: `38154ae50ac225b9ce794f88ca7b963e91a20b466e21f2bcd795db2251e899ab`;[owning PID record](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md).
-- Baseline 1577/1577;candidate/final/mandatory target 1585/1585,zero other outcomes. Target ran once;all dispositions match bound final. This migration adds no product/scientific validation.
-- At migration preflight:no controller,validator,lease,quarantine or pending integration. All 52 histories terminal:37 receipts,36 exact integrated final sources,one deliberately superseded acceptance,15 incomplete;53 worktrees preserved. Recheck live facts before action.
+- Baseline 1577/1577;candidate/final/mandatory target 1585/1585,zero other outcomes. Target ran once;all dispositions match bound final. This resumption establishes no new product/scientific validation.
+- Fresh resumption reconciliation: all 52 histories and state hashes unchanged; 37 receipts, 36 exact accepted sources ancestral to main, one deliberately superseded acceptance, 15 incomplete; 53 worktrees preserved. Supported status/diagnose and actual-host checks find no live controller/validator, lease, quarantine or pending integration. Historical recording gaps and two nonresumable operation intents remain preserved.
+- Prepared [REQ-D03-010-R1](development/requests/REQ-D03-010-R1.md), the unfinished Source-only CLI slice after the accepted baseline repair. Attempt local/attempts/D03-010-R1-attempt-001 counts continuous start 52 before launch; no implementation/acceptance is implied.
 - Backend `bcb7ad24f83ff5193345f3d4fa72122ea53a4e66`;[audit](coding_pipeline_changes.md). Product files and frozen requests unchanged.
 
 ## Cumulative consumption
 
 | Account | Consumption |
 | --- | --- |
-| Continuous starts | 51/100 consumed;49 remain |
+| Continuous starts | 52/100 consumed;48 remain |
 | Commissioning | 1/3;closed |
-| CWI repairs / coordinator interventions | 44 / 19 |
-| B-024 corrective actions | 1/2;resolved |
+| CWI repairs / coordinator interventions | 44 / 20 |
+| B-024 corrective actions | 2/2; repaired baseline; replacement counted |
 | Backend attempts/adoptions/reversions | 3/3/0 |
 | Reported role lower bound | 486479850input(448540288cached),4488658output(1538709reasoning),390knownturns |
 
@@ -37,4 +38,4 @@ D01–D05/M0-E remain partial;all 94requirements/13 FOLLOWON and later phases re
 
 ## Exactly one next safe action
 
-After explicit human resumption of product coordination,compare this snapshot,effective authority and local handoff with fresh Git/CWI/host evidence before selecting work. Prerequisites:unchanged authorized specification,preserved limits and resolved ownership. Expected result:an authorized starting state;no product launch is scheduled by this documentation task.
+Launch the single prepared REQ-D03-010-R1 attempt through CWI from its committed clean main base, with the recorded environment, complete baseline and all eight model flags. Prerequisites: verified ownership, unchanged authorized specification, current model/account support and preserved limits. Expected result: one owned run or an evidenced preflight stop; no competing launch or automatic retry.

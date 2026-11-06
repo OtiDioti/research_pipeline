@@ -28,7 +28,7 @@ All other historical consumed/partial allowances persist. Resolution does not re
 
 B-024 is resolved by [accepted/integrated run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md); first corrective action 1/2 remains consumed. Earlier B-001/B-002/B-007/B-008/B-012/B-014–B-023 resolutions, original counts and evidence remain in the [historical backlog](development/history/BACKLOG.md). B-013 was reopened as recorded above.
 
-Source run5d1adb23 remains incomplete before role execution; no Source feature or draft was delivered. Source-proposal/capture CLI, seed/project/readiness, Task/lifecycle/report and broader mandatory scope remain in [ROADMAP](ROADMAP.md) and [REQUIREMENTS](development/REQUIREMENTS.md). They are not waived or automatically treated as new recovery attempts. Product coordination remains stopped; STATUS owns the single next safe action.
+Source run5d1adb23 remains incomplete before role execution; no Source feature or draft was delivered. Source-proposal/capture CLI, seed/project/readiness, Task/lifecycle/report and broader mandatory scope remain in [ROADMAP](ROADMAP.md) and [REQUIREMENTS](development/REQUIREMENTS.md). They are not waived or automatically treated as new recovery attempts. Product coordination is explicitly resumed under unchanged revision 7 authority. The repaired baseline permits one conservatively counted replacement Source attempt, REQ-D03-010-R1; B-024 corrective actions become 2/2 on that launch, without replenishing prior recovery limits. STATUS owns the single next safe action.
 
 ## Required fields for a new blocked or paused item
 

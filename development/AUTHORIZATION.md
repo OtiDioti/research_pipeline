@@ -4,7 +4,7 @@ Records the effective human operating grant and links to original grants, amendm
 
 ## Current instruction and provenance
 
-Product coordination remains STOPPED after the completed PID-fixture repair. AUTH-2026-10-30-001 revision 7 persists for a future explicit human resumption; no start, recovery, budget, model, service/data or scientific allowance is reset or expanded. Current administrative task scope is summarized in [STATUS](../STATUS.md) under actual human instructions; it does not reactivate product coordination.
+The human explicitly resumed top-level product coordination on 2026-11-06 under AUTH-2026-10-30-001 revision 7, superseding prior session-specific shutdown instructions. [Actual resumption instruction](history/authorization/063-explicit-continuous-resumption-2026-11-06.md) creates no new permissions and resets no limits. All operative restrictions and exhausted allowances persist.
 
 Actual human instructions are authoritative. This is a selective reading view, not an independent grant or substitute for source evidence. Activation checkpoint: af23c313d73edd8c6311e4364f3521605582d0ba. Original inspected source: dce9bedb998c8be4389d42627916911f4c25d336. Verify applicable source amendments and later restrictions before acting.
 
@@ -14,7 +14,7 @@ Actual human instructions are authoritative. This is a selective reading view, n
 | --- | --- |
 | Repository / target | `/home/francesco/Desktop/gits/research_pipeline`, branch `main`; inspected original commit `dce9bedb998c8be4389d42627916911f4c25d336` |
 | Current specification | project_description.md v1.4; SHA-256 `fefc5b9b750ca270f286c7b799f71da610f33c3babf77e53b2321bf1d060664f`; narrowly amended under actual human authority; historical v1.3 evidence preserved |
-| Current mode | Underlying revision 7 grant CONTINUOUS; product coordination is currently STOPPED. Current human task permits administrative restructuring only. |
+| Current mode | Revision 7 CONTINUOUS; explicitly resumed on 2026-11-06 under unchanged permissions and cumulative limits. |
 | Commissioning starts | At most 3, including failed preflights/replacements; correction must be diagnosed and previous attempt safely resolved; no blind retries |
 | First integration | Human explicitly preauthorizes coordinator inspection and exact fast-forward of first finally accepted result after bootstrap/receipt/CWI complete-diff-review evidence/exact Git identity/branch/base/cleanliness/collision/meaningful-validation checks. CWI --merge stays off. This is preauthorization, not a completed human review |
 | Continuous activation | Only after first final acceptance, complete inspection, exact integration, successful validation and documentation checkpoint; record activation then |
@@ -45,6 +45,7 @@ Actual human instructions are authoritative. This is a selective reading view, n
 - [One additional interrupted-workflow salvage — actual human amendment, 2026-11-05](history/authorization/058-one-additional-interrupted-workflow-salvage--actual-human-amendment-2026-11-05.md)
 - [Human amendment — PID-fixture repair, then shutdown, 2026-11-06](history/authorization/002-human-amendment--pid-fixture-repair-then-shutdown-2026-11-06.md)
 - [Repair fulfilled; human-directed shutdown — 2026-11-06](history/authorization/001-repair-fulfilled-human-directed-shutdown--2026-11-06.md)
+- [Explicit continuous resumption — 2026-11-06](history/authorization/063-explicit-continuous-resumption-2026-11-06.md)
 
 The narrow extra context-salvage and PID-repair permissions were consumed; they are not reusable exceptions. The [complete source index](history/authorization/FOLDER_CONTENT.md) retains every other amendment, stop, resumption and consumption checkpoint. Its order preserves the former document's section order; dates and explicit supersession determine effect.
 

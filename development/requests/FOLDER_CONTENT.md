@@ -29,6 +29,7 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [REQ-D03-007.md](REQ-D03-007.md) — REQ-D03-007 — CLI for immutable readable views and preserved refresh.
 - [REQ-D03-008.md](REQ-D03-008.md) — REQ-D03-008 — Correct observed directory mutation diagnostics in readable commands.
 - [REQ-D03-009.md](REQ-D03-009.md) — REQ-D03-009 — Read-only current claim-use and generation-history CLI.
+- [REQ-D03-010-R1.md](REQ-D03-010-R1.md) — Saved Source-proposal inspection and explicit submission after the accepted baseline repair.
 - [REQ-D03-010.md](REQ-D03-010.md) — REQ-D03-010 — Saved Source-proposal inspection and explicit submission CLI.
 - [REQ-D04-001.md](REQ-D04-001.md) — REQ-D04-001 — Durable controller resource accounting.
 - [REQ-D04-002-R1.md](REQ-D04-002-R1.md) — REQ-D04-002-R1 — Recover and complete deterministic committed run reports.

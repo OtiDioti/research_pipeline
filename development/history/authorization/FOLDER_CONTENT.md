@@ -65,3 +65,4 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [061-support-context-integration-checkpoint--2026-11-06-same-revision7-grant.md](061-support-context-integration-checkpoint--2026-11-06-same-revision7-grant.md) — Recorded authority: Support-context integration checkpoint — 2026-11-06; same revision7 grant.
 - [062-claim-use-cli-integration-checkpoint--2026-11-06-same-revision7-grant.md](062-claim-use-cli-integration-checkpoint--2026-11-06-same-revision7-grant.md) — Recorded authority: Claim-use CLI integration checkpoint — 2026-11-06; same revision7 grant.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — Immediate-child navigation index.
+- [063-explicit-continuous-resumption-2026-11-06.md](063-explicit-continuous-resumption-2026-11-06.md) — Actual human resumption under unchanged revision 7 authority and limits.

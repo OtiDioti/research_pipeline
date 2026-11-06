@@ -4,9 +4,9 @@ Defines phase outcomes and dependency gates; current execution belongs to STATUS
 
 ## Current progression
 
-D00 commissioning is complete. D01–D05 and M0-E remain partial; later phases and M0-S are not completed. All 94 specification requirements and13 FOLLOWON criteria remain mandatory. Product coordination is currently stopped; this task restructures records only.
+D00 commissioning is complete. D01–D05 and M0-E remain partial; later phases and M0-S are not completed. All 94 specification requirements and13 FOLLOWON criteria remain mandatory. Product coordination is explicitly resumed under the unchanged revision 7 grant.
 
-Latest product evidence belongs to [run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md), with earlier accepted scope indexed in [run records](development/runs/FOLDER_CONTENT.md). A future candidate is saved Source-proposal inspection/explicit submission after explicit resumption and reconciliation of the repaired 1585-test baseline. Capture preparation,seed/project/readiness/full CLI,Task/lifecycle/report and scientific duties remain;the original failed Source request stays frozen.
+Latest product evidence belongs to [run9bae8bd6](development/runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md), with earlier accepted scope indexed in [run records](development/runs/FOLDER_CONTENT.md). The next ready slice is [REQ-D03-010-R1](development/requests/REQ-D03-010-R1.md), saved Source-proposal inspection/explicit submission, after fresh reconciliation of the repaired 1585-test baseline. Capture preparation,seed/project/readiness/full CLI,Task/lifecycle/report and scientific duties remain;the original failed Source request stays frozen.
 
 ## Phase map
 
