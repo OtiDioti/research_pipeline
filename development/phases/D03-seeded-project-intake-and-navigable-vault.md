@@ -2,15 +2,15 @@
 
 Defines this phase’s scope, dependencies, acceptance criteria and recorded engineering/scientific progress. Dated delivery notes retain their historical context; current execution is owned by STATUS.
 
-## PID prerequisite repaired; Source feature remains unimplemented — 2026-11-06
+## Current Source CLI evidence
 
-[REQ-DEV-VALIDATION-002/run9bae8bd6](../runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) resolves B-024 at exact-integratedb376faf,final/target1585/1585. No Source functionality was introduced and no D03 requirement credit follows. Original Source run5d1adb23/request remain frozen,incomplete before role execution and unimplemented. Current claim-use/history CLI remains accepted. The human-directed session stops without another request/phase;future Source work requires explicit resumption and fresh reconciliation against the repaired baseline. Capture preparation,seed/project/readiness/full CLI and scientific obligations remain mandatory;D03 stays partial. The hold described below is the historical pre-repair checkpoint.
+[REQ-D03-010-R1/run9252c1a1](../runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md) is finally accepted/exact-integrated4c25bc8, final/mandatory target1618/1618. It delivers offline saved Source-proposal inspection and explicit exact submission/original-ID retry through the existing codecs/store, with33 new tests and one resolved predecessor help-output fixture repair. Capture preparation remains library-only and proposal-file publication caller-controlled. Original run5d1adb23/request and the accepted PID repair retain their historical evidence; no failed draft was adopted. Human-directed shutdown follows this current request, with no new request or phase. D03 remains partial: seed/project/readiness/full CLI and scientific obligations are unfinished. The dated hold below is preserved historical context.
 
 ## Source-proposal request held at baseline — 2026-11-06
 
 REQ-D03-010/run5d1adb23 is STOPPED_INCOMPLETE:1577executed/1576successful/one existing validator-fixture error,zero roles or Source changes. The frozen request remains unchanged; no acceptance/integration/requirement credit. Latest accepted/integrated Source-independent CLI source remains6d023d5 with prior final/target1577/1577. B-024 blocks new feature starts on the current baseline; the scoped fixture repair is held for the single human decision in STATUS. Capture preparation,seed/project/readiness/full CLI and scientific obligations remain mandatory; D03 stays partial.
 
-**State:** PARTIAL; latest bounded claim-use/history CLI REQ-D03-009 is accepted/exact-integrated at6d023d56a8e80914911e163278db140225b65dbb,final/target1577/1577. Earlier storage/intake/vault/authoring evidence remains recorded below;B-017 is resolved in BACKLOG/DEV-047. Actual authorized readiness,full workspace,full CLI and scientific obligations remain incomplete.
+**State:** PARTIAL; latest bounded saved Source-proposal inspection/submission CLI REQ-D03-010-R1 is accepted/exact-integrated at4c25bc8c750aa0c90761a8b105e7f09feb4b5503, final/mandatory target1618/1618. Earlier storage/intake/vault/authoring and claim-use/history CLI evidence remains below. Actual authorized readiness, full workspace, full CLI and scientific obligations remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.
 

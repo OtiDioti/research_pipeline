@@ -10,6 +10,7 @@ This migration changes no requirement ID,obligation,scope,state or acceptance ru
 
 | Recent evidence | Owning record |
 | --- | --- |
+| Saved Source-proposal inspection/submission CLI;partial R-017/R-019/R-021/R-024/R-082, accepted/integrated1618/1618 | [9252c1a1](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md) |
 | R-007 PID-fixture reliability;accepted/integrated,1585/1585 | [9bae8bd6](runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md) |
 | Claim-use/history CLI;partial R-082 and supporting inspection evidence | [45afcd6b](runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) |
 | Selected support-context freshness;partial R-011/R-014/R-015/R-017/R-019/R-077 | [b4a385e8](runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) |
@@ -47,19 +48,19 @@ Requests must cite these IDs in acceptance criteria and retain partial coverage 
 | R-014 | §§5.5, 13.2–13.3 | Invalid/stale/inapplicable/incomplete support differs from refutation; preserve old contexts, failed routes and sufficient independent alternatives. | D02, D08 | Failed-route, selective impact and context-change tests |
 | R-015 | §§5.5, 7.5 | Assessment/issue changes synchronously update affected eligibility in the metadata transaction even without statement change; only previously assessed sufficient alternatives preserve eligibility. | D02, D07–D08 | Withdrawal/promotion race; no inferred sufficiency |
 | R-016 | §§4.1–4.4, 6.7, 10.1 | Controller alone writes canonical state; narrow submissions; no unbounded spawning, self-promotion, reviewer repair in place or generic worker DB write. | D02, D04, D07 | Access/authority denials and attributed submissions |
-| R-017 | §§9.1–9.2 | SQLite metadata/queue/resources/events; immutable hashed artifacts stored durably before atomic authority/version/resource-checked metadata commit. | D02 | Crash between artifact and DB commit, corruption and rollback |
+| R-017 | §§9.1–9.2 | SQLite metadata/queue/resources/events; immutable hashed artifacts stored durably before atomic authority/version/resource-checked metadata commit. | D02 | Crash between artifact and DB commit, corruption and rollback; [partial Source CLI evidence](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md), remaining obligation open |
 | R-018 | §§9.2–9.3, 13.4 | Submission IDs prevent duplicate effects/charges; lease generation fences expired attempts; preserve late/stale work without advancing current outcome. | D02, D04 | Duplicate delivery, stale worker and relevant-dependency conflicts |
-| R-019 | §§9.1, 9.5–9.6 | Runtime data separate from code; schema migration/old-record access or export; consistent metadata/artifact backup and interrupted-run restore; inspection/replay/reconstruction distinct. | D02, D09 | Migration, integrity and real restoration exercise |
+| R-019 | §§9.1, 9.5–9.6 | Runtime data separate from code; schema migration/old-record access or export; consistent metadata/artifact backup and interrupted-run restore; inspection/replay/reconstruction distinct. | D02, D09 | Migration, integrity and real restoration exercise; [partial Source CLI evidence](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md), remaining obligation open |
 
 ## Seeds and workspace
 
 | ID | Source | Obligation | Owner / dependencies | Evidence required |
 | --- | --- | --- | --- | --- |
 | R-020 | §§1.3, 3.2, 8.1 | Substantive pre-existing scientific material before research; awaiting_materials and bounded intake allowed; empty titles/metadata/placeholders/tool catalogs insufficient. | D03–D04 | Empty/unreadable denial and substantive short-note admission |
-| R-021 | §3.2 | Preserve original bytes, organization, provenance, permissions and seed baseline; support notes/text/TeX/PDF/scans with inspection/notebooks/calculations/pasted content/vault imports. | D03 | Mixed corpus, original hashes/path mappings and limitations |
+| R-021 | §3.2 | Preserve original bytes, organization, provenance, permissions and seed baseline; support notes/text/TeX/PDF/scans with inspection/notebooks/calculations/pasted content/vault imports. | D03 | Mixed corpus, original hashes/path mappings and limitations; [partial Source CLI evidence](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md), remaining obligation open |
 | R-022 | §3.2 | Classify duplicates/versions/inaccessible/uninspected content; inspect relevant subset; map questions, provisional claims, conventions, contradictions, gaps and baselines. | D03 | Partial/conflicting corpus and accurate coverage |
 | R-023 | §§3.2–3.3 | Source-linked usable brief and authorized envelope precede readiness; unknown origin stays unknown; seeds/prior reviews not automatically endorsed. | D03, D06 | Readiness decision and no-promotion cases |
-| R-024 | §§3.2, 6.6 | Preserve original/unresolved/external links; no imported plugins/templates/config activation; record candidate exposure from seeds. | D03, D07 | Vault link/configuration and exposure cases |
+| R-024 | §§3.2, 6.6 | Preserve original/unresolved/external links; no imported plugins/templates/config activation; record candidate exposure from seeds. | D03, D07 | Vault link/configuration and exposure cases; [partial Source CLI evidence](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md), remaining obligation open |
 | R-025 | §§9.7–9.8 | Source-prescribed logical Obsidian areas and branch bundles, stable IDs/revisions, manifests and meaningful-folder READMEs with all seven prescribed fields; optional folders only when useful. | D03 | Layout and README contract fixtures |
 | R-026 | §9.7 | Private generation and atomic publication of complete snapshot views; pinned readers, labeled stale indexes, no writable hard links to immutable objects. | D03 | Interrupted refresh, generation consistency and mutation isolation |
 | R-027 | §§9.8, 9.11 | Home/branch/question/claim/source/issue navigation, safe relative Markdown links/IDs/headings, companions and generated properties; typed support distinct from hyperlinks. | D03, D09 | Link/companion checks and human navigation |
@@ -137,7 +138,7 @@ Requests must cite these IDs in acceptance criteria and retain partial coverage 
 
 | ID | Source | Obligation | Owner / dependencies | Evidence required |
 | --- | --- | --- | --- | --- |
-| R-082 | §§10.1, 10.3 | CLI creation/intake/start/pause/resume/cancel, task/claim/tool/decision inspection/assessment, drafts/import/refresh/run reports/export; deny unauthorized continuation. | D03–D09 | Complete CLI workflow and negative paths |
+| R-082 | §§10.1, 10.3 | CLI creation/intake/start/pause/resume/cancel, task/claim/tool/decision inspection/assessment, drafts/import/refresh/run reports/export; deny unauthorized continuation. | D03–D09 | Complete CLI workflow and negative paths; [partial Source CLI evidence](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md), remaining obligation open |
 | R-083 | §§1.4, 10.4 | Concrete batched human decisions with proposal/reasons/alternatives/evidence/consequences; routine in-envelope autonomy; human endorsement not mathematical truth. | D07, D09 | Decision authority and history |
 | R-084 | §§3.9, 7.7, 10.5, 10.11 | Synthesis has all eight prescribed sections and exact current support/conditions/issues; no synthesis-only promotion; figures/tables/captions pin raw data, generator and context. | D09 | Stale caption, dropped premise, conflicting scope and unsupported interpretation |
 | R-085 | §§9.10, 10.5, 10.11 | Portable self-contained README/record/artifact/environment/review manifest; relative links, restricted/unavailable dependency declarations; private backup distinct. | D09 | Clean inspection/replay without live DB; reuse-aware export |

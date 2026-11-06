@@ -55,4 +55,5 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [f746e33a-7475-44dc-b8bf-4613130fba79.md](f746e33a-7475-44dc-b8bf-4613130fba79.md) — REQ-D03-002 corpus inventory — f746e33a-7475-44dc-b8bf-4613130fba79.
 - [f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md](f78fa4a9-7bd2-4321-a8e0-b4c6f4ef868f.md) — REQ-D04-006 — Unaccepted source candidate; correctness recovery prepared.
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — Immediate-child navigation index.
+- [9252c1a1-74db-4390-b5d8-7305479ab7d6.md](9252c1a1-74db-4390-b5d8-7305479ab7d6.md) — REQ-D03-010-R1 — Source proposal CLI accepted, exact-integrated, validated and shutdown.
 - [README.md](README.md) — CWI run records.

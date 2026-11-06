@@ -2,9 +2,9 @@
 
 Provides concise navigation to chronological changes; detailed implementation and acceptance evidence remains in owning run records.
 
-## Current administrative change
+## Current development change
 
-2026-11-06 — [DEV-095](development/decisions/ADR-095-documentation-maintenance.md) makes documentation maintenance mandatory by owner and event. [UPDATE_GUIDE](development/UPDATE_GUIDE.md) maps the actual files to update triggers, preservation rules and checks. Product coordination remains stopped; no product/backend change or CWI start.
+2026-11-06 — [REQ-D03-010-R1/run9252c1a1](development/runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md) adds offline saved Source-proposal inspection and explicit exact submission/retry; accepted/exact-integrated4c25bc8, final/mandatory target1618/1618. One predecessor help-output fixture repair preserves material acknowledgement assertions. Preparation remains library-only and proposal-file publication caller-controlled. The human-directed session stops after the verified documentation commit; scientific/live evaluation remains pending.
 
 ## Historical changes
 

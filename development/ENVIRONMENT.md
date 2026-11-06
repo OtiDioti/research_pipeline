@@ -40,7 +40,7 @@ Fresh parser,authentication,approved-model/effort and actual-host ownership chec
 
 Default sandbox `/proc` cannot establish host ownership. Preserve the exact environment,executable,backend and frozen settings of unfinished runs. Historical schema1 inspection uses `local/backend-repairs/CP-002/bin/agentic-flow`;do not migrate or automatically resume old state.
 
-Latest final/required target evidence belongs to [run9bae8bd6](runs/9bae8bd6-2d0d-4cc7-ab70-9ec7b652d998.md). Terminal CWI may clear transient validation/diff pointers:resolve immutable evidence through receipts. Native `status` is JSON;`diagnose` is text;successful dispositions may include `subtest_success`. Effective server-model/quota attestation is unavailable.
+Latest final/required target evidence belongs to [run9252c1a1](runs/9252c1a1-74db-4390-b5d8-7305479ab7d6.md). Terminal CWI may clear transient validation/diff pointers:resolve immutable evidence through receipts. Native `status` is JSON;`diagnose` is text;successful dispositions may include `subtest_success`. Effective server-model/quota attestation is unavailable.
 
 ## Historical observations
 
