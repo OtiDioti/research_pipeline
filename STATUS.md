@@ -1,5 +1,11 @@
 # Development status
 
+## Support-context freshness accepted, integrated and target-validated — 2026-11-06
+
+[REQ-D02-010/run b4a385e8](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) is finally accepted/exact-integrated at **0668007ed7234910d19f0a7a27f5e81ae47961af**,treebed9c43460723b845e075273a6bc64dc27668eef. Final receipta676a20898f2b68003bd1ec0133ecc45b2fa459e8fd6a812deefffb02950a9af binds both final checks and accepting complete-diff review,without open findings/obligations. Candidate/final/required target each **1544/1544**,zero other outcomes;target ran once in1347.767252s,all dispositions match CWI final. No repair or recovery. Explicit schema7 support-context activation and complete historical scope/cause inspection add partial engineering evidence;no positive scientific eligibility/transfer follows.
+
+Parent and accepted worktree remain exact/clean before this administrative checkpoint;backend unchanged cleanbcb7ad24. No owner,validator,lease,quarantine,in-flight operation or pending integration remains.49histories terminal:35receipts,34exact integrated sources,one deliberately superseded acceptance,14incomplete;50worktrees preserved. Current grant remains CONTINUOUS. Continuous **48/100used52remain**,CWIrepairs**43**,coordinator**18**,backend**3/3/0**;all exhausted/partial limits persist. Owning run record reconciles exact evidence and usage. D02/D03/D04/D05/M0-E/product and scientific/live/human gates remain partial/pending. Bounded read-only claim-use/history CLI is the next independent R-082 candidate;no second run started.
+
 ## Resumed coordination; support-context freshness prelaunch — 2026-11-05
 
 The human explicitly resumed top-level development under AUTH-2026-10-30-001 revision7, superseding prior session shutdowns without new permission or reset. Fresh native status/diagnose of all48 retained histories confirms34final receipts,33exact integrated sources,one deliberately superseded acceptance and14terminal incomplete histories. No live matching process,lease,quarantine or pending integration remains. Latest final receipt/source and target-log digests match their run record; implementation/ and docs/ are unchanged from accepted0da0dd0f. Specification digest matches the grant; backend remains clean bcb7ad24.
@@ -76,4 +82,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Launch the committed REQ-D02-010 once through CWI from its clean recorded main base, with the unchanged stable launch map, FD4096, all eight approved role flags and both literal-base checks; count start48 before execution and record the actual UUID locally.
+Prepare and commit REQ-D03-009 for bounded read-only current claim-use and generation-history CLI,using accepted APIs,fresh model/account readiness and unchanged grant/counters. No new run may start before that clean prelaunch checkpoint.

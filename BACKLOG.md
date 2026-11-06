@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## Support-context slice accepted; existing holds preserved — 2026-11-06
+
+[REQ-D02-010](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) is accepted/exact-integrated0668007,final/target1544/1544,no findings or repairs. No new blocker,backend defect or recovery allowance. Failed Task/B1 drafts and exhausted salvage/orphan/Writer-deadline families remain held without reset. Positive authority/sufficiency/promotion,active-context adoption,all94mandatory requirements/13FOLLOWON and M0-S/live/human gates remain controlling. Independent read-only claim-use CLI preparation may proceed under unchanged CONTINUOUS authority after this checkpoint.
+
 ## Approved salvage completed; existing holds preserved — 2026-11-05
 
 [REQ-D02-009-R1](development/runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) is accepted/exact-integrated0da0dd0f with final/target1511/1511. F-001/F-002 are resolved,with no new open CWI finding or pending integration. The expressly authorized additional salvage1/1 is consumed; historical2/2salvage/orphan-permission/Writer-deadline and all other consumed limits remain. Original dc1e5d73 and failed Task/B1 source/evidence remain recoverable and unaccepted in their original histories. Broader context selection/transfer,positive authority/sufficiency/promotion,Task persistence/admission,D04B1/B2/008/009,all13FOLLOWON/all94requirements and M0-S/live/human gates remain mandatory. Human-directed shutdown supersedes continuation; no new engineering request is selected.

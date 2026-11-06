@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Selected support-context freshness integrated — 2026-11-06
+
+[REQ-D02-010/run b4a385e8](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) finally accepted/exact-integrated0668007. Explicit selected candidate,route,premise and Evidence context successors now synchronously trigger conservative recorded-use reassessment,with complete historical provenance and bound/observed scope. Opt-in schema7 activation/migration preserves old semantics. Baseline1511;candidate/final/required target1544/1544,zero other outcomes,no repairs;all target dispositions match final. This is partial engineering evidence,without scientific transfer,positive eligibility or phase/product completion.
+
 ## Transactional target-context freshness accepted and integrated — 2026-11-05
 
 [REQ-D02-009-R1/run c0bffb7b](development/runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) finally accepted and exact-integrated **0da0dd0fcc29e0be6cc219baa270a197b633327a**. Schema6 adds explicit context-freshness activation/migration,complete recorded historical downstream impact,coherent bound/observed scope and atomic metadata-only retry/recovery behavior,without granting scientific transfer or positive eligibility. Initial1510/1511 exposed obsolete invalid-version6 coverage; one prescribed repair corrected that coverage and the backup guide. Revised/final/required target **1511/1511**,zero other outcomes,and accepting complete-diff review support the delivered scope. The original cancelled run/draft remains unaccepted evidence with separate fresh R1 acceptance. Human-directed graceful shutdown follows this administrative checkpoint; no subsequent implementation request/phase started.

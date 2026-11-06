@@ -1,6 +1,6 @@
 # Coding-pipeline requests
 
-## Current checkpoint — passive Tool CLI ready, 2026-11-05
+## Historical checkpoint — passive Tool CLI ready, 2026-11-05
 
 [REQ-D05-005](REQ-D05-005.md)/[run 5bad636b-0ef8-4b3e-a448-8bc51d1f8249](../runs/5bad636b-0ef8-4b3e-a448-8bc51d1f8249.md)
 is finally accepted/exact-integrated/target-validated1326/1326. Its frozen request

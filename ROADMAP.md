@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Support-context freshness delivered; read-only claim-use CLI candidate — 2026-11-06
+
+[REQ-D02-010](development/runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) is accepted,exact-integrated0668007 and target-validated1544/1544. D02 remains PARTIAL;R-011/R-014/R-015/R-017/R-019/R-077 gain bounded engineering evidence. R-082 still lacks dedicated CLI current-use and generation-history inspection despite existing APIs. A bounded read-only REQ-D03-009 is the next candidate after fresh prelaunch readiness. Positive authority/sufficiency/promotion,active-context adoption,Task/lifecycle/report and scientific/live/human obligations remain mandatory. STATUS owns counters and next action.
+
 ## Support-context freshness prepared — 2026-11-05
 
 [REQ-D02-010](development/requests/REQ-D02-010.md) is the next independent D02 engineering slice under DEV-086, extending the accepted context contract to explicitly selected support-context occurrences. Prior REQ-D02-009-R1 acceptance/integration remains exact; D02 and broader obligations remain partial. STATUS owns launch readiness/counters and next action; no feature is claimed by preparation.

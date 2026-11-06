@@ -1,6 +1,6 @@
 # D02 — Durable scientific records and provenance
 
-**State:** PARTIAL; downstream Source/corpus/project-intake contracts are integrated at d8dffdd/7d6dd624/9373860 with ten typed kinds and396/396 target tests; latest phase-specific REQ-D02-007 INTEGRATED at 1296c93f1bffa306d04a7b240241a5b85275335b; REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
+**State:** PARTIAL; downstream Source/corpus/project-intake contracts are integrated at d8dffdd/7d6dd624/9373860 with ten typed kinds and396/396 target tests; latest phase-specific REQ-D02-010 INTEGRATED at 0668007ed7234910d19f0a7a27f5e81ae47961af,final/target1544/1544; REQ-D02-006 INTEGRATED at a56111f3e531b392ac997a6689944ec0820f151a; REQ-D02-005-R1 INTEGRATED at a5bba690a6c7e7113a92f34cc99efffc7a8c5656; REQ-D02-001 INTEGRATED at b51e421626f9fe6ffe8ca76dfe3f7267e689c82d; REQ-D02-002 backup/restoration INTEGRATED at 645c118a9846b23a3c410bc1a9fe7742f58846bc; REQ-D02-003 typed scientific content/admission is INTEGRATED at 22b863b1aabc5b3681c33800025f539c500462ca.
 
 **Goal:** Implement the smallest trustworthy storage core for versioned research objects and their justifications.
 
@@ -103,3 +103,7 @@ After REQ-D02-008 exact integration and required1470/1470 target evidence, [REQ-
 ## Target-context freshness accepted and integrated — 2026-11-05
 
 [REQ-D02-009-R1/run c0bffb7b](../runs/c0bffb7b-f83d-4b19-aeef-752f925671e9.md) finally accepted/exact-integrated0da0dd0f,final/target1511/1511,one prescribed CWI repair closingF-001/F-002. Explicit schema6 context activation/migration and conservative selective historical downstream freshness advance bounded R-011/R-014/R-015/R-017/R-019/R-077 evidence. D02/M0-E/product remain PARTIAL;broader applicability/active-context adoption,scientific transfer,sufficient alternatives,positive authority/promotion and scientific/live/human gates remain mandatory. Original dc1e5d73 remains terminal unaccepted with source/evidence preserved. Human stopped this session after current bounded completion; no next request/phase selected.
+
+## Support-context engineering checkpoint — 2026-11-06
+
+[REQ-D02-010/run b4a385e8](../runs/b4a385e8-ede3-446d-8069-bbdd76c9e9b6.md) extends conservative freshness to selected support-context occurrences with explicit schema7 activation and preserved historical semantics;final/target1544/1544,no repairs. R-011/R-014/R-015/R-017/R-019/R-077 remain partial. Positive sufficiency/authority/promotion,active-context adoption and broader scientific outcomes remain mandatory;D02 is not complete. Dedicated read-only current/history CLI is independent R-082 follow-up.

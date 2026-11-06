@@ -411,3 +411,7 @@ Original controller cancellation left a live orphan Writer. Coordinator preserve
 ## 2026-11-05 — REQ-D02-009-R1 accepted/integrated; backend unchanged
 
 The expressly authorized one-use salvage completed through unchanged clean backend bcb7ad24f83ff5193345f3d4fa72122ea53a4e66. One CWI product test/documentation repair resolved F-001/F-002; final full-range acceptance and required target1511/1511 passed. Exact external integration0da0dd0f and shutdown reconciliation changed no backend source/config/prompt/executable/environment/controller state/receipt/log/lease/quarantine or security guard. No maintenance attempt/adoption/reversion; cumulative3/3/0. Prior CP-001/002/003,failed candidates,patches/backups and schema1-compatible original backend remain intact. Read-only local verifier metadata/positive-subtest-shape assumptions were corrected against actual evidence without changing source or consuming CWI recovery. No automatic-approval rejection occurred. Human stopped after current bounded completion;no additional implementation request or phase.
+
+## 2026-11-06 — REQ-D02-010 backend audit
+
+Runb4a385e8 accepted/exact-integrated0668007,final/target1544/1544. Backend remained unchanged cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66;no maintenance attempt,adoption or reversion. Cumulative3/3/0. Historical source,patches,backups and unfinished-run evidence remain preserved. Read-only metadata/namespace verifier clarifications were not backend changes or CWI recoveries.
