@@ -33,6 +33,7 @@ Navigation only. Immediate project-controlled children; frozen scope and permiss
 - [9af6f133-62d8-4348-b8f2-7d95cbb84928.md](9af6f133-62d8-4348-b8f2-7d95cbb84928.md) — REQ-D02-004 first attempt — 9af6f133-62d8-4348-b8f2-7d95cbb84928
 - [9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md](9ec9e902-27ba-4f3f-891e-4e89eed13e0d.md) — REQ-D05-003 — Passive Tool-release registration integrated
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This navigation index.
+- [5d1adb23-9348-458c-bba9-03f1d77c0a54.md](5d1adb23-9348-458c-bba9-03f1d77c0a54.md) — Source request stopped at baseline before role execution; PID-fixture defect preserved.
 - [README.md](README.md) — Development run records
 - [b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md](b4dd25a5-c915-4e9f-85ea-598b1c6cce13.md) — REQ-D04-005-R1 — Offline lifecycle-report binding integrated
 - [b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md](b63e2b5e-4e40-45d3-adfd-e5a092e96dac.md) — REQ-D04-002-R2 — Validated candidate; Reviewer context limit

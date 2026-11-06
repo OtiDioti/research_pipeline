@@ -1,5 +1,9 @@
 # Development decisions
 
+## DEV-092 — One authorized PID-fixture repair, then graceful shutdown
+
+The human's follow-up “perform the PID fixture before the sutdown” resolves the B-024 launch judgment for one fresh CWI repair attempt only. Update the previously unlaunched REQ-DEV-VALIDATION-002 with this actual authority; do not change its technical criteria or weaken the full baseline. The unchanged baseline must pass before roles run; a repeat failure ends the attempt without retry. After actual final acceptance, safe exact integration and mandatory target validation, checkpoint and stop. Do not begin Source-proposal or other work. Count start51/coordinator19/B-024corrective1/2 before execution; other limits and historical evidence remain intact. This is a narrow human amendment, not self-authorization or a reset.
+
 ## DEV-091 — Preserve the failed baseline and hold the scoped fixture repair
 
 The Source-proposal run5d1adb23 failed the unchanged full baseline before any role ran. Bound evidence identifies an empty PID read; focused inspection of the failing concurrency fixture reveals entry-count readiness before complete PID publication. No product source or backend change, diagnostic rerun, draft adoption or acceptance occurred. Preserve that failure alongside the prior genuine1577/1577 acceptance/target results.

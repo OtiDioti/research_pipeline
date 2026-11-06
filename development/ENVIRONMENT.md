@@ -1,5 +1,9 @@
 # Development environment contract
 
+## Authorized PID-fixture repair readiness — 2026-11-06
+
+Fresh05:39:45Z parser compatibility and ChatGPT authentication pass with unchanged pinnedCodex0.166.0/SHA256b8a11fed; catalog fetched05:38:36Z advertises approvedgpt-6-astra/gpt-6.1-sol with high/xhigh. Backend cleanbcb7ad24,main cleand863deb,51terminal histories and no host CWI/validator/fixture owner or pending integration. Specification hash matches. Both latest accepted and failed run supported status/diagnose verify retained evidence. Stable map,validation-env46f63a41,FD4096,2700s,one milestone,repairs2/6,all eight role flags,two full checks,no--merge remain. No model call,server effective-model/quota attestation,new dependency or environment change. Evidence local/shutdown-20261106-pid-repair/readiness.json and native reports.
+
 ## Baseline failure and quiescence — 2026-11-06
 
 REQ-D03-010/run5d1adb23 used the unchanged stable map,validation environment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09,FD4096,2700s and both full checks. No timeout,execution error or source mutation:1577executed/1576successful/one empty-PID fixture error; literal-base diff check passed. No CWI role ran. Fresh host04:10:51Z confirms owners3846708/3846709 and matching CWI/validator/fixture processes absent; CWI terminal/noresume with no lease/quarantine/in-flight operation/recording gap. Main and failed worktree clean5fea9ae,backend cleanbcb7ad24 before administrative checkpoint. Specification digest unchanged. No dependency,auth,model,environment,security or backend alteration and no diagnostic test rerun. Exact evidence is local/attempts/D03-010-attempt-001/ and the owning run record. Further launch readiness must be checked anew after the human recovery decision; old catalog/auth evidence is not a fresh access guarantee.

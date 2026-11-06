@@ -3,6 +3,7 @@
 Navigation only. Immediate project-controlled children; frozen scope and permissions take precedence.
 
 - [FOLDER_CONTENT.md](FOLDER_CONTENT.md) — This navigation index.
+- [REQ-DEV-VALIDATION-002.md](REQ-DEV-VALIDATION-002.md) — Authorized PID-readiness fixture repair before shutdown.
 - [README.md](README.md) — Coding-pipeline requests
 - [REQ-D01-001.md](REQ-D01-001.md) — REQ-D01-001 — Worktree-local product foundation
 - [REQ-D01-002.md](REQ-D01-002.md) — REQ-D01-002 — Synthetic harmonic/quartic development example

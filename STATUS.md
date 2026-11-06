@@ -1,5 +1,11 @@
 # Development status
 
+## Human-authorized PID-fixture repair before shutdown — 2026-11-06
+
+The human directs the scoped [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) repair before graceful shutdown. This supersedes the earlier launch hold for exactly one fresh CWI attempt with the unchanged full baseline gate; if that baseline fails, stop without retry. No Source feature, other request or phase is authorized. After final acceptance and safe exact integration, perform required target validation, reconcile the shutdown handoff and STOP.
+
+Fresh host/CWI/readiness evidence05:39:45Z: clean maind863deb, clean backendbcb7ad24,51terminal histories,36receipts,no owner/pending integration; pinned Codex parser and ChatGPT auth pass, current catalog advertises both exact approved models/high/xhigh. Specification digest unchanged. Stable environment/FD4096/2700s/two full checks/all eight role flags remain. Evidence:local/shutdown-20261106-pid-repair/. Before launch:continuous50/100,CWIrepairs44,coordinator18,backend3/3/0;count this single attempt as start51 leaving49,coordinator19,B-024corrective1/2 before execution. All other consumed/exhausted limits persist. No repair implementation or acceptance yet.
+
 ## Baseline blocker checkpoint — 2026-11-06
 
 [REQ-D03-010/run5d1adb23](development/runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md) stopped before any role ran: full baseline **1577 executed,1576 successful,one error** in the existing overlap test. It read an empty PID announcement after observing its filename. Focused diagnosis identifies an incomplete-publication window; no test was replayed and no product source changed. No candidate, milestone, final acceptance or integration exists for this request. The frozen Source request remains held.
@@ -110,4 +116,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Obtain the human's decision on permitting one fresh CWI repair start for [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) despite the known intermittent baseline failure, retaining the full unchanged baseline gate and stopping if it fails again. No launch is authorized by this checkpoint.
+Launch and monitor the single human-authorized REQ-DEV-VALIDATION-002 CWI attempt from its committed clean base with unchanged full gates and approved role flags; count start51/coordinator19/B-024corrective1/2 first. Complete only this bounded repair and shutdown; if baseline fails, preserve evidence and stop without retry.

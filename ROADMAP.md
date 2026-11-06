@@ -1,5 +1,9 @@
 # Development roadmap
 
+## Focused PID-fixture repair before shutdown — 2026-11-06
+
+REQ-D03-010 stopped before implementation at the full baseline. B-024/DEV-091 preserve its incomplete-PID diagnosis. The human now authorizes only existing [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) through CWI before graceful shutdown, retaining the full baseline and all acceptance/integration/target gates. If the baseline fails again, stop without retry. Source-proposal and broader D03 work remain held; no additional request/phase starts. STATUS owns actual execution, counters and the single next action.
+
 ## Saved Source-proposal CLI prepared — 2026-11-06
 
 [REQ-D03-010](development/requests/REQ-D03-010.md) is the next small R-082 slice after verified claim-use CLI integration/checkpoint. It exposes pure saved-Source inspection and explicit original-request submission using accepted codecs/admission. Source capture preparation/exclusive file publication remains a separate mandatory follow-up;there is no new source acquisition,readiness or scientific approval. D03/R-082 and all broader obligations remain partial. STATUS owns prelaunch readiness,counters and the next action.

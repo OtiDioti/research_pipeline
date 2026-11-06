@@ -1,5 +1,9 @@
 # Blocked, paused, and deferred work
 
+## B-024 focused recovery authorized — 2026-11-06
+
+The human directs the existing PID-fixture repair before shutdown. DEV-092 and AUTHORIZATION record one fresh REQ-DEV-VALIDATION-002 attempt with the full baseline gate unchanged; if it fails again, stop without retry. Count first B-024corrective1/2/coordinator19/start51 before execution. Source request5d1adb23 remains incomplete, frozen and unimplemented; no failed source is adopted. No defect is marked fixed by preparation. Other exhausted recovery and scientific/live holds remain; no subsequent request/phase is authorized before shutdown.
+
 ## B-024 — PID publication race blocks the full baseline, 2026-11-06
 
 REQ-D03-010/run5d1adb23 stopped before any role ran:1577 executed,1576 successful,one error in `test_pipe_gated_overlap`,which parsed an empty PID announcement after seeing both filenames. Focused failing-fixture inspection identifies a path-creation/content-publication window; no test rerun or source edit. Prior accepted/integrated6d023d5 passed final/required target1577/1577,but the later failure prevents asserting a reliable current baseline. Exact evidence, hashes and terminal/quiescence checks are in the [run record](development/runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md).
