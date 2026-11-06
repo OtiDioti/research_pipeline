@@ -1,5 +1,11 @@
 # Development decisions
 
+## DEV-091 — Preserve the failed baseline and hold the scoped fixture repair
+
+The Source-proposal run5d1adb23 failed the unchanged full baseline before any role ran. Bound evidence identifies an empty PID read; focused inspection of the failing concurrency fixture reveals entry-count readiness before complete PID publication. No product source or backend change, diagnostic rerun, draft adoption or acceptance occurred. Preserve that failure alongside the prior genuine1577/1577 acceptance/target results.
+
+Prepare [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) for reliable fixture readiness with a deterministic publication-window regression, unchanged live-overlap proof and all predecessor/full checks. Do not launch it under the current passing-baseline precondition: REQUEST.md explicitly prohibits an already-failing baseline and BOOTSTRAP is inapplicable. A human decision on one fresh repair start, with the baseline gate still enforced, is the smallest unresolved operating judgment. This is not a self-issued grant amendment or a reason to bypass CWI. B-024 corrective actions0/2; no recovery/limit reset. The Source frozen request remains unchanged and held; STATUS owns the single next safe action.
+
 This index records consequential implementation and workflow choices. D00 decisions recorded after full v1.3 reconciliation; v1.4 dependency amendment explicitly authorized 2026-10-30. Reversible implementation defaults are coordinator choices within the human grant, not invented scientific approvals.
 
 | ID | Proposed choice | Rationale | Confirmation |

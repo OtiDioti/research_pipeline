@@ -1,5 +1,9 @@
 # Specification-to-evidence crosswalk
 
+## Current baseline reliability limitation — 2026-11-06
+
+[REQ-D03-010/run5d1adb23](runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md) stopped before any role ran. Full baseline1577executed/1576successful/one error exposed incomplete PID publication in an existing concurrency test. R-007 retains historical accepted validation evidence,with this current reliability limitation recorded; [REQ-DEV-VALIDATION-002](requests/REQ-DEV-VALIDATION-002.md) is a held repair proposal,not new implementation or acceptance. No R-017/R-019/R-021/R-024/R-082 credit is added by the failed Source request. All94rows/13FOLLOWONcriteria and scientific/live/human gates remain controlling. No mandatory obligation is removed or reclassified by this hold.
+
 ## Current/history claim-use CLI partial engineering evidence — 2026-11-06
 
 [REQ-D03-009/run45afcd6b](runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md),accepted/integrated6d023d56a8e80914911e163278db140225b65dbb,final receiptd13f69e862865eeea40681f5fd4a20b23646f73621ee1b1775a139665e8e5ea8,final/target1577/1577. Eleven accepted criteria establish two protected read-only CLI operations,complete schema4–7 current/history API equivalence,pagination,independent control/work/output limits,truthful errors and canonical nonmutation. One CWI repair resolved late permission/ownership classificationF-001. This advances partial R-082 and bounded inspection evidence for R-011/R-014/R-015/R-019/R-077 only. Source creation/preparation,seed/project/readiness,Task/run control/report/export,positive eligibility/authority/promotion and remaining requirements are not delivered by these commands. All94mandatory rows,13FOLLOWON and M0-S/live/human gates remain controlling;no phase/product/scientific completion.

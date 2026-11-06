@@ -1,5 +1,9 @@
 # coding_pipeline change audit
 
+## REQ-D03-010 baseline failure audit — 2026-11-06
+
+Run5d1adb23 stopped before role execution at full baseline:1577executed/1576successful/one incomplete-PID error in the product's concurrency test fixture. No backend defect or maintenance is established. Backend remains unchanged cleanbcb7ad24f83ff5193345f3d4fa72122ea53a4e66; cumulative attempts/adoptions/reversions3/3/0. No guard,lease,state,receipt,log,environment or source edit; no test rerun. B-024/DEV-091 preserve diagnosis and the held product-test repair request through CWI. Historical patches/backups and all unfinished evidence remain intact.
+
 ## 2026-11-04 — REQ-D05-002 backend audit
 
 Run `d4513360-8b98-4b8d-9bdc-91835d40a323` accepted and integrated `0a6a01e2552b886232e2880d80123479b70a79e6`. Backend remained clean at `b6a2e05283f92f2bb42402d49e4a274225b43f6a`; no backend maintenance attempted. Attempted/adopted/reverted remains 2/2/0.

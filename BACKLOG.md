@@ -1,5 +1,11 @@
 # Blocked, paused, and deferred work
 
+## B-024 — PID publication race blocks the full baseline, 2026-11-06
+
+REQ-D03-010/run5d1adb23 stopped before any role ran:1577 executed,1576 successful,one error in `test_pipe_gated_overlap`,which parsed an empty PID announcement after seeing both filenames. Focused failing-fixture inspection identifies a path-creation/content-publication window; no test rerun or source edit. Prior accepted/integrated6d023d5 passed final/required target1577/1577,but the later failure prevents asserting a reliable current baseline. Exact evidence, hashes and terminal/quiescence checks are in the [run record](development/runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md).
+
+No CWI role, draft, candidate or receipt exists to salvage. Ownership/effects are resolved; historical state is preserved. Source work is held, and ordinary feature starts share this failed baseline. [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) prepares one focused fixture correction and deterministic regression through CWI. It is not launched: the request-template rule prohibits an already-failing baseline and bootstrap does not apply. Human decision is required for a single repair start retaining the complete unchanged baseline gate. B-024 corrective actions0/2; coordinator18 and CWI repairs44 unchanged. This new fixture defect does not reset exhausted salvage/deadline families. STATUS owns exactly one next safe action. Scientific/live and remaining product obligations persist.
+
 ## Claim-use CLI accepted; current holds unchanged — 2026-11-06
 
 [REQ-D03-009](development/runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) is accepted/exact-integrated6d023d5,final/target1577/1577. Its one internal repair resolvedF-001;no unresolved new blocker/backend defect or coordinator recovery. Failed Task/B1 drafts and exhausted salvage/orphan/Writer-deadline families remain held. Saved Source-proposal inspect/submit is independent ordinary engineering from accepted APIs;capture preparation,full CLI,all94requirements/13FOLLOWON and M0-S/live/human duties remain mandatory.

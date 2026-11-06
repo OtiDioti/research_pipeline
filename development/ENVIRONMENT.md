@@ -1,5 +1,9 @@
 # Development environment contract
 
+## Baseline failure and quiescence — 2026-11-06
+
+REQ-D03-010/run5d1adb23 used the unchanged stable map,validation environment46f63a419a7b148d3489f4a2dd9109c1c3d3a3f334364123e7a858ddee6ace09,FD4096,2700s and both full checks. No timeout,execution error or source mutation:1577executed/1576successful/one empty-PID fixture error; literal-base diff check passed. No CWI role ran. Fresh host04:10:51Z confirms owners3846708/3846709 and matching CWI/validator/fixture processes absent; CWI terminal/noresume with no lease/quarantine/in-flight operation/recording gap. Main and failed worktree clean5fea9ae,backend cleanbcb7ad24 before administrative checkpoint. Specification digest unchanged. No dependency,auth,model,environment,security or backend alteration and no diagnostic test rerun. Exact evidence is local/attempts/D03-010-attempt-001/ and the owning run record. Further launch readiness must be checked anew after the human recovery decision; old catalog/auth evidence is not a fresh access guarantee.
+
 ## Support-context prelaunch readiness — 2026-11-05
 
 Fresh native status/diagnose of48histories and host inspection show no live owner/lease/quarantine or pending integration. Latest acceptance/source/target log verified. Backend clean bcb7ad24 and pinned Codex0.166.0/SHA256b8a11fed unchanged. Fresh actual parser/authentication probes22:28:48Z pass with ChatGPT login; catalog fetched22:28:36Z advertises both exact approved identifiers and high/xhigh. No live model call/server-model/quota attestation. Stable nonsecret launch map unchanged; process-onlyFD4096,2700s,one milestone,repairs2/6,two ordered checks,no--merge persist. No dependencies/auth/config/backend/security change. Evidence:local/resume-20261105-next/.

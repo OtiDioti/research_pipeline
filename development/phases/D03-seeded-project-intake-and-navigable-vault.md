@@ -1,5 +1,9 @@
 # D03 — Seeded project intake and navigable vault
 
+## Source-proposal request held at baseline — 2026-11-06
+
+REQ-D03-010/run5d1adb23 is STOPPED_INCOMPLETE:1577executed/1576successful/one existing validator-fixture error,zero roles or Source changes. The frozen request remains unchanged; no acceptance/integration/requirement credit. Latest accepted/integrated Source-independent CLI source remains6d023d5 with prior final/target1577/1577. B-024 blocks new feature starts on the current baseline; the scoped fixture repair is held for the single human decision in STATUS. Capture preparation,seed/project/readiness/full CLI and scientific obligations remain mandatory; D03 stays partial.
+
 **State:** PARTIAL; latest bounded claim-use/history CLI REQ-D03-009 is accepted/exact-integrated at6d023d56a8e80914911e163278db140225b65dbb,final/target1577/1577. Earlier storage/intake/vault/authoring evidence remains recorded below;B-017 is resolved in BACKLOG/DEV-047. Actual authorized readiness,full workspace,full CLI and scientific obligations remain incomplete.
 
 **Goal:** Create a usable research project from supplied scientific material, with an Obsidian-compatible human view.

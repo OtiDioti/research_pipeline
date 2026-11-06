@@ -1,5 +1,15 @@
 # Development status
 
+## Baseline blocker checkpoint — 2026-11-06
+
+[REQ-D03-010/run5d1adb23](development/runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md) stopped before any role ran: full baseline **1577 executed,1576 successful,one error** in the existing overlap test. It read an empty PID announcement after observing its filename. Focused diagnosis identifies an incomplete-publication window; no test was replayed and no product source changed. No candidate, milestone, final acceptance or integration exists for this request. The frozen Source request remains held.
+
+Main and failed worktree are clean at launch base **5fea9aedb45cac484a3c57fbe343c638ba925fc8** before this administrative checkpoint; product paths still match latest accepted/integrated **6d023d56a8e80914911e163278db140225b65dbb**, whose final/required target passed1577/1577. This later failure limits current baseline reliability; it does not erase prior acceptance. Backend stays cleanbcb7ad24. Host04:10:51Z finds no controller, validator or fixture worker; CWI has no lease, quarantine, in-flight operation or recording gap and cannot resume. Nothing awaits integration. All51histories are terminal:36receipts,35exact integrated final sources,one deliberately superseded acceptance,15incomplete;52worktrees retained. Specification digest still matches the grant.
+
+CONTINUOUS remains effective without a reset. Continuous **50/100 starts consumed,50 remain**,CWI repairs**44**,coordinator interventions**18**,backend**3/3/0**. New B-024 corrective actions0/2; no recovery executed. All exhausted/partial historical families persist. No roles ran in the failed Source start; cumulative reported role usage is unchanged at484540744input(446906368cached),4454540output(1521070reasoning),385knownturns,with unmeasured liabilities still unknown. No scientific validation or new requirement credit. D01/D02/D03/D04/D05/M0-E/product and scientific/live/human obligations remain partial/pending.
+
+[REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) specifies a focused CWI fixture repair and deterministic regression, retaining every predecessor test and full gate. It is **HELD**: the request-template passing-baseline rule bars a new launch from the observed failing baseline, and BOOTSTRAP is inapplicable. No direct edit, repeated check, backend change or guard waiver was used. B-024/DEV-091 and the run record own the diagnosis; no competing run or automatic restart is scheduled.
+
 ## Saved Source-proposal CLI prelaunch — 2026-11-06
 
 [REQ-D03-010](development/requests/REQ-D03-010.md) is prepared under DEV-090 for protected offline frozen-Source inspection and explicit exact submission through existing strict codecs/admission. Capture preparation/file publication stays separate mandatory work. Prior REQ-D03-009 is finally accepted/exact-integrated6d023d5 and target-validated1577/1577,all dispositions matching final,with clean checkpointbad7a10 and unchanged product paths. Fresh CWI/Git evidence reconciles50terminal histories,no owner/lease/quarantine/pending integration;host03:37:46Z finds no controller/target process. Specification digest,clean backendbcb7ad24 and pinnedCodex hash match.
@@ -100,4 +110,4 @@ The human resumed autonomous coordination. Fresh read-only Git, host and CWI ins
 
 ## Exactly one next safe action
 
-Launch committed REQ-D03-010 once through CWI from its recorded clean main base,with unchanged stable environment,FD4096,all eight approved role flags and both literal-base checks;count start50 before execution and record its actual UUID locally.
+Obtain the human's decision on permitting one fresh CWI repair start for [REQ-DEV-VALIDATION-002](development/requests/REQ-DEV-VALIDATION-002.md) despite the known intermittent baseline failure, retaining the full unchanged baseline gate and stopping if it fails again. No launch is authorized by this checkpoint.

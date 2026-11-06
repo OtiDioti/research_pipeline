@@ -1,5 +1,9 @@
 # Integrated development history
 
+## Source-proposal baseline failure checkpoint — 2026-11-06
+
+[REQ-D03-010/run5d1adb23](development/runs/5d1adb23-9348-458c-bba9-03f1d77c0a54.md) stopped before role execution:1577 tests ran,1576 succeeded,one existing concurrency fixture read an incomplete PID announcement. No Source implementation, acceptance, integration or requirement credit. B-024/DEV-091 preserve the diagnosis and a held CWI repair request; no test rerun, direct product edit or backend maintenance. Continuous50/100 consumed; repair/recovery counters unchanged. Latest accepted/integrated product remains6d023d5 with prior final/required target1577/1577. Human recovery decision is pending; scientific validation remains pending.
+
 ## Read-only current claim-use/history CLI integrated — 2026-11-06
 
 [REQ-D03-009/run45afcd6b](development/runs/45afcd6b-0489-4e55-a807-a92ea9b15083.md) finally accepted/exact-integrated6d023d5. Two protected CLI commands expose complete existing current views and paged original generation causes,retaining historical scope,independent limits and scientific limitations. One CWI repair corrected late directory permission/ownership changes to integrity failures while preserving initial unsafe-layout behavior. Revised/final/required target1577/1577,zero other outcomes,all target dispositions match final. R-082 and the product remain partial;no scientific validation or authority follows.

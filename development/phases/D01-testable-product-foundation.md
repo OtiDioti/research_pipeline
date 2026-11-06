@@ -1,5 +1,9 @@
 # D01 — Testable product foundation
 
+## Baseline reliability hold — 2026-11-06
+
+REQ-D03-010/run5d1adb23 executed1577 baseline tests with1576successful/one error in the existing live-overlap PID fixture,before any role ran. B-024/DEV-091 record the incomplete-publication diagnosis; [REQ-DEV-VALIDATION-002](../requests/REQ-DEV-VALIDATION-002.md) is a held focused CWI repair proposal. No product change or validation credit is claimed. Historical accepted validator evidence remains; current baseline reliability is limited until corrected and accepted. STATUS owns the recovery decision; phase and scientific gates remain partial/pending.
+
 **State:** PARTIAL; M0-E initial storage contract accepted/integrated in REQ-D02-001 with 72/72 tests; other engineering contracts pending; M0-S pending. REQ-D01-001 integrated at 7d5acab and REQ-D01-002 at 79a84d2; M0 remains incomplete.
 
 **Goal:** Create a minimal, worktree-local Python package and meaningful validation infrastructure through one CWI implementation milestone.

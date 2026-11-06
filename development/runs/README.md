@@ -1,5 +1,7 @@
 # Development run records
 
+- [5d1adb23 — REQ-D03-010](5d1adb23-9348-458c-bba9-03f1d77c0a54.md): STOPPED_INCOMPLETE at full baseline,1577executed/1576successful/one fixture error; no roles, candidate, acceptance or integration. Continuous start50/100. B-024 and held REQ-DEV-VALIDATION-002; STATUS owns the human recovery decision.
+
 Actual runs are recorded below; templates are not execution evidence.
 
 - [47d6ef06 — REQ-D01-001](47d6ef06-c251-4a0d-bb2c-da2059d9360f.md): commissioning foundation finally accepted, exactly integrated and validated; one start, no repairs.
