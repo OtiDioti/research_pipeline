@@ -2,7 +2,7 @@
 
 Provides a concise restart prompt for this commissioned repository; it grants no authority and does not automatically resume a stopped session.
 
-Use after an explicit human continuation instruction. Initial commissioning and activation prompts remain in [historical startup guidance](history/development-CODEX_START.md); do not repeat commissioning in this repository.
+Use after an explicit human continuation instruction. Current first-time forms are separate: [commissioning](templates/COMMISSIONING.md) and [activation](templates/ACTIVATION.md), with an [optional initial preauthorization alternative](CODEX_START_AUTONOMOUS.md). This repository is already commissioned and activated; do not repeat those steps. [Earlier prompt wording](history/development-CODEX_START.md) remains historical evidence.
 
 ```text
 Resume top-level coordination only within my current instruction and effective human authority. Follow AGENTS.md. Begin with the current STATUS.md, development/AUTHORIZATION.md and its applicable source amendments/revocations, local/live.md if present, and the relevant run/request record.

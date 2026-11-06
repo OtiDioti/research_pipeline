@@ -37,54 +37,46 @@ Three alternatives were considered. A single huge CWI request makes phase bounda
 
 ## 3. Repository layout
 
-```text
-research-pipeline/
-├── README.md                       # Human entry point
-├── project_description.md          # Existing product specification; preserved
-├── AGENTS.md                       # Outer/delegated execution-mode rules
-├── DEVELOPMENT.md                  # This operating design
-├── ROADMAP.md                      # Ordered development outcomes and dependencies
-├── STATUS.md                       # Last committed checkpoint + one next action
-├── BACKLOG.md                      # Deliberately deferred, blocked, or paused items
-├── DECISIONS.md                    # Consequential decision index
-├── CHANGELOG.md                    # Accepted and integrated development history
-├── coding_pipeline_changes.md     # Necessary backend changes, including failed attempts
-├── development/
-│   ├── README.md
-│   ├── RUNBOOK.md                  # Installation, start, inspect, integrate, resume
-│   ├── BOOTSTRAP.md                # Safe first run from Markdown-only source
-│   ├── CODEX_START.md              # Commissioning, activation, and continuation prompts
-│   ├── AUTONOMY.md                 # Continuous loop, limits, stopping and completion
-│   ├── AUTHORIZATION.md            # Actual operating grant, not self-issued authority
-│   ├── MODEL_POLICY.md             # Verified requested model; effort ceiling xhigh
-│   ├── BACKEND_MAINTENANCE.md      # Focused repair exception and recovery safeguards
-│   ├── UPDATE_GUIDE.md             # Safe adoption without resetting progress
-│   ├── REQUIREMENTS.md             # Exact specification-to-evidence mapping
-│   ├── ENVIRONMENT.md              # Non-secret version/launch contract
-│   ├── PIPELINE_REVIEW.md          # Findings about the supplied backend snapshot
-│   ├── phases/                    # One outcome/acceptance plan per development phase
-│   ├── requests/                  # Committed bounded requests; revision history
-│   ├── runs/                      # Human-readable run/evidence summaries
-│   ├── decisions/                 # Detailed decision records
-│   ├── backend_patches/           # Reviewed, non-secret repair patches when appropriate
-│   ├── review/                    # Supplied-backend inventory and test results
-│   └── templates/                 # Reusable Markdown record formats
-├── implementation/
-│   ├── README.md
-│   ├── pyproject.toml             # Created by CWI, not supplied by this kit
-│   ├── src/research_pipeline/     # Created by CWI
-│   ├── tests/                     # Created by CWI
-│   └── scripts/                   # Validation and developer utilities, created by CWI
-├── docs/                          # Product architecture and usage documentation
-├── examples/                      # Curated, non-private demonstration material
-├── local/                         # Ignored live notes, raw reports, local scratch
-│   └── README.md                  # The one tracked navigation note in this area
-├── coding_pipeline/               # Separate untracked Git clone; exact directory name
-├── workflow_logs/                 # CWI-owned ignored diagnostics
-└── .git/                          # Git administration
-```
+This summarizes the existing logical layout. Consult FOLDER_CONTENT.md indexes for complete immediate-child listings; dated archives are not current instructions. Product maturity is recorded in STATUS rather than inferred from directory existence.
 
-Only existing Markdown placeholders are included in this kit. The non-Markdown implementation paths above are future outputs of CWI.
+```text
+research_pipeline/
+├── README.md / AGENTS.md          # Navigation and mandatory operating rules
+├── project_description.md        # Protected product specification
+├── STATUS.md                     # Current snapshot and one next action
+├── ROADMAP.md / BACKLOG.md        # Current phase scope and unresolved work
+├── DECISIONS.md                  # Individual-decision index
+├── CHANGELOG.md                  # Period-based change index
+├── coding_pipeline_changes.md    # Backend-incident index
+├── development/
+│   ├── FOLDER_CONTENT.md         # Immediate-child navigation
+│   ├── AUTHORIZATION.md          # Effective view linked to real human source records
+│   ├── ENVIRONMENT.md            # Stable non-secret contract; readiness belongs to runs
+│   ├── CODEX_START.md            # Continuation prompt and links to initial forms
+│   ├── CODEX_START_AUTONOMOUS.md  # Optional human-issued initial preauthorization form
+│   ├── RUNBOOK.md / MODEL_POLICY.md / AUTONOMY.md
+│   ├── BACKEND_MAINTENANCE.md / UPDATE_GUIDE.md
+│   ├── REQUIREMENTS.md           # Mandatory crosswalk and selective evidence links
+│   ├── phases/                  # Scope/acceptance plans and recorded phase progress
+│   ├── requests/                # Frozen committed request bodies
+│   ├── runs/                    # One detailed CWI execution record per run
+│   ├── decisions/               # Individual DEV/ADR rationale and evidence
+│   ├── backend_changes/         # Full CP-ID incident/attempt records
+│   ├── backend_patches/          # Reviewed patches or protected backup references
+│   ├── history/                 # Historical views, source records and lossless originals
+│   │   ├── authorization/       # Individually addressable authority-source sections
+│   │   ├── requirements/        # Selective requirement-evidence records
+│   │   ├── changelog/           # Historical entries grouped by period
+│   │   └── originals/           # Exact pre-restructure source recovery
+│   ├── review/ / benchmarks/    # Dated backend inspection and performance evidence
+│   └── templates/               # Record formats; COMMISSIONING/ACTIVATION issuance forms
+├── implementation/              # Existing CWI-produced product source/config/tests/utilities
+├── docs/ / examples/            # Product guides and non-private examples
+├── local/                       # Ignored observations/handoffs; only README.md is tracked
+├── coding_pipeline/             # Separate ignored direct-child backend clone
+├── workflow_logs/               # CWI-owned ignored diagnostics
+└── .git/                        # Legitimate Git administration
+```
 
 ### Root-file rule
 
@@ -112,7 +104,7 @@ CWI's authoritative state is a fourth storage location controlled by CWI, not by
 | Paused/deferred exceptions | `BACKLOG.md` | Links from phase/status records |
 | Consequential decisions | Detailed decision record and `DECISIONS.md` index | Request references |
 | Operating authority | Actual human grant recorded in `development/AUTHORIZATION.md` | STATUS link and mode summary |
-| Backend maintenance | Backend source revision, regression evidence and `coding_pipeline_changes.md` | Environment record and run links |
+| Backend maintenance | Backend revision and full `development/backend_changes/` incident records | `coding_pipeline_changes.md` index and environment contract |
 | Resource consumption | Reconciled attempt/run records, including failed starts | STATUS cumulative summary |
 | Integrated changes | Git plus verified integration record | `CHANGELOG.md` |
 
@@ -221,11 +213,11 @@ Detailed commands are in [RUNBOOK.md](development/RUNBOOK.md), the first-run pro
 
 ## 14. Continuous development and necessary backend repair
 
-The commissioning default remains D00 plus one bootstrap request, held for human first-result review. The [activation prompt](development/CODEX_START.md) supplies a one-time bounded grant for continuous progression through the remaining phases. Its optional explicit preauthorization clause can replace that first-result review; it is not selected by default.
+For a genuinely unstarted repository, the [commissioning form](development/templates/COMMISSIONING.md) defaults to D00 plus one bootstrap request held for human review. The separate [activation form](development/templates/ACTIVATION.md) proposes the one-time bounded grant only when actually issued by the human. The [optional initial preauthorization form](development/CODEX_START_AUTONOMOUS.md) can replace that first-result pause only through explicit human selection. Existing grants use [continuation](development/CODEX_START.md), not renewed activation or reset budgets.
 
-After activation, the coordinator integrates each finally accepted commit itself under the existing grant, checks the result, records progress, and immediately selects the next ready task. Keeping CWI `--merge` off preserves an inspection point without requiring the human at every iteration. The phase/request/run/session distinction remains intact.
+When current authority permits continuation, the coordinator integrates each finally accepted commit itself under the existing grant, checks the result, records progress, and immediately selects the next ready task. Keeping CWI `--merge` off preserves an inspection point without requiring the human at every iteration. The phase/request/run/session distinction remains intact.
 
-Necessary backend repairs use a separate maintenance branch/worktree after live owners are resolved. Preserve evidence, demonstrate the cause, make the smallest fix with regression tests, and record every attempted change. Keep pending audit entries local while the parent checkout remains bound, then incorporate them into [coding_pipeline_changes.md](coding_pipeline_changes.md) at a safe checkpoint. Existing runs do not silently resume under changed controller code. Product repair remains a CWI task.
+Necessary backend repairs use a separate maintenance branch/worktree after live owners are resolved. Preserve evidence, demonstrate the cause, make the smallest fix with regression tests, and record every attempted change. Keep pending incident records local while the parent checkout remains bound, then track them under [development/backend_changes/](development/backend_changes/README.md) and link them from [coding_pipeline_changes.md](coding_pipeline_changes.md) at a safe checkpoint. Existing runs do not silently resume under changed controller code. Product repair remains a CWI task.
 
 These coordination rules are instructions, not an implemented supervisor or an OS security mechanism. A future automated launcher/watchdog is a separate bounded CWI implementation request, not an executable hidden in these Markdown files.
 

@@ -22,6 +22,10 @@ The [manifest](../history/MANIFEST.md) retains every original administrative Mar
 - [x] Update startup/ownership guidance and the local handoff without resuming product work.
 - [x] Verify preservation, links, indexes, scope, frozen inputs and unchanged CWI/backend identities; create the administrative checkpoint.
 
+## Reference-consistency follow-up
+
+The initial migration checks verified preservation, links and indexes but missed semantic references in current guidance. The human subsequently authorized correcting all reported mismatches without losing information. [The cleanup record](../history/reference-cleanup-2026-11-06/README.md) preserves the preceding versions and defines current initial-use forms, stable readiness ownership and full backend incident records. This is administrative correction, not new product or backend execution.
+
 ## Verification evidence
 
 [Verification](../history/VERIFICATION.md) records source preservation,94 identical requirement rows,93 extracted definitions,62 authority sections,purpose/index/link checks and unchanged protected/CWI/backend state. Detailed check outputs remain under ignored local/documentation-restructure-20261106/. Do not substitute a summary for missing evidence or rerun successful product tests solely for this administrative migration.

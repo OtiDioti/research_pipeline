@@ -20,4 +20,4 @@ Future current-state updates replace the appropriate view and link to owning run
 
 ## Migration evidence
 
-[Verification](VERIFICATION.md) records the completed checks. [DEV-094](../decisions/ADR-094-development-records.md) records the authorized scope and validation. [MANIFEST](MANIFEST.md) enables exact recovery of every original input. [FOLDER_CONTENT](FOLDER_CONTENT.md) describes immediate children.
+[Reference cleanup](reference-cleanup-2026-11-06/README.md) records the subsequent semantic-role corrections and exact pre-cleanup versions. [Verification](VERIFICATION.md) records the original migration checks. [DEV-094](../decisions/ADR-094-development-records.md) records the authorized scope and validation. [MANIFEST](MANIFEST.md) enables exact recovery of every original input. [FOLDER_CONTENT](FOLDER_CONTENT.md) describes immediate children.

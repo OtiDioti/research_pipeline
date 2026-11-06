@@ -17,7 +17,7 @@ Current engineering maturity,accepted source,validation and unfinished work are 
 | What is deferred, blocked, or deliberately paused? | [BACKLOG.md](BACKLOG.md) |
 | Why were important choices made? | [DECISIONS.md](DECISIONS.md) |
 | What has actually been integrated? | [CHANGELOG.md](CHANGELOG.md) |
-| What must Codex do? | [AGENTS.md](AGENTS.md) and [startup/activation/continuation prompts](development/CODEX_START.md) |
+| What must Codex do? | [AGENTS.md](AGENTS.md) and [continuation prompt](development/CODEX_START.md); initial-use forms are in [templates](development/templates/README.md) |
 | How does it continue across development steps? | [Continuous policy](development/AUTONOMY.md) and [actual authorization](development/AUTHORIZATION.md) |
 | Which model and effort does development use? | [Model policy](development/MODEL_POLICY.md) |
 | What happens if the coding backend breaks? | [Maintenance procedure](development/BACKEND_MAINTENANCE.md) and [change audit](coding_pipeline_changes.md) |

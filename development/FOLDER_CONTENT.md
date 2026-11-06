@@ -4,6 +4,7 @@ Lists immediate project-controlled children and their purpose; use this index to
 
 - [AUTHORIZATION.md](AUTHORIZATION.md) — Records the effective human operating grant and links to original grants, amendments and restrictions; this view creates no new permission.
 - [AUTONOMY.md](AUTONOMY.md) — Defines the development loop, cumulative limits, stopping boundaries and completion gates under actual human authority.
+- [backend_changes/](backend_changes/FOLDER_CONTENT.md) — Project-controlled backend changes directory.
 - [BACKEND_MAINTENANCE.md](BACKEND_MAINTENANCE.md) — Defines the narrow backend-maintenance exception and its evidence requirements; dated additional authority remains limited to its original task.
 - [backend_patches/](backend_patches/FOLDER_CONTENT.md) — Project-controlled backend patches directory.
 - [benchmarks/](benchmarks/FOLDER_CONTENT.md) — Project-controlled benchmarks directory.
@@ -24,4 +25,4 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [RUNBOOK.md](RUNBOOK.md) — Provides setup and operational commands for authorized CWI work, including current role-specific flags and exact integration controls.
 - [runs/](runs/FOLDER_CONTENT.md) — Project-controlled runs directory.
 - [templates/](templates/FOLDER_CONTENT.md) — Project-controlled templates directory.
-- [UPDATE_GUIDE.md](UPDATE_GUIDE.md) — Explains adoption of development guidance while preserving existing source, authority, counters and unfinished-run evidence.
+- [UPDATE_GUIDE.md](UPDATE_GUIDE.md) — Explains how to update current guidance and migrate records without losing authority, evidence, budgets or unfinished-run recoverability.

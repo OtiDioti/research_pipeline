@@ -26,7 +26,7 @@ These are development-agent selections. They do not make Codex or either model a
 
 ## Readiness and evidence
 
-Before a new model-dependent run, inspect the actual compatible Codex executable, account/provider access, supported model catalog and reasoning levels. Record identities and non-secret evidence in [ENVIRONMENT.md](ENVIRONMENT.md). The local catalog fetched `2026-11-04T16:39:43.361492207Z` advertises both exact identifiers and `high`/`xhigh`; the selected installed Codex is 0.166.0. This is advertised support, not live execution or a guarantee of future access. Fresh readiness remains required before product development resumes.
+Before a new model-dependent run, inspect the actual compatible Codex executable, account/provider access, supported model catalog and reasoning levels. Record stable identity/environment changes in [ENVIRONMENT.md](ENVIRONMENT.md). Put dated authentication, catalog and readiness observations in the relevant local attempt evidence and owning run record. The local catalog fetched `2026-11-04T16:39:43.361492207Z` advertises both exact identifiers and `high`/`xhigh`; the selected installed Codex is 0.166.0. This is advertised support, not live execution or a guarantee of future access. Fresh readiness remains required before product development resumes.
 
 If an approved selection cannot be established, record `MODEL_SELECTION_REQUIRED` and stop model-dependent work. Read-only inspection and administrative preparation may continue. Do not invent aliases, silently substitute a model/effort, or accept a fallback. Changing this approved allocation requires actual human authorization.
 

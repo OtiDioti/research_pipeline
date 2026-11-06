@@ -17,6 +17,7 @@ Lists immediate project-controlled children and their purpose; use this index to
 - [MANIFEST.md](MANIFEST.md) — Records exact original paths, byte counts and SHA-256 hashes so every pre-restructure Markdown input can be recovered independently of the new summaries.
 - [originals/](originals/FOLDER_CONTENT.md) — Project-controlled originals directory.
 - [README.md](README.md) — Explains how to inspect past decisions, grants and execution checkpoints without loading them during normal session startup.
+- [reference-cleanup-2026-11-06/](reference-cleanup-2026-11-06/FOLDER_CONTENT.md) — Project-controlled reference-cleanup-2026-11-06 directory.
 - [requirements/](requirements/FOLDER_CONTENT.md) — Project-controlled requirements directory.
 - [ROADMAP.md](ROADMAP.md) — Preserves the complete ROADMAP.md contents from before the 2026-11-06 restructuring for selective historical inspection.
 - [STATUS.md](STATUS.md) — Preserves the complete STATUS.md contents from before the 2026-11-06 restructuring for selective historical inspection.

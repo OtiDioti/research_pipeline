@@ -4,7 +4,7 @@ Provides concise navigation to chronological changes; detailed implementation an
 
 ## Current administrative change
 
-2026-11-06 — [DEV-094](development/decisions/ADR-094-development-records.md) separates current state from history,adds purpose descriptions and folder indexes,and preserves original information with a hash manifest. Product source remains b376faf;no new CWI run or product-test rerun.
+2026-11-06 — [Reference-consistency cleanup](development/history/reference-cleanup-2026-11-06/README.md) completes [DEV-094](development/decisions/ADR-094-development-records.md): current initial-use forms, stable-contract versus readiness guidance, full backend incident records and accurate layout/update references. The prior restructuring at d04b472 and all pre-cleanup wording remain preserved. Product source remains b376faf; no new CWI run or product-test rerun.
 
 ## Historical changes
 

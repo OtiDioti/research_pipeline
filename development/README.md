@@ -19,6 +19,7 @@ The ownership map is in [DEVELOPMENT](../DEVELOPMENT.md#4-information-ownership-
 | Stable setup and permitted commands | ENVIRONMENT.md, RUNBOOK.md, MODEL_POLICY.md |
 | Requirement obligations and evidence pointers | REQUIREMENTS.md |
 | Exact execution narrative | One runs/ record per actual CWI run |
+| Backend maintenance detail | backend_changes/CP-ID.md, linked from the root backend index |
 | Frozen implementation request | requests/; bodies stay unchanged after launch |
 | Consequential rationale | Individual decisions/ record; DECISIONS is the index |
 | Current phase scope and progress | phases/ and ROADMAP.md |

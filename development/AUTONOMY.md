@@ -15,7 +15,7 @@ The recommended sequence preserves the user's first-run inspection:
 3. **Continuous execution:** select, implement through CWI, inspect, integrate, checkpoint, and continue until the scoped completion gate or a genuine stopping condition.
 4. **Recovery across sessions:** a new coordinator reads the same durable authorization and reconciles actual evidence. A fresh session is not a new budget and does not require reauthorization unless authority changed or expired.
 
-The [startup prompts](CODEX_START.md) link a complete [optional single-prompt alternative](CODEX_START_AUTONOMOUS.md) for explicitly preauthorizing step 2 before the first run. That removes the human first-integration checkpoint only when the human actually selects it. Do not infer that permission from a request to update documentation.
+Current first-time forms are [commissioning](templates/COMMISSIONING.md) and [activation](templates/ACTIVATION.md). The [optional single-prompt alternative](CODEX_START_AUTONOMOUS.md) replaces the first-result pause only when explicitly issued by the human. Existing grants use [continuation](CODEX_START.md) with unchanged consumption and restrictions. A documentation update or template selection creates no permission.
 
 ### Alternatives and tradeoffs
 

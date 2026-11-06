@@ -1,67 +1,51 @@
-# Applying the continuous-development update
+# Safe development-document updates
 
-Explains adoption of development guidance while preserving existing source, authority, counters and unfinished-run evidence.
+Explains how to update current guidance and migrate records without losing authority, evidence, budgets or unfinished-run recoverability.
 
-**Prepared:** 2026-10-30; current role-selection adoption guidance amended 2026-11-04. The original documentation package contains no product implementation, backend source patch, installed supervisor, or replacement for `project_description.md`. The separately authorized 2026-11-04 backend modernization and its evidence are recorded in [coding_pipeline_changes.md](../coding_pipeline_changes.md).
+## 1. Establish scope and a safe boundary
 
-## 1. Choose the appropriate package
+Follow the current human instruction and effective grant. Inspect Git,local handoff/attempts and CWI status/diagnose. If a run is live or an accepted result remains base-bound,keep tracked updates outside that checkout until safe integration or supported recovery resolves the binding. Do not change its baseline,backend,environment or frozen inputs.
 
-The **upgrade package** separates `replacement_files/` (policy-document candidates) from `merge_only/` (records that may already contain progress or local decisions). Its manifest identifies the files and their original/new digests. Review it outside the target repository first; do not extract the whole upgrade package into the project root.
+Preserve pre-update text,paths and hashes before replacing or retiring documents,including legitimate uncommitted work. A dated lossless copy or exact Git revision must remain recoverable. Do not overwrite the product specification,freeze new authority from a template,reset consumption or transfer an unaccepted draft into product source.
 
-The **complete v2 starter kit** contains the full resulting documentation tree. Use that only for a genuinely unstarted repository or as a comparison reference. Its fresh-project STATUS, BACKLOG, ENVIRONMENT, grants, and phase files are not observations of your current checkout.
+## 2. Keep one owner for each kind of information
 
-Even replacement policy files may contain local customization. Compare before applying; preserve compatible additions and surface real policy conflicts. Never overwrite `project_description.md`.
+Use [DEVELOPMENT](../DEVELOPMENT.md#4-information-ownership-avoid-competing-status-files) and [development records](README.md). Current STATUS,ROADMAP,BACKLOG,ENVIRONMENT and REQUIREMENTS views are updated in place;detailed execution belongs to its run and rationale to its decision record. Preserve superseded narratives in history and link them instead of merging them into current startup documents.
 
-## 2. Establish a safe update boundary
+AUTHORIZATION is an effective-authority view,not a blank grant form. Actual new human grants,amendments or revocations need dated source records linked from that view;budget ceilings remain distinct from consumption in run evidence and STATUS. Preserve every operative restriction,source date and unknown liability;an upgrade package or proposed form cannot supply permission.
 
-Inspect actual Git, local handoff/attempts, and retained CWI status before writing to the target. If a run is live or an accepted result is still bound to its original base, leave these new files outside the repository. Finish authorized exact integration under the old grant or follow the actual recovery/hold procedure first. Applying a documentation update can change HEAD and invalidate an otherwise legitimate pending integration.
+Stable identity/environment changes belong in ENVIRONMENT. Dated model/account/catalog readiness evidence belongs to the corresponding local attempt and owning run. [MODEL_POLICY](MODEL_POLICY.md) and [RUNBOOK](RUNBOOK.md) define current role flags and access checks;do not duplicate or overwrite historical frozen selections.
 
-If an unfinished run uses a different frozen model, do not change its model/effort, controller, or runtime to match these new instructions. Record its disposition explicitly. If required maintenance is the only route out of a genuine defect, the user's maintenance permission still applies, but parent files remain unchanged until safe and historical evidence must remain intact.
+Backend detail belongs in [backend_changes/CP-ID.md](backend_changes/README.md);the root coding_pipeline_changes.md is its index and backend_patches/ holds patch artifacts. Transfer pending local incident detail and the index link only at a safe checkpoint,preserving all rejected/reverted attempts.
 
-Do not use a hard reset, stash of unknown user work, broad clean, destructive worktree removal, or forced merge to make the update convenient. Preserve user edits and determine their ownership.
+## 3. Synchronize meaning as well as links
 
-## 3. Integrate the policy changes
+Review descriptions,repository diagrams,prompts,templates and references whenever a file's role changes. A resolving link can still send an operator to the wrong kind of content. Name the actual destination:continuation versus commissioning,contract versus observation,index versus detailed record,authority view versus issuance form.
 
-At a safe boundary, review and merge the updated root `AGENTS.md` and `DEVELOPMENT.md`, coordinator prompts, runbook, autonomy policy, model policy, and backend-maintenance policy. They form one coordinated update; changing only the prompt can leave contradictory repository instructions. Apply the current no-backward-compatibility and coordinator-oversight policies: obsolete paths may be removed within authorized scope while current functionality, safety, evidence and unfinished-run recovery remain protected. Check goals through Designer outputs (Architect only when necessary), rely on CWI for implementation review/validation, and retain acceptance/Git/integration gates. Routine Writer code/test/diff inspection or duplicate successful CWI checks is not required.
+Do not rewrite frozen requests,controller-owned evidence or preserved historical claims to match present conventions. Keep their context explicit and provide current navigation outside immutable inputs. Add concise purpose introductions to editable Markdown and update affected FOLDER_CONTENT indexes.
 
-Add missing policy/navigation/template files. Add `coding_pipeline_changes.md` only if absent; if it exists, preserve every historical entry and adopt the new audit fields. This file records changes to the ignored nested backend, not research-product changes.
+Apply the existing AGENTS review/removal and source-preservation rules. Administrative updates do not authorize product coding,backend modernization,scientific judgments,new services or purchases.
 
-Merge the new authority/mode/model/consumption fields into the actual STATUS. Preserve actual phase, request, run, commits, blockers, and next action. Merge backlog, decisions, environment, requirements, phase plans, and the first request without erasing their histories. A request already frozen by a run must remain unchanged; use a later revision/new request as appropriate.
+## 4. Select the current form by actual state
 
-An AUTHORIZATION file supplied by a starter kit is a form, not an active grant. This repository's AUTHORIZATION.md records actual human grants and amendments. Migrate any existing genuine grant accurately; do not replace it with NOT_RECORDED or infer broader authority. Mark pending activation when no such grant exists. Preserve actual grants' dates, scope, source, budgets, and consumption.
-
-## 4. Adopt and verify the current role selections
-
-The original “Astra 6.1” ambiguity was resolved by the human's 2026-10-30 `gpt-6-astra` correction. The separate 2026-11-04 amendment now approves Designer `gpt-6-astra`/`xhigh`, Architect `gpt-6.1-sol`/`xhigh`, Writer `gpt-6.1-sol`/`high`, and Reviewer `gpt-6.1-sol`/`high`. Verify actual executable/account/catalog support before new model-dependent execution; no silent fallback is permitted.
-
-Record model/provider and effort evidence in ENVIRONMENT. Every new start requires `--designer-model gpt-6-astra --designer-reasoning xhigh --architect-model gpt-6.1-sol --architect-reasoning xhigh --writer-model gpt-6.1-sol --writer-reasoning high --reviewer-model gpt-6.1-sol --reviewer-reasoning high`. The schema-revision-2 contract freezes all four pairs immutably on resume, with no revision-1 migration. Preserve original backend revisions for historical inspection; do not automatically resume historical runs. The outer Codex session's selection does not configure child processes.
-
-## 5. Commit and enter the appropriate workflow
-
-Inspect this administrative Markdown update’s diff, check links and root layout, and commit explicit paths at a safe boundary. This does not require routine review of Writer-produced implementation diffs. Do not stage the nested clone, logs, secrets, or private local data. If bootstrap has not started, capture its exact baseline only **after** this final prelaunch commit. The bootstrap program is unchanged by this update; do not introduce a broad missing-tests exemption.
-
-Select the prompt by actual state:
-
-| Actual state | Action |
+| Actual state | Current destination |
 | --- | --- |
-| No implementation yet, no unfinished run | First session: commission D00 and REQ-D01-001 |
-| First result accepted-unmerged, not yet approved | Review it, then issue the one-time activation/integration prompt |
-| Already integrated work and genuine continuous authority | Continuation prompt; reconcile records and continue |
-| Already integrated work but only supervised authority | Issue an actual continuous grant for the remaining scope; do not rerun bootstrap |
-| Run active, ownership uncertain, or recovery blocked | Inspect/recover/hold under its existing evidence; no competing start |
+| Genuinely unstarted repository; no unfinished run | [COMMISSIONING](templates/COMMISSIONING.md),only when actually issued by the human |
+| First result accepted-unmerged; human chooses activation | [ACTIVATION](templates/ACTIVATION.md),with exact receipt/base/integration prerequisites |
+| Existing activated grant and explicit human resumption | [Continuation](CODEX_START.md); preserve all consumption and prior restrictions |
+| Already integrated but no continuous authority | Actual human grant for remaining scope;adapt the activation premise to the verified checkpoint without resetting prior history |
+| Run active,ownership uncertain or recovery blocked | Supported inspection/recovery/hold;no competing start |
 
-The activation prompt's first paragraph assumes the first result is waiting for integration. For an already-integrated project, replace that paragraph with an accurate reference to the inspected integrated checkpoint; the rest can authorize the remaining phase range. Record that actual grant before the next new run.
+The [optional initial preauthorization form](CODEX_START_AUTONOMOUS.md) replaces the default first-result pause only if explicitly selected by the human. Reading or editing a form does not issue it,activate a grant or resume a stopped session.
 
-By default there is one human first-result review, then no routine prompt per request or phase. The optional ready-to-paste CODEX_START_AUTONOMOUS prompt can replace that review for a single initial instruction. Do not select it silently. Session limits, permissions, model availability, budgets, or scientific review can still require human action. No unattended supervisor is installed.
+## 5. Verify and checkpoint
 
-## 6. Verify the adoption
+Check lossless preservation,source/request digests,scope,links and headings,purpose descriptions,index coverage and semantic owner references. Confirm authority and model/effort propagation remain correct and old states retain their original backend/configuration. Do not infer historical validity from a newly passing test.
 
-- The original product description and existing progress/evidence are intact.
-- Coordinator and delegated-role permissions agree: product implementation through CWI; focused direct backend repairs and the specifically authorized 2026-11-04 modernization follow the maintenance procedure, with no ongoing general modernization exception.
-- Continuous scope and integration authority trace to a real human grant; templates have not activated themselves.
-- Every new start passes all eight explicit role flags with the verified human-approved selections, at or below xhigh; revision-2 pairs remain immutable on resume.
-- Historical state is unchanged, with original backend revisions available for inspection, no state migration and no automatic historical resume.
-- Every live/base-bound run retains the original source/environment/runtime identity; no policy update rewrote its evidence.
-- The next safe action is unambiguous and correctly distinguishes a new request, a resume, an integration, or a human decision.
+Review the administrative diff and commit explicit safe paths after bindings are resolved. Do not stage the nested clone,private logs,credentials or unrelated files. Do not add routine product-test reruns solely for documentation;required product acceptance/integration/target checks still apply to product work.
 
-Verification performed when preparing this update is recorded in [WORKFLOW_UPDATE_CHECKS.md](review/WORKFLOW_UPDATE_CHECKS.md). It does not certify your local installation or the finished scientific product.
+Leave accurate current views and a self-contained handoff with exactly one next safe action. A documentation update installs no supervisor or automatic restart.
+
+## Historical context
+
+The [pre-cleanup guide](history/reference-cleanup-2026-11-06/originals/development/UPDATE_GUIDE.md.txt) preserves the former upgrade/starter-kit packaging instructions and original adoption evidence links. The [reference-cleanup record](history/reference-cleanup-2026-11-06/README.md) records this correction. Historical package descriptions do not define the current repository layout or create authority.

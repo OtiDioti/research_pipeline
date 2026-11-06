@@ -1,6 +1,8 @@
 # CP-nnn — Focused backend repair
 
-Provides a reusable backend change record format; placeholders are not execution evidence or authority.
+Provides the full per-incident backend change record format; placeholders are not execution evidence or authority.
+
+Save the record as `development/backend_changes/CP-ID.md` at a safe checkpoint and link it from the root backend index. While live/base-bound, keep pending detail under `local/backend-maintenance/`. Preserve each attempt and its disposition within the incident record; do not replace failures with a later success.
 
 **Disposition:** DIAGNOSING / CANDIDATE / ADOPTED / REVERTED / BLOCKED. **Event time:** actual timestamp. **Recorded in parent:** actual later checkpoint if delayed.
 

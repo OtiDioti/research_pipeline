@@ -1,0 +1,33 @@
+# One-time activation form
+
+Provides the current activation issuance form separately from routine continuation; only an actual human instruction can grant its proposed permissions.
+
+Use only for the corresponding first-time state of an unstarted/unactivated repository. This repository is already commissioned and activated: use [continuation](../CODEX_START.md) for an explicitly resumed existing grant; never reset counters by issuing this form again.
+
+The text below is a proposal until actually issued by the human. Verify its scope,limits and source identities before use; it creates no authority by appearing in a file. The [original form](../history/development-CODEX_START.md) remains preserved as historical evidence.
+
+```text
+I have reviewed the first accepted implementation result. Integrate only that exact finally accepted commit after rechecking its receipt, bound complete-diff review evidence, exact Git identities, original branch/base, clean state, and all integration preconditions.
+
+Backward compatibility is not required. Within an authorized change, remove superseded interfaces, flags, modules, adapters and unused functionality rather than retaining deprecated paths. Preserve current required functionality, safety guarantees, historical evidence and recoverability of unfinished runs. Do not change frozen configurations or delete evidence under this policy.
+
+Check task understanding through Designer outputs; consult Architect outputs only when necessary. Delegate implementation correctness to CWI’s Writer, Reviewer, validation and acceptance gates. Do not routinely inspect Writer-produced code, tests or substantive diffs, or duplicate successful CWI validation and Reviewer checks. Inspect implementation details only when diagnosing a concrete failure or inconsistency. Verify terminal acceptance evidence, bound validation/review results, exact Git identities and integration safety. Required post-integration validation remains mandatory.
+
+I authorize CONTINUOUS development of the reconciled project_description.md requirements across D01–D10, including any remaining D01 work, on the current recorded target branch. Use the workflow in AGENTS.md and development/AUTONOMY.md. Do not ask for routine confirmation at request or phase boundaries. Continue in this session until the authorized scope is genuinely complete or a defined stopping condition occurs.
+
+This grant allows preparing administrative Markdown, choosing reversible internal implementation details within the specification, running coding_pipeline for all product changes/repairs, and coordinator-controlled exact fast-forward integration of subsequent finally accepted commits. Keep CWI --merge off; inspect each result before the authorized integration. Never change mandatory scope, weaken acceptance, push/publish, purchase credits/services, or alter external data-access permissions without separate approval.
+
+Limits from activation: at most 100 new CWI start attempts, including failed preflights and replacements; one product CWI run at a time; one bootstrap milestone and at most three later milestones per run; at most two repairs per review and six per run; 2700-second per-agent and per-validation deadlines. Use at most two evidence-based recovery actions for the same blocker before escalation, and at most two unsuccessful direct backend repair candidates per diagnosed issue. Record cumulative consumption and unknown liabilities across restarts. These limits do not imply a hard monetary cap.
+
+Use my existing explicitly approved Codex allowance, without purchases or top-ups. If execution is API-billed, require an actual recorded spending authorization/cap before those calls. Product live-provider experiments, new paid services, and scientific-pilot data access require separately recorded service/data/budget approval; implement deterministic contracts without falsely calling mock results live validation. Required human scientific judgments remain human decisions, not something you may sign off yourself.
+
+For every new coding_pipeline run, use the human-approved role allocation: Designer gpt-6-astra/xhigh, Architect gpt-6.1-sol/xhigh, Writer gpt-6.1-sol/high, Reviewer gpt-6.1-sol/high. Verify actual model/account/effort support under MODEL_POLICY.md before model calls. Pass all eight explicit flags: --designer-model gpt-6-astra --designer-reasoning xhigh --architect-model gpt-6.1-sol --architect-reasoning xhigh --writer-model gpt-6.1-sol --writer-reasoning high --reviewer-model gpt-6.1-sol --reviewer-reasoning high. If a selection cannot be established, report MODEL_SELECTION_REQUIRED without substitution. Never exceed xhigh. Revision-2 state freezes all four selections immutably on resume; no old-state migration or automatic historical resume is authorized. Preserve the original backend revision for historical inspection. Follow the focused necessary-backend-repair exception and coding_pipeline_changes.md audit. The dated 2026-11-04 modernization permission is limited to that task and creates no ongoing permission for unrelated backend changes. Do not alter a live controller or silently resume with changed backend code.
+
+Record this actual grant in a dated source record, link it from development/AUTHORIZATION.md, and update current STATUS.md. While the first accepted result is still bound to its base, record approval locally first, perform the authorized exact integration, and only then commit the grant and post-integration checkpoint. Do not move the target base by committing an approval document before integration.
+
+Loop: reconcile actual state; resolve existing work; choose the next ready requirement slice; prepare and commit the request; execute CWI; inspect acceptance; integrate; validate and update the evidence/checkpoint; continue. Prioritize correctness, preserve failed attempts, and record remaining unsupported behavior. Work around an unrelated blocker only when dependencies and run ownership allow it; do not label blocked mandatory work complete.
+
+Stop for missing authority/resources/model access, integrity failures, unresolved effects, material conflicts, exhausted limits, or required human judgment. If this session must end, leave one exact next safe action and a recovery-ready handoff under the existing grant. Do not claim unattended restarts or an installed supervisor. Finish with a completion report only when the documented scope and evidence gate is satisfied.
+```
+
+If the first result is already integrated, replace only the waiting-for-integration premise with its actual verified checkpoint. Preserve existing consumption and grant history; an existing active grant needs continuation, not a new activation.

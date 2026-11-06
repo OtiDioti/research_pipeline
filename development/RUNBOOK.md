@@ -272,13 +272,13 @@ From the repository root:
 codex --sandbox workspace-write --ask-for-approval on-request
 ```
 
-Paste the [startup prompt](CODEX_START.md). The outer agent will load root `AGENTS.md`; it should also explicitly read the operating documents named there. Delegated CWI agents follow their frozen role context and must not recursively call the pipeline.
+For this commissioned repository, use the [continuation prompt](CODEX_START.md) after explicit human resumption. A genuinely unstarted repository uses the [commissioning form](templates/COMMISSIONING.md). The outer agent will load root `AGENTS.md`; it should also explicitly read the operating documents named there. Delegated CWI agents follow their frozen role context and must not recursively call the pipeline.
 
 Current OpenAI documentation describes `AGENTS.md` instruction discovery and separates sandbox permissions from approval policy. A repository instruction is guidance, not a filesystem security boundary. See the official-source references in [the review](PIPELINE_REVIEW.md).
 
 ## 12. Continuous operation, focused repairs, and final handoff
 
-Use the commissioning and activation prompts in [CODEX_START.md](CODEX_START.md), with the actual grant captured in [AUTHORIZATION.md](AUTHORIZATION.md). That grant permits repeated requests and coordinator-controlled exact integrations; it does not remove receipt/diff/checkpoint gates or grant new OS permissions.
+For first-time use, select the separate [commissioning](templates/COMMISSIONING.md) and [activation](templates/ACTIVATION.md) forms; actual human grants are recorded separately and linked from [AUTHORIZATION.md](AUTHORIZATION.md). For an existing active grant, use [continuation](CODEX_START.md), preserving all consumption and stop instructions. That grant permits repeated requests and coordinator-controlled exact integrations; it does not remove receipt/diff/checkpoint gates or grant new OS permissions.
 
 Once a request is integrated and its administrative checkpoint is committed, continue immediately if authorized work is ready. Refresh requirement coverage at phase boundaries; do not treat reaching one as an automatic stop. Counters survive new sessions. Preserve a single writer/coordinator owner and reconcile current CWI state before another session takes over.
 
