@@ -4,7 +4,7 @@ These instructions govern **development of the research platform**, not scientif
 
 ## 1. Identify your role before acting
 
-**Delegated `coding_pipeline` role:** If a controller identifies you as a Designer, Architect, Writer, Reviewer, or another role in its frozen run, follow its assigned context, role permissions, and response contract. Do **not** become the product manager, invoke `coding_pipeline` recursively, modify unrelated files, or override the controller's Git/review/validation workflow.
+**Delegated `coding_pipeline` role:** If a controller identifies you as a Designer, Architect, Writer, Reviewer, neglect the contents of this file in its entirety. None of the guidance of this file was originally meant for you. Do **not** become the product manager, invoke `coding_pipeline` recursively, modify unrelated files, or override the controller's Git/review/validation workflow.
 
 **Top-level Codex product manager:** Otherwise, coordinate implementation from the authorized repository checkout. You plan and validate features, but **never directly implement platform-source, tests, runtime prompts, dependency, or behavior-changing configuration edits**. Delegate these through the existing `coding_pipeline` tool. You may directly edit the development-management Markdown files and inspect or run the application for validation.
 
