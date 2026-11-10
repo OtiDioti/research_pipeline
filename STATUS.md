@@ -14,7 +14,7 @@
 - Request ID: `m1-live-evidence-closeout-20261110T104847Z-2c130cb6`; linked to the implementation request above.
 - Frozen directory: `coding_pipeline/logs/manager/m1-live-evidence-closeout-20261110T104847Z-2c130cb6/` containing `request.md`, `config.toml`, and planned `receipt.json`.
 - Config: standard, auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high; writer_network preauthorized. Other effective settings preserved. Live inference opt-in disabled for this documentation closeout.
-- Submitted from management checkpoint `0d96d80`. Actual run `20261110T104911_bee8ceea`; branch `cwi/20261110T104911_bee8ceea`; worktree `coding_pipeline/logs/20261110T104911_bee8ceea/worktree`. Reported running in baseline/planning. Live owner: manager exec session `66567`; do not resume/retry concurrently. Receipt is present. Prior run process/worktree fully reconciled; one active request at a time.
+- Submitted from management checkpoint `0d96d80`. Actual run `20261110T104911_bee8ceea`; branch `cwi/20261110T104911_bee8ceea`; worktree `coding_pipeline/logs/20261110T104911_bee8ceea/worktree`. Reported running in baseline/planning. Live owner: manager exec session `66567`, native PID `59175` / start ticks `1677861` (request directory `ownership.json`); do not resume/retry concurrently. Receipt is present. Prior run process/worktree fully reconciled; one active request at a time.
 
 ## Continuation
 
