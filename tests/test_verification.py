@@ -73,6 +73,7 @@ class VerificationTests(unittest.TestCase):
         self.human_report = False
         self.changed_initial_artifact = None
         self.ack_delay = 0
+        self.prompt_handoffs = False
 
     def setup_exchange(self):
         self.assertEqual(self.case.start(), 0)
@@ -452,7 +453,20 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
                     path = 'REEXAMINATION.md' if self.phase == 'reexamination' else 'CHECK.md'
                     text = check(test.final_outcome if self.phase == 'reexamination' else 'objection')
                     case.draft(config, root + '/' + path, text.replace('(check.csv)', f'({data})'))
-                    case.draft(config, f'handoffs/{self.task_id}.md', fixtures.handoff(self.task_id, root + '/' + data))
+                    handoff = fixtures.handoff(self.task_id, root + '/' + data)
+                    if test.prompt_handoffs:
+                        # Follow the final handoff checklist literally, as the live
+                        # verifier did. Do not silently add fields from the fixture.
+                        schema = prompt.split('fields/headings:\n', 1)[1].split(
+                            '\nInclude substantive progress', 1)[0]
+                        bodies = verification.sections(handoff, (
+                            'Objective', 'Completed', 'Artifacts', 'Assumptions',
+                            'Unresolved', 'Next action', 'Parent question',
+                            'Interrupted computation', 'Resume or reconsider'))
+                        handoff = '\n'.join(
+                            field + ('\n' + bodies[field[3:]] + '\n' if field.startswith('## ') else '')
+                            for field in schema.splitlines())
+                    case.draft(config, f'handoffs/{self.task_id}.md', handoff)
                     if test.bad_draft and self.phase == 'reexamination':
                         case.draft(config, root + '/CHECK.md', '# Replace original objection')
 
@@ -475,7 +489,7 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
                         _, control, _ = workspace.control_paths(test.project, state)
                         workspace.atomic_text(control / 'request.json', json.dumps({'version':1, **workspace.owner_fields(state),
                             'request_id':uuid.uuid4().hex, 'reason':'pause'}))
-                    return bool(self.number)
+                    return test.prompt_handoffs or bool(self.number)
 
                 def finish(self):
                     self.finished = True
@@ -599,6 +613,29 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
         (self.project / next(iter(final))).write_text('altered final evidence')
         self.assertTrue(any('reexamination.csv' in failure and 'reassessment required' in failure
                             for failure in coordinator.validate_integration()))
+
+    def test_prompt_handoff_checklist_delivers_both_phases_without_repair_context(self):
+        self.prompt_handoffs = True
+        self.assertEqual(self.start(), 0, self.case.state())
+        state = self.case.state()
+        self.assertEqual([v.phase for v in self.verifiers], ['initial', 'reexamination'])
+        task = next(t for t in state['tasks'].values() if t['role'] == 'verifier')
+        self.assertEqual(task['status'], 'completed')
+        self.assertEqual(task['verification']['disposition'], 'checked')
+        self.assertTrue(task['verification']['response_committed'])
+        self.assertEqual(task['verification']['exchange_limit'], 1)
+        self.assertIn('Disposition: objection',
+                      (self.project / task['verification']['initial_check']).read_text())
+        self.assertEqual(task['integration'], ['outputs/REPORT.md'])
+        sessions = [s for s in state['sessions'] if s['role'] == 'verifier']
+        self.assertEqual(len({s['native_session_id'] for s in sessions}), 2)
+        for session in sessions:
+            self.assertNotIn('checkpoint_error', session)
+            self.assertEqual(session['checkpoint_id'], session['activation_id'])
+            saved = (self.project / session['logs'] / 'handoff.md').read_text()
+            workspace.validate_handoff(self.project, saved, task_id=task['task_id'])
+        verification.check_unchanged(self.project, task)
+        self.assertTrue(state['cleanup_ok'])
 
     def test_disputed_exchange_and_declined_exchange_allow_parent_completion(self):
         self.final_outcome = 'objection'

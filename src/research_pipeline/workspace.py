@@ -476,9 +476,16 @@ def intake_snapshot(intake):
             + "\n\n## Human feedback\n\n" + (intake.feedback or "(absent)") + "\n")
 
 
+def handoff_fields(task_id="primary"):
+    fields = (f"Logical researcher: {task_id}", "## Objective", "## Completed",
+              "## Artifacts", "## Assumptions", "## Unresolved", "## Next action")
+    if task_id != "primary":
+        fields += ("## Parent question", "## Interrupted computation", "## Resume or reconsider")
+    return fields
+
+
 def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary"):
-    for field in (f"Logical researcher: {task_id}", "## Objective", "## Completed",
-                  "## Artifacts", "## Assumptions", "## Unresolved", "## Next action"):
+    for field in handoff_fields(task_id):
         check_deadline(deadline)
         if field not in text:
             raise InputError(f"Handoff missing required field: {field}")
@@ -486,10 +493,6 @@ def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary
             body = text.split(field, 1)[1].split("\n## ", 1)[0].strip()
             if not body:
                 raise InputError(f"Handoff field has no content: {field}")
-    if task_id != "primary":
-        for field in ("## Parent question", "## Interrupted computation", "## Resume or reconsider"):
-            if field not in text or not text.split(field, 1)[1].split("\n## ", 1)[0].strip():
-                raise InputError(f"Handoff missing required content: {field}")
     artifacts = []
     for match in re.finditer(r"\[[^\]]*\]\(([^\s)]+)\)", text):
         check_deadline(deadline)

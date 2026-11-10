@@ -9,6 +9,7 @@ import tempfile
 import time
 
 from .isolation import RequestedStop, RuntimeUnavailable
+from .workspace import handoff_fields
 
 
 LIMITATIONS = [
@@ -121,6 +122,8 @@ def private_auth(project):
 
 def build_prompt(intake, limits, continuation=None, task=None):
     rollover_saving = limits.get("rollover_saving_seconds", 15)
+    task_id = task["task_id"] if task else "primary"
+    handoff_schema = "\n".join(handoff_fields(task_id))
     verifier = task is not None and task["role"] == "verifier"
     if verifier:
         root = task["workspace"]
@@ -160,8 +163,7 @@ every artifact needed to reproduce each check explicitly in its report.
 An initial objection releases your service/slot to await primary response. Do not wait
 inside this session for a response. Finish with your check and useful handoff saved.
 You cannot delegate or communicate peer-to-peer; record assistance needs for primary.
-Your handoff also requires ## Parent question, ## Interrupted computation and
-## Resume or reconsider. Preserve task/parent/workspace/phase across fresh contexts.
+Preserve task/parent/workspace/phase across fresh contexts.
 """
     else:
         science_instructions = """Before substantial computation write /project/work/PLAN.md: questions, assumptions,
@@ -208,16 +210,12 @@ Read /project/starting_evidence/RESEARCH_QUESTIONS.md and relevant available evi
 The controller maintains FOLDER_CONTENT.md. Preserve unaffected science; do not repeat
 completed computations without scientific reason. Useful partial work can be checkpointed
 without a finished report. Before ending ALWAYS save a concise Markdown handoff draft at
-/run/research-drafts/handoffs/primary.md with exactly these fields/headings:
-Logical researcher: primary
-## Objective
-## Completed
-## Artifacts
-## Assumptions
-## Unresolved
-## Next action
+/run/research-drafts/handoffs/primary.md with the following required fields/headings:
+{handoff_schema}
 Include substantive progress, limitations, interrupted computations (or none), and a
-concrete next step. Use ordinary links relative to the canonical handoff in handoffs/,
+concrete next step. Fill EVERY section in the handoff itself; a reference to sections
+in another note does not satisfy required handoff content.
+Use ordinary links relative to the canonical handoff in handoffs/,
 e.g. [Plan](../work/PLAN.md). Do not copy conversations.
 End with an honest account of progress and blockers.
 
@@ -338,8 +336,7 @@ Read /project/{task['assignment']} before work. Your only writable native direct
 mirroring {root}/. Save a substantive {root}/RESULT.md explaining methods, assumptions,
 artifact links, uncertainty, limitations and remaining questions; label findings PRELIMINARY.
 You cannot edit original parent/sibling research or shared synthesis. You cannot delegate;
-record assistance requests in your notes for primary mediation. Your handoff must also have
-## Parent question, ## Interrupted computation and ## Resume or reconsider with useful content.
+record assistance requests in your notes for primary mediation.
 Preserve this task, parent and workspace across fresh contexts. Do not restart saved work.
 """
     return prompt

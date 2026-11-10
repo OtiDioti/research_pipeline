@@ -286,3 +286,35 @@ attempted response, preserves accepted evidence and launches no further session.
 The updated real scientific protocol remains unverified locally. Normal review and
 enabled controller-host final verification must establish live acceptance before
 local integration; this repair reports readiness, not M3 completion.
+
+### Integration repair: complete verifier handoff schema (2026-11-10)
+
+Read the complete final-008 command log and retained session drafts/receipts from
+`m3-live-c674_gm5`. The initial verifier completed its independent objection in
+96 seconds but omitted three delegated handoff sections, recording their contents
+in CHECK.md instead. Publication rejected the missing `Parent question`. A second
+context repaired only that handoff; re-examination then exceeded the live gate's
+two-context limit. Primary saving/rollover was acknowledged successfully in this run.
+
+The prompt required those sections earlier, then instructed the verifier to use
+“exactly” the shorter primary checklist. Prompt and validation now share one complete
+role-specific schema; every required section must contain content in the handoff
+itself. The regression follows the prompt's checklist literally through actual
+publication, objection delivery, response, re-examination and integration. Substituting
+the original shorter checklist reproduces the missing-section failure. With the fix,
+both phases finish in two distinct native contexts without a handoff-repair activation.
+Scientific judgments in this test remain explicit engineering doubles. Live science,
+activation limits, resource grants and all acceptance assertions are unchanged.
+
+- `python -m unittest discover -s tests -q`: **132 run, OK, 4 expected skips**.
+- `python -m unittest tests.test_verification -q`: **24 passed**, including the
+  completed objection/response exchange with the prompt-derived handoff checklist.
+- Enabled `tests.test_isolation.BubblewrapBoundaryTests`: **4 passed**, including
+  native runtime startup and protected verifier/research workspaces.
+- Enabled M3 live and service checks **fail before inference** because this worker
+  lacks `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Fresh diagnostic receipt:
+  `runtime/tmp/m3-integration-5-repair/m3-live-u7_78rdt/receipt.json` under this
+  pipeline run; no owned services and no cleanup errors.
+
+Enabled controller-host final verification is still required to establish scientific
+acceptance. This repair establishes local code readiness only.
