@@ -14,10 +14,10 @@
 - Request ID: `m1-live-evidence-closeout-20261110T104847Z-2c130cb6`; linked to the implementation request above.
 - Frozen directory: `coding_pipeline/logs/manager/m1-live-evidence-closeout-20261110T104847Z-2c130cb6/` containing `request.md`, `config.toml`, and planned `receipt.json`.
 - Config: standard, auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high; writer_network preauthorized. Other effective settings preserved. Live inference opt-in disabled for this documentation closeout.
-- Submission: prepared; commit this checkpoint before submission. Actual run ID and owner not assigned. Prior run process/worktree are fully reconciled. One active request at a time.
+- Submitted from management checkpoint `0d96d80`. Actual run `20261110T104911_bee8ceea`; branch `cwi/20261110T104911_bee8ceea`; worktree `coding_pipeline/logs/20261110T104911_bee8ceea/worktree`. Reported running in baseline/planning. Live owner: manager exec session `66567`; do not resume/retry concurrently. Receipt is present. Prior run process/worktree fully reconciled; one active request at a time.
 
 ## Continuation
 
-- Submit the frozen closeout request, record actual receipt/run ID/ownership, and trust pipeline review/testing/assessment. The manager performs no independent product inspection/review/testing.
+- Monitor exec session `66567` and flow status/report for `20261110T104911_bee8ceea`; trust pipeline review/testing/assessment. Reconcile process ownership before recovery. The manager performs no independent product inspection/review/testing.
 - If the report identifies a real M1 gap, resolve it through pipeline recovery before M2. Otherwise record M1 acceptance after local integration and choose the next M2 increment. No COMPLETE until all current PROJECT.md gates, including human M5 acceptance, pass and all jobs stop.
 - Components: pipeline clean main `6c7b4d4`; controller clean `project-manager/setup` at `d0771db`. No manager component repairs or restart needed.
