@@ -3,6 +3,7 @@
 - [__init__.py](__init__.py) — Shared source-checkout imports for tests and their Python CLI subprocesses.
 - [test_cli.py](test_cli.py) — User-visible intake, orchestration and consequential-failure checks using explicit doubles.
 - [test_collaboration.py](test_collaboration.py) — Delegation, concurrent task continuity, scoped publication, integration, human direction and killed-owner recovery with explicit doubles.
+- [test_verification.py](test_verification.py) — Independent check exchange, frozen evidence, verifier rollover, disputed integration, human edits and killed-owner recovery with explicit doubles.
 - [test_continuity.py](test_continuity.py) — Persistent continuation, human changes, crash recovery and cumulative accounting with explicit research doubles.
 - [test_pause.py](test_pause.py) — Separate CLI suspension requests, handoff preparation, forced pause, human edits and interrupted preparation recovery.
 - [test_rollover.py](test_rollover.py) — Fresh primary sessions, cumulative budgets, pause precedence, failure and interrupted rollover recovery with explicit doubles.

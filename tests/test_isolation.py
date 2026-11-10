@@ -204,6 +204,62 @@ for path in (p, p.parent, Path('/project/handoffs/foreign.md')):
                     reader.communicate()
 
 
+    def test_verifier_frozen_code_data_and_original_research_are_read_only(self):
+        if not shutil.which('bwrap'):
+            if live_enabled():
+                self.fail('Bubblewrap missing during enabled live acceptance')
+            self.skipTest('Bubblewrap missing; verifier boundary unverified')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            fixture(root)
+            task_id = 'task-' + 'c' * 32
+            rel = workspace.task_directory(task_id)
+            inputs = rel + '/inputs'
+            (root / inputs / 'initial').mkdir(parents=True)
+            for name in ('method.py', 'data.csv', 'PACKET.md'):
+                (root / inputs / 'initial' / name).write_text('frozen evidence')
+            (root / rel / 'CHECK.md').write_text('# Accepted objection')
+            (root / 'outputs/original.py').write_text('protected original')
+            drafts = root / '.research_pipeline/verifier-drafts'
+            drafts.mkdir()
+            script = f"""
+from pathlib import Path
+for target in ('/project/{inputs}/initial/method.py', '/project/{inputs}/initial/data.csv',
+               '/project/{inputs}/initial/PACKET.md', '/project/{rel}/CHECK.md',
+               '/project/outputs/original.py', '/project/work/protected.md'):
+    p = Path(target)
+    for action in (lambda: p.write_text('changed'), lambda: p.unlink(),
+                   lambda: p.rename(p.with_name('stolen'))):
+        try: action()
+        except OSError: pass
+        else: raise AssertionError('verification evidence writable: ' + target)
+for p in (Path('/project/{inputs}/initial/new.py'), Path('/project/{inputs}/new.csv')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('frozen input creation allowed')
+own = Path('/project/{rel}/independent.py')
+own.write_text('print(42)')
+import subprocess
+assert subprocess.check_output(['/usr/bin/python3', str(own)]).strip() == b'42'
+p = Path('/run/research-drafts/{rel}/REEXAMINATION.md')
+p.parent.mkdir(parents=True)
+p.write_text('# Independent re-examination')
+"""
+            command = isolation.bubblewrap_command(root, ['/usr/bin/python3', '-c', script],
+                task_id=task_id, frozen_inputs=(inputs,), drafts=drafts)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=5)
+            if result.returncode and any(t in result.stderr for t in ('Operation not permitted', 'No permissions', 'namespace')):
+                if live_enabled():
+                    self.fail('Bubblewrap verifier namespaces unavailable: ' + result.stderr)
+                self.skipTest('Bubblewrap verifier namespaces unavailable: ' + result.stderr)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            protected = (rel + '/CHECK.md',)
+            workspace.publish_drafts(root, drafts, workspace.science_fingerprints(root, task_id), [],
+                                     task_id, protected)
+            self.assertEqual((root / rel / 'CHECK.md').read_text(), '# Accepted objection')
+            self.assertTrue((root / rel / 'REEXAMINATION.md').exists())
+
+
 class ServiceIsolationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -374,13 +430,18 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check
         child_id = 'task-' + 'a'*32
         child_rel = workspace.task_directory(child_id)
         (self.root / child_rel).mkdir(parents=True)
+        verifier_id = 'task-' + 'b'*32
+        verifier_rel = workspace.task_directory(verifier_id)
+        (self.root / verifier_rel / 'inputs').mkdir(parents=True)
+        roles = (('primary', 'work'), (child_id, child_rel), (verifier_id, verifier_rel))
         services, outputs = [], []
         began = time.monotonic()
         try:
-            for task_id, rel in (('primary','work'), (child_id,child_rel)):
+            for task_id, rel in roles:
                 output = bytearray()
                 outputs.append(output)
                 config = isolation.Config(task_id=task_id, task_workspaces=('work/tasks',),
+                    frozen_inputs=(verifier_rel + '/inputs',) if task_id == verifier_id else (),
                     deadline=began + 5, memory_mib=128, max_tasks=32,
                     on_poll=lambda: 'pause' if time.monotonic() - began > 1 else None)
                 heartbeat = f'/project/{rel}/heartbeat'
@@ -395,9 +456,9 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check
                 result = service.finish()
                 self.assertEqual(result.requested_stop, 'pause', output)
                 self.assertTrue(result.cleanup_ok, output)
-            before = [(self.root / rel / 'heartbeat').read_bytes() for rel in ('work',child_rel)]
+            before = [(self.root / rel / 'heartbeat').read_bytes() for _, rel in roles]
             time.sleep(.15)
-            self.assertEqual(before, [(self.root / rel / 'heartbeat').read_bytes() for rel in ('work',child_rel)])
+            self.assertEqual(before, [(self.root / rel / 'heartbeat').read_bytes() for _, rel in roles])
         finally:
             for service in services:
                 if not service.result.cleanup_ok:

@@ -14,7 +14,7 @@ import time
 import uuid
 from urllib.parse import unquote, urlsplit
 
-from . import codex, isolation, workspace
+from . import codex, isolation, verification, workspace
 
 SCIENCE_FIELDS = {
     "checkpoint", "checkpoints", "checkpoint_prepared", "checkpoint_error",
@@ -42,14 +42,14 @@ class TaskState(dict):
             else:
                 self.task.pop(key, None)
         self.task["activation"] = {k: v for k, v in self.items()
-                                  if k not in SCIENCE_FIELDS | IDENTITY_FIELDS
+                                  if k not in SCIENCE_FIELDS | IDENTITY_FIELDS | {"verification"}
                                   and k not in ("run_id", "ownership_nonce")}
         self.coordinator.save()
 
 
-def new_task(task_id, objective, benefit, parent=None, assignment=None):
+def new_task(task_id, objective, benefit, parent=None, assignment=None, role="researcher"):
     return {"task_id": task_id, "logical_researcher_id": task_id,
-            "role": "primary" if task_id == "primary" else "researcher",
+            "role": "primary" if task_id == "primary" else role,
             "objective": objective, "scientific_benefit": benefit, "parent_task": parent,
             "assigning_primary": "primary", "workspace": workspace.task_directory(task_id),
             "assignment": assignment, "status": "pending", "checkpoints": [], "activation": None,
@@ -82,9 +82,13 @@ def validate_state(state, project):
         if (task["task_id"] != task_id or task["logical_researcher_id"] != task_id
                 or task["workspace"] != workspace.task_directory(task_id)
                 or task["assigning_primary"] != "primary"
-                or task["role"] != ("primary" if task_id == "primary" else "researcher")
+                or task["role"] not in (("primary",) if task_id == "primary" else ("researcher", "verifier"))
                 or (task_id != "primary" and task["parent_task"] not in tasks)):
             raise workspace.InputError("Invalid saved task ownership")
+        if task["role"] == "verifier":
+            verification.validate_record(task)
+            if tasks[task["parent_task"]]["role"] == "verifier":
+                raise workspace.InputError("A verifier must check a research task")
     # Validate every unit before attempting cleanup, without opening any agent drafts.
     for activation in owned_activations(state):
         for key, flag in (("service", "service_attempted"), ("probe_service", "probe_attempted")):
@@ -217,7 +221,7 @@ class Coordinator:
 
     def summaries(self):
         return [{k: task.get(k) for k in ("task_id", "role", "objective", "parent_task", "workspace",
-                    "status", "assignment", "delivery", "integration", "checkpoint_error")}
+                    "status", "assignment", "delivery", "integration", "checkpoint_error", "verification")}
                 | {"handoff": workspace.handoff_path(task["task_id"])}
                 for task in self.state["tasks"].values()]
 
@@ -282,7 +286,8 @@ class Coordinator:
         config = replace(self.base, memory_mib=self.state["limits"]["memory_mib"] // count,
             max_tasks=self.state["limits"]["max_tasks"] // count, max_agents=count,
             deadline=self.deadline, unit=view["service"], task_id=task["task_id"],
-            task_workspaces=("work/tasks",), launch_guard=self.launch_guard)
+            task_workspaces=("work/tasks",), launch_guard=self.launch_guard,
+            frozen_inputs=(f"{task['workspace']}/inputs",) if task["role"] == "verifier" else ())
         session, config.control, config.response = workspace.control_paths(self.project, view)
         session.mkdir(parents=True)
         config.control.mkdir()
@@ -293,6 +298,10 @@ class Coordinator:
         recorder = None
         runtime = None
         try:
+            if task["role"] == "verifier":
+                verification.check_unchanged(self.project, task, self.deadline)
+                if task["verification"]["phase"] not in ("initial", "reexamination"):
+                    raise workspace.InputError("Verification is waiting or closed")
             intake = workspace.read_intake(self.project)
             baseline = workspace.science_fingerprints(self.project, task["task_id"])
             external = sorted(set(workspace.changed_files(task.get("science_fingerprints", {}), baseline))
@@ -455,7 +464,14 @@ class Coordinator:
                                 "limitation": rollover_error, "source_activation": view["activation_id"]}
         elif not self.stop_reason and result.cleanup_ok and not (result.returncode or result.error or result.interrupted or result.timed_out):
             failures = [view["checkpoint_error"]] if view.get("checkpoint_error") else []
-            if task_id != "primary":
+            if task["role"] == "verifier" and view.get("pending_reconciliation"):
+                failures.append("Verifier drafts conflict with human edits; reassessment required")
+            if task["role"] == "verifier" and not failures:
+                try:
+                    task["status"] = verification.deliver(self.project, task, self.deadline)
+                except (OSError, ValueError, KeyError) as exc:
+                    failures.append(f"Verification delivery failed: {exc}")
+            elif task_id != "primary" and task["role"] != "verifier":
                 path = f"{task['workspace']}/RESULT.md"
                 try:
                     text = workspace.read_input(workspace.safe_path(self.project, path))
@@ -465,12 +481,13 @@ class Coordinator:
                         task["delivery"] = {"result": path, "handoff": workspace.handoff_path(task_id), "label": "preliminary"}
                 except (OSError, ValueError) as exc:
                     failures.append(str(exc))
-            task["status"] = "incomplete" if failures else "completed"
+            if task["role"] != "verifier" or failures:
+                task["status"] = "incomplete" if failures else "completed"
             if failures:
                 view["checkpoint_error"] = "; ".join(failures)
         elif result.timed_out:
             task["status"] = "timed_out"
-        if result.cleanup_ok and task_id != "primary" and not task.get("delivery"):
+        if result.cleanup_ok and task["role"] == "researcher" and not task.get("delivery"):
             partial = f"{task['workspace']}/RESULT.md"
             if workspace.safe_path(self.project, partial).is_file():
                 task["delivery"] = {"result": partial, "handoff": workspace.handoff_path(task_id),
@@ -506,31 +523,134 @@ class Coordinator:
                 expected = {**workspace.owner_fields(runtime["view"]), "task_id": "primary"}
                 if any(request.get(k) != v for k, v in expected.items()):
                     raise workspace.InputError("Assignment activation ownership mismatch")
-                parent = request.get("parent_task")
-                if parent not in self.state["tasks"]:
-                    raise workspace.InputError("Unknown scientific parent task")
-                if not self.has_slot():
-                    raise workspace.InputError("All researcher slots allocated; continue parent work")
-                task = next((t for t in self.state["tasks"].values()
-                             if t.get("assignment") == request["assignment"]), None)
-                if task is not None:
-                    if task["parent_task"] != parent or task["assigning_primary"] != "primary":
-                        raise workspace.InputError("Cannot change an existing task's parent or ownership")
-                    if task["status"] == "completed" or task["task_id"] in self.running:
-                        raise workspace.InputError("Existing task is completed or already active")
+                operation = request.get("operation", "delegate")
+                if operation in ("verify", "respond", "close"):
+                    task, should_launch = self.verification_request(request, runtime["config"].drafts)
+                elif operation == "delegate":
+                    task = self.delegation_request(request, runtime["config"].drafts)
+                    should_launch = True
                 else:
-                    task = self.read_assignment(request["assignment"], parent, runtime["config"].drafts)
-                    self.state["tasks"][task["task_id"]] = task
+                    raise workspace.InputError("Unknown helper operation")
                 ack.update(accepted=True, task_id=task["task_id"], workspace=task["workspace"])
                 recorded[nonce] = ack
                 runtime["view"].persist()  # durable acceptance before spawn
-            self.launch(task)
+            if should_launch:
+                self.launch(task)
         except (OSError, ValueError, KeyError, isolation.RequestedStop) as exc:
             ack["error"] = str(exc)
         recorded[nonce] = ack
         runtime["view"].persist()
         workspace.atomic_text(runtime["config"].control / "delegation-ack.json", json.dumps(ack))
         self.publish_status()
+
+    def delegation_request(self, request, drafts):
+        # Preserve the original researcher admission and retry rules.
+        parent = request.get("parent_task")
+        if parent not in self.state["tasks"]:
+            raise workspace.InputError("Unknown scientific parent task")
+        if not self.has_slot():
+            raise workspace.InputError("All researcher slots allocated; continue parent work")
+        task = next((t for t in self.state["tasks"].values()
+                     if t.get("assignment") == request["assignment"]), None)
+        if task is not None:
+            if task["role"] != "researcher":
+                raise workspace.InputError("Cannot delegate an existing verifier")
+            if task["parent_task"] != parent or task["assigning_primary"] != "primary":
+                raise workspace.InputError("Cannot change an existing task's parent or ownership")
+            if task["status"] == "completed" or task["task_id"] in self.running:
+                raise workspace.InputError("Existing task is completed or already active")
+        else:
+            task = self.read_assignment(request["assignment"], parent, drafts)
+            self.state["tasks"][task["task_id"]] = task
+        return task
+
+    def verification_request(self, request, drafts):
+        def retry(task):
+            verification.check_unchanged(self.project, task, self.deadline)
+            runnable = (task["verification"]["phase"] in ("initial", "reexamination")
+                        and task["status"] in ("failed", "interrupted", "incomplete", "paused")
+                        and task["task_id"] not in self.running)
+            if runnable and not self.has_slot(task["task_id"]):
+                raise workspace.InputError("All researcher slots allocated; accepted phase retained")
+            return task, runnable
+
+        operation = request["operation"]
+        if operation == "verify":
+            parent = request.get("parent_task")
+            if parent not in self.state["tasks"] or self.state["tasks"][parent]["role"] == "verifier":
+                raise workspace.InputError("Unknown scientific research parent")
+            rel = request["assignment"]
+            if not workspace.allowed_science(rel, "primary"):
+                raise workspace.InputError("Verification packet must belong to the submitting primary")
+            existing = next((t for t in self.state["tasks"].values() if t.get("verification", {}).get("packet_source") == rel), None)
+            if existing:
+                if existing["parent_task"] != parent:
+                    raise workspace.InputError("Cannot change verifier parent or ownership")
+                return retry(existing)  # same packet cannot manufacture another allowance
+            if not self.has_slot():
+                raise workspace.InputError("All researcher slots allocated; continue parent work")
+            task_id = f"task-{uuid.uuid4().hex}"
+            root = workspace.task_directory(task_id)
+            packet, content = verification.freeze(self.project, rel, drafts, f"{root}/inputs/initial",
+                                                  verification.PACKET_FIELDS, self.deadline)
+            task = new_task(task_id, content["Claim and scope"], content["Scientific benefit"],
+                            parent, f"{root}/ASSIGNMENT.md", role="verifier")
+            task["verification"] = {"packet_source": rel, "initial": packet, "phase": "initial",
+                "exchange_limit": 1, "response_committed": False, "disposition": "preliminary",
+                "reviewed_version": packet["version"], "initial_check": None,
+                "response": None, "final_check": None, "closure": None}
+            workspace.atomic_text(self.project / task["assignment"],
+                f"# Independent verification\n\nParent task: {parent}\n\n"
+                f"Examine the [frozen scientific packet](/project/{packet['packet']}).\n"
+                "Use your own reasoning/checks; do not edit original research or frozen inputs.\n")
+            workspace.refresh_indexes(self.project, task_id=task_id)
+            self.state["tasks"][task_id] = task
+            return task, True
+        task = self.state["tasks"].get(request.get("target"))
+        if task is None or task["role"] != "verifier":
+            raise workspace.InputError("Unknown verifier target")
+        verification.check_unchanged(self.project, task, self.deadline)
+        record = task["verification"]
+        if record["phase"] == "closed":
+            raise workspace.InputError("Closed verification exchanges cannot reopen")
+        if operation == "respond" and record["response_committed"]:
+            if request["response"] == record.get("response_source"):
+                return retry(task)  # accepted phase can resume, never replace the response
+            raise workspace.InputError("Verification response cannot be replaced")
+        if record["phase"] != "awaiting_response" or task["task_id"] in self.running:
+            raise workspace.InputError("Verification is not awaiting response; closed exchanges cannot reopen")
+        rel = request["response"] if operation == "respond" else request["reason"]
+        if not workspace.allowed_science(rel, "primary"):
+            raise workspace.InputError("Verification response/closure must belong to primary")
+        if operation == "respond":
+            if not self.has_slot(task["task_id"]):
+                raise workspace.InputError("All researcher slots allocated; response allowance unconsumed")
+            packet, _ = verification.freeze(self.project, rel, drafts, f"{task['workspace']}/inputs/response",
+                                            verification.RESPONSE_FIELDS, self.deadline)
+            record.update(response=packet, response_source=rel, response_committed=True, phase="reexamination")
+            task["status"] = "pending"
+            return task, True
+        path = workspace.safe_path(drafts, rel)
+        if not path.exists():
+            path = workspace.safe_path(self.project, rel)
+        text = verification.read_bytes(path, self.deadline).decode("utf-8")
+        if not text.strip() or Path(rel).suffix != ".md":
+            raise workspace.InputError("Closure requires a substantive Markdown explanation")
+        for target in verification.LINK.findall(text):
+            candidate = verification.link_path(self.project, rel, target)
+            if candidate is not None:
+                if not workspace.safe_path(self.project, candidate).is_file():
+                    raise workspace.InputError("Closure links must refer to saved canonical science")
+                text = text.replace(f"]({target})", f"](/project/{candidate})")
+        closure = f"{task['workspace']}/CLOSURE.md"
+        workspace.atomic_text(self.project / closure,
+            f"# Disputed: finite verification exchange closed\n\n{text}\n\n"
+            f"Unresolved [independent objection](/project/{record['initial_check']}).\n")
+        record.update(closure=closure, closure_sha256=workspace.file_digest(self.project / closure),
+                      closure_source=rel, phase="closed", disposition="disputed")
+        task.update(status="completed")
+        task["delivery"]["label"] = "disputed"
+        return task, False
 
     def read_assignment(self, rel, parent, drafts):
         canonical = workspace.safe_path(self.project, rel)
@@ -540,12 +660,8 @@ class Coordinator:
         if not path.exists():
             path = canonical
         text = workspace.read_input(path)
-        sections = {}
-        for field in ("Objective", "Parent question", "Scientific benefit", "Assumptions", "Requested result", "Artifacts"):
-            match = re.search(r"^## " + field + r"\s*\n(.+?)(?=\n## |\Z)", text, re.S | re.M)
-            if not match or not match[1].strip():
-                raise workspace.InputError(f"Assignment missing substantive ## {field}")
-            sections[field] = match[1].strip()
+        sections = verification.sections(text, ("Objective", "Parent question", "Scientific benefit",
+                                               "Assumptions", "Requested result", "Artifacts"))
         task_id = f"task-{uuid.uuid4().hex}"
         root = workspace.safe_path(self.project, workspace.task_directory(task_id))
         # Validate/copy draft inputs before accepting. Canonical science stays linked.
@@ -608,30 +724,64 @@ class Coordinator:
         return new_task(task_id, sections["Objective"], sections["Scientific benefit"], parent, assignment)
 
     def validate_integration(self):
-        primary = self.state["tasks"]["primary"]
         paths = workspace.science_fingerprints(self.project, "primary")
         failures = []
         for task in self.state["tasks"].values():
             if task["task_id"] == "primary":
                 continue
+            task["integration"] = []
             delivery = task.get("delivery")
             if task["status"] != "completed" or not delivery:
                 failures.append(f"Unfinished delegated task: {task['task_id']}; inspect its handoff and saved artifacts")
                 continue
+            required = [delivery["result"]]
+            if task["role"] == "verifier":
+                record = task["verification"]
+                try:
+                    verification.check_unchanged(self.project, task, self.deadline)
+                except (OSError, ValueError, KeyError) as exc:
+                    record["integrity_error"] = str(exc)
+                    failures.append(f"{task['task_id']}: {exc}")
+                    continue
+                record.pop("integrity_error", None)
+                required = [record["initial_check"]]
+                required += [record[key] for key in ("final_check", "closure") if record.get(key)]
+                if record.get("response"):
+                    required.append(record["response"]["packet"])
+                # Endorsements apply only to the copied version, even after a human
+                # or researcher changes the original. Surface this explicitly.
+                reviewed = {e["source"]: e for key in ("initial", "response")
+                            for e in (record.get(key) or {}).get("evidence", [])}
+                record["changed_originals"] = [
+                    e["source"] for e in reviewed.values()
+                    if workspace.file_digest(workspace.safe_path(self.project, e["source"]), self.deadline)
+                    != e["source_sha256"]]
             references = []
+            linked = set()
             for rel in paths:
                 if rel.startswith("handoffs/") or Path(rel).name == "FOLDER_CONTENT.md":
                     continue
                 text = workspace.read_input_unbounded(self.project / rel)
+                if task["role"] == "verifier":
+                    needed = (task["verification"]["disposition"], "assumptions", "uncertainty",
+                              "scope", "objection")
+                    if any(word not in text.lower() for word in needed):
+                        continue
+                    if task["verification"].get("response") and "superseded" not in text.lower():
+                        continue
+                    if task["verification"].get("changed_originals") and "version" not in text.lower():
+                        continue
                 for target in re.findall(r"\[[^\]]*\]\(([^\s)]+)\)", text):
                     link = urlsplit(target)
                     if link.scheme or not link.path:
                         continue
                     path = self.project / link.path.removeprefix("/project/") if link.path.startswith("/project/") else self.project / Path(rel).parent / unquote(link.path)
-                    if path.resolve() == (self.project / delivery["result"]).resolve():
+                    matches = [r for r in required if path.resolve() == (self.project / r).resolve()]
+                    if matches:
                         references.append(rel)
+                        linked.update(matches)
             task["integration"] = sorted(set(references))
-            if not references:
+            if not references or linked != set(required):
                 failures.append(f"No primary integration reference for {task['task_id']}")
         return failures
 
@@ -640,7 +790,9 @@ class Coordinator:
         try:
             self.launch(self.state["tasks"]["primary"])
             for task in list(self.state["tasks"].values()):
-                if task["task_id"] != "primary" and task["status"] != "completed" and not self.stop_reason:
+                if (task["task_id"] != "primary" and task["status"] != "completed" and not self.stop_reason
+                        and (task["role"] != "verifier"
+                             or task["verification"]["phase"] in ("initial", "reexamination"))):
                     if self.has_slot(task["task_id"]):
                         self.launch(task)
                     else:
@@ -717,7 +869,10 @@ class Coordinator:
                     code = 124 if self.stop_reason == "wall deadline" else 3 if outcome == "blocked" else 4
             else:
                 try:
-                    failures = finalization_errors + workspace.validate_deliverables(self.project) + self.validate_integration()
+                    failures = (finalization_errors
+                                + workspace.validate_deliverables(self.project,
+                                    labels=("preliminary", "checked", "disputed", "superseded"))
+                                + self.validate_integration())
                 except (OSError, ValueError, UnicodeError) as exc:
                     failures = [f"Final validation failed: {exc}"]
                 if self.state.get("pending_intake_changes"):
@@ -729,7 +884,7 @@ class Coordinator:
                            for s in self.state["sessions"] if s.get("task_id") == "primary"):
                     failures.append("No successful primary scientific command observed")
                 self.state.update(state="incomplete" if failures else "completed", validation_failures=failures,
-                    reason="; ".join(failures) if failures else "Delegated results integrated; findings remain preliminary. Structural checks do not establish scientific correctness.")
+                    reason="; ".join(failures) if failures else "Research and verification deliveries integrated with scoped labels. Structural checks do not establish scientific correctness.")
                 code = 4 if failures else 0
             self.charge()
             self.save()

@@ -1,7 +1,7 @@
 # Research Pipeline — persistent scientific investigations
 
 A Python/Linux CLI runs a primary Codex researcher, optionally with bounded delegated
-researchers, in a scientific project. It reads human questions and evidence, asks the researcher to plan, assess
+researchers and independent verifiers, in a scientific project. It reads human questions and evidence, asks the researcher to plan, assess
 primary literature, derive and compute, and saves ordinary linked Markdown and
 reproducible scientific artifacts. `start` stays in the foreground; `inspect` uses
 saved files and needs no model access. `resume` continues the same investigation
@@ -24,12 +24,12 @@ each suite passed 85 tests with only the separate M1 live gate skipped. Both rea
 investigations preserved baseline data and human edits, adapted the plan, continued
 the same logical task in a distinct native session after an acknowledged rollover,
 reproduced the successor computation in isolation, and confirmed service cleanup.
-M3 now has an opt-in delegated-research increment described below. Independent
-verification, bounded disagreement and the real M3 acceptance demonstration remain
-deferred; this increment does not establish M3 acceptance. M4 cross-project reuse
+M3 now supports dependent research and separate independent verification with a finite
+exchange, described below. The real M3 acceptance demonstration remains deferred;
+engineering readiness alone does not establish M3 acceptance. M4 cross-project reuse
 and M5 physics-benchmark investigation remain deferred.
 
-## Dependent collaboration (M3 first increment)
+## Dependent collaboration
 
 ```sh
 research-pipeline start /path/to/investigation --max-agents 2 \
@@ -71,7 +71,8 @@ next action, and whether to resume or reconsider. The primary continues useful w
 reads deliveries, and incorporates their implications and retained uncertainties into
 its own notes/report with links to each `RESULT.md`. Structural integration checks
 require those links; they do not certify the quality of the scientific synthesis.
-All findings remain **preliminary** until a later independent-verification increment.
+Unchecked findings remain **preliminary**. Consequential results can receive a separate,
+version-scoped independent check through the verification flow below.
 
 The count includes the primary. Every probe/research service receives fixed shares
 `floor(memory_mib / max_agents)` and `floor(max_tasks / max_agents)`, with zero swap.
@@ -114,8 +115,86 @@ visibility, concurrent service/descendant stopping where the host supports syste
 and explicit doubles for independent task rollover, parent progress, budgets,
 pause/resume, human edits, full capacity and killed-controller recovery. Enabled
 `RESEARCH_PIPELINE_M3_LIVE=1` makes unavailable enforcement prerequisites fail.
-The real opt-in M3 Codex demonstration and verification/disagreement flow belong to
-the subsequent milestone; no M3 paid gate is supplied or claimed here.
+The real opt-in M3 Codex demonstration belongs to the subsequent milestone; no M3
+paid gate or actual independent scientific verification receipt is claimed here.
+
+## Independent verification and finite disagreement
+
+Within a schema-3 investigation the primary prepares a scientific Markdown packet with
+`## Claim and scope`, `## Parent question`, `## Scientific benefit`,
+`## Assumptions and approximation regime`, `## Sources and artifacts`, and
+`## Reproduction instructions` (parameters and dependencies). Explicitly link every
+local evidence file needed, including dependencies of linked Markdown. The packet
+can be a canonical primary note or the primary's private draft; other sessions'
+private drafts and operational logs are never verification input.
+
+```sh
+python3 /run/research-checkpoint-helper.py --verify work/PACKET.md --parent TASK_ID
+python3 /run/research-checkpoint-helper.py --tasks
+```
+
+The verifier gets a new logical ID/workspace and a fresh native context. Its parent
+is the research task checked; the primary remains the assigning owner. Only supplied
+evidence is copied into `work/tasks/<verifier>/inputs/initial/`, with source paths,
+SHA-256 hashes and a reviewed version in `manifest.json`. Markdown links are rebased;
+reproduction commands are preserved for the verifier to adapt and record explicitly.
+Admission executes no evidence. Inputs must be regular files: at most 128 supplied
+files, 16 MiB each and 64 MiB total, within the original investigation deadline.
+The entire `inputs/` tree is read-only, including code/data. The verifier writes its
+own checks in its workspace and Markdown through scoped drafts, without editing
+original research or shared synthesis.
+
+The verifier independently reconstructs or challenges consequential work, preferably
+using another method. `CHECK.md` requires `Disposition: checked`, `objection`, or
+`inconclusive`, and substantive sections `## Claim and scope`, `## Independent approach`,
+`## Observations`, `## Objections and limitations`, and
+`## Reproduction or analytical evidence`, with saved evidence/check links. Scientific
+reasoning and actual observations establish the check; these structural requirements
+cannot certify its quality. An inconclusive initial check closes as preliminary.
+At acceptance, the controller records SHA-256 fingerprints of every explicitly linked
+local check artifact, including code, data and supporting Markdown. Changing or deleting
+these artifacts requires reassessment and prevents continuation or successful integration.
+Preserve accepted evidence and save revised calculations under new paths.
+
+An initial objection saves a handoff and **releases its service and agent slot**.
+It stays stopped on resume while awaiting the primary. The primary can continue
+other work, decline further exchange, or submit **one** response/revision:
+
+```sh
+python3 /run/research-checkpoint-helper.py --respond VERIFIER_ID --response work/RESPONSE.md
+python3 /run/research-checkpoint-helper.py --close-verification VERIFIER_ID --reason work/CLOSURE.md
+```
+
+A response needs `## Response to objections`, `## Revised claim`,
+`## Sources and artifacts`, and `## Reproduction instructions`. Its explicitly supplied
+revised evidence is frozen separately under `inputs/response/`; the original packet
+and accepted `CHECK.md` remain unchanged. Acceptance commits the single exchange
+allowance before launching the same logical verifier in a fresh context. A justified
+targeted test can be performed in the response or re-examination, within the existing
+grant. The verifier saves `REEXAMINATION.md` with the same check sections/disposition.
+Resolved work closes checked for the reviewed version; unresolved objections or an
+inconclusive final check close disputed with both arguments retained. Declining an
+awaiting exchange also closes disputed and links the primary's `CLOSURE.md` explanation.
+Closure needs no slot; a new check or re-examination needs a free slot. Full capacity
+consumes no exchange allowance and creates no pending work.
+
+Repeating the same request returns its saved outcome. Resubmitting a packet identifies
+its existing check, without another exchange budget; materially different future claims
+need a new packet with scientific explanation of the relationship. Retrying a failed or
+interrupted check with the same packet/accepted response preserves its phase and frozen
+version. Closed checks cannot reopen. Pause and crash recovery retain accepted phases,
+responses and allowances. Preparing and rolling-over verifiers keep their reservations;
+waiting verifiers consume none. Both verifier phases use the same acknowledged rollover,
+fresh context, cumulative accounting and full cleanup as researchers.
+
+The primary integrates the check, accepted response and final check/closure through
+ordinary Markdown links, explaining scope, assumptions, uncertainty, objections and
+superseded conclusions. Disputed work can be integrated without preventing unrelated
+research from completing. Labels apply to the frozen version, never automatically to
+later original edits. Changed frozen packets or accepted reports require reassessment;
+human edits are preserved. `--tasks` and `inspect --json` expose phase, disposition,
+reviewed versions and evidence/report paths. Original changes detected at integration
+are recorded and require an explicit version limitation in the synthesis.
 
 ## Installation and prerequisites
 
@@ -373,8 +452,8 @@ unconfirmed/stale activity explicitly. Partial artifacts are retained on failure
 
 Completion requires backend success, investigation-level observed successful command execution,
 nonempty required Markdown, a report link to a local computational artifact (code or
-data) under `work/`, a preliminary
-label, a usable new handoff and confirmed cleanup. These structural checks cannot establish scientific
+data) under `work/`, an explicit scientific status label (preliminary on the single-agent
+path), a usable new handoff and confirmed cleanup. These structural checks cannot establish scientific
 correctness, literature quality, novelty, or reproducibility. M1 has **no independent
 scientific verifier**. Failed experimental commands are retained in telemetry; a
 corrected command or useful negative finding is not automatically a failed investigation.

@@ -10,19 +10,27 @@ import uuid
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true")
-    parser.add_argument("--tasks", action="store_true")
-    parser.add_argument("--delegate", metavar="ASSIGNMENT")
+    operations = parser.add_mutually_exclusive_group()
+    operations.add_argument("--check", action="store_true")
+    operations.add_argument("--tasks", action="store_true")
+    operations.add_argument("--delegate", metavar="ASSIGNMENT")
+    operations.add_argument("--verify", metavar="PACKET.md")
+    operations.add_argument("--respond", metavar="VERIFIER_TASK_ID")
+    operations.add_argument("--close-verification", metavar="VERIFIER_TASK_ID")
+    parser.add_argument("--response", metavar="RESPONSE.md")
+    parser.add_argument("--reason", metavar="CLOSURE.md")
     parser.add_argument("--parent", default="primary")
     args = parser.parse_args()
+    if bool(args.respond) != bool(args.response) or bool(args.close_verification) != bool(args.reason):
+        parser.error("--respond requires --response; --close-verification requires --reason")
     control = Path("/run/research-control")
     if args.tasks:
         print((control / "tasks.json").read_text())
         return 0
-    if args.delegate:
+    if args.delegate or args.verify or args.respond or args.close_verification:
         owner = json.loads((control / "owner.json").read_text())
         if owner.get("task_id") != "primary":
-            print("Only the primary can authorize assignments.")
+            print("Only the primary can authorize collaboration requests.")
             return 1
         response = Path("/run/research-checkpoint")
         path = response / "delegation.json"
@@ -34,7 +42,11 @@ def main():
         if previous and ack.get("nonce") != previous.get("nonce"):
             print("An assignment request is already outstanding.")
             return 1
-        request = {**owner, "assignment": args.delegate, "parent_task": args.parent,
+        operation = ("verify" if args.verify else "respond" if args.respond else
+                     "close" if args.close_verification else "delegate")
+        request = {**owner, "assignment": args.delegate or args.verify, "parent_task": args.parent,
+                   "operation": operation, "target": args.respond or args.close_verification,
+                   "response": args.response, "reason": args.reason,
                    "nonce": uuid.uuid4().hex}
         temp = response / f".delegation-{request['nonce']}"
         temp.write_text(json.dumps(request) + "\n")

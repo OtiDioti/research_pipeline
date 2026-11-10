@@ -49,13 +49,17 @@ def writable_directories(task_id="primary"):
     return ("sources", "work", "outputs") if task_id == "primary" else (task_directory(task_id),)
 
 
-def allowed_science(rel, task_id="primary"):
+def allowed_science(rel, task_id="primary", protected=()):
     path = Path(rel)
+    if rel in protected:
+        return False
     if task_id == "primary":
         return (rel == "RESEARCH_STATUS.md" or rel == "handoffs/primary.md"
                 or path.parts[0] in ("sources", "outputs")
                 or path.parts[0] == "work" and not path.is_relative_to("work/tasks"))
-    return (path.is_relative_to(task_directory(task_id)) and rel != f"{task_directory(task_id)}/ASSIGNMENT.md"
+    return (path.is_relative_to(task_directory(task_id))
+            and not path.is_relative_to(f"{task_directory(task_id)}/inputs")
+            and rel != f"{task_directory(task_id)}/ASSIGNMENT.md"
             or rel == f"handoffs/{task_id}.md")
 
 
@@ -431,7 +435,7 @@ def read_input_unbounded(path, deadline=None):
         raise InputError(f"Cannot read Markdown {path}: {exc}") from exc
 
 
-def draft_proposals(project, drafts, task_id="primary"):
+def draft_proposals(project, drafts, task_id="primary", protected=()):
     """Validate the complete role-scoped batch before making any replacements."""
     regular_tree(drafts)
     proposals = []
@@ -440,7 +444,7 @@ def draft_proposals(project, drafts, task_id="primary"):
             continue
         rel = draft.relative_to(drafts)
         if (draft.suffix != ".md" or draft.name == "FOLDER_CONTENT.md"
-                or not allowed_science(rel.as_posix(), task_id)):
+                or not allowed_science(rel.as_posix(), task_id, protected)):
             raise InputError(f"Invalid scientific draft destination: {rel}")
         target = safe_path(project, rel)
         if target.exists() and not target.is_file():
@@ -449,8 +453,8 @@ def draft_proposals(project, drafts, task_id="primary"):
     return proposals
 
 
-def publish_drafts(project, drafts, baseline, external_changes, task_id="primary"):
-    proposals = draft_proposals(project, drafts, task_id)
+def publish_drafts(project, drafts, baseline, external_changes, task_id="primary", protected=()):
+    proposals = draft_proposals(project, drafts, task_id, protected)
     conflicts, preserved = [], []
     for rel, target, text in proposals:
         if file_digest(target) != baseline.get(rel):
@@ -543,7 +547,7 @@ def commit_checkpoint(project, state, intake, session, accepted_intake=None, tas
 def prepare_checkpoint(project, state, intake, session, drafts, baseline, external, deadline=None, task_id="primary"):
     """Confirm saved work before acknowledging; canonical files stay pinned."""
     check_deadline(deadline)
-    draft_proposals(project, drafts, task_id)
+    draft_proposals(project, drafts, task_id, protected_reports(state))
     check_deadline(deadline)
     text = read_input_unbounded(safe_path(drafts, handoff_path(task_id)), deadline)
     artifacts = validate_handoff(project, text, drafts=drafts, deadline=deadline, task_id=task_id)
@@ -599,7 +603,7 @@ def finalize_science(project, state, intake, session, drafts, baseline, external
     """Only called after confirmed cleanup, for normal, paused or recovered work."""
     external = sorted(set(external) | set(changed_files(baseline, science_fingerprints(project, task_id))))
     state["external_changes"] = external
-    conflicts, preserved = publish_drafts(project, drafts, baseline, external, task_id)
+    conflicts, preserved = publish_drafts(project, drafts, baseline, external, task_id, protected_reports(state))
     state["pending_reconciliation"] = conflicts
     state["preserved_edits"] = preserved
     published = {p.relative_to(drafts).as_posix() for p in drafts.rglob("*.md")}
@@ -618,6 +622,11 @@ def finalize_science(project, state, intake, session, drafts, baseline, external
         state["checkpoint_error"] = str(exc)
     state["science_fingerprints"] = science_fingerprints(project, task_id)
     return conflicts
+
+
+def protected_reports(state):
+    record = state.get("verification") or {}
+    return tuple(record[key] for key in ("initial_check", "final_check", "closure") if record.get(key))
 
 
 def load_checkpoint(project, state):
@@ -639,7 +648,7 @@ def load_checkpoint(project, state):
     return None, "", ""
 
 
-def validate_deliverables(project):
+def validate_deliverables(project, labels=("preliminary",)):
     failures = []
     linked_computation = False
     for rel in REQUIRED:
@@ -666,8 +675,8 @@ def validate_deliverables(project):
     # These are structural gates, not a scientific quality or execution certificate.
     if not failures:
         report = (project / "outputs/REPORT.md").read_text()
-        if "preliminary" not in report.lower():
-            failures.append("Report must label unchecked results preliminary")
+        if not any(re.search(r"\b" + re.escape(label) + r"\b", report, re.I) for label in labels):
+            failures.append("Report must use an explicit scientific status label: " + ", ".join(labels))
         if not linked_computation:
             failures.append("Report must link to a local computational artifact (code or data) in work/")
     return failures
