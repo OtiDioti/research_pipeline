@@ -16,12 +16,14 @@
 - Frozen request: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/request.md`.
 - Effective config: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/config.toml` (standard; auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high).
 - Receipt: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/receipt.json`.
-- Submission: prepared; commit this checkpoint before `flow run`. Actual run ID not assigned yet.
+- Submission checkpoint: `3583428`; submitted in standard mode with explicit frozen config.
+- Actual run: `20261110T091713_50e21105`; reported running in planning. Local branch `cwi/20261110T091713_50e21105`; worktree `coding_pipeline/logs/20261110T091713_50e21105/worktree`.
+- Ownership: live manager-owned exec session `18506`; no resume/retry while it remains active. Receipt was published successfully.
 - Reconciliation: `flow discover` returned no runs; pipeline logs tree did not previously exist. No earlier worktree or partial run is recorded. One implementation request at a time.
 
 ## Components and continuation
 
 - Pipeline: clean `main` at `6c7b4d4` (native Codex authentication reuse). Controller: clean `project-manager/setup` at `d0771db`. No manager repairs or required restart.
 - Blockers: none established; actual nested Codex execution and live demonstration must be established by pipeline reports.
-- Next action: submit the frozen M1 request, record its actual run ID/ownership, and resolve reported questions without duplicating active work.
+- Next action: monitor the active M1 run using status/report and the owned exec session; resolve reported questions and trust reported test/review/demo outcomes before proceeding.
 - Recovery: discover by the request ID above, then use status/report and reconcile process ownership before resume/retry. Do not mark COMPLETE until all current PROJECT.md acceptance gates are satisfied and all jobs stop.
