@@ -4,6 +4,7 @@ No fallback launches science outside this boundary. The service owns all descend
 including setsid children. The PID namespace also dies with the Bubblewrap parent.
 """
 from dataclasses import dataclass, field
+from contextlib import nullcontext
 import math
 import os
 from pathlib import Path
@@ -12,10 +13,15 @@ import shutil
 import signal
 import subprocess
 import time
+from typing import Callable
 import uuid
 
 
 class RuntimeUnavailable(RuntimeError):
+    pass
+
+
+class RequestedStop(Exception):
     pass
 
 
@@ -26,8 +32,15 @@ class Config:
     wall_seconds: float = 600
     memory_mib: int = 2048
     max_tasks: int = 128
+    primary_session_seconds: float = 300
     deadline: float = 0
     unit: str = field(default_factory=lambda: f"research-{uuid.uuid4().hex}.service")
+    drafts: Path | None = None
+    on_probe_launch: Callable[[str], None] | None = None
+    control: Path | None = None
+    response: Path | None = None
+    on_poll: Callable | None = None
+    launch_guard: Callable | None = None
 
     def limits(self):
         return {"wall_seconds": self.wall_seconds, "memory_mib": self.memory_mib, "swap_bytes": 0,
@@ -44,6 +57,7 @@ class ExecutionResult:
     cleanup_ok: bool = False
     service_properties: dict = field(default_factory=dict)
     error: str | None = None
+    requested_stop: str | None = None
 
 
 def _control(*args):
@@ -53,7 +67,7 @@ def _control(*args):
 
 def service_properties(unit):
     result = _control("show", unit, "--property=LoadState,ActiveState,SubState,Result,"
-                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent")
+                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent,InactiveEnterTimestampMonotonic")
     props = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
     if not props:
         raise RuntimeUnavailable("Cannot query transient service: " + result.stderr.strip())
@@ -69,7 +83,8 @@ def stop_service(unit):
             # Stop is bounded by TimeoutStopSec; systemd sends SIGKILL to the group.
             _control("stop", unit)
         props = service_properties(unit)
-        stopped = props.get("ActiveState") in ("inactive", "failed")
+        stopped = (props.get("LoadState") == "not-found"
+                   or props.get("ActiveState") in ("inactive", "failed"))
         if cgroup:
             events = Path("/sys/fs/cgroup") / cgroup.lstrip("/") / "cgroup.events"
             if events.exists():
@@ -80,7 +95,8 @@ def stop_service(unit):
             _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit)
             _control("stop", unit)
             props = service_properties(unit)
-            stopped = props.get("ActiveState") in ("inactive", "failed")
+            stopped = (props.get("LoadState") == "not-found"
+                       or props.get("ActiveState") in ("inactive", "failed"))
             if cgroup and events.exists():
                 stopped = stopped and "populated 0" in events.read_text()
         return stopped
@@ -93,7 +109,9 @@ def stop_service(unit):
         return False
 
 
-def bubblewrap_command(project, argv, codex=None, auth_home=None):
+def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
+                       control=None, response=None):
+    from . import workspace
     args = ["bwrap", "--die-with-parent", "--unshare-user", "--unshare-pid",
             "--unshare-ipc", "--unshare-uts", "--cap-drop", "ALL", "--new-session",
             "--clearenv", "--setenv", "PATH", "/usr/local/bin:/usr/bin:/bin",
@@ -112,8 +130,23 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None):
     args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
              "--tmpfs", "/run", "--dir", "/home/researcher/.codex",
              "--ro-bind", str(project), "/project"]
-    for name in ("sources", "work", "outputs"):
-        args += ["--bind", str(project / name), f"/project/{name}"]
+    for name in workspace.MANAGED:
+        if (project / name).exists():
+            args += ["--bind", str(project / name), f"/project/{name}"]
+    # Protect existing notes with file mounts: unlink/rename are blocked as well
+    # as writes. Never replace these inodes until the namespace has been stopped.
+    for rel, digest in workspace.science_fingerprints(project).items():
+        if digest not in ("symlink", "special"):
+            args += ["--ro-bind", str(project / rel), f"/project/{rel}"]
+    if drafts is None:
+        drafts = project / ".research_pipeline/drafts"
+        drafts.mkdir(exist_ok=True)
+    args += ["--bind", str(drafts), "/run/research-drafts"]
+    if control is not None:
+        args += ["--ro-bind", str(control), "/run/research-control",
+                 "--bind", str(response), "/run/research-checkpoint",
+                 "--ro-bind", str(Path(__file__).with_name("checkpoint.py")),
+                 "/run/research-checkpoint-helper.py"]
     args += ["--tmpfs", "/project/.research_pipeline", "--remount-ro", "/project/.research_pipeline"]
     if codex:
         # Standalone Codex distribution, including its sibling exec helper binaries.
@@ -124,7 +157,7 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None):
 
 
 def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data: None,
-                 auth_home=None):
+                 auth_home=None, poll=None, launch_guard=None):
     remaining = config.deadline - time.monotonic()
     if remaining <= 0:
         return ExecutionResult(124, timed_out=True, cleanup_ok=True)
@@ -137,13 +170,17 @@ def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data:
                "--property=MemorySwapMax=0",
                f"--property=TasksMax={config.max_tasks}",
                "--property=LimitFSIZE=67108864", "--",
-               *bubblewrap_command(project, argv, config.codex if auth_home else None, auth_home)]
+               *bubblewrap_command(project, argv, config.codex if auth_home else None,
+                                   auth_home, config.drafts, config.control, config.response)]
+    poll = poll or config.on_poll
+    launch_guard = launch_guard or config.launch_guard
     process = None
     result = ExecutionResult(4)
     selector = selectors.DefaultSelector()
     try:
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE, start_new_session=True)
+        with launch_guard() if launch_guard else nullcontext():
+            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, start_new_session=True)
         payload = memoryview(stdin.encode())
         for stream, channel in ((process.stdout, "stdout"), (process.stderr, "stderr")):
             os.set_blocking(stream.fileno(), False)
@@ -153,10 +190,18 @@ def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data:
             selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
         else:
             process.stdin.close()
-        while selector.get_map():
+        # Even a worker that closes both output streams remains controllable.
+        while selector.get_map() or process.poll() is None:
             if time.monotonic() >= config.deadline:
                 result.timed_out = True
                 break
+            reason = poll() if poll else None
+            if reason:
+                result.requested_stop = reason
+                break
+            if not selector.get_map():
+                time.sleep(min(.2, max(0, config.deadline - time.monotonic())))
+                continue
             for key, _ in selector.select(min(0.2, max(0, config.deadline - time.monotonic()))):
                 stream = key.fileobj
                 if key.data == "stdin":
@@ -175,11 +220,10 @@ def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data:
                     else:
                         selector.unregister(stream)
                         stream.close()
-        if not result.timed_out:
-            try:
-                result.returncode = process.wait(timeout=max(0.001, config.deadline-time.monotonic()))
-            except subprocess.TimeoutExpired:
-                result.timed_out = True
+        if not result.timed_out and not result.requested_stop:
+            result.returncode = process.wait(timeout=.5)
+    except RequestedStop as exc:
+        result.requested_stop = str(exc)
     except KeyboardInterrupt:
         result.interrupted = True
     except Exception as exc:
@@ -205,6 +249,8 @@ def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data:
         result.returncode = 124
     if result.interrupted:
         result.returncode = 130
+    if result.requested_stop:
+        result.returncode = 0
     return result
 
 
@@ -225,6 +271,17 @@ for action in (lambda: p.write_text('changed'), lambda: p.unlink(),
     else: raise AssertionError('protected write succeeded')
 assert not list(Path('/project/.research_pipeline').iterdir())
 assert not Path('/home/host-private-sentinel').exists()
+note = Path('/project/work/protected.md')
+if note.exists():
+    for action in (lambda: note.write_text('changed'), lambda: note.unlink(),
+                   lambda: note.rename(note.with_name('replacement.md'))):
+        try: action()
+        except OSError: pass
+        else: raise AssertionError('canonical Markdown write succeeded')
+draft = Path('/run/research-drafts/work/protected.md')
+draft.parent.mkdir(parents=True, exist_ok=True)
+draft.write_text('# Scientific draft')
+assert draft.read_text() == '# Scientific draft'
 code = Path('/project/work/compute.py')
 code.write_text('from pathlib import Path\nPath("/project/outputs/value").write_text(str(sum(i*i for i in range(10))))\n')
 subprocess.run(['/usr/bin/python3', str(code)], check=True)
@@ -249,14 +306,18 @@ def preflight(config, project):
     import tempfile
     with tempfile.TemporaryDirectory(prefix="probe-", dir=project / ".research_pipeline") as tmp:
         probe = Path(tmp)
-        for name in ("starting_evidence", "sources", "work", "outputs", ".research_pipeline"):
+        for name in ("starting_evidence", "sources", "work", "outputs", "handoffs", ".research_pipeline"):
             (probe / name).mkdir()
         (probe / "starting_evidence/sentinel").write_text("protected")
         (probe / "AGENTS.md").write_text("protected")
         (probe / "RESEARCH_STATUS.md").write_text("protected")
+        (probe / "work/protected.md").write_text("# Protected canonical note")
         probe_config = Config(wall_seconds=min(10, config.wall_seconds), memory_mib=config.memory_mib,
                               max_tasks=config.max_tasks,
                               deadline=min(config.deadline, time.monotonic() + 10))
+        probe_config.launch_guard = config.launch_guard
+        if config.on_poll:
+            probe_config.on_poll = lambda: config.on_poll(research=False)
         diagnostics = bytearray()
         enforced = {}
         def capture(channel, data):
@@ -286,6 +347,8 @@ def preflight(config, project):
         sentinel.write_text("host-private")
         script = PROBE + f"\nassert not Path({str(sentinel)!r}).exists()\n"
         try:
+            if config.on_probe_launch:
+                config.on_probe_launch(probe_config.unit)
             result = run_isolated(probe_config, probe, ["/usr/bin/python3", "-c", script], on_event=capture)
             if sentinel.read_text() != "host-private":
                 raise RuntimeUnavailable("Outside-workspace sentinel changed")
@@ -293,6 +356,10 @@ def preflight(config, project):
             sentinel.unlink()
         if result.timed_out and time.monotonic() >= config.deadline:
             raise TimeoutError("Wall budget exhausted during the isolated runtime probe")
+        if result.requested_stop:
+            if not result.cleanup_ok:
+                raise RuntimeUnavailable("Pause during preflight: cleanup could not be confirmed")
+            raise RequestedStop(result.requested_stop)
         if result.returncode or not result.cleanup_ok or not enforced:
             raise RuntimeUnavailable(
                 f"Isolated runtime probe failed (cleanup_ok={result.cleanup_ok}, error={result.error}): "
