@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-- PROJECT.md and root AGENTS.md are unchanged. **M1–M3 accepted and locally integrated. M4 cross-project retrieval/reusable-tool increment prepared for submission; general M4 reporting/budget closeout and M5 remain.** COMPLETE and COMPLETE.ack are absent. All work/commits stay local; this invocation has no publication authority.
+- PROJECT.md and root AGENTS.md are unchanged. **M1–M3 accepted and locally integrated. M4 cross-project retrieval/reusable-tool increment running; general M4 reporting/budget closeout and M5 remain.** COMPLETE and COMPLETE.ack are absent. All work/commits stay local; this invocation has no publication authority.
 - M1 evidence: `development/requests/m1-implementation.md`; integrated `dd2efc9` / `a39d454`. M2 run `20261110T111316_7e4bef43` merged at `53a68e19e6e695788dc2ba0b8673665e1f80c370`, with two actual pause/edit/resume/fresh-primary demonstrations. Frozen M2 evidence: `coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/`. Do not restart accepted milestones.
 
 ## Accepted M3
@@ -13,11 +13,11 @@
 - Repair 14 replaced fragile parent shell heuristics with a standalone invocation of the agent-written scientific program reproduced in isolation. Independent review found no actionable issues; strict verifier execution provenance, timing, immutable snapshots and numerical checks remain. Earlier failures/repairs are retained in Git and run logs, not waived.
 - Manager assessed pipeline reports/receipts only; no independent product inspection/review/tests. Concise receipts: `final022-manager-assessment.json`, `m3-integrated-manager-receipt.json`. Owner **243258**, start ticks **5783375**, exec **82255** exited **0**; host owner absent and run lock free. Former shutdown/restart receipts are retained. No remaining M3 implementation/research job is reported.
 
-## Selected M4 increment — submit after this checkpoint
+## Active M4 increment
 
 - Objective: explicit authorized read-only reference projects, navigation/full-text retrieval, qualified scientific reuse and simple validated user/agent reusable tools. Keep general reporting/resource-control closeout as subsequent M4 work; no whole-M4 acceptance is claimed by this increment alone.
-- Request ID **`m4-cross-project-reuse-tools-20261110T225137Z-ac955108`**. Frozen directory **`coding_pipeline/logs/manager/m4-cross-project-reuse-tools-20261110T225137Z-ac955108/`** contains `request.md`, effective `config.toml` and `submission.json` with input hashes. `receipt.json` will identify the actual run once submitted; never infer submission failure from a timeout. Discover by this ID before any retry/replacement.
-- Submit exactly once with standard mode and the explicit frozen config/receipt. One active implementation at a time. Set **`RESEARCH_PIPELINE_M4_LIVE=1`**, **`RESEARCH_PIPELINE_M4_OUTPUT_DIR`** to this absolute directory plus `/live-host-acceptance`; disable M1/M2/M3 paid gates. New real sessions ≤600s, cumulative demonstration ≤900s, reproduction ≤60s, whole test including cleanup ≤1200s. Keep usual review and enabled final/required combined verification followed by pipeline-confirmed local integration. Product implementation/tests/config/dependencies/demonstrations/review all belong to coding_pipeline.
+- Request ID **`m4-cross-project-reuse-tools-20261110T225137Z-ac955108`**. Frozen directory **`coding_pipeline/logs/manager/m4-cross-project-reuse-tools-20261110T225137Z-ac955108/`** contains `request.md`, effective `config.toml` and `submission.json` with input hashes. Run **`20261110T225305_1f92cb97`** is **running**, phase **plan**. `receipt.json` records submission; `owner.json` records actual owner/start ticks and exec **3384**. Never infer termination from a timeout; discover/status/report this same run before recovery.
+- Submitted exactly once with standard mode and the explicit frozen config/receipt. One active implementation at a time. Set **`RESEARCH_PIPELINE_M4_LIVE=1`**, **`RESEARCH_PIPELINE_M4_OUTPUT_DIR`** to this absolute directory plus `/live-host-acceptance`; disable M1/M2/M3 paid gates. New real sessions ≤600s, cumulative demonstration ≤900s, reproduction ≤60s, whole test including cleanup ≤1200s. Keep usual review and enabled final/required combined verification followed by pipeline-confirmed local integration. Product implementation/tests/config/dependencies/demonstrations/review all belong to coding_pipeline.
 
 ## Active component repairs — committed, unmerged
 
