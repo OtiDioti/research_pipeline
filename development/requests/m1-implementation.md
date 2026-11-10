@@ -1,18 +1,311 @@
 # M1 implementation report
 
-The CPU-controller integration repair removes the CPU-percentage option and
-hard-quota prerequisite as authorized by the recovery response. Memory, zero
-swap, task/thread limits, wall deadlines, namespace/mount protections and
-whole-service cleanup remain required. CPU fraction and aggregate CPU time are
-not capped. Review is followed directly by the existing enabled controller final
-suite; actual M1 scientific acceptance remains pending.
+**Current Writer verdict (2026-11-10): the preserved evidence supports the M1
+minimal scientific loop.** Both enabled controller suites passed all 34 tests.
+Inspection of both actual scientific projects establishes a meaningful bounded
+question-to-artifact demonstration, beyond structural and numerical assertions.
+The [closeout assessment](#m1-live-evidence-closeout) records the evidence,
+qualifications and remaining pipeline Reviewer gate. Findings remain preliminary;
+this does not certify novelty, overall scientific competence, M3 independent
+verification or M5 human scientific acceptance.
+
+The authorized CPU-quota removal remains in effect: memory, zero swap,
+task/thread limits, wall deadlines, namespace/mount protections and whole-service
+cleanup are required; CPU fraction and aggregate CPU time are uncapped.
+
+## M1 live-evidence closeout
+
+### Preserved execution evidence
+
+All evidence paths below resolve against the **original target checkout**,
+`/home/francesco/Desktop/gits/research_project/research_pipeline`, not this
+documentation worktree. The prior pipeline summary identifies successful
+final/pre-merge verification and local integration at
+`dd2efc92cfaccb3776b730fc9fa6a33bd09090dc`. These abbreviations give exact
+target-root-relative paths:
+
+```text
+L = coding_pipeline/logs/20261110T091713_50e21105
+E = coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/live-host-acceptance
+F = E/m1-live-ig_wfv10
+P = E/m1-live-nomwciin
+```
+
+The Writer inspected `L/summary.md`, both complete command logs, the actual
+receipts and the scientific projects:
+
+| Stage | Command log under L | Exact suite outcome | Preserved receipt and project |
+|---|---|---|---|
+| Final | `tests/final-004.txt.commands/0001.txt` | `Ran 34 tests in 233.142s`, `OK`, no skips | `F/receipt.json`, `F/project/` |
+| Pre-merge | `tests/pre-merge-005.txt.commands/0001.txt` | `Ran 34 tests in 281.364s`, `OK`, no skips | `P/receipt.json`, `P/project/` |
+
+`L/tests/final-004.txt` and `L/tests/pre-merge-005.txt` record exit code 0
+for `/home/francesco/miniconda3/bin/python -m unittest discover -s tests`.
+Both ran with live acceptance enabled. Each receipt records `outcome: passed`,
+`state: completed`, no validation failures, research return code 0, unchanged
+protected inputs and successful text/JSON CLI inspection. The exact absolute
+`start`/`inspect` invocations are in each receipt's `commands`; start used
+`--wall-seconds 600 --memory-mib 2048 --max-tasks 128`.
+F ran at 10:37:52–10:41:39 UTC and P at 10:41:46–10:46:20 UTC on 2026-11-10.
+Earlier blocked projects, including `E/m1-live-rwho2ts7`, are not counted.
+
+Selected scientific Markdown, code, data and saved source text are copied to
+ignored `.m1-local/m1-live-evidence-closeout/` for bounded Reviewer inspection.
+`EVIDENCE_INDEX.md` maps copies to originals and SHA-256 values. Each demo has
+`COMMAND_EVIDENCE.md` with sanitized command outcomes and original JSONL record
+numbers, `SOURCE_EXCERPTS.md` with PDF page references, and
+`receipt-selected.json` containing whitelisted outcome fields.
+All 12 receipt-listed scientific artifact hashes and six protected-input hashes
+match the preserved files. No authentication, native histories, raw diagnostic
+streams or unrelated logs were copied. Original PDFs remain in each original
+`project/sources/`; their full extracted text is staged instead.
+
+### Intake and planning before computation
+
+Both projects preserve `project/starting_evidence/RESEARCH_QUESTIONS.md`,
+`STARTING_NOTE.md` alongside it, and `project/AGENTS.md`. The human supplied the
+integral, tentative nearby-singularity hypothesis, grid and script/data interface,
+but no analytical solution, scientific code or report. Instructions required
+deterministic standard-library calculations and honest failure reporting.
+This demonstrates a focused supplied question, not unrestricted research framing.
+
+Recorded command order in each original
+`project/.research_pipeline/backend.jsonl` establishes the sequence independently
+of file timestamps or retrospective report statements:
+
+- F: records 5 and 9 read the starting files and project instructions; record 11
+  writes the initial plan. Retrieval and source inspection follow. Record 36
+  writes the derivation/program and executes the first quadrature; 42 runs a
+  separate output.
+- P: record 5 reads both starting files; 9 writes the initial plan, before
+  retrieval and first computation at 24. Record 30 adds error decomposition
+  and regenerates results; 33 writes the final derivation note; 35 runs the
+  final program to a separate output and compares it with the final original.
+  The final derivation note was saved after computation, although planning
+  preceded it. Project instructions were supplied through intake rather than
+  a separate recorded `cat AGENTS.md`.
+
+The initial plans define the unshifted periodic grid, fixed real `a>1`,
+exact arithmetic versus binary64, literature, derivation, direct sums, checks
+and a stopping point. Later checkpoints document the method adjustments:
+F added 80/100-digit Decimal checks to interpret saturation; P used 340/370
+digits to resolve tiny predicted errors and added input/evaluation-error
+separation. These are methods connected to the question, not empty headings.
+
+### Substantive derivation and assumptions
+
+Both complete `project/work/DERIVATION.md` files split the interval at pi for
+the tangent half-angle substitution, obtaining
+`I(a)=2*pi/sqrt((a-1)*(a+1))`. They locate simple complex poles at
+`2*pi*k +/- i*alpha`, with `alpha=acosh(a)`, and expand the Poisson kernel
+with `q=1/(a+sqrt(a*a-1))`. Absolute convergence for fixed `a>1` justifies
+integration and finite-node averaging. Only Fourier modes divisible by n
+survive averaging on the unshifted grid, yielding
+
+```text
+T_n - I = 2*I*q**n/(1-q**n) = 2*I/(exp(n*alpha)-1).
+```
+
+This explains positive exact error, exponential refinement at fixed a, and
+nonuniform convergence near one: `alpha ~ sqrt(2*(a-1))`, so the node count
+for fixed relative tolerance grows as `(a-1)**(-1/2)`. The integral diverges
+at `a=1`, which is excluded. Both notes correctly distinguish the exact
+formula from a general bounded analytic-strip theorem: a narrower strip
+`0<b<alpha` admits `M_b=1/(a-cosh(b))`; inserting `b=alpha` would incorrectly
+assume boundedness at the poles. This is substantive reasoning that explains
+the experiment and its approximation regime.
+
+### Literature actually consulted
+
+Both `project/sources/LITERATURE.md` files give citations, URLs, relevance,
+access date **2026-11-10 UTC** and links to these saved full texts:
+
+| Work and role | Files under each project/sources | Relevant content inspected |
+|---|---|---|
+| Mohsin Javed and Lloyd N. Trefethen (2014), “A trapezoidal rule error bound unifying the Euler–Maclaurin formula and geometric convergence for periodic functions,” *Proc. R. Soc. A* 470 (2161), 20130571; DOI `10.1098/rspa.2013.0571`. Original primary research. | `javed_trefethen_2014.pdf`, `javed_trefethen_2014.txt` | PDF pp. 2–4: Theorem 2.1, Corollary 3.1 and proof; periodic cancellation removes boundary contributions, leaving the geometric bound. Scaling the unit interval supports the notes' strip argument. |
+| Lloyd N. Trefethen and J. A. C. Weideman (2014), “The Exponentially Convergent Trapezoidal Rule,” *SIAM Review* 56 (3), 385–458; DOI `10.1137/130932132`. Author-written review with explicit proofs, not an original priority source. | `trefethen_weideman_2014.pdf`, `trefethen_weideman_2014.txt` | Section 3, printed pp. 394–397 (PDF pp. 10–13): Theorem 3.2 and Fourier aliasing proof, especially (3.17)–(3.18). Supports the mechanism and hypotheses, not floating-point guarantees. |
+
+The author URLs are
+`https://people.maths.ox.ac.uk/trefethen/publication/PDF/2014_150.pdf`
+and `https://people.maths.ox.ac.uk/trefethen/publication/PDF/2014_149.pdf`,
+respectively. F records successful `urllib` downloads at JSONL records 17
+and 19, with PDF signatures and byte counts; successful `pdftotext -layout`
+at 23 and 25; theorem/proof reads at 27, 34, 38 and 40. P records successful
+`curl -fL` retrieval at 15 and within 22, conversions at 19 and 22, and
+source reads at 26, 28 and 30.
+
+The actual extracted text contains titles, authors, theorems, proofs and
+subsequent sections, rather than substituted landing or error pages.
+The Javed–Trefethen PDF is 318349 bytes, SHA-256
+`acdc861a0ddd8dc30c980720478390aa4f68081fa6a94d10d679b773363f73fc`;
+the Trefethen–Weideman PDF is 1213120 bytes, SHA-256
+`378ed15ee9b822bc222dac0e90cacf689d56cc21be7710bbce715dd1e6d2324b`.
+These agree with F's `sources/provenance.json` and P's `sources/MANIFEST.md`.
+Full texts were retrieved and relevant sections examined; reading every page
+is neither claimed nor established. The research paper fulfills the primary
+literature requirement; the review corroborates direct theory. No inaccessible
+or abstract-only work substantiates a theorem here.
+
+Web-search records establish bibliographic discovery. The scientific notes
+also describe publisher metadata access; search snippets alone do not prove
+that a publisher page was read. This assessment relies on the saved author
+texts and local reads. Two closely related works provide a focused methodological
+assessment, not a systematic literature or novelty search.
+
+F records 20 commands, 19 successful; P records 14, 13 successful. Each has
+one recorded exit-127 command for unavailable `rg`, recovered with `grep`,
+`sed` and Python. P's failed composite command includes successful retrieval
+and conversions before the final search failure; it is not a download failure.
+P also records a grep-to-head broken-pipe diagnostic despite composite exit 0,
+and initial Decimal-to-float diagnostic underflow displaying tiny residuals
+as zero. The retained table generator formats Decimal directly. These display
+and tool problems were resolved; no unresolved numerical or retrieval failure
+is apparent in the inspected evidence. Composite success alone would not
+establish this.
+
+### Executable study and preliminary findings
+
+Inspection of both `project/work/compute.py` files confirms direct evaluation
+of all n samples `1/(a-math.cos(2*math.pi*j/n))`, `j=0,...,n-1`, using
+`math.fsum` and `2*pi/n`; no duplicated endpoint. References and exact errors
+are separate comparison fields, not substituted estimates. Both implement
+`--output PATH`. F refuses existing output; P can overwrite it, so its rerun
+instructions require a fresh filename.
+
+Each `work/results.json` contains all 18 combinations of
+`a=1.01,1.1,2.0` and `n=16,32,64,128,256,512`, with identical binary64
+estimates across demonstrations. For `a=1.01`, the estimate decreases from
+`54.635116083083503` at n=16 to `44.318173338057896` at n=128, near the
+reference `44.3181721004628`; relative discretization error falls from about
+0.233 to `2.79e-8`. At n=16, `a=1.1` and `a=2` already have relative errors
+about `1.66e-3` and `1.41e-9`. This resolved convergence agrees with pole
+distances about 0.141304, 0.443568 and 1.316958.
+
+The numerical floor matters: at `a=1.01`, n=256 and 512 have observed absolute
+errors about `-3.47e-15` and `-4.61e-14`, despite positive exact discretization
+errors about `1.73e-14` and `3.37e-30`. Refinement can worsen the computed
+answer. Both notes separate parameter representation, node/cosine, denominator,
+scaling and summation effects; `fsum` does not repair them all. The alternative
+sine-squared denominator is a diagnostic, not a uniformly better result.
+
+F's Decimal direct sums at 80/100 digits cannot resolve the predicted `a=2`,
+n=512 absolute error around `1.06e-292`; its report explicitly labels such
+tiny errors as formula predictions. P's 340/370-digit direct sums empirically
+resolve that scale: maximum relative precision difference `7.48364e-339`,
+identity residual `8.57436e-369`. Both use Machin's pi formula and a cosine
+Taylor series as additional computational routes. Precision repetition and
+stopping rules are not interval certificates or independent verification.
+The broader near-one scaling rests on derivation, not three sampled parameters.
+
+Both `outputs/REPORT.md` files link the plan, literature, derivation, code and
+original/repeated data; F includes its table and P links
+`work/NUMERICAL_RESULTS.md`. They label findings **PRELIMINARY**, explain
+assumptions, limitations and next questions, and reject field-novelty claims.
+JSON preserves Python 3.10.12, Linux x86_64, libmpdec 2.5.1, binary64 with
+53 mantissa bits, precisions, code hashes and deterministic/no-randomness
+parameters. The scientific subprocess Python differs from the controller's.
+Both receipts record `codex-cli 0.167.0` and research model `backend default`;
+pipeline role settings and cumulative emitted token usage do not establish
+resolved model identity or reliable context occupancy.
+
+### Reproduction, protection and cleanup
+
+F's command-log lines 206–207 and P's lines 198–199 print the production
+invocation and exact executable shell command. These are also preserved in
+each original receipt's `reproduction_invocation` and
+`reproduction_rerun_command`. The scientific command was exactly:
+
+```sh
+/usr/bin/python3 /project/work/compute.py --output /project/work/reproduced.json
+```
+
+It ran through `research_pipeline.isolation.run_isolated`, with
+`Config(wall_seconds=60, memory_mib=512, max_tasks=32,
+deadline=time.monotonic()+60)` inside a fresh production systemd/Bubblewrap
+service. The saved shell command creates a fresh deadline and exits 4 on
+uncertain cleanup. No reproduction command was executed again for closeout.
+
+Both receipts record reproduction return code 0, no timeout/interruption,
+`cleanup_ok: true` and **“All 18 estimates agree within rtol=atol=1e-12”**.
+Inspection of saved original/reproduced data also finds identical binary64
+estimates. `work/results_rerun.json` is each researcher's internal repeat;
+`work/reproduced.json` is the later bounded launcher reproduction. Final
+original results still match receipt hashes. P regenerated its original after
+adding diagnostics; preservation concerns the receipt-hashed final result,
+not every intermediate version.
+
+Both receipts confirm unchanged starting evidence and project `AGENTS.md`;
+current hash comparison agrees. Preflight recorded actual cgroup
+`memory.max=2147483648`, `memory.swap.max=0`, `pids.max=128`, and successful
+protected-sentinel/permitted-computation checks. The enabled suites also
+include existing real boundary, resource and detached-descendant cleanup tests.
+Research and reproduction properties record `ActiveState: inactive`,
+`SubState: dead`, `LoadState: not-found` and empty control groups.
+Final receipt cleanup maps confirm both services for each demonstration:
+
+| Demo | Research service | Reproduction service |
+|---|---|---|
+| F | `research-3e92dccc6c40472c9862aa600ab87902.service` | `research-17cf677e8db94d8bb25937a152ff0c75.service` |
+| P | `research-289d79e1f7784b90b9d983ae9a1a6877.service` | `research-2d8fa22b7e9b4c128fc5992c2b32f107.service` |
+
+These are confirmed inactive at execution time; no new service inspection
+or demonstration job occurred during closeout.
+
+### Verdict, review boundary and documentation checks
+
+The Writer finds no material gap in the **M1 meaningful question-to-artifact
+demonstration**: both runs show real intake, prior planning, relevant retrieved
+primary text, substantive reasoning, executed direct quadrature and useful
+linked preliminary conclusions with reproducible artifacts. This bounded
+application of known theory to a supplied grid does not certify novelty or
+overall scientific competence.
+
+The pipeline Reviewer must still assess the staged actual sources, derivations,
+code, data and command evidence. Its authoritative outcome belongs in
+`coding_pipeline/logs/20261110T104911_bee8ceea/milestones/001/review.md`
+and adjacent `review-outcome.txt` when produced. This report does not
+predeclare approval. Prior reviews in `L/summary.md` approved implementation
+readiness before these live artifacts and do not substitute for this review.
+
+Numerical reproduction and pipeline artifact assessment remain distinct from
+the separate scientific verifier required by M3 and human acceptance required
+by M5. M2 persistence/human direction/primary rollover, M3 collaboration and
+verification, M4 cross-project reuse/remaining controls and M5 Ge-rich
+quantum-well light-hole-qubit/resonator research remain deferred. One fresh
+session supplies no pause/resume or edit reconciliation. Hard spending/token
+and context guarantees remain unavailable; CPU fraction/time are uncapped,
+network destinations unfiltered, and file/log bounds are not an aggregate
+disk quota. Memory, zero swap, tasks and wall limits are aggregate, not a
+per-command scheduler.
+
+Only README and this report change. Original evidence, `PROJECT.md`, root
+`AGENTS.md`, manager `STATUS.md`, production code, tests, dependencies and
+configuration are preserved. No scientific code, live inference or reproduction
+was rerun. The existing ordinary suite ran with paid inference explicitly disabled:
+
+```sh
+RESEARCH_PIPELINE_M1_LIVE=0 \
+  /home/francesco/miniconda3/bin/python -m unittest discover -s tests
+```
+
+It exited **0**: `Ran 26 tests in 1.158s`, `OK (skipped=2)`. The disabled
+live test and unavailable Writer user-bus class setup explain the skips;
+these local checks do not replace prior enabled 34-test results. Log:
+`.m1-local/m1-live-evidence-closeout/ordinary-tests.txt`.
+`git diff --check` passed; only the two authorized documents appear in the
+tracked diff. New links/anchors and 17 durable evidence paths resolve.
+Before/after hashes confirm 15 protected, configuration, production and test
+files unchanged. Results are saved in the same ignored directory's
+`documentation-checks.txt` and `preservation-{before,after}.json`.
 
 ## Historical implementation and verification record
 
 The following records describe earlier attempts and their interfaces. Historical
 commands, CPU-quota claims and failed receipts are retained as evidence, not
-current usage guidance. The recovery record at the end supersedes that CPU
-contract; README describes the supported interface.
+current usage guidance. The CPU-quota recovery record below supersedes that
+CPU contract; README describes the supported interface. All pending/blocked
+statements below describe their historical stage; the closeout assessment above
+is the current Writer verdict.
 
 The minimal Python CLI and isolated Codex backend boundary are implemented and
 ready for code review and controller-owned final verification. **M1

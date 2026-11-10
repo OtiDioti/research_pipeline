@@ -6,15 +6,19 @@ primary literature, derive and compute, and saves ordinary linked Markdown and
 reproducible scientific artifacts. `start` stays in the foreground; `inspect` uses
 saved files and needs no model access.
 
-This implementation is **not yet accepted as M1**: the Writer's restricted
-environment has no user bus or native file credentials. Actual Codex research and
-cgroup/lifetime acceptance must pass in the pipeline's authorized controller host
-environment using the opt-in check below. See the
-[implementation report](development/requests/m1-implementation.md).
+The **M1 minimal scientific loop has been demonstrated** in two real isolated
+Codex quadrature investigations. Prior enabled final and pre-merge suites each
+passed all 34 tests, including 18 numerical estimates, bounded reproduction
+agreeing within `rtol=atol=1e-12`, protected inputs and confirmed service cleanup.
+The [evidence assessment](development/requests/m1-implementation.md#m1-live-evidence-closeout)
+examines the actual plans, retrieved literature, derivations, code and preliminary
+findings, and identifies the preserved demonstration paths and pipeline review gate.
+This establishes a bounded capability demonstration, without certifying novelty
+or overall scientific competence.
 
-The CPU-controller integration repair returns to the existing controller-owned
-final verification stage after review. M1 acceptance still requires the enabled
-suite and assessment of its actual scientific evidence.
+M2 persistence, human direction and primary context rollover; M3 collaboration
+and independent verification; M4 cross-project reuse and remaining controls; and
+M5 physics-benchmark investigation and human scientific acceptance remain deferred.
 
 ## Installation and prerequisites
 
@@ -22,7 +26,9 @@ Use Python 3.11+ on Linux, Bubblewrap, systemd with an already available user se
 manager, and a cgroup v2 hierarchy delegated to that manager. Install a recent
 **standalone Linux Codex distribution** (including sibling helpers). npm/Node wrapper
 installations are not supported by this small launcher. CLI options were inspected
-with `codex-cli 0.167.0`; the isolated inference path is still awaiting live validation.
+with `codex-cli 0.167.0`, also used in both successful isolated demonstrations.
+Their receipts record the research model as **backend default**, without a resolved
+model identity.
 
 ```sh
 python3 -m venv .venv
@@ -191,5 +197,11 @@ through the production launcher with a fresh 60-second bound, and confirms input
 integrity and service cleanup. Literature assessment and scientific Markdown are
 printed to the test log; model transcripts remain private in the project. Automated
 numerical and artifact checks do not constitute independent scientific verification.
-The implementation report records Writer-local outcomes; the enabled controller test
-result is the remaining M1 acceptance gate.
+The preserved enabled final run (`m1-live-ig_wfv10`) and pre-merge run
+(`m1-live-nomwciin`) are under
+`coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/live-host-acceptance/`
+in the original target checkout. Exact command logs, receipts, scientific assessment
+and limitations are recorded in the
+[implementation report](development/requests/m1-implementation.md#m1-live-evidence-closeout).
+These completed runs supply the execution evidence for the documentation closeout;
+ordinary documentation checks keep paid live inference disabled.
