@@ -10,7 +10,8 @@ import tempfile
 import unittest
 
 from tests.test_m3_live import (independent_observations, observation_invocations,
-                                numerical_evidence, parent_overlap, record_parent_progress, reproduction_driver)
+                                direct_python_commands, numerical_evidence, parent_overlap,
+                                record_parent_progress, reproduction_driver)
 
 
 class M3EvidenceTests(unittest.TestCase):
@@ -110,6 +111,73 @@ class M3EvidenceTests(unittest.TestCase):
                     with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
                         parent_overlap(progress, self.milestones)
 
+    def test_retained_data_before_completion_establishes_overlap(self):
+        # final-019 / m3-live-zmooar8_: data preceded command completion by
+        # ~0.2s at both expansions. The first chain masks transition.py's status;
+        # the second is a successful final && chain, including an opaque listing.
+        milestones = {"saving": {"elapsed": 209.43386594099866},
+                      "continued_calculation": {"elapsed": 245.09415544900548}}
+        parameters = [1.001, 1.01, 1.02, 1.04, 1.0402, 1.0403, 1.2, 1.5]
+        masked = shlex.join(["/usr/bin/bash", "-lc",
+            "python3 /run/research-checkpoint-helper.py --check && "
+            "python3 /project/work/transition.py && python3 - <<'PY'\n"
+            "print('Parent observations')\nPY\n"
+            "python3 /run/research-checkpoint-helper.py --check"])
+        note = shlex.join(["/usr/bin/bash", "-lc",
+            "cat >> /run/research-drafts/work/PARENT.md <<'EOF'\n"
+            "Observed child saving interval\nEOF\n"
+            "python3 /run/research-checkpoint-helper.py --check"])
+        calculation = shlex.join(["/usr/bin/bash", "-lc",
+            "python3 /run/research-checkpoint-helper.py --check && "
+            "python3 /project/work/transition.py && "
+            "ls /project/work/tasks/ta[REDACTED_SECRET] && "
+            "cat /project/work/tasks/ta[REDACTED_SECRET]/baseline.json && "
+            "python3 /run/research-checkpoint-helper.py --check"])
+        observations = []
+        history = ["python3 /run/research-checkpoint-helper.py --check"] * 14
+        for elapsed, rows, count in ((209.43387854700268, 4, 14),
+                                     (211.0418936730057, 6, 14),
+                                     (211.2428683629987, 6, 15),
+                                     (218.0857485680026, 6, 16),
+                                     (224.73849158500525, 8, 16),
+                                     (224.93993548599974, 8, 17)):
+            p = self.observation(elapsed, parameters[:rows], 0)
+            p["commands"] = (history + [masked, note, calculation])[:count]
+            observations.append(p)
+        self.assertFalse(direct_python_commands(calculation))  # Verifier stays strict.
+        recorded = []
+        for p in observations:
+            self.record(recorded, p)
+        frozen = json.dumps(recorded)
+        self.assertEqual(parent_overlap(recorded, milestones), (recorded[0], recorded[-1]))
+        self.assertEqual(json.dumps(recorded), frozen)
+        self.assertEqual([len(p["commands"]) for p in recorded], [14, 14, 15, 16, 16, 17])
+        self.assertEqual([len(p["rows"]) for p in recorded], [4, 6, 6, 6, 8, 8])
+        # Data alone and the masked earlier event cannot establish completion.
+        with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
+            parent_overlap(recorded[:-1], milestones)
+        with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
+            parent_overlap(recorded, {**milestones,
+                "continued_calculation": {"elapsed": 224.8}})
+        # Changing the observation's identity still invalidates the join.
+        recorded[2]["native_session_id"] = "another-primary"
+        with self.assertRaisesRegex(AssertionError, "native session changed"):
+            parent_overlap(recorded, milestones)
+
+    def test_failed_calculation_chain_cannot_corroborate_new_rows(self):
+        progress = []
+        self.record(progress, self.observation(225, [1.01], 0))
+        record_parent_progress(progress, elapsed=260, native_session_id="primary-native",
+            child_activation="child",
+            data=json.dumps({"rows": [IndependentEvidenceTests.row(a)
+                                     for a in (1.01, 1.02)]}).encode(),
+            derivation="Parent derivation", events=[{"type": "item.completed", "item": {
+                "type": "command_execution", "exit_code": 1,
+                "command": "python3 /project/work/transition.py && ls /project/work"}}])
+        self.assertEqual(progress[-1]["commands"], [])
+        with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
+            parent_overlap(progress, self.milestones)
+
     def test_wrapped_science_and_parent_reproduction_use_real_trusted_fixture(self):
         # Only trusted engineering fixture code executes on this test host.
         # Prove that a helper invocation really can append arithmetic rows
@@ -183,6 +251,10 @@ class M3EvidenceTests(unittest.TestCase):
     def test_documented_skipped_and_other_role_commands_cannot_establish_overlap(self):
         for body in ("cat > rerun.sh <<'SH'\npython3 expand.py\nSH",
                      "cat missing && python3 expand.py\ncat parent.json",
+                     "ls missing && python3 expand.py\ncat parent.json",
+                     "python3 /run/research-checkpoint-helper.py --check && "
+                     "python3 expand.py && python3 - <<'PY'\nprint('data')\nPY\n"
+                     "python3 /run/research-checkpoint-helper.py --check",
                      "exit 0 && python3 expand.py",
                      "python3 /run/research-checkpoint-helper.py --check",
                      "python3 /project/work/tasks/child/compute.py",

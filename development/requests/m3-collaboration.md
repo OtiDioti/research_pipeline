@@ -622,3 +622,38 @@ run's `runtime/tmp/m3-evidence-roles-repair/`. This establishes repair readiness
 Normal review, fresh enabled controller-host final/combined verification and LOCAL
 integration remain required for M3 acceptance. PROJECT.md, root AGENTS.md, manager
 STATUS.md and earlier evidence are preserved.
+
+### Integration repair 13: parent execution corroboration (2026-11-10)
+
+Read the complete final-019 failure and repair-12 recovery direction. Read-only
+inspection of `m3-live-zmooar8_` confirms data-before-completion at both expansions.
+The current overlap code already compares the first and last retained in-window
+snapshots, so it preserves the before-state while awaiting successful execution.
+The remaining failure was command recognition: the first expansion's compound
+event masks the calculation's status and correctly cannot prove success; the
+second expansion's successful final `&&` chain was rejected because it includes
+`ls` of the child's artifacts. Permit opaque listing only for parent progress.
+Verifier provenance rules, masked-failure rejection, numerical reproduction,
+immutable snapshots, native identity and the original transition window remain
+unchanged. No new observation ledger or timing workaround was needed.
+
+Regression coverage retains the six reported observation times, row counts and
+command counts, including delayed completion, missing/out-of-window success,
+failed events and changed native identity. The earlier wrapped-calculation
+regression also passes. Read-only checks accept final-019's original snapshots
+and recognize the older wrapped native event with output equal to the three
+saved new rows; historical failed receipts remain unchanged.
+
+- Full discovery: **162 tests, OK, 4 expected skips**, 9.6 seconds.
+- Enabled isolation/M3 checks: all four Bubblewrap/native checks pass; systemd
+  service setup and live M3 fail before inference because this worker lacks
+  `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Diagnostic receipt:
+  `runtime/tmp/m3-integration-13-repair/m3-live-lq3pxusb/receipt.json` under this
+  pipeline run; no owned services or cleanup errors.
+- Discovery output and read-only retained-evidence observations are saved under
+  the same `runtime/tmp/m3-integration-13-repair/` directory.
+
+This establishes repair readiness. Fresh enabled controller-host final/combined
+verification, including isolated scientific reproduction, and normal review/local
+integration remain required for M3 acceptance. Human-owned requirements, manager
+status, scientific artifacts and resource grants are preserved.

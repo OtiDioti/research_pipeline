@@ -169,8 +169,12 @@ def parent_overlap(progress, milestones):
     # Do not interpret that program or require a particular shell-level filename:
     # observed new rows, a proven role-local execution and isolated reproduction
     # together establish progress. Documentation and checkpoint calls do not.
+    # Keep the first in-window before-state through later observations: output
+    # can become visible before the successful shell event is recorded. A final
+    # successful && chain may also list the child's artifacts after calculating.
+    # Listing is safe opaque utility syntax here, not verifier CLI provenance.
     calls = (args for command in after["commands"][prior_commands:]
-             for args in direct_python_commands(command))
+             for args in direct_python_commands(command, allow_listing=True))
     if not any(primary_program(args) for args in calls):
         raise AssertionError("No new parent calculation event during transition")
     return before, after
@@ -286,11 +290,13 @@ def independent_observations(project, independent, artifacts, read):
     return observations
 
 
-def direct_python_commands(command):
+def direct_python_commands(command, *, allow_listing=False):
     """Recover calls proven to run by a successful simple-command shell event.
 
     This is deliberately not a shell parser: control flow, expansion, pipelines,
     multiline quotes and other unsupported syntax invalidate the entire event.
+    Primary progress may permit an opaque directory listing in the same chain;
+    independent-verifier provenance keeps the default utility set.
     """
     if command.split() and Path(command.split()[0]).name in ("bash", "sh"):
         try:
@@ -311,6 +317,9 @@ def direct_python_commands(command):
         rf"(?:>[ \t]*{word}[ \t]+)?<<(?P<tabs>-?)[ \t]*"
         r"""(?P<quote>['"]?)(?P<end>[A-Za-z_][A-Za-z0-9_]*)(?P=quote)""")
     lines = iter(command.split("\n"))
+    programs = ("python", "python3", "cat", "mkdir", "sha256sum")
+    if allow_listing:
+        programs += ("ls",)
     calls = []
     final_conditional = []
     for line in lines:
@@ -339,7 +348,7 @@ def direct_python_commands(command):
         for position, part in enumerate(parts):
             args = shlex.split(part)
             program = Path(args[0]).name
-            if program not in ("python", "python3", "cat", "mkdir", "sha256sum"):
+            if program not in programs:
                 return []
             if program in ("python", "python3"):
                 if header and position == len(parts) - 1 and args[1:] == ["-"]:
