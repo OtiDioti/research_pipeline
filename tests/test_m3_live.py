@@ -124,6 +124,9 @@ perform a justified targeted test, saving NEW JSON with the same row interface a
 the stress case a=1.2, and link its code/data in REEXAMINATION.md. You may rerun
 unchanged check.py with a new output path or author a revised check. Finish. Remaining
 opposing arguments are disputed after this finite exchange; do not force consensus.
+Run each numerical check as a direct `python3 script.py --output data.json` command
+from your workspace (extra parameter options are allowed), retaining code/data links.
+Use a standalone call, or put the checkpoint && calculation chain last in its shell event.
 
 PRIMARY: read the independent check. If challenged, write one scientific response
 with correction, qualification, opposing argument or a justified targeted test; submit
@@ -159,6 +162,159 @@ def reproduction_driver(invocations):
     return "import subprocess; " + "; ".join(
         f"subprocess.run({item['argv']!r}, cwd={item['cwd']!r}, check=True, timeout=25)"
         for item in invocations)
+
+
+def independent_observations(project, independent, artifacts, read):
+    """Separate observation tables from verified fingerprint maps, by content."""
+    observations, seen = {}, {}
+    for rel in artifacts:
+        if (not rel.startswith(independent + "/") or "/inputs/" in rel
+                or not rel.endswith(".json")):
+            continue
+        data = json.loads(read(rel))
+        if not isinstance(data, dict) or not data:
+            raise AssertionError(f"Unrecognized independent evidence: {rel}")
+        if "rows" not in data:
+            # Reports may link provenance alongside observations. Unknown JSON is
+            # not silently ignored, and a hash map must describe real evidence.
+            for target, digest in data.items():
+                if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+                    raise AssertionError(f"Unrecognized independent evidence: {rel}")
+                path = verification.link_path(project, rel, target)
+                if path is None or workspace.file_digest(workspace.safe_path(project, path)) != digest:
+                    raise AssertionError(f"Independent fingerprint mismatch: {rel}: {target}")
+            continue
+        rows = data["rows"]
+        if not isinstance(rows, list) or not rows:
+            raise AssertionError(f"Missing independent observations: {rel}")
+        parameters = set()
+        for row in rows:
+            fields = ("a", "reference", "approximation", "relative_error")
+            if (not isinstance(row, dict) or any(
+                    type(row.get(k)) not in (int, float) or not math.isfinite(row[k])
+                    for k in fields)):
+                raise AssertionError(f"Malformed independent observation: {rel}")
+            a = row["a"]
+            if a <= 1 or a in parameters:
+                raise AssertionError(f"Invalid or duplicate independent parameter: {rel}")
+            parameters.add(a)
+            reference = 2 * math.pi / math.sqrt((a - 1) * (a + 1))
+            approximation = 2 * math.pi / math.sqrt(2 * (a - 1))
+            error = abs(row["approximation"] / row["reference"] - 1) if row["reference"] > 0 else math.inf
+            if (not math.isclose(row["reference"], reference, rel_tol=1e-8)
+                    or not math.isclose(row["approximation"], approximation, rel_tol=1e-8)
+                    or not math.isclose(row["relative_error"], error, rel_tol=1e-8, abs_tol=1e-8)):
+                raise AssertionError(f"Inconsistent independent observation: {rel}: {a}")
+            if a in seen and any(not math.isclose(row[k], seen[a][k], rel_tol=1e-8, abs_tol=1e-10)
+                                 for k in fields[1:]):
+                raise AssertionError(f"Conflicting independent observations: {a}")
+            seen[a] = row
+        observations[rel] = rows
+    if not any(1 < a < 1.0402 for a in seen):
+        raise AssertionError("Independent near-boundary observations absent")
+    stress = [r for a, r in seen.items() if math.isclose(a, 1.2, rel_tol=0, abs_tol=1e-12)]
+    if not stress or any(r["relative_error"] <= .01 for r in stress):
+        raise AssertionError("Independent stress observation/challenge absent")
+    return observations
+
+
+def direct_python_commands(command):
+    """Recover calls proven to run by a successful simple-command shell event.
+
+    This is deliberately not a shell parser: control flow, expansion, pipelines,
+    multiline quotes and other unsupported syntax invalidate the entire event.
+    """
+    if command.split() and Path(command.split()[0]).name in ("bash", "sh"):
+        try:
+            outer = shlex.split(command)
+        except ValueError:
+            return []
+        if len(outer) != 3 or outer[1] not in ("-lc", "-c"):
+            return []
+        command = outer[2]
+    # Bracketed/redacted paths are accepted for opaque utility arguments, never
+    # for Python invocations whose exact arguments establish provenance.
+    word = r"""(?:[\w./:=,+\[\]-]+|'[\w./:=,+\[\] -]*'|"[\w./:=,+\[\] -]*")"""
+    simple = rf"{word}(?:[ \t]+{word})*"
+    chain = re.compile(rf"{simple}(?:[ \t]*&&[ \t]*{simple})*")
+    heredoc = re.compile(
+        rf"(?P<prefix>(?:{simple}[ \t]*&&[ \t]*)*)cat[ \t]+"
+        rf"(?:>[ \t]*{word}[ \t]+)?<<(?P<tabs>-?)[ \t]*"
+        r"""(?P<quote>['"]?)(?P<end>[A-Za-z_][A-Za-z0-9_]*)(?P=quote)""")
+    lines = iter(command.split("\n"))
+    calls = []
+    final_conditional = []
+    for line in lines:
+        line = line.strip(" \t")
+        if not line or line.startswith("#"):
+            continue
+        # Only the final statement's status is known. A later statement (even
+        # an opaque heredoc writer) can mask a failed earlier && prerequisite.
+        final_conditional = []
+        header = heredoc.fullmatch(line)
+        statement = line
+        if header:
+            # Strip only the opaque writer redirection/body. Its executable
+            # prefix goes through exactly the same validation as every chain.
+            statement = header["prefix"] + "cat"
+            for body in lines:
+                if (body.lstrip("\t") if header["tabs"] else body) == header["end"]:
+                    break
+            else:
+                return []
+        if not chain.fullmatch(statement):
+            return []
+        # Full matching above excludes quoted operators and incomplete commands
+        # before splitting; heredoc contents never reach this branch.
+        for position, part in enumerate(statement.split("&&")):
+            args = shlex.split(part)
+            program = Path(args[0]).name
+            if program not in ("python", "python3", "cat", "mkdir", "sha256sum"):
+                return []
+            if program in ("python", "python3"):
+                if (len(args) < 2 or not args[1].endswith(".py")
+                        or any("[" in arg or "]" in arg for arg in args)):
+                    return []
+                if header:
+                    continue  # Writer headers never supply calculation calls.
+                if position == 0:
+                    calls.append(args)  # Unconditional in this supported grammar.
+                else:
+                    final_conditional.append(args)
+    # A successful final && chain ran every member; earlier chains may skip
+    # conditional members, so those cannot establish execution provenance.
+    return calls + final_conditional
+
+
+def observation_invocations(project, independent, artifacts, observations, commands):
+    """Recover direct Python CLI calls, never replay an agent's shell program."""
+    calls = {rel: [] for rel in observations}
+    for command in commands:
+        for args in direct_python_commands(command):
+            if len(args) < 4 or args.count("--output") != 1:
+                continue
+            output_index = args.index("--output") + 1
+            if output_index >= len(args):
+                continue
+            anchor = independent + "/ASSIGNMENT.md"
+            script = verification.link_path(project, anchor, args[1])
+            output = verification.link_path(project, anchor, args[output_index])
+            if output not in calls:
+                continue
+            if script not in artifacts or not script.startswith(independent + "/") or "/inputs/" in script:
+                raise AssertionError(f"Unlinked independent program for {output}")
+            argv = ["/usr/bin/python3", "/project/" + script, *args[2:]]
+            # Index stays the same after normalizing interpreter/script.
+            candidate = {"argv": argv, "output_index": output_index,
+                         "cwd": "/project/" + independent}
+            if candidate not in calls[output]:
+                calls[output].append(candidate)
+    result = {}
+    for rel, candidates in calls.items():
+        if len(candidates) != 1:
+            raise AssertionError(f"Missing or ambiguous executed independent calculation: {rel}")
+        result[rel] = candidates[0]
+    return result
 
 
 def check_synthesis(project, report, result, record):
@@ -308,30 +464,6 @@ class LiveM3Acceptance(unittest.TestCase):
             self.assertLess(errors[max(grids)], errors[min(grids)] * 1e-5)
             receipt.setdefault("numerics", {})[rel] = {"reference": reference, "relative_errors": errors}
             return values
-
-        def check_observations(rel, challenge=True):
-            rows = json.loads(read(rel))["rows"]
-            self.assertGreaterEqual(len(rows), 2)
-            seen, stress = set(), None
-            for row in rows:
-                a = row["a"]
-                self.assertGreater(a, 1)
-                self.assertNotIn(a, seen)
-                seen.add(a)
-                self.assertTrue(all(math.isfinite(row[k]) for k in
-                                    ("reference", "approximation", "relative_error")))
-                reference = 2 * math.pi / math.sqrt((a - 1) * (a + 1))
-                self.assertTrue(math.isclose(row["reference"], reference, rel_tol=1e-8))
-                error = abs(row["approximation"] / row["reference"] - 1)
-                self.assertAlmostEqual(row["relative_error"], error, delta=1e-8)
-                if math.isclose(a, 1.2, abs_tol=1e-12):
-                    stress = row
-            self.assertIsNotNone(stress, "Independent stress observation absent")
-            if challenge:
-                self.assertGreater(stress["relative_error"], .01,
-                                   "Stress observation does not substantiate required one-percent challenge")
-            receipt.setdefault("numerics", {})[rel] = rows
-            return rows
 
         try:
             self.assertNotEqual(os.environ.get("RESEARCH_PIPELINE_M1_LIVE"), "1", "Leave M1 paid gate disabled")
@@ -535,24 +667,27 @@ class LiveM3Acceptance(unittest.TestCase):
             for text in (initial_check, read(record["response"]["packet"]), final_check):
                 self.assertRegex(text, r"1\.2\b", "Exchange must address the observed stress case")
             independent = verifier["workspace"]
-            # The check report supplies its data path; do not assume a model-chosen filename.
+            # Reports can link several observation tables and fingerprint metadata.
+            # Validate all tables coherently, preserving each round's provenance.
             linked = record["initial_check_artifacts"]
-            check_data = [rel for rel in linked if rel.startswith(independent + "/") and rel.endswith(".json") and "/inputs/" not in rel]
-            self.assertEqual(len(check_data), 1, "Initial check must link one independent numerical observation file")
-            original_check = check_observations(check_data[0])
+            initial_observations = independent_observations(project, independent, linked, read)
             self.assertIn(independent + "/check.py", linked)
-            self.assertTrue(commands(verifier_sessions[0], "check.py"))
+            initial_calls = observation_invocations(project, independent, linked, initial_observations,
+                                                   commands(verifier_sessions[0]))
             final_artifacts = record["final_check_artifacts"]
-            targeted = [rel for rel in final_artifacts if rel.startswith(independent + "/")
-                        and rel.endswith(".json") and "/inputs/" not in rel and rel not in linked]
-            self.assertEqual(len(targeted), 1, "Re-examination must link a new targeted numerical observation")
-            check_observations(targeted[0], challenge=False)
-            check_code = [rel for rel in final_artifacts if rel.startswith(independent + "/")
-                          and rel.endswith(".py") and "/inputs/" not in rel]
-            self.assertTrue(any("python" in command and Path(rel).name in command
-                                and Path(targeted[0]).name in command
-                                for rel in check_code for command in commands(verifier_sessions[1])),
-                            "No executed targeted calculation attributable to re-examination")
+            final_observations = independent_observations(project, independent, final_artifacts, read)
+            targeted = {rel: rows for rel, rows in final_observations.items() if rel not in linked}
+            self.assertTrue(targeted, "Re-examination must link new targeted numerical observations")
+            # Require the new round itself to cover the boundary and stress case.
+            independent_observations(project, independent, targeted, read)
+            targeted_calls = observation_invocations(project, independent, final_artifacts, targeted,
+                                                    commands(verifier_sessions[1]))
+            observations = independent_observations(project, independent,
+                                                   {**linked, **final_artifacts}, read)
+            receipt.setdefault("numerics", {}).update(observations)
+            independent_calls = {**initial_calls, **targeted_calls}
+            self.assertEqual(set(independent_calls), set(observations),
+                             "Every selected independent observation needs execution provenance")
             for t in (child, verifier):
                 self.assertTrue(t["integration"])
             report = read("outputs/REPORT.md")
@@ -579,12 +714,18 @@ class LiveM3Acceptance(unittest.TestCase):
             receipt["services"][reproduction.unit] = {"groups": []}
             argv1 = ["/usr/bin/python3", "/project/" + root + "/compute.py", "--a", "1.001", "--n",
                      *map(str, (16,32,64,128,256,512,1024,2048,4096)), "--output", "/project/work/reproduced-child.json"]
-            argv2 = ["/usr/bin/python3", "/project/" + independent + "/check.py", "--output", "/project/work/reproduced-check.json"]
-            invocations = [{"argv": argv1, "cwd": "/project/" + root},
-                           {"argv": argv2, "cwd": "/project/" + independent}]
+            invocations = [{"argv": argv1, "cwd": "/project/" + root}]
+            reproduced = {}
+            for index, (rel, call) in enumerate(independent_calls.items()):
+                output = f"work/reproduced-check-{index}.json"
+                argv = list(call["argv"])
+                argv[call["output_index"]] = "/project/" + output
+                invocations.append({"argv": argv, "cwd": call["cwd"]})
+                reproduced[output] = rel
             argv = ["/usr/bin/python3", "-c", reproduction_driver(invocations)]
             receipt["reproduction_invocation"] = {"api": "research_pipeline.isolation.run_isolated", "argv": argv,
-                                                   "scientific_commands": invocations, "config": asdict(reproduction)}
+                                                   "scientific_commands": invocations,
+                                                   "observations": reproduced, "config": asdict(reproduction)}
             with (run / "reproduce.stdout").open("wb") as out, (run / "reproduce.stderr").open("wb") as err:
                 def capture(channel, data):
                     stream = out if channel == "stdout" else err
@@ -599,7 +740,9 @@ class LiveM3Acceptance(unittest.TestCase):
             repeated = quadrature("work/reproduced-child.json", 1.001, (16,32,64,128,256,512,1024,2048,4096))
             for n, value in successor_values.items():
                 self.assertTrue(math.isclose(value, repeated[n], rel_tol=1e-12, abs_tol=1e-12))
-            self.assertEqual(check_observations("work/reproduced-check.json"), original_check)
+            for output, original in reproduced.items():
+                self.assertEqual(json.loads(read(output))["rows"], observations[original],
+                                 f"Independent reproduction differs: {original}")
             self.assertEqual(workspace.file_digest(project / root / "baseline.json"), baseline_hash)
             self.assertEqual(workspace.file_digest(project / root / "compute.py"), baseline_code_hash)
             verification.check_unchanged(project, verifier, work_deadline)

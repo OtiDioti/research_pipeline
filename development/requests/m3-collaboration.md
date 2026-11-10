@@ -433,3 +433,73 @@ added. The original overlap window and all scientific acceptance assertions rema
 This is repair readiness, not live scientific acceptance. Normal review and fresh
 enabled controller-host final verification remain necessary. Human-owned requirements,
 manager STATUS.md and retained evidence were preserved.
+
+### Integration repair: verifier evidence roles and targeted reproduction (2026-11-10)
+
+Read the complete pre-merge-014 command log and retained `m3-live-yyz5ukqf`
+reports, frozen artifacts and successful command events. The second initial JSON
+was a valid evidence fingerprint map, alongside nine Simpson observations in
+`check.json`. Re-examination independently authored `reexamine.py`, importing
+the preserved Simpson routine, and produced four new observations.
+
+The gate now distinguishes numerical tables from verified fingerprint maps by
+content. It checks all linked tables coherently, requires boundary/stress coverage
+and new re-examination evidence, and rejects unknown, malformed or conflicting
+evidence. Each numerical output needs an unambiguous recorded direct Python call
+with linked code and exact parameters. All selected initial and targeted outputs
+are reproduced in the existing production isolation service, using their own
+scripts/workspaces and fresh output paths, then compared with accepted rows.
+Unsupported invocation forms fail explicitly. Existing fingerprint preservation,
+scientific exchange, rollover, budgets and cleanup checks remain.
+
+- Six new unpaid regressions cover provenance maps, multiple/partitioned tables,
+  bad/missing/conflicting evidence, missing/ambiguous execution provenance, and
+  separate targeted programs with reproduction of every selected output.
+- Full discovery: **143 tests, OK with 4 expected skips**, 9.1 seconds.
+- Read-only validation of retained evidence passes for both rounds and their
+  executed programs; accepted fingerprints are unchanged. No science was executed.
+- Enabled Bubblewrap/native checks: **4 passed**. Enabled M3 and service checks
+  fail before inference because this worker lacks the systemd user bus. Receipt:
+  `runtime/tmp/m3-integration-9-repair/m3-live-5iyl9zyx/receipt.json` under this
+  pipeline run; no owned services or cleanup errors.
+
+This establishes repair readiness only. Fresh enabled controller-host final and
+combined verification and normal local integration remain required for acceptance.
+
+Review repair: provenance recognition now validates complete command lists against
+a restricted grammar before accepting any invocation. Heredoc executable prefixes
+and ordinary chains share the same command validation, including allowed programs
+and Python script requirements. Only writer redirections/bodies are opaque; a
+prefix containing `exit`, `exec`, `eval` or another unsupported command invalidates
+the entire event. Bracketed paths in sanitized backend events are accepted only
+as opaque utility arguments, never as recorded Python arguments. Writer headers
+and bodies supply no calculation calls. Within the
+supported grammar, the first command of each statement is unconditional. Other
+members of an `&&` chain count only in the final statement, whose success proves
+all members ran. A later statement, including a heredoc writer, can hide an earlier
+failed prerequisite; such conditional calls cannot establish provenance. The live
+assignment now explains this supported invocation form. Unsupported
+control flow, expansion, pipelines, multiline quotes and incomplete heredocs
+invalidate the whole event. No shell program is replayed.
+
+Six added regressions cover successful documentation-only heredocs (quoted and
+tab-stripped delimiters), documentation with different parameters followed by a
+genuine run, unsupported/incomplete structures, skipped checks masked by successful
+checksum or heredoc statements, valid unconditional/final-chain calls, and early
+shell exits hidden in writer prefixes. The latter reproduced four failures before
+repair (`exit`, `exec`, `eval`, and a later chained `exit`). Trusted fixture shell
+commands confirm that these successful events never ran Python. Positive coverage
+retains checkpoint/mkdir/heredoc, standalone calculation and trailing checkpoint
+shapes; unsupported Python prefixes are rejected consistently in both paths.
+
+Full discovery: **149 tests, OK with 4 expected skips**, 9.3 seconds, including
+all **18 evidence tests**. Read-only validation recognizes the retained nine-row
+`check.py --output check.json` and four-row
+`reexamine.py --output reexamination.json` executions, with all 17 accepted artifact
+fingerprints unchanged. No agent-written science was executed during this repair.
+Enabled Bubblewrap/native runtime checks: **4 passed**. Enabled M3 and service
+checks fail before inference because this worker lacks `XDG_RUNTIME_DIR` and
+`DBUS_SESSION_BUS_ADDRESS`. Fresh diagnostic receipt:
+`runtime/tmp/m3-heredoc-prefix-repair/m3-live-8mn_d1gg/receipt.json` under this
+pipeline run; no owned services or cleanup errors. Normal review and fresh enabled
+controller-host final/combined verification remain required for acceptance.
