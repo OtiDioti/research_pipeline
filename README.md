@@ -260,6 +260,10 @@ the controller does not assert a particular resolved model. All limits must be
 positive and finite.
 `--max-tasks` counts processes and threads, including backend overhead.
 The research service has no swap allowance (`MemorySwapMax=0`).
+The controlled Codex launcher disables code mode and its optional host, using
+direct tools instead. Codex 0.167.0's code-mode host crashed with SIGTRAP in the
+bounded M3 service before any scientific command ran; this setting retains the
+existing sandbox, resource limits and model selection.
 
 `start` accepts only fresh projects: existing scientific directories/status/indexes or a
 previous run are conflicts. Symlinks/special files in the supplied project and symlink

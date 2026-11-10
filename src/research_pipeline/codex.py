@@ -87,6 +87,9 @@ def build_command(config):
         'project_doc_fallback_filenames=[]', 'projects."/project".trust_level="untrusted"',
         'sandbox_workspace_write.network_access=true', 'features.multi_agent=false',
         'features.apps=false', 'cli_auth_credentials_store="file"',
+        # Use direct tools: the optional code-mode host crashed with SIGTRAP
+        # inside the bounded M3 service before any scientific command ran.
+        'features.code_mode=false', 'features.code_mode_host=false',
         'check_for_update_on_startup=false',
     ]
     for setting in settings:

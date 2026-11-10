@@ -172,3 +172,36 @@ locally**. After normal review, Architect completion must trigger the existing e
 controller-host final suite with M1/M2 paid gates disabled, and local integration. Any
 failure there requires normal implementation repair; this handoff is code readiness,
 not an M3 acceptance claim.
+
+### Integration repair: code-mode host failure (2026-11-10)
+
+The controller's `tests/final-002.txt.commands/0001.txt` reports one failure:
+the primary exited without a handoff. Its saved `backend.jsonl` contains no
+command events and explicitly reports tool failures; `stderr.txt` records
+`code-mode host closed its stdout` and SIGTRAP. The missing handoff is a
+consequence of the tool environment failure, not a checkpoint-validation defect.
+
+The shared Codex launcher now explicitly sets `features.code_mode=false` and
+`features.code_mode_host=false`, retaining direct tools and all existing isolation,
+resource, authentication and model settings. The existing controlled-command
+regression checks both overrides. Codex 0.167.0 accepts the production settings:
+`codex … features list` with a fresh temporary home reports both flags false and
+`shell_tool` / `unified_exec` true. No inference is needed for this configuration
+check. The underlying optional host crash is not diagnosed further.
+Feature overrides use the documented [Codex CLI configuration mechanism](https://developers.openai.com/codex/cli/reference/);
+the installed binary supplies the feature names.
+
+- `python -m unittest discover -s tests -q`: **126 tests run, OK with 4 skips**,
+  including disabled paid gates and the unavailable systemd service class.
+- `RESEARCH_PIPELINE_M3_LIVE=1 python -m unittest tests.test_isolation.BubblewrapBoundaryTests -v`:
+  **3 tests passed**, exercising actual protected inputs, task separation and
+  verifier evidence protection with permitted local computation.
+- Enabled `tests.test_m3_live` and `tests.test_isolation.ServiceIsolationTests`
+  **fail before inference** because this worker lacks `XDG_RUNTIME_DIR` and
+  `DBUS_SESSION_BUS_ADDRESS`. Failed receipt:
+  `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261110T135145_2b46d578/runtime/tmp/m3-integration-repair/m3-live-gttotdxb/receipt.json`;
+  owned services are empty and cleanup errors are empty.
+
+The controller must rerun its enabled final suite to establish whether the real
+scientific demonstration now completes. Local checks establish repair readiness;
+they do not establish M3 acceptance.
