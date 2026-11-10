@@ -8,14 +8,15 @@
 - M2 reviewed work is preserved only on feature branch `cwi/20261110T111316_7e4bef43`: persistence/human direction/resumption at `74bc2d6`, then cooperative checkpoints/full pause and reviewed repairs at `cdf0b8f80126f4695821580aa5f3c03da2d31582`. Latest Writer result: 56 successful tests, two disclosed local skips. Actual M2 host verification has not run; no M2 target integration or acceptance.
 - Remaining M2 work: primary fresh-context rollover, opt-in real pause/edit/resume/rollover demonstration, final review/testing and local integration. Do not proceed to M3 until the current PROJECT.md M2 gates pass.
 
-## Preserved request and stopped ownership
+## Preserved request and recovery ownership
 
 - Objective: M2 persistence, full suspension, current questions/instructions/feedback, preserved human notes/unaffected results, crash recovery and primary rollover with cumulative budgets.
 - Request ID: `m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf`.
 - Frozen directory: `coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/`; original `request.md`, effective `config.toml`, creation `receipt.json` and operational shutdown receipts remain there.
 - Actual run: `20261110T111316_7e4bef43`; state **interrupted**, phase `plan`, pipeline milestone 003 (primary rollover). Report: `coding_pipeline/logs/20261110T111316_7e4bef43/summary.md`.
 - Worktree: `coding_pipeline/logs/20261110T111316_7e4bef43/worktree`; clean, preserved at reviewed HEAD `cdf0b8f`. Roadmap, prior plans/reviews/tests and partial planning artifacts remain in the run directory.
-- Retirement: supported SIGINT sent to verified owner PID `62544` / start ticks `1822351` at 12:35:54 UTC, 2026-11-10. Owned exec `72841` exited 130; pipeline checkpointed interruption. Owner and recorded Codex/MCP descendants `71233`, `71292`, `71293` were all absent at 12:36:56 UTC; no matching pipeline process remained and the run lock was free. Evidence: request-directory `shutdown-ownership-before.json`, `shutdown-interrupt.json`, `shutdown-termination.json`. No implementation or research jobs remain from this invocation.
+- Prior retirement: verified owner and descendants stopped after SIGINT; run checkpointed interruption. Evidence: request-directory `shutdown-ownership-before.json`, `shutdown-interrupt.json`, `shutdown-termination.json`.
+- Recovery invocation, 2026-11-10: current root, unchanged human contract, clean target/component checkouts, matching discovery/receipt and interrupted planning state reconciled. Preserved worktree is clean at `cdf0b8f`; the exclusive run lock is free. Resume this same request with frozen configuration and enabled M2 host acceptance; no duplicate submission.
 
 ## Decisions, limits and recovery
 
@@ -23,7 +24,8 @@
 - Existing systemd/Bubblewrap isolation, memory/zero-swap/task/wall limits and whole-service cleanup remain required. Host delegates memory/pids without CPU quotas; CPU fraction/time are uncapped. Exact context occupancy and hard spending caps are unavailable: implement the documented conservative short-session fallback without a false 60% guarantee. Active-work accounting stays cumulative across continuation.
 - Guarded Markdown publication preserves human edits; pause publication follows confirmed cleanup. Reviewed repairs retain unresolved cleanup charges, recover despite invalid drafts, bound preparation, preserve prepared handoffs across recovery and charge finalization once.
 - Trusted controller final tests execute host capabilities unavailable to restricted Writers. Implementation readiness must transfer to Architect completion and final tests; avoid a circular Writer host-acceptance milestone. Manager trusts pipeline reports and performs no independent product inspection/review/testing.
-- Next session: resolve the current Git root; reconcile discovery/status/report, process identity and lock state before recovery. Resume this same interrupted run, without a new request or unnecessary retry, preserving the worktree and completed milestones.
+- Next action: resume this same interrupted run without a new request or unnecessary retry, preserving its worktree and completed milestones. Reconcile live ownership again before any further recovery.
 - Resume environment: `RESEARCH_PIPELINE_M2_LIVE=1`; `RESEARCH_PIPELINE_M2_OUTPUT_DIR` = absolute frozen request-directory path plus `/live-host-acceptance`; M1 live opt-in disabled. With those variables, use `flow resume 20261110T111316_7e4bef43`. Require actual scientific continuation, fresh context/stable logical identity, cumulative limits and cleanup evidence before M2 acceptance.
 - Components: pipeline clean main `6c7b4d4`; controller clean `project-manager/setup` at `d0771db`. No component repairs or required restart; controller owns its lifecycle.
-- This is a retirement checkpoint. Project completion conditions are unmet; COMPLETE was not written.
+- Publication authority for this invocation: local commits/integration only; no push, PR, remote changes or external publication. Component repair branches must remain unmerged.
+- Project completion conditions remain unmet; COMPLETE must not be written until all current PROJECT.md gates, including human M5 scientific acceptance, pass.
