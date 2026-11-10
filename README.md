@@ -603,7 +603,12 @@ assignments, derivations, checks, responses and synthesis. For a near-boundary i
 approximation, the primary delegates a dependent quadrature study, continues its own
 parameter/error analysis while the child rolls over, incorporates the fresh successor's
 reserved calculation, and requests an independent approximation challenge. The gate
-requires an actual objection, one response and one re-examination; a checked-only first
+submits both the derived near-boundary regime and the exploratory hypothesis of
+one-percent accuracy across the parameter study, including the stress case, as
+distinct verification subjects. A refuted exploratory extension can receive an
+objection while the restricted theorem is confirmed; no false theorem or verdict
+is prescribed. The gate requires an actual objection, one response and one
+re-examination; a checked-only first
 examination is retained honestly as failed demonstration evidence. Final disagreement
 may pass with a scientifically explained disputed synthesis and opposing arguments.
 The gate does not seed answers, forge helper requests or retry paid investigations.

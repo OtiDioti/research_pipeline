@@ -253,3 +253,36 @@ The integrated scientific failure cannot be revalidated on this worker. Normal
 review and the enabled controller-host final suite must establish live success;
 M3 remains unaccepted until those checks and local integration succeed. No host
 bus/authentication fallback, resource increase or scientific acceptance claim was made.
+
+### Integration repair: independent challenge scope (2026-11-10)
+
+Read the full final-006 command output and frozen packet/CHECK.md from
+`m3-live-2hxhi8ti`. Delegation, acknowledged rollover, integration and separate
+verification completed. The packet explicitly excluded broader applicability and
+submitted only the correct, qualified near-boundary theorem. The verifier reasonably
+closed it checked, leaving one verifier session; the gate required an objection,
+response and re-examination and failed `1 != 2`. Reopening a checked exchange or
+inventing a theorem error would be incorrect.
+
+The demonstration now explicitly submits two subjects: the derived scoped result
+and the broader one-percent applicability hypothesis, clearly exploratory rather
+than established. The verifier independently tests both and can object to an
+unsupported extension while confirming the theorem. No answer or verdict is seeded.
+All scientific exchange, continuation, resource, reproduction and cleanup assertions
+remain required. A checked-only initial examination now fails with a scope-specific
+diagnostic before the verifier-session count. Production coordination is unchanged.
+A regression confirms that a checked initial report closes normally, rejects an
+attempted response, preserves accepted evidence and launches no further session.
+
+- `python -m unittest tests.test_verification tests.test_m3_evidence -q`: **29 passed**.
+- `python -m unittest discover -s tests -q`: **131 run, OK, 4 expected skips**.
+- Enabled `tests.test_isolation.BubblewrapBoundaryTests`: **4 passed**, including
+  native runtime startup and researcher/verifier write protection.
+- Enabled M3 gate and service-enforcement class fail before inference because this
+  worker lacks the systemd user bus environment. Fresh prerequisite receipt:
+  `runtime/tmp/m3-integration-4-repair/m3-live-12x_dsap/receipt.json` under this
+  pipeline run; no owned services and no cleanup errors.
+
+The updated real scientific protocol remains unverified locally. Normal review and
+enabled controller-host final verification must establish live acceptance before
+local integration; this repair reports readiness, not M3 completion.

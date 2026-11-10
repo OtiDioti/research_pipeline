@@ -276,6 +276,33 @@ class VerificationTests(unittest.TestCase):
         self.assertEqual(task['verification']['disposition'], 'preliminary')
         self.assertEqual(task['verification']['phase'], 'closed')
 
+    def test_checked_initial_result_closes_without_manufacturing_a_response(self):
+        self.setup_exchange()
+        self.case.draft(self.config, 'work/PACKET.md', PACKET.replace('0.05', '0.2'))
+        task = self.admit()
+        root = self.project / task['workspace']
+        (root / 'check.csv').write_text('error\n0.1\n')
+        (root / 'CHECK.md').write_text(
+            check('checked').replace('above the original 0.05 bound', 'below the proposed 0.2 bound')
+            .replace('The approximation omits a consequential endpoint correction.',
+                     'The proposed bound includes the endpoint correction.'))
+        task['status'] = verification.deliver(self.project, task)
+        self.coordinator.save()
+        accepted = json.dumps(task['verification'], sort_keys=True)
+        report = (root / 'CHECK.md').read_bytes()
+        self.assertEqual(task['status'], 'completed')
+        self.assertEqual(task['verification']['phase'], 'closed')
+        self.assertEqual(task['verification']['disposition'], 'checked')
+        ack, launch = self.request(operation='respond', target=task['task_id'],
+                                   response='work/RESPONSE.md')
+        self.assertFalse(ack['accepted'])
+        self.assertIn('cannot reopen', ack['error'])
+        launch.assert_not_called()
+        self.assertEqual(json.dumps(task['verification'], sort_keys=True), accepted)
+        self.assertEqual((root / 'CHECK.md').read_bytes(), report)
+        self.assertFalse((root / 'inputs/response').exists())
+        verification.check_unchanged(self.project, task)
+
     def test_changing_evidence_during_copy_is_rejected_and_identical_uncommitted_packet_recovers(self):
         self.setup_exchange()
         original = verification.read_bytes

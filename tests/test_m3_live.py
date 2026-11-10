@@ -74,13 +74,18 @@ Once the child delivers, prioritize integration and verification over optional a
 
 After the child delivers, integrate its numerical findings and uncertainties into
 the parent approximation analysis. Request exactly ONE separate independent verifier
-using --verify, with scientific parent primary. Supply your current proposed validity
-regime, a consequential approximation claim, assumptions, sources and reproducible
-artifacts. Ask it to challenge applicability, including the stress case a=1.2, using
-independent reasoning and independently authored checks. Do not manufacture a false
-claim or prescribe its conclusion. The packet must EXPLICITLY link every local
-Markdown dependency recursively (including code/data linked from notes), within the
-existing packet limits. A short self-contained claim note can avoid irrelevant links.
+using --verify, with scientific parent primary. The packet's Claim and scope must
+include TWO distinct subjects: your derived near-boundary validity regime, and the
+exploratory hypothesis that the leading approximation's one-percent accuracy extends
+across the parameter study, including a=1.2. Submit the latter as a hypothesis to test,
+never an established bound, even if your own calculations already argue against it.
+Supply assumptions, sources and reproducible artifacts. Ask for independent reasoning
+and independently authored checks of both subjects; do not restrict the examination
+to confirming your narrowed theorem or exclude broader applicability from its scope.
+Do not manufacture a false claim or prescribe the verdict. The packet must EXPLICITLY
+link every local Markdown dependency recursively (including code/data linked from
+notes), within the existing packet limits. A short self-contained claim note can
+avoid irrelevant links.
 Never supply conversations. Include these verification interface requirements:
 
 VERIFIER (only): independently author check.py in YOUR workspace, accepting --output
@@ -89,6 +94,12 @@ and writing {"rows": [{"a": ..., "reference": ..., "approximation": ...,
 reconstruction, preferably another method; relative_error is an absolute fraction,
 not a percentage. Execute it and explain whether the stress
 observations challenge the proposed approximation/regime or an unsupported extension.
+Address BOTH the scoped near-boundary result and the submitted broader applicability
+hypothesis. If your evidence rejects that hypothesis, record a substantive objection
+to that extension, distinguishing it from any theorem you confirm. An objection need
+not allege that the researcher asserted a false theorem: an independently refuted
+exploratory hypothesis also needs a documented response and scope decision. Do not
+invent disagreement if the evidence supports both subjects; report your actual verdict.
 Write substantive CHECK.md linking the independent check code/data and frozen evidence.
 A substantive objection should identify the scientific issue, numerical observations,
 and a justified targeted test if useful. Finish this examination rather than waiting.
@@ -408,6 +419,9 @@ class LiveM3Acceptance(unittest.TestCase):
             verifier = next(t for t in final["tasks"].values() if t["role"] == "verifier")
             child_sessions = [s for s in final["sessions"] if s["task_id"] == child["task_id"]]
             verifier_sessions = [s for s in final["sessions"] if s["task_id"] == verifier["task_id"]]
+            self.assertIn("Disposition: objection", read(verifier["verification"]["initial_check"]),
+                          "Initial verifier found no objection: the required scientific exchange "
+                          "was not demonstrated; inspect the frozen packet scope and CHECK.md")
             self.assertEqual(len(child_sessions), 2)
             self.assertEqual(len(verifier_sessions), 2)
             self.assertLessEqual(len(final["sessions"]), 6)
@@ -491,7 +505,6 @@ class LiveM3Acceptance(unittest.TestCase):
             self.assertIn(record["disposition"], ("checked", "disputed"))
             self.assertEqual(record["reviewed_version"], record["response"]["version"])
             initial_check, final_check = read(record["initial_check"]), read(record["final_check"])
-            self.assertIn("Disposition: objection", initial_check, "A checked-only examination cannot satisfy the challenge demonstration")
             for text in (initial_check, read(record["response"]["packet"]), final_check):
                 self.assertRegex(text, r"1\.2\b", "Exchange must address the observed stress case")
             independent = verifier["workspace"]
