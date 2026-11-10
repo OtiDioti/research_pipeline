@@ -168,7 +168,10 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
     args += ["--tmpfs", "/project/.research_pipeline", "--remount-ro", "/project/.research_pipeline"]
     if codex:
         # Standalone Codex distribution, including its sibling exec helper binaries.
-        args += ["--ro-bind", str(Path(codex).parent), "/opt/codex"]
+        # CPU-sized Tokio pools in Codex and its exec server can exhaust a task
+        # slot before V8 starts. Bound backend overhead without raising TasksMax.
+        args += ["--setenv", "TOKIO_WORKER_THREADS", "1",
+                 "--ro-bind", str(Path(codex).parent), "/opt/codex"]
     if auth_home:
         args += ["--bind", str(auth_home), "/home/researcher/.codex"]
     return args + ["--chdir", f"/project/{workspace.task_directory(task_id)}", "--", *argv]

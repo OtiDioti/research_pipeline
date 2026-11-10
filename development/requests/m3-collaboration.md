@@ -173,35 +173,42 @@ controller-host final suite with M1/M2 paid gates disabled, and local integratio
 failure there requires normal implementation repair; this handoff is code readiness,
 not an M3 acceptance claim.
 
-### Integration repair: code-mode host failure (2026-11-10)
+### Integration repair: required code-mode runtime (2026-11-10)
 
-The controller's `tests/final-002.txt.commands/0001.txt` reports one failure:
-the primary exited without a handoff. Its saved `backend.jsonl` contains no
-command events and explicitly reports tool failures; `stderr.txt` records
-`code-mode host closed its stdout` and SIGTRAP. The missing handoff is a
-consequence of the tool environment failure, not a checkpoint-validation defect.
+The complete `tests/final-003.txt.commands/0001.txt` records one failure: the primary
+could not save a handoff. Its native stderr repeatedly says `code-mode host is
+disabled`; the backend records no scientific commands. The previous repair disabled
+the host after final-002's SIGTRAP, but `codex debug models --bundled` shows that
+the installed current models require `tool_mode: code_mode_only`. Feature-list
+output alone did not establish usable tools.
 
-The shared Codex launcher now explicitly sets `features.code_mode=false` and
-`features.code_mode_host=false`, retaining direct tools and all existing isolation,
-resource, authentication and model settings. The existing controlled-command
-regression checks both overrides. Codex 0.167.0 accepts the production settings:
-`codex … features list` with a fresh temporary home reports both flags false and
-`shell_tool` / `unified_exec` true. No inference is needed for this configuration
-check. The underlying optional host crash is not diagnosed further.
-Feature overrides use the documented [Codex CLI configuration mechanism](https://developers.openai.com/codex/cli/reference/);
-the installed binary supplies the feature names.
+The launcher now enables `features.code_mode.enabled` and `features.code_mode_host`.
+The [official configuration reference](https://developers.openai.com/codex/config-reference/)
+documents the former; the installed 0.167.0 binary supplies the host flag. Model,
+authentication, isolation and resource grants are preserved. Backend namespaces set
+`TOKIO_WORKER_THREADS=1` to reduce CPU-sized runtime pools. An unpaid native startup
+probe, using the production Bubblewrap mounts, starts Codex's idle app server,
+exec server and code-mode host together, executes JavaScript and a subprocess, and
+counts namespace threads. Original pools reproduce **97 tasks**, exceeding the M3
+slot's 64; bounded pools use **50 tasks** and execute successfully. This supports
+thread exhaustion as the earlier SIGTRAP cause; the original host's fatal diagnostic
+was not retained. This setting does not enforce CPU fraction or aggregate CPU time.
 
-- `python -m unittest discover -s tests -q`: **126 tests run, OK with 4 skips**,
-  including disabled paid gates and the unavailable systemd service class.
+The regression uses installed binaries without inference, credentials or a research
+session. It also runs through production systemd isolation with 1024 MiB, zero swap
+and **TasksMax=64** when the host prerequisites are available. It checks real execution
+and cleanup rather than only configuration strings.
+
+- `python -m unittest discover -s tests -q`: **127 tests run, OK with 4 skips** in
+  6.4 s (disabled M1/M2/M3 paid gates and unavailable systemd service class).
 - `RESEARCH_PIPELINE_M3_LIVE=1 python -m unittest tests.test_isolation.BubblewrapBoundaryTests -v`:
-  **3 tests passed**, exercising actual protected inputs, task separation and
-  verifier evidence protection with permitted local computation.
-- Enabled `tests.test_m3_live` and `tests.test_isolation.ServiceIsolationTests`
-  **fail before inference** because this worker lacks `XDG_RUNTIME_DIR` and
-  `DBUS_SESSION_BUS_ADDRESS`. Failed receipt:
-  `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261110T135145_2b46d578/runtime/tmp/m3-integration-repair/m3-live-gttotdxb/receipt.json`;
-  owned services are empty and cleanup errors are empty.
+  **4 tests passed**, including native runtime startup and existing protected-input,
+  task-separation and verifier checks.
+- Enabled `tests.test_m3_live` and `tests.test_isolation.ServiceIsolationTests` still
+  **fail before inference**, as required, because this worker lacks `XDG_RUNTIME_DIR`
+  and `DBUS_SESSION_BUS_ADDRESS`. Fresh diagnostic receipt:
+  `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261110T135145_2b46d578/runtime/tmp/m3-integration-2-repair/m3-live-5m3d4u61/receipt.json`.
+  No owned services were created; cleanup errors are empty.
 
-The controller must rerun its enabled final suite to establish whether the real
-scientific demonstration now completes. Local checks establish repair readiness;
-they do not establish M3 acceptance.
+The enabled controller-host final suite must establish actual cgroup startup and
+scientific acceptance. Local results establish repair readiness, not M3 acceptance.

@@ -32,6 +32,75 @@ def fixture(root):
     (root / 'work/protected.md').write_text('# Protected canonical note')
     (root / '.research_pipeline/private').write_text('hidden operational state')
 
+
+# No inference or credentials: exercise the installed native runtimes together.
+# The model catalog requires code mode; feature-list checks alone missed its
+# disabled host, and CPU-sized runtime pools overflowed a 64-task research slot.
+CODEX_RUNTIME_PROBE = r'''
+import json, struct, subprocess, time
+from pathlib import Path
+processes = []
+try:
+    for argv in (['/opt/codex/codex', 'app-server'], ['/opt/codex/codex-exec-server']):
+        processes.append(subprocess.Popen(argv, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+    backend = processes[0]
+    backend.stdin.write(b'{"id":1,"method":"initialize","params":{"clientInfo":{"name":"runtime-probe","version":"1"}}}\n')
+    backend.stdin.flush()
+    assert json.loads(backend.stdout.readline())['id'] == 1
+    host = subprocess.Popen(['/opt/codex/codex-code-mode-host'], stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    processes.append(host)
+    def receive():
+        header = host.stdout.read(4)
+        assert len(header) == 4, 'code-mode host closed stdout'
+        size = struct.unpack('<I', header)[0]
+        assert size <= 65536, size
+        return json.loads(host.stdout.read(size))
+    def send(message):
+        encoded = json.dumps(message).encode()
+        host.stdin.write(struct.pack('<I', len(encoded)) + encoded)
+        host.stdin.flush()
+        return receive()
+    ready = send({'type':'connection/hello', 'supportedVersions':[1],
+                  'requiredCapabilities':[], 'optionalCapabilities':[]})
+    assert ready['type'] == 'connection/ready', ready
+    opened = send({'type':'operation/request', 'id':1,
+                   'request':{'method':'session/open', 'sessionId':'probe'}})
+    assert opened['result']['status'] == 'ok', opened
+    started = send({'type':'operation/request', 'id':2, 'request':{
+        'method':'session/execute', 'sessionId':'probe', 'request':{
+            'tool_call_id':'probe', 'source':'text(6 * 7)', 'enabled_tools':[],
+            'yield_time_ms':1000, 'max_output_tokens':1000}}})
+    assert started['result']['status'] == 'ok', started
+    completed = receive()
+    result = completed['result']['value']['Result']
+    assert result['error_text'] is None, result
+    assert result['content_items'] == [{'type':'input_text', 'text':'42'}], result
+    # Let the idle exec server finish startup before counting its worker pool.
+    time.sleep(.2)
+    assert all(p.poll() is None for p in processes), 'native runtime exited'
+    threads = sum(len(list(p.glob('task/*'))) for p in Path('/proc').glob('[0-9]*'))
+    assert threads <= 64, f'native runtime exhausted the 64-task slot: {threads}'
+    subprocess.run(['/usr/bin/python3', '-c', 'assert 6 * 7 == 42'], check=True, timeout=2)
+    print(f'code-mode runtime check passed; namespace tasks={threads}', flush=True)
+finally:
+    for p in processes:
+        if p.poll() is None:
+            p.terminate()
+        p.communicate(timeout=3)
+'''
+
+
+def native_codex(case):
+    binary = shutil.which('codex')
+    if not binary:
+        if live_enabled():
+            case.fail('Codex missing during enabled live acceptance')
+        case.skipTest('Codex missing; native runtime startup unverified')
+    return str(Path(binary).resolve())
+
+
 class PreflightResourceTests(unittest.TestCase):
     """Service/environment doubles test rejection, not real resource enforcement."""
 
@@ -106,6 +175,26 @@ class PreflightResourceTests(unittest.TestCase):
 
 
 class BubblewrapBoundaryTests(unittest.TestCase):
+    def test_native_code_mode_runtime_fits_task_slot(self):
+        binary = native_codex(self)
+        if not shutil.which('bwrap'):
+            if live_enabled():
+                self.fail('Bubblewrap missing during enabled live acceptance')
+            self.skipTest('Bubblewrap missing; native runtime startup unverified')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            fixture(root)
+            result = subprocess.run(isolation.bubblewrap_command(
+                root, ['/usr/bin/python3', '-c', CODEX_RUNTIME_PROBE], codex=binary),
+                capture_output=True, text=True, timeout=12)
+            if result.returncode and any(s in result.stderr for s in
+                                         ('Operation not permitted', 'No permissions', 'namespace')):
+                if live_enabled():
+                    self.fail('Bubblewrap namespaces unavailable: ' + result.stderr)
+                self.skipTest('Bubblewrap namespaces unavailable: ' + result.stderr)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('code-mode runtime check passed', result.stdout)
+
     def test_actual_mount_boundary_and_permitted_computation(self):
         if not shutil.which('bwrap'):
             if live_enabled():
@@ -313,6 +402,22 @@ class ServiceIsolationTests(unittest.TestCase):
         result, output = self.run_code(isolation.PROBE)
         self.assertEqual(result.returncode, 0, output.decode(errors='replace'))
         self.assertTrue(self.capabilities['observed_cgroup_limits'])
+
+    def test_native_code_mode_runtime_with_enforced_task_slot(self):
+        binary = native_codex(self)
+        config = isolation.Config(codex=binary, wall_seconds=12,
+                                  memory_mib=1024, max_tasks=64,
+                                  deadline=time.monotonic() + 12)
+        # Empty private home: the probe creates no research session or inference.
+        home = self.root / '.research_pipeline/runtime-home'
+        home.mkdir()
+        output = bytearray()
+        result = isolation.run_isolated(
+            config, self.root, ['/usr/bin/python3', '-c', CODEX_RUNTIME_PROBE],
+            auth_home=home, on_event=lambda channel, data: output.extend(data))
+        self.assertTrue(result.cleanup_ok, output.decode(errors='replace'))
+        self.assertEqual(result.returncode, 0, output.decode(errors='replace'))
+        self.assertIn(b'code-mode runtime check passed', output)
 
     def test_swap_is_disabled(self):
         # Production preflight reads the running service's actual cgroup setting.
