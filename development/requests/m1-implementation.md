@@ -1,11 +1,14 @@
 # M1 implementation report
 
-The minimal Python CLI and isolated Codex backend boundary are implemented. **M1
+The minimal Python CLI and isolated Codex backend boundary are implemented and
+ready for code review and controller-owned final verification. **M1
 acceptance remains incomplete:** the Writer's restricted execution environment cannot
 run the required systemd user service and has no supported native file credentials.
 This is not a host-wide diagnosis. No actual Codex research
 session, literature assessment, scientific derivation or numerical research result
-is claimed. The prepared demonstration stops at the prerequisite gate.
+is claimed. The Writer-local demonstration stopped at the prerequisite gate.
+The recovery response places the mandatory enabled host suite after the Architect's
+`CWI: complete` signal; missing Writer capabilities do not block that handoff.
 
 ## Implementation and decisions
 
@@ -282,3 +285,148 @@ Final verification after the receipt changes repeated the ordinary suite:
 `.m1-local/recovery-preservation-after.json` confirms `PROJECT.md`, root `AGENTS.md`
 and manager-owned `STATUS.md` match the hashes captured before recovery work.
 No demonstration agents or compute jobs were intentionally left running.
+
+## Milestone 002 — full acceptance invocation remains blocked
+
+The following evidence is preserved from the previous Writer attempt. The
+execution-order correction below supersedes its blocked implementation handoff,
+without changing the pending M1 acceptance requirements.
+
+The supplied milestone plan requests completion of the remaining M1 acceptance
+gates, with production changes only for a demonstrated defect. The current
+Writer environment still has neither `XDG_RUNTIME_DIR` nor
+`DBUS_SESSION_BUS_ADDRESS`, and its effective native Codex home has no
+`auth.json`. A direct `systemd-run --user --wait --pipe --quiet /usr/bin/true`
+probe exits **1** with `Failed to connect to bus: $DBUS_SESSION_BUS_ADDRESS and
+$XDG_RUNTIME_DIR not defined`.
+
+The existing trusted integrated-test stage is not exposed as an invocation
+capability in this Writer session. The following full acceptance invocation ran
+in the current restricted environment; it is **not** a controller-host result.
+No alternate bus, credential source, execution context, controller configuration,
+or permissions were used. The artifact reader refused the supplied artifact
+paths; the plan, earlier decisions and failure reports were read from their
+existing local artifact-directory files instead.
+
+Exact commands, from the request worktree:
+
+```sh
+umask 077
+python3 -m venv .m1-local/venv
+.m1-local/venv/bin/python -m pip install -e . \
+  > .m1-local/milestone-002/install.txt 2>&1
+.m1-local/venv/bin/research-pipeline --help \
+  > .m1-local/milestone-002/help.txt 2>&1
+.m1-local/venv/bin/python -m unittest discover -s tests -v \
+  > .m1-local/milestone-002/local-tests.txt 2>&1
+RESEARCH_PIPELINE_M1_LIVE=1 \
+RESEARCH_PIPELINE_M1_OUTPUT_DIR="$PWD/.m1-local/milestone-002/host-acceptance" \
+  .m1-local/venv/bin/python -m unittest discover -s tests -v \
+  > .m1-local/milestone-002/host-acceptance-tests.txt 2>&1
+```
+
+Installation and entry-point help exit **0**. Ordinary regression testing exits
+**0**: `Ran 25 tests in 1.170s`, `OK (skipped=2)`; 24 tests pass, the disabled
+research test skips, and service-integration class setup skips. The real
+Bubblewrap protected-input/permitted-computation check passes.
+
+Both live variables reached the full acceptance process. Enabled testing exits
+**1**: `Ran 25 tests in 1.285s`, `FAILED (failures=1, errors=1)`, with 24 passing
+tests and no skips. Service-integration setup errors with `Required systemd user
+bus unavailable during enabled live acceptance`. The actual research test fails
+because product `start` exits **3**, state **blocked**, with:
+
+```text
+systemd user bus unavailable: XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS must already be set; do not connect to another execution context to bypass restrictions
+```
+
+Fresh private evidence is
+`.m1-local/milestone-002/host-acceptance/m1-live-2pfmd962/receipt.json`,
+with the scientific project at the adjacent `project/`. The receipt contains
+the absolute CLI invocations. Their equivalent commands from the worktree are:
+
+```sh
+demo_project="$PWD/.m1-local/milestone-002/host-acceptance/m1-live-2pfmd962/project"
+.m1-local/venv/bin/python -m research_pipeline start "$demo_project" \
+  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 --cpu-percent 100
+.m1-local/venv/bin/python -m research_pipeline inspect "$demo_project" --json
+.m1-local/venv/bin/python -m research_pipeline inspect "$demo_project"
+```
+
+The recorded start exits **3**; both inspection commands exit **0**. Do not
+rerun `start` on this used project: the test creates a fresh project on each
+acceptance invocation. `start.stdout`, `start.stderr`, `inspect-json.stdout`,
+`inspect-json.stderr`, `inspect.stdout`, and `inspect.stderr` retain the outputs.
+State records **codex-cli 0.167.0**, backend-default model, all three required
+scientific artifacts missing, unchanged protected inputs, and
+`service_attempted: false`. No research service was created, so
+`cleanup_ok: null` and the empty receipt cleanup map do not establish service
+cleanup acceptance. The test process and direct Bubblewrap subprocess finished;
+no demonstration agent or compute job was launched or left running.
+
+Observed work is limited to controller intake, status and folder indexes.
+No Codex scientific plan, literature retrieval or access assessment, derivation,
+quadrature estimates, report, emitted model usage, or reproduction exists.
+Accordingly, there is no reproduction command/outcome to report. Actual cgroup
+resource enforcement and detached-descendant cleanup remain untested here.
+The documented aggregate-budget, authentication, unrestricted-network,
+nonaggregate-disk and unavailable spending/context-telemetry limitations remain.
+
+No production or test change is justified by these environmental failures.
+README acceptance statements remain accurate. `PROJECT.md`, root `AGENTS.md`,
+and manager-owned `STATUS.md` are preserved; before/after SHA-256 evidence is
+in `.m1-local/milestone-002/preservation-{before,after}.json`.
+Human input fingerprints match the receipt, no starting-evidence index was
+written, and the generated managed-directory indexes are present.
+
+**Unresolved gate:** run the existing enabled full suite in the existing
+authorized controller test environment with a functional systemd user
+manager/delegated cgroup v2 and native Codex file authentication. Retain its
+fresh receipt, assess actual primary-source access and scientific artifacts,
+and pass bounded numerical reproduction and cleanup before accepting M1.
+
+## Milestone 002 recovery — implementation ready for final verification
+
+The recovery response corrects execution order: controller-owned host tests run
+only after the Architect emits `CWI: complete` and cannot be submitted by the
+Writer. No implementation tasks remain. Preserve implementation commit `b0e119c`,
+the existing opt-in acceptance suite, production protections and earlier blocked
+evidence. This recovery changes documentation only; no new runner or platform
+functionality is needed.
+
+**Decision for milestone decisions and review summary:** after code-review
+approval, the next Architect action is `CWI: complete`, transferring execution to
+the existing controller-owned FINAL VERIFICATION stage. No further implementation
+milestone is authorized absent an actual final-test defect. This signal ends the
+implementation roadmap; it does not establish scientific acceptance of M1.
+The mandatory full suite must inherit `RESEARCH_PIPELINE_M1_LIVE=1` and the
+original request's `live-host-acceptance` output directory. Actual research,
+literature assessment, service/resource enforcement, bounded numerical reproduction
+and cleanup remain pending. A final-test failure requires normal integration
+repair; auto-merge cannot pass without enabled acceptance success.
+
+Fresh ordinary checks used the existing installation:
+
+```sh
+RESEARCH_PIPELINE_M1_LIVE=0 \
+TMPDIR="$PWD/.m1-local/milestone-002-recovery/tmp" \
+  .m1-local/venv/bin/python -m unittest discover -s tests -v \
+  > .m1-local/milestone-002-recovery/local-tests.txt 2>&1
+.m1-local/venv/bin/research-pipeline --help \
+  > .m1-local/milestone-002-recovery/help.txt
+```
+
+Both commands exit **0**. The suite reports `Ran 25 tests in 1.156s`,
+`OK (skipped=2)`: **24 tests pass**, including actual Bubblewrap input protection
+and permitted computation; service-class setup skips for the unavailable user
+bus, and live research skips because it is explicitly disabled for this local
+command. The inherited controller acceptance configuration was not changed.
+No enabled host probe, bus/credential access or research job was attempted.
+The standalone boundary-test subprocess finished normally.
+
+SHA-256 manifests at
+`.m1-local/milestone-002-recovery/preservation-{before,after}.json` confirm
+`PROJECT.md`, root `AGENTS.md`, manager-owned `STATUS.md`, packaging, production
+Python and test sources are unchanged. Earlier milestone-002 report evidence is
+retained. The disclosed Writer-local infeasibility remains; the next required
+execution belongs to controller final verification, not another Writer milestone.

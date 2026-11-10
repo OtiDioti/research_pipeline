@@ -12,6 +12,11 @@ cgroup/lifetime acceptance must pass in the pipeline's authorized controller hos
 environment using the opt-in check below. See the
 [implementation report](development/requests/m1-implementation.md).
 
+Implementation is ready for code review and the existing controller-owned final
+verification stage. That stage runs after the Architect emits `CWI: complete`;
+the signal completes the implementation roadmap, while M1 acceptance still
+requires the enabled suite and assessment of its actual scientific evidence.
+
 ## Installation and prerequisites
 
 Use Python 3.11+ on Linux, Bubblewrap, systemd with an already available user service
