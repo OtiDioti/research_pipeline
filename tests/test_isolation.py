@@ -1,5 +1,6 @@
 """Real enforcement checks. Skips mean the host has not passed live acceptance."""
 import os
+import json
 from pathlib import Path
 import shutil
 import signal
@@ -8,12 +9,17 @@ import tempfile
 import threading
 import time
 import unittest
+import uuid
 from unittest.mock import patch
 
 from tests import use_checkout
 
 use_checkout()
-from research_pipeline import isolation
+from research_pipeline import cli, isolation, workspace
+
+
+def live_enabled():
+    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2))
 
 
 def fixture(root):
@@ -29,9 +35,10 @@ class PreflightResourceTests(unittest.TestCase):
     """Service/environment doubles test rejection, not real resource enforcement."""
 
     def test_live_acceptance_cannot_skip_missing_user_bus(self):
-        with patch.dict(os.environ, {"RESEARCH_PIPELINE_M1_LIVE": "1"}, clear=True):
-            with self.assertRaisesRegex(AssertionError, "user bus unavailable"):
-                ServiceIsolationTests.setUpClass()
+        for milestone in (1, 2):
+            with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True):
+                with self.assertRaisesRegex(AssertionError, "user bus unavailable"):
+                    ServiceIsolationTests.setUpClass()
 
     def test_live_acceptance_cannot_skip_missing_bubblewrap(self):
         with patch.dict(os.environ, {"RESEARCH_PIPELINE_M1_LIVE": "1"}), \
@@ -85,33 +92,46 @@ class PreflightResourceTests(unittest.TestCase):
 class BubblewrapBoundaryTests(unittest.TestCase):
     def test_actual_mount_boundary_and_permitted_computation(self):
         if not shutil.which('bwrap'):
-            if os.environ.get('RESEARCH_PIPELINE_M1_LIVE') == '1':
+            if live_enabled():
                 self.fail('Bubblewrap missing during enabled live acceptance')
             self.skipTest('Bubblewrap missing; filesystem enforcement unverified')
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp) / 'project'
             root.mkdir()
             fixture(root)
+            control, response = (root / '.research_pipeline' / name for name in ('control', 'response'))
+            control.mkdir()
+            response.mkdir()
             outside = Path(temp) / 'host-private-sentinel'
             outside.write_text('not mounted')
             script = isolation.PROBE + f'\nassert not Path({str(outside)!r}).exists()\n'
-            result = subprocess.run(isolation.bubblewrap_command(root, ['/usr/bin/python3', '-c', script]),
+            script += """
+for p in (Path('/run/research-control/forbidden'), Path('/run/research-checkpoint-helper.py')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('checkpoint control or helper is writable')
+Path('/run/research-checkpoint/probe').write_text('writable')
+subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--check'], check=True)
+"""
+            result = subprocess.run(isolation.bubblewrap_command(root, ['/usr/bin/python3', '-c', script],
+                                                                 control=control, response=response),
                                     capture_output=True, text=True, timeout=5)
             if result.returncode and any(s in result.stderr for s in ('Operation not permitted', 'No permissions', 'namespace')):
-                if os.environ.get('RESEARCH_PIPELINE_M1_LIVE') == '1':
+                if live_enabled():
                     self.fail('Bubblewrap namespaces unavailable: ' + result.stderr.strip())
                 self.skipTest('Bubblewrap namespaces unavailable: ' + result.stderr.strip())
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual((root / 'starting_evidence/sentinel').read_text(), 'protected')
             self.assertEqual((root / 'outputs/value').read_text(), '285')
             self.assertEqual(outside.read_text(), 'not mounted')
+            self.assertEqual((response / 'probe').read_text(), 'writable')
 
 
 class ServiceIsolationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not os.environ.get('XDG_RUNTIME_DIR') or not os.environ.get('DBUS_SESSION_BUS_ADDRESS'):
-            if os.environ.get('RESEARCH_PIPELINE_M1_LIVE') == '1':
+            if live_enabled():
                 raise AssertionError('Required systemd user bus unavailable during enabled live acceptance')
             raise unittest.SkipTest('Required systemd user bus is not available; cgroup/lifetime acceptance incomplete')
         with tempfile.TemporaryDirectory() as temp:
@@ -189,6 +209,80 @@ class ServiceIsolationTests(unittest.TestCase):
             timer.cancel()
             timer.join()
         self.assertTrue(result.interrupted)
+        self.assert_child_stopped()
+
+    def test_requested_stop_with_closed_streams_kills_detached_descendant(self):
+        """Scientific-worker fixture, no model: ignored saving and closed pipes."""
+        began = time.monotonic()
+        config = isolation.Config(wall_seconds=5, deadline=began + 5,
+                                  memory_mib=128, max_tasks=32)
+        script = ("import subprocess,time,os; "
+                  f"subprocess.Popen(['/usr/bin/python3','-c',{self.CHILD!r}],"
+                  "start_new_session=True,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL); "
+                  "time.sleep(.3); os.close(1); os.close(2); time.sleep(30)")
+        result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+                                       poll=lambda: "pause" if time.monotonic() - began > .8 else None)
+        self.assertEqual(result.requested_stop, "pause")
+        self.assertTrue(result.cleanup_ok)
+        self.assertFalse(result.timed_out)
+        self.assertLess(time.monotonic() - began, 5)
+        self.assert_child_stopped()
+
+    def test_cooperative_scientific_worker_prepares_before_service_cleanup(self):
+        """Actual helper/mount/service handshake; explicitly not Codex science."""
+        from tests.test_continuity import HANDOFF
+        activation = uuid.uuid4().hex
+        state = {"run_id": uuid.uuid4().hex, "activation_id": activation,
+                 "ownership_nonce": uuid.uuid4().hex, "state": "running"}
+        session = self.root / ".research_pipeline/sessions" / activation
+        control, response, drafts = (session / name for name in ("control", "response", "drafts"))
+        for directory in (control, response, drafts):
+            directory.mkdir(parents=True)
+        config = isolation.Config(wall_seconds=8, deadline=time.monotonic() + 8,
+                                  memory_mib=128, max_tasks=32, control=control,
+                                  response=response, drafts=drafts)
+        intake = workspace.Intake(self.root, "Worker fixture.", "", [], {})
+        baseline = workspace.science_fingerprints(self.root)
+        controller = cli.PauseControl(self.root, state, config, intake, session, baseline, [])
+        config.on_poll, config.launch_guard = controller.poll, controller.launch_guard
+        request = {"version": 1, **workspace.owner_fields(state), "reason": "pause",
+                   "request_id": uuid.uuid4().hex, "requested_at": cli.now()}
+        script = f"""
+from pathlib import Path
+import subprocess, time
+control = Path('/run/research-control/request.json')
+subprocess.Popen(['/usr/bin/python3', '-c', {self.CHILD!r}], start_new_session=True)
+drafts = Path('/run/research-drafts')
+(drafts / 'work').mkdir()
+(drafts / 'handoffs').mkdir()
+(drafts / 'work/PLAN.md').write_text('# Saved worker plan')
+(drafts / 'handoffs/primary.md').write_text({HANDOFF!r})
+Path('/project/work/data.csv').write_text('n,value\\n1,2\\n')
+for path in (Path('/run/research-control/forbidden'),
+             Path('/run/research-checkpoint-helper.py')):
+    try: path.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('trusted checkpoint control was writable')
+print('worker ready', flush=True)
+while not control.exists(): time.sleep(.02)
+subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check=True)
+"""
+        output = bytearray()
+        def capture(channel, data):
+            output.extend(data)
+            if b"worker ready" in output and not (control / "request.json").exists():
+                workspace.atomic_text(control / "request.json", json.dumps(request))
+        with patch.object(cli, "SAVING_GRACE", 3):
+            result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+                                           on_event=capture)
+        self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
+        self.assertFalse(result.timed_out, output.decode(errors="replace"))
+        self.assertIn("checkpoint_prepared", state)
+        self.assertTrue(workspace.read_control(control / "ack.json")["accepted"])
+        self.assertFalse((self.root / "work/PLAN.md").exists())
+        workspace.finalize_science(self.root, state, intake, session, drafts, baseline, [])
+        self.assertEqual((self.root / "work/PLAN.md").read_text(), "# Saved worker plan")
+        self.assertIn("checkpoint", state)
         self.assert_child_stopped()
 
     def test_memory_and_file_limits(self):

@@ -12,7 +12,8 @@ from .isolation import RuntimeUnavailable
 
 
 LIMITATIONS = [
-    "Checkpoints occur at quiescent session boundaries; no live pause, automatic rollover, delegation or independent verification yet.",
+    "Pause allows 15 seconds to save, bounded by the remaining deadline, then stops all service descendants. Uncheckpointed work can be lost.",
+    "No automatic rollover, delegation or independent verification yet.",
     "Model spending and context occupancy are unavailable and cannot be capped by this backend.",
     "Emitted turn usage is cumulative across activations; missing telemetry remains unknown. Usage is not context occupancy or a hard token cap.",
     "Memory, tasks and wall time are aggregate limits shared by all scientific commands.",
@@ -54,7 +55,8 @@ def build_command(config):
             "--ephemeral", "--skip-git-repo-check", "--json", "--color", "never",
             "--sandbox", "workspace-write", "-C", "/project/work",
             "--add-dir", "/project/sources", "--add-dir", "/project/outputs",
-            "--add-dir", "/project/handoffs", "--add-dir", "/run/research-drafts"]
+            "--add-dir", "/project/handoffs", "--add-dir", "/run/research-drafts",
+            "--add-dir", "/run/research-checkpoint"]
     settings = [
         'approval_policy="never"', 'web_search="live"', 'project_doc_max_bytes=0',
         'project_doc_fallback_filenames=[]', 'projects."/project".trust_level="untrusted"',
@@ -145,6 +147,21 @@ Include substantive progress, limitations, interrupted computations (or none), a
 concrete next step. Use ordinary links relative to the canonical handoff in handoffs/,
 e.g. [Plan](../work/PLAN.md). Do not copy conversations.
 End with an honest account of progress and blockers.
+
+COOPERATIVE FULL SUSPENSION
+Before substantial operations and after each command, check
+/run/research-control/request.json, or run:
+python3 /run/research-checkpoint-helper.py --check
+If a pause is requested, immediately stop scientific work. Within the fixed
+15-second saving grace (also bounded by the remaining wall deadline), save useful
+progress, plan/status updates and the required handoff in /run/research-drafts.
+Include interrupted computations and the next concrete action. As your FINAL tool
+command run: python3 /run/research-checkpoint-helper.py
+This saves readiness and waits for the controller to validate your handoff/artifacts.
+On rejection correct the stated issue within the original grace and retry. After
+acknowledgement finish immediately with no further scientific commands. The helper
+cannot extend deadlines or change limits. Forced suspension may occur without a new
+checkpoint if saving is incomplete. Never write the trusted control directory.
 
 AUTHORIZED OPTIONAL PROJECT INSTRUCTIONS
 {intake.instructions or '(none supplied)'}

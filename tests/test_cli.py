@@ -274,6 +274,7 @@ class ProjectCase(unittest.TestCase):
         command = codex.build_command(isolation.Config())
         self.assertIn('project_doc_max_bytes=0', command)
         self.assertIn('features.multi_agent=false', command)
+        self.assertIn('/run/research-checkpoint', command)
         self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', command)
 
     def test_private_auth_removed_and_not_config_copied(self):

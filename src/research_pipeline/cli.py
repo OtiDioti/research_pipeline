@@ -1,5 +1,6 @@
 """Foreground investigation activations with checkpoint-based continuation."""
 import argparse
+from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timezone
 import fcntl
@@ -15,6 +16,113 @@ import time
 import uuid
 
 from . import codex, isolation, workspace
+
+SAVING_GRACE = 15
+PAUSE_TIMEOUT = 60
+ACK_EXIT_GRACE = 1
+
+
+class PauseControl:
+    """One ownership-scoped request; duplicate readiness never extends grace."""
+    def __init__(self, project, state, config, intake, session, baseline, external):
+        self.project, self.state, self.config = project, state, config
+        self.intake, self.session = intake, session
+        self.baseline, self.external = baseline, external
+        self.request = None
+        self.deadline = None
+        self.ack_deadline = None
+        self.last_readiness = None
+
+    def current_request(self):
+        request = workspace.read_control(self.config.control / "request.json")
+        return request if workspace.matching_request(request, self.state) else None
+
+    @contextmanager
+    def launch_guard(self):
+        with workspace.control_lock(self.project):
+            if self.current_request():
+                raise isolation.RequestedStop("pause")
+            yield
+
+    def poll(self, research=True):
+        request = self.current_request()
+        if not request:
+            return None
+        if self.request is None:
+            self.request = request
+            self.deadline = min(self.config.deadline, time.monotonic() + SAVING_GRACE)
+            self.state.update(state="pausing", reason="Saving progress before full suspension.",
+                              pause_request_id=request["request_id"])
+            workspace.write_state(self.project, self.state)
+        if not research:
+            return "pause"
+        if time.monotonic() >= (self.ack_deadline or self.deadline):
+            return "pause"
+        ready = workspace.read_control(self.config.response / "ready.json")
+        nonce = ready.get("readiness_nonce") if ready else None
+        if (ready and all(ready.get(k) == v for k, v in request.items())
+                and isinstance(nonce, str) and re.fullmatch(r"[a-f0-9]{32}", nonce)
+                and nonce != self.last_readiness and self.ack_deadline is None):
+            self.last_readiness = nonce
+            ack = {**ready, "accepted": False}
+            try:
+                workspace.prepare_checkpoint(self.project, self.state, self.intake,
+                    self.session, self.config.drafts, self.baseline, self.external,
+                    deadline=self.deadline)
+                workspace.check_deadline(self.deadline)
+                ack["accepted"] = True
+                self.ack_deadline = min(self.deadline, time.monotonic() + ACK_EXIT_GRACE)
+            except TimeoutError as exc:
+                self.state["checkpoint_error"] = str(exc)
+                return "pause"
+            except (OSError, ValueError, UnicodeError) as exc:
+                ack["error"] = str(exc)[:1000]
+            workspace.atomic_text(self.config.control / "ack.json", json.dumps(ack) + "\n")
+        return None
+
+
+def pause(project):
+    """Request live suspension, or recover an idle/stale owner under run.lock."""
+    project = validate_project(project)
+    # Do not create an investigation as a side effect of an invalid pause.
+    load_state(project)
+    deadline = time.monotonic() + PAUSE_TIMEOUT
+    target = None
+    while time.monotonic() < deadline:
+        try:
+            with workspace.acquire_project_lock(project):
+                state = load_state(project)
+                if target and workspace.owner_fields(state) != target:
+                    raise workspace.InputError("Pause ownership conflict: another activation replaced the target")
+                recover_owner(project, state)
+                if state.get("cleanup_ok") is not True:
+                    raise workspace.InputError("Suspension cleanup is unconfirmed")
+                if state["state"] != "paused":
+                    state["previous_outcome"] = state["state"]
+                    state.update(state="paused", reason="Full suspension confirmed; no research work remains.")
+                with workspace.control_lock(project):
+                    workspace.write_state(project, state)
+                limitation = state.get("checkpoint_error") or (
+                    "Using the latest saved checkpoint." if state.get("checkpoint")
+                    else "No valid checkpoint; only ordinary artifacts are available.")
+                print(f"paused: full service/descendant suspension confirmed. {limitation}")
+                return 0
+        except workspace.ProjectBusy:
+            pass
+        with workspace.control_lock(project):
+            state = load_state(project)
+            owner = workspace.owner_fields(state)
+            if target and target != owner:
+                raise workspace.InputError("Pause ownership conflict: another activation replaced the target")
+            target = owner
+            _, control, _ = workspace.control_paths(project, state)
+            request = workspace.read_control(control / "request.json")
+            if not workspace.matching_request(request, state):
+                request = {"version": 1, **owner, "request_id": uuid.uuid4().hex,
+                           "reason": "pause", "requested_at": now()}
+                workspace.atomic_text(control / "request.json", json.dumps(request) + "\n")
+        time.sleep(.1)
+    raise workspace.InputError("Pause confirmation timed out; request remains pending; suspension is not confirmed")
 
 
 def positive(value):
@@ -61,7 +169,7 @@ def inspect_project(project):
     state["activity_check"] = ("Cleanup unconfirmed; residual work may still be active."
                                if state.get("cleanup_ok") is False else
                                "Terminal state recorded; no live session requested.")
-    if state.get("state") in ("starting", "running"):
+    if state.get("state") in workspace.ACTIVE_STATES:
         held = False
         try:
             with (project / ".research_pipeline/run.lock").open() as stream:
@@ -117,9 +225,31 @@ def load_state(project):
     return state
 
 
+def finish_recovery_accounting(state, interrupted=False):
+    """Settle one saved finalization interval together with its pending marker."""
+    interval = state.pop("recovery_finalization_pending")
+    same_clock = (not interrupted or interval["boot_id"] is not None
+                  and interval["boot_id"] == boot_identity())
+    elapsed = (time.monotonic() - interval["started_monotonic"] if same_clock
+               else time.time() - interval["started_epoch"])
+    remaining = max(0, state["limits"]["wall_seconds"] - state.get("active_seconds", 0))
+    charged = min(remaining, interval["allowance"], max(0, elapsed))
+    state["active_seconds"] = state.get("active_seconds", 0) + charged
+    state["remaining_active_seconds"] = remaining - charged
+    state["recovery_finalization_seconds"] = state.get("recovery_finalization_seconds", 0) + charged
+    for session in state.get("sessions", []):
+        if session["activation_id"] == state["activation_id"]:
+            session["active_seconds"] = session.get("active_seconds", 0) + charged
+            session["recovery_finalization_seconds"] = session.get("recovery_finalization_seconds", 0) + charged
+    if interrupted:
+        state.setdefault("accounting_uncertainties", []).append(
+            "Interrupted recovery finalization: conservatively charged elapsed time through recovery, "
+            "capped at its remaining allowance; the exact lost-controller work interval is unknown.")
+
+
 def recover_owner(project, state):
     """Called under the exclusive lock before reading agent-mutated science."""
-    unresolved = state.get("state") in ("starting", "running") or state.get("cleanup_ok") is False
+    unresolved = state.get("state") in workspace.ACTIVE_STATES or state.get("cleanup_ok") is False
     service_ends = []
     for key in ("probe_service", "service"):
         attempted = state.get("probe_attempted" if key == "probe_service" else "service_attempted")
@@ -170,6 +300,31 @@ def recover_owner(project, state):
             if session["activation_id"] == state.get("activation_id"):
                 session["active_seconds"] = state.get("activation_charged_seconds", 0)
         workspace.write_state(project, state)
+    # Cleanup/accounting can already be durable when an earlier recovery dies.
+    # Pending preparation must remain independently recoverable in that state.
+    if state.get("cleanup_ok") is True:
+        if state.get("recovery_finalization_pending"):
+            finish_recovery_accounting(state, interrupted=True)
+            workspace.write_state(project, state)
+        if state.get("checkpoint_prepared"):
+            remaining = max(0, state["limits"]["wall_seconds"] - state.get("active_seconds", 0))
+            state["recovery_finalization_pending"] = {
+                "started_monotonic": time.monotonic(), "started_epoch": time.time(),
+                "boot_id": boot_identity(), "allowance": remaining,
+            }
+            workspace.write_state(project, state)
+            try:
+                try:
+                    prepared, session, intake, accepted = workspace.load_prepared(project, state)
+                    workspace.finalize_science(project, state, intake, session, session / "drafts",
+                        prepared["baseline"], prepared["external_changes"],
+                        expected=state.get("science_fingerprints"), accepted_intake=accepted)
+                except (OSError, ValueError, KeyError, TypeError, UnicodeError) as exc:
+                    state["checkpoint_error"] = f"Interrupted checkpoint finalization: {exc}; previous checkpoint retained"
+                state.pop("checkpoint_prepared", None)
+            finally:
+                finish_recovery_accounting(state)
+                workspace.write_state(project, state)
 
 
 def start(project, config):
@@ -246,6 +401,7 @@ def activate(project, config, resume=False):
         began_epoch = time.time() - max(0, time.monotonic() - began)
         for key in ("execution", "telemetry"):
             state.pop(key, None)
+        state["limitations"] = codex.LIMITATIONS
         state.update(activation_id=activation, ownership_nonce=uuid.uuid4().hex,
                      native_session_id=None, service=config.unit, service_attempted=False,
                      probe_service=None, probe_attempted=False, cleanup_ok=None,
@@ -257,7 +413,16 @@ def activate(project, config, resume=False):
                      input_fingerprints=intake.fingerprints, input_inventory=intake.inventory,
                      validation_failures=[], external_changes=external,
                      pending_intake_changes=False, current_usage_totals=None)
-        workspace.write_state(project, state)
+        with workspace.control_lock(project):
+            _, config.control, config.response = workspace.control_paths(project, state)
+            config.control.mkdir()
+            config.response.mkdir()
+            state.pop("checkpoint_prepared", None)
+            state.pop("pause_request_id", None)
+            workspace.write_state(project, state)
+        controller = PauseControl(project, state, config, intake, session, baseline, external)
+        config.on_poll = controller.poll
+        config.launch_guard = controller.launch_guard
         def record_probe(unit):
             state.update(probe_service=unit, probe_attempted=True)
             workspace.write_state(project, state)
@@ -265,7 +430,11 @@ def activate(project, config, resume=False):
         recorder = result = None
         code = 4
         try:
+            with controller.launch_guard():
+                pass
             state["backend"] = codex.verify_backend(config)
+            with controller.launch_guard():
+                pass
             state["capabilities"] = isolation.preflight(config, project)
             with codex.private_auth(project) as auth:
                 if time.monotonic() >= config.deadline:
@@ -298,6 +467,9 @@ def activate(project, config, resume=False):
                 state["cleanup_ok"] = result.cleanup_ok
                 if not result.cleanup_ok:
                     state.update(state="failed", reason="Cannot confirm service/descendant cleanup.")
+                elif result.requested_stop:
+                    state.update(state="pausing", reason="Research service stopped for suspension.")
+                    code = 0
                 elif result.interrupted:
                     state.update(state="interrupted", reason="User interrupted; partial science retained.")
                     code = 130
@@ -310,6 +482,9 @@ def activate(project, config, resume=False):
                 else:
                     state.update(state="completed", reason="Session ended; validating saved science.")
                     code = 0
+        except isolation.RequestedStop:
+            state.update(state="pausing", reason="Suspension requested during startup.")
+            code = 0
         except isolation.RuntimeUnavailable as exc:
             state.update(state="blocked", reason=str(exc))
             code = 3
@@ -327,7 +502,7 @@ def activate(project, config, resume=False):
                 telemetry = recorder.summary()
                 state["telemetry"] = telemetry
                 state["usage_complete"] &= telemetry["usage_complete"] and not (
-                    result is None or result.returncode or result.error)
+                    result is None or result.returncode or result.error or result.requested_stop)
                 state["successful_commands"] = state.get("successful_commands", 0) + telemetry["successful_commands"]
             else:
                 telemetry = {}
@@ -348,29 +523,9 @@ def activate(project, config, resume=False):
                         state.update(state="incomplete", reason="Human inputs changed; reassessment required.")
                         code = 4
                 if state["cleanup_ok"]:
-                    external = sorted(set(external) | set(workspace.changed_files(
-                        baseline, workspace.science_fingerprints(project))))
-                    state["external_changes"] = external
-                    conflicts, preserved = workspace.publish_drafts(project, config.drafts, baseline, external)
-                    state["pending_reconciliation"] = conflicts
-                    state["preserved_edits"] = preserved
-                    published = {p.relative_to(config.drafts).as_posix()
-                                 for p in config.drafts.rglob("*.md")}
-                    published -= {c["path"] for c in conflicts}
-                    state["pending_human_changes"] = sorted(
-                        (set(external) | {c["path"] for c in conflicts}) - published)
-                    # Reconcile indexes only while no researcher can mutate paths.
-                    workspace.refresh_indexes(project, expected=state.get("science_fingerprints", baseline))
-                    if result is not None:
-                        try:
-                            if any(c["path"] == "handoffs/primary.md" for c in conflicts):
-                                raise workspace.InputError("Handoff draft conflicts with a human edit")
-                            if not (config.drafts / "handoffs/primary.md").is_file():
-                                raise workspace.InputError("No new handoff draft; previous checkpoint retained")
-                            workspace.commit_checkpoint(project, state, intake, session)
-                            state.pop("checkpoint_error", None)
-                        except (OSError, workspace.InputError) as exc:
-                            state["checkpoint_error"] = str(exc)
+                    conflicts = workspace.finalize_science(
+                        project, state, intake, session, config.drafts, baseline, external,
+                        expected=state.get("science_fingerprints", baseline))
                     if state["state"] == "completed":
                         failures = workspace.validate_deliverables(project)
                         if not state.get("successful_commands"):
@@ -386,19 +541,31 @@ def activate(project, config, resume=False):
                         code = 4 if failures else 0
                     state["science_fingerprints"] = workspace.science_fingerprints(project)
             except (OSError, workspace.InputError, UnicodeError) as exc:
-                state.update(state="failed", reason=f"Checkpoint finalization failed: {exc}")
-                code = 4
+                state["checkpoint_error"] = f"Checkpoint finalization failed: {exc}"
+                if state["state"] != "pausing":
+                    state.update(state="failed", reason=state["checkpoint_error"])
+                    code = 4
             charged = min(remaining, max(0, time.monotonic() - began))
             state["active_seconds"] = min(config.wall_seconds, state.get("active_seconds", 0) + charged)
             state["activation_charged_seconds"] = charged
             state["remaining_active_seconds"] = max(0, config.wall_seconds - state["active_seconds"])
             state["accounting_pending"] = not state["cleanup_ok"]
             state["finished_at"] = now()
-            state["sessions"].append({"activation_id": activation, "native_session_id": state["native_session_id"],
-                                      "outcome": state["state"], "active_seconds": charged,
-                                      "usage_totals": telemetry.get("usage_totals"),
-                                      "logs": session.relative_to(project).as_posix()})
-            workspace.write_state(project, state)
+            # Registration and acknowledgement serialize with pause requests.
+            with workspace.control_lock(project):
+                request = controller.current_request()
+                if state["cleanup_ok"] and (request or state["state"] == "pausing"):
+                    state["previous_outcome"] = state["state"]
+                    state.update(state="paused", reason="Full suspension confirmed; all service descendants stopped.",
+                                 pause_request_id=request["request_id"] if request else state.get("pause_request_id"))
+                    code = 0
+                if state["cleanup_ok"]:
+                    state.pop("checkpoint_prepared", None)
+                state["sessions"].append({"activation_id": activation, "native_session_id": state["native_session_id"],
+                                          "outcome": state["state"], "active_seconds": charged,
+                                          "usage_totals": telemetry.get("usage_totals"),
+                                          "logs": session.relative_to(project).as_posix()})
+                workspace.write_state(project, state)
         print(f"{state['state']}: {state['reason']}\nStatus: {project / 'RESEARCH_STATUS.md'}")
         return code
 
@@ -447,12 +614,16 @@ def main(argv=None):
     show = sub.add_parser("inspect", help="inspect saved status without inference or authentication")
     show.add_argument("project", type=Path)
     show.add_argument("--json", action="store_true")
+    suspend = sub.add_parser("pause", help="fully suspend research; wait up to 60 seconds for confirmation")
+    suspend.add_argument("project", type=Path)
     args = parser.parse_args(argv)
     previous = signal.getsignal(signal.SIGTERM)
     def terminate(signum, frame):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, terminate)
     try:
+        if args.command == "pause":
+            return pause(args.project)
         if args.command == "inspect":
             state = inspect_project(args.project)
             if args.json:
@@ -461,7 +632,8 @@ def main(argv=None):
                 print(f"{state['state']}: {state.get('reason', '')}\n{state['activity_check']}")
                 for key in ("limits", "remaining_active_seconds", "usage_totals", "usage_complete",
                             "checkpoint", "native_session_id", "pending_reconciliation",
-                            "pending_intake_changes", "checkpoint_error", "recovery", "accounting_uncertainties"):
+                            "pending_intake_changes", "checkpoint_error", "checkpoint_prepared",
+                            "previous_outcome", "interrupted_work", "recovery", "accounting_uncertainties"):
                     print(f"{key}: {json.dumps(state.get(key))}")
                 for artifact in state.get("artifacts", []):
                     present = "present" if state["artifact_availability"][artifact] else "missing"

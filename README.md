@@ -17,9 +17,9 @@ findings, and identifies the preserved demonstration paths and pipeline review g
 This establishes a bounded capability demonstration, without certifying novelty
 or overall scientific competence.
 
-The first M2 implementation increment adds quiescent checkpoints, foreground
-resumption, human direction and note-edit reconciliation. Full live pause and
-automatic primary rollover remain for subsequent increments and have **not**
+M2 implementation now supports checkpoints, foreground resumption, full live pause,
+human direction and note-edit reconciliation. Automatic primary rollover and the
+real Codex-backed M2 demonstration remain for subsequent increments and have **not**
 passed M2 live acceptance. M3 collaboration
 and independent verification; M4 cross-project reuse and remaining controls; and
 M5 physics-benchmark investigation and human scientific acceptance remain deferred.
@@ -99,17 +99,43 @@ distinct from questions and scientific conclusions. Keep human inputs stable dur
 a run; detected changes require reassessment on the next activation. Only explicit
 human `redirect` and `feedback` commands write those inputs.
 
-## Continue and redirect
+## Pause, continue and redirect
 
-After the foreground activation ends and all its descendants are stopped:
+From another terminal, suspend a foreground investigation before editing or redirecting:
 
 ```sh
+research-pipeline pause /path/to/investigation
 research-pipeline redirect /path/to/investigation --questions-file /path/to/new-questions.md
 research-pipeline feedback /path/to/investigation --file /path/to/feedback.md
 # Alternatively edit questions, optional AGENTS.md, HUMAN_FEEDBACK.md or scientific notes.
 research-pipeline resume /path/to/investigation
 research-pipeline inspect /path/to/investigation --json
 ```
+
+`pause` needs no model authentication. It requests suspension from the current owner
+and waits up to 60 seconds for confirmation, including release of the foreground
+project lock. The researcher has a fixed 15-second saving grace, bounded by the
+remaining investigation deadline. It checks a read-only request channel, writes
+draft progress and a handoff, and invokes a small mounted checkpoint helper as its
+final command. The controller validates the saved handoff and referenced drafts or
+native artifacts, persists preparation, and acknowledges it. A one-second exit grace
+inside the original saving period allows the researcher to finish and emit usage.
+Preparation checks the same saving deadline while validating links and reading or
+hashing files in chunks; expiry abandons preparation and requests service stopping.
+Then whole-service cleanup stops all research, computation and checkpoint helpers.
+A request during startup/preflight cancels startup without launching inference.
+
+Zero exit from `pause` means confirmed suspension with no intentional work left
+running, including detached descendants. It does not guarantee a new checkpoint:
+ignored requests, long computations or invalid drafts are forcibly stopped, and
+inspection reports whether a fresh checkpoint, an older checkpoint or only ordinary
+artifacts can be used. Saving and shutdown consume the cumulative active allowance.
+Duplicate requests reuse the same request and cannot extend saving time. A confirmation
+timeout returns nonzero and leaves the request pending; suspension is not confirmed.
+An ownership conflict reports that another activation replaced the requested owner.
+Pausing an idle investigation is idempotent; pausing a stale owner first requires
+confirmed cleanup of recorded services. Previous failures and checkpoint errors remain
+available in saved state. Unconfirmed cleanup prevents publication and further work.
 
 `redirect` replaces the questions; `feedback` appends a dated, distinct human
 contribution. These commands require the exclusive project lock and confirmed
@@ -130,9 +156,8 @@ native session identity and pending reconciliation.
 
 Each activation has a stable investigation ID and logical researcher `primary`,
 and fresh controller/native session identities (native identity only when emitted).
-This is explicit resumption, not automatic rollover. No live `pause` command is
-available in this increment. Interrupting the foreground CLI requests bounded
-whole-service cleanup; inspect the outcome before continuing.
+This is explicit resumption, not automatic rollover. Interrupting the foreground
+CLI also requests bounded whole-service cleanup; use `pause` for cooperative saving.
 
 Existing scientific Markdown is mounted read-only. The researcher writes Markdown
 drafts under `/run/research-drafts`, mirroring final project paths; code/data use
@@ -158,6 +183,15 @@ there is no exact replay guarantee. Without trustworthy service timing it conser
 charges elapsed real time up to the recorded activation allocation/deadline and marks
 accounting uncertain. Unobserved model usage stays unknown. If no valid checkpoint
 exists, ordinary artifacts remain available with an explicit recovery limitation.
+If the controller dies after preparing a pause handoff, recovery first confirms
+cleanup, validates its saved hashes/intake/baseline and attempts the same guarded
+publication used at normal checkpoints. Damaged preparation or drafts retain the
+previous checkpoint with an interrupted-finalization limitation. Human edits still win.
+Pending preparation is retried even if an earlier recovery already recorded cleanup.
+Recovery validation, publication and index reconciliation consume the remaining active
+allowance. Their accounting interval is saved separately and settled once; if its
+controller dies, elapsed time through the next recovery is conservatively charged,
+capped at the saved remaining allowance and reported as uncertain.
 Schema-1 M1 investigations remain inspectable, but cannot resume; preserved M1
 demonstrations are not migrated.
 
@@ -180,18 +214,22 @@ The researcher writes:
 
 The controller initializes root `RESEARCH_STATUS.md`, maintains immediate-entry
 `FOLDER_CONTENT.md` indexes, and writes private `.research_pipeline/run.json`,
-`run.lock` and per-activation `sessions/<id>/` directories. Each session retains
+`run.lock`, the short-lived `control.lock`, and per-activation `sessions/<id>/` directories. Each session retains
 bounded `backend.jsonl`/`stderr.txt`, drafts, and accepted checkpoint Markdown.
+Its `control/` directory holds ownership-scoped requests/acknowledgements, mounted
+read-only to the researcher; `response/` receives untrusted bounded readiness JSON.
+Prepared handoff/intake Markdown and small preparation metadata support interrupted
+finalization. These operational files cannot change research limits or select services.
 Indexes are reconciled at startup and the terminal checkpoint after process cleanup.
 The controller does not traverse scientific trees while agent commands can mutate them. Starting evidence is listed in the root index; no
 index is written into `starting_evidence/`. Other subdirectories are created only
 when the science needs them. Operational diagnostics may contain private scientific
 material; keep the project private as appropriate.
 
-Exit codes: `0` completed/inspected, `2` bad input or conflict, `3` unsupported runtime
+Exit codes: `0` completed/inspected/confirmed paused, `2` bad input, conflict or pause confirmation timeout, `3` unsupported runtime
 or authentication, `4` backend failure/incomplete artifacts/uncertain cleanup, `124`
 wall deadline, `130` interruption. States include `starting`, `running`, `completed`,
-`incomplete`, `blocked`, `failed`, `timed_out`, and `interrupted`. Inspection marks
+`pausing`, `paused`, `incomplete`, `blocked`, `failed`, `timed_out`, and `interrupted`. Inspection marks
 unconfirmed/stale activity explicitly. Partial artifacts are retained on failure.
 
 Completion requires backend success, investigation-level observed successful command execution,
@@ -238,8 +276,8 @@ Limits that are **not** guaranteed:
   home or custom MCP/connector configuration are supplied. The authorized backend's
   native credentials exist in its private namespace during the run.
 - Abrupt host/controller SIGKILL cannot finalize status; systemd still enforces its
-  lifetime bound. Checkpoint recovery can lose uncheckpointed work. Full live pause,
-  automatic rollover and collaboration remain later increments.
+  lifetime bound. Checkpoint recovery and forced pause can lose uncheckpointed work.
+  Automatic rollover and collaboration remain later increments.
 
 ## Checks and demonstration
 
@@ -256,7 +294,12 @@ Tests distinguish orchestration doubles, actual Bubblewrap enforcement, and actu
 systemd/cgroup enforcement. An unsupported-host skip means incomplete acceptance.
 `test_continuity.py` checks checkpoint/resume, human edits, direction, cumulative
 accounting, stale ownership and a genuinely killed controller with an explicitly
-doubled research launcher. It supplies no paid scientific evidence. This increment's
+doubled research launcher. `test_pause.py` checks separate CLI pause processes,
+duplicate/stale requests, handoff preparation, startup cancellation, fixed grace,
+human edits and a real controller SIGKILL after acknowledgement. `test_isolation.py`
+adds cooperative and ignored-request scientific-worker fixtures through the production
+launcher, including closed output streams and detached heartbeat descendants. These
+fixtures supply no paid scientific evidence. This increment's
 code-readiness handoff proceeds to pipeline controller final verification; it does
 not assert the full M2 demonstration gate.
 Ordinary tests do not launch inference. The pipeline's integrated-test stage can
@@ -271,7 +314,10 @@ RESEARCH_PIPELINE_M1_OUTPUT_DIR=/absolute/private/request-output/m1 \
 
 Both variables must be supplied to that process. Enabled acceptance fails on missing
 prerequisites; the service/filesystem integration checks cannot skip unavailable
-capabilities. Do not give a restricted Writer access to another execution context.
+capabilities when either `RESEARCH_PIPELINE_M1_LIVE=1` or
+`RESEARCH_PIPELINE_M2_LIVE=1`. The small paid M2 test belongs to the later rollover
+and demonstration increment; enabling M2 here enforces isolation prerequisites.
+Do not give a restricted Writer access to another execution context.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,
 CLI command logs and `receipt.json`. The test starts the actual CLI/Codex session
 with a 600-second limit, inspects its scientific artifacts, checks a small quadrature
