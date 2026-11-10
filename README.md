@@ -24,10 +24,11 @@ each suite passed 85 tests with only the separate M1 live gate skipped. Both rea
 investigations preserved baseline data and human edits, adapted the plan, continued
 the same logical task in a distinct native session after an acknowledged rollover,
 reproduced the successor computation in isolation, and confirmed service cleanup.
-M3 now supports dependent research and separate independent verification with a finite
-exchange, described below. Its opt-in real Codex gate is implemented; enabled
-controller-host verification is still required for M3 acceptance. M4 cross-project reuse
-and M5 physics-benchmark investigation remain deferred.
+M3 supports dependent research and separate independent verification with a finite
+exchange, described below. **M3 acceptance passed** in enabled final and combined
+verification, and integrated locally at `034d9a9`. Each suite passed 176 tests with
+only the separate M1/M2 paid gates disabled. M4 cross-project reuse is next;
+the M5 physics-benchmark investigation remains deferred.
 
 ## Dependent collaboration
 
@@ -660,6 +661,20 @@ no alternate bus, authentication or unisolated fallback is used. Writer readines
 Reviewer approval proceed to Architect completion, which must trigger the existing
 enabled controller final tests and local integration. Only those successful enabled
 checks and their actual scientific observations complete M3 acceptance.
+
+Accepted M3 final (`m3-live-s5ot7g0w`) and combined (`m3-live-pl1i_zc2`)
+demonstrations are preserved under
+`coding_pipeline/logs/manager/m3-collaboration-independent-verification-20261110T135106Z-715e354e/live-host-acceptance/`.
+The pipeline report at `coding_pipeline/logs/20261110T135145_2b46d578/summary.md`
+records both passed checks and local integration. Each demonstration continued a
+stable delegated task in a fresh native Codex session, observed same-primary
+numerical progress during rollover, integrated the result, and completed a separate
+independent objection/response/re-examination with isolated numerical reproduction.
+All thirteen services per demonstration stopped without cleanup errors. Reported
+cumulative active work was about 691 and 716 seconds of the 900-second allowance;
+missing model usage remains unknown. Fixed-duration rollover supplies no exact
+60% context-occupancy guarantee. This is M3 engineering/scientific-workflow evidence,
+not human scientific acceptance of the M5 benchmark.
 
 The preserved M1 gate remains available separately.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,
