@@ -34,7 +34,7 @@ class Intake:
 
 MANAGED = ("sources", "work", "outputs", "handoffs")
 REQUIRED = ("work/PLAN.md", "sources/LITERATURE.md", "outputs/REPORT.md")
-ACTIVE_STATES = ("starting", "running", "pausing")
+ACTIVE_STATES = ("starting", "running", "pausing", "rolling_over")
 
 
 @contextmanager
@@ -80,7 +80,7 @@ def read_control(path):
 
 def matching_request(value, state):
     return (isinstance(value, dict) and value.get("version") == 1
-            and value.get("reason") == "pause"
+            and value.get("reason") in ("pause", "rollover")
             and all(value.get(k) == v for k, v in owner_fields(state).items())
             and isinstance(value.get("request_id"), str)
             and re.fullmatch(r"[a-f0-9]{32}", value["request_id"]) is not None)

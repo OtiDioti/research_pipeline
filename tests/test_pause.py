@@ -44,7 +44,7 @@ class PauseTests(unittest.TestCase):
         config = isolation.Config(deadline=time.monotonic() + 60, control=control,
                                   response=response, drafts=session / "drafts")
         baseline = workspace.science_fingerprints(self.project)
-        return cli.PauseControl(self.project, state, config, workspace.read_intake(self.project),
+        return cli.CheckpointControl(self.project, state, config, workspace.read_intake(self.project),
                                 session, baseline, [])
 
     def test_separate_pause_processes_handshake_before_cleanup_and_publication(self):

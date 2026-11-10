@@ -11,11 +11,12 @@ def main():
     control = Path("/run/research-control")
     request_path = control / "request.json"
     if not request_path.exists():
-        print("No suspension requested.")
+        print("No checkpoint requested.")
         return 0
     request = json.loads(request_path.read_text())
     if "--check" in sys.argv:
-        print("PAUSE REQUESTED: save progress and handoff, then invoke this helper without --check.")
+        reason = request.get("reason", "checkpoint").upper()
+        print(f"{reason} REQUESTED: save progress and handoff, then invoke this helper without --check.")
         return 0
     response = Path("/run/research-checkpoint")
     ready = {**request, "readiness_nonce": uuid.uuid4().hex}

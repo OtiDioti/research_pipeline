@@ -1,9 +1,9 @@
-# M2 checkpoints and full pause — milestones 001–002
+# M2 checkpoints, full pause and primary rollover — milestones 001–003
 
 Implemented the supplied plans: quiescent checkpoints, foreground `resume`,
-`redirect`, distinct `feedback`, and cooperative full `pause`. Automatic context
-rollover and the opt-in real M2 scientific demonstration belong to subsequent
-milestones. This report transfers code readiness to controller verification;
+`redirect`, distinct `feedback`, cooperative full `pause` and automatic primary
+rollover. The opt-in real M2 scientific demonstration belongs to milestone 004.
+This report transfers code readiness to controller verification;
 it does not establish M2 acceptance.
 
 ## Decisions
@@ -135,3 +135,49 @@ isolation prerequisites fail instead of skip. Controller verification must run
 these host checks; later rollover/demonstration work must still satisfy the real
 Codex M2 gate. This is implementation readiness for milestone 002, not full M2
 scientific acceptance.
+
+## Milestone 003: automatic primary rollover
+
+- Persist `--primary-session-seconds` separately from immutable resource limits:
+  default 300 seconds, finite and greater than the existing 15-second saving grace.
+  Missing schema-2 policy defaults on resume. There is no reliable occupancy/capacity
+  telemetry, so this is a fixed-duration fallback, not an exact 60% guarantee.
+  A reliable occupancy implementation should prefer the specification's 60% default.
+- Reuse one checkpoint controller/helper with trusted reasons `pause` and `rollover`.
+  Saving starts before the effective session deadline, measured after startup;
+  that deadline also bounds the research service and saved crash allocation.
+  Pause upgrades retain request identity/timing and take precedence.
+- Hold the foreground project lock across sequential sessions and successor
+  registration. Preserve investigation/logical identity, ownership nonce, workspace,
+  useful artifacts and cumulative budgets. New activations/services use private
+  authentication-only homes and fresh ephemeral execution, never native resume or
+  transcripts. Reused nonempty native identity fails; missing identity stays unknown.
+- Automatic continuation requires acknowledgement before closure, confirmed cleanup,
+  revalidated preparation, guarded publication and the ending activation's valid
+  checkpoint. Human handoff conflicts block rollover. Ordinary note conflicts remain
+  preserved reconciliation inputs. Shared continuation intake reloads current human
+  inputs, previous accepted intake, handoff, changed/missing science and interruptions.
+- Record a small last/current rollover summary and predecessor/successor references
+  in session summaries. Failed saving/publication/startup stops with retained science
+  and a limitation; explicit resume remains available. Unknown usage stays sticky.
+  One monotonic investigation deadline spans all sessions. Inter-session intake
+  belongs to the next interval; its persisted pending marker also makes controller
+  loss recoverable without charging the completed predecessor twice.
+
+Validation: `python -m unittest discover -s tests -v` passed 73 tests with two skips.
+New controlled-clock checks exercise multiple automatic sessions, unchanged reference
+data plus new computation artifacts, fresh native identities/commands/auth homes,
+stable ownership, changed/removed inputs, cumulative usage/time, unknown telemetry,
+failed saving, changed preparation, human handoff conflicts, unconfirmed cleanup,
+successor failure, repeated identity, exhausted allowance and pause precedence.
+A real subprocess is killed after checkpoint publication and before successor intake;
+recovery retains the checkpoint, charges the preparation interval once and resumes
+with interruption disclosure. Existing controller-crash, pause and human-edit checks
+still pass. The actual Bubblewrap boundary test passed.
+
+The systemd user bus remains unavailable in this Writer environment; the production
+service class, including its new rollover helper/descendant-cleanup worker variant,
+could not run here. Paid M1 inference is disabled. These are disclosed local
+limitations, not M2 acceptance. Milestone 004 must add the small opt-in actual Codex
+demonstration and transfer completion to the enabled controller-host final gate.
+No platform isolation, dependencies or controller capabilities were expanded.

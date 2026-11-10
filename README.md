@@ -18,8 +18,8 @@ This establishes a bounded capability demonstration, without certifying novelty
 or overall scientific competence.
 
 M2 implementation now supports checkpoints, foreground resumption, full live pause,
-human direction and note-edit reconciliation. Automatic primary rollover and the
-real Codex-backed M2 demonstration remain for subsequent increments and have **not**
+human direction, note-edit reconciliation and automatic primary rollover. The
+real Codex-backed M2 demonstration remains for the next increment and has **not**
 passed M2 live acceptance. M3 collaboration
 and independent verification; M4 cross-project reuse and remaining controls; and
 M5 physics-benchmark investigation and human scientific acceptance remain deferred.
@@ -77,7 +77,7 @@ mkdir -p /path/to/investigation/starting_evidence
 # Write the human questions in starting_evidence/RESEARCH_QUESTIONS.md.
 # Add relevant notes, papers, code or datasets and optional root AGENTS.md.
 .venv/bin/research-pipeline start /path/to/investigation \
-  --wall-seconds 600 --memory-mib 2048 --max-tasks 128
+  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 --primary-session-seconds 300
 .venv/bin/research-pipeline inspect /path/to/investigation
 .venv/bin/research-pipeline inspect /path/to/investigation --json
 ```
@@ -132,7 +132,8 @@ inspection reports whether a fresh checkpoint, an older checkpoint or only ordin
 artifacts can be used. Saving and shutdown consume the cumulative active allowance.
 Duplicate requests reuse the same request and cannot extend saving time. A confirmation
 timeout returns nonzero and leaves the request pending; suspension is not confirmed.
-An ownership conflict reports that another activation replaced the requested owner.
+An ownership conflict reports that another foreground owner replaced the requested owner.
+Automatic session changes within that same owner are followed by the pause requester.
 Pausing an idle investigation is idempotent; pausing a stale owner first requires
 confirmed cleanup of recorded services. Previous failures and checkpoint errors remain
 available in saved state. Unconfirmed cleanup prevents publication and further work.
@@ -148,16 +149,59 @@ artifacts when questions change.
 
 Limits are immutable across activations: `--wall-seconds` is the investigation's
 **cumulative active-work allowance**, covering startup, research and finalization.
-Time between activations is free. Resume accepts `--codex` and `--model`, but no
+Time while fully stopped between foreground invocations is free; automatic
+inter-session preparation is charged. Resume accepts `--codex` and `--model`, but no
 budget-increase flags. Missing usage/native identity is explicitly unknown; observed
 turn usage accumulates without adding cached input tokens a second time.
 Inspection exposes cumulative usage, completeness, remaining active time, checkpoint,
-native session identity and pending reconciliation.
+session policy, rollover outcome, session identities and pending reconciliation.
 
 Each activation has a stable investigation ID and logical researcher `primary`,
-and fresh controller/native session identities (native identity only when emitted).
-This is explicit resumption, not automatic rollover. Interrupting the foreground
-CLI also requests bounded whole-service cleanup; use `pause` for cooperative saving.
+and fresh activation/native session identities (native identity only when emitted).
+Interrupting the foreground CLI requests bounded whole-service cleanup; use `pause`
+for cooperative saving.
+
+## Automatic primary context rollover
+
+`--primary-session-seconds` defaults to **300**, must be finite and greater than the
+15-second saving reserve, and is persisted separately from investigation resource
+limits. Existing schema-2 investigations without a policy receive this default
+on resume. Each research session's duration starts after backend inspection,
+preflight and authentication. The effective service/controller deadline is the
+earlier of launch plus this duration and the cumulative investigation deadline.
+When the session duration constrains execution, the controller requests saving
+15 seconds before that deadline. Saving, cleanup and preparation consume the
+original investigation allowance.
+
+This Codex backend exposes completed-turn billing usage, **not reliable context
+occupancy or capacity**. A 60% occupancy default is preferred if reliable telemetry
+becomes available; the fixed session duration is the current configurable fallback.
+It provides no exact 60% guarantee and never treats cumulative tokens as occupancy.
+
+Rollover uses the same checkpoint helper as pause. The controller requires an
+acknowledged handoff, confirmed whole-service cleanup, unchanged prepared files
+and a valid published checkpoint before launching a successor. Current questions,
+instructions, feedback and note changes are reloaded. Ordinary scientific conflicts
+are carried for reconciliation; a conflicting handoff blocks continuation.
+The same foreground command retains the exclusive project lock, investigation,
+logical researcher `primary`, workspace, ownership nonce and cumulative limits.
+Each successor gets a new activation/service, private authentication-only Codex
+home and `codex exec --ephemeral` conversation. No transcript or native resume
+command is supplied. Repeated nonempty native identities are an error; absent
+identities remain unknown and cannot establish live freshness.
+
+Human pause takes precedence, including during saving or successor registration.
+Upgrading a rollover request preserves its ID and original grace. Successful pause
+stops the entire investigation. Automatic rollover instead continues the same
+logical task within the running foreground command.
+
+Ignored/unacknowledged saving, damaged preparation, failed publication or successor
+startup stops automatic continuation with an explicit limitation. Inspect the
+checkpoint/error and use `resume` after addressing the failure. Unconfirmed cleanup
+blocks both publication and further launches. Controller loss at rollover boundaries
+uses the same checkpoint recovery; interrupted work and unknown usage are disclosed.
+Inspection's `rollover` summary records source/destination activation, checkpoint,
+native identities when known, phase and limitation; session summaries retain links.
 
 Existing scientific Markdown is mounted read-only. The researcher writes Markdown
 drafts under `/run/research-drafts`, mirroring final project paths; code/data use
@@ -229,7 +273,7 @@ material; keep the project private as appropriate.
 Exit codes: `0` completed/inspected/confirmed paused, `2` bad input, conflict or pause confirmation timeout, `3` unsupported runtime
 or authentication, `4` backend failure/incomplete artifacts/uncertain cleanup, `124`
 wall deadline, `130` interruption. States include `starting`, `running`, `completed`,
-`pausing`, `paused`, `incomplete`, `blocked`, `failed`, `timed_out`, and `interrupted`. Inspection marks
+`pausing`, `rolling_over`, `paused`, `incomplete`, `blocked`, `failed`, `timed_out`, and `interrupted`. Inspection marks
 unconfirmed/stale activity explicitly. Partial artifacts are retained on failure.
 
 Completion requires backend success, investigation-level observed successful command execution,
@@ -277,7 +321,7 @@ Limits that are **not** guaranteed:
   native credentials exist in its private namespace during the run.
 - Abrupt host/controller SIGKILL cannot finalize status; systemd still enforces its
   lifetime bound. Checkpoint recovery and forced pause can lose uncheckpointed work.
-  Automatic rollover and collaboration remain later increments.
+  Collaboration remains a later increment.
 
 ## Checks and demonstration
 
@@ -296,7 +340,10 @@ systemd/cgroup enforcement. An unsupported-host skip means incomplete acceptance
 accounting, stale ownership and a genuinely killed controller with an explicitly
 doubled research launcher. `test_pause.py` checks separate CLI pause processes,
 duplicate/stale requests, handoff preparation, startup cancellation, fixed grace,
-human edits and a real controller SIGKILL after acknowledgement. `test_isolation.py`
+human edits and a real controller SIGKILL after acknowledgement. `test_rollover.py`
+checks sequential fresh sessions, current intake, cumulative budgets, failed saving
+and startup, pause precedence and a killed controller between publication and launch.
+`test_isolation.py`
 adds cooperative and ignored-request scientific-worker fixtures through the production
 launcher, including closed output streams and detached heartbeat descendants. These
 fixtures supply no paid scientific evidence. This increment's
@@ -315,8 +362,8 @@ RESEARCH_PIPELINE_M1_OUTPUT_DIR=/absolute/private/request-output/m1 \
 Both variables must be supplied to that process. Enabled acceptance fails on missing
 prerequisites; the service/filesystem integration checks cannot skip unavailable
 capabilities when either `RESEARCH_PIPELINE_M1_LIVE=1` or
-`RESEARCH_PIPELINE_M2_LIVE=1`. The small paid M2 test belongs to the later rollover
-and demonstration increment; enabling M2 here enforces isolation prerequisites.
+`RESEARCH_PIPELINE_M2_LIVE=1`. The small paid M2 test belongs to the next
+demonstration increment; enabling M2 here enforces isolation prerequisites.
 Do not give a restricted Writer access to another execution context.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,
 CLI command logs and `receipt.json`. The test starts the actual CLI/Codex session

@@ -229,6 +229,12 @@ class ServiceIsolationTests(unittest.TestCase):
         self.assert_child_stopped()
 
     def test_cooperative_scientific_worker_prepares_before_service_cleanup(self):
+        self.cooperative_worker("pause")
+
+    def test_rollover_scientific_worker_prepares_before_descendant_cleanup(self):
+        self.cooperative_worker("rollover")
+
+    def cooperative_worker(self, reason):
         """Actual helper/mount/service handshake; explicitly not Codex science."""
         from tests.test_continuity import HANDOFF
         activation = uuid.uuid4().hex
@@ -243,9 +249,9 @@ class ServiceIsolationTests(unittest.TestCase):
                                   response=response, drafts=drafts)
         intake = workspace.Intake(self.root, "Worker fixture.", "", [], {})
         baseline = workspace.science_fingerprints(self.root)
-        controller = cli.PauseControl(self.root, state, config, intake, session, baseline, [])
+        controller = cli.CheckpointControl(self.root, state, config, intake, session, baseline, [])
         config.on_poll, config.launch_guard = controller.poll, controller.launch_guard
-        request = {"version": 1, **workspace.owner_fields(state), "reason": "pause",
+        request = {"version": 1, **workspace.owner_fields(state), "reason": reason,
                    "request_id": uuid.uuid4().hex, "requested_at": cli.now()}
         script = f"""
 from pathlib import Path
@@ -280,6 +286,7 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check
         self.assertIn("checkpoint_prepared", state)
         self.assertTrue(workspace.read_control(control / "ack.json")["accepted"])
         self.assertFalse((self.root / "work/PLAN.md").exists())
+        workspace.load_prepared(self.root, state)
         workspace.finalize_science(self.root, state, intake, session, drafts, baseline, [])
         self.assertEqual((self.root / "work/PLAN.md").read_text(), "# Saved worker plan")
         self.assertIn("checkpoint", state)

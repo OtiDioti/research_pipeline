@@ -13,7 +13,8 @@ from .isolation import RuntimeUnavailable
 
 LIMITATIONS = [
     "Pause allows 15 seconds to save, bounded by the remaining deadline, then stops all service descendants. Uncheckpointed work can be lost.",
-    "No automatic rollover, delegation or independent verification yet.",
+    "Primary rollover uses a configurable fixed session duration (default 300 seconds), not measured context occupancy or an exact 60% guarantee.",
+    "No delegation or independent verification yet.",
     "Model spending and context occupancy are unavailable and cannot be capped by this backend.",
     "Emitted turn usage is cumulative across activations; missing telemetry remains unknown. Usage is not context occupancy or a hard token cap.",
     "Memory, tasks and wall time are aggregate limits shared by all scientific commands.",
@@ -148,11 +149,13 @@ concrete next step. Use ordinary links relative to the canonical handoff in hand
 e.g. [Plan](../work/PLAN.md). Do not copy conversations.
 End with an honest account of progress and blockers.
 
-COOPERATIVE FULL SUSPENSION
+COOPERATIVE CHECKPOINT: FULL SUSPENSION OR AUTOMATIC ROLLOVER
 Before substantial operations and after each command, check
 /run/research-control/request.json, or run:
 python3 /run/research-checkpoint-helper.py --check
-If a pause is requested, immediately stop scientific work. Within the fixed
+If a pause or rollover is requested, immediately stop scientific work. Pause fully
+suspends the investigation; rollover continues this SAME logical primary task in a
+fresh conversation after the old service stops. Within the fixed
 15-second saving grace (also bounded by the remaining wall deadline), save useful
 progress, plan/status updates and the required handoff in /run/research-drafts.
 Include interrupted computations and the next concrete action. As your FINAL tool
@@ -161,7 +164,10 @@ This saves readiness and waits for the controller to validate your handoff/artif
 On rejection correct the stated issue within the original grace and retry. After
 acknowledgement finish immediately with no further scientific commands. The helper
 cannot extend deadlines or change limits. Forced suspension may occur without a new
-checkpoint if saving is incomplete. Never write the trusted control directory.
+checkpoint if saving is incomplete. Failed rollover stops for explicit resume.
+Never write the trusted control directory. The configurable session duration reserves
+15 seconds for saving; it is a fallback for unavailable context occupancy telemetry,
+not an exact 60% guarantee. Cumulative investigation limits survive context replacement.
 
 AUTHORIZED OPTIONAL PROJECT INSTRUCTIONS
 {intake.instructions or '(none supplied)'}

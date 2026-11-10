@@ -32,6 +32,7 @@ class Config:
     wall_seconds: float = 600
     memory_mib: int = 2048
     max_tasks: int = 128
+    primary_session_seconds: float = 300
     deadline: float = 0
     unit: str = field(default_factory=lambda: f"research-{uuid.uuid4().hex}.service")
     drafts: Path | None = None
