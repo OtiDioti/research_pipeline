@@ -1,0 +1,12 @@
+# Folder contents
+
+- [AGENTS.md](AGENTS.md) — Preserved development instructions.
+- [PROJECT.md](PROJECT.md) — Preserved approved scientific product specification.
+- [STATUS.md](STATUS.md) — Preserved manager-owned milestone status.
+- [README.md](README.md) — Installation, CLI usage, artifacts, enforcement and limitations.
+- [pyproject.toml](pyproject.toml) — Python packaging and research-pipeline command entry point.
+- [src](src) — Minimal Python research implementation.
+- [tests](tests) — Focused orchestration and actual isolation checks.
+- [development](development) — Implementation outcome and test evidence.
+- [.gitignore](.gitignore) — Private runtime and generated Python exclusions.
+- [.m1-local](.m1-local) — Ignored installation, automated-check logs and blocked demonstration evidence.
