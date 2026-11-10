@@ -9,9 +9,9 @@
 
 - Objective: dependent delegated research, separate independent verification, finite criticism exchange, integration, separate workspaces/handoffs, fresh contexts and cumulative limits.
 - Request ID `m3-collaboration-independent-verification-20261110T135106Z-715e354e`; frozen directory `coding_pipeline/logs/manager/m3-collaboration-independent-verification-20261110T135106Z-715e354e/`. Preserve original request/config/submission hashes/receipt. Submitted once; recover the same run, not duplicate work.
-- Run `20261110T135145_2b46d578`: **interrupted**, final phase, milestone 004, integration repair 12, turn 52. Reviewed HEAD `ac87bdba69bf82f7a097decbabf16a394db1d474`; branch `cwi/20261110T135145_2b46d578`; worktree `coding_pipeline/logs/20261110T135145_2b46d578/worktree`; report `summary.md` under run directory. Target main remains unmodified by product integration.
+- Run `20261110T135145_2b46d578`: **running**, Writer, milestone 004, integration repair 13, turn 53. Reviewed HEAD `ac87bdba69bf82f7a097decbabf16a394db1d474`; branch `cwi/20261110T135145_2b46d578`; worktree `coding_pipeline/logs/20261110T135145_2b46d578/worktree`; report `summary.md` under run directory. Target main remains unmodified by product integration.
 - Last owner PID `199953` / start ticks `5555441`, exec session `81137`, exited 130 after explicit retry unexpectedly reran unchanged verification (`tests/final-020.txt`). Actual run never reached anticipated repair 13. Owner absent and lock free; both recorded services for interrupted attempt `m3-live-zbflxxsb` are inactive/failed. Receipt `final-retry-component-reconciled.json`. No implementation/background scientific job is currently active.
-- Necessary component recovery fix is now active and reviewed (below). Ready input: **`retry7-after-component-input.txt`**, linked to unchanged `retry7-input.txt`; original frozen submission unchanged. Next: same-run `resume --retry --input ...`, record actual owner and actual phase before claiming Writer/repair advancement. Do not rerun unchanged science before repairing the saved failure.
+- Necessary component recovery fix is active and reviewed (below). Submitted same-run `resume --retry` using **`retry7-after-component-input.txt`**, linked to unchanged `retry7-input.txt`; original frozen submission unchanged. Actual state confirms Writer/repair 13 before further live verification. Current owner PID `237690`, start ticks `5617607`, exec session `47098`; receipt `retry7-after-component-owner.json`, output `retry7-after-component-execution.log`. Reconcile this owner and lock before any recovery.
 
 ## Latest product evidence and exact remaining defect
 
@@ -40,7 +40,7 @@
 
 ## Next boundary and completion
 
-- Resume focused repair through the corrected component; require ordinary review, fresh passed enabled final AND combined verification, then pipeline-confirmed LOCAL integration before accepting M3 or submitting M4. All product edits/tests/demonstrations/review go through coding_pipeline; manager assesses reports, without independent product inspection/review/testing.
+- Await focused repair 13 through the corrected component under owner PID `237690` / session `47098`; require ordinary review, fresh passed enabled final AND combined verification, then pipeline-confirmed LOCAL integration before accepting M3 or submitting M4. All product edits/tests/demonstrations/review go through coding_pipeline; manager assesses reports, without independent product inspection/review/testing.
 - M4 planning only: explicit read-only selected prior projects, ordinary navigation/full-text search, qualified scientific reuse, simple file-based tools and remaining approved reporting/budget controls. No M4 request submitted.
 - M5 questions/Valvo materials are not supplied outside ignored pipeline directories; the local investigation/materials-path question remains pending. Do not invent questions or scientific acceptance.
 - **LOCAL ONLY:** no pushes, PRs, remote changes or external publication are authorized. Component repair branches remain unmerged. Project completion is unclaimed; COMPLETE was not written.
