@@ -732,6 +732,11 @@ def run_session(project, config, state, intake, baseline, external, continuation
                 state.pop("checkpoint_prepared", None)
             state["sessions"].append({"activation_id": activation, "native_session_id": state["native_session_id"],
                                       "outcome": state["state"], "active_seconds": charged,
+                                      "service": state["service"] if state["service_attempted"] else None,
+                                      "probe_service": state["probe_service"] if state["probe_attempted"] else None,
+                                      "cleanup_ok": state["cleanup_ok"],
+                                      "control_group": (result.service_properties.get("ControlGroup")
+                                                        if result else None),
                                       "usage_totals": telemetry.get("usage_totals"),
                                       "checkpoint_id": state.get("checkpoint", {}).get("id"),
                                       "predecessor_activation": predecessor,

@@ -1,8 +1,8 @@
-# M2 checkpoints, full pause and primary rollover — milestones 001–003
+# M2 checkpoints, full pause and primary rollover — milestones 001–004
 
 Implemented the supplied plans: quiescent checkpoints, foreground `resume`,
 `redirect`, distinct `feedback`, cooperative full `pause` and automatic primary
-rollover. The opt-in real M2 scientific demonstration belongs to milestone 004.
+rollover, plus the opt-in real M2 scientific demonstration in milestone 004.
 This report transfers code readiness to controller verification;
 it does not establish M2 acceptance.
 
@@ -181,3 +181,50 @@ could not run here. Paid M1 inference is disabled. These are disclosed local
 limitations, not M2 acceptance. Milestone 004 must add the small opt-in actual Codex
 demonstration and transfer completion to the enabled controller-host final gate.
 No platform isolation, dependencies or controller capabilities were expanded.
+
+## Milestone 004: real continuity gate and verification handoff
+
+Added one opt-in `test_m2_live.py` investigation under ordinary unittest discovery.
+Only `RESEARCH_PIPELINE_M2_LIVE=1` enables inference; enabled execution requires
+`RESEARCH_PIPELINE_M2_OUTPUT_DIR` and fails on unavailable prerequisites. It does
+not enable the M1 paid gate. Each invocation creates a private `m2-live-*` directory,
+with exact CLI commands/logs, phase snapshots, numerical evidence and a failure-or-
+success receipt. Scientific excerpts and preservation/accounting/cleanup observations
+are emitted to the report; backend transcripts stay private.
+
+The fixture supplies questions and a script interface, not a solution or scientific
+worker. Codex must produce baseline quadrature, save useful progress, undergo live
+full pause, then incorporate redirected/removed objectives, distinct feedback,
+instructions and a substantive human derivation edit. A single foreground resume
+must perform new analysis, acknowledge automatic rollover and continue the same
+logical task in a different native context. A reserved post-rollover parameter study,
+independent numerical checks and isolated reproduction distinguish new scientific
+progress from threshold arithmetic. Exact baseline bytes and the human paragraph
+must survive; current notes must explain adaptation. Excerpts and numerical checks
+support manager assessment rather than certifying scientific competence.
+
+Session summaries now retain attempted research/probe services, cleanup outcome
+and available research control-group path. Existing rollover checks cover distinct
+predecessor/successor service identities, unlaunched services and failed cleanup.
+The demonstration observes inactivity before emergency cleanup can conceal a false
+pause, retains observed groups, stops foreground launchers first on failure, and
+uses only existing isolation helpers for investigation-owned services.
+
+Bounds follow the plan: 900 seconds cumulative active allowance, 240 per research
+session including saving, 60 for isolated reproduction, 1500 overall with 400
+reserved for failure cleanup. Occupancy remains unavailable; fixed-duration
+rollover does not promise an exact 60% threshold or reset cumulative limits.
+No product scope, isolation, dependencies or controller configuration changed.
+
+Local validation: ordinary discovery passed 74 tests with three skips (systemd
+service class unavailable, M1 disabled, M2 disabled); the actual Bubblewrap
+boundary test passed. Focused rollover checks passed. Enabled M2 with no output
+failed immediately without inference, as required. An enabled invocation with
+private output failed honestly before inference because this Writer has no
+systemd user bus, retaining a failed receipt and no attempted research services.
+There is no local live-science success claim.
+
+This is the final implementation readiness handoff to Reviewer/Architect and the
+existing controller final verification. Architect completion must trigger the
+enabled real M2 and host-enforcement gates. Their actual results remain mandatory
+for M2 acceptance; discovered defects use normal integration repair.

@@ -49,6 +49,10 @@ class RolloverTests(unittest.TestCase):
                     raise isolation.RuntimeUnavailable("Successor backend unavailable")
                 return {"version": "engineering double"}
 
+            def preflight(config, project):
+                config.on_probe_launch(f"research-{uuid.uuid4().hex}.service")
+                return {}
+
             def execute(config, project, command, prompt, recorder, auth_home):
                 n = len(self.contexts)
                 self.assertLess(n, count + 1, "Unexpected continuation loop")
@@ -110,11 +114,12 @@ class RolloverTests(unittest.TestCase):
                 elif second:
                     second(config)
                 clock.return_value += 1
-                return isolation.ExecutionResult(0, cleanup_ok=cleanup)
+                return isolation.ExecutionResult(0, cleanup_ok=cleanup,
+                    service_properties={"ControlGroup": f"/engineering/{config.unit}"})
 
             with patch.object(codex, "verify_backend", side_effect=verify), \
                  patch.object(codex, "private_auth", auth), \
-                 patch.object(isolation, "preflight", return_value={}), \
+                 patch.object(isolation, "preflight", side_effect=preflight), \
                  patch.object(isolation, "run_isolated", side_effect=execute), \
                  patch.object(isolation, "stop_service", return_value=True):
                 yield
@@ -156,6 +161,14 @@ class RolloverTests(unittest.TestCase):
         self.assertEqual(sum(s["active_seconds"] for s in state["sessions"]), 41)
         self.assertEqual([s["predecessor_activation"] for s in state["sessions"]][1:],
                          [s["activation_id"] for s in state["sessions"]][:-1])
+        self.assertEqual([s["service"] for s in state["sessions"]],
+                         [context[0]["service"] for context in self.contexts])
+        self.assertEqual([s["probe_service"] for s in state["sessions"]],
+                         [context[0]["probe_service"] for context in self.contexts])
+        self.assertEqual(len({s["probe_service"] for s in state["sessions"]}), 3)
+        for session in state["sessions"]:
+            self.assertTrue(session["cleanup_ok"])
+            self.assertEqual(session["control_group"], f"/engineering/{session['service']}")
         prompt = self.contexts[1][2]
         for text in ("Remove A; add C.", "Check endpoint error.", "Use deterministic calculations.",
                      "AGENTS.md", "ADDED", "REMOVED"):
@@ -235,6 +248,7 @@ class RolloverTests(unittest.TestCase):
         self.assertEqual(len(self.contexts), 1)
         self.assertTrue(self.state()["accounting_pending"])
         self.assertEqual(self.state()["rollover"]["phase"], "failed")
+        self.assertFalse(self.state()["sessions"][-1]["cleanup_ok"])
 
     def test_successor_startup_failure_retains_acknowledged_checkpoint(self):
         with self.sessions(startup_failure=True):
@@ -244,6 +258,10 @@ class RolloverTests(unittest.TestCase):
         self.assertEqual(len(self.contexts), 1)
         self.assertEqual(len(state["sessions"]), 2)
         self.assertEqual(state["rollover"]["phase"], "failed")
+        self.assertIsNone(state["sessions"][-1]["service"])
+        self.assertIsNone(state["sessions"][-1]["probe_service"])
+        self.assertIsNone(state["sessions"][-1]["control_group"])
+        self.assertTrue(state["sessions"][-1]["cleanup_ok"])
         self.assertIn("Successor backend unavailable", state["rollover"]["limitation"])
         self.assertEqual(state["checkpoint"]["id"], state["sessions"][0]["activation_id"])
         self.assertTrue(state["cleanup_ok"])

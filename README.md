@@ -19,8 +19,8 @@ or overall scientific competence.
 
 M2 implementation now supports checkpoints, foreground resumption, full live pause,
 human direction, note-edit reconciliation and automatic primary rollover. The
-real Codex-backed M2 demonstration remains for the next increment and has **not**
-passed M2 live acceptance. M3 collaboration
+opt-in real Codex-backed M2 demonstration is implemented and awaits enabled
+controller-host verification; this is **not yet M2 live acceptance**. M3 collaboration
 and independent verification; M4 cross-project reuse and remaining controls; and
 M5 physics-benchmark investigation and human scientific acceptance remain deferred.
 
@@ -201,7 +201,9 @@ checkpoint/error and use `resume` after addressing the failure. Unconfirmed clea
 blocks both publication and further launches. Controller loss at rollover boundaries
 uses the same checkpoint recovery; interrupted work and unknown usage are disclosed.
 Inspection's `rollover` summary records source/destination activation, checkpoint,
-native identities when known, phase and limitation; session summaries retain links.
+native identities when known, phase and limitation; session summaries retain links,
+attempted research/probe service names, cleanup outcomes and observed research
+control-group paths for durable cleanup evidence.
 
 Existing scientific Markdown is mounted read-only. The researcher writes Markdown
 drafts under `/run/research-drafts`, mirroring final project paths; code/data use
@@ -362,9 +364,43 @@ RESEARCH_PIPELINE_M1_OUTPUT_DIR=/absolute/private/request-output/m1 \
 Both variables must be supplied to that process. Enabled acceptance fails on missing
 prerequisites; the service/filesystem integration checks cannot skip unavailable
 capabilities when either `RESEARCH_PIPELINE_M1_LIVE=1` or
-`RESEARCH_PIPELINE_M2_LIVE=1`. The small paid M2 test belongs to the next
-demonstration increment; enabling M2 here enforces isolation prerequisites.
+`RESEARCH_PIPELINE_M2_LIVE=1`.
 Do not give a restricted Writer access to another execution context.
+
+For M2, enable only its dedicated gate (M1 inference remains opt-in separately):
+
+```sh
+RESEARCH_PIPELINE_M2_LIVE=1 \
+RESEARCH_PIPELINE_M2_OUTPUT_DIR=/absolute/private/request-output/m2 \
+  .venv/bin/python -m unittest discover -s tests -v
+```
+
+`test_m2_live.py` uses the public start/pause/redirect/feedback/resume/inspect flow.
+Codex authors the quadrature derivation, plan, code and data. After detecting live
+baseline progress, the test confirms full suspension before changing questions,
+instructions, feedback and a derivation paragraph. The same resumed foreground
+process must automatically roll over with an acknowledged handoff; a distinct
+native session then computes a reserved near-singular parameter study. Numerical
+convergence, preservation, current input integrity, indexes, cumulative time/usage
+and service inactivity are checked. The researcher-written calculation is reproduced
+only through the production isolation launcher.
+
+Bounds are 900 seconds cumulative active work, 240 seconds per research session
+(including saving), 60 seconds for reproduction and 1500 seconds overall including
+failure cleanup. The test reserves cleanup time and rejects extra research sessions.
+Fixed-duration rollover is a conservative fallback for unavailable occupancy, with
+no exact 60% guarantee; spending and CPU limitations above still apply.
+Each invocation retains a fresh private `m2-live-*` directory with exact command
+arguments/logs, phase snapshots, scientific evidence and `receipt.json`, including on
+failure. The unittest report prints scientific excerpts, numerical observations,
+human-edit preservation, accounting and cleanup results; transcripts remain private.
+These structural and numerical observations support manager assessment, not independent
+scientific verification. Disabled discovery starts no inference or demonstration.
+Enabled missing output/prerequisites fail instead of skipping. Writer/Reviewer code
+readiness transfers to Architect completion and existing controller final tests;
+no additional implementation milestone is required to collect host receipts.
+
+The preserved M1 gate remains available separately.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,
 CLI command logs and `receipt.json`. The test starts the actual CLI/Codex session
 with a 600-second limit, inspects its scientific artifacts, checks a small quadrature
