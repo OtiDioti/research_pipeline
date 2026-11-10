@@ -1,5 +1,6 @@
 """Real enforcement checks. Skips mean the host has not passed live acceptance."""
 import os
+import sys
 import json
 from pathlib import Path
 import shutil
@@ -33,6 +34,21 @@ def fixture(root):
 
 class PreflightResourceTests(unittest.TestCase):
     """Service/environment doubles test rejection, not real resource enforcement."""
+
+    def test_cleanup_deadline_exhaustion_does_not_grant_escalation_time(self):
+        with patch.object(isolation.time, "monotonic", return_value=100), \
+             patch.object(isolation.subprocess, "run") as run:
+            self.assertFalse(isolation.stop_service("research-deadline.service", deadline=100))
+            run.assert_not_called()
+
+    def test_cleanup_controls_share_remaining_deadline(self):
+        def control(argv, **kwargs):
+            self.assertLessEqual(kwargs["timeout"], .25)
+            raise subprocess.TimeoutExpired(argv, kwargs["timeout"])
+        with patch.object(isolation.time, "monotonic", return_value=100), \
+             patch.object(isolation.subprocess, "run", side_effect=control) as run:
+            self.assertFalse(isolation.stop_service("research-deadline.service", deadline=100.25))
+            self.assertEqual(run.call_count, 2)  # query and best-effort kill share the deadline
 
     def test_live_acceptance_cannot_skip_missing_user_bus(self):
         for milestone in (1, 2, 3):
@@ -426,43 +442,126 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check
         self.assert_child_stopped()
 
 
-    def test_concurrent_role_services_full_stop_owns_detached_compute(self):
-        child_id = 'task-' + 'a'*32
-        child_rel = workspace.task_directory(child_id)
-        (self.root / child_rel).mkdir(parents=True)
-        verifier_id = 'task-' + 'b'*32
-        verifier_rel = workspace.task_directory(verifier_id)
-        (self.root / verifier_rel / 'inputs').mkdir(parents=True)
-        roles = (('primary', 'work'), (child_id, child_rel), (verifier_id, verifier_rel))
-        services, outputs = [], []
-        began = time.monotonic()
-        try:
-            for task_id, rel in roles:
-                output = bytearray()
-                outputs.append(output)
-                config = isolation.Config(task_id=task_id, task_workspaces=('work/tasks',),
-                    frozen_inputs=(verifier_rel + '/inputs',) if task_id == verifier_id else (),
-                    deadline=began + 5, memory_mib=128, max_tasks=32,
-                    on_poll=lambda: 'pause' if time.monotonic() - began > 1 else None)
-                heartbeat = f'/project/{rel}/heartbeat'
-                child = f"from pathlib import Path; import time; p=Path({heartbeat!r});\nwhile True: p.write_text(str(time.monotonic())); time.sleep(.03)"
-                script = f"import subprocess,time; subprocess.Popen(['/usr/bin/python3','-c',{child!r}],start_new_session=True); print('ready',flush=True); time.sleep(30)"
-                services.append(isolation.RunningService(config, self.root,
-                    ['/usr/bin/python3','-c',script], on_event=lambda ch,data,out=output: out.extend(data)))
-            while not all(s.done for s in services):
-                for service in services:
-                    service.poll(.02)
-            for service, output in zip(services, outputs):
-                result = service.finish()
-                self.assertEqual(result.requested_stop, 'pause', output)
-                self.assertTrue(result.cleanup_ok, output)
-            before = [(self.root / rel / 'heartbeat').read_bytes() for _, rel in roles]
-            time.sleep(.15)
-            self.assertEqual(before, [(self.root / rel / 'heartbeat').read_bytes() for _, rel in roles])
-        finally:
-            for service in services:
-                if not service.result.cleanup_ok:
-                    service.finish()
+    def test_schema3_cli_pause_stops_all_roles_and_detached_compute(self):
+        """Real owner, helper, services and CLI pause; explicit non-model backend."""
+        # Unlike the paid gate these workers supply engineering fixture artifacts.
+        # Only backend identity/auth/command construction are substituted.
+        runner = r"""
+from contextlib import contextmanager
+from pathlib import Path
+import sys
+from unittest.mock import patch
+from tests.test_collaboration import ASSIGNMENT, handoff
+from tests.test_verification import PACKET
+from research_pipeline import cli, codex, workspace
+
+WORKER = r'''
+from pathlib import Path
+import json, subprocess, time
+root, task_id, handoff_text, assignment, packet = INPUTS
+own = Path('/project') / root
+heartbeat = str(own / 'heartbeat')
+child = "from pathlib import Path; import time; p=Path(%r);\nwhile True: p.write_text(str(time.monotonic())); time.sleep(.03)" % heartbeat
+subprocess.Popen(['/usr/bin/python3', '-c', child], start_new_session=True)
+drafts = Path('/run/research-drafts')
+for rel, text in ((f'handoffs/{task_id}.md', handoff_text),
+                  (f'{root}/PLAN.md', '# Engineering fixture saved progress')):
+    p = drafts / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text)
+(own / 'reference.csv').write_text('x,value\n1,2\n')
+if task_id == 'primary':
+    (own / 'method.py').write_text('print(2 - 1.9)')
+    for rel, text in (('work/ASSIGNMENT.md', assignment), ('work/PACKET.md', packet)):
+        p = drafts / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+    for operation, rel in (('--delegate', 'work/ASSIGNMENT.md'), ('--verify', 'work/PACKET.md')):
+        subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', operation, rel], check=True)
+print('all fixture work saved', flush=True)
+while not Path('/run/research-control/request.json').exists(): time.sleep(.02)
+subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check=True)
+'''
+
+def command(config):
+    root = workspace.task_directory(config.task_id)
+    script = 'INPUTS = ' + repr((root, config.task_id,
+        handoff(config.task_id, root + '/reference.csv'), ASSIGNMENT, PACKET)) + '\n' + WORKER
+    return ['/usr/bin/python3', '-c', script]
+
+@contextmanager
+def auth(project):
+    yield None
+
+with patch.object(codex, 'verify_backend', return_value={'version': 'engineering worker'}), \
+     patch.object(codex, 'private_auth', auth), patch.object(codex, 'build_command', side_effect=command):
+    raise SystemExit(cli.main(['start', sys.argv[1], '--max-agents', '3', '--wall-seconds', '120',
+                              '--memory-mib', '768', '--max-tasks', '96']))
+"""
+        # Start requires a fresh scientific project, unlike the isolation probe fixture.
+        project = self.root / 'investigation'
+        (project / 'starting_evidence').mkdir(parents=True)
+        (project / 'starting_evidence/RESEARCH_QUESTIONS.md').write_text('Engineering pause fixture.')
+        end = time.monotonic() + 100
+        work_end = end - 25  # Retain time to stop every unit after a failed assertion.
+        owner = None
+        units = set()
+        with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+            try:
+                owner = subprocess.Popen([sys.executable, '-c', runner, str(project)], stdout=out, stderr=err)
+                while time.monotonic() < work_end:
+                    path = project / '.research_pipeline/run.json'
+                    if path.exists():
+                        state = json.loads(path.read_text())
+                        for task in state['tasks'].values():
+                            activation = task.get('activation') or {}
+                            for key, flag in (('service', 'service_attempted'), ('probe_service', 'probe_attempted')):
+                                if activation.get(flag):
+                                    units.add(activation[key])
+                        if len(state['tasks']) == 3 and all(
+                                (project / t['workspace'] / 'heartbeat').exists() for t in state['tasks'].values()):
+                            break
+                    if owner.poll() is not None:
+                        err.seek(0)
+                        self.fail('Engineering owner exited before three-role pause: ' + err.read().decode())
+                    time.sleep(.05)
+                else:
+                    self.fail('Three actual role services did not start before deadline')
+                self.assertEqual({t['role'] for t in state['tasks'].values()}, {'primary', 'researcher', 'verifier'})
+                pause = subprocess.run([sys.executable, '-m', 'research_pipeline', 'pause', str(project)],
+                                       capture_output=True, text=True, timeout=max(.001, work_end-time.monotonic()))
+                self.assertEqual(pause.returncode, 0, pause.stdout + pause.stderr)
+                self.assertEqual(owner.wait(timeout=max(.001, work_end-time.monotonic())), 0)
+                state = json.loads(path.read_text())
+                self.assertEqual(state['state'], 'paused')
+                self.assertTrue(state['cleanup_ok'])
+                self.assertEqual(len(state['sessions']), 3, 'Pause must prevent successors')
+                for task in state['tasks'].values():
+                    self.assertTrue(task.get('checkpoint'), task.get('checkpoint_error'))
+                    activation = task['activation']
+                    session = project / '.research_pipeline/sessions' / activation['activation_id']
+                    self.assertTrue(workspace.read_control(session / 'control/ack.json')['accepted'])
+                before = [(project / t['workspace'] / 'heartbeat').read_bytes() for t in state['tasks'].values()]
+                time.sleep(.15)
+                self.assertEqual(before, [(project / t['workspace'] / 'heartbeat').read_bytes() for t in state['tasks'].values()])
+                for unit in units:
+                    props = isolation.service_properties(unit, deadline=end)
+                    self.assertTrue(props.get('LoadState') == 'not-found' or props.get('ActiveState') in ('inactive', 'failed'), props)
+                with workspace.acquire_project_lock(project):
+                    pass  # Successful pause releases the real foreground lock.
+            finally:
+                if owner and owner.poll() is None:
+                    owner.kill()
+                    owner.wait(timeout=max(.001, min(5, end-time.monotonic())))
+                path = project / '.research_pipeline/run.json'
+                if path.exists():
+                    state = json.loads(path.read_text())
+                    for entry in [*state.get('sessions', []), *(t.get('activation') or {} for t in state.get('tasks', {}).values())]:
+                        for key, flag in (('service', 'service_attempted'), ('probe_service', 'probe_attempted')):
+                            if entry.get(flag):
+                                units.add(entry[key])
+                unclean = [unit for unit in units if not isolation.stop_service(unit, deadline=end)]
+                self.assertFalse(unclean, 'Unconfirmed engineering fixture cleanup: ' + ', '.join(unclean))
 
     def test_memory_and_file_limits(self):
         result, _ = self.run_code("x = bytearray(256 * 1024 * 1024)", memory=64)

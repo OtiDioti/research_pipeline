@@ -3,8 +3,9 @@
 Implements the supplied delegation and independent-verification increments. One
 primary owns scientific integration; subordinate researchers and separate verifiers
 use the existing bounded coordinator, task workspaces, checkpoints and fresh-context
-launcher. The real bounded Codex M3 gate/demonstration is the next planned increment.
-This report establishes code readiness, not M3 scientific acceptance.
+launcher. The bounded real Codex M3 gate is implemented and ready for enabled
+controller-host verification after review. This report establishes code readiness,
+not M3 scientific acceptance.
 
 ## Decisions and scope
 
@@ -55,11 +56,11 @@ This report establishes code readiness, not M3 scientific acceptance.
   for saving; occupancy is unavailable, with no exact 60% guarantee. Hard spending,
   CPU fraction/aggregate CPU time and missing usage remain disclosed limitations.
 
-No new paid gate, workflow engine, transcript continuation, claim registry, model
-routing or host-permission changes were added. PROJECT.md, root AGENTS.md and manager
+The opt-in paid gate described below adds acceptance evidence without a new workflow
+engine, transcript continuation, claim registry, model routing or host-permission changes. PROJECT.md, root AGENTS.md and manager
 STATUS.md were preserved. The README documents the packet/report headings and commands.
 
-## Validation (2026-11-10)
+## Prior engineering validation (2026-11-10)
 
 The focused verification tests use explicit engineering backend/service doubles,
 not real scientific receipts. They exercise initial and re-examination rollover with
@@ -91,3 +92,83 @@ M1/M2 continuity and rollover regression coverage remains passing.
 acceptance`. No alternate bus or isolation/authentication fallback was attempted.
 Cgroup enforcement and real three-role descendant cleanup remain unverified locally;
 existing controller-host final verification must run them. No inference was launched.
+
+## Bounded M3 gate and acceptance handoff (2026-11-10)
+
+`tests/test_m3_live.py` adds one normally discovered test enabled only by
+`RESEARCH_PIPELINE_M3_LIVE=1`, requiring `RESEARCH_PIPELINE_M3_OUTPUT_DIR`. Disabled
+execution creates no demonstration or inference. Enabled execution uses fresh private
+projects, production CLI/backend/coordinator/checkpoints/isolation, and fails missing
+prerequisites. M1/M2 paid gates must remain disabled. No scientific solutions or
+programs are seeded: the primary, dependent researcher and separate verifier author
+all substantive work. The trusted harness only observes, parses, hashes and compares
+numerics; reproduction runs agent code inside production isolation.
+
+The fixture investigates the leading near-boundary approximation of a periodic
+integral. It requires baseline quadrature, an acknowledged fixed-policy delegated
+rollover, a distinct native successor computing the reserved near-boundary case,
+and substantive parent parameter-study progress during that transition. It also
+requires a frozen independent check with an actual supported stress-case objection,
+one committed response, a targeted re-examination and integrated checked/disputed
+synthesis. An initially checked-only report cannot satisfy the challenge requirement;
+it is retained as failed evidence without manufacturing disagreement. Initial accepted
+check artifacts remain fingerprinted and unchanged; revised checks use new paths.
+
+Allocations follow the supplied plan: 900 seconds cumulative owner activity, primary
+sessions 540 seconds, delegated/verifier sessions 240 seconds, reproduction 60 seconds,
+ordinary work cutoff at 1200 seconds and final cleanup cutoff at 1800 seconds. Two
+slots divide the 2048 MiB/128-process grant. Unexpected extra contexts fail instead
+of retrying paid work. Existing verifier rollover engineering coverage is retained.
+Receipts include exact commands, identity/parent/workspace relationships, acknowledged
+handoff, preserved baseline/code hashes, successor calculations, parent overlap,
+versions and evidence integrity, objection/response/outcome, usage/unknown telemetry,
+limits, services/cgroups and observed cleanup before emergency recovery. Available
+scientific excerpts, numerical observations and cumulative accounting are printed in
+the test report; exit zero and structural labels alone are insufficient.
+
+`isolation.stop_service()` and its systemctl/query helpers accept an optional shared
+monotonic deadline, preserving existing callers. Exhaustion grants no new escalation
+wait and reports unconfirmed cleanup. The real service enforcement test now uses the
+actual schema-3 foreground owner, primary-only helper requests, CLI pause and project
+lock, with primary/researcher/verifier services and detached computation descendants.
+Only backend/auth/command construction are explicit engineering fixtures; production
+isolation, probes, coordination and saving remain real. This test is separate from
+paid scientific evidence.
+
+Local validation and the final controller handoff are recorded below. PROJECT.md,
+root AGENTS.md, manager STATUS.md and prior M1/M2 evidence remain unchanged. No
+scientific acceptance is claimed until normal review, enabled controller final tests
+and local integration succeed; no extra Writer milestone waits for host receipts.
+
+### Current local validation
+
+The interrupted review repair retains both harness corrections. Parent progress
+collection starts at the observed rollover-saving request and ends at the observed
+successor calculation. Acceptance requires new parameter observations and a new
+parent command within that interval; progress made only before saving cannot pass.
+Isolated reproduction supplies each script's original task working directory through
+`cwd` and records it alongside the exact arguments, preserving relative input paths.
+
+- `python -m unittest discover -s tests -q`: **126 tests run, OK with 4 skips** in 6.1 s.
+  Skips are the disabled M1/M2/M3 paid gates and the unavailable systemd service class.
+- `python -m unittest tests.test_m3_evidence -v`: **6 tests passed**. Regressions
+  reject progress occurring only before saving or after successor calculation,
+  unchanged science and missing calculation events; accept work during handoff or
+  continuation; and execute trusted reproduction fixtures with distinct relative
+  inputs in researcher and verifier workspaces.
+- With `RESEARCH_PIPELINE_M3_LIVE=1`, all **3 actual Bubblewrap boundary tests pass**.
+  Protected original research, verifier inputs and accepted reports reject writes,
+  unlinks and renames while role-local scientific computation remains permitted.
+- Enabled `tests.test_m3_live` and `tests.test_isolation.ServiceIsolationTests` **fail
+  as required**, rather than skip, because this Writer has no `XDG_RUNTIME_DIR` /
+  `DBUS_SESSION_BUS_ADDRESS` systemd user bus. The real gate fails before inference,
+  saves a fresh failed receipt with the exact prerequisite error and empty owned-unit
+  inventory, and reports no cleanup errors. Latest diagnostic receipt:
+  `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261110T135145_2b46d578/runtime/tmp/m3-recovery-check/m3-live-kny8zoiz/receipt.json`.
+  No alternate bus, authentication fallback or unisolated science was attempted.
+
+The enabled scientific demonstration and real three-role owner pause remain **unverified
+locally**. After normal review, Architect completion must trigger the existing enabled
+controller-host final suite with M1/M2 paid gates disabled, and local integration. Any
+failure there requires normal implementation repair; this handoff is code readiness,
+not an M3 acceptance claim.

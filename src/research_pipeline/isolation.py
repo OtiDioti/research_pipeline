@@ -65,29 +65,34 @@ class ExecutionResult:
     requested_stop: str | None = None
 
 
-def _control(*args):
+def _control(*args, deadline=None):
+    timeout = 5 if deadline is None else min(5, deadline - time.monotonic())
+    if timeout <= 0:
+        raise subprocess.TimeoutExpired(["systemctl", "--user", *args], 0)
     return subprocess.run(["systemctl", "--user", *args], capture_output=True,
-                          text=True, timeout=5, check=False)
+                          text=True, timeout=timeout, check=False)
 
 
-def service_properties(unit):
+def service_properties(unit, *, deadline=None):
     result = _control("show", unit, "--property=LoadState,ActiveState,SubState,Result,"
-                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent,InactiveEnterTimestampMonotonic")
+                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent,InactiveEnterTimestampMonotonic",
+                      **({"deadline": deadline} if deadline is not None else {}))
     props = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
     if not props:
         raise RuntimeUnavailable("Cannot query transient service: " + result.stderr.strip())
     return props
 
 
-def stop_service(unit):
+def stop_service(unit, *, deadline=None):
     """Never report completion while a control group may still contain work."""
+    options = {"deadline": deadline} if deadline is not None else {}
     try:
-        props = service_properties(unit)
+        props = service_properties(unit, **options)
         cgroup = props.get("ControlGroup", "")
         if props.get("LoadState") != "not-found":
             # Stop is bounded by TimeoutStopSec; systemd sends SIGKILL to the group.
-            _control("stop", unit)
-        props = service_properties(unit)
+            _control("stop", unit, **options)
+        props = service_properties(unit, **options)
         stopped = (props.get("LoadState") == "not-found"
                    or props.get("ActiveState") in ("inactive", "failed"))
         if cgroup:
@@ -95,11 +100,11 @@ def stop_service(unit):
             if events.exists():
                 stopped = stopped and "populated 0" in events.read_text()
         if props.get("ActiveState") == "failed":
-            _control("reset-failed", unit)
+            _control("reset-failed", unit, **options)
         if not stopped:
-            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit)
-            _control("stop", unit)
-            props = service_properties(unit)
+            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit, **options)
+            _control("stop", unit, **options)
+            props = service_properties(unit, **options)
             stopped = (props.get("LoadState") == "not-found"
                        or props.get("ActiveState") in ("inactive", "failed"))
             if cgroup and events.exists():
@@ -108,7 +113,7 @@ def stop_service(unit):
     except (OSError, subprocess.TimeoutExpired, RuntimeUnavailable):
         # Best effort escalation; inability to confirm still prevents completion.
         try:
-            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit)
+            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit, **options)
         except (OSError, subprocess.TimeoutExpired):
             pass
         return False

@@ -25,8 +25,8 @@ investigations preserved baseline data and human edits, adapted the plan, contin
 the same logical task in a distinct native session after an acknowledged rollover,
 reproduced the successor computation in isolation, and confirmed service cleanup.
 M3 now supports dependent research and separate independent verification with a finite
-exchange, described below. The real M3 acceptance demonstration remains deferred;
-engineering readiness alone does not establish M3 acceptance. M4 cross-project reuse
+exchange, described below. Its opt-in real Codex gate is implemented; enabled
+controller-host verification is still required for M3 acceptance. M4 cross-project reuse
 and M5 physics-benchmark investigation remain deferred.
 
 ## Dependent collaboration
@@ -115,8 +115,8 @@ visibility, concurrent service/descendant stopping where the host supports syste
 and explicit doubles for independent task rollover, parent progress, budgets,
 pause/resume, human edits, full capacity and killed-controller recovery. Enabled
 `RESEARCH_PIPELINE_M3_LIVE=1` makes unavailable enforcement prerequisites fail.
-The real opt-in M3 Codex demonstration belongs to the subsequent milestone; no M3
-paid gate or actual independent scientific verification receipt is claimed here.
+The opt-in M3 gate below exercises actual Codex science. Code readiness and
+disabled discovery do not establish independent scientific verification or M3 acceptance.
 
 ## Independent verification and finite disagreement
 
@@ -520,9 +520,7 @@ and startup, pause precedence and a killed controller between publication and la
 `test_isolation.py`
 adds cooperative and ignored-request scientific-worker fixtures through the production
 launcher, including closed output streams and detached heartbeat descendants. These
-fixtures supply no paid scientific evidence. This increment's
-code-readiness handoff proceeds to pipeline controller final verification; it does
-not assert the full M2 demonstration gate.
+fixtures supply enforcement evidence separate from the paid scientific gates below.
 Ordinary tests do not launch inference. The pipeline's integrated-test stage can
 explicitly enable the real, potentially paid acceptance run in its existing authorized
 host context:
@@ -581,6 +579,55 @@ Receipts report about 351 and 359 seconds of cumulative activity, respectively,
 with missing model usage explicitly unknown. Fixed-duration rollover does not
 establish an exact 60% context threshold. These are bounded engineering and
 scientific-continuity demonstrations, not independent scientific certification.
+
+For M3, keep both earlier paid gates disabled and enable only this gate:
+
+```sh
+RESEARCH_PIPELINE_M3_LIVE=1 \
+RESEARCH_PIPELINE_M3_OUTPUT_DIR=/absolute/private/request-output/m3 \
+  .venv/bin/python -m unittest discover -s tests -v
+```
+
+`test_m3_live.py` runs one fresh investigation through the production CLI, coordinator,
+Codex backend and isolation launcher. Actual researchers author all scientific code,
+assignments, derivations, checks, responses and synthesis. For a near-boundary integral
+approximation, the primary delegates a dependent quadrature study, continues its own
+parameter/error analysis while the child rolls over, incorporates the fresh successor's
+reserved calculation, and requests an independent approximation challenge. The gate
+requires an actual objection, one response and one re-examination; a checked-only first
+examination is retained honestly as failed demonstration evidence. Final disagreement
+may pass with a scientifically explained disputed synthesis and opposing arguments.
+The gate does not seed answers, forge helper requests or retry paid investigations.
+
+Bounds are 900 seconds cumulative owner activity, 540 seconds per primary session,
+240 seconds per delegated/verifier session, 60 seconds for isolated reproduction,
+a 1200-second ordinary-work cutoff and 1800 seconds overall including failure cleanup.
+Two simultaneous slots share the original 2048 MiB/128-process grant. At most two
+primary contexts, exactly two delegated contexts and two verifier examination contexts
+are accepted. Fixed-duration handoff reserves 15 seconds inside each session; context
+occupancy remains unavailable, without an exact 60% guarantee. CPU/spending limitations
+remain as disclosed above. Existing engineering tests also cover verifier rollover.
+
+Every invocation retains a private fresh `m3-live-*` directory, command logs, project
+and receipt, including failed runs. Receipts preserve stable task/parent/workspace and
+distinct native identities, acknowledged handoff, baseline hashes, successor numerics,
+parent calculations between the observed rollover-saving request and successor
+calculation, frozen evidence versions, objection /
+response / final outcome, cumulative accounting and unknown telemetry, exact commands,
+available control groups and confirmed descendant cleanup. Both child and verifier
+programs are reproduced through the production isolation launcher from their original
+task working directories, recorded with each command in the receipt. Original
+accepted evidence is checked again for mutation. Numerical observations and scientific
+excerpts appear in the unittest report for manager assessment; structural labels or
+exit zero alone cannot pass. The real schema-3 CLI pause path additionally has a
+three-role production-service test with explicitly non-model engineering workers and
+detached computations. It supplies enforcement evidence, not paid scientific evidence.
+
+On a restricted Writer host, enabled missing prerequisites fail and retain diagnostics;
+no alternate bus, authentication or unisolated fallback is used. Writer readiness and
+Reviewer approval proceed to Architect completion, which must trigger the existing
+enabled controller final tests and local integration. Only those successful enabled
+checks and their actual scientific observations complete M3 acceptance.
 
 The preserved M1 gate remains available separately.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,

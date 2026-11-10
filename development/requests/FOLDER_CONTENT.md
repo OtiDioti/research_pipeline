@@ -4,4 +4,4 @@
 
 - [m1-implementation.md](m1-implementation.md) — Implementation readiness and validation report; M1 acceptance awaits controller final verification.
 
-- [m3-collaboration.md](m3-collaboration.md) — Collaboration and finite independent verification, cumulative limits, engineering evidence and remaining real M3 demonstration.
+- [m3-collaboration.md](m3-collaboration.md) — Collaboration, finite verification, bounded real M3 gate, engineering evidence and enabled controller acceptance handoff.
