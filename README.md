@@ -19,8 +19,12 @@ or overall scientific competence.
 
 M2 implementation now supports checkpoints, foreground resumption, full live pause,
 human direction, note-edit reconciliation and automatic primary rollover. The
-opt-in real Codex-backed M2 demonstration is implemented and awaits enabled
-controller-host verification; this is **not yet M2 live acceptance**. M3 collaboration
+**M2 live demonstration passed** in both enabled final and pre-merge verification:
+each suite passed 85 tests with only the separate M1 live gate skipped. Both real
+investigations preserved baseline data and human edits, adapted the plan, continued
+the same logical task in a distinct native session after an acknowledged rollover,
+reproduced the successor computation in isolation, and confirmed service cleanup.
+M3 collaboration
 and independent verification; M4 cross-project reuse and remaining controls; and
 M5 physics-benchmark investigation and human scientific acceptance remain deferred.
 
@@ -399,6 +403,16 @@ scientific verification. Disabled discovery starts no inference or demonstration
 Enabled missing output/prerequisites fail instead of skipping. Writer/Reviewer code
 readiness transfers to Architect completion and existing controller final tests;
 no additional implementation milestone is required to collect host receipts.
+
+The accepted M2 final demonstration (`m2-live-e17h2s_r`) and pre-merge demonstration
+(`m2-live-4_euwf6h`) are preserved under
+`coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/live-host-acceptance/`.
+The pipeline report at `coding_pipeline/logs/20261110T111316_7e4bef43/summary.md`
+records passed final/pre-merge verification and local integration at `53a68e1`.
+Receipts report about 351 and 359 seconds of cumulative activity, respectively,
+with missing model usage explicitly unknown. Fixed-duration rollover does not
+establish an exact 60% context threshold. These are bounded engineering and
+scientific-continuity demonstrations, not independent scientific certification.
 
 The preserved M1 gate remains available separately.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,
