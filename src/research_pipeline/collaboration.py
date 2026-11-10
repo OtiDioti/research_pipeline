@@ -291,6 +291,7 @@ class Coordinator:
                     if previous["activation_id"] == predecessor["activation_id"]:
                         previous["successor_activation"] = activation
             self.save()  # reserves a slot before any probe or backend spawn
+        self.publish_status()  # Preparation polling must expose the reserved successor.
         view = TaskState(self, task)
         count = self.state["limits"]["concurrent_researchers"]
         config = replace(self.base, memory_mib=self.state["limits"]["memory_mib"] // count,
@@ -307,12 +308,16 @@ class Coordinator:
         stack = ExitStack()
         recorder = None
         runtime = None
+        control = TaskControl(self, view, config, None, session, {}, [])
+        config.on_poll = lambda research=False: self.poll_preparation(control)
         try:
             if task["role"] == "verifier":
                 verification.check_unchanged(self.project, task, self.deadline)
                 if task["verification"]["phase"] not in ("initial", "reexamination"):
                     raise workspace.InputError("Verification is waiting or closed")
-            intake = workspace.read_intake(self.project)
+            intake = workspace.read_intake(self.project, self.deadline, config.on_poll)
+            from . import references
+            references.configure(config, self.project, session, intake)
             baseline = workspace.science_fingerprints(self.project, task["task_id"])
             external = sorted(set(workspace.changed_files(task.get("science_fingerprints", {}), baseline))
                               | set(task.get("pending_human_changes", [])))
@@ -326,8 +331,7 @@ class Coordinator:
                 "tasks": self.summaries(), "interrupted_work": task.get("interrupted_work")}
             view["input_fingerprints"] = intake.fingerprints
             view.persist()
-            control = TaskControl(self, view, config, intake, session, baseline, external)
-            config.on_poll = lambda research=False: self.poll_preparation(control)
+            control.intake, control.baseline, control.external = intake, baseline, external
             def probe_launch(unit):
                 view.update(probe_service=unit, probe_attempted=True, cleanup_ok=False)
                 view.persist()
@@ -974,7 +978,7 @@ def activate(project, config, state=None):
     setup_started = time.monotonic()
     if state is None:
         workspace.validate_fresh(project)
-        intake = workspace.read_intake(project)
+        intake = workspace.read_intake(project, setup_started + config.wall_seconds)
         state = {"schema_version": 3, "project": str(project), "run_id": uuid.uuid4().hex,
             "started_at": now(), "limits": config.limits(), "sessions": [], "tasks": {},
             "primary_session_policy": {"mode": "fixed_session_seconds", "session_seconds": config.primary_session_seconds},

@@ -27,8 +27,97 @@ reproduced the successor computation in isolation, and confirmed service cleanup
 M3 supports dependent research and separate independent verification with a finite
 exchange, described below. **M3 acceptance passed** in enabled final and combined
 verification, and integrated locally at `034d9a9`. Each suite passed 176 tests with
-only the separate M1/M2 paid gates disabled. M4 cross-project reuse is next;
-the M5 physics-benchmark investigation remains deferred.
+only the separate M1/M2 paid gates disabled. M4 now has explicit reference navigation
+and retrieval; tool registration/execution and the new live reuse demonstration
+remain outstanding. The M5 physics-benchmark investigation remains deferred.
+
+## Authorized reference retrieval
+
+Authorize each source explicitly on the **target** investigation, before `start` or
+while stopped. Nothing scans the user's home or discovers projects implicitly:
+
+```sh
+research-pipeline reference add /path/to/new-investigation prior /path/to/prior-project
+research-pipeline reference list /path/to/new-investigation
+research-pipeline reference browse /path/to/new-investigation prior outputs --max-entries 50
+research-pipeline reference search /path/to/new-investigation 'convergence' --source prior --max-results 30
+research-pipeline reference read /path/to/new-investigation prior outputs/REPORT.md --start-line 1 --max-lines 100
+research-pipeline reference remove /path/to/new-investigation prior
+```
+
+All commands return JSON. The human-controlled `.research_pipeline/references.json`
+contains only `{"version": 1, "references": {"prior": "/absolute/path/to/prior-project"}}`.
+Aliases start with a letter and contain letters, digits, `_` or `-` (up to 64
+characters). Re-adding the same alias/path is idempotent; remove an alias before
+replacing its path. Authorization changes acquire the existing investigation lock,
+recover stale ownership and require confirmed cleanup. They cannot change an active
+investigation. Invalid registrations leave existing authorizations intact. A later
+missing or unsafe reference stays recorded with its reason; other available sources
+and saved science remain usable. Malformed registries fail before research launches.
+
+Each fresh primary, delegated or verifier session gets a current read-only catalog
+at `/run/research-references.json`, scientific source entries at `/references/ALIAS`,
+and a standalone helper sharing the CLI retrieval implementation:
+
+```sh
+python3 /run/research-references.py list
+python3 /run/research-references.py browse prior outputs --max-entries 50 --offset 0
+python3 /run/research-references.py search 'convergence' --source prior --max-results 30
+python3 /run/research-references.py read prior outputs/REPORT.md --start-line 101 --max-lines 100
+```
+
+Browse lists immediate entries, types and sizes; source `FOLDER_CONTENT.md` files can
+also be read. Search streams actual UTF-8 file contents, including Markdown, text,
+scripts and structured text, using **literal, case-sensitive** line matching.
+Matches include original root, alias, relative file, one-based line and bounded
+excerpt. Read returns paginated numbered lines and the SHA-256 of the observed
+complete file, rejecting changed or disappeared versions. `next_line` / `next_offset`
+continue pages. Result/entry/page limits accept 1–1000; read lines are clipped at
+2000 characters and search excerpts at 500. Truncation and text clipping are explicit.
+Binary/PDF extraction, OCR and semantic search are unsupported. Errors, unreadable
+files and invalid UTF-8 make search `incomplete`; an empty incomplete result cannot
+establish that a term is absent. Search stops at its result limit. At most 100 error
+details are displayed, with the full `error_count` and explicit `errors_truncated`.
+
+Source roots cannot overlap the target in either direction. Symlinked roots or
+ancestors, links and special files in exposed subtrees are unsupported; an unsafe
+subtree disables that reference conservatively. All hidden top-level entries,
+including `.research_pipeline`, `.git`, `.codex` and `.agents`, are excluded.
+Paths cannot traverse upward, be absolute, or enter those private roots. The
+controller mounts individual non-hidden entries read-only, preserving source files
+and indexes; it never grants writable reference directories. Reference preparation
+uses the existing deadline and polls the foreground owner's live services and pause
+requests while enumerating and validating entries. Services and checkpoint
+acknowledgements continue to be processed during slow preparation. Resume intake is
+registered in recoverable cumulative accounting before traversal: failures,
+interruptions and timeouts consume elapsed allowance, while successful preparation
+transfers into the session interval without a second charge. Scientific retrieval
+shares the session's resource and suspension boundaries. Authorization fingerprints
+and catalogs survive intake
+snapshots and checkpoint interpretation without hashing entire source projects.
+
+**Retrieval is not endorsement.** Reference papers, `AGENTS.md`, scripts and tool
+descriptions are scientific evidence, never operational authority. They cannot
+change target questions/instructions, approve execution/dependencies or expand
+access/budgets. Unstated or ambiguous source verification is **unknown**; even
+checked findings need an applicability assessment for the new question.
+
+For material actually reused, the researcher writes `sources/REUSE.md` through the
+normal drafts (delegated/verifier roles use their own workspace's `REUSE.md`).
+Each substantive entry records source alias/root, relative path, original URI and
+observed SHA-256; assumptions and limitations; source verification status and basis;
+intended use, applicability, uncertainty and needed checks. Reports and handoffs link
+the relevant entry. This is a researcher-authored scientific note, not an automatically
+inferred claim status or a log of every browse action. Existing human-edit preservation
+and index reconciliation apply to it. Adaptations use permitted local working copies.
+When an independent verifier needs exact prior evidence, include the identified local
+copy explicitly in the existing frozen packet; live references cannot substitute for
+versioned verification inputs. Consequential new conclusions retain independent checking.
+
+This increment retrieves scripts as evidence; tool registration, validation and reuse
+execution follow separately. Existing cumulative grants and disclosed CPU, spending,
+occupancy, disk and missing-telemetry limitations still apply. See the
+[M4 implementation note](development/requests/m4-cross-project-reuse.md).
 
 ## Dependent collaboration
 

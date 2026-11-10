@@ -4,6 +4,9 @@ import io
 import json
 import os
 from pathlib import Path
+import signal
+import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -12,7 +15,7 @@ from unittest.mock import patch
 from tests import use_checkout
 
 use_checkout()
-from research_pipeline import cli, codex, isolation, workspace
+from research_pipeline import cli, codex, isolation, references, workspace
 
 
 HANDOFF = """# Primary handoff
@@ -103,6 +106,171 @@ class ContinuityTests(unittest.TestCase):
             code, out = self.call("start", "--wall-seconds", "60")
         self.assertEqual(code, 0, out)
         return self.state()
+
+    def test_references_resume_qualified_reuse_and_human_edits(self):
+        prior = Path(self.temp.name) / "prior"
+        prior.mkdir()
+        (prior / "result.md").write_text("# Preliminary result\nAssumes positive n.")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["reference", "add", str(self.project), "prior", str(prior)]), 0)
+        reuse = ("# Qualified reuse\nSource prior/result.md, preliminary, no independent check. "
+                 "Positive n is applicable here; sensitivity remains uncertain.")
+        catalogs = []
+        def write_reuse(config):
+            catalogs.append(json.loads(config.reference_catalog.read_text()))
+            if len(catalogs) > 1:
+                note = self.project / "sources/REUSE.md"
+                note.write_text(note.read_text() + "\nHuman: edited during this session.")
+            (config.drafts / "sources/REUSE.md").write_text(reuse)
+        with self.backend(during=write_reuse, handoff=HANDOFF + "\n[Reuse](../sources/REUSE.md)\n"):
+            code, out = self.call("start", "--wall-seconds", "60")
+        self.assertEqual(code, 0, out)
+        first = self.state()
+        snapshot = (self.project / first["checkpoint"]["intake"]).read_text()
+        self.assertIn(str(prior), snapshot)
+        self.assertIn("sources/REUSE.md", first["checkpoint"]["artifacts"])
+        (self.project / "sources/REUSE.md").write_text(reuse + "\nHuman: applicability must be narrowed.")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["reference", "remove", str(self.project), "prior"]), 0)
+            self.assertEqual(cli.main(["reference", "add", str(self.project), "updated", str(prior)]), 0)
+        with self.backend(during=write_reuse, handoff=HANDOFF + "\n[Reuse](../sources/REUSE.md)\n"):
+            code, out = self.call("resume")
+        self.assertEqual(code, 4, out)  # Preserved edit requires human reconciliation.
+        self.assertEqual(set(catalogs[0]), {"prior"})
+        self.assertEqual(set(catalogs[1]), {"updated"})
+        self.assertEqual(catalogs[1]["updated"]["path"], "/references/updated")
+        second = self.state()
+        self.assertEqual(first["limits"], second["limits"])
+        self.assertGreater(second["active_seconds"], first["active_seconds"])
+        self.assertEqual(second["usage_totals"]["input_tokens"], 60)
+        self.assertIn(".research_pipeline/references.json", self.prompts[-1])
+        self.assertIn("sources/REUSE.md", self.prompts[-1])
+        self.assertIn("Human:", (self.project / "sources/REUSE.md").read_text())
+        self.assertTrue(any(p["path"] == "sources/REUSE.md" for p in second["pending_reconciliation"]))
+        self.assertEqual((prior / "result.md").read_text(), "# Preliminary result\nAssumes positive n.")
+
+    def test_authorization_refuses_mutation_until_stale_service_cleanup_confirmed(self):
+        state = self.start()
+        state["cleanup_ok"] = False
+        self.save(state)
+        prior = Path(self.temp.name) / "prior"
+        prior.mkdir()
+        with patch.object(isolation, "stop_service", return_value=False), \
+             redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+            self.assertEqual(cli.main(["reference", "add", str(self.project), "prior", str(prior)]), 2)
+        self.assertFalse((self.project / ".research_pipeline/references.json").exists())
+
+    def test_resume_reference_timeout_consumes_remaining_budget_before_launch(self):
+        state = self.start()
+        prior = Path(self.temp.name) / "slow-prior"
+        (prior / "outputs").mkdir(parents=True)
+        for n in range(20):
+            (prior / f"outputs/result-{n}.md").write_text("# Preliminary evidence\n")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["reference", "add", str(self.project), "prior", str(prior)]), 0)
+        state["active_seconds"] = 55
+        state["remaining_active_seconds"] = 5
+        self.save(state)
+        science = workspace.science_fingerprints(self.project)
+        inputs = workspace.fingerprints(self.project)
+        ordinary = references.ordinary
+        with patch.object(cli.time, "monotonic", return_value=100) as clock:
+            def slow(path):
+                if path.is_relative_to(prior):
+                    self.assertIn("resume_preparation_pending", self.state())
+                    clock.return_value += 1
+                return ordinary(path)
+            with patch.object(references, "ordinary", side_effect=slow), \
+                 patch.object(codex, "verify_backend") as backend:
+                code, out = self.call("resume")
+                self.assertEqual(code, 124, out)
+                backend.assert_not_called()
+            saved = self.state()
+            self.assertEqual(saved["state"], "timed_out")
+            self.assertEqual(saved["active_seconds"], 60)
+            self.assertEqual(saved["remaining_active_seconds"], 0)
+            self.assertEqual(saved["resume_preparation_seconds"], 5)
+            self.assertNotIn("resume_preparation_pending", saved)
+            self.assertEqual(saved["sessions"], state["sessions"])
+            self.assertEqual(saved["usage_totals"], state["usage_totals"])
+            with patch.object(codex, "verify_backend") as backend:
+                code, out = self.call("resume")
+                self.assertEqual(code, 2, out)
+                self.assertIn("exhausted", out)
+                backend.assert_not_called()
+        self.assertEqual(science, workspace.science_fingerprints(self.project))
+        self.assertEqual(inputs, workspace.fingerprints(self.project))
+
+    def test_resume_preparation_failure_and_interrupt_are_charged_and_retryable(self):
+        self.start()
+        for failure, outcome, expected in ((references.ReferenceError("malformed registry"), "failed", 2),
+                                           (KeyboardInterrupt(), "interrupted", 130)):
+            with self.subTest(outcome=outcome):
+                before = self.state()
+                with patch.object(cli.time, "monotonic", return_value=100) as clock:
+                    def fail(project):
+                        self.assertIn("resume_preparation_pending", self.state())
+                        clock.return_value += 3
+                        raise failure
+                    with patch.object(references, "load_registry", side_effect=fail), \
+                         patch.object(codex, "verify_backend") as backend:
+                        code, out = self.call("resume")
+                        self.assertEqual(code, expected, out)
+                        backend.assert_not_called()
+                saved = self.state()
+                self.assertEqual(saved["state"], outcome)
+                self.assertAlmostEqual(saved["active_seconds"], before["active_seconds"] + 3)
+                self.assertEqual(saved["sessions"], before["sessions"])
+                self.assertEqual(saved["usage_totals"], before["usage_totals"])
+                self.assertNotIn("resume_preparation_pending", saved)
+        before = self.state()
+        load = references.load_registry
+        with patch.object(cli.time, "monotonic", return_value=200) as clock:
+            def slow(project):
+                clock.return_value += 2
+                return load(project)
+            with self.backend(), patch.object(references, "load_registry", side_effect=slow):
+                code, out = self.call("resume")
+                self.assertEqual(code, 0, out)
+        saved = self.state()
+        self.assertAlmostEqual(saved["active_seconds"], before["active_seconds"] + 4)
+        self.assertEqual(saved["sessions"][-1]["active_seconds"], 4)
+        self.assertNotIn("resume_preparation_pending", saved)
+
+    def test_killed_resume_preparation_recovers_its_interval_once_without_old_service_cleanup(self):
+        before = self.start()
+        script = r'''
+import os, signal, sys
+from pathlib import Path
+from unittest.mock import patch
+from research_pipeline import cli
+def crash(project, *args):
+    state = cli.load_state(project)
+    assert state["resume_preparation_pending"]["started_monotonic"] == 100
+    assert state["cleanup_ok"]
+    os.kill(os.getpid(), signal.SIGKILL)
+with patch.object(cli.time, "monotonic", return_value=100), \
+     patch.object(cli, "continuation_inputs", side_effect=crash):
+    cli.main(["resume", sys.argv[1]])
+'''
+        process = subprocess.run([sys.executable, "-c", script, str(self.project)],
+                                 capture_output=True, timeout=10)
+        self.assertEqual(process.returncode, -signal.SIGKILL, process.stderr)
+        saved = self.state()
+        self.assertIn("resume_preparation_pending", saved)
+        with patch.object(cli.time, "monotonic", return_value=105), \
+             patch.object(isolation, "stop_service") as stop:
+            with workspace.acquire_project_lock(self.project):
+                cli.recover_owner(self.project, saved)
+            stop.assert_not_called()
+            recovered = self.state()
+            self.assertAlmostEqual(recovered["active_seconds"], before["active_seconds"] + 5)
+            self.assertEqual(recovered["resume_preparation_seconds"], 5)
+            self.assertEqual(recovered["sessions"], before["sessions"])
+            self.assertNotIn("resume_preparation_pending", recovered)
+            with workspace.acquire_project_lock(self.project):
+                cli.recover_owner(self.project, recovered)
+            self.assertEqual(self.state(), recovered)
 
     def test_resume_reloads_direction_keeps_identity_and_cumulative_limits(self):
         first = self.start()

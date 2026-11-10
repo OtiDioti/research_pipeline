@@ -1,5 +1,5 @@
 """Checkpoint/session engineering doubles; not real Codex scientific evidence."""
-from contextlib import contextmanager, redirect_stderr
+from contextlib import contextmanager, redirect_stderr, redirect_stdout
 import io
 import json
 from pathlib import Path
@@ -14,7 +14,7 @@ from unittest.mock import patch
 from tests import test_continuity as fixtures
 
 HANDOFF = fixtures.HANDOFF
-from research_pipeline import cli, codex, isolation, workspace
+from research_pipeline import cli, codex, isolation, references, workspace
 
 
 class RolloverTests(unittest.TestCase):
@@ -136,6 +136,60 @@ class RolloverTests(unittest.TestCase):
 
     def run_rollover(self):
         return self.call("start", "--wall-seconds", "100", "--primary-session-seconds", "30")
+
+    def test_reference_catalog_refreshes_with_qualified_reuse_in_fresh_context(self):
+        prior = Path(self.temp.name) / "prior"
+        prior.mkdir()
+        (prior / "result.md").write_text("# Preliminary\nFinite positive n only.")
+        registry = self.project / ".research_pipeline/references.json"
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["reference", "add", str(self.project), "prior", str(prior)]), 0)
+        def first(config, request, n):
+            self.assertIn("prior", json.loads(config.reference_catalog.read_text()))
+            (config.drafts / "sources/REUSE.md").write_text(
+                "# Prior applicability\nprior/result.md is preliminary. Finite positive n only; verify convergence.")
+            workspace.atomic_text(registry, json.dumps({"version": 1, "references": {"new": str(prior)}}))
+            self.ack(config, request)
+        def second(config):
+            self.assertEqual(set(json.loads(config.reference_catalog.read_text())), {"new"})
+            self.assertIn("prior/result.md is preliminary", (self.project / "sources/REUSE.md").read_text())
+            self.assertIn(".research_pipeline/references.json", self.contexts[-1][2])
+            self.assertIn(str(prior), self.contexts[-1][2])
+        with self.sessions(first=first, second=second):
+            code, out = self.run_rollover()
+        self.assertEqual(code, 0, out)
+        self.assertEqual(self.state()["usage_totals"]["input_tokens"], 20)
+
+    def test_pause_cancels_slow_reference_intake_between_primary_contexts(self):
+        prior = Path(self.temp.name) / "prior"
+        (prior / "outputs").mkdir(parents=True)
+        for n in range(20):
+            (prior / f"outputs/result-{n}.md").write_text("# Preliminary evidence\n")
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["reference", "add", str(self.project), "prior", str(prior)]), 0)
+        ordinary = references.ordinary
+        visited = []
+        def inspect(path):
+            state = self.state() if self.contexts else {}
+            if path.is_relative_to(prior) and state.get("rollover", {}).get("phase") == "checkpointed":
+                self.clock.return_value += .25
+                visited.append(path)
+                if len(visited) == 1:
+                    _, control, _ = workspace.control_paths(self.project, state)
+                    self.upgrade_to_pause(isolation.Config(control=control),
+                                          workspace.read_control(control / "request.json"))
+            return ordinary(path)
+        with self.sessions(), patch.object(references, "ordinary", side_effect=inspect):
+            code, out = self.run_rollover()
+        self.assertEqual(code, 0, out)
+        self.assertEqual(len(visited), 1, "Pause should cancel the remaining source traversal")
+        self.assertEqual(self.state()["state"], "paused")
+        self.assertEqual(self.state()["rollover"]["phase"], "paused")
+        self.assertEqual(self.state()["sessions"][-1]["outcome"], "paused")
+        self.assertEqual(len(self.contexts), 1)
+        self.assertNotIn("recovery_finalization_pending", self.state())
+        self.assertEqual(self.state()["recovery_finalization_seconds"], .25)
+        self.assertEqual(self.state()["active_seconds"], sum(s["active_seconds"] for s in self.state()["sessions"]))
 
     def test_multiple_fresh_sessions_preserve_task_science_and_cumulative_resources(self):
         def changed_inputs(config, request, n):
@@ -351,8 +405,8 @@ class RolloverTests(unittest.TestCase):
 
     def test_pause_at_successor_registration_prevents_launch_and_charges_intake(self):
         native = cli.continuation_inputs
-        def intake(project, state):
-            result = native(project, state)
+        def intake(project, state, deadline=None, on_poll=None):
+            result = native(project, state, deadline, on_poll)
             self.clock.return_value += 4
             _, control, _ = workspace.control_paths(project, state)
             config = isolation.Config(control=control)

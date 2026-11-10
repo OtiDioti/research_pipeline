@@ -16,11 +16,11 @@ from unittest.mock import patch
 from tests import use_checkout
 
 use_checkout()
-from research_pipeline import cli, isolation, workspace
+from research_pipeline import cli, isolation, references, workspace
 
 
 def live_enabled():
-    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2, 3))
+    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2, 3, 4))
 
 
 def fixture(root):
@@ -120,17 +120,18 @@ class PreflightResourceTests(unittest.TestCase):
             self.assertEqual(run.call_count, 2)  # query and best-effort kill share the deadline
 
     def test_live_acceptance_cannot_skip_missing_user_bus(self):
-        for milestone in (1, 2, 3):
+        for milestone in (1, 2, 3, 4):
             with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True):
                 with self.assertRaisesRegex(AssertionError, "user bus unavailable"):
                     ServiceIsolationTests.setUpClass()
 
     def test_live_acceptance_cannot_skip_missing_bubblewrap(self):
-        with patch.dict(os.environ, {"RESEARCH_PIPELINE_M1_LIVE": "1"}), \
-             patch.object(shutil, "which", return_value=None):
-            case = BubblewrapBoundaryTests("test_actual_mount_boundary_and_permitted_computation")
-            with self.assertRaisesRegex(AssertionError, "Bubblewrap missing"):
-                case.test_actual_mount_boundary_and_permitted_computation()
+        for milestone in (1, 2, 3, 4):
+            with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True), \
+                 patch.object(shutil, "which", return_value=None):
+                case = BubblewrapBoundaryTests("test_actual_mount_boundary_and_permitted_computation")
+                with self.assertRaisesRegex(AssertionError, "Bubblewrap missing"):
+                    case.test_actual_mount_boundary_and_permitted_computation()
 
     def test_preflight_requires_memory_zero_swap_and_tasks_without_cpu_controller(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -209,6 +210,19 @@ class BubblewrapBoundaryTests(unittest.TestCase):
             response.mkdir()
             outside = Path(temp) / 'host-private-sentinel'
             outside.write_text('not mounted')
+            prior = Path(temp) / 'prior'
+            (prior / 'outputs').mkdir(parents=True)
+            (prior / 'outputs/value.md').write_text('# Preliminary source\nreference-needle: n > 0\n')
+            (prior / 'FOLDER_CONTENT.md').write_text('# Immutable source index\n')
+            (prior / '.research_pipeline').mkdir()
+            (prior / '.research_pipeline/private').write_text('not authorized')
+            workspace.atomic_text(root / references.REGISTRY, json.dumps({
+                'version': 1, 'references': {'prior': str(prior)}}))
+            config = isolation.Config(deadline=time.monotonic() + 5)
+            references.configure(config, root, control.parent, workspace.Intake(root, '', '', [], {}))
+            source_before = {p.relative_to(prior).as_posix(): workspace.file_digest(p)
+                             for p in prior.rglob('*') if p.is_file()}
+            protected_before = workspace.fingerprints(root)
             script = isolation.PROBE + f'\nassert not Path({str(outside)!r}).exists()\n'
             script += """
 for p in (Path('/run/research-control/forbidden'), Path('/run/research-checkpoint-helper.py')):
@@ -217,9 +231,32 @@ for p in (Path('/run/research-control/forbidden'), Path('/run/research-checkpoin
     else: raise AssertionError('checkpoint control or helper is writable')
 Path('/run/research-checkpoint/probe').write_text('writable')
 subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--check'], check=True)
+import json
+ref = Path('/references/prior')
+assert (ref / 'outputs/value.md').read_text().startswith('# Preliminary')
+assert not (ref / '.research_pipeline').exists()
+for p in (ref / 'outputs/value.md', ref / 'FOLDER_CONTENT.md',
+          Path('/run/research-references.json'), Path('/run/research-references.py')):
+    for action in (lambda: p.write_text('changed'), lambda: p.unlink(),
+                   lambda: p.rename(p.with_name('replacement'))):
+        try: action()
+        except OSError: pass
+        else: raise AssertionError('reference or retrieval control changed')
+for p in (ref / 'outputs/created', ref / 'created', Path('/references/unauthorized')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('reference creation succeeded')
+found = subprocess.run(['/usr/bin/python3', '/run/research-references.py',
+                        'search', 'reference-needle'], check=True, capture_output=True, text=True)
+assert json.loads(found.stdout)['matches'][0]['line'] == 2
+read = subprocess.run(['/usr/bin/python3', '/run/research-references.py',
+                       'read', 'prior', 'outputs/value.md'], check=True, capture_output=True, text=True)
+assert json.loads(read.stdout)['sha256']
 """
             result = subprocess.run(isolation.bubblewrap_command(root, ['/usr/bin/python3', '-c', script],
-                                                                 control=control, response=response),
+                                        control=control, response=response,
+                                        reference_mounts=config.reference_mounts,
+                                        reference_catalog=config.reference_catalog),
                                     capture_output=True, text=True, timeout=5)
             if result.returncode and any(s in result.stderr for s in ('Operation not permitted', 'No permissions', 'namespace')):
                 if live_enabled():
@@ -230,6 +267,9 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--che
             self.assertEqual((root / 'outputs/value').read_text(), '285')
             self.assertEqual(outside.read_text(), 'not mounted')
             self.assertEqual((response / 'probe').read_text(), 'writable')
+            self.assertEqual(source_before, {p.relative_to(prior).as_posix(): workspace.file_digest(p)
+                                            for p in prior.rglob('*') if p.is_file()})
+            self.assertEqual(protected_before, workspace.fingerprints(root))
 
 
     def test_actual_task_boundary_and_live_delivery_visibility(self):

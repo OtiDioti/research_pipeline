@@ -15,7 +15,7 @@ import sys
 import time
 import uuid
 
-from . import codex, isolation, workspace, collaboration
+from . import codex, isolation, workspace, collaboration, references
 
 SAVING_GRACE = 15
 PAUSE_TIMEOUT = 60
@@ -267,9 +267,9 @@ def load_state(project):
     return state
 
 
-def finish_recovery_accounting(state, interrupted=False):
-    """Settle one saved finalization interval together with its pending marker."""
-    interval = state.pop("recovery_finalization_pending")
+def finish_controller_accounting(state, phase, interrupted=False):
+    """Settle a recoverable controller-only interval without charging it twice."""
+    interval = state.pop(f"{phase}_pending")
     same_clock = (not interrupted or interval["boot_id"] is not None
                   and interval["boot_id"] == boot_identity())
     elapsed = (time.monotonic() - interval["started_monotonic"] if same_clock
@@ -278,21 +278,34 @@ def finish_recovery_accounting(state, interrupted=False):
     charged = min(remaining, interval["allowance"], max(0, elapsed))
     state["active_seconds"] = state.get("active_seconds", 0) + charged
     state["remaining_active_seconds"] = remaining - charged
-    state["recovery_finalization_seconds"] = state.get("recovery_finalization_seconds", 0) + charged
-    for session in state.get("sessions", []):
+    counter = f"{phase}_seconds"
+    state[counter] = state.get(counter, 0) + charged
+    # Recovery finalizes the previous session; failed resume preparation has not
+    # launched a new session and must not rewrite the previous session's usage.
+    for session in state.get("sessions", []) if phase == "recovery_finalization" else ():
         if session["activation_id"] == state["activation_id"]:
             session["active_seconds"] = session.get("active_seconds", 0) + charged
-            session["recovery_finalization_seconds"] = session.get("recovery_finalization_seconds", 0) + charged
+            session[counter] = session.get(counter, 0) + charged
     if interrupted:
         state.setdefault("accounting_uncertainties", []).append(
-            "Interrupted recovery finalization: conservatively charged elapsed time through recovery, "
+            f"Interrupted {phase.replace('_', ' ')}: conservatively charged elapsed time through recovery, "
             "capped at its remaining allowance; the exact lost-controller work interval is unknown.")
+
+
+def finish_recovery_accounting(state, interrupted=False):
+    finish_controller_accounting(state, "recovery_finalization", interrupted)
 
 
 def recover_owner(project, state):
     """Called under the exclusive lock before reading agent-mutated science."""
     if state.get("schema_version") == 3:
         return collaboration.recover(project, state)
+    if state.get("resume_preparation_pending") and state.get("cleanup_ok") is True:
+        # No successor service can launch before this interval is transferred to
+        # activation accounting. Historical service IDs need no new cleanup.
+        finish_controller_accounting(state, "resume_preparation", interrupted=True)
+        state.update(state="interrupted", reason="Interrupted resume preparation recovered; saved science retained.")
+        workspace.write_state(project, state)
     unresolved = state.get("state") in workspace.ACTIVE_STATES or state.get("cleanup_ok") is False
     service_ends = []
     for key in ("probe_service", "service"):
@@ -382,8 +395,8 @@ def resume(project, codex_path="codex", model=None):
     return activate(project, isolation.Config(codex=codex_path, model=model), resume=True)
 
 
-def continuation_inputs(project, state):
-    intake = workspace.read_intake(project)
+def continuation_inputs(project, state, deadline=None, on_poll=None):
+    intake = workspace.read_intake(project, deadline, on_poll)
     saved, handoff, historical = workspace.load_checkpoint(project, state)
     state["recovery"] = {
         "checkpoint_id": saved["id"] if saved else None,
@@ -413,6 +426,35 @@ def continuation_inputs(project, state):
     return intake, baseline, external, continuation
 
 
+def resume_inputs(project, state, began, deadline):
+    """Register intake work before traversal, then transfer it to the new session."""
+    with workspace.control_lock(project):
+        state.update(ownership_nonce=uuid.uuid4().hex, state="starting",
+                     reason="Preparing current intake before resume.")
+        state["resume_preparation_pending"] = {
+            "started_monotonic": began,
+            "started_epoch": time.time() - max(0, time.monotonic() - began),
+            "boot_id": boot_identity(), "allowance": max(0, deadline - began)}
+        workspace.write_state(project, state)
+    _, control, _ = workspace.control_paths(project, state)
+    def poll():
+        request = workspace.read_control(control / "request.json")
+        return ("pause" if workspace.matching_request(request, state)
+                and request["reason"] == "pause" else None)
+    try:
+        inputs = continuation_inputs(project, state, deadline, poll)
+        references.check_deadline(deadline, poll)
+        return inputs
+    except BaseException as exc:
+        outcome = ("paused" if isinstance(exc, isolation.RequestedStop) else
+                   "timed_out" if isinstance(exc, TimeoutError) else
+                   "interrupted" if isinstance(exc, (KeyboardInterrupt, SystemExit)) else "failed")
+        state.update(state=outcome, reason=f"Resume preparation {outcome}: {exc}")
+        finish_controller_accounting(state, "resume_preparation")
+        workspace.write_state(project, state)
+        raise
+
+
 def activate(project, config, resume=False):
     session_seconds(str(config.primary_session_seconds))
     session_seconds(str(config.delegated_session_seconds))
@@ -434,12 +476,16 @@ def activate(project, config, resume=False):
             remaining = max(0, config.wall_seconds - state.get("active_seconds", 0))
             if remaining <= 0:
                 raise workspace.InputError("Investigation active-work allowance exhausted; resume cannot increase limits")
-            intake, baseline, external, continuation = continuation_inputs(project, state)
+            try:
+                intake, baseline, external, continuation = resume_inputs(project, state, began, began + remaining)
+            except (isolation.RequestedStop, TimeoutError, KeyboardInterrupt) as exc:
+                print(f"{state['state']}: {state['reason']}\nStatus: {project / 'RESEARCH_STATUS.md'}")
+                return 0 if isinstance(exc, isolation.RequestedStop) else 124 if isinstance(exc, TimeoutError) else 130
         else:
             if config.max_agents > 1:
                 return collaboration.activate(project, config)
             workspace.validate_fresh(project)
-            intake = workspace.read_intake(project)
+            intake = workspace.read_intake(project, began + config.wall_seconds)
             remaining = config.wall_seconds
             state = {"schema_version": 2, "run_id": uuid.uuid4().hex, "project": str(project),
                      "logical_researcher_id": "primary", "started_at": now(),
@@ -456,7 +502,8 @@ def activate(project, config, resume=False):
             baseline = workspace.science_fingerprints(project)
             external = []
         investigation_deadline = began + remaining
-        state["ownership_nonce"] = uuid.uuid4().hex
+        if not resume:
+            state["ownership_nonce"] = uuid.uuid4().hex
         previous = None
         while True:
             code, controller, ended = run_session(project, config, state, intake, baseline,
@@ -467,8 +514,20 @@ def activate(project, config, resume=False):
             # Keep the stopped predecessor registered while reloading human inputs.
             # Its pending interval covers a crash during this preparation.
             began = ended
+            def poll():
+                request = controller.current_request()
+                return "pause" if request and request["reason"] == "pause" else None
             try:
-                intake, baseline, external, continuation = continuation_inputs(project, state)
+                intake, baseline, external, continuation = continuation_inputs(project, state, investigation_deadline, poll)
+            except (isolation.RequestedStop, KeyboardInterrupt) as exc:
+                state.update(state="paused" if isinstance(exc, isolation.RequestedStop) else "interrupted",
+                             reason="Continuation preparation stopped; all prior descendants are stopped.")
+                state["rollover"].update(phase="paused" if state["state"] == "paused" else "failed")
+                state["sessions"][-1]["outcome"] = state["state"]
+                finish_recovery_accounting(state)
+                workspace.write_state(project, state)
+                code = 0 if state["state"] == "paused" else 130
+                break
             except (OSError, ValueError, UnicodeError) as exc:
                 state.update(state="failed", reason=f"Rollover continuation intake failed: {exc}")
                 state["rollover"].update(phase="failed", limitation=state["reason"])
@@ -524,6 +583,9 @@ def run_session(project, config, state, intake, baseline, external, continuation
                      input_fingerprints=intake.fingerprints, input_inventory=intake.inventory,
                      validation_failures=[], external_changes=external,
                      pending_intake_changes=False, current_usage_totals=None)
+        # This durable activation owns the same interval from before resume
+        # intake. Removing the marker here transfers it without a second charge.
+        state.pop("resume_preparation_pending", None)
         _, config.control, config.response = workspace.control_paths(project, state)
         config.control.mkdir()
         config.response.mkdir()
@@ -544,6 +606,7 @@ def run_session(project, config, state, intake, baseline, external, continuation
     recorder = result = None
     code = 4
     try:
+        references.configure(config, project, session, intake)
         with controller.launch_guard():
             pass
         state["backend"] = codex.verify_backend(config)
@@ -779,9 +842,50 @@ def human_direction(project, source, feedback=False):
     return 0
 
 
+def reference_command(args):
+    project = validate_project(args.project)
+    if args.action not in ("add", "remove"):
+        print(json.dumps(references.dispatch(references.load_catalog(project), args), indent=2))
+        return 0
+    if not references.ALIAS.fullmatch(args.alias):
+        raise workspace.InputError("Reference alias must start with a letter and use letters, digits, _ or - (max 64)")
+    with workspace.acquire_project_lock(project):
+        state = None
+        if workspace.safe_path(project, ".research_pipeline/run.json").exists():
+            state = load_state(project)
+            recover_owner(project, state)
+        registry = references.load_registry(project)
+        if args.action == "add":
+            root = references.validate_reference_root(project, args.path)
+            references.reference_entries(root)
+            previous = registry["references"].get(args.alias)
+            if previous is not None and previous != str(root):
+                raise workspace.InputError("Alias already authorizes a different root; remove it first")
+            registry["references"][args.alias] = str(root)
+        else:
+            if args.alias not in registry["references"]:
+                raise workspace.InputError(f"Reference alias is not authorized: {args.alias}")
+            del registry["references"][args.alias]
+        workspace.atomic_text(project / references.REGISTRY, json.dumps(registry, indent=2) + "\n")
+        if state is not None:
+            state["pending_intake_changes"] = True
+            workspace.write_state(project, state)
+    print(json.dumps({"references": references.load_catalog(project)}, indent=2))
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Bounded scientific investigation with persistent checkpoints.")
     sub = parser.add_subparsers(dest="command", required=True)
+    ref = sub.add_parser("reference", help="authorize and retrieve read-only scientific evidence")
+    actions = ref.add_subparsers(dest="action", required=True)
+    references.add_read_commands(actions, host=True)
+    for action in ("add", "remove"):
+        command = actions.add_parser(action)
+        command.add_argument("project", type=Path)
+        command.add_argument("alias")
+        if action == "add":
+            command.add_argument("path", type=Path)
     launch = sub.add_parser("start", help="start a fresh foreground investigation")
     launch.add_argument("project", type=Path)
     launch.add_argument("--codex", default="codex")
@@ -811,6 +915,8 @@ def main(argv=None):
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, terminate)
     try:
+        if args.command == "reference":
+            return reference_command(args)
         if args.command == "pause":
             return pause(args.project)
         if args.command == "inspect":

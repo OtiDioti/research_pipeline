@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from tests import use_checkout
 use_checkout()
-from research_pipeline import checkpoint, cli, codex, collaboration, isolation, workspace
+from research_pipeline import checkpoint, cli, codex, collaboration, isolation, references, workspace
 
 
 ASSIGNMENT = """# Dependent comparison
@@ -241,6 +241,11 @@ class CollaborationTests(unittest.TestCase):
                              '--primary-session-seconds', primary_seconds])
 
     def test_dependent_delivery_integrated_after_fresh_rollover_while_parent_progresses(self):
+        prior = Path(self.tmp.name) / 'prior'
+        prior.mkdir()
+        (prior / 'result.md').write_text('# Preliminary input\nFinite parameters only.')
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(['reference', 'add', str(self.project), 'prior', str(prior)]), 0)
         self.assertEqual(self.start(), 0, self.state())
         state = self.state()
         child = next(t for t in state['tasks'].values() if t['role'] == 'researcher')
@@ -263,6 +268,15 @@ class CollaborationTests(unittest.TestCase):
         self.assertIn('PRELIMINARY', self.services[-1].prompt)
         self.assertEqual(len({s['native_session_id'] for s in state['sessions']}), 3)
         self.assertTrue(state['cleanup_ok'])
+        for service in self.services:
+            catalog = json.loads(service.config.reference_catalog.read_text())
+            self.assertEqual(catalog['prior']['path'], '/references/prior')
+            self.assertEqual(catalog['prior']['root'], str(prior))
+            self.assertIn((str(prior / 'result.md'), '/references/prior/result.md'),
+                          service.config.reference_mounts)
+            self.assertIn('applicability assessment', service.prompt)
+        self.assertEqual(len({s.config.reference_catalog for s in self.services}), 3)
+        self.assertEqual((prior / 'result.md').read_text(), '# Preliminary input\nFinite parameters only.')
         for path in (self.project / child['workspace'], self.project / 'handoffs', self.project / 'work/tasks'):
             self.assertTrue((path / 'FOLDER_CONTENT.md').is_file())
 
@@ -308,9 +322,12 @@ class CollaborationTests(unittest.TestCase):
         self.assertEqual(self.start('missed-saving-notice'), 0, self.state())
         self.assertFalse(any(n['saving_reason'] for n in self.saving_notices))
         countdowns = [n['rollover_in_seconds'] for n in self.saving_notices
-                      if not n['predecessor_activation']]
+                      if not n['predecessor_activation'] and n['status'] == 'running']
         self.assertTrue(countdowns)
         self.assertTrue(all(n is not None for n in countdowns))
+        self.assertTrue(all(n['rollover_in_seconds'] is None for n in self.saving_notices
+                            if n['status'] == 'starting'),
+                        'Reserved preparation has no running context deadline yet')
         self.assertGreater(countdowns[0], countdowns[-1])
         child_sessions = [s for s in self.state()['sessions'] if s['task_id'] != 'primary']
         self.assertTrue(any(n['predecessor_activation'] == child_sessions[0]['activation_id']
@@ -404,6 +421,77 @@ class CollaborationTests(unittest.TestCase):
         self.assertTrue(self.state()['cleanup_ok'])
         self.assertTrue(all(not s.result.timed_out for s in self.services))
         self.assertTrue(all(t['status'] == 'completed' for t in self.state()['tasks'].values()))
+
+    def reference_preparation(self, stage, pause=False):
+        prior = Path(self.tmp.name) / 'slow-prior'
+        (prior / 'outputs').mkdir(parents=True)
+        for n in range(40):
+            (prior / f'outputs/result-{n}.md').write_text('# Preliminary evidence\n')
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(['reference', 'add', str(self.project), 'prior', str(prior)]), 0)
+        entries, ordinary = references.reference_entries, references.ordinary
+        traversals, observed = [], []
+        slow = False
+        pause_sent = None
+
+        def traverse(root, deadline=None, on_poll=None):
+            nonlocal slow
+            state = self.state() if self.services else {}
+            preparing_child = any(t['task_id'] != 'primary' and t['status'] == 'starting'
+                                  for t in state.get('tasks', {}).values())
+            if preparing_child and len(self.services) == 1:
+                traversals.append(self.clock)
+                slow = len(traversals) == stage
+            try:
+                return entries(root, deadline, on_poll)
+            finally:
+                slow = False
+
+        def inspect(path):
+            nonlocal pause_sent
+            if slow and path.is_relative_to(prior):
+                self.clock += .5  # Slow filesystem operations, not a slow polling double.
+                observed.append(self.clock)
+                if pause and pause_sent is None and len(observed) == 3:
+                    state = self.state()
+                    _, control, _ = workspace.control_paths(self.project, state)
+                    workspace.atomic_text(control / 'request.json', json.dumps({
+                        'version': 1, **workspace.owner_fields(state),
+                        'request_id': uuid.uuid4().hex, 'reason': 'pause'}))
+                    pause_sent = self.clock
+            return ordinary(path)
+
+        with self.backend(), redirect_stdout(io.StringIO()), \
+             patch.object(references, 'reference_entries', side_effect=traverse), \
+             patch.object(references, 'ordinary', side_effect=inspect):
+            code = cli.main(['start', str(self.project), '--max-agents', '2',
+                             '--wall-seconds', '100', '--primary-session-seconds', '16',
+                             '--delegated-session-seconds', '16'])
+        self.assertEqual(code, 0, self.state())
+        self.assertEqual(len(traversals), stage if pause else 3)
+        parent = self.services[0]
+        self.assertTrue(parent.finished)
+        self.assertIsNotNone(parent.acknowledged_at)
+        self.assertLess(parent.acknowledged_at, parent.config.deadline)
+        self.assertTrue(self.state()['cleanup_ok'])
+        self.assertTrue(all(not s.result.timed_out for s in self.services))
+        if pause:
+            self.assertEqual(self.state()['state'], 'paused')
+            self.assertEqual(len(self.services), 1, 'Cancelled preparation must not launch the child')
+            self.assertLessEqual(self.clock - pause_sent, 15)
+            self.assertLess(len(observed), 40, 'Pause must cancel the remaining traversal')
+        else:
+            self.assertGreater(observed[-1], parent.config.deadline)
+            primaries = [s for s in self.services if s.task_id == 'primary']
+            self.assertGreaterEqual(len(primaries), 2)
+            self.assertIn('Computed a reference and saved reusable data.', primaries[1].prompt)
+            self.assertEqual(self.state()['state'], 'completed')
+
+    def test_reference_intake_services_parent_rollover_during_slow_traversal(self):
+        self.reference_preparation(stage=1)
+
+    def test_reference_mount_preparation_cancels_promptly_on_whole_owner_pause(self):
+        self.reference_preparation(stage=3, pause=True)
 
     def test_backend_inspection_polls_during_subprocess_wait_and_cleans_up_on_pause(self):
         popen = subprocess.Popen
