@@ -580,3 +580,45 @@ window, allowance, resource grant or scientific outcome requirement was relaxed.
 Fresh enabled controller-host final/combined verification, including actual isolated
 parent reproduction, is still required. This establishes repair readiness only.
 Human-owned requirements, manager status and prior scientific evidence are preserved.
+
+### Integration repair 12: explicit numerical evidence roles (2026-11-10)
+
+Resumed the preserved repair and read the complete final-018 failure, recovery
+direction and retained science. Replaced the overfitted flat/structured audit parser
+(superseding the earlier audit-classification decisions) with an explicit live-demo
+interface: CHECK.md and REEXAMINATION.md list consequential JSON tables under
+`## Numerical observations`. Missing or malformed selected tables fail. Every table
+retains boundary/stress validation, executed-script provenance and isolated
+reproduction with its recorded parameters; the new targeted round remains required.
+Other linked records use the existing authoritative report/artifact fingerprints and
+frozen input manifests. Optional sidecar assertions are unassessed and cannot establish
+integrity or substitute for an independent calculation. Receipts record these roles.
+
+Regressions cover flat hashes, structured and mixed integrity records, ordinary
+metadata, missing/bad/conflicting observations, canonical fingerprint preservation,
+both frozen exchange packets, and separately authored targeted checks with actual
+trusted-fixture reproduction. Existing rollover timing/native identity/prior-row
+requirements, immutable snapshots, parent reproduction, shell execution-provenance
+protections, budgets and cleanup are preserved. No production schema was added.
+
+- Full discovery: **160 tests run, OK, 4 expected skips**, 9.5 seconds.
+- Focused evidence/verification/collaboration suite: **80 passed**.
+- Read-only validation of `m3-live-yyz5ukqf`, `m3-live-uk1qggkx` and
+  `m3-live-7ej_vgn_` passes for their explicit historical numerical roles:
+  **9/4, 10/5 and 9/5 initial/targeted rows**, distinct executed check programs,
+  synthesis links and **17, 15 and 22** accepted artifact fingerprints. Stress
+  relative error is approximately **0.04880885** in each round. Historical reports
+  and failed receipts were not rewritten; no retained science executed.
+- Enabled Bubblewrap/native-runtime checks: **4 passed**. Enabled M3 and service
+  enforcement checks fail before inference because this worker lacks
+  `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Fresh diagnostic receipt:
+  `runtime/tmp/m3-evidence-roles-repair/live/m3-live-pgyupewl/receipt.json` under
+  this pipeline run; no owned services or cleanup errors. An earlier diagnostic
+  command used an unnormalized output path; rerunning with its canonical absolute
+  path established the actual prerequisite failure.
+
+Read-only validation script/output and test logs are retained under this pipeline
+run's `runtime/tmp/m3-evidence-roles-repair/`. This establishes repair readiness only.
+Normal review, fresh enabled controller-host final/combined verification and LOCAL
+integration remain required for M3 acceptance. PROJECT.md, root AGENTS.md, manager
+STATUS.md and earlier evidence are preserved.

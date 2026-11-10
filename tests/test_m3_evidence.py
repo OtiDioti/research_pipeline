@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from tests.test_m3_live import (independent_observations, observation_invocations,
-                                parent_overlap, record_parent_progress, reproduction_driver)
+                                numerical_evidence, parent_overlap, record_parent_progress, reproduction_driver)
 
 
 class M3EvidenceTests(unittest.TestCase):
@@ -245,85 +245,93 @@ class IndependentEvidenceTests(unittest.TestCase):
     def read(self, rel):
         return (self.project / rel).read_text()
 
-    def observations(self, artifacts=None):
-        return independent_observations(self.project, self.independent,
-                                        self.artifacts if artifacts is None else artifacts, self.read)
+    def observations(self, artifacts=None, *, numerical=("check.json",)):
+        artifacts = self.artifacts if artifacts is None else artifacts
+        report = self.independent + "/CHECK.md"
+        text = "## Numerical observations\n" + "\n".join(f"[Table]({name})" for name in numerical)
+        selected = numerical_evidence(self.project, self.independent, artifacts, report, text)
+        return independent_observations(self.project, self.independent, selected, self.read)
 
     def calls(self, observations, commands):
         return observation_invocations(self.project, self.independent, self.artifacts,
                                        observations, commands)
 
-    def test_observations_and_linked_hash_map_are_distinct_evidence(self):
+    def test_ancillary_records_do_not_define_or_replace_numerical_evidence(self):
         code = self.write("check.py", "# independent check")
         data = self.write("check.json", {"rows": self.rows})
-        self.write("evidence_hashes.json", {"check.py": self.artifacts[code]})
-        self.assertEqual(self.observations(), {data: self.rows})
-        (self.project / code).write_text("changed")
-        with self.assertRaisesRegex(AssertionError, "fingerprint mismatch"):
+        # Retained final-015 and final-018 audit shapes, plus ordinary metadata.
+        # No sidecar assertion is interpreted as proof; canonical fingerprints
+        # and frozen manifests are checked by verification.check_unchanged.
+        sidecars = {
+            "hashes.json": {"check.py": self.artifacts[code]},
+            "reexamination_audit.json": {
+                "artifacts": [{"path": "check.py", "sha256": self.artifacts[code],
+                               "expected": self.artifacts[code], "matches": True}],
+                "coarse_simpson_exact_arithmetic_relative_bias_bound": 1.1e-40},
+            "recheck_integrity.json": {"check.py": self.artifacts[code],
+                                     "response_manifest_matches": [True]},
+            "environment.json": {"method": "Simpson", "versions": {"python": "3.10"}},
+            "optional_assertions.json": {"response_manifest_matches": [False],
+                                         "unassessed": "not an integrity endorsement"}}
+        for name, contents in sidecars.items():
+            with self.subTest(name=name):
+                self.write(name, contents)
+                self.assertEqual(self.observations(), {data: self.rows})
+                self.assertEqual(set(self.calls(self.observations(), [
+                    "python3 check.py --output check.json"])), {data})
+                with self.assertRaisesRegex(AssertionError, "Missing independent observation rows"):
+                    self.observations(numerical=(name,))
+        # Metadata alongside numerical evidence cannot conceal bad observations.
+        self.write("check.json", {"rows": [{**self.rows[0], "reference": 9.0}, self.rows[1]]})
+        with self.assertRaisesRegex(AssertionError, "Inconsistent"):
             self.observations()
 
-    def test_structured_audit_validates_hashes_without_becoming_observations(self):
-        code = self.write("check.py", "# independent check")
-        data = self.write("check.json", {"rows": self.rows})
-        frozen = self.project / self.independent / "inputs/initial/files/work/parent.py"
-        frozen.parent.mkdir(parents=True)
-        frozen.write_text("# frozen evidence")
-        digest = hashlib.sha256(frozen.read_bytes()).hexdigest()
-        audit = self.write("audit.json", {
-            "artifacts": [
-                {"path": frozen.relative_to(self.project).as_posix(),
-                 "sha256": digest, "expected": digest, "matches": True},
-                {"path": "check.py", "sha256": self.artifacts[code]},
-                {"path": "/project/" + data, "sha256": self.artifacts[data]}],
-            "max_absolute_fractional_error_difference_from_response": 2.8e-16,
-            "coarse_simpson_exact_arithmetic_relative_bias_bound": 1.1e-40})
-        observations = self.observations()
-        self.assertEqual(observations, {data: self.rows})
-        self.assertEqual(set(self.calls(observations, [
-            "python3 check.py --output check.json"])), {data})
-        with self.assertRaisesRegex(AssertionError, "near-boundary"):
-            self.observations({audit: self.artifacts[audit]})
-        frozen.write_text("# changed frozen evidence")
-        with self.assertRaisesRegex(AssertionError, "fingerprint mismatch"):
-            self.observations()
-
-    def test_structured_audit_rejects_false_or_malformed_evidence(self):
-        code = self.write("check.py", "# independent check")
+    def test_report_must_explicitly_identify_accepted_local_numerical_tables(self):
         self.write("check.json", {"rows": self.rows})
-        entry = {"path": "check.py", "sha256": self.artifacts[code]}
-        for audit in (
-                {"artifacts": []},
-                {"artifacts": [None]},
-                {"artifacts": [{**entry, "sha256": "0" * 64}]},
-                {"artifacts": [{**entry, "expected": "0" * 64, "matches": True}]},
-                {"artifacts": [{**entry, "expected": entry["sha256"], "matches": False}]},
-                {"artifacts": [{**entry, "matches": True}]},
-                {"artifacts": [{**entry, "unexpected": "ignored"}]},
-                {"artifacts": [entry], "diagnostic": float("nan")},
-                {"artifacts": [entry], "diagnostic": True},
-                {"artifacts": [entry], "observations": [self.rows[1]]},
-                {"artifacts": [entry], "rows": []},
-                {"artifacts": [entry], "rows": [{**self.rows[1], "reference": 9.0}]}):
-            with self.subTest(audit=audit):
-                self.write("audit.json", audit)
-                with self.assertRaises(AssertionError):
-                    self.observations()
+        report = self.independent + "/CHECK.md"
+        for text, message in (
+                ("## Observations\n[Data](check.json)", "section"),
+                ("## Numerical observations\nOnly a verbal assertion.", "tables"),
+                ("## Numerical observations\n[Data](missing.json)", "link"),
+                ("## Numerical observations\n[Data](https://example.org/data.json)", "link"),
+                ("## Numerical observations\n[Data](inputs/initial/data.json)", "link"),
+                ("## Numerical observations\n[Data](../other/data.json)", "link"),
+                ("## Numerical observations\n[Code](check.py)", "link")):
+            with self.subTest(text=text):
+                with self.assertRaisesRegex(AssertionError, message):
+                    numerical_evidence(self.project, self.independent, self.artifacts, report, text)
+        (self.project / self.independent / "check.json").unlink()
+        with self.assertRaisesRegex(AssertionError, "evidence changed"):
+            self.observations()
+
+    def test_selected_numerical_bytes_must_match_accepted_fingerprints(self):
+        data = self.write("check.json", {"rows": self.rows})
+        accepted = dict(self.artifacts)
+        # A scientifically compatible replacement still needs reassessment.
+        self.write("check.json", {"rows": self.rows, "method": "replacement"})
+        with self.assertRaisesRegex(AssertionError, "evidence changed"):
+            self.observations(accepted)
+        self.assertEqual(self.observations(), {data: self.rows})
 
     def test_all_numerical_files_are_checked_including_partitioned_stress(self):
         near = self.write("near.json", {"rows": self.rows[:1]})
         stress = self.write("stress.json", {"rows": self.rows[1:]})
-        self.assertEqual(set(self.observations()), {near, stress})
+        self.assertEqual(set(self.observations(numerical=("near.json", "stress.json"))), {near, stress})
         self.write("stress.json", {"rows": [{**self.rows[1], "reference": 9.0}]})
         with self.assertRaisesRegex(AssertionError, "Inconsistent"):
-            self.observations()
+            self.observations(numerical=("near.json", "stress.json"))
 
     def test_missing_malformed_and_unknown_evidence_fail(self):
-        for data, message in (({}, "Unrecognized"), ({"rows": []}, "Missing"),
+        for data, message in (({}, "Missing"), ([], "Missing"), ({"rows": []}, "Missing"),
+                              ("invalid JSON", "Malformed independent numerical table"),
+                              ({"rows": "not a table"}, "Missing"),
+                              ({"rows": [None]}, "Malformed"),
                               ({"rows": [self.rows[0]]}, "stress"),
                               ({"rows": [self.rows[1]]}, "near-boundary"),
                               ({"rows": [self.rows[0], self.rows[0]]}, "duplicate"),
                               ({"rows": [{**self.rows[0], "reference": float("nan")}]}, "Malformed"),
-                              ({"method": "Simpson"}, "Unrecognized")):
+                              ({"rows": [{**self.rows[0], "reference": 0}]}, "Inconsistent"),
+                              ({"method": "Simpson"}, "Missing")):
             with self.subTest(data=data):
                 self.artifacts.clear()
                 self.write("check.json", data)
@@ -335,7 +343,7 @@ class IndependentEvidenceTests(unittest.TestCase):
         self.write("other.json", {"rows": [{**self.rows[0], "relative_error":
                                            self.rows[0]["relative_error"] + 5e-9}]})
         with self.assertRaisesRegex(AssertionError, "Conflicting"):
-            self.observations()
+            self.observations(numerical=("check.json", "other.json"))
 
     def test_each_observation_needs_unambiguous_executed_linked_code(self):
         data = self.write("check.json", {"rows": self.rows})
@@ -489,12 +497,15 @@ class IndependentEvidenceTests(unittest.TestCase):
                    + "# separately authored targeted check\n")
         near = self.write("near.json", {"rows": self.rows[:1]})
         stress = self.write("stress.json", {"rows": self.rows[1:]})
-        initial = self.observations()
+        self.write("initial_integrity.json", {"check.py": "sidecar assertions are unassessed"})
+        initial = self.observations(numerical=("near.json", "stress.json"))
         initial_calls = self.calls(initial, [
             "/usr/bin/bash -lc 'python3 helper.py --check && python3 check.py --a 1.01 --output near.json'",
             "/usr/bin/bash -lc 'python3 check.py --a 1.2 --output stress.json'"])
         targeted = self.write("targeted.json", {"rows": self.rows})
-        final = self.observations()
+        self.write("recheck_integrity.json", {"response_manifest_matches": [True]})
+        self.write("environment.json", {"python": sys.version, "method": "trusted fixture"})
+        final = self.observations(numerical=("near.json", "stress.json", "targeted.json"))
         new = {rel: rows for rel, rows in final.items() if rel not in initial}
         targeted_calls = self.calls(new, ["python3 reexamine.py --a 1.01 1.2 --output targeted.json"])
         calls = {**initial_calls, **targeted_calls}
@@ -514,5 +525,5 @@ class IndependentEvidenceTests(unittest.TestCase):
         for output, expected in outputs.items():
             self.assertEqual(json.loads(output.read_text())["rows"], expected)
         # A second round linking only old observations cannot supply a new test.
-        with self.assertRaisesRegex(AssertionError, "near-boundary"):
-            self.observations({})
+        with self.assertRaisesRegex(AssertionError, "numerical evidence link"):
+            self.observations({}, numerical=("targeted.json",))

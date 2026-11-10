@@ -264,6 +264,40 @@ class VerificationTests(unittest.TestCase):
         ack, _ = self.request(operation='respond', target=child['task_id'], response='work/RESPONSE.md')
         self.assertFalse(ack['accepted'])
 
+    def test_ancillary_audits_use_canonical_integrity_for_both_exchange_rounds(self):
+        self.setup_exchange()
+        task = self.admit()
+        root = self.project / task['workspace']
+        sidecars = {
+            'reexamination_audit.json': {'artifacts': [
+                {'path': 'check.csv', 'sha256': '0' * 64, 'matches': True}]},
+            'recheck_integrity.json': {'response_manifest_matches': [True]},
+            'environment.json': {'method': 'subtraction', 'versions': {'python': '3'}}}
+        for name, contents in sidecars.items():
+            (root / name).write_text(json.dumps(contents))
+        (root / 'check.csv').write_text('error\n0.1\n')
+        # Sidecar assertions are not interpreted. Even a claimed match cannot
+        # supersede the platform's saved fingerprints or frozen packet bytes.
+        (root / 'CHECK.md').write_text(check() + '\n' + '\n'.join(
+            f'[Ancillary record]({name})' for name in sidecars))
+        task['status'] = verification.deliver(self.project, task)
+        accepted = dict(task['verification']['initial_check_artifacts'])
+        ack, _ = self.request(operation='respond', target=task['task_id'], response='work/RESPONSE.md')
+        self.assertTrue(ack['accepted'], ack)
+        self.deliver(task, 'checked')
+        verification.check_unchanged(self.project, task)
+        self.assertEqual(task['verification']['initial_check_artifacts'], accepted)
+        for rel in (*accepted, *(e['path'] for key in ('initial', 'response')
+                                 for e in task['verification'][key]['evidence'])):
+            with self.subTest(artifact=rel):
+                path = self.project / rel
+                saved = path.read_bytes()
+                path.write_bytes(saved + b'\nchanged')
+                with self.assertRaisesRegex(workspace.InputError, 'changed'):
+                    verification.check_unchanged(self.project, task)
+                path.write_bytes(saved)
+        verification.check_unchanged(self.project, task)
+
     def test_malformed_or_inconclusive_reports_cannot_become_checked(self):
         self.setup_exchange()
         task = self.admit()

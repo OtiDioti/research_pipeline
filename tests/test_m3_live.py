@@ -116,6 +116,11 @@ not allege that the researcher asserted a false theorem: an independently refute
 exploratory hypothesis also needs a documented response and scope decision. Do not
 invent disagreement if the evidence supports both subjects; report your actual verdict.
 Write substantive CHECK.md linking the independent check code/data and frozen evidence.
+In BOTH CHECK.md and REEXAMINATION.md include a ## Numerical observations section
+directly linking ALL consequential independent JSON observation tables for that round.
+These explicitly identified tables must use the row interface above. Link ancillary
+integrity/provenance records and check code elsewhere; put only the numerical table
+links in that section. Ancillary records cannot replace numerical observations.
 A substantive objection should identify the scientific issue, numerical observations,
 and a justified targeted test if useful. Finish this examination rather than waiting.
 On re-examination preserve ALL initial reports and linked code/data/notes; use NEW
@@ -210,48 +215,43 @@ def reproduction_driver(invocations):
         for item in invocations)
 
 
+def numerical_evidence(project, independent, artifacts, report, text):
+    """Select explicit numerical roles from an accepted report's artifact links."""
+    try:
+        section = verification.sections(text, ("Numerical observations",))["Numerical observations"]
+    except workspace.InputError as exc:
+        raise AssertionError("Missing independent numerical evidence section") from exc
+    selected = {}
+    for target in verification.LINK.findall(section):
+        rel = verification.link_path(project, report, target)
+        if (rel is None or not rel.startswith(independent + "/") or "/inputs/" in rel
+                or not rel.endswith(".json") or rel not in artifacts):
+            raise AssertionError(f"Invalid independent numerical evidence link: {target}")
+        selected[rel] = artifacts[rel]
+    if not selected:
+        raise AssertionError("Missing independent numerical observation tables")
+    return selected
+
+
 def independent_observations(project, independent, artifacts, read):
-    """Separate observation tables from verified fingerprint metadata, by content."""
+    """Validate explicitly selected tables; ancillary JSON has no numerical role.
+
+    Accepted reports, all linked artifacts and frozen inputs are separately checked
+    by verification.check_unchanged. Optional audit assertions are not endorsements.
+    """
     observations, seen = {}, {}
-    for rel in artifacts:
+    for rel, digest in artifacts.items():
         if (not rel.startswith(independent + "/") or "/inputs/" in rel
                 or not rel.endswith(".json")):
-            continue
-        data = json.loads(read(rel))
-        if not isinstance(data, dict) or not data:
-            raise AssertionError(f"Unrecognized independent evidence: {rel}")
-        if "rows" not in data:
-            # Accept flat hash maps and structured artifact audits. Auxiliary
-            # finite diagnostics do not substitute for observation rows. Unknown
-            # JSON still fails, and every fingerprint is checked against bytes.
-            if "artifacts" in data:
-                entries = data["artifacts"]
-                if (not isinstance(entries, list) or not entries or any(
-                        type(value) not in (int, float) or not math.isfinite(value)
-                        for key, value in data.items() if key != "artifacts")):
-                    raise AssertionError(f"Unrecognized independent evidence: {rel}")
-            else:
-                entries = [{"path": target, "sha256": digest} for target, digest in data.items()]
-            for entry in entries:
-                if (not isinstance(entry, dict) or not {"path", "sha256"} <= entry.keys()
-                        or entry.keys() - {"path", "sha256", "expected", "matches"}
-                        or not isinstance(entry["path"], str)
-                        or any(not isinstance(entry[key], str)
-                               or not re.fullmatch(r"[a-f0-9]{64}", entry[key])
-                               for key in ("sha256", "expected") if key in entry)
-                        or ("matches" in entry and
-                            ("expected" not in entry or entry["matches"] is not True))):
-                    raise AssertionError(f"Unrecognized independent evidence: {rel}")
-                target, digest = entry["path"], entry["sha256"]
-                # Audit lists can use project-relative paths for frozen inputs,
-                # and report-relative paths for their own checks.
-                if target.startswith(independent + "/"):
-                    target = "/project/" + target
-                path = verification.link_path(project, rel, target)
-                if (path is None or workspace.file_digest(workspace.safe_path(project, path)) != digest
-                        or entry.get("expected", digest) != digest):
-                    raise AssertionError(f"Independent fingerprint mismatch: {rel}: {target}")
-            continue
+            raise AssertionError(f"Invalid independent numerical evidence: {rel}")
+        if workspace.file_digest(workspace.safe_path(project, rel)) != digest:
+            raise AssertionError(f"Accepted independent numerical evidence changed: {rel}")
+        try:
+            data = json.loads(read(rel))
+        except json.JSONDecodeError as exc:
+            raise AssertionError(f"Malformed independent numerical table: {rel}") from exc
+        if not isinstance(data, dict) or "rows" not in data:
+            raise AssertionError(f"Missing independent observation rows: {rel}")
         rows = data["rows"]
         if not isinstance(rows, list) or not rows:
             raise AssertionError(f"Missing independent observations: {rel}")
@@ -729,23 +729,35 @@ class LiveM3Acceptance(unittest.TestCase):
             for text in (initial_check, read(record["response"]["packet"]), final_check):
                 self.assertRegex(text, r"1\.2\b", "Exchange must address the observed stress case")
             independent = verifier["workspace"]
-            # Reports can link several observation tables and fingerprint metadata.
-            # Validate all tables coherently, preserving each round's provenance.
+            # Reports explicitly identify numerical tables. Other linked records
+            # retain canonical fingerprints but supply no numerical assertions.
             linked = record["initial_check_artifacts"]
-            initial_observations = independent_observations(project, independent, linked, read)
+            initial_tables = numerical_evidence(project, independent, linked,
+                                               record["initial_check"], initial_check)
+            initial_observations = independent_observations(project, independent, initial_tables, read)
             self.assertIn(independent + "/check.py", linked)
             initial_calls = observation_invocations(project, independent, linked, initial_observations,
                                                    commands(verifier_sessions[0]))
             final_artifacts = record["final_check_artifacts"]
-            final_observations = independent_observations(project, independent, final_artifacts, read)
+            final_tables = numerical_evidence(project, independent, final_artifacts,
+                                             record["final_check"], final_check)
+            final_observations = independent_observations(project, independent, final_tables, read)
             targeted = {rel: rows for rel, rows in final_observations.items() if rel not in linked}
             self.assertTrue(targeted, "Re-examination must link new targeted numerical observations")
             # Require the new round itself to cover the boundary and stress case.
-            independent_observations(project, independent, targeted, read)
+            independent_observations(project, independent,
+                                     {rel: final_tables[rel] for rel in targeted}, read)
             targeted_calls = observation_invocations(project, independent, final_artifacts, targeted,
                                                     commands(verifier_sessions[1]))
             observations = independent_observations(project, independent,
-                                                   {**linked, **final_artifacts}, read)
+                                                   {**initial_tables, **final_tables}, read)
+            receipt["independent_evidence_roles"] = {
+                "initial_numerical": list(initial_tables),
+                "reexamination_numerical": list(final_tables),
+                "ancillary_json": sorted(rel for rel in linked.keys() | final_artifacts.keys()
+                                         if rel.endswith(".json") and "/inputs/" not in rel
+                                         and rel not in initial_tables and rel not in final_tables),
+                "integrity": "verification.check_unchanged; optional sidecar assertions not assessed"}
             receipt.setdefault("numerics", {}).update(observations)
             independent_calls = {**initial_calls, **targeted_calls}
             self.assertEqual(set(independent_calls), set(observations),

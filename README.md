@@ -643,7 +643,13 @@ response / final outcome, cumulative accounting and unknown telemetry, exact com
 available control groups and confirmed descendant cleanup. Both child and verifier
 programs are reproduced through the production isolation launcher from their original
 task working directories, recorded with each command in the receipt. Original
-accepted evidence is checked again for mutation. Numerical observations and scientific
+accepted evidence is checked again for mutation. Each verifier report explicitly lists
+its consequential JSON tables under `## Numerical observations`; every selected table
+must satisfy the numerical interface and have a recorded executed calculation.
+Initial and new targeted tables are reproduced with their saved scripts and parameters.
+Other linked integrity/provenance records retain the platform's authoritative fingerprints
+and frozen snapshots, without interpreting optional sidecar assertions as proof.
+Numerical observations and scientific
 excerpts appear in the unittest report for manager assessment; structural labels or
 exit zero alone cannot pass. The real schema-3 CLI pause path additionally has a
 three-role production-service test with explicitly non-model engineering workers and
