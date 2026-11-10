@@ -130,7 +130,8 @@ class CollaborationTests(unittest.TestCase):
                     if self.number:
                         assert 'Computed a reference and saved reusable data.' in prompt
                         assert (project / root / 'reference.csv').read_text() == 'x,value\n1,2\n'
-                        (project / root / 'comparison.csv').write_text('x,error\n1,0.1\n')
+                        if case.mode != 'missed-saving-notice':
+                            (project / root / 'comparison.csv').write_text('x,error\n1,0.1\n')
                     else:
                         assert (project / root / 'ASSIGNMENT.md').is_file()
                         assert '/project/work/reference.csv' in (project / root / 'assignment-input-0.md').read_text()
@@ -167,7 +168,7 @@ class CollaborationTests(unittest.TestCase):
                             return True
                     return bool(reason)
                 if self.task_id == 'primary':
-                    if case.mode == 'saving-notice':
+                    if case.mode in ('saving-notice', 'missed-saving-notice'):
                         output = io.StringIO()
                         with patch.object(checkpoint, 'Path', return_value=self.config.control), \
                              patch.object(sys, 'argv', ['checkpoint', '--check']), redirect_stdout(output):
@@ -176,11 +177,21 @@ class CollaborationTests(unittest.TestCase):
                             if not line.startswith('Concurrent task status: '):
                                 continue
                             for summary in json.loads(line.removeprefix('Concurrent task status: ')):
+                                if case.mode == 'missed-saving-notice' and summary['saving_reason']:
+                                    # A primary model turn spans the entire saving notice.
+                                    continue
                                 case.saving_notices.append(summary)
                                 if summary['saving_reason'] == 'rollover':
                                     # The signal must arrive before the child publishes,
                                     # so the parent can extend its own study immediately.
                                     case.assertFalse((case.project / workspace.handoff_path(summary['task_id'])).exists())
+                                    (case.project / 'work/parent-extension.csv').write_text('x,value\n2,4\n')
+                                if (case.mode == 'missed-saving-notice' and summary['predecessor_activation']
+                                        and not (case.project / 'work/parent-extension.csv').exists()):
+                                    # The already prepared scientific command reacts to
+                                    # status without waiting for another primary turn.
+                                    root = workspace.task_directory(summary['task_id'])
+                                    case.assertFalse((case.project / root / 'comparison.csv').exists())
                                     (case.project / 'work/parent-extension.csv').write_text('x,value\n2,4\n')
                     case.parent_progress.append((case.clock, len(case.services)))
                     if case.mode == 'pause' and len(case.services) > 1:
@@ -200,6 +211,10 @@ class CollaborationTests(unittest.TestCase):
                                 'Finite parameter uncertainty limits applicability. [Reference](../work/reference.csv)')
                         return True
                 elif self.number:
+                    if case.mode == 'missed-saving-notice':
+                        case.assertTrue((case.project / 'work/parent-extension.csv').is_file())
+                        root = workspace.task_directory(self.task_id)
+                        (case.project / root / 'comparison.csv').write_text('x,error\n1,0.1\n')
                     return True
                 return False
 
@@ -288,6 +303,41 @@ class CollaborationTests(unittest.TestCase):
             self.assertEqual(checkpoint.main(), 0)
         self.assertIn('PAUSE REQUESTED', output.getvalue())
         self.assertNotIn('Concurrent task status', output.getvalue())
+
+    def test_primary_can_stage_science_and_react_after_missing_brief_saving_notice(self):
+        self.assertEqual(self.start('missed-saving-notice'), 0, self.state())
+        self.assertFalse(any(n['saving_reason'] for n in self.saving_notices))
+        countdowns = [n['rollover_in_seconds'] for n in self.saving_notices
+                      if not n['predecessor_activation']]
+        self.assertTrue(countdowns)
+        self.assertTrue(all(n is not None for n in countdowns))
+        self.assertGreater(countdowns[0], countdowns[-1])
+        child_sessions = [s for s in self.state()['sessions'] if s['task_id'] != 'primary']
+        self.assertTrue(any(n['predecessor_activation'] == child_sessions[0]['activation_id']
+                            and n['activation_id'] == child_sessions[1]['activation_id']
+                            for n in self.saving_notices))
+        self.assertEqual((self.project / 'work/parent-extension.csv').read_text(), 'x,value\n2,4\n')
+        self.assertEqual(len(self.services), 3)
+        self.assertTrue(self.state()['cleanup_ok'])
+
+    def test_countdown_uses_current_time_even_without_a_new_status_publication(self):
+        control = self.project / 'helper-control'
+        control.mkdir()
+        (control / 'owner.json').write_text(json.dumps({'task_id': 'primary'}))
+        (control / 'tasks.json').write_text(json.dumps([
+            {'task_id': 'child', 'status': 'running', 'activation_id': 'first',
+             'rollover_at_monotonic': 110},
+            {'task_id': 'near-wall-limit', 'status': 'running'}]))
+        for now, expected in ((100, 10), (109, 1), (115, 0)):
+            with self.subTest(now=now):
+                output = io.StringIO()
+                with patch.object(checkpoint, 'Path', return_value=control), \
+                     patch.object(checkpoint.time, 'monotonic', return_value=now), \
+                     patch.object(sys, 'argv', ['checkpoint', '--check']), redirect_stdout(output):
+                    self.assertEqual(checkpoint.main(), 0)
+                summary = json.loads(output.getvalue().split('Concurrent task status: ')[1])
+                self.assertEqual(summary[0]['rollover_in_seconds'], expected)
+                self.assertIsNone(summary[1]['rollover_in_seconds'])
 
     def test_slow_model_handoff_rolls_primary_and_child_without_extending_limits(self):
         self.ack_delay = 20  # The real runs missed the old 15-second reserve.

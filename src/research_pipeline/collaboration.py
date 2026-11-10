@@ -228,6 +228,9 @@ class Coordinator:
                  "assignment", "delivery", "integration", "checkpoint_error", "verification")}
                 | {"handoff": workspace.handoff_path(task["task_id"]),
                    "activation_id": activation.get("activation_id"),
+                   "predecessor_activation": activation.get("predecessor_activation"),
+                   "rollover_at_monotonic": activation.get("rollover_at_monotonic")
+                       if task["status"] == "running" else None,
                    "saving_reason": activation.get("saving_reason")
                        if task["status"] in ("running", "rolling_over") else None})
         return summaries
@@ -370,6 +373,7 @@ class Coordinator:
             workspace.atomic_text(config.control / "tasks.json", json.dumps(self.summaries()))
             view.update(service_attempted=True, cleanup_ok=False, state="running",
                         session_deadline_monotonic=config.deadline,
+                        rollover_at_monotonic=control.rollover_at,
                         rollover_saving_seconds=control.rollover_grace)
             task["status"] = "running"
             view.persist()

@@ -50,7 +50,11 @@ trapezoidal sums, never an analytical formula substituted for numerical quadratu
 Before automatic rollover calculate a=1.01, n=16,32,64,128,256,512,1024 in baseline.json.
 Preserve its bytes and compute.py unchanged on continuation. Continue useful convergence/error/sensitivity
 analysis, keeping an intelligible handoff saved EARLY. Reserve a=1.001 for your
-AUTOMATIC SUCCESSOR: its concrete Next action must use saved compute.py to calculate
+AUTOMATIC SUCCESSOR: its concrete Next action must first use the saved baseline and
+error analysis to predict how convergence and numerical uncertainty should change
+at a=1.001. Save that independent prediction in a short Markdown note BEFORE running
+the reserved calculation; do not change the baseline or repeat its computation.
+Then use saved compute.py to calculate
 n=16,32,64,128,256,512,1024,2048,4096 in successor.json and extend the uncertainty
 assessment. Do not do this reserved calculation in the first context. Do not finish
 before the requested automatic handoff while meaningful numerical analysis remains.
@@ -70,11 +74,17 @@ No sleep/heartbeat/poll loop as a substitute for science. Consult sources and re
 access honestly. Save required plan, literature, status, report and handoff drafts.
 Stage the parent study in small useful expansions, retaining new parameters for the
 observed child saving/continuation interval; do not exhaust all extensions beforehand.
-Use concurrent task status printed by --check (or the full --tasks summary):
-when the child reports saving_reason=rollover, immediately execute a reserved
-parent expansion and update PARENT.md. Do this before reading the child's published
-handoff; that publication occurs later. Keep another expansion for its changed
-activation_id if useful. The child's saving signal does not request your own handoff.
+Use concurrent task status printed by --check (or the full --tasks summary).
+Prepare your OWN conditional scientific command early: read status, then immediately
+execute a reserved parent expansion if saving_reason=rollover or the child's
+activation_id has changed. Run that status check and conditional calculation WITHIN
+the same command; do not spend another model turn composing a report before reacting.
+No waiting/poll loop: combine this with short useful scientific commands. As
+rollover_in_seconds approaches zero, avoid long note-writing batches. Save the initial
+child activation ID so a missed brief saving notice can still be recognized from its
+successor. Update PARENT.md with the actual observations after the calculation.
+Do this before reading the child's published handoff. Keep another expansion for its
+changed activation_id if useful. The child's signal does not request your own handoff.
 Once the child delivers, prioritize integration and verification over optional analyses.
 
 After the child delivers, integrate its numerical findings and uncertainties into

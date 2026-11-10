@@ -72,9 +72,18 @@ def main():
             owner = json.loads((control / "owner.json").read_text())
             if owner.get("task_id") == "primary":
                 tasks = json.loads((control / "tasks.json").read_text())
-                progress = [{k: task.get(k) for k in
-                             ("task_id", "status", "activation_id", "saving_reason")}
-                            for task in tasks if task["task_id"] != "primary"]
+                progress = []
+                for task in tasks:
+                    if task["task_id"] == "primary":
+                        continue
+                    summary = {k: task.get(k) for k in
+                               ("task_id", "status", "activation_id",
+                                "predecessor_activation", "saving_reason")}
+                    cutoff = task.get("rollover_at_monotonic")
+                    summary["rollover_in_seconds"] = (
+                        round(max(0, cutoff - time.monotonic()), 1)
+                        if cutoff is not None else None)
+                    progress.append(summary)
                 if progress:
                     print("Concurrent task status: " + json.dumps(progress))
         return 0

@@ -401,3 +401,35 @@ relaxation was added.
 The scientific timing repair remains subject to fresh enabled controller-host final
 verification. This is engineering readiness, not M3 acceptance. PROJECT.md, root
 AGENTS.md, manager STATUS.md and retained scientific evidence were preserved.
+
+### Integration repair: brief rollover notice and model-turn delay (2026-11-10)
+
+Read the complete final-012 command log and retained `m3-live-qva6baq6` receipt
+and primary commands. Saving was observed at 204.99 seconds, successor activation
+at 219.87 and its calculation at 234.57. The primary never observed saving while
+writing a long report command, then composed another command before extending its
+study. Only one transition snapshot exists; the failed overlap assertion is valid.
+Delegation, continuation, independent challenge/exchange and cleanup did complete.
+
+Task summaries now expose the scheduled fixed-policy saving time and existing
+predecessor relationship. Primary `--check` computes a fresh countdown from that
+timestamp, so status need not be republished continuously. Prompts describe staging
+short scientific commands and reacting within the same command rather than another
+model turn. The live assignment asks the successor to record a scientific prediction
+from saved baseline evidence before the reserved calculation. Primary authors its own
+conditional expansion; no solution, wait loop, delayed launch or resource grant was
+added. The original overlap window and all scientific acceptance assertions remain.
+
+- Full discovery: **137 tests run, OK with 4 expected skips**, 9.0 seconds.
+- Enabled actual Bubblewrap boundaries/native runtime: **4 passed**, 1.5 seconds.
+- New engineering regressions cover a missed entire saving notice, predecessor
+  identity, parent science before successor calculation, and countdown updates from
+  an unchanged status snapshot, including no scheduled rollover near the wall limit.
+- Enabled M3 and service enforcement **fail before inference**, as required, because
+  this worker lacks `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Fresh failed
+  receipt: `runtime/tmp/m3-integration-8-repair/m3-live-m3ieq4zf/receipt.json` under
+  this pipeline run; no owned services and no cleanup errors.
+
+This is repair readiness, not live scientific acceptance. Normal review and fresh
+enabled controller-host final verification remain necessary. Human-owned requirements,
+manager STATUS.md and retained evidence were preserved.
