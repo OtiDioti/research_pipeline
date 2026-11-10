@@ -1,32 +1,32 @@
 # Development status — research_pipeline
 
-## Progress and decisions
+## Current progress
 
-- PROJECT.md is the unchanged human-owned product contract. Clean restart: no product implementation or completed milestone yet.
-- Selected increment: M1 minimal scientific loop, including CLI start/inspect, current questions/evidence intake, actual Codex research, literature, analytical reasoning, executable computation, Markdown artifacts, basic enforced boundaries and essential resource protections.
-- Acceptance requires pipeline-reported focused automated checks and an actual bounded question-to-artifact demonstration. The pipeline owns implementation, testing, review, and the demonstration; the manager does not independently inspect or test completed product work.
-- M2–M4 follow only after preceding demonstrations pass. M5 additionally requires human scientific acceptance; researcher-supplied benchmark questions/materials are not present.
-- Broad approach: small Python/Linux package, ordinary files, minimal Codex CLI boundary. Pipeline selected Bubblewrap plus a systemd user service for enforced boundaries and aggregate resource/lifetime controls. Writer network preauthorized; sandbox restrictions remain binding.
-- Writer-reported partial result after review repairs: CLI/backend implemented; 22 tests passed, one service-integration class skipped. Swap accounting and local computation links were repaired. Demonstration stopped before research with exit 3 because the Writer environment lacks a user bus and native file credentials. Reviewer reports no further actionable defects but blocked acceptance; M1 remains incomplete.
-- Prepared runtime .gitignore is tracked unchanged with this management checkpoint so the repository can be clean for pipeline submission. No human source edits or staged files were present at intake. Initial Git commit already exists.
+- Human contract: unchanged PROJECT.md and root AGENTS.md. Clean-restart product; **M1 remains incomplete**. M2–M5 have not started; M5 requires human scientific acceptance and researcher-supplied benchmark materials.
+- M1 CLI/backend implementation and code-review repairs are preserved. Latest reviewed feature commit: `30e4707`. Target main has management checkpoints only; product integration is pending.
+- Pipeline-reported local checks: 24 passes; Writer-local service/live cases unavailable. Actual Bubblewrap protection/computation passed. Host final verification is now enabled and has run; no actual research session has started successfully.
+- The pipeline owns implementation, tests, review and functional demonstrations. Manager uses its reports and performs no independent product inspection/review/testing.
 
-## Active pipeline work
+## Active request and ownership
 
-- Request ID: `m1-minimal-scientific-loop-20261110T091644Z-1be6cf51`.
-- Objective: implement and demonstrate M1 as described above.
-- Frozen request: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/request.md`.
-- Effective config: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/config.toml` (standard; auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high).
-- Receipt: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/receipt.json`.
-- Submission checkpoint: `3583428`; submitted in standard mode with explicit frozen config.
-- Actual run: `20261110T091713_50e21105`; blocked in pipeline milestone 003 / integration repair 2. Reviewed feature HEAD `30e4707` includes implementation, verification handoff and source-checkout test import repair. Target integration and actual live acceptance remain pending. Local branch `cwi/20261110T091713_50e21105`; worktree `coding_pipeline/logs/20261110T091713_50e21105/worktree`.
-- Ownership: exec sessions `18506`, `95848`, and `9727` exited blocked with code 4. No owned pipeline process remains active. Integration-2 documentation changes are preserved in the worktree. Reported host preflight probes cleaned up; no actual research jobs launched. Receipt remains valid.
-- Reconciliation: `flow discover` returned no runs; pipeline logs tree did not previously exist. No earlier worktree or partial run is recorded. One implementation request at a time.
+- Request: `m1-minimal-scientific-loop-20261110T091644Z-1be6cf51` — implement and demonstrate M1 minimal scientific loop.
+- Request directory: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/`; frozen `request.md`, `config.toml`, and `receipt.json` remain there.
+- Configuration: standard, auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high; writer_network preauthorized. No settings substituted.
+- Actual run: `20261110T091713_50e21105`; branch `cwi/20261110T091713_50e21105`; worktree `coding_pipeline/logs/20261110T091713_50e21105/worktree`.
+- Current phase: running Writer recovery in pipeline milestone 003 / integration repair 2. Live owner: manager exec session `29827`. Do not resume/retry concurrently.
+- Earlier exec sessions `18506`, `95848`, `9727` exited blocked with code 4. Partial work, immutable reports and useful unfinished documentation were preserved. Reported preflight probes cleaned up; no research jobs were launched.
 
-## Components and continuation
+## Material decisions and blockers
 
-- Pipeline: clean `main` at `6c7b4d4` (native Codex authentication reuse). Controller: clean `project-manager/setup` at `d0771db`. No manager repairs or required restart.
-- Acceptance blocker: actual host final verification now runs. First failure (package import) was repaired by the pipeline. The next failure established missing CPU-controller delegation (`cpu.max`) in user services; memory and pids are delegated. Host bus and native file credentials exist. Read-only operational receipts: request directory `host-environment-receipt.json` and `host-cgroup-receipt.json`. No host settings were changed. Actual research/reproduction remains pending.
-- Recovery decisions: `recovery-input-001.md` added an opt-in live unittest; latest Writer evidence is 24 passes and disclosed unavailable local gates. `recovery-input-002.md` corrects ordering: finish code-ready documentation/review, then Architect completion transfers control to mandatory host FINAL VERIFICATION; no further Writer acceptance milestone before actual tests. Both inputs are in the original request directory. Resume with `RESEARCH_PIPELINE_M1_LIVE=1` and `RESEARCH_PIPELINE_M1_OUTPUT_DIR` pointing to request directory `live-host-acceptance`. Restricted Writer capabilities remain unchanged.
-- Latest recovery decision: `recovery-input-003.md` removes the implementation-added CPU-percentage control, which PROJECT.md does not require, while retaining enforced wall time, memory, zero swap, task count, one researcher, protected inputs and whole-service cleanup. Document unavailable CPU capping; require real service/live/reproduction checks without skips. No host administration or alternative execution framework is authorized.
-- Next action: resume the same run with `recovery-input-003.md` and required live-test environment, record ownership, and await pipeline-controlled final verification. Require actual service/demonstration/reproduction/cleanup success before M2; do not mark M1 complete based only on tests using doubles or code review.
-- Recovery: discover by the request ID above, then use status/report and reconcile process ownership before resume/retry. Do not mark COMPLETE until all current PROJECT.md acceptance gates are satisfied and all jobs stop.
+- Writer lacks host bus/authentication by design. Host-presence checks found both available; protected capabilities were not exposed to the Writer. Recovery 001 added a small opt-in live unittest for controller-owned host verification. Recovery 002 corrected ordering: implementation readiness transfers to final tests, without claiming M1 acceptance.
+- First host failure: uninstalled source-checkout imports. Pipeline repaired test imports and CLI subprocess discovery.
+- Next host failure: `cpu.max` unavailable. Read-only diagnosis confirmed user services receive memory/pids controllers, without CPU-controller delegation. No host settings were changed. Operational evidence: request directory `host-environment-receipt.json` and `host-cgroup-receipt.json`.
+- Latest decision/input: request directory `recovery-input-003.md`. Remove the implementation-added CPU-percentage control, which PROJECT.md does not require; retain enforced wall time, aggregate memory, zero swap, task/thread count, one researcher, protected inputs, and whole-service cleanup. Disclose unavailable CPU capping. No alternative execution framework or host administration.
+- Remaining acceptance: actual host service/resource checks, real Codex literature/analytical/numerical research, bounded reproduction and cleanup must pass with pipeline evidence before M2. Enabled gates must fail rather than skip when necessary capabilities are missing. Context occupancy/spending caps remain disclosed backend limitations.
+
+## Continuation
+
+- Monitor exec session `29827` and `flow status/report 20261110T091713_50e21105`. Reconcile process ownership before any resume/retry; discover by the stable request ID if necessary.
+- Preserve live-test environment for every recovery/approval: `RESEARCH_PIPELINE_M1_LIVE=1`; `RESEARCH_PIPELINE_M1_OUTPUT_DIR` = absolute request-directory path plus `/live-host-acceptance`. Both frozen role config and original scope remain binding. Current source-level recovery returns to controller final tests.
+- Pipeline component: clean main at `6c7b4d4`. Controller: clean `project-manager/setup` at `d0771db`. No component repairs or restart required.
+- Next action: await current repair/review and mandatory host final verification; resolve concrete pipeline failures. Update this checkpoint and README as warranted after confirmed integration. Do not write COMPLETE until all current PROJECT.md gates, including human M5 acceptance, pass and all jobs stop.
