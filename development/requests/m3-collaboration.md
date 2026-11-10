@@ -537,3 +537,46 @@ audits; existing shell regressions now exercise Python heredocs too.
 Normal review and fresh enabled controller-host final/combined verification remain
 necessary, including isolated scientific reproduction. This repair establishes
 code readiness, not live M3 acceptance. Requirements and prior evidence are preserved.
+
+### Integration repair: wrapped primary calculations (2026-11-10)
+
+Read the complete pre-merge-017 output and retained `m3-live-4405llp9` receipt
+and native events. The original failure is a false negative: within observed
+saving/continuation (209.41–240.03 seconds), the same primary native session
+expanded its parameter table from five to eight to eleven rows, preserving all
+prior values. Successful event `item_21` executed its scientific helper, whose
+output matches the three newly observed threshold/stress rows exactly. The old
+filename filter missed this event because the helper invoked `parent.py` internally.
+
+Parent snapshots now retain all successful command events at their actual observation
+times, including a separate snapshot when execution completes after its output
+appears. Overlap requires new parameters, unchanged prior rows, one unchanged native
+session and a new proven Python invocation in the primary's own scientific workspace.
+The existing restricted command recognizer excludes documentation, skipped calls,
+checkpoint helpers and other roles; it does not interpret helper source or depend
+on a helper filename. Verifier provenance recognition is unchanged.
+
+The existing bounded production-isolation reproduction also reruns the parent
+program with the observed transition parameters and compares every scientific row.
+The primary assignment explicitly requests that parameter-list interface. No timing
+window, allowance, resource grant or scientific outcome requirement was relaxed.
+
+- Focused evidence coverage: **28 passed** in full discovery, including the retained wrapped-call shape,
+  actual trusted helper/subprocess arithmetic and reproduction, changed native
+  identity, changed/missing prior rows, prose/hash-only updates, documentation,
+  skipped calls, commands from another role and delayed completion without rewriting
+  earlier snapshots.
+- Full discovery: **159 tests, OK with 4 expected skips**, 9.5 seconds.
+- Read-only retained-evidence validation confirms unchanged prior rows, stable native
+  identity, recognized successful helper execution and output matching the new
+  numerical rows. No agent-written science was executed, and the historical failed
+  receipt remains failed.
+- Enabled Bubblewrap/native runtime checks: **4 passed**. Enabled M3 and service
+  checks fail before inference because this worker lacks `XDG_RUNTIME_DIR` and
+  `DBUS_SESSION_BUS_ADDRESS`. Fresh diagnostic receipt:
+  `runtime/tmp/m3-integration-11-repair/m3-live-we6o1oy1/receipt.json` under this
+  pipeline run; no owned services or cleanup errors.
+
+Fresh enabled controller-host final/combined verification, including actual isolated
+parent reproduction, is still required. This establishes repair readiness only.
+Human-owned requirements, manager status and prior scientific evidence are preserved.

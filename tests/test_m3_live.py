@@ -63,7 +63,7 @@ fresh successor continues this same task, writes RESULT.md with links to code/da
 and limitations, and finishes. Do not repeat the saved baseline on continuation.
 
 PRIMARY: while that task runs and rolls over, continue substantive analytical and
-computational work. Author work/parent.py accepting --output, save work/parent.json
+computational work. Author work/parent.py accepting --a (parameter list) and --output, save work/parent.json
 as {"rows": [{"a": ..., "approximation": ..., "reference": ..., "relative_error": ...}]}
 for an expanding parameter study of YOUR derived approximation. Use distinct a>1
 parameters and actual calculations; relative_error is an absolute fraction, not a
@@ -148,13 +148,59 @@ def parent_overlap(progress, milestones):
     if len(observations) < 2:
         raise AssertionError("Missing substantive parent progress during child transition")
     before, after = observations[0], observations[-1]
-    if not {r["a"] for r in after["rows"]} - {r["a"] for r in before["rows"]}:
+    native = before["native_session_id"]
+    if not native or any(p["native_session_id"] != native for p in observations):
+        raise AssertionError("Parent native session changed during transition")
+    prior_rows = {r["a"]: r for r in before["rows"]}
+    current_rows = {r["a"]: r for r in after["rows"]}
+    if not current_rows.keys() - prior_rows.keys():
         raise AssertionError("Parent did not extend its parameter study during child rollover")
-    prior_commands = (len(before["commands"]) if
-                      before["native_session_id"] == after["native_session_id"] else 0)
-    if len(after["commands"]) <= prior_commands:
+    if any(current_rows.get(a) != row for a, row in prior_rows.items()):
+        raise AssertionError("Parent changed prior numerical observations during transition")
+    prior_commands = len(before["commands"])
+    if after["commands"][:prior_commands] != before["commands"]:
+        raise AssertionError("Parent execution history changed during transition")
+    # The primary may invoke its calculation through its own scientific helper.
+    # Do not interpret that program or require a particular shell-level filename:
+    # observed new rows, a proven role-local execution and isolated reproduction
+    # together establish progress. Documentation and checkpoint calls do not.
+    calls = (args for command in after["commands"][prior_commands:]
+             for args in direct_python_commands(command))
+    if not any(primary_program(args) for args in calls):
         raise AssertionError("No new parent calculation event during transition")
     return before, after
+
+
+def primary_program(args):
+    script = Path(args[1])
+    if not script.is_absolute():
+        script = Path("/project/work") / script
+    return (script.is_relative_to("/project/work") and ".." not in script.parts
+            and not script.is_relative_to("/project/work/tasks"))
+
+
+def successful_commands(events, needle=""):
+    return [e["item"]["command"] for e in events
+            if e.get("type") == "item.completed"
+            and e.get("item", {}).get("type") == "command_execution"
+            and e["item"].get("exit_code") == 0
+            and needle in e["item"].get("command", "")]
+
+
+def record_parent_progress(progress, *, elapsed, native_session_id, child_activation,
+                           data, derivation, events):
+    """Keep immutable timed snapshots of numerical and successful-call changes."""
+    try:
+        rows = json.loads(data)["rows"]
+    except ValueError:
+        return  # The calculation may currently be writing the output file.
+    signature = hashlib.sha256(data).hexdigest()
+    commands = successful_commands(events)
+    if rows and (not progress or progress[-1]["sha256"] != signature
+                 or progress[-1]["commands"] != commands):
+        progress.append({"elapsed": elapsed, "native_session_id": native_session_id,
+                         "child_activation": child_activation, "sha256": signature,
+                         "rows": rows, "derivation": derivation[:3500], "commands": commands})
 
 
 def reproduction_driver(invocations):
@@ -434,11 +480,7 @@ class LiveM3Acceptance(unittest.TestCase):
             return result
 
         def commands(entry, needle=""):
-            return [e["item"]["command"] for e in events(entry)
-                    if e.get("type") == "item.completed"
-                    and e.get("item", {}).get("type") == "command_execution"
-                    and e["item"].get("exit_code") == 0
-                    and needle in e["item"].get("command", "")]
+            return successful_commands(events(entry), needle)
 
         def milestone(name, value):
             if name not in receipt["milestones"]:
@@ -550,21 +592,15 @@ class LiveM3Acceptance(unittest.TestCase):
                                 note = project / session(primary) / "drafts/work/PARENT.md"
                                 data = project / "work/parent.json"
                                 if note.is_file() and data.is_file():
-                                    try:
-                                        observations = json.loads(read("work/parent.json"))["rows"]
-                                    except ValueError:
-                                        observations = []
-                                    signature = hashlib.sha256(data.read_bytes()).hexdigest()
-                                    progress = receipt["parent_progress"]
-                                    if observations and (not progress or progress[-1]["sha256"] != signature):
-                                        progress.append({"elapsed": time.monotonic() - began,
-                                            "native_session_id": primary.get("native_session_id"),
-                                            "child_activation": act["activation_id"], "sha256": signature,
-                                            "rows": observations, "derivation": note.read_text()[:3500],
-                                            "commands": commands(primary, "parent")})
-                                    elif observations and progress[-1]["native_session_id"] == primary.get("native_session_id"):
-                                        # A command can finish just after its output was observed.
-                                        progress[-1]["commands"] = commands(primary, "parent")
+                                    record_parent_progress(receipt["parent_progress"],
+                                        elapsed=time.monotonic() - began,
+                                        native_session_id=primary.get("native_session_id"),
+                                        child_activation=act["activation_id"],
+                                        data=read("work/parent.json").encode(),
+                                        derivation=note.read_text(), events=events(primary))
+                                    # A command can finish just after its output is
+                                    # observed. Save a new timed snapshot, preserving
+                                    # the earlier execution boundary.
                             if act and act["activation_id"] != predecessor_id and act.get("native_session_id"):
                                 continued_commands = commands(act, "successor.json")
                                 if continued_commands:
@@ -740,7 +776,12 @@ class LiveM3Acceptance(unittest.TestCase):
             receipt["services"][reproduction.unit] = {"groups": []}
             argv1 = ["/usr/bin/python3", "/project/" + root + "/compute.py", "--a", "1.001", "--n",
                      *map(str, (16,32,64,128,256,512,1024,2048,4096)), "--output", "/project/work/reproduced-child.json"]
-            invocations = [{"argv": argv1, "cwd": "/project/" + root}]
+            parent_rows = progress[-1]["rows"]
+            parent_argv = ["/usr/bin/python3", "/project/work/parent.py", "--output",
+                           "/project/work/reproduced-parent.json", "--a",
+                           *(str(row["a"]) for row in parent_rows)]
+            invocations = [{"argv": argv1, "cwd": "/project/" + root},
+                           {"argv": parent_argv, "cwd": "/project/work"}]
             reproduced = {}
             for index, (rel, call) in enumerate(independent_calls.items()):
                 output = f"work/reproduced-check-{index}.json"
@@ -766,6 +807,16 @@ class LiveM3Acceptance(unittest.TestCase):
             repeated = quadrature("work/reproduced-child.json", 1.001, (16,32,64,128,256,512,1024,2048,4096))
             for n, value in successor_values.items():
                 self.assertTrue(math.isclose(value, repeated[n], rel_tol=1e-12, abs_tol=1e-12))
+            repeated_parent = json.loads(read("work/reproduced-parent.json"))["rows"]
+            self.assertEqual(len(repeated_parent), len(parent_rows))
+            repeated_by_a = {row["a"]: row for row in repeated_parent}
+            self.assertEqual(set(repeated_by_a), {row["a"] for row in parent_rows})
+            for row in parent_rows:
+                for key in ("approximation", "reference", "relative_error"):
+                    self.assertTrue(math.isclose(row[key], repeated_by_a[row["a"]][key],
+                                                 rel_tol=1e-12, abs_tol=1e-12),
+                                    f"Parent reproduction differs: {row['a']}: {key}")
+            receipt["parent_reproduction"] = repeated_parent
             for output, original in reproduced.items():
                 self.assertEqual(json.loads(read(output))["rows"], observations[original],
                                  f"Independent reproduction differs: {original}")

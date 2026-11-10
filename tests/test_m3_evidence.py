@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from tests.test_m3_live import (independent_observations, observation_invocations,
-                                parent_overlap, reproduction_driver)
+                                parent_overlap, record_parent_progress, reproduction_driver)
 
 
 class M3EvidenceTests(unittest.TestCase):
@@ -18,9 +18,18 @@ class M3EvidenceTests(unittest.TestCase):
                   "continued_calculation": {"elapsed": 270}}
 
     def observation(self, elapsed, parameters, command_count):
-        return {"elapsed": elapsed, "rows": [{"a": a} for a in parameters],
+        return {"elapsed": elapsed, "rows": [IndependentEvidenceTests.row(a) for a in parameters],
                 "native_session_id": "primary-native",
                 "commands": ["python parent.py"] * command_count}
+
+    def record(self, progress, observation):
+        events = [{"type": "item.completed", "item": {
+            "type": "command_execution", "exit_code": 0, "command": command}}
+                  for command in observation["commands"]]
+        record_parent_progress(progress, elapsed=observation["elapsed"],
+            native_session_id=observation["native_session_id"], child_activation="child",
+            data=json.dumps({"rows": observation["rows"]}).encode(),
+            derivation="Parent derivation", events=events)
 
     def test_updates_only_before_saving_cannot_establish_overlap(self):
         progress = [self.observation(195, [1.01], 1),
@@ -54,6 +63,137 @@ class M3EvidenceTests(unittest.TestCase):
                     self.observation(260, [1.01, 1.02], 1)]
         with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
             parent_overlap(progress, self.milestones)
+
+    def test_retained_wrapped_calculation_establishes_overlap(self):
+        # pre-merge-017 / m3-live-4405llp9: all three snapshots had eight
+        # commands containing "parent", although item_21 successfully invoked
+        # the saved parent calculation via its scientific helper. Preserve the
+        # actual times, parameters and executable event shape from that run.
+        milestones = {"saving": {"elapsed": 209.41090981199523},
+                      "continued_calculation": {"elapsed": 240.028779070999}}
+        parameters = [1.0001, 1.001, 1.01, 1.02, 1.04,
+                      1.0402, 1.041, 1.2, 1.039, 1.05, 1.5]
+        progress = [self.observation(elapsed, parameters[:count], 8)
+                    for elapsed, count in ((209.41104402099882, 5),
+                                           (212.02448658399953, 8),
+                                           (220.48571984299633, 11))]
+        # The original item_21 authored a decimal-threshold diagnostic, then
+        # ran this final successful chain. No direct parent.py call appears.
+        body = ("cat > /project/work/threshold_decimal.py <<'EOF'\n"
+                "# Decimal boundary diagnostic authored by the primary\nEOF\n"
+                "python3 /run/research-checkpoint-helper.py --check && "
+                "python3 /project/work/transition.py && "
+                "python3 /project/work/threshold_decimal.py")
+        event = shlex.join(["/usr/bin/bash", "-lc", body])
+        for p in progress[1:]:
+            p["commands"].append(event)
+        recorded = []
+        for observation in progress:
+            self.record(recorded, observation)
+        self.assertEqual(len(recorded), 3)
+        self.assertEqual(recorded[1]["commands"][-1], event)
+        self.assertEqual(parent_overlap(recorded, milestones), (recorded[0], recorded[-1]))
+
+    def test_delayed_success_creates_a_new_snapshot_without_rewriting_history(self):
+        for completion in (261, 280):
+            with self.subTest(completion=completion):
+                progress = []
+                self.record(progress, self.observation(225, [1.01], 1))
+                self.record(progress, self.observation(260, [1.01, 1.02], 1))
+                self.record(progress, self.observation(completion, [1.01, 1.02], 2))
+                self.assertEqual(len(progress), 3)
+                self.assertEqual(len(progress[1]["commands"]), 1)
+                if completion <= self.milestones["continued_calculation"]["elapsed"]:
+                    self.assertEqual(parent_overlap(progress, self.milestones),
+                                     (progress[0], progress[-1]))
+                else:
+                    with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
+                        parent_overlap(progress, self.milestones)
+
+    def test_wrapped_science_and_parent_reproduction_use_real_trusted_fixture(self):
+        # Only trusted engineering fixture code executes on this test host.
+        # Prove that a helper invocation really can append arithmetic rows
+        # without the native event containing the underlying script's name.
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            script = (
+                "import argparse,json,math\nfrom pathlib import Path\n"
+                "p=argparse.ArgumentParser();p.add_argument('--a',type=float,nargs='+');"
+                "p.add_argument('--output');p.add_argument('--append',action='store_true');"
+                "args=p.parse_args()\n"
+                "rows=json.loads(Path(args.output).read_text())['rows'] if args.append else []\n"
+                "for a in args.a:\n"
+                " reference=2*math.pi/math.sqrt((a-1)*(a+1))\n"
+                " approximation=2*math.pi/math.sqrt(2*(a-1))\n"
+                " rows.append(dict(a=a,reference=reference,approximation=approximation,"
+                "relative_error=abs(approximation/reference-1)))\n"
+                "Path(args.output).write_text(json.dumps(dict(rows=rows)))\n")
+            (work / "parent.py").write_text(script)
+            (work / "expand.py").write_text(
+                "import subprocess,sys\n"
+                "subprocess.run([sys.executable,'parent.py','--a','1.0402','1.041','1.2',"
+                "'--output','parent.json','--append'],check=True)\n")
+            subprocess.run([sys.executable, "parent.py", "--a", "1.01", "--output", "parent.json"],
+                           cwd=work, check=True, timeout=5)
+            before = self.observation(225, [1.01], 1)
+            before["rows"] = json.loads((work / "parent.json").read_text())["rows"]
+            body = "/usr/bin/python3 expand.py"
+            result = subprocess.run(["/bin/bash", "-c", body], cwd=work,
+                                    capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            after = {**before, "elapsed": 230,
+                     "rows": json.loads((work / "parent.json").read_text())["rows"],
+                     "commands": [*before["commands"], body]}
+            self.assertNotIn("parent.py", body)
+            self.assertEqual(parent_overlap([before, after], self.milestones), (before, after))
+            invocation = {"argv": [sys.executable, str(work / "parent.py"), "--a",
+                                  *(str(row["a"]) for row in after["rows"]),
+                                  "--output", str(work / "reproduced.json")],
+                          "cwd": str(work)}
+            subprocess.run([sys.executable, "-c", reproduction_driver([invocation])],
+                           cwd=work, check=True, timeout=5)
+            self.assertEqual(json.loads((work / "reproduced.json").read_text())["rows"], after["rows"])
+
+    def test_another_primary_native_session_cannot_establish_overlap(self):
+        progress = [self.observation(225, [1.01], 1),
+                    self.observation(260, [1.01, 1.02], 2)]
+        progress[-1]["native_session_id"] = "fresh-primary"
+        with self.assertRaisesRegex(AssertionError, "native session changed"):
+            parent_overlap(progress, self.milestones)
+
+    def test_changed_or_removed_prior_rows_cannot_establish_overlap(self):
+        for change in ("changed", "removed"):
+            with self.subTest(change=change):
+                progress = [self.observation(225, [1.01], 1),
+                            self.observation(260, [1.01, 1.02], 2)]
+                if change == "changed":
+                    progress[-1]["rows"][0]["reference"] += 1
+                else:
+                    progress[-1]["rows"].pop(0)
+                with self.assertRaisesRegex(AssertionError, "changed prior numerical"):
+                    parent_overlap(progress, self.milestones)
+
+    def test_prose_hash_changes_without_new_parameters_cannot_establish_overlap(self):
+        progress = [self.observation(225, [1.01], 1),
+                    self.observation(260, [1.01], 2)]
+        progress[-1].update(sha256="changed", derivation="New explanatory text")
+        with self.assertRaisesRegex(AssertionError, "did not extend"):
+            parent_overlap(progress, self.milestones)
+
+    def test_documented_skipped_and_other_role_commands_cannot_establish_overlap(self):
+        for body in ("cat > rerun.sh <<'SH'\npython3 expand.py\nSH",
+                     "cat missing && python3 expand.py\ncat parent.json",
+                     "exit 0 && python3 expand.py",
+                     "python3 /run/research-checkpoint-helper.py --check",
+                     "python3 /project/work/tasks/child/compute.py",
+                     "python3 ../work/tasks/child/compute.py",
+                     "cat parent.json"):
+            with self.subTest(body=body):
+                before = self.observation(225, [1.01], 1)
+                after = self.observation(260, [1.01, 1.02], 1)
+                after["commands"].append(shlex.join(["/bin/bash", "-c", body]))
+                with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
+                    parent_overlap([before, after], self.milestones)
 
     def test_reproduction_preserves_each_tasks_relative_input_paths(self):
         # Trusted fixture code, not agent-written science: exercise the same driver
