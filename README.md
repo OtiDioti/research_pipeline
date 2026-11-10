@@ -151,6 +151,10 @@ Limits that are **not** guaranteed:
 
 ## Checks and demonstration
 
+Tests also run from an uninstalled checkout with `python3 -m unittest discover -s tests -v`.
+Shared test setup exposes this checkout's `src/` to the test process and its Python
+CLI subprocesses. Install the package as above for normal CLI usage.
+
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/python -m research_pipeline --help

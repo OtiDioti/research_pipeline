@@ -10,6 +10,9 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
+from tests import use_checkout
+
+use_checkout()
 from research_pipeline import cli, codex, isolation, workspace
 
 

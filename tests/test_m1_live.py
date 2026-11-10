@@ -19,6 +19,9 @@ import time
 import unittest
 from urllib.parse import unquote, urlsplit
 
+from tests import use_checkout
+
+use_checkout()
 from research_pipeline import codex, isolation, workspace
 
 

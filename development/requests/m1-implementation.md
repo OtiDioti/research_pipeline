@@ -430,3 +430,51 @@ SHA-256 manifests at
 Python and test sources are unchanged. Earlier milestone-002 report evidence is
 retained. The disclosed Writer-local infeasibility remains; the next required
 execution belongs to controller final verification, not another Writer milestone.
+
+## Integration repair — source-checkout test discovery
+
+The supplied `tests/final-002.txt.commands/0001.txt` shows three import errors,
+before any assertions ran: `research_pipeline` was unavailable to the integrated
+runner's uninstalled Python interpreter. Reproduced all three errors with the
+exact supplied command:
+
+```sh
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests
+```
+
+Added shared `tests.use_checkout()` setup and invoked it before product imports
+in each test module. It exposes the checkout's `src/` through `sys.path` and
+inherited `PYTHONPATH`, so actual Python CLI subprocesses also exercise this
+checkout. Existing Python search paths are retained. This avoids requiring
+installation into the runner's interpreter or changing the product's source
+layout. Production code, packaging, isolation and live-acceptance configuration
+are unchanged. README and the test directory index document this setup.
+
+After repair the exact command exits **0**: `Ran 25 tests`, `OK (skipped=2)`.
+The verbose repeat also exits **0**, with **24 passing tests**, including real
+Bubblewrap input protection/permitted computation and subprocess CLI start/inspect.
+Private log:
+
+```sh
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests -v \
+  > .m1-local/integration-1/tests.txt 2>&1
+```
+
+Independent discovery of the live-test module also imports successfully:
+
+```sh
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests \
+  -p test_m1_live.py -v
+```
+
+It exits **0**, with one explicitly disabled live test skipped. No new test cases
+were needed: the reproduced discovery command and existing CLI subprocess checks
+directly verify the repair.
+
+Acceptance limitations remain: service integration class setup skips because this
+Writer environment has neither `XDG_RUNTIME_DIR` nor `DBUS_SESSION_BUS_ADDRESS`;
+live research skips because `RESEARCH_PIPELINE_M1_LIVE` is unset. These skips do
+not establish service enforcement or scientific acceptance. The enabled controller
+host suite remains required. No research agent, model inference or demonstration
+job was launched during this repair. `PROJECT.md`, root `AGENTS.md`, human evidence
+and manager-owned `STATUS.md` were not edited.
