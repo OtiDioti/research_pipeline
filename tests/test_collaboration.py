@@ -68,6 +68,7 @@ class CollaborationTests(unittest.TestCase):
         self.services = []
         self.parent_progress = []
         self.mode = 'normal'
+        self.ack_delay = 0
         self.units_stopped = []
 
     def state(self):
@@ -106,6 +107,7 @@ class CollaborationTests(unittest.TestCase):
                 self.ticks = 0
                 self.finished = False
                 self.acknowledged_at = None
+                self.request_seen_at = None
                 case.services.append(self)
                 recorder('stdout', (json.dumps({'type':'thread.started', 'thread_id':f'native-{len(case.services)}'}) + '\n').encode())
                 recorder('stdout', b'{"type":"item.completed","item":{"type":"command_execution","exit_code":0}}\n')
@@ -146,6 +148,13 @@ class CollaborationTests(unittest.TestCase):
                 reason = self.config.on_poll()
                 request = workspace.read_control(self.config.control / 'request.json')
                 if request:
+                    if self.request_seen_at is None:
+                        self.request_seen_at = case.clock
+                    if case.mode == 'pause-during-saving' and request['reason'] == 'rollover':
+                        self.config.on_poll.__self__.coordinator.request_stop('pause')
+                        return False
+                    if case.clock - self.request_seen_at < case.ack_delay:
+                        return bool(reason)
                     if case.mode != 'no-ack':
                         (self.config.response / 'ready.json').write_text(json.dumps({**request, 'readiness_nonce': uuid.uuid4().hex}))
                         self.config.on_poll()
@@ -193,11 +202,11 @@ class CollaborationTests(unittest.TestCase):
              patch.object(collaboration.time, 'sleep', side_effect=sleep):
             yield
 
-    def start(self, mode='normal', primary_seconds='300'):
+    def start(self, mode='normal', primary_seconds='300', delegated_seconds='16', wall_seconds='100'):
         self.mode = mode
         with self.backend(), redirect_stdout(io.StringIO()):
-            return cli.main(['start', str(self.project), '--wall-seconds', '100', '--max-agents', '2',
-                             '--memory-mib', '512', '--max-tasks', '64', '--delegated-session-seconds', '16',
+            return cli.main(['start', str(self.project), '--wall-seconds', wall_seconds, '--max-agents', '2',
+                             '--memory-mib', '512', '--max-tasks', '64', '--delegated-session-seconds', delegated_seconds,
                              '--primary-session-seconds', primary_seconds])
 
     def test_dependent_delivery_integrated_after_fresh_rollover_while_parent_progresses(self):
@@ -236,6 +245,33 @@ class CollaborationTests(unittest.TestCase):
         self.assertEqual(len(state['tasks']), 2)
         self.assertEqual(len({s['native_session_id'] for s in state['sessions']}), 4)
         self.assertTrue(state['cleanup_ok'])
+
+    def test_slow_model_handoff_rolls_primary_and_child_without_extending_limits(self):
+        self.ack_delay = 20  # The real runs missed the old 15-second reserve.
+        self.assertEqual(self.start(primary_seconds='240', delegated_seconds='240',
+                                    wall_seconds='500'), 0, self.state())
+        state = self.state()
+        self.assertEqual(len(self.services), 4)
+        for service in self.services[:2]:
+            self.assertGreaterEqual(service.acknowledged_at - service.request_seen_at, 20)
+            self.assertLess(service.acknowledged_at, service.config.deadline)
+            self.assertEqual(service.config.deadline - service.request_seen_at, 60)
+            self.assertIn('rollover reserves 60 seconds', service.prompt)
+        self.assertEqual(len({s['native_session_id'] for s in state['sessions']}), 4)
+        self.assertEqual(state['usage_totals'], {'input_tokens': 40, 'output_tokens': 8})
+        self.assertEqual(state['remaining_active_seconds'], 500 - state['active_seconds'])
+        self.assertTrue(all(s.finished and not s.result.timed_out for s in self.services))
+
+    def test_pause_shortens_rollover_saving_without_waiting_for_slow_model(self):
+        self.ack_delay = 100
+        self.assertEqual(self.start('pause-during-saving', primary_seconds='240',
+                                    delegated_seconds='240', wall_seconds='500'), 0)
+        self.assertEqual(self.state()['state'], 'paused')
+        self.assertEqual(len(self.services), 2)
+        for service in self.services:
+            self.assertLessEqual(self.clock - service.request_seen_at, 15.5)
+            self.assertTrue(service.finished)
+        self.assertTrue(self.state()['cleanup_ok'])
 
     def test_slow_launch_preparation_services_sibling_rollover_before_deadline(self):
         stages = []

@@ -72,6 +72,7 @@ class VerificationTests(unittest.TestCase):
         self.backend_failure = False
         self.human_report = False
         self.changed_initial_artifact = None
+        self.ack_delay = 0
 
     def setup_exchange(self):
         self.assertEqual(self.case.start(), 0)
@@ -404,6 +405,8 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
                     self.number = sum(v.phase == self.phase and v.task_id == self.task_id for v in test.verifiers)
                     self.result = isolation.ExecutionResult(0, cleanup_ok=True)
                     self.finished = False
+                    self.request_seen_at = None
+                    self.acknowledged_at = None
                     test.verifiers.append(self)
                     case.services.append(self)
                     recorder('stdout', (json.dumps({'type':'thread.started', 'thread_id': 'verifier-' + uuid.uuid4().hex})+'\n').encode())
@@ -430,9 +433,15 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
                     reason = self.config.on_poll()
                     request = workspace.read_control(self.config.control / 'request.json')
                     if request:
+                        if self.request_seen_at is None:
+                            self.request_seen_at = case.clock
+                        if case.clock - self.request_seen_at < test.ack_delay:
+                            return bool(reason)
                         workspace.atomic_text(self.config.response / 'ready.json', json.dumps({**request, 'readiness_nonce':uuid.uuid4().hex}))
                         self.config.on_poll()
                         ack = workspace.read_control(self.config.control / 'ack.json')
+                        if ack and ack.get('accepted'):
+                            self.acknowledged_at = case.clock
                         return bool(ack and ack.get('accepted')) or bool(reason)
                     if test.pause_phase == self.phase and not self.number:
                         state = case.state()
@@ -509,10 +518,29 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
             with patch.object(isolation, 'RunningService', side_effect=launch):
                 yield
 
-    def start(self):
+    def start(self, delegated_seconds='16', wall_seconds='100', primary_seconds='300'):
         with self.backend(), redirect_stdout(io.StringIO()):
-            return cli.main(['start', str(self.project), '--max-agents','2', '--wall-seconds','100',
-                             '--memory-mib','512', '--max-tasks','64', '--delegated-session-seconds','16'])
+            return cli.main(['start', str(self.project), '--max-agents','2', '--wall-seconds', wall_seconds,
+                             '--memory-mib','512', '--max-tasks','64', '--delegated-session-seconds', delegated_seconds,
+                             '--primary-session-seconds', primary_seconds])
+
+    def test_delayed_verifier_handoff_continues_both_examinations_within_original_grant(self):
+        self.ack_delay = 18
+        self.assertEqual(self.start(delegated_seconds='80', wall_seconds='500',
+                                    primary_seconds='600'), 0, self.case.state())
+        state = self.case.state()
+        self.assertEqual([v.phase for v in self.verifiers],
+                         ['initial', 'initial', 'reexamination', 'reexamination'])
+        for verifier in self.verifiers[::2]:
+            self.assertEqual(verifier.acknowledged_at - verifier.request_seen_at, 18)
+            self.assertLess(verifier.acknowledged_at, verifier.config.deadline)
+        task = next(t for t in state['tasks'].values() if t['role'] == 'verifier')
+        self.assertEqual(task['verification']['disposition'], 'checked')
+        self.assertEqual(task['verification']['exchange_limit'], 1)
+        self.assertEqual(task['integration'], ['outputs/REPORT.md'])
+        self.assertEqual(state['usage_totals'], {'input_tokens': 70, 'output_tokens': 14})
+        self.assertEqual(state['remaining_active_seconds'], 500 - state['active_seconds'])
+        self.assertTrue(state['cleanup_ok'])
 
     def test_initial_and_reexamination_rollover_keep_same_task_and_cumulative_limits(self):
         self.assertEqual(self.start(), 0, self.case.state())

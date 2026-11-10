@@ -85,9 +85,13 @@ and reliable context occupancy remain unavailable.
 
 Each role independently uses acknowledged handoff, cleanup, guarded publication and
 fresh `codex exec --ephemeral` context to roll over while siblings keep running.
-`--delegated-session-seconds` defaults to 300, must exceed the 15-second saving
-reserve, and survives resume alongside the primary policy and original resource
-grant. These fixed durations provide **no exact 60% occupancy guarantee**. Billing
+`--delegated-session-seconds` defaults to 300, must exceed 15 seconds, and survives
+resume alongside the primary policy and original resource grant. Collaboration
+sessions reserve one quarter of their duration for rollover saving, bounded between
+15 and 60 seconds, inside the existing session cap. This allows a model turn and
+handoff validation to finish without extending the resource grant. A human pause
+overrides rollover and retains its shared 15-second saving deadline.
+These fixed durations provide **no exact 60% occupancy guarantee**. Billing
 tokens are never treated as occupancy. Fresh contexts reload current questions,
 instructions, feedback and saved science, retaining task/parent/workspace identity.
 Clean child failures preserve partial artifacts and recovery guidance; unconfirmed
@@ -609,7 +613,7 @@ Bounds are 900 seconds cumulative owner activity, 540 seconds per primary sessio
 a 1200-second ordinary-work cutoff and 1800 seconds overall including failure cleanup.
 Two simultaneous slots share the original 2048 MiB/128-process grant. At most two
 primary contexts, exactly two delegated contexts and two verifier examination contexts
-are accepted. Fixed-duration handoff reserves 15 seconds inside each session; context
+are accepted. Fixed-duration handoff reserves 60 seconds inside these sessions; context
 occupancy remains unavailable, without an exact 60% guarantee. CPU/spending limitations
 remain as disclosed above. Existing engineering tests also cover verifier rollover.
 

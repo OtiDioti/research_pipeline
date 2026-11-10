@@ -334,7 +334,10 @@ class Coordinator:
             auth = stack.enter_context(codex.private_auth(self.project))
             duration = self.state["primary_session_policy" if task["task_id"] == "primary" else "delegated_session_policy"]["session_seconds"]
             config.deadline = min(self.deadline, time.monotonic() + duration)
-            control.rollover_at = config.deadline - 15 if config.deadline < self.deadline else None
+            # A model turn plus handoff validation can exceed the pause grace.
+            # Reserve headroom *inside* the fixed session, never extend its cap.
+            control.rollover_grace = min(60, max(15, duration / 4))
+            control.rollover_at = config.deadline - control.rollover_grace if config.deadline < self.deadline else None
             def identity(value):
                 all_ids = [a.get("native_session_id") for a in owned_activations(self.state)
                            if a.get("activation_id") != activation]
@@ -359,12 +362,15 @@ class Coordinator:
             workspace.atomic_text(config.control / "owner.json", json.dumps({**workspace.owner_fields(view), "task_id": task["task_id"]}))
             workspace.atomic_text(config.control / "tasks.json", json.dumps(self.summaries()))
             view.update(service_attempted=True, cleanup_ok=False, state="running",
-                        session_deadline_monotonic=config.deadline)
+                        session_deadline_monotonic=config.deadline,
+                        rollover_saving_seconds=control.rollover_grace)
             task["status"] = "running"
             view.persist()
             service = isolation.RunningService(config, self.project, codex.build_command(config),
                 codex.build_prompt(intake, {**self.state["limits"], "slot_memory_mib": config.memory_mib,
-                    "slot_max_tasks": config.max_tasks, "remaining_wall_seconds": max(0, self.deadline-time.monotonic())},
+                    "slot_max_tasks": config.max_tasks, "session_seconds": duration,
+                    "rollover_saving_seconds": control.rollover_grace,
+                    "remaining_wall_seconds": max(0, self.deadline-time.monotonic())},
                     continuation, task), recorder, auth)
             runtime = {"service": service, "config": config, "control": control, "view": view,
                 "intake": intake, "session": session, "baseline": baseline, "external": external,
@@ -896,6 +902,7 @@ class TaskControl:
         self.coordinator, self.view, self.config = coordinator, view, config
         self.intake, self.session, self.baseline, self.external = intake, session, baseline, external
         self.deadline = self.ack_deadline = self.rollover_at = None
+        self.rollover_grace = 15
         self.last_readiness = None
 
     def current_request(self):
@@ -910,7 +917,8 @@ class TaskControl:
                    "request_id": request["request_id"] if request else uuid.uuid4().hex}
         workspace.atomic_text(self.config.control / "request.json", json.dumps(request))
         self.deadline = min(self.deadline or math.inf, deadline or math.inf,
-                            self.config.deadline, time.monotonic() + 15)
+                            self.config.deadline, time.monotonic() +
+                            (self.rollover_grace if reason == "rollover" else 15))
 
     def poll(self, research=True):
         if self.coordinator.global_request():
@@ -924,7 +932,8 @@ class TaskControl:
             return None
         if not research:
             return request["reason"]
-        self.deadline = self.deadline or min(self.config.deadline, time.monotonic() + 15)
+        self.deadline = self.deadline or min(self.config.deadline, time.monotonic() +
+            (self.rollover_grace if request["reason"] == "rollover" else 15))
         if time.monotonic() >= (self.ack_deadline or self.deadline):
             return request["reason"]
         ready = workspace.read_control(self.config.response / "ready.json")

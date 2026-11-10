@@ -120,6 +120,7 @@ def private_auth(project):
 
 
 def build_prompt(intake, limits, continuation=None, task=None):
+    rollover_saving = limits.get("rollover_saving_seconds", 15)
     verifier = task is not None and task["role"] == "verifier"
     if verifier:
         root = task["workspace"]
@@ -226,8 +227,9 @@ Before substantial operations and after each command, check
 python3 /run/research-checkpoint-helper.py --check
 If a pause or rollover is requested, immediately stop scientific work. Pause fully
 suspends the investigation; rollover continues this SAME logical primary task in a
-fresh conversation after the old service stops. Within the fixed
-15-second saving grace (also bounded by the remaining wall deadline), save useful
+fresh conversation after the old service stops. Pause has a fixed 15-second saving
+grace; rollover reserves {rollover_saving:g} seconds inside the fixed session duration.
+Both are bounded by the remaining wall deadline. Save useful
 progress, plan/status updates and the required handoff in /run/research-drafts.
 Include interrupted computations and the next concrete action. As your FINAL tool
 command run: python3 /run/research-checkpoint-helper.py
@@ -236,8 +238,8 @@ On rejection correct the stated issue within the original grace and retry. After
 acknowledgement finish immediately with no further scientific commands. The helper
 cannot extend deadlines or change limits. Forced suspension may occur without a new
 checkpoint if saving is incomplete. Failed rollover stops for explicit resume.
-Never write the trusted control directory. The configurable session duration reserves
-15 seconds for saving; it is a fallback for unavailable context occupancy telemetry,
+Never write the trusted control directory. The configurable session duration includes
+the saving reserve; it is a fallback for unavailable context occupancy telemetry,
 not an exact 60% guarantee. Cumulative investigation limits survive context replacement.
 
 AUTHORIZED OPTIONAL PROJECT INSTRUCTIONS

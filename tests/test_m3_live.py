@@ -27,6 +27,17 @@ assess a candidate ONE PERCENT validity regime for the leading approximation,
 and distinguish approximation error, discretization error and floating-point uncertainty.
 Treat broad applicability as a hypothesis, never assert an unsupported bound as fact.
 
+This is a SMALL bounded demonstration. Prioritize the dependent calculation, safe
+handoff, integration and independent challenge over optional surveys, plots or extra
+precision programs. Keep notes and packets concise and self-contained. One useful
+convergence analysis and one numerical sensitivity/roundoff check suffice for the
+dependent task; disclose any remaining uncertainty. Do not spend the session filling
+the time with increasingly expensive grids. Keep handoffs current from the first
+calculation; when saving is requested, acknowledge the existing useful work promptly.
+Combine the checkpoint --check with each scientific shell command where practical.
+After the reserved successor calculation and its compact uncertainty assessment,
+deliver RESULT.md promptly so primary can integrate and start independent checking.
+
 PRIMARY: delegate exactly ONE dependent quadrature/convergence study, with a scientific
 benefit: you need independently computed numerical evidence while you derive the
 analytical approximation and its correction. Use the primary helper --delegate. The
@@ -57,6 +68,9 @@ error argument. Extend this study during the child handoff and successor calcula
 so the saved rows and derivation show useful parent progress across the transition.
 No sleep/heartbeat/poll loop as a substitute for science. Consult sources and report
 access honestly. Save required plan, literature, status, report and handoff drafts.
+Stage the parent study in small useful expansions, retaining new parameters for the
+observed child saving/continuation interval; do not exhaust all extensions beforehand.
+Once the child delivers, prioritize integration and verification over optional analyses.
 
 After the child delivers, integrate its numerical findings and uncertainties into
 the parent approximation analysis. Request exactly ONE separate independent verifier

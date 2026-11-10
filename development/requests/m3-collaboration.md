@@ -212,3 +212,44 @@ and cleanup rather than only configuration strings.
 
 The enabled controller-host final suite must establish actual cgroup startup and
 scientific acceptance. Local results establish repair readiness, not M3 acceptance.
+
+### Integration repair: rollover saving headroom (2026-11-10)
+
+Read the complete final-004/final-005 command logs and retained private session
+diagnostics. Both delegated first contexts reached their hard cap without a readiness
+acknowledgement. Final-004's primary saw the rollover request but had no time to save
+before its cap; final-005's primary also missed acknowledgement and stopped its still
+running child. Final-005's distinct child successor was a primary-requested recovery,
+not evidence of successful automatic acknowledged rollover. Neither run reached
+independent verification. The successful thread-pool repair is retained.
+
+Collaboration now starts rollover saving one quarter of a session before its cap,
+bounded between 15 and 60 seconds. The 240/540-second live policies therefore reserve
+60 seconds, allowing another model turn and validation without extending session or
+cumulative limits. Prompts and activation receipts expose the reserve. Human pause
+still overrides rollover with the existing shared 15-second deadline. The M1/M2
+single-agent policy remains unchanged. This is fixed-duration headroom, not measured
+context occupancy or a guarantee that every delayed backend will acknowledge.
+
+The live scientific instructions now prioritize compact convergence/uncertainty work,
+staged parent progress, prompt successor delivery and integration/checking over the
+optional large sweeps and extra programs observed in both failures. No calculations
+or conclusions are supplied; all numerical, independence, objection/exchange, overlap,
+acknowledgement, isolated reproduction and cleanup assertions remain required.
+
+- `python -m unittest discover -s tests -q`: **130 tests run, OK with 4 expected skips**,
+  8.7 seconds. New consequential regressions require primary/researcher saving after
+  a 20-second model delay, both verifier phases after an 18-second delay, fresh
+  continuation, integration, cumulative accounting and pause overriding slow saving.
+- Enabled Bubblewrap checks: **4 passed**, including native runtime startup and the
+  actual task/verifier write boundaries.
+- Enabled service enforcement and M3 live gate **fail before inference** because
+  this worker lacks the systemd user bus (`XDG_RUNTIME_DIR` and
+  `DBUS_SESSION_BUS_ADDRESS`). The gate retains a failed prerequisite receipt at
+  `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261110T135145_2b46d578/runtime/tmp/m3-integration-3-repair/m3-live-ggnp30vz/receipt.json`.
+  Its owned-unit inventory and cleanup errors are empty.
+
+The integrated scientific failure cannot be revalidated on this worker. Normal
+review and the enabled controller-host final suite must establish live success;
+M3 remains unaccepted until those checks and local integration succeed. No host
+bus/authentication fallback, resource increase or scientific acceptance claim was made.
