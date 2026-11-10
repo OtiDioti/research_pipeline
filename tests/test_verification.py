@@ -13,6 +13,7 @@ from unittest.mock import patch
 from tests import use_checkout
 use_checkout()
 from tests import test_collaboration as fixtures
+from tests.test_m3_live import check_synthesis
 from research_pipeline import cli, codex, collaboration, isolation, verification, workspace
 
 PACKET = """# Scoped comparison
@@ -367,6 +368,57 @@ class VerificationTests(unittest.TestCase):
         report.write_text(report.read_text() + '\nThe checked version is the copied evidence; changed original data remain preliminary.')
         self.assertEqual(self.coordinator.validate_integration(), [])
         self.assertIn('work/reference.csv', task['verification']['changed_originals'])
+
+    def test_integrated_exchange_accepts_scientific_prose_without_keyword_checklist(self):
+        self.setup_exchange()
+        (self.project / 'work/PACKET.md').write_text(PACKET)
+        (self.project / 'work/RESPONSE.md').write_text(RESPONSE)
+        task = self.admit()
+        self.deliver(task)
+        ack, _ = self.request(operation='respond', target=task['task_id'], response='work/RESPONSE.md')
+        self.assertTrue(ack['accepted'], ack)
+        self.deliver(task, 'checked')
+        record = task['verification']
+        child = next(t for t in self.state['tasks'].values() if t['role'] == 'researcher')
+        result = child['delivery']['result']
+        report = self.project / 'outputs/REPORT.md'
+        original = report.read_text()
+        # The final-009 synthesis explained all these matters, but used "assumes"
+        # and numerical-certification limitations rather than the exact nouns
+        # "assumptions" and "uncertainty". Integration is not a word checklist.
+        synthesis = f"""
+## Independent challenge
+For finite x=1 the model assumes the supplied reference parameters.
+The independent subtraction gives error 0.1, rejecting the exploratory 0.05 bound.
+The parent accepts that objection and withdraws the broader hypothesis.
+Only the revised bound 0.2 at x=1 is CHECKED; no guarantee follows at other x.
+The separate stress observations at a=1.2 reject extrapolating the approximation.
+Numerical diagnostics remain empirical, not certified roundoff bounds.
+[Initial examination](../{record['initial_check']}).
+[Accepted frozen response](../{record['response']['packet']}).
+[Final examination](../{record['final_check']}).
+"""
+        report.write_text(original + synthesis)
+        self.assertEqual(self.coordinator.validate_integration(), [])
+        self.assertEqual(task['integration'], ['outputs/REPORT.md'])
+        verification.check_unchanged(self.project, task)
+        check_synthesis(self.project, report.read_text(), result, record)
+
+        # All accepted stages must still be reachable from labeled primary science.
+        for missing in (result, record['initial_check'], record['response']['packet'], record['final_check']):
+            with self.subTest(missing=missing):
+                report.write_text((original + synthesis).replace(f'(../{missing})', '(../work/reference.csv)'))
+                self.assertTrue(any('No primary integration reference' in failure
+                                    for failure in self.coordinator.validate_integration()))
+                with self.assertRaisesRegex(AssertionError, 'Synthesis missing'):
+                    check_synthesis(self.project, report.read_text(), result, record)
+        report.write_text(original + synthesis.replace('CHECKED', 'evaluated'))
+        self.assertTrue(any(task['task_id'] in failure
+                            for failure in self.coordinator.validate_integration()))
+        with self.assertRaisesRegex(AssertionError, 'Synthesis missing checked'):
+            check_synthesis(self.project, report.read_text(), result, record)
+        with self.assertRaisesRegex(AssertionError, 'observed stress case'):
+            check_synthesis(self.project, original + synthesis.replace('a=1.2', 'a=other'), result, record)
 
     def test_controller_killed_after_response_acceptance_preserves_allowance_and_recovers_science(self):
         script = r"""

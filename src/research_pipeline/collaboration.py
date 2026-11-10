@@ -769,11 +769,10 @@ class Coordinator:
                     continue
                 text = workspace.read_input_unbounded(self.project / rel)
                 if task["role"] == "verifier":
-                    needed = (task["verification"]["disposition"], "assumptions", "uncertainty",
-                              "scope", "objection")
-                    if any(word not in text.lower() for word in needed):
-                        continue
-                    if task["verification"].get("response") and "superseded" not in text.lower():
+                    # Links and outcome labels are structural requirements.
+                    # Scientific explanations use ordinary prose; exact words
+                    # cannot establish whether the findings were integrated.
+                    if task["verification"]["disposition"] not in text.lower():
                         continue
                     if task["verification"].get("changed_originals") and "version" not in text.lower():
                         continue

@@ -199,6 +199,9 @@ later original edits. Changed frozen packets or accepted reports require reasses
 human edits are preserved. `--tasks` and `inspect --json` expose phase, disposition,
 reviewed versions and evidence/report paths. Original changes detected at integration
 are recorded and require an explicit version limitation in the synthesis.
+Structural integration validation checks the outcome label, links to all accepted
+exchange stages and evidence integrity. It does not require specific words in the
+scientific explanation or assess whether that explanation is scientifically adequate.
 
 ## Installation and prerequisites
 

@@ -318,3 +318,53 @@ activation limits, resource grants and all acceptance assertions are unchanged.
 
 Enabled controller-host final verification is still required to establish scientific
 acceptance. This repair establishes local code readiness only.
+
+### Integration repair: ordinary scientific integration prose (2026-11-10)
+
+Read the complete final-009 command output and preserved `m3-live-oegk2imb` state
+and synthesis. Both delegated tasks completed, including the independent objection,
+accepted response and checked re-examination. The synthesis linked every required
+accepted artifact and explained its assumptions and numerical limitations, but lacked
+the literal nouns `assumptions` and `uncertainty`. The integration validator discarded
+all its links because of that keyword filter, reporting a misleading missing-reference
+failure.
+
+Removed the prose keyword checklist. Integration still requires the actual outcome
+label, every accepted exchange-stage link, unchanged accepted evidence and an explicit
+version limitation when original evidence changes. Prompts still require substantive
+scientific explanations; the real gate and its scientific assertions are unchanged.
+README now distinguishes structural validation from assessing scientific adequacy.
+The regression reproduces the original rejection with the old filter and accepts
+equivalent scientific prose with the repair; missing links and outcome labels still
+fail. This deliberately avoids adding another mandatory report schema or vocabulary.
+
+- Focused verification/collaboration/evidence suite: **53 passed**.
+- `python -m unittest discover -s tests -q`: **133 run, OK, 4 expected skips**.
+- Enabled actual Bubblewrap boundary/runtime checks: **4 passed**.
+- Read-only validation of the preserved final-009 scientific files now returns no
+  deliverable or integration failures; accepted evidence integrity passes. This did
+  not rewrite the failed receipt, run state or scientific artifacts and is not a new
+  scientific acceptance run.
+- Enabled M3 live and service-enforcement checks **fail before inference** here because
+  the required `XDG_RUNTIME_DIR` / `DBUS_SESSION_BUS_ADDRESS` are absent. Fresh failed
+  receipt: `runtime/tmp/m3-integration-6-repair/m3-live-q9qnyfce/receipt.json` under this
+  pipeline run. No owned services were created; cleanup errors are empty.
+
+Normal review and enabled controller-host final verification remain required.
+PROJECT.md, root AGENTS.md, manager STATUS.md and previous evidence are preserved.
+
+Review follow-up: the live gate duplicated the same prose keyword checklist.
+Extracted its synthesis check into `check_synthesis`, removed that checklist, and
+extended the existing regression through the exact helper called by live acceptance.
+The test first reproduced `Synthesis missing assumptions` after coordinator validation
+passed. It now passes and rejects missing child/check/response/final-check links,
+missing outcome labels and missing stress-case discussion. The live gate retains its
+independent numerical observations, supported objection, finite exchange, fresh-context
+continuation, cumulative accounting, isolated reproduction and cleanup checks.
+Read-only replay of the preserved final-009 synthesis also passes this helper.
+
+Follow-up validation: **31 focused tests passed; 133 full-suite tests passed with
+4 expected skips**. Enabled M3 still fails before inference on the absent systemd
+user bus, with no owned services or cleanup errors. Fresh receipt:
+`runtime/tmp/m3-integration-6-review-repair/m3-live-osfl4jcr/receipt.json` under this
+pipeline run. Controller-host live verification remains necessary.
