@@ -11,4 +11,4 @@
 - [test_m1_live.py](test_m1_live.py) — Explicitly enabled actual Codex research, numerical reproduction and private acceptance receipts.
 - [test_m2_live.py](test_m2_live.py) — Opt-in real Codex pause, human direction, automatic fresh-context continuation, isolated reproduction and private receipts.
 - [test_m3_live.py](test_m3_live.py) — Opt-in real dependent collaboration, acknowledged child rollover, parent progress, independent challenge, finite response, isolated reproduction and private receipts.
-- [test_m3_evidence.py](test_m3_evidence.py) — Unpaid regressions for parent progress within observed rollover milestones and reproduction from each task's original working directory.
+- [test_m3_evidence.py](test_m3_evidence.py) — Unpaid regressions for rollover progress, numerical evidence and fingerprint audits, executed-call provenance and task-local reproduction.

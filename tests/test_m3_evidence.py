@@ -122,6 +122,53 @@ class IndependentEvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "fingerprint mismatch"):
             self.observations()
 
+    def test_structured_audit_validates_hashes_without_becoming_observations(self):
+        code = self.write("check.py", "# independent check")
+        data = self.write("check.json", {"rows": self.rows})
+        frozen = self.project / self.independent / "inputs/initial/files/work/parent.py"
+        frozen.parent.mkdir(parents=True)
+        frozen.write_text("# frozen evidence")
+        digest = hashlib.sha256(frozen.read_bytes()).hexdigest()
+        audit = self.write("audit.json", {
+            "artifacts": [
+                {"path": frozen.relative_to(self.project).as_posix(),
+                 "sha256": digest, "expected": digest, "matches": True},
+                {"path": "check.py", "sha256": self.artifacts[code]},
+                {"path": "/project/" + data, "sha256": self.artifacts[data]}],
+            "max_absolute_fractional_error_difference_from_response": 2.8e-16,
+            "coarse_simpson_exact_arithmetic_relative_bias_bound": 1.1e-40})
+        observations = self.observations()
+        self.assertEqual(observations, {data: self.rows})
+        self.assertEqual(set(self.calls(observations, [
+            "python3 check.py --output check.json"])), {data})
+        with self.assertRaisesRegex(AssertionError, "near-boundary"):
+            self.observations({audit: self.artifacts[audit]})
+        frozen.write_text("# changed frozen evidence")
+        with self.assertRaisesRegex(AssertionError, "fingerprint mismatch"):
+            self.observations()
+
+    def test_structured_audit_rejects_false_or_malformed_evidence(self):
+        code = self.write("check.py", "# independent check")
+        self.write("check.json", {"rows": self.rows})
+        entry = {"path": "check.py", "sha256": self.artifacts[code]}
+        for audit in (
+                {"artifacts": []},
+                {"artifacts": [None]},
+                {"artifacts": [{**entry, "sha256": "0" * 64}]},
+                {"artifacts": [{**entry, "expected": "0" * 64, "matches": True}]},
+                {"artifacts": [{**entry, "expected": entry["sha256"], "matches": False}]},
+                {"artifacts": [{**entry, "matches": True}]},
+                {"artifacts": [{**entry, "unexpected": "ignored"}]},
+                {"artifacts": [entry], "diagnostic": float("nan")},
+                {"artifacts": [entry], "diagnostic": True},
+                {"artifacts": [entry], "observations": [self.rows[1]]},
+                {"artifacts": [entry], "rows": []},
+                {"artifacts": [entry], "rows": [{**self.rows[1], "reference": 9.0}]}):
+            with self.subTest(audit=audit):
+                self.write("audit.json", audit)
+                with self.assertRaises(AssertionError):
+                    self.observations()
+
     def test_all_numerical_files_are_checked_including_partitioned_stress(self):
         near = self.write("near.json", {"rows": self.rows[:1]})
         stress = self.write("stress.json", {"rows": self.rows[1:]})
@@ -207,7 +254,8 @@ class IndependentEvidenceTests(unittest.TestCase):
         self.write("check.json", {"rows": self.rows})
         for prefix in ("exit 0", "exec /usr/bin/true", "eval 'exit 0'",
                        "mkdir -p notes && exit 0"):
-            for writer in ("cat check.py", "cat > note.md <<'MD'\nSaved note\nMD"):
+            for writer in ("cat check.py", "cat > note.md <<'MD'\nSaved note\nMD",
+                           "python3 - <<'PY'\nprint('Saved note')\nPY"):
                 with self.subTest(prefix=prefix, writer=writer):
                     body = f"{prefix} && {writer}\npython3 check.py --output check.json\n"
                     result = subprocess.run(["/bin/bash", "-c", body],
@@ -221,7 +269,8 @@ class IndependentEvidenceTests(unittest.TestCase):
     def test_skipped_check_then_successful_statement_is_not_execution_provenance(self):
         self.write("check.py", "from pathlib import Path\nPath('executed').touch()\n")
         self.write("check.json", {"rows": self.rows})
-        for tail in ("sha256sum check.py", "cat > note.md <<'MD'\nSaved note\nMD"):
+        for tail in ("sha256sum check.py", "cat > note.md <<'MD'\nSaved note\nMD",
+                     "python3 - <<'PY'\nprint('Saved note')\nPY"):
             with self.subTest(tail=tail):
                 body = ("cat missing-file && python3 check.py --output check.json\n"
                         + tail + "\n")
@@ -232,6 +281,27 @@ class IndependentEvidenceTests(unittest.TestCase):
                 self.assertFalse((self.project / self.independent / "executed").exists())
                 with self.assertRaisesRegex(AssertionError, "Missing or ambiguous"):
                     self.calls(self.observations(), [shlex.join(["/bin/bash", "-c", body])])
+
+    def test_python_heredoc_authoring_then_direct_check_supplies_provenance(self):
+        self.write("helper.py", "# trusted checkpoint fixture\n")
+        data = self.write("check.json", {"rows": self.rows})
+        script = ("from pathlib import Path\nimport sys\n"
+                  "Path('executed').write_text(' '.join(sys.argv[1:]))\n")
+        self.write("check.py", script)
+        body = ("python3 helper.py --check && python3 - <<'PY'\n"
+                "from pathlib import Path\n"
+                f"Path('check.py').write_text({script!r})\n"
+                "Path('note.md').write_text('python3 check.py --a 9 --output check.json')\n"
+                "PY\n"
+                "python3 helper.py --check && python3 check.py --a 1.01 1.2 --output check.json")
+        result = subprocess.run(["/bin/bash", "-c", body],
+                                cwd=self.project / self.independent,
+                                capture_output=True, text=True, timeout=5)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.project / self.independent / "executed").read_text(),
+                         "--a 1.01 1.2 --output check.json")
+        calls = self.calls(self.observations(), [shlex.join(["/bin/bash", "-c", body])])
+        self.assertEqual(calls[data]["argv"][2:], ["--a", "1.01", "1.2", "--output", "check.json"])
 
     def test_unconditional_and_successful_final_chain_calls_supply_provenance(self):
         self.write("check.py", "from pathlib import Path\nPath('executed').touch()\n")

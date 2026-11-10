@@ -165,7 +165,7 @@ def reproduction_driver(invocations):
 
 
 def independent_observations(project, independent, artifacts, read):
-    """Separate observation tables from verified fingerprint maps, by content."""
+    """Separate observation tables from verified fingerprint metadata, by content."""
     observations, seen = {}, {}
     for rel in artifacts:
         if (not rel.startswith(independent + "/") or "/inputs/" in rel
@@ -175,13 +175,35 @@ def independent_observations(project, independent, artifacts, read):
         if not isinstance(data, dict) or not data:
             raise AssertionError(f"Unrecognized independent evidence: {rel}")
         if "rows" not in data:
-            # Reports may link provenance alongside observations. Unknown JSON is
-            # not silently ignored, and a hash map must describe real evidence.
-            for target, digest in data.items():
-                if not isinstance(digest, str) or not re.fullmatch(r"[a-f0-9]{64}", digest):
+            # Accept flat hash maps and structured artifact audits. Auxiliary
+            # finite diagnostics do not substitute for observation rows. Unknown
+            # JSON still fails, and every fingerprint is checked against bytes.
+            if "artifacts" in data:
+                entries = data["artifacts"]
+                if (not isinstance(entries, list) or not entries or any(
+                        type(value) not in (int, float) or not math.isfinite(value)
+                        for key, value in data.items() if key != "artifacts")):
                     raise AssertionError(f"Unrecognized independent evidence: {rel}")
+            else:
+                entries = [{"path": target, "sha256": digest} for target, digest in data.items()]
+            for entry in entries:
+                if (not isinstance(entry, dict) or not {"path", "sha256"} <= entry.keys()
+                        or entry.keys() - {"path", "sha256", "expected", "matches"}
+                        or not isinstance(entry["path"], str)
+                        or any(not isinstance(entry[key], str)
+                               or not re.fullmatch(r"[a-f0-9]{64}", entry[key])
+                               for key in ("sha256", "expected") if key in entry)
+                        or ("matches" in entry and
+                            ("expected" not in entry or entry["matches"] is not True))):
+                    raise AssertionError(f"Unrecognized independent evidence: {rel}")
+                target, digest = entry["path"], entry["sha256"]
+                # Audit lists can use project-relative paths for frozen inputs,
+                # and report-relative paths for their own checks.
+                if target.startswith(independent + "/"):
+                    target = "/project/" + target
                 path = verification.link_path(project, rel, target)
-                if path is None or workspace.file_digest(workspace.safe_path(project, path)) != digest:
+                if (path is None or workspace.file_digest(workspace.safe_path(project, path)) != digest
+                        or entry.get("expected", digest) != digest):
                     raise AssertionError(f"Independent fingerprint mismatch: {rel}: {target}")
             continue
         rows = data["rows"]
@@ -238,7 +260,8 @@ def direct_python_commands(command):
     simple = rf"{word}(?:[ \t]+{word})*"
     chain = re.compile(rf"{simple}(?:[ \t]*&&[ \t]*{simple})*")
     heredoc = re.compile(
-        rf"(?P<prefix>(?:{simple}[ \t]*&&[ \t]*)*)cat[ \t]+"
+        rf"(?P<prefix>(?:{simple}[ \t]*&&[ \t]*)*)"
+        rf"(?P<writer>cat|(?:[\w./-]*/)?python3?[ \t]+-)[ \t]+"
         rf"(?:>[ \t]*{word}[ \t]+)?<<(?P<tabs>-?)[ \t]*"
         r"""(?P<quote>['"]?)(?P<end>[A-Za-z_][A-Za-z0-9_]*)(?P=quote)""")
     lines = iter(command.split("\n"))
@@ -256,7 +279,7 @@ def direct_python_commands(command):
         if header:
             # Strip only the opaque writer redirection/body. Its executable
             # prefix goes through exactly the same validation as every chain.
-            statement = header["prefix"] + "cat"
+            statement = header["prefix"] + header["writer"]
             for body in lines:
                 if (body.lstrip("\t") if header["tabs"] else body) == header["end"]:
                     break
@@ -266,12 +289,15 @@ def direct_python_commands(command):
             return []
         # Full matching above excludes quoted operators and incomplete commands
         # before splitting; heredoc contents never reach this branch.
-        for position, part in enumerate(statement.split("&&")):
+        parts = statement.split("&&")
+        for position, part in enumerate(parts):
             args = shlex.split(part)
             program = Path(args[0]).name
             if program not in ("python", "python3", "cat", "mkdir", "sha256sum"):
                 return []
             if program in ("python", "python3"):
+                if header and position == len(parts) - 1 and args[1:] == ["-"]:
+                    continue  # Opaque stdin authoring; never a recorded calculation.
                 if (len(args) < 2 or not args[1].endswith(".py")
                         or any("[" in arg or "]" in arg for arg in args)):
                     return []

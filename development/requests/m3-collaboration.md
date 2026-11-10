@@ -503,3 +503,37 @@ checks fail before inference because this worker lacks `XDG_RUNTIME_DIR` and
 `runtime/tmp/m3-heredoc-prefix-repair/m3-live-8mn_d1gg/receipt.json` under this
 pipeline run; no owned services or cleanup errors. Normal review and fresh enabled
 controller-host final/combined verification remain required for acceptance.
+
+### Integration repair: structured evidence audits (2026-11-10)
+
+Read complete final-015 command output and the retained `m3-live-uk1qggkx`
+evidence. The failure rejected a legitimate structured fingerprint audit with
+supplementary numerical diagnostics. The gate now validates both flat hash maps
+and nonempty artifact lists against actual bytes, including optional expected
+hashes/match assertions. Supplementary finite numeric diagnostics cannot replace
+observation rows; unknown structures, malformed audits and incorrect fingerprints
+still fail. Both numerical rounds retain all observation/provenance/reproduction
+requirements.
+
+Read-only validation exposed a further rejection before reproduction: the recorded
+targeted check followed Python stdin authoring in the same shell event. The narrow
+grammar now permits that heredoc consumer, validates its entire executable prefix
+and ignores its body for calculation provenance. Early exits, unsupported prefixes,
+masked failed prerequisites and documentation-only calls remain rejected. Three
+new regressions reproduced both failures before repair and cover false/malformed
+audits; existing shell regressions now exercise Python heredocs too.
+
+- Full discovery: **152 tests, OK with 4 expected skips**, 9.3 seconds.
+- Focused evidence tests: **21 passed**. Enabled Bubblewrap/native checks:
+  **4 passed**.
+- Read-only retained-run validation recognizes all **10 initial and 5 targeted
+  rows**, their two distinct executed scripts and synthesis links; all **15
+  accepted artifact fingerprints remain unchanged**. No science was executed.
+- Enabled M3 and service enforcement checks fail before inference because this
+  worker lacks `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Fresh receipt:
+  `runtime/tmp/m3-integration-10-repair/m3-live-83vfcmde/receipt.json` under this
+  pipeline run; owned services and cleanup errors are empty.
+
+Normal review and fresh enabled controller-host final/combined verification remain
+necessary, including isolated scientific reproduction. This repair establishes
+code readiness, not live M3 acceptance. Requirements and prior evidence are preserved.
