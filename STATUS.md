@@ -2,10 +2,10 @@
 
 ## Current boundary
 
-- PROJECT.md and root AGENTS.md are unchanged. **M1/M2 accepted; M3 reviewed but neither integrated nor accepted. M4/M5 not started.** COMPLETE and COMPLETE.ack are absent. This is safe retirement, not project completion.
+- PROJECT.md and root AGENTS.md are unchanged. **M1/M2 accepted; M3 reviewed but neither integrated nor accepted. M4/M5 not started.** COMPLETE and COMPLETE.ack are absent. Recovery is active; project completion is not claimed.
 - M1 evidence: `development/requests/m1-implementation.md`; integrated `dd2efc9` / `a39d454`. M2 run `20261110T111316_7e4bef43` merged locally at `53a68e19e6e695788dc2ba0b8673665e1f80c370`, with two actual pause/edit/resume/fresh-primary demonstrations. Frozen M2 evidence: `coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/`. Do not restart M1/M2.
 
-## Preserved M3 request and exact stopped state
+## Preserved M3 request and recovery checkpoint
 
 - Objective: dependent delegation, separate independent verification, bounded criticism, scientific integration, separate workspaces/handoffs, fresh contexts and cumulative limits.
 - Request ID **`m3-collaboration-independent-verification-20261110T135106Z-715e354e`**. Frozen directory **`coding_pipeline/logs/manager/m3-collaboration-independent-verification-20261110T135106Z-715e354e/`** holds immutable `request.md`, effective `config.toml`, submission hashes and `receipt.json`; preserve them. Submitted once; recover this run rather than duplicate work.
@@ -29,6 +29,8 @@
 - Independent read-only component review found no actionable findings. Activation confirmed clean worktrees, absent owner/free lock; only clean committed component repair worktrees were removed. Receipts: frozen-directory `final-retry-component-review.json`, `final-retry-component-activated.json`. Controller unchanged on `project-manager/setup` at `d0771db`; **no restart required**. Let it manage its lifecycle.
 
 ## Recovery configuration and next action
+
+- Current session reconciled the stopped owner, free lock and all twelve inactive scientific units in `restart-reconciled-20261110T2213Z.json`. Next: ordinary resume of the same interrupted Writer repair 14 using frozen `restart-input-20261110T2213Z.txt`. This asks the pipeline to diagnose its repeated command/evidence recognition mismatch and use proportional proof of actual same-primary science without waiving overlap or verifier protections. No new request, budget renewal, product inspection or manager test is authorized/needed.
 
 - First rediscover/status/report the same run and reconcile its stopped owner/lock. Then use ordinary **`flow resume 20261110T135145_2b46d578 --input ...`** for interrupted Writer repair 14, carrying a focused decision based on final-021 and its saved receipt. Preserve existing partial work and bounded repair budget; a new request or automatic budget renewal is unnecessary. Diagnose the repeated event-recognition mismatch through pipeline reports and keep the proof of real parent science proportional. All product edits/tests/demonstrations/review remain in coding_pipeline; manager adds no independent product tests/review or new human gate.
 - Require ordinary review, fresh passed enabled **final and combined verification**, then pipeline-confirmed LOCAL integration before accepting M3 or submitting M4. Exit zero alone does not establish integration. Keep all prior substantive science, actual reproduction, accepted-evidence integrity, timing/native-identity requirements and confirmed full cleanup.
