@@ -26,13 +26,12 @@ class Config:
     wall_seconds: float = 600
     memory_mib: int = 2048
     max_tasks: int = 128
-    cpu_percent: int = 100
     deadline: float = 0
     unit: str = field(default_factory=lambda: f"research-{uuid.uuid4().hex}.service")
 
     def limits(self):
         return {"wall_seconds": self.wall_seconds, "memory_mib": self.memory_mib, "swap_bytes": 0,
-                "max_tasks": self.max_tasks, "cpu_percent": self.cpu_percent,
+                "max_tasks": self.max_tasks,
                 "per_file_bytes": 64 * 1024 * 1024, "log_bytes_per_stream": 4 * 1024 * 1024,
                 "concurrent_researchers": 1}
 
@@ -137,7 +136,6 @@ def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data:
                f"--property=MemoryMax={config.memory_mib}M",
                "--property=MemorySwapMax=0",
                f"--property=TasksMax={config.max_tasks}",
-               f"--property=CPUQuota={config.cpu_percent}%",
                "--property=LimitFSIZE=67108864", "--",
                *bubblewrap_command(project, argv, config.codex if auth_home else None, auth_home)]
     process = None
@@ -257,7 +255,7 @@ def preflight(config, project):
         (probe / "AGENTS.md").write_text("protected")
         (probe / "RESEARCH_STATUS.md").write_text("protected")
         probe_config = Config(wall_seconds=min(10, config.wall_seconds), memory_mib=config.memory_mib,
-                              max_tasks=config.max_tasks, cpu_percent=config.cpu_percent,
+                              max_tasks=config.max_tasks,
                               deadline=min(config.deadline, time.monotonic() + 10))
         diagnostics = bytearray()
         enforced = {}
@@ -274,17 +272,14 @@ def preflight(config, project):
                     memory = (path / "memory.max").read_text().strip()
                     swap = (path / "memory.swap.max").read_text().strip()
                     tasks = (path / "pids.max").read_text().strip()
-                    quota, period = (path / "cpu.max").read_text().split()
                     if (int(memory) != config.memory_mib * 1024 * 1024
                             or swap != "0"
-                            or int(tasks) != config.max_tasks
-                            or quota == "max"
-                            or abs(int(quota) / int(period) * 100 - config.cpu_percent) > 0.1):
+                            or int(tasks) != config.max_tasks):
                         raise ValueError("requested cgroup settings were not applied")
                 except (OSError, ValueError) as exc:
                     raise RuntimeUnavailable(f"Cannot verify cgroup v2 resource limits: {exc}") from exc
                 enforced.update(memory_max=memory, memory_swap_max=swap,
-                                pids_max=tasks, cpu_max=f"{quota} {period}")
+                                pids_max=tasks)
         # This host path exists but is absent in the namespace. A new file at the
         # same spelling in private /tmp cannot affect the host sentinel.
         sentinel = project / ".research_pipeline" / f"outside-{uuid.uuid4().hex}"
@@ -304,7 +299,7 @@ def preflight(config, project):
                 + diagnostics.decode(errors="replace"))
     return {"filesystem": "Bubblewrap explicit mounts; protected inputs read-only",
             "descendants": "PID namespace and systemd KillMode=control-group",
-            "resources": "systemd cgroup memory/tasks/CPU, no swap; monotonic and service wall deadline",
+            "resources": "systemd cgroup memory/tasks, no swap; monotonic and service wall deadline",
             "probe": "permitted computation and protected sentinel operations passed",
             "observed_cgroup_limits": enforced,
             "network": "outbound network available; no destination filtering",

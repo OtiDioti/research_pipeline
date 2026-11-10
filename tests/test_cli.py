@@ -122,6 +122,8 @@ class ProjectCase(unittest.TestCase):
         state = self.state()
         self.assertEqual(state['state'], 'completed')
         self.assertTrue(state['cleanup_ok'])
+        self.assertNotIn('cpu_percent', state['limits'])
+        self.assertIn('CPU fraction and aggregate CPU time are not capped.', state['limitations'])
         self.assertEqual(state['telemetry']['usage_as_emitted']['input_tokens'], 12)
         self.assertEqual(before, workspace.fingerprints(self.project))
         self.assertFalse((self.project / 'starting_evidence/FOLDER_CONTENT.md').exists())
@@ -201,6 +203,14 @@ class ProjectCase(unittest.TestCase):
                 with self.assertRaises(SystemExit) as error:
                     cli.main(['start', str(self.project), '--wall-seconds', value])
                 self.assertEqual(error.exception.code, 2)
+        self.assertFalse((self.project / '.research_pipeline').exists())
+
+    def test_removed_cpu_option_is_rejected(self):
+        with redirect_stderr(io.StringIO()) as errors:
+            with self.assertRaises(SystemExit) as error:
+                cli.main(['start', str(self.project), '--cpu-percent', '100'])
+        self.assertEqual(error.exception.code, 2)
+        self.assertIn('unrecognized arguments: --cpu-percent', errors.getvalue())
         self.assertFalse((self.project / '.research_pipeline').exists())
 
     def test_inspect_reports_stale_activity(self):

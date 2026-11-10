@@ -12,10 +12,9 @@ cgroup/lifetime acceptance must pass in the pipeline's authorized controller hos
 environment using the opt-in check below. See the
 [implementation report](development/requests/m1-implementation.md).
 
-Implementation is ready for code review and the existing controller-owned final
-verification stage. That stage runs after the Architect emits `CWI: complete`;
-the signal completes the implementation roadmap, while M1 acceptance still
-requires the enabled suite and assessment of its actual scientific evidence.
+The CPU-controller integration repair returns to the existing controller-owned
+final verification stage after review. M1 acceptance still requires the enabled
+suite and assessment of its actual scientific evidence.
 
 ## Installation and prerequisites
 
@@ -47,6 +46,13 @@ codex exec --help
 systemd-run --user --wait --pipe --quiet /usr/bin/true
 ```
 
+A successful `/usr/bin/true` service checks bus access, but does not establish
+resource enforcement. The service hierarchy must expose the cgroup v2 `memory`
+and `pids` controllers, including `memory.swap.max`. Preflight verifies their
+actual settings; missing controllers or unapplied limits block execution.
+CPU controller delegation is not required. CPU fraction and aggregate CPU time
+are not capped.
+
 Do not route through another user bus, disable an enclosing sandbox, or change
 permissions to evade restrictions. If the user manager, native authentication, PID/user
 namespaces, controlled Codex configuration or resource controllers are unavailable,
@@ -61,7 +67,7 @@ mkdir -p /path/to/investigation/starting_evidence
 # Write the human questions in starting_evidence/RESEARCH_QUESTIONS.md.
 # Add relevant notes, papers, code or datasets and optional root AGENTS.md.
 .venv/bin/research-pipeline start /path/to/investigation \
-  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 --cpu-percent 100
+  --wall-seconds 600 --memory-mib 2048 --max-tasks 128
 .venv/bin/research-pipeline inspect /path/to/investigation
 .venv/bin/research-pipeline inspect /path/to/investigation --json
 ```
@@ -69,7 +75,7 @@ mkdir -p /path/to/investigation/starting_evidence
 `--codex /absolute/path/to/codex` and `--model MODEL` select the installed binary
 and account-supported model. Without `--model`, Codex selects its backend default;
 the controller does not assert a particular resolved model. All limits must be
-positive and finite. `--cpu-percent 100` is an aggregate quota of one logical CPU.
+positive and finite.
 `--max-tasks` counts processes and threads, including backend overhead.
 The research service has no swap allowance (`MemorySwapMax=0`).
 
@@ -128,16 +134,18 @@ The PID namespace, `--die-with-parent`, dropped capabilities, and systemd
 `KillMode=control-group` contain descendants, including detached sessions. Cleanup
 runs after success, failure, deadline and interruption, with short grace then
 SIGKILL. The launcher refuses completion unless service/cgroup inactivity is confirmed.
-Systemd enforces aggregate memory, zero swap, CPU, tasks and remaining wall time; the controller
+Systemd enforces aggregate memory, zero swap, tasks and remaining wall time; the controller
 also checks a monotonic deadline. Startup uses that same wall budget; bounded service
 cleanup may add several seconds. A disposable probe checks protected inputs, permitted
-computation, and actual cgroup `memory.max`, `memory.swap.max`, `pids.max`, `cpu.max`
+computation, and actual cgroup `memory.max`, `memory.swap.max`, `pids.max`
 settings before inference. Missing or nonzero swap limits fail preflight.
 
 Limits that are **not** guaranteed:
 
 - No hard model-token/spending cap or reliable context occupancy. Optional emitted
   turn usage is stored verbatim and never interpreted as context occupancy.
+- CPU fraction and aggregate CPU time are not capped. Scientific commands can use
+  available CPUs within the shared wall, memory and task limits.
 - No separate per-command runtime or scientific-job scheduler. All commands share
   the remaining investigation lifetime and aggregate quotas; there is one researcher.
 - A 64 MiB per-file limit and 4 MiB per operational log are **not** a total disk quota.

@@ -1,5 +1,19 @@
 # M1 implementation report
 
+The CPU-controller integration repair removes the CPU-percentage option and
+hard-quota prerequisite as authorized by the recovery response. Memory, zero
+swap, task/thread limits, wall deadlines, namespace/mount protections and
+whole-service cleanup remain required. CPU fraction and aggregate CPU time are
+not capped. Review is followed directly by the existing enabled controller final
+suite; actual M1 scientific acceptance remains pending.
+
+## Historical implementation and verification record
+
+The following records describe earlier attempts and their interfaces. Historical
+commands, CPU-quota claims and failed receipts are retained as evidence, not
+current usage guidance. The recovery record at the end supersedes that CPU
+contract; README describes the supported interface.
+
 The minimal Python CLI and isolated Codex backend boundary are implemented and
 ready for code review and controller-owned final verification. **M1
 acceptance remains incomplete:** the Writer's restricted execution environment cannot
@@ -478,3 +492,122 @@ not establish service enforcement or scientific acceptance. The enabled controll
 host suite remains required. No research agent, model inference or demonstration
 job was launched during this repair. `PROJECT.md`, root `AGENTS.md`, human evidence
 and manager-owned `STATUS.md` were not edited.
+
+## Integration repair 2 — host CPU controller unavailable
+
+Read the complete supplied `tests/final-003.txt` report and its sibling
+`tests/final-003.txt.commands/0001.txt`. The artifact reader refused the sibling
+file, so its complete contents were read from the existing local artifact path.
+Both failures share one cause: service integration setup and actual CLI research
+preflight cannot read the transient service's `cpu.max`. The recorded backend
+version is `codex-cli 0.167.0`; the CLI exits **3**, state **blocked**, before
+research starts. The disposable boundary probe passes and reports
+`cleanup_ok=True`. These failures do not establish a scientific demonstration.
+
+Read-only inspection of this host's cgroup hierarchy confirms the prerequisite
+failure rather than a wrong service path or an exited probe:
+
+```text
+/sys/fs/cgroup/cgroup.controllers: cpuset cpu io memory hugetlb pids rdma misc
+/sys/fs/cgroup/cgroup.subtree_control: memory pids
+/sys/fs/cgroup/user.slice/cgroup.controllers: memory pids
+/sys/fs/cgroup/user.slice/cgroup.subtree_control: memory pids
+```
+
+The same `memory pids` values appear at `user-1000.slice`,
+`user@1000.service` and `app.slice`; `cpu.max` is absent throughout that user
+hierarchy. The CPU controller is available at the host root but unavailable to
+these descendants. Requesting systemd `CPUQuota` has not established a kernel
+quota, and accepting the missing file would falsely claim enforced protection.
+No production or test change can supply the missing host delegation within this
+task's authority. Preserve the existing rejection. README now explains this
+specific prerequisite and why a successful trivial service is insufficient.
+No host configuration, permissions, controller machinery or isolation settings
+were changed.
+
+Verification:
+
+```sh
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests -v \
+  > .m1-local/integration-2/tests.txt 2>&1
+```
+
+Both commands exit **0**: `Ran 25 tests`, `OK (skipped=2)`, with **24 passing
+tests**, including actual Bubblewrap input protection and permitted computation.
+Service-class setup skips because this Writer session has neither user-bus
+environment variable; the opt-in live test skips because it is not enabled.
+The verbose run took 1.153 seconds. The read-only controller-availability snapshot
+is preserved in `.m1-local/integration-2/runtime.json`.
+
+The enabled controller test's **one failure and one setup error remain
+unresolved**. A host with CPU, memory and task controllers available to the
+authorized user-service hierarchy is required before its existing enabled full
+suite can validate actual research, resource enforcement, reproduction and
+cleanup. This session cannot perform that host repair or submit controller-owned
+verification. No additional live run was attempted: it would fail earlier on the
+already documented missing Writer bus. No agent or compute job was launched or
+left running. `PROJECT.md`, root `AGENTS.md`, human inputs and manager-owned
+`STATUS.md` were not edited.
+
+## Integration repair 2 recovery — remove the CPU-quota requirement
+
+Read the preserved recovery response and full failure output from the existing
+local artifact files after the artifact reader refused those paths. The response
+explicitly authorizes removing the plan-imposed CPU quota within M1; no host
+configuration or alternate execution mechanism is authorized or needed.
+
+Removed `--cpu-percent`, `Config.cpu_percent`, saved CPU limit fields,
+`CPUQuota`, and the `cpu.max` preflight check. Actual live CLI and reproduction
+commands now use wall, memory and task limits only. Status/inspection limitations
+and README explicitly disclose that CPU fraction and aggregate CPU time are not
+capped. Historical commands and failure receipts above and under `.m1-local/`
+remain intact. They describe the superseded contract.
+
+The production launcher still requests `MemoryMax`, `MemorySwapMax=0`,
+`TasksMax`, `RuntimeMaxSec`, the per-file bound and whole-control-group cleanup.
+Preflight still checks actual memory, zero-swap and task settings. Namespace and
+mount boundaries, protected-input checks, one researcher, monotonic deadlines,
+detached-descendant cleanup and enabled-acceptance failure behavior are unchanged.
+No optional-resource framework, fallback sandbox, controller change or later
+milestone functionality was introduced.
+
+Regression coverage exercises preflight with memory/pids settings and **no
+`cpu.max` file**. Each remaining cgroup setting must reject absent, unlimited or
+incorrect values. CLI checks reject the removed option without creating a run,
+and successful saved/inspected status contains no CPU-percentage limit and
+discloses the uncapped CPU limitation. Existing real service and live research
+tests retain their checks and explicit opt-in behavior.
+
+Writer-local verification commands:
+
+```sh
+mkdir -p .m1-local/integration-2-recovery/tmp
+TMPDIR="$PWD/.m1-local/integration-2-recovery/tmp" \
+  /home/francesco/miniconda3/bin/python -m unittest discover -s tests -v \
+  > .m1-local/integration-2-recovery/tests.txt 2>&1
+PYTHONPATH="$PWD/src" /home/francesco/miniconda3/bin/python \
+  -m research_pipeline start --help \
+  > .m1-local/integration-2-recovery/start-help.txt
+sha256sum -c .m1-local/integration-2-recovery/protected-before.sha256
+```
+
+All exit **0**. The final suite reports `Ran 26 tests in 1.159s`,
+`OK (skipped=2)`: **25 tests pass**, including actual Bubblewrap protected-input
+enforcement and permitted computation. Service-class setup skips for this
+Writer's unavailable user bus; live research skips because it is not enabled.
+No host bus/authentication access or live research invocation was attempted.
+The regression's cgroup service doubles establish validation behavior only;
+actual memory/tasks/swap enforcement and descendant cleanup still require
+enabled controller verification. Before/after SHA-256 manifests confirm
+`PROJECT.md`, root `AGENTS.md` and manager-owned `STATUS.md` are unchanged.
+
+Reviewed the repair against the preserved failure: neither service startup nor
+preflight now requests a CPU controller, while remaining protection requests and
+checks are retained. The implementation repair is ready for review and returns
+directly to the existing integrated final suite with
+`RESEARCH_PIPELINE_M1_LIVE=1` and the same private request output directory.
+No additional implementation milestone is required. This is **not M1 scientific
+completion**: actual Codex research, primary-literature assessment, numerical
+reproduction and cleanup must pass in that pipeline evidence. No demonstration
+agents or compute jobs were launched or left running by this recovery.

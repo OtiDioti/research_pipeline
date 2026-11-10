@@ -39,18 +39,20 @@ class PreflightResourceTests(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, "Bubblewrap missing"):
                 case.test_actual_mount_boundary_and_permitted_computation()
 
-    def test_preflight_requires_verified_zero_swap(self):
+    def test_preflight_requires_memory_zero_swap_and_tasks_without_cpu_controller(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             fixture(root)
             cgroups = root / '.research_pipeline/cgroups'
             group = cgroups / 'probe'
             group.mkdir(parents=True)
-            (group / 'memory.max').write_text(str(128 * 1024 * 1024))
-            (group / 'pids.max').write_text('32')
-            (group / 'cpu.max').write_text('50000 100000')
+            settings = {'memory.max': str(128 * 1024 * 1024),
+                        'memory.swap.max': '0', 'pids.max': '32'}
+            for name, value in settings.items():
+                (group / name).write_text(value)
+            # Mirrors the demonstrated host: memory/pids delegated, no cpu.max.
             config = isolation.Config(wall_seconds=8, memory_mib=128, max_tasks=32,
-                                      cpu_percent=50, deadline=time.monotonic() + 8)
+                                      deadline=time.monotonic() + 8)
             def path(value):
                 return cgroups if value == '/sys/fs/cgroup' else Path(value)
             def execute(config, project, argv, on_event):
@@ -62,19 +64,21 @@ class PreflightResourceTests(unittest.TestCase):
                  patch.object(isolation, 'Path', side_effect=path), \
                  patch.object(isolation, 'service_properties', return_value={'ControlGroup': '/probe'}), \
                  patch.object(isolation, 'run_isolated', side_effect=execute):
-                for swap in ('max', '1048576', None, '0'):
-                    with self.subTest(swap=swap):
-                        setting = group / 'memory.swap.max'
-                        if swap is None:
-                            setting.unlink()
-                        else:
-                            setting.write_text(swap)
-                        if swap == '0':
-                            capabilities = isolation.preflight(config, root)
-                            self.assertEqual(capabilities['observed_cgroup_limits']['memory_swap_max'], '0')
-                        else:
+                capabilities = isolation.preflight(config, root)
+                self.assertEqual(capabilities['observed_cgroup_limits'],
+                                 {'memory_max': settings['memory.max'],
+                                  'memory_swap_max': '0', 'pids_max': '32'})
+                for name, valid in settings.items():
+                    for invalid in (None, 'max', '1048576'):
+                        with self.subTest(resource=name, value=invalid):
+                            setting = group / name
+                            if invalid is None:
+                                setting.unlink()
+                            else:
+                                setting.write_text(invalid)
                             with self.assertRaisesRegex(isolation.RuntimeUnavailable, 'Cannot verify cgroup'):
                                 isolation.preflight(config, root)
+                            setting.write_text(valid)
 
 
 class BubblewrapBoundaryTests(unittest.TestCase):
@@ -113,7 +117,7 @@ class ServiceIsolationTests(unittest.TestCase):
             root = Path(temp)
             fixture(root)
             config = isolation.Config(wall_seconds=8, memory_mib=128, max_tasks=32,
-                                      cpu_percent=50, deadline=time.monotonic() + 8)
+                                      deadline=time.monotonic() + 8)
             # An available but broken runtime is a failure, not a skip.
             cls.capabilities = isolation.preflight(config, root)
 
@@ -125,7 +129,7 @@ class ServiceIsolationTests(unittest.TestCase):
 
     def run_code(self, code, wall=4, memory=128, tasks=32):
         config = isolation.Config(wall_seconds=wall, memory_mib=memory, max_tasks=tasks,
-                                  cpu_percent=50, deadline=time.monotonic() + wall)
+                                  deadline=time.monotonic() + wall)
         output = bytearray()
         def capture(channel, data):
             output.extend(data[:max(0, 65536-len(output))])

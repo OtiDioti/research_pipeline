@@ -190,7 +190,6 @@ def main(argv=None):
     launch.add_argument("--wall-seconds", type=positive, default=600)
     launch.add_argument("--memory-mib", type=positive_int, default=2048)
     launch.add_argument("--max-tasks", type=positive_int, default=128)
-    launch.add_argument("--cpu-percent", type=positive_int, default=100)
     show = sub.add_parser("inspect", help="inspect saved status without inference or authentication")
     show.add_argument("project", type=Path)
     show.add_argument("--json", action="store_true")
@@ -215,8 +214,7 @@ def main(argv=None):
                     print(f"Limitation: {limitation}")
             return 0
         config = isolation.Config(codex=args.codex, model=args.model, wall_seconds=args.wall_seconds,
-                                  memory_mib=args.memory_mib, max_tasks=args.max_tasks,
-                                  cpu_percent=args.cpu_percent)
+                                  memory_mib=args.memory_mib, max_tasks=args.max_tasks)
         return start(args.project, config)
     except (workspace.InputError, OSError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)

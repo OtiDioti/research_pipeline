@@ -127,7 +127,7 @@ class LiveM1Acceptance(unittest.TestCase):
         try:
             start = [sys.executable, "-m", "research_pipeline", "start", str(project),
                      "--wall-seconds", "600", "--memory-mib", "2048",
-                     "--max-tasks", "128", "--cpu-percent", "100"]
+                     "--max-tasks", "128"]
             code = command(start, "start", timeout=630)
             inspect = [sys.executable, "-m", "research_pipeline", "inspect", str(project)]
             self.assertEqual(command(inspect + ["--json"], "inspect-json"), 0)
@@ -169,7 +169,7 @@ class LiveM1Acceptance(unittest.TestCase):
                 rel: hashlib.sha256((project / rel).read_bytes()).hexdigest() for rel in artifacts}
 
             reproduction = isolation.Config(wall_seconds=60, memory_mib=512, max_tasks=32,
-                                            cpu_percent=100, deadline=time.monotonic() + 60)
+                                            deadline=time.monotonic() + 60)
             argv = ["/usr/bin/python3", "/project/work/compute.py",
                     "--output", "/project/work/reproduced.json"]
             receipt["reproduction_invocation"] = {
@@ -179,7 +179,7 @@ class LiveM1Acceptance(unittest.TestCase):
             rerun = (
                 "from pathlib import Path; import time; from research_pipeline import isolation; "
                 "c = isolation.Config(wall_seconds=60, memory_mib=512, max_tasks=32, "
-                "cpu_percent=100, deadline=time.monotonic()+60); "
+                "deadline=time.monotonic()+60); "
                 f"r = isolation.run_isolated(c, Path({str(project)!r}), {argv!r}); "
                 "print(r); raise SystemExit(r.returncode if r.cleanup_ok else 4)")
             receipt["reproduction_rerun_command"] = shlex.join([sys.executable, "-c", rerun])
