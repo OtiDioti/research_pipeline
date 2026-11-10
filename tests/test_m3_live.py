@@ -34,7 +34,8 @@ convergence analysis and one numerical sensitivity/roundoff check suffice for th
 dependent task; disclose any remaining uncertainty. Do not spend the session filling
 the time with increasingly expensive grids. Keep handoffs current from the first
 calculation; when saving is requested, acknowledge the existing useful work promptly.
-Combine the checkpoint --check with each scientific shell command where practical.
+Combine the checkpoint --check with each scientific shell command where practical,
+except for the PRIMARY's standalone parent.py --advance call described below.
 After the reserved successor calculation and its compact uncertainty assessment,
 deliver RESULT.md promptly so primary can integrate and start independent checking.
 
@@ -75,11 +76,17 @@ access honestly. Save required plan, literature, status, report and handoff draf
 Stage the parent study in small useful expansions, retaining new parameters for the
 observed child saving/continuation interval; do not exhaust all extensions beforehand.
 Use concurrent task status printed by --check (or the full --tasks summary).
-Prepare your OWN conditional scientific command early: read status, then immediately
+Give YOUR parent.py an --advance mode early: read status, then immediately
 execute a reserved parent expansion if saving_reason=rollover or the child's
-activation_id has changed. Run that status check and conditional calculation WITHIN
-the same command; do not spend another model turn composing a report before reacting.
-No waiting/poll loop: combine this with short useful scientific commands. As
+activation_id has changed. This mode must use the SAME calculation function as
+your --a/--output mode and propagate calculation failures. Invoke it as a
+STANDALONE exec_command containing ONLY `python3 /project/work/parent.py --advance`.
+No checkpoint chain, code authoring, cd, redirection, or subsequent command in that
+same exec_command: its native exit status must belong to the calculation itself.
+Use separate exec_command calls for checkpoint checks and note writing. This mode
+queries status and calculates within ONE process invocation; do not spend another
+model turn composing a report before reacting.
+No waiting/poll loop: interleave these calls with short useful scientific work. As
 rollover_in_seconds approaches zero, avoid long note-writing batches. Save the initial
 child activation ID so a missed brief saving notice can still be recognized from its
 successor. Update PARENT.md with the actual observations after the calculation.
@@ -165,27 +172,32 @@ def parent_overlap(progress, milestones):
     prior_commands = len(before["commands"])
     if after["commands"][:prior_commands] != before["commands"]:
         raise AssertionError("Parent execution history changed during transition")
-    # The primary may invoke its calculation through its own scientific helper.
-    # Do not interpret that program or require a particular shell-level filename:
-    # observed new rows, a proven role-local execution and isolated reproduction
-    # together establish progress. Documentation and checkpoint calls do not.
-    # Keep the first in-window before-state through later observations: output
-    # can become visible before the successful shell event is recorded. A final
-    # successful && chain may also list the child's artifacts after calculating.
-    # Listing is safe opaque utility syntax here, not verifier CLI provenance.
-    calls = (args for command in after["commands"][prior_commands:]
-             for args in direct_python_commands(command, allow_listing=True))
-    if not any(primary_program(args) for args in calls):
+    # The standalone calculation's native status belongs to that invocation. Compound
+    # shells can hide an earlier failure behind a successful later statement;
+    # do not infer execution by parsing their source or documentation.
+    if not any(primary_calculation(command)
+               for command in after["commands"][prior_commands:]):
         raise AssertionError("No new parent calculation event during transition")
     return before, after
 
 
-def primary_program(args):
-    script = Path(args[1])
-    if not script.is_absolute():
-        script = Path("/project/work") / script
-    return (script.is_relative_to("/project/work") and ".." not in script.parts
-            and not script.is_relative_to("/project/work/tasks"))
+def primary_calculation(command):
+    """Require standalone execution of the same program we reproduce in isolation."""
+    try:
+        args = shlex.split(command)
+        if args and Path(args[0]).name in ("bash", "sh"):
+            if len(args) != 3 or args[1] not in ("-c", "-lc"):
+                return False
+            command = args[2]
+            args = shlex.split(command)
+    except ValueError:
+        return False
+    # Exact argv recognition needs no shell grammar. Additional statements,
+    # redirection, expansion, authoring and unrelated Python programs fail.
+    return (len(args) == 3
+            and args[0] in ("python", "python3", "/usr/bin/python", "/usr/bin/python3")
+            and args[1] in ("parent.py", "./parent.py", "/project/work/parent.py")
+            and args[2] == "--advance")
 
 
 def successful_commands(events, needle=""):
@@ -290,13 +302,11 @@ def independent_observations(project, independent, artifacts, read):
     return observations
 
 
-def direct_python_commands(command, *, allow_listing=False):
+def direct_python_commands(command):
     """Recover calls proven to run by a successful simple-command shell event.
 
     This is deliberately not a shell parser: control flow, expansion, pipelines,
     multiline quotes and other unsupported syntax invalidate the entire event.
-    Primary progress may permit an opaque directory listing in the same chain;
-    independent-verifier provenance keeps the default utility set.
     """
     if command.split() and Path(command.split()[0]).name in ("bash", "sh"):
         try:
@@ -318,8 +328,6 @@ def direct_python_commands(command, *, allow_listing=False):
         r"""(?P<quote>['"]?)(?P<end>[A-Za-z_][A-Za-z0-9_]*)(?P=quote)""")
     lines = iter(command.split("\n"))
     programs = ("python", "python3", "cat", "mkdir", "sha256sum")
-    if allow_listing:
-        programs += ("ls",)
     calls = []
     final_conditional = []
     for line in lines:
@@ -718,6 +726,16 @@ class LiveM3Acceptance(unittest.TestCase):
                 "start_elapsed": receipt["milestones"]["saving"]["elapsed"],
                 "end_elapsed": receipt["milestones"]["continued_calculation"]["elapsed"],
                 "before": progress[0], "after": progress[-1]}
+            prior_parameters = {r["a"] for r in progress[0]["rows"]}
+            receipt["parent_transition"] = {
+                "native_session_id": progress[0]["native_session_id"],
+                "saving_elapsed": receipt["milestones"]["saving"]["elapsed"],
+                "continued_calculation_elapsed": receipt["milestones"]["continued_calculation"]["elapsed"],
+                "before_row_count": len(progress[0]["rows"]),
+                "after_row_count": len(progress[-1]["rows"]),
+                "new_rows": [r for r in progress[-1]["rows"] if r["a"] not in prior_parameters],
+                "successful_calculations": [c for c in progress[-1]["commands"][len(progress[0]["commands"]):]
+                                            if primary_calculation(c)]}
             for observation in progress:
                 self.assertTrue(observation["native_session_id"])
                 for row in observation["rows"]:
@@ -909,7 +927,7 @@ class LiveM3Acceptance(unittest.TestCase):
             print(f"M3 outcome: {receipt['outcome']}; receipt: {run / 'receipt.json'}", flush=True)
             for label, excerpt in receipt.get("scientific_excerpts", {}).items():
                 print(f"\nM3 {label}:\n{excerpt}", flush=True)
-            for key in ("failure", "numerics", "accounting", "cleanup", "cleanup_errors"):
+            for key in ("failure", "parent_transition", "numerics", "accounting", "cleanup", "cleanup_errors"):
                 print(f"M3 {key}: {json.dumps(receipt.get(key))}", flush=True)
             if cleanup_errors and failure is None:
                 self.fail("; ".join(cleanup_errors))

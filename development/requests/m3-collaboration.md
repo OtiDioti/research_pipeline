@@ -657,3 +657,44 @@ This establishes repair readiness. Fresh enabled controller-host final/combined
 verification, including isolated scientific reproduction, and normal review/local
 integration remain required for M3 acceptance. Human-owned requirements, manager
 status, scientific artifacts and resource grants are preserved.
+
+### Integration repair 14: standalone parent calculation evidence (2026-11-10)
+
+Read the complete final-021 output and recovery direction, then inspected
+`m3-live-b17hs7ld` without executing its science. During saving/continuation
+(217.24–255.91 seconds), the same primary native context retained its prior rows
+and expanded 8→11→14. Both expansion commands mix a conditional helper, Python
+stdin note writing and a final checkpoint. Their successful final status cannot
+establish the helper's own successful exit. The numerical progress is useful
+evidence, but another shell-grammar exception would preserve this ambiguity.
+
+Superseding repairs 11/13's parent command recognition, the demonstration now asks
+the researcher to author `parent.py --advance`: one status query and a conditional
+expansion using the same calculation as its reproducible `--a/--output` mode.
+It must run as a standalone native command. Exact argument recognition replaces
+parent shell interpretation; unrelated Python, documentation, chains and redirected
+commands cannot establish execution. No science code or answers are seeded.
+Timed immutable snapshots, real overlap, native identity, new/unchanged numerical
+rows and production-isolated reproduction remain required. Verifier provenance
+validation is unchanged. The test report also prints concise parent transition
+timing, native identity, successful commands and newly calculated rows.
+
+- Full discovery: **163 tests, OK, 4 expected skips**; focused evidence suite:
+  **31 passed**. Regressions retain final-021's six observation times/counts,
+  reproduce masked failures with trusted fixtures, and require successful
+  standalone computation, preserved snapshots and numerical reproduction.
+- Enabled Bubblewrap/native-runtime checks: **4 passed**.
+- Read-only historical validation: **12 initial / 5 re-examination rows**,
+  their executed scripts and **9 / 8 accepted artifact fingerprints** pass
+  current independent evidence checks. All twelve saved cleanup receipts are
+  successful. The historical failed receipt is unchanged; no science executed.
+- Enabled M3/service checks fail before inference because this worker lacks
+  `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. Fresh receipt:
+  `runtime/tmp/m3-integration-14-repair/live/m3-live-tj1yilfd/receipt.json`
+  under this pipeline run; no owned services or cleanup errors. Read-only
+  diagnosis script/results are in the same repair directory.
+
+This is repair readiness only. Normal independent review and fresh enabled
+controller-host final/combined verification, including isolated reproduction,
+must precede local integration and M3 acceptance. No resource grants, model/effort
+configuration, protected inputs or earlier evidence were changed.

@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from tests.test_m3_live import (independent_observations, observation_invocations,
-                                direct_python_commands, numerical_evidence, parent_overlap,
+                                numerical_evidence, parent_overlap, primary_calculation,
                                 record_parent_progress, reproduction_driver)
 
 
@@ -21,7 +21,7 @@ class M3EvidenceTests(unittest.TestCase):
     def observation(self, elapsed, parameters, command_count):
         return {"elapsed": elapsed, "rows": [IndependentEvidenceTests.row(a) for a in parameters],
                 "native_session_id": "primary-native",
-                "commands": ["python parent.py"] * command_count}
+                "commands": ["python3 /project/work/parent.py --advance"] * command_count}
 
     def record(self, progress, observation):
         events = [{"type": "item.completed", "item": {
@@ -65,36 +65,6 @@ class M3EvidenceTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
             parent_overlap(progress, self.milestones)
 
-    def test_retained_wrapped_calculation_establishes_overlap(self):
-        # pre-merge-017 / m3-live-4405llp9: all three snapshots had eight
-        # commands containing "parent", although item_21 successfully invoked
-        # the saved parent calculation via its scientific helper. Preserve the
-        # actual times, parameters and executable event shape from that run.
-        milestones = {"saving": {"elapsed": 209.41090981199523},
-                      "continued_calculation": {"elapsed": 240.028779070999}}
-        parameters = [1.0001, 1.001, 1.01, 1.02, 1.04,
-                      1.0402, 1.041, 1.2, 1.039, 1.05, 1.5]
-        progress = [self.observation(elapsed, parameters[:count], 8)
-                    for elapsed, count in ((209.41104402099882, 5),
-                                           (212.02448658399953, 8),
-                                           (220.48571984299633, 11))]
-        # The original item_21 authored a decimal-threshold diagnostic, then
-        # ran this final successful chain. No direct parent.py call appears.
-        body = ("cat > /project/work/threshold_decimal.py <<'EOF'\n"
-                "# Decimal boundary diagnostic authored by the primary\nEOF\n"
-                "python3 /run/research-checkpoint-helper.py --check && "
-                "python3 /project/work/transition.py && "
-                "python3 /project/work/threshold_decimal.py")
-        event = shlex.join(["/usr/bin/bash", "-lc", body])
-        for p in progress[1:]:
-            p["commands"].append(event)
-        recorded = []
-        for observation in progress:
-            self.record(recorded, observation)
-        self.assertEqual(len(recorded), 3)
-        self.assertEqual(recorded[1]["commands"][-1], event)
-        self.assertEqual(parent_overlap(recorded, milestones), (recorded[0], recorded[-1]))
-
     def test_delayed_success_creates_a_new_snapshot_without_rewriting_history(self):
         for completion in (261, 280):
             with self.subTest(completion=completion):
@@ -111,85 +81,108 @@ class M3EvidenceTests(unittest.TestCase):
                     with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
                         parent_overlap(progress, self.milestones)
 
-    def test_retained_data_before_completion_establishes_overlap(self):
-        # final-019 / m3-live-zmooar8_: data preceded command completion by
-        # ~0.2s at both expansions. The first chain masks transition.py's status;
-        # the second is a successful final && chain, including an opaque listing.
-        milestones = {"saving": {"elapsed": 209.43386594099866},
-                      "continued_calculation": {"elapsed": 245.09415544900548}}
-        parameters = [1.001, 1.01, 1.02, 1.04, 1.0402, 1.0403, 1.2, 1.5]
-        masked = shlex.join(["/usr/bin/bash", "-lc",
-            "python3 /run/research-checkpoint-helper.py --check && "
-            "python3 /project/work/transition.py && python3 - <<'PY'\n"
-            "print('Parent observations')\nPY\n"
-            "python3 /run/research-checkpoint-helper.py --check"])
-        note = shlex.join(["/usr/bin/bash", "-lc",
-            "cat >> /run/research-drafts/work/PARENT.md <<'EOF'\n"
-            "Observed child saving interval\nEOF\n"
-            "python3 /run/research-checkpoint-helper.py --check"])
-        calculation = shlex.join(["/usr/bin/bash", "-lc",
-            "python3 /run/research-checkpoint-helper.py --check && "
-            "python3 /project/work/transition.py && "
-            "ls /project/work/tasks/ta[REDACTED_SECRET] && "
-            "cat /project/work/tasks/ta[REDACTED_SECRET]/baseline.json && "
-            "python3 /run/research-checkpoint-helper.py --check"])
+    def test_retained_final_021_exposes_compound_status_ambiguity(self):
+        # m3-live-b17hs7ld: exact retained observation times, row/command
+        # counts and parameter sets. Both successful expansion events use this
+        # shell shape; later statements mask the conditional helper's status.
+        milestones = {"saving": {"elapsed": 217.24254299699533},
+                      "continued_calculation": {"elapsed": 255.90935201799584}}
+        initial = [1.0001, 1.001, 1.01, 1.02, 1.03, 1.04, 1.1, 1.2]
+        saving = [1.025, 1.035, 1.05]
+        successor = [1.0401, 1.0403, 1.08]
+        body = ("python3 /run/research-checkpoint-helper.py --check && "
+                "python3 /project/work/transition.py && python3 - <<'PY'\n"
+                "from pathlib import Path\n"
+                "import json\n"
+                "p=Path('/project/work/transition_events.jsonl')\n"
+                "if p.exists():\n"
+                " events=[json.loads(s) for s in p.read_text().splitlines()]\n"
+                " print(events)\n"
+                " with Path('/run/research-drafts/work/PARENT.md').open('a') as f:\n"
+                "  f.write('\\n## Observed child transition\\nStatus and conditional "
+                "calculation in one command recorded '+json.dumps(events)+'. "
+                "[Event evidence](transition_events.jsonl). Each event expanded "
+                "parent.json immediately, before reading the child handoff.\\n')\n"
+                "PY\npython3 /run/research-checkpoint-helper.py --check")
+        calculation = shlex.join(["/usr/bin/bash", "-lc", body])
+        self.assertFalse(primary_calculation(calculation))
         observations = []
         history = ["python3 /run/research-checkpoint-helper.py --check"] * 14
-        for elapsed, rows, count in ((209.43387854700268, 4, 14),
-                                     (211.0418936730057, 6, 14),
-                                     (211.2428683629987, 6, 15),
-                                     (218.0857485680026, 6, 16),
-                                     (224.73849158500525, 8, 16),
-                                     (224.93993548599974, 8, 17)):
-            p = self.observation(elapsed, parameters[:rows], 0)
-            p["commands"] = (history + [masked, note, calculation])[:count]
+        for elapsed, rows, count in ((217.24255496799742, initial, 14),
+                                     (221.26264102300047, initial + saving, 14),
+                                     (221.46370552699955, initial + saving, 15),
+                                     (231.93375910999748, initial + saving + successor, 16),
+                                     (239.58764530799817, initial + saving + successor, 17),
+                                     (247.4449976679971, initial + saving + successor, 18)):
+            p = self.observation(elapsed, sorted(rows), 0)
+            p["commands"] = (history + [calculation] * 4)[:count]
             observations.append(p)
-        self.assertFalse(direct_python_commands(calculation))  # Verifier stays strict.
         recorded = []
         for p in observations:
             self.record(recorded, p)
         frozen = json.dumps(recorded)
-        self.assertEqual(parent_overlap(recorded, milestones), (recorded[0], recorded[-1]))
-        self.assertEqual(json.dumps(recorded), frozen)
-        self.assertEqual([len(p["commands"]) for p in recorded], [14, 14, 15, 16, 16, 17])
-        self.assertEqual([len(p["rows"]) for p in recorded], [4, 6, 6, 6, 8, 8])
-        # Data alone and the masked earlier event cannot establish completion.
         with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
-            parent_overlap(recorded[:-1], milestones)
-        with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
-            parent_overlap(recorded, {**milestones,
-                "continued_calculation": {"elapsed": 224.8}})
-        # Changing the observation's identity still invalidates the join.
-        recorded[2]["native_session_id"] = "another-primary"
-        with self.assertRaisesRegex(AssertionError, "native session changed"):
             parent_overlap(recorded, milestones)
+        self.assertEqual(json.dumps(recorded), frozen)
+        self.assertEqual([len(p["commands"]) for p in recorded], [14, 14, 15, 16, 17, 18])
+        self.assertEqual([len(p["rows"]) for p in recorded], [8, 11, 11, 14, 14, 14])
 
-    def test_failed_calculation_chain_cannot_corroborate_new_rows(self):
-        progress = []
-        self.record(progress, self.observation(225, [1.01], 0))
-        record_parent_progress(progress, elapsed=260, native_session_id="primary-native",
-            child_activation="child",
-            data=json.dumps({"rows": [IndependentEvidenceTests.row(a)
-                                     for a in (1.01, 1.02)]}).encode(),
-            derivation="Parent derivation", events=[{"type": "item.completed", "item": {
-                "type": "command_execution", "exit_code": 1,
-                "command": "python3 /project/work/transition.py && ls /project/work"}}])
-        self.assertEqual(progress[-1]["commands"], [])
-        with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
-            parent_overlap(progress, self.milestones)
+    def test_native_exit_status_belongs_to_standalone_calculation(self):
+        # Trusted engineering fixtures demonstrate the ambiguity in final-021,
+        # then the new standalone contract. No retained agent code runs here.
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            (work / "checkpoint.py").write_text("print('No checkpoint requested.')\n")
+            (work / "parent.py").write_text(
+                "import subprocess,sys\n"
+                "subprocess.run([sys.executable,'calculation.py'],check=True)\n")
+            compound = ("python3 checkpoint.py && python3 parent.py --advance && "
+                        "python3 - <<'PY'\nprint('Notes')\nPY\n"
+                        "python3 checkpoint.py")
+            standalone = "python3 parent.py --advance"
+            (work / "calculation.py").write_text("raise SystemExit(7)\n")
+            for body, success in ((compound, True), (standalone, False)):
+                result = subprocess.run(["/bin/bash", "-c", body], cwd=work,
+                                        capture_output=True, text=True, timeout=5)
+                self.assertEqual(result.returncode == 0, success, result.stderr)
+                self.assertEqual(primary_calculation(body), body == standalone)
+            (work / "calculation.py").write_text("print(6 * 7)\n")
+            result = subprocess.run(["/bin/bash", "-c", standalone], cwd=work,
+                                    capture_output=True, text=True, timeout=5)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout.strip(), "42")
 
-    def test_wrapped_science_and_parent_reproduction_use_real_trusted_fixture(self):
+    def test_failed_calculations_cannot_corroborate_new_rows(self):
+        for body in ("python3 /project/work/parent.py --advance",
+                     "python3 /project/work/parent.py --advance && ls /project/work"):
+            with self.subTest(body=body):
+                progress = []
+                self.record(progress, self.observation(225, [1.01], 0))
+                record_parent_progress(progress, elapsed=260, native_session_id="primary-native",
+                    child_activation="child",
+                    data=json.dumps({"rows": [IndependentEvidenceTests.row(a)
+                                             for a in (1.01, 1.02)]}).encode(),
+                    derivation="Parent derivation", events=[{"type": "item.completed", "item": {
+                        "type": "command_execution", "exit_code": 1, "command": body}}])
+                self.assertEqual(progress[-1]["commands"], [])
+                with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
+                    parent_overlap(progress, self.milestones)
+
+    def test_standalone_science_and_parent_reproduction_use_same_trusted_program(self):
         # Only trusted engineering fixture code executes on this test host.
-        # Prove that a helper invocation really can append arithmetic rows
-        # without the native event containing the underlying script's name.
+        # The status-driven and reproducible CLI modes share the calculation.
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
             script = (
                 "import argparse,json,math\nfrom pathlib import Path\n"
                 "p=argparse.ArgumentParser();p.add_argument('--a',type=float,nargs='+');"
-                "p.add_argument('--output');p.add_argument('--append',action='store_true');"
+                "p.add_argument('--output');p.add_argument('--advance',action='store_true');"
                 "args=p.parse_args()\n"
-                "rows=json.loads(Path(args.output).read_text())['rows'] if args.append else []\n"
+                "rows=[]\n"
+                "if args.advance:\n"
+                " args.output='parent.json'\n"
+                " rows=json.loads(Path(args.output).read_text())['rows']\n"
+                " args.a=json.loads(Path('status.json').read_text())['reserved_parameters']\n"
                 "for a in args.a:\n"
                 " reference=2*math.pi/math.sqrt((a-1)*(a+1))\n"
                 " approximation=2*math.pi/math.sqrt(2*(a-1))\n"
@@ -197,22 +190,19 @@ class M3EvidenceTests(unittest.TestCase):
                 "relative_error=abs(approximation/reference-1)))\n"
                 "Path(args.output).write_text(json.dumps(dict(rows=rows)))\n")
             (work / "parent.py").write_text(script)
-            (work / "expand.py").write_text(
-                "import subprocess,sys\n"
-                "subprocess.run([sys.executable,'parent.py','--a','1.0402','1.041','1.2',"
-                "'--output','parent.json','--append'],check=True)\n")
+            (work / "status.json").write_text(
+                json.dumps({"reserved_parameters": [1.0402, 1.041, 1.2]}))
             subprocess.run([sys.executable, "parent.py", "--a", "1.01", "--output", "parent.json"],
                            cwd=work, check=True, timeout=5)
             before = self.observation(225, [1.01], 1)
             before["rows"] = json.loads((work / "parent.json").read_text())["rows"]
-            body = "/usr/bin/python3 expand.py"
+            body = "/usr/bin/python3 parent.py --advance"
             result = subprocess.run(["/bin/bash", "-c", body], cwd=work,
                                     capture_output=True, text=True, timeout=5)
             self.assertEqual(result.returncode, 0, result.stderr)
             after = {**before, "elapsed": 230,
                      "rows": json.loads((work / "parent.json").read_text())["rows"],
                      "commands": [*before["commands"], body]}
-            self.assertNotIn("parent.py", body)
             self.assertEqual(parent_overlap([before, after], self.milestones), (before, after))
             invocation = {"argv": [sys.executable, str(work / "parent.py"), "--a",
                                   *(str(row["a"]) for row in after["rows"]),
@@ -259,6 +249,12 @@ class M3EvidenceTests(unittest.TestCase):
                      "python3 /run/research-checkpoint-helper.py --check",
                      "python3 /project/work/tasks/child/compute.py",
                      "python3 ../work/tasks/child/compute.py",
+                     "python3 /project/work/write_notes.py",
+                     "python3 /project/work/tasks/child/parent.py --advance",
+                     "python3 ../work/parent.py --advance",
+                     "python3 parent.py --advance > notes.md",
+                     "python3 parent.py --advance && cat parent.json",
+                     "cat > rerun.sh <<'SH'\npython3 parent.py --advance\nSH",
                      "cat parent.json"):
             with self.subTest(body=body):
                 before = self.observation(225, [1.01], 1)
@@ -266,6 +262,18 @@ class M3EvidenceTests(unittest.TestCase):
                 after["commands"].append(shlex.join(["/bin/bash", "-c", body]))
                 with self.assertRaisesRegex(AssertionError, "No new parent calculation"):
                     parent_overlap([before, after], self.milestones)
+
+    def test_standalone_calculation_allows_native_shell_wrapper(self):
+        for body in ("python3 /project/work/parent.py --advance",
+                     "/usr/bin/python3 parent.py --advance",
+                     "python3 ./parent.py --advance"):
+            for command in (body, shlex.join(["/usr/bin/bash", "-lc", body])):
+                with self.subTest(command=command):
+                    before = self.observation(225, [1.01], 0)
+                    after = self.observation(260, [1.01, 1.02], 0)
+                    after["commands"] = [command]
+                    self.assertEqual(parent_overlap([before, after], self.milestones),
+                                     (before, after))
 
     def test_reproduction_preserves_each_tasks_relative_input_paths(self):
         # Trusted fixture code, not agent-written science: exercise the same driver
