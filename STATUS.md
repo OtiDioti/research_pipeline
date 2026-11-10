@@ -1,23 +1,25 @@
 # Development status — research_pipeline
 
-## Milestones and evidence
+## Milestone checkpoint
 
-- Human contract: unchanged PROJECT.md and root AGENTS.md. **M1 implementation and actual host demonstrations are integrated; scientific-evidence closeout is pending before M2.** M2–M5 have not started; M5 additionally requires researcher-supplied questions/materials and human scientific acceptance.
-- Implementation request `m1-minimal-scientific-loop-20261110T091644Z-1be6cf51`, run `20261110T091713_50e21105`: pipeline-confirmed merged locally as `dd2efc9` (reviewed feature HEAD `c7fb08f`). Worktree removed; exec `29827` exited successfully. No pipeline/research jobs remain from that run.
-- Pipeline final and combined pre-merge verification each passed 34 tests, including actual service/memory/zero-swap/task/lifetime checks, real Codex literature/analytical/numerical research and bounded reproduction. All 18 grid estimates agreed at rtol=atol=1e-12; inputs preserved and services inactive. Report: `coding_pipeline/logs/20261110T091713_50e21105/summary.md`; detailed evidence in `tests/final-004.txt.commands/0001.txt` and `tests/pre-merge-005.txt.commands/0001.txt` beneath that run.
-- Persistent demo projects/receipts: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/live-host-acceptance/`. Saved inputs only seeded questions/hypothesis; actual agent artifacts and reproduction survive worktree cleanup.
-- Material decisions: trusted controller host tests handle capabilities unavailable to the restricted Writer. Source-checkout test imports repaired. Removed implementation-added CPU quota because host delegates memory/pids without CPU; wall time, memory, zero swap, task bounds and whole-service cleanup remain enforced. CPU fraction/aggregate CPU time, spending caps and exact context occupancy remain unavailable and disclosed. No host settings or components changed.
+- Human contract: unchanged PROJECT.md and root AGENTS.md. **M1 accepted; M2 selected next.** M3–M5 have not started. M5 requires researcher-supplied benchmark questions/materials and human scientific acceptance.
+- M1 implementation run `20261110T091713_50e21105` merged locally at `dd2efc9`; final and combined pre-merge suites each passed 34 tests, including real Codex scientific work, 18 numerical estimates, bounded reproduction agreeing within rtol=atol=1e-12, input preservation and inactive services.
+- M1 evidence-closeout run `20261110T104911_bee8ceea` merged at `a39d454`; final/pre-merge verification passed. Its Reviewer directly assessed both saved scientific demonstrations and confirmed meaningful planning, derivation, full-text primary literature, computation, preliminary conclusions and reproduction. Authoritative review: `coding_pipeline/logs/20261110T104911_bee8ceea/milestones/001/review.md`; synthesis: `development/requests/m1-implementation.md`.
+- Both prior run worktrees are removed and owning execs exited successfully. No prior implementation/research jobs remain. Persistent M1 evidence: `coding_pipeline/logs/manager/m1-minimal-scientific-loop-20261110T091644Z-1be6cf51/live-host-acceptance/`.
+- Retain existing memory/zero-swap/task/wall protection and systemd/Bubblewrap cleanup. Host delegates memory/pids, without CPU quota; CPU fraction/time are uncapped. Reliable context occupancy and hard spending caps are unavailable. No host settings changed. Trusted controller final tests handle capabilities unavailable to restricted Writers.
 
-## Current request and ownership
+## Current M2 request
 
-- Selected increment: M1 live-evidence closeout. Pipeline assesses saved literature/derivation/numerical artifacts, records actual observations and updates acceptance documentation; no new product behavior or paid research run.
-- Request ID: `m1-live-evidence-closeout-20261110T104847Z-2c130cb6`; linked to the implementation request above.
-- Frozen directory: `coding_pipeline/logs/manager/m1-live-evidence-closeout-20261110T104847Z-2c130cb6/` containing `request.md`, `config.toml`, and planned `receipt.json`.
-- Config: standard, auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high; writer_network preauthorized. Other effective settings preserved. Live inference opt-in disabled for this documentation closeout.
-- Submitted from management checkpoint `0d96d80`. Actual run `20261110T104911_bee8ceea`; branch `cwi/20261110T104911_bee8ceea`; worktree `coding_pipeline/logs/20261110T104911_bee8ceea/worktree`. Reported running in baseline/planning. Live owner: manager exec session `66567`, native PID `59175` / start ticks `1677861` (request directory `ownership.json`); do not resume/retry concurrently. Receipt is present. Prior run process/worktree fully reconciled; one active request at a time.
+- Objective: persistent checkpoints, full pause/resume, changed questions/instructions/feedback, preserved human notes/unaffected results, checkpoint-based crash recovery and automatic fresh-context primary rollover with cumulative budgets. Actual live scientific continuation is required before M3.
+- Request ID: `m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf`.
+- Frozen directory: `coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/` containing `request.md`, `config.toml`, and planned `receipt.json`.
+- Effective config: standard; auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high; writer_network preauthorized; other settings preserved.
+- Submission: prepared; commit this checkpoint first. No active pipeline owner/run yet; previous work fully reconciled. One active implementation request at a time.
+- Controller-host live settings for submission/recovery/approval: `RESEARCH_PIPELINE_M2_LIVE=1`; `RESEARCH_PIPELINE_M2_OUTPUT_DIR` = absolute request-directory path plus `/live-host-acceptance`. M1 live opt-in stays disabled. Writer/Reviewer implementation readiness must hand off to Architect completion and mandatory controller final tests; no circular Writer host-verification milestone.
 
 ## Continuation
 
-- Monitor exec session `66567` and flow status/report for `20261110T104911_bee8ceea`; trust pipeline review/testing/assessment. Reconcile process ownership before recovery. The manager performs no independent product inspection/review/testing.
-- If the report identifies a real M1 gap, resolve it through pipeline recovery before M2. Otherwise record M1 acceptance after local integration and choose the next M2 increment. No COMPLETE until all current PROJECT.md gates, including human M5 acceptance, pass and all jobs stop.
+- Submit M2, record actual receipt/run/ownership, and trust pipeline implementation/testing/review/live reports; manager performs no independent product inspection/review/testing.
+- Require actual pause/edit/resume and fresh-session task continuation, cumulative limits and cleanup evidence before accepting M2 or proceeding to M3. Use documented conservative short-session fallback rather than a false occupancy guarantee. Preserve protected inputs and existing M1 evidence.
 - Components: pipeline clean main `6c7b4d4`; controller clean `project-manager/setup` at `d0771db`. No manager component repairs or restart needed.
+- No COMPLETE until all current PROJECT.md gates, including human M5 scientific acceptance, pass and all jobs stop.
