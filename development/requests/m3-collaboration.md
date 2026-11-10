@@ -368,3 +368,36 @@ Follow-up validation: **31 focused tests passed; 133 full-suite tests passed wit
 user bus, with no owned services or cleanup errors. Fresh receipt:
 `runtime/tmp/m3-integration-6-review-repair/m3-live-osfl4jcr/receipt.json` under this
 pipeline run. Controller-host live verification remains necessary.
+
+### Integration repair: timely primary rollover observation (2026-11-10)
+
+Read the complete final-011 command log and preserved `m3-live-_g3kn3qj`
+receipt, native commands and artifact timestamps. The primary extended its study
+at 261 seconds, after the observed child successor calculation at 247 seconds.
+Its only captured transition observation was at saving (211 seconds). The failed
+overlap assertion was valid; the receipt must remain failed. The task helper
+reported the child as running throughout saving, and primary recognized the
+transition only after reading the published handoff.
+
+Task summaries now expose the activation ID and saving reason. Saving requests
+publish that status immediately; the primary's routine `--check` prints compact
+concurrent status unless its own saving request takes precedence. A fresh activation
+clears its predecessor's saving notice. Production and demonstration instructions
+explain how to continue independent parent science on the saving signal before
+handoff publication. No new messages, queue, resource allowance or acceptance-window
+relaxation was added.
+
+- `python -m unittest discover -s tests -q`: **135 run, OK, 4 expected skips**.
+- New coordination regression exercises the actual helper during child saving,
+  parent progress before publication, and successor identity without stale saving.
+  With immediate status publication withheld, it reproduces the missing notification.
+  Another regression preserves the primary's own pause precedence.
+- Enabled actual Bubblewrap boundary/runtime checks: **4 passed**.
+- Enabled M3 and service-enforcement checks **fail before inference** here because
+  `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` are absent. Fresh diagnostic:
+  `runtime/tmp/m3-integration-7-repair/m3-live-n6yoyrn_/receipt.json` under this
+  pipeline run; no owned services and no cleanup errors.
+
+The scientific timing repair remains subject to fresh enabled controller-host final
+verification. This is engineering readiness, not M3 acceptance. PROJECT.md, root
+AGENTS.md, manager STATUS.md and retained scientific evidence were preserved.

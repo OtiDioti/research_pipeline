@@ -15,7 +15,7 @@ from unittest.mock import patch
 
 from tests import use_checkout
 use_checkout()
-from research_pipeline import cli, codex, collaboration, isolation, workspace
+from research_pipeline import checkpoint, cli, codex, collaboration, isolation, workspace
 
 
 ASSIGNMENT = """# Dependent comparison
@@ -70,6 +70,7 @@ class CollaborationTests(unittest.TestCase):
         self.mode = 'normal'
         self.ack_delay = 0
         self.units_stopped = []
+        self.saving_notices = []
 
     def state(self):
         return json.loads((self.project / '.research_pipeline/run.json').read_text())
@@ -166,6 +167,21 @@ class CollaborationTests(unittest.TestCase):
                             return True
                     return bool(reason)
                 if self.task_id == 'primary':
+                    if case.mode == 'saving-notice':
+                        output = io.StringIO()
+                        with patch.object(checkpoint, 'Path', return_value=self.config.control), \
+                             patch.object(sys, 'argv', ['checkpoint', '--check']), redirect_stdout(output):
+                            case.assertEqual(checkpoint.main(), 0)
+                        for line in output.getvalue().splitlines():
+                            if not line.startswith('Concurrent task status: '):
+                                continue
+                            for summary in json.loads(line.removeprefix('Concurrent task status: ')):
+                                case.saving_notices.append(summary)
+                                if summary['saving_reason'] == 'rollover':
+                                    # The signal must arrive before the child publishes,
+                                    # so the parent can extend its own study immediately.
+                                    case.assertFalse((case.project / workspace.handoff_path(summary['task_id'])).exists())
+                                    (case.project / 'work/parent-extension.csv').write_text('x,value\n2,4\n')
                     case.parent_progress.append((case.clock, len(case.services)))
                     if case.mode == 'pause' and len(case.services) > 1:
                         state = case.state()
@@ -245,6 +261,33 @@ class CollaborationTests(unittest.TestCase):
         self.assertEqual(len(state['tasks']), 2)
         self.assertEqual(len({s['native_session_id'] for s in state['sessions']}), 4)
         self.assertTrue(state['cleanup_ok'])
+
+    def test_primary_observes_child_saving_before_publication_and_fresh_successor(self):
+        self.ack_delay = 2
+        self.assertEqual(self.start('saving-notice'), 0, self.state())
+        child = next(t for t in self.state()['tasks'].values() if t['role'] == 'researcher')
+        saving = [n for n in self.saving_notices if n['saving_reason'] == 'rollover']
+        self.assertTrue(saving, 'Primary never learned that its child was saving')
+        self.assertEqual((self.project / 'work/parent-extension.csv').read_text(), 'x,value\n2,4\n')
+        self.assertTrue(any(n['activation_id'] == child['activation']['activation_id']
+                            and n['activation_id'] != saving[0]['activation_id']
+                            and n['saving_reason'] is None for n in self.saving_notices),
+                        'Successor retained a stale saving notice or identity')
+        self.assertEqual(len(self.services), 3)
+        self.assertTrue(self.state()['cleanup_ok'])
+
+    def test_own_saving_request_takes_precedence_over_concurrent_status(self):
+        control = self.project / 'helper-control'
+        control.mkdir()
+        (control / 'request.json').write_text(json.dumps({'reason': 'pause'}))
+        # A primary pause must be actionable even without a readable tasks snapshot.
+        (control / 'tasks.json').write_text('incomplete snapshot')
+        output = io.StringIO()
+        with patch.object(checkpoint, 'Path', return_value=control), \
+             patch.object(sys, 'argv', ['checkpoint', '--check']), redirect_stdout(output):
+            self.assertEqual(checkpoint.main(), 0)
+        self.assertIn('PAUSE REQUESTED', output.getvalue())
+        self.assertNotIn('Concurrent task status', output.getvalue())
 
     def test_slow_model_handoff_rolls_primary_and_child_without_extending_limits(self):
         self.ack_delay = 20  # The real runs missed the old 15-second reserve.

@@ -70,6 +70,11 @@ No sleep/heartbeat/poll loop as a substitute for science. Consult sources and re
 access honestly. Save required plan, literature, status, report and handoff drafts.
 Stage the parent study in small useful expansions, retaining new parameters for the
 observed child saving/continuation interval; do not exhaust all extensions beforehand.
+Use concurrent task status printed by --check (or the full --tasks summary):
+when the child reports saving_reason=rollover, immediately execute a reserved
+parent expansion and update PARENT.md. Do this before reading the child's published
+handoff; that publication occurs later. Keep another expansion for its changed
+activation_id if useful. The child's saving signal does not request your own handoff.
 Once the child delivers, prioritize integration and verification over optional analyses.
 
 After the child delivers, integrate its numerical findings and uncertainties into

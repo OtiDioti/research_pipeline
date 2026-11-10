@@ -288,6 +288,12 @@ To continue an unfinished task later, submit its saved ASSIGNMENT.md path with i
 original parent; task identity and ownership cannot be changed.
 Inspect deliveries while continuing your own work:
 python3 /run/research-checkpoint-helper.py --tasks
+The --tasks summary includes activation_id and saving_reason. Your routine --check
+also prints concurrent task status when you have no saving request of your own.
+A child's saving_reason=rollover signals that it is saving now, before publication
+of its handoff. Continue independent parent work immediately where useful; do not
+wait for the published handoff to recognize this interval. A changed activation_id
+identifies its fresh successor. These signals do not request saving of your session.
 Read each delivered RESULT.md and handoff; integrate the substantive implication,
 assumptions, uncertainty, and any rejected/reconsidered contribution into your report
 or notes. Link its canonical RESULT.md. A delivery alone is not integration.

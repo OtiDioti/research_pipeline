@@ -220,10 +220,17 @@ class Coordinator:
             yield
 
     def summaries(self):
-        return [{k: task.get(k) for k in ("task_id", "role", "objective", "parent_task", "workspace",
-                    "status", "assignment", "delivery", "integration", "checkpoint_error", "verification")}
-                | {"handoff": workspace.handoff_path(task["task_id"])}
-                for task in self.state["tasks"].values()]
+        summaries = []
+        for task in self.state["tasks"].values():
+            activation = task.get("activation") or {}
+            summaries.append({k: task.get(k) for k in
+                ("task_id", "role", "objective", "parent_task", "workspace", "status",
+                 "assignment", "delivery", "integration", "checkpoint_error", "verification")}
+                | {"handoff": workspace.handoff_path(task["task_id"]),
+                   "activation_id": activation.get("activation_id"),
+                   "saving_reason": activation.get("saving_reason")
+                       if task["status"] in ("running", "rolling_over") else None})
+        return summaries
 
     def publish_status(self):
         text = json.dumps(self.summaries(), indent=2) + "\n"
@@ -918,6 +925,9 @@ class TaskControl:
         self.deadline = min(self.deadline or math.inf, deadline or math.inf,
                             self.config.deadline, time.monotonic() +
                             (self.rollover_grace if reason == "rollover" else 15))
+        self.view["saving_reason"] = reason
+        self.view.persist()
+        self.coordinator.publish_status()
 
     def poll(self, research=True):
         if self.coordinator.global_request():

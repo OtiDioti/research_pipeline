@@ -49,6 +49,12 @@ python3 /run/research-checkpoint-helper.py --delegate work/ASSIGNMENT.md --paren
 python3 /run/research-checkpoint-helper.py --tasks
 ```
 
+Task summaries expose the current `activation_id` and `saving_reason`. The primary's
+routine `--check` also prints concurrent task status when it has no saving request
+of its own. A child's `saving_reason=rollover` is visible before handoff publication,
+so the primary can continue independent work during saving; a changed activation ID
+identifies the fresh successor. These notices do not request that the primary save.
+
 An acknowledgement identifies a stable `task-...` and `work/tasks/<task-id>/`.
 The assignment and referenced private Markdown drafts are copied into that workspace;
 canonical scientific inputs stay linked. Only the primary may authorize assignments.

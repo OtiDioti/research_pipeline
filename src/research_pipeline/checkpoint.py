@@ -66,6 +66,17 @@ def main():
     request_path = control / "request.json"
     if not request_path.exists():
         print("No checkpoint requested.")
+        # The primary's own saving request takes precedence. Otherwise report
+        # concurrent lifecycle changes while it is still able to do useful work.
+        if args.check and (control / "tasks.json").exists():
+            owner = json.loads((control / "owner.json").read_text())
+            if owner.get("task_id") == "primary":
+                tasks = json.loads((control / "tasks.json").read_text())
+                progress = [{k: task.get(k) for k in
+                             ("task_id", "status", "activation_id", "saving_reason")}
+                            for task in tasks if task["task_id"] != "primary"]
+                if progress:
+                    print("Concurrent task status: " + json.dumps(progress))
         return 0
     request = json.loads(request_path.read_text())
     if args.check:
