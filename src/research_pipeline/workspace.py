@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import stat
 import tempfile
+import uuid
 from urllib.parse import unquote, urlsplit
 
 
@@ -23,9 +24,10 @@ class Intake:
     instructions: str
     inventory: list[dict]
     fingerprints: dict[str, str]
+    feedback: str = ""
 
 
-MANAGED = ("sources", "work", "outputs")
+MANAGED = ("sources", "work", "outputs", "handoffs")
 REQUIRED = ("work/PLAN.md", "sources/LITERATURE.md", "outputs/REPORT.md")
 
 
@@ -41,8 +43,9 @@ def regular_tree(root):
 
 def fingerprints(project):
     paths = sorted((project / "starting_evidence").rglob("*"))
-    if (project / "AGENTS.md").exists():
-        paths.append(project / "AGENTS.md")
+    for name in ("AGENTS.md", "HUMAN_FEEDBACK.md"):
+        if (project / name).exists() or (project / name).is_symlink():
+            paths.append(project / name)
     result = {}
     for p in paths:
         if p.is_symlink():
@@ -60,32 +63,36 @@ def read_intake(project):
     project = Path(os.path.abspath(project))
     if not project.is_dir():
         raise InputError(f"Project directory does not exist: {project}")
-    regular_tree(project)
-    for name in (*MANAGED, "RESEARCH_STATUS.md", "FOLDER_CONTENT.md"):
-        if (project / name).exists():
-            raise InputError(f"Fresh project required; managed path already exists: {name}")
+    if any(p.is_symlink() for p in (project, *project.parents)):
+        raise InputError("Symlinked project ancestors are unsupported")
+    regular_tree(project / "starting_evidence")
+    for name in (*MANAGED, "RESEARCH_STATUS.md", "FOLDER_CONTENT.md",
+                 "AGENTS.md", "HUMAN_FEEDBACK.md", ".research_pipeline"):
+        p = project / name
+        if p.is_symlink():
+            raise InputError(f"Protected or managed path is a symlink: {p}")
+        if name in MANAGED and p.exists() and not p.is_dir():
+            raise InputError(f"Managed path must be a directory: {p}")
+    # Validate controller paths individually. Historical draft trees contain
+    # untrusted agent output and are checked only when publishing that batch.
+    for rel, directory in ((".research_pipeline", True), (".research_pipeline/sessions", True),
+                           (".research_pipeline/run.json", False), (".research_pipeline/run.lock", False)):
+        p = safe_path(project, rel)
+        if p.exists() and not (p.is_dir() if directory else p.is_file()):
+            raise InputError(f"Invalid operational path: {p}")
     # Tool configuration is not scientific input. Do not load project hooks/skills.
     for name in (".codex", ".agents", ".git"):
-        if (project / name).exists():
+        if (project / name).exists() or (project / name).is_symlink():
             raise InputError(f"Use a plain research directory without {name}")
     q = project / "starting_evidence/RESEARCH_QUESTIONS.md"
     if not q.is_file():
         raise InputError(f"Required questions file is missing: {q}")
 
-    def read_text(p):
-        if not p.is_file() or not p.stat().st_mode & 0o444:
-            raise InputError(f"Cannot read supplied input: {p}")
-        if p.stat().st_size > 256 * 1024:
-            raise InputError(f"Input exceeds 256 KiB prompt limit: {p}")
-        try:
-            return p.read_text(encoding="utf-8")
-        except (OSError, UnicodeError) as exc:
-            raise InputError(f"Cannot read {p}: {exc}") from exc
-
-    questions = read_text(q)
+    questions = read_input(q)
     if not questions.strip():
         raise InputError("RESEARCH_QUESTIONS.md must not be empty")
-    instructions = read_text(project / "AGENTS.md") if (project / "AGENTS.md").exists() else ""
+    instructions = read_input(project / "AGENTS.md") if (project / "AGENTS.md").exists() else ""
+    feedback = read_input(project / "HUMAN_FEEDBACK.md") if (project / "HUMAN_FEEDBACK.md").exists() else ""
     inventory = []
     for p in sorted((project / "starting_evidence").rglob("*")):
         if p.is_file():
@@ -94,7 +101,25 @@ def read_intake(project):
             inventory.append({"path": str(p.relative_to(project)), "bytes": p.stat().st_size})
     if len(inventory) > 10000:
         raise InputError("More than 10000 evidence files; narrow the starting material")
-    return Intake(project, questions, instructions, inventory, fingerprints(project))
+    return Intake(project, questions, instructions, inventory, fingerprints(project), feedback)
+
+
+def read_input(p):
+    if p.is_symlink() or not p.is_file() or not p.stat().st_mode & 0o444:
+        raise InputError(f"Cannot read supplied input: {p}")
+    if p.stat().st_size > 256 * 1024:
+        raise InputError(f"Input exceeds 256 KiB prompt limit: {p}")
+    try:
+        return p.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise InputError(f"Cannot read {p}: {exc}") from exc
+
+
+def validate_fresh(project):
+    regular_tree(project)
+    for name in (*MANAGED, "RESEARCH_STATUS.md", "FOLDER_CONTENT.md", ".research_pipeline/run.json"):
+        if (project / name).exists():
+            raise InputError(f"Fresh project required; managed path already exists: {name}")
 
 
 @contextmanager
@@ -109,7 +134,7 @@ def acquire_project_lock(project):
         try:
             fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as exc:
-            raise InputError("Another start holds the project lock") from exc
+            raise InputError("Another controller holds the project lock") from exc
         yield
 
 
@@ -131,11 +156,15 @@ def write_state(project, state):
         p: (project / p).is_file() and not (project / p).is_symlink() for p in REQUIRED
     }
     atomic_text(project / ".research_pipeline/run.json", json.dumps(state, indent=2) + "\n")
-    links = "\n".join(f"- [{p}]({p})" if state["artifact_availability"][p]
-                      else f"- `{p}` — not produced." for p in REQUIRED)
-    atomic_text(project / "RESEARCH_STATUS.md", f"# Research status\n\n"
-                f"State: **{state['state']}**\n\n{state.get('reason', '')}\n\n{links}\n\n"
-                "Findings are preliminary: M1 has no independent verifier.\n\n"
+
+
+def initial_status(project):
+    """Create science status once. Operational updates live exclusively in JSON."""
+    if (project / "RESEARCH_STATUS.md").exists():
+        return
+    links = "\n".join(f"- `{p}` — not produced." for p in REQUIRED)
+    atomic_text(project / "RESEARCH_STATUS.md", "# Research status\n\n"
+                "Investigation initialized; findings remain preliminary.\n\n" + links + "\n\n"
                 "See `.research_pipeline/run.json` for limits and operational diagnostics.\n")
 
 
@@ -145,6 +174,8 @@ DESCRIPTIONS = {
     "sources": "Retrieved scientific sources and literature assessment.",
     "work": "Scientific plan, derivations, executable scripts and computation data.",
     "outputs": "Research findings and supporting figures.",
+    "handoffs": "Continuation guidance, preserved human edits and proposed reconciliations.",
+    "HUMAN_FEEDBACK.md": "Distinct human scientific feedback (read-only to agents).",
     ".research_pipeline": "Private controller status and bounded backend diagnostics.",
     "RESEARCH_STATUS.md": "Operational state and links to current scientific progress.",
     "PLAN.md": "Revisable scientific questions, assumptions and methods.",
@@ -157,7 +188,13 @@ DESCRIPTIONS = {
 }
 
 
-def refresh_indexes(project, include_science=True):
+def refresh_indexes(project, include_science=True, expected=None):
+    edited_indexes = {}
+    if expected is not None and include_science:
+        for rel, digest in science_fingerprints(project).items():
+            if (Path(rel).name == "FOLDER_CONTENT.md"
+                    and digest != expected.get(rel)):
+                edited_indexes[rel] = preserve_edit(project, project / rel)
     # Walk only managed directories; never follow links made by scientific scripts.
     roots = [project, project / ".research_pipeline"]
     for name in MANAGED if include_science else ():
@@ -199,7 +236,177 @@ def refresh_indexes(project, include_science=True):
                 if p.is_file() and not p.is_symlink():
                     rel = p.relative_to(project).as_posix()
                     rows.append(f"- [{p.name}]({quote(rel)}) — Supplied scientific input.")
-        atomic_text(directory / "FOLDER_CONTENT.md", "\n".join(rows) + "\n")
+        index = directory / "FOLDER_CONTENT.md"
+        rel = index.relative_to(project).as_posix()
+        # Preserve human additions before regenerating navigation. Operational
+        # indexes are private controller files, not human scientific notes.
+        if rel in edited_indexes:
+            saved = edited_indexes[rel]
+            rows += ["", f"- [Preserved edited index]({os.path.relpath(saved, directory)})"]
+        atomic_text(index, "\n".join(rows) + "\n")
+
+
+def file_digest(path):
+    if path.is_symlink():
+        return "symlink"
+    if not path.exists():
+        return None
+    if not path.is_file():
+        return "special"
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def science_fingerprints(project):
+    """Never follow scientific symlinks or open special artifacts."""
+    paths = [project / "RESEARCH_STATUS.md", project / "FOLDER_CONTENT.md"]
+    for name in MANAGED:
+        root = project / name
+        if root.is_symlink():
+            raise InputError(f"Managed directory is a symlink: {name}")
+        if root.is_dir():
+            for base, dirs, files in os.walk(root, followlinks=False):
+                dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()]
+                paths.extend(Path(base) / f for f in files if f.lower().endswith(".md"))
+    return {p.relative_to(project).as_posix(): file_digest(p)
+            for p in paths if p.exists() or p.is_symlink()}
+
+
+def changed_files(previous, current):
+    return sorted(p for p in previous.keys() | current.keys() if previous.get(p) != current.get(p))
+
+
+def safe_path(project, rel):
+    p = Path(rel)
+    if p.is_absolute() or ".." in p.parts or not p.parts:
+        raise InputError(f"Unsafe project-relative path: {rel}")
+    target = project / p
+    if any(parent.is_symlink() for parent in (target, *target.parents)):
+        raise InputError(f"Symlinked artifact path: {rel}")
+    if not target.resolve().is_relative_to(project):
+        raise InputError(f"Outside-project path: {rel}")
+    return target
+
+
+def preserve_edit(project, path):
+    text = read_input_unbounded(path)
+    directory = safe_path(project, "handoffs/preserved")
+    directory.mkdir(parents=True, exist_ok=True)
+    saved = directory / f"{path.stem}-{uuid.uuid4().hex}.md"
+    atomic_text(saved, f"<!-- Preserved human version: {path.relative_to(project)} -->\n\n{text}")
+    return saved
+
+
+def read_input_unbounded(path):
+    if path.is_symlink() or not path.is_file():
+        raise InputError(f"Expected regular Markdown file: {path}")
+    try:
+        return path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as exc:
+        raise InputError(f"Cannot read Markdown {path}: {exc}") from exc
+
+
+def publish_drafts(project, drafts, baseline, external_changes):
+    """Validate the batch, then compare each target immediately before replacing."""
+    regular_tree(drafts)
+    proposals = []
+    for draft in sorted(drafts.rglob("*")):
+        if not draft.is_file():
+            continue
+        rel = draft.relative_to(drafts)
+        if (draft.suffix != ".md" or draft.name == "FOLDER_CONTENT.md"
+                or not (rel.as_posix() == "RESEARCH_STATUS.md" or rel.parts[0] in MANAGED)):
+            raise InputError(f"Invalid scientific draft destination: {rel}")
+        target = safe_path(project, rel)
+        if target.exists() and not target.is_file():
+            raise InputError(f"Draft destination is not a file: {rel}")
+        proposals.append((rel.as_posix(), target, read_input_unbounded(draft)))
+    conflicts, preserved = [], []
+    for rel, target, text in proposals:
+        if file_digest(target) != baseline.get(rel):
+            proposed = safe_path(project, f"handoffs/proposed/{uuid.uuid4().hex}-{target.name}")
+            proposed.parent.mkdir(parents=True, exist_ok=True)
+            atomic_text(proposed, f"<!-- Proposed replacement for {rel}; human state preserved. -->\n\n{text}")
+            conflicts.append({"path": rel, "proposal": proposed.relative_to(project).as_posix()})
+            continue
+        if rel in external_changes and target.exists():
+            preserved.append(preserve_edit(project, target).relative_to(project).as_posix())
+        target.parent.mkdir(parents=True, exist_ok=True)
+        atomic_text(target, text)
+    return conflicts, preserved
+
+
+def intake_snapshot(intake):
+    return ("# Accepted intake\n\n## Questions\n\n" + intake.questions
+            + "\n\n## Project instructions\n\n" + (intake.instructions or "(absent)")
+            + "\n\n## Human feedback\n\n" + (intake.feedback or "(absent)") + "\n")
+
+
+def validate_handoff(project, text):
+    for field in ("Logical researcher: primary", "## Objective", "## Completed",
+                  "## Artifacts", "## Assumptions", "## Unresolved", "## Next action"):
+        if field not in text:
+            raise InputError(f"Handoff missing required field: {field}")
+    artifacts = []
+    for target in re.findall(r"\[[^\]]*\]\(([^\s)]+)\)", text):
+        url = urlsplit(target)
+        if url.scheme or url.netloc or not url.path:
+            continue
+        link = unquote(url.path)
+        if link.startswith("/project/"):
+            p = safe_path(project, link[len("/project/"):])
+        else:
+            # Ordinary Markdown links resolve relative to the canonical handoff.
+            candidate = Path(os.path.abspath(project / "handoffs" / link))
+            if not candidate.is_relative_to(project):
+                raise InputError(f"Outside-project handoff link: {link}")
+            p = safe_path(project, candidate.relative_to(project))
+        rel = p.relative_to(project).as_posix()
+        if not p.is_file():
+            raise InputError(f"Missing handoff artifact: {rel}")
+        artifacts.append(rel)
+    if not artifacts:
+        raise InputError("Handoff must link at least one saved scientific artifact")
+    return sorted(set(artifacts))
+
+
+def commit_checkpoint(project, state, intake, session):
+    text = read_input_unbounded(project / "handoffs/primary.md")
+    artifacts = validate_handoff(project, text)
+    atomic_text(session / "handoff.md", text)
+    atomic_text(session / "intake.md", intake_snapshot(intake))
+    checkpoint = {
+        "id": state["activation_id"],
+        "handoff": (session / "handoff.md").relative_to(project).as_posix(),
+        "handoff_sha256": file_digest(session / "handoff.md"),
+        "intake": (session / "intake.md").relative_to(project).as_posix(),
+        "artifacts": artifacts, "input_fingerprints": intake.fingerprints,
+        "science_fingerprints": science_fingerprints(project),
+    }
+    # Publish the new reference only after all its files are validated. Keep one
+    # previous immutable handoff for a damaged newest checkpoint.
+    state["checkpoints"] = (state.get("checkpoints", []) + [checkpoint])[-2:]
+    state["checkpoint"] = checkpoint
+    write_state(project, state)
+    return checkpoint
+
+
+def load_checkpoint(project, state):
+    for checkpoint in reversed(state.get("checkpoints", [])):
+        try:
+            handoff = safe_path(project, checkpoint["handoff"])
+            if file_digest(handoff) != checkpoint["handoff_sha256"]:
+                continue
+            text = read_input_unbounded(handoff)
+            # Referenced science can change; missing files are explicitly reported
+            # to the researcher rather than silently discarding the handoff.
+            safe_path(project, checkpoint["intake"])
+            snapshot = read_input_unbounded(project / checkpoint["intake"])
+            for rel in checkpoint["artifacts"]:
+                safe_path(project, rel)
+            return checkpoint, text, snapshot
+        except (OSError, InputError, KeyError, TypeError):
+            continue
+    return None, "", ""
 
 
 def validate_deliverables(project):

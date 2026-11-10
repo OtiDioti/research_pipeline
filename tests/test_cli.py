@@ -42,12 +42,19 @@ class ProjectCase(unittest.TestCase):
             self.assertIn('--ignore-user-config', argv)
             (project / 'work/partial.md').write_text('# Preserved scientific progress\n')
             if outcome in ('complete', 'external_only'):
-                (project / 'work/PLAN.md').write_text('# Plan\nCompare methods and assumptions.\n')
-                (project / 'sources/LITERATURE.md').write_text('# Literature\nAbstract-only source assessment.\n')
+                for name in workspace.MANAGED:
+                    (config.drafts / name).mkdir(exist_ok=True)
+                (config.drafts / 'work/PLAN.md').write_text('# Plan\nCompare methods and assumptions.\n')
+                (config.drafts / 'sources/LITERATURE.md').write_text('# Literature\nAbstract-only source assessment.\n')
                 (project / 'work/calculate.py').write_text('print(sum(range(10)))\n')
-                (project / 'outputs/REPORT.md').write_text('# Preliminary findings\n[Code](../work/calculate.py)\n')
+                (config.drafts / 'outputs/REPORT.md').write_text('# Preliminary findings\n[Code](../work/calculate.py)\n')
+                (config.drafts / 'handoffs/primary.md').write_text(
+                    '# Handoff\nLogical researcher: primary\n\n## Objective\nStudy convergence.\n'
+                    '## Completed\nInitial calculation.\n## Artifacts\n[Plan](../work/PLAN.md)\n'
+                    '## Assumptions\nDeterministic.\n## Unresolved\nNo interrupted computation.\n'
+                    '## Next action\nCompare convergence rates.\n')
                 if outcome == 'external_only':
-                    (project / 'outputs/REPORT.md').write_text(
+                    (config.drafts / 'outputs/REPORT.md').write_text(
                         '# Preliminary findings\n[Source](https://example.org/paper)\n')
                 on_event('stdout', b'{"type":"item.completed","item":{"type":"command_execution","command":"python calculate.py","exit_code":0}}\n')
                 on_event('stdout', b'{"type":"turn.completed","usage":{"input_tokens":12,"output_tokens":5}}\n')

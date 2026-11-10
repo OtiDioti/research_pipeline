@@ -1,10 +1,11 @@
-# Research Pipeline — M1
+# Research Pipeline — persistent scientific investigations
 
-A Python/Linux CLI runs one researcher-directed Codex session in a fresh scientific
+A Python/Linux CLI runs one researcher-directed Codex session at a time in a scientific
 project. It reads human questions and evidence, asks the researcher to plan, assess
 primary literature, derive and compute, and saves ordinary linked Markdown and
 reproducible scientific artifacts. `start` stays in the foreground; `inspect` uses
-saved files and needs no model access.
+saved files and needs no model access. `resume` continues the same investigation
+from a validated checkpoint in fresh conversation context.
 
 The **M1 minimal scientific loop has been demonstrated** in two real isolated
 Codex quadrature investigations. Prior enabled final and pre-merge suites each
@@ -16,7 +17,10 @@ findings, and identifies the preserved demonstration paths and pipeline review g
 This establishes a bounded capability demonstration, without certifying novelty
 or overall scientific competence.
 
-M2 persistence, human direction and primary context rollover; M3 collaboration
+The first M2 implementation increment adds quiescent checkpoints, foreground
+resumption, human direction and note-edit reconciliation. Full live pause and
+automatic primary rollover remain for subsequent increments and have **not**
+passed M2 live acceptance. M3 collaboration
 and independent verification; M4 cross-project reuse and remaining controls; and
 M5 physics-benchmark investigation and human scientific acceptance remain deferred.
 
@@ -85,13 +89,82 @@ positive and finite.
 `--max-tasks` counts processes and threads, including backend overhead.
 The research service has no swap allowance (`MemorySwapMax=0`).
 
-M1 accepts only fresh projects: existing scientific directories/status/indexes or a
+`start` accepts only fresh projects: existing scientific directories/status/indexes or a
 previous run are conflicts. Symlinks/special files in the supplied project and symlink
 ancestors are rejected. Use a plain project without `.git`, `.agents` or `.codex`
 tool configuration. Questions and optional instructions must be UTF-8, nonempty
 questions, and at most 256 KiB each; intake supports up to 10,000 evidence files.
-Keep human inputs stable during the run. Fingerprint differences invalidate completion;
-this is detection, not M2 edit reconciliation. Inputs are never rewritten.
+Optional root `HUMAN_FEEDBACK.md` follows the same UTF-8/256 KiB limit and remains
+distinct from questions and scientific conclusions. Keep human inputs stable during
+a run; detected changes require reassessment on the next activation. Only explicit
+human `redirect` and `feedback` commands write those inputs.
+
+## Continue and redirect
+
+After the foreground activation ends and all its descendants are stopped:
+
+```sh
+research-pipeline redirect /path/to/investigation --questions-file /path/to/new-questions.md
+research-pipeline feedback /path/to/investigation --file /path/to/feedback.md
+# Alternatively edit questions, optional AGENTS.md, HUMAN_FEEDBACK.md or scientific notes.
+research-pipeline resume /path/to/investigation
+research-pipeline inspect /path/to/investigation --json
+```
+
+`redirect` replaces the questions; `feedback` appends a dated, distinct human
+contribution. These commands require the exclusive project lock and confirmed
+quiescence. Direct human file edits remain supported. Resume reloads current
+questions, optional instructions (including removal), feedback and evidence inventory.
+It supplies the previous accepted intake and handoff, changed/deleted note paths and
+pending conflicts so the researcher can revise added, changed and removed objectives,
+preserve unaffected findings and reconsider affected assumptions. It does not delete
+artifacts when questions change.
+
+Limits are immutable across activations: `--wall-seconds` is the investigation's
+**cumulative active-work allowance**, covering startup, research and finalization.
+Time between activations is free. Resume accepts `--codex` and `--model`, but no
+budget-increase flags. Missing usage/native identity is explicitly unknown; observed
+turn usage accumulates without adding cached input tokens a second time.
+Inspection exposes cumulative usage, completeness, remaining active time, checkpoint,
+native session identity and pending reconciliation.
+
+Each activation has a stable investigation ID and logical researcher `primary`,
+and fresh controller/native session identities (native identity only when emitted).
+This is explicit resumption, not automatic rollover. No live `pause` command is
+available in this increment. Interrupting the foreground CLI requests bounded
+whole-service cleanup; inspect the outcome before continuing.
+
+Existing scientific Markdown is mounted read-only. The researcher writes Markdown
+drafts under `/run/research-drafts`, mirroring final project paths; code/data use
+the scientific directories directly. After confirmed cleanup the controller checks
+each destination against its activation-start fingerprint before publishing. Concurrent
+human edits, creations and deletions win; conflicting proposals go to
+`handoffs/proposed/`. On a later activation, intentional replacement of a previously
+detected human version first saves that version in `handoffs/preserved/`.
+Edited indexes are similarly preserved before navigation is regenerated. The
+controller never replaces scientific status prose with operational JSON updates.
+Rejected draft batches remain private diagnostics; invalid draft entries cannot
+block service recovery or reuse of an earlier checkpoint.
+
+`handoffs/primary.md` records the objective, completed work, linked saved artifacts,
+assumptions, unresolved/interrupted work and next action. Checkpoints retain a private
+immutable copy and the accepted intake; a damaged newest handoff falls back to the
+previous valid copy. A structurally valid checkpoint can retain useful partial work
+even when final reports are incomplete. It does not certify scientific quality.
+
+After controller loss, resume first stops the recorded research/probe services and
+requires confirmed inactivity. It marks interrupted work and uses saved science;
+there is no exact replay guarantee. Without trustworthy service timing it conservatively
+charges elapsed real time up to the recorded activation allocation/deadline and marks
+accounting uncertain. Unobserved model usage stays unknown. If no valid checkpoint
+exists, ordinary artifacts remain available with an explicit recovery limitation.
+Schema-1 M1 investigations remain inspectable, but cannot resume; preserved M1
+demonstrations are not migrated.
+
+Unconfirmed cleanup leaves active-work accounting pending. Once inactivity is
+confirmed, recovery charges the additional interval after the amount already
+accounted for, capped at the original activation allowance. Residual work cannot
+grant extra time to a later activation.
 
 ## Files and status
 
@@ -102,10 +175,14 @@ The researcher writes:
   abstract-only, secondary-source or inaccessible assessments.
 - `work/`: analytical notes, scientific scripts, parameters, data and rerun instructions.
 - `outputs/REPORT.md`: linked preliminary findings, limitations and next questions.
+- `RESEARCH_STATUS.md`: scientific progress and next directions.
+- `handoffs/primary.md`: concise continuation guidance.
 
-The controller writes root `RESEARCH_STATUS.md`, immediate-entry `FOLDER_CONTENT.md`
-indexes, and private `.research_pipeline/run.json`, `backend.jsonl`, `stderr.txt` and
-`run.lock`. Indexes are reconciled at startup and the terminal checkpoint after process cleanup.
+The controller initializes root `RESEARCH_STATUS.md`, maintains immediate-entry
+`FOLDER_CONTENT.md` indexes, and writes private `.research_pipeline/run.json`,
+`run.lock` and per-activation `sessions/<id>/` directories. Each session retains
+bounded `backend.jsonl`/`stderr.txt`, drafts, and accepted checkpoint Markdown.
+Indexes are reconciled at startup and the terminal checkpoint after process cleanup.
 The controller does not traverse scientific trees while agent commands can mutate them. Starting evidence is listed in the root index; no
 index is written into `starting_evidence/`. Other subdirectories are created only
 when the science needs them. Operational diagnostics may contain private scientific
@@ -117,10 +194,10 @@ wall deadline, `130` interruption. States include `starting`, `running`, `comple
 `incomplete`, `blocked`, `failed`, `timed_out`, and `interrupted`. Inspection marks
 unconfirmed/stale activity explicitly. Partial artifacts are retained on failure.
 
-Completion requires backend success, observed successful command execution,
+Completion requires backend success, investigation-level observed successful command execution,
 nonempty required Markdown, a report link to a local computational artifact (code or
 data) under `work/`, a preliminary
-label and confirmed cleanup. These structural checks cannot establish scientific
+label, a usable new handoff and confirmed cleanup. These structural checks cannot establish scientific
 correctness, literature quality, novelty, or reproducibility. M1 has **no independent
 scientific verifier**. Failed experimental commands are retained in telemetry; a
 corrected command or useful negative finding is not automatically a failed investigation.
@@ -129,7 +206,8 @@ corrected command or useful negative finding is not automatically a failed inves
 
 The supported launcher is a systemd user transient service containing Bubblewrap.
 It mounts `/project` read-only, overlays only `sources/`, `work/`, and `outputs/`
-writable, and hides `.research_pipeline/`. System programs/libraries, certificates
+writable along with `handoffs/`, read-only mounts for existing scientific Markdown,
+and a separate writable draft mount; it hides `.research_pipeline/`. System programs/libraries, certificates
 and resolver files are mounted explicitly read-only; the host root and home are
 not mounted. Temporary storage and Codex home are private. The actual Codex session
 uses `workspace-write`, never approval, live literature search, and no inherited
@@ -160,8 +238,8 @@ Limits that are **not** guaranteed:
   home or custom MCP/connector configuration are supplied. The authorized backend's
   native credentials exist in its private namespace during the run.
 - Abrupt host/controller SIGKILL cannot finalize status; systemd still enforces its
-  lifetime bound. Pause/resume, human-edit reconciliation, rollover and collaboration
-  are later milestones.
+  lifetime bound. Checkpoint recovery can lose uncheckpointed work. Full live pause,
+  automatic rollover and collaboration remain later increments.
 
 ## Checks and demonstration
 
@@ -176,6 +254,11 @@ CLI subprocesses. Install the package as above for normal CLI usage.
 
 Tests distinguish orchestration doubles, actual Bubblewrap enforcement, and actual
 systemd/cgroup enforcement. An unsupported-host skip means incomplete acceptance.
+`test_continuity.py` checks checkpoint/resume, human edits, direction, cumulative
+accounting, stale ownership and a genuinely killed controller with an explicitly
+doubled research launcher. It supplies no paid scientific evidence. This increment's
+code-readiness handoff proceeds to pipeline controller final verification; it does
+not assert the full M2 demonstration gate.
 Ordinary tests do not launch inference. The pipeline's integrated-test stage can
 explicitly enable the real, potentially paid acceptance run in its existing authorized
 host context:

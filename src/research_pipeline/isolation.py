@@ -12,6 +12,7 @@ import shutil
 import signal
 import subprocess
 import time
+from typing import Callable
 import uuid
 
 
@@ -28,6 +29,8 @@ class Config:
     max_tasks: int = 128
     deadline: float = 0
     unit: str = field(default_factory=lambda: f"research-{uuid.uuid4().hex}.service")
+    drafts: Path | None = None
+    on_probe_launch: Callable[[str], None] | None = None
 
     def limits(self):
         return {"wall_seconds": self.wall_seconds, "memory_mib": self.memory_mib, "swap_bytes": 0,
@@ -53,7 +56,7 @@ def _control(*args):
 
 def service_properties(unit):
     result = _control("show", unit, "--property=LoadState,ActiveState,SubState,Result,"
-                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent")
+                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent,InactiveEnterTimestampMonotonic")
     props = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
     if not props:
         raise RuntimeUnavailable("Cannot query transient service: " + result.stderr.strip())
@@ -93,7 +96,8 @@ def stop_service(unit):
         return False
 
 
-def bubblewrap_command(project, argv, codex=None, auth_home=None):
+def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None):
+    from . import workspace
     args = ["bwrap", "--die-with-parent", "--unshare-user", "--unshare-pid",
             "--unshare-ipc", "--unshare-uts", "--cap-drop", "ALL", "--new-session",
             "--clearenv", "--setenv", "PATH", "/usr/local/bin:/usr/bin:/bin",
@@ -112,8 +116,18 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None):
     args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
              "--tmpfs", "/run", "--dir", "/home/researcher/.codex",
              "--ro-bind", str(project), "/project"]
-    for name in ("sources", "work", "outputs"):
-        args += ["--bind", str(project / name), f"/project/{name}"]
+    for name in workspace.MANAGED:
+        if (project / name).exists():
+            args += ["--bind", str(project / name), f"/project/{name}"]
+    # Protect existing notes with file mounts: unlink/rename are blocked as well
+    # as writes. Never replace these inodes until the namespace has been stopped.
+    for rel, digest in workspace.science_fingerprints(project).items():
+        if digest not in ("symlink", "special"):
+            args += ["--ro-bind", str(project / rel), f"/project/{rel}"]
+    if drafts is None:
+        drafts = project / ".research_pipeline/drafts"
+        drafts.mkdir(exist_ok=True)
+    args += ["--bind", str(drafts), "/run/research-drafts"]
     args += ["--tmpfs", "/project/.research_pipeline", "--remount-ro", "/project/.research_pipeline"]
     if codex:
         # Standalone Codex distribution, including its sibling exec helper binaries.
@@ -137,7 +151,8 @@ def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data:
                "--property=MemorySwapMax=0",
                f"--property=TasksMax={config.max_tasks}",
                "--property=LimitFSIZE=67108864", "--",
-               *bubblewrap_command(project, argv, config.codex if auth_home else None, auth_home)]
+               *bubblewrap_command(project, argv, config.codex if auth_home else None,
+                                   auth_home, config.drafts)]
     process = None
     result = ExecutionResult(4)
     selector = selectors.DefaultSelector()
@@ -225,6 +240,17 @@ for action in (lambda: p.write_text('changed'), lambda: p.unlink(),
     else: raise AssertionError('protected write succeeded')
 assert not list(Path('/project/.research_pipeline').iterdir())
 assert not Path('/home/host-private-sentinel').exists()
+note = Path('/project/work/protected.md')
+if note.exists():
+    for action in (lambda: note.write_text('changed'), lambda: note.unlink(),
+                   lambda: note.rename(note.with_name('replacement.md'))):
+        try: action()
+        except OSError: pass
+        else: raise AssertionError('canonical Markdown write succeeded')
+draft = Path('/run/research-drafts/work/protected.md')
+draft.parent.mkdir(parents=True, exist_ok=True)
+draft.write_text('# Scientific draft')
+assert draft.read_text() == '# Scientific draft'
 code = Path('/project/work/compute.py')
 code.write_text('from pathlib import Path\nPath("/project/outputs/value").write_text(str(sum(i*i for i in range(10))))\n')
 subprocess.run(['/usr/bin/python3', str(code)], check=True)
@@ -249,11 +275,12 @@ def preflight(config, project):
     import tempfile
     with tempfile.TemporaryDirectory(prefix="probe-", dir=project / ".research_pipeline") as tmp:
         probe = Path(tmp)
-        for name in ("starting_evidence", "sources", "work", "outputs", ".research_pipeline"):
+        for name in ("starting_evidence", "sources", "work", "outputs", "handoffs", ".research_pipeline"):
             (probe / name).mkdir()
         (probe / "starting_evidence/sentinel").write_text("protected")
         (probe / "AGENTS.md").write_text("protected")
         (probe / "RESEARCH_STATUS.md").write_text("protected")
+        (probe / "work/protected.md").write_text("# Protected canonical note")
         probe_config = Config(wall_seconds=min(10, config.wall_seconds), memory_mib=config.memory_mib,
                               max_tasks=config.max_tasks,
                               deadline=min(config.deadline, time.monotonic() + 10))
@@ -286,6 +313,8 @@ def preflight(config, project):
         sentinel.write_text("host-private")
         script = PROBE + f"\nassert not Path({str(sentinel)!r}).exists()\n"
         try:
+            if config.on_probe_launch:
+                config.on_probe_launch(probe_config.unit)
             result = run_isolated(probe_config, probe, ["/usr/bin/python3", "-c", script], on_event=capture)
             if sentinel.read_text() != "host-private":
                 raise RuntimeUnavailable("Outside-workspace sentinel changed")

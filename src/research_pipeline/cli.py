@@ -1,4 +1,4 @@
-"""Foreground start and read-only inspection of one fresh investigation."""
+"""Foreground investigation activations with checkpoint-based continuation."""
 import argparse
 from dataclasses import asdict
 from datetime import datetime, timezone
@@ -7,6 +7,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import signal
 import subprocess
 import sys
@@ -40,6 +41,13 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def boot_identity():
+    try:
+        return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+    except OSError:
+        return None
+
+
 def inspect_project(project):
     project = Path(os.path.abspath(project))
     try:
@@ -50,7 +58,9 @@ def inspect_project(project):
         p: (project / p).is_file() and not (project / p).is_symlink()
         for p in state.get("artifacts", [])
     }
-    state["activity_check"] = "Terminal state recorded; no live session requested."
+    state["activity_check"] = ("Cleanup unconfirmed; residual work may still be active."
+                               if state.get("cleanup_ok") is False else
+                               "Terminal state recorded; no live session requested.")
     if state.get("state") in ("starting", "running"):
         held = False
         try:
@@ -72,69 +82,234 @@ def inspect_project(project):
     return state
 
 
-def start(project, config):
+def validate_project(project):
     project = Path(os.path.abspath(project))
     if not project.is_dir() or any(p.is_symlink() for p in (project, *project.parents)):
         raise workspace.InputError("Project must be an existing directory with no symlink ancestors")
-    # Lock before freshness checks so concurrent starts receive the actual conflict.
-    with workspace.acquire_project_lock(project):
-        intake = workspace.read_intake(project)
-        if (project / ".research_pipeline/run.json").exists():
-            raise workspace.InputError("A run already exists; M1 requires a fresh project")
-        config.deadline = time.monotonic() + config.wall_seconds
-        state = {"schema_version": 1, "run_id": uuid.uuid4().hex, "project": str(project),
-                 "started_at": now(), "state": "starting", "reason": "Checking runtime prerequisites.",
-                 "limits": config.limits(), "capabilities": {}, "service": config.unit,
-                 "backend": {}, "artifacts": list(workspace.REQUIRED), "validation_failures": [],
-                 "input_fingerprints": intake.fingerprints, "input_inventory": intake.inventory,
-                 "limitations": codex.LIMITATIONS, "cleanup_ok": None, "service_attempted": False}
-        recorder = None
-        result = None
-        code = 4
-        for name in workspace.MANAGED:
-            (project / name).mkdir()
+    return project
+
+
+def load_state(project):
+    # Drafts are untrusted and may belong to a still-live orphan. Read only the
+    # trusted state needed to stop it; validate other operational paths afterward.
+    path = workspace.safe_path(project, ".research_pipeline/run.json")
+    if not path.is_file():
+        raise workspace.InputError("Investigation state must be a regular file")
+    state = json.loads(path.read_text())
+    if state.get("schema_version") != 2:
+        raise workspace.InputError("Unsupported state schema; M1 projects are inspectable but cannot resume")
+    if state.get("project") != str(project) or state.get("logical_researcher_id") != "primary":
+        raise workspace.InputError("Saved project/logical identity is invalid")
+    for key in ("service", "probe_service"):
+        attempted = state.get("service_attempted" if key == "service" else "probe_attempted")
+        if attempted and not state.get(key):
+            raise workspace.InputError(f"Missing saved {key} for attempted launch")
+        if state.get(key) and not re.fullmatch(r"research-[a-f0-9]{32}\.service", state[key]):
+            raise workspace.InputError(f"Invalid saved {key}")
+    limits = state["limits"]
+    if (positive(str(limits["wall_seconds"])) != limits["wall_seconds"]
+            or positive_int(str(limits["memory_mib"])) != limits["memory_mib"]
+            or positive_int(str(limits["max_tasks"])) != limits["max_tasks"]):
+        raise workspace.InputError("Invalid saved limits")
+    consumed = state.get("active_seconds", 0)
+    if not isinstance(consumed, (int, float)) or not math.isfinite(consumed) or consumed < 0:
+        raise workspace.InputError("Invalid saved active-work accounting")
+    return state
+
+
+def recover_owner(project, state):
+    """Called under the exclusive lock before reading agent-mutated science."""
+    unresolved = state.get("state") in ("starting", "running") or state.get("cleanup_ok") is False
+    service_ends = []
+    for key in ("probe_service", "service"):
+        attempted = state.get("probe_attempted" if key == "probe_service" else "service_attempted")
+        if attempted and (unresolved or state.get("cleanup_ok") is not True):
+            if not isolation.stop_service(state[key]):
+                state.update(state="failed", cleanup_ok=False,
+                             reason="Previous service/descendant cleanup could not be confirmed; launch blocked.")
+                workspace.write_state(project, state)
+                raise workspace.InputError(state["reason"])
+            try:
+                props = isolation.service_properties(state[key])
+                service_ends.append(int(props.get("InactiveEnterTimestampMonotonic", 0)) / 1e6)
+            except (OSError, ValueError, isolation.RuntimeUnavailable, subprocess.TimeoutExpired):
+                service_ends.append(0)
+    if unresolved or state.get("accounting_pending"):
+        if state.get("accounting_pending"):
+            # A dead controller has no trustworthy monotonic interval. Charge
+            # elapsed real time, capped at its recorded allocation/deadline.
+            elapsed = max(0, time.time() - state["activation_started_epoch"])
+            measured = (bool(service_ends) and all(service_ends)
+                        and state.get("boot_id") is not None and state["boot_id"] == boot_identity()
+                        and max(service_ends) >= state.get("activation_started_monotonic", math.inf))
+            if measured:
+                elapsed = max(service_ends) - state["activation_started_monotonic"]
+            previously_charged = state.get("activation_charged_seconds", 0)
+            charged = max(previously_charged, min(state["activation_allowance"], elapsed))
+            state["active_seconds"] = min(state["limits"]["wall_seconds"],
+                                           state.get("active_seconds", 0) + (charged - previously_charged))
+            state["activation_charged_seconds"] = charged
+            state["remaining_active_seconds"] = max(0, state["limits"]["wall_seconds"] - state["active_seconds"])
+            state["accounting_pending"] = False
+            state.setdefault("accounting_uncertainties", []).append(
+                ("Lost controller: charged startup through observed service inactivity, bounded by its allocation; "
+                 if measured else
+                 "Lost controller: charged elapsed wall time up to the original activation deadline; "
+                 "no reliable service active interval was available. ")
+                + "Unobserved model usage and interrupted finalization remain unknown.")
+            state["usage_complete"] = False
+        state.update(state="interrupted", cleanup_ok=True,
+                     interrupted_work="Controller lost; work after the last valid checkpoint may be incomplete. "
+                     "Inspect retained artifacts before repeating computations.",
+                     reason="Stale ownership recovered after confirmed service cleanup.")
+        if not any(s["activation_id"] == state.get("activation_id") for s in state.setdefault("sessions", [])):
+            state["sessions"].append({
+                "activation_id": state.get("activation_id"), "native_session_id": state.get("native_session_id"),
+                "outcome": "interrupted", "usage_totals": state.get("current_usage_totals")})
+        for session in state["sessions"]:
+            if session["activation_id"] == state.get("activation_id"):
+                session["active_seconds"] = state.get("activation_charged_seconds", 0)
         workspace.write_state(project, state)
-        workspace.refresh_indexes(project)
+
+
+def start(project, config):
+    return activate(project, config, resume=False)
+
+
+def resume(project, codex_path="codex", model=None):
+    return activate(project, isolation.Config(codex=codex_path, model=model), resume=True)
+
+
+def activate(project, config, resume=False):
+    project = validate_project(project)
+    with workspace.acquire_project_lock(project):
+        began = time.monotonic()
+        continuation = None
+        if resume:
+            state = load_state(project)
+            recover_owner(project, state)
+            began = time.monotonic()
+            intake = workspace.read_intake(project)
+            saved, handoff, historical = workspace.load_checkpoint(project, state)
+            state["recovery"] = {
+                "checkpoint_id": saved["id"] if saved else None,
+                "limitation": ("No valid checkpoint; continue from retained ordinary artifacts."
+                               if not saved else
+                               "Newest checkpoint invalid; using the previous saved handoff."
+                               if saved["id"] != state.get("checkpoint", {}).get("id") else None),
+            }
+            for key in ("wall_seconds", "memory_mib", "max_tasks"):
+                setattr(config, key, state["limits"][key])
+            remaining = max(0, config.wall_seconds - state.get("active_seconds", 0))
+            if remaining <= 0:
+                raise workspace.InputError("Investigation active-work allowance exhausted; resume cannot increase limits")
+            baseline = workspace.science_fingerprints(project)
+            external = sorted(set(workspace.changed_files(state.get("science_fingerprints", {}), baseline))
+                              | set(state.get("pending_human_changes", [])))
+            continuation = {
+                "investigation_id": state["run_id"], "logical_researcher_id": "primary",
+                "checkpoint_id": saved["id"] if saved else None,
+                "recovery": state["recovery"],
+                "handoff": handoff or "No valid saved checkpoint; continue cautiously from ordinary artifacts.",
+                "previous_accepted_intake": historical or "(no accepted intake)",
+                "input_changes": workspace.changed_files(
+                    saved["input_fingerprints"] if saved else state.get("input_fingerprints", {}),
+                    intake.fingerprints),
+                "external_markdown_changes_or_deletions": external,
+                "pending_reconciliation": state.get("pending_reconciliation", []),
+                "interrupted_work": state.get("interrupted_work"),
+                "missing_saved_artifacts": [rel for rel in saved["artifacts"]
+                                             if not workspace.safe_path(project, rel).is_file()] if saved else [],
+            }
+        else:
+            workspace.validate_fresh(project)
+            intake = workspace.read_intake(project)
+            remaining = config.wall_seconds
+            state = {"schema_version": 2, "run_id": uuid.uuid4().hex, "project": str(project),
+                     "logical_researcher_id": "primary", "started_at": now(),
+                     "limits": config.limits(), "capabilities": {}, "backend": {},
+                     "artifacts": list(workspace.REQUIRED), "checkpoints": [], "sessions": [],
+                     "active_seconds": 0, "usage_totals": None, "usage_complete": True,
+                     "limitations": codex.LIMITATIONS, "pending_reconciliation": []}
+            for name in workspace.MANAGED:
+                (project / name).mkdir()
+            workspace.initial_status(project)
+            workspace.refresh_indexes(project)
+            baseline = workspace.science_fingerprints(project)
+            external = []
+        config.deadline = began + remaining
+        activation = uuid.uuid4().hex
+        session = project / ".research_pipeline/sessions" / activation
+        session.mkdir(parents=True)
+        config.drafts = session / "drafts"
+        config.drafts.mkdir()
+        began_epoch = time.time() - max(0, time.monotonic() - began)
+        for key in ("execution", "telemetry"):
+            state.pop(key, None)
+        state.update(activation_id=activation, ownership_nonce=uuid.uuid4().hex,
+                     native_session_id=None, service=config.unit, service_attempted=False,
+                     probe_service=None, probe_attempted=False, cleanup_ok=None,
+                     state="starting", reason="Checking runtime prerequisites.",
+                     activation_started_epoch=began_epoch, activation_allowance=remaining,
+                     activation_started_monotonic=began, boot_id=boot_identity(),
+                     activation_deadline_epoch=began_epoch + remaining,
+                     accounting_pending=True, activation_charged_seconds=0, remaining_active_seconds=remaining,
+                     input_fingerprints=intake.fingerprints, input_inventory=intake.inventory,
+                     validation_failures=[], external_changes=external,
+                     pending_intake_changes=False, current_usage_totals=None)
+        workspace.write_state(project, state)
+        def record_probe(unit):
+            state.update(probe_service=unit, probe_attempted=True)
+            workspace.write_state(project, state)
+        config.on_probe_launch = record_probe
+        recorder = result = None
+        code = 4
         try:
             state["backend"] = codex.verify_backend(config)
             state["capabilities"] = isolation.preflight(config, project)
             with codex.private_auth(project) as auth:
                 if time.monotonic() >= config.deadline:
-                    state.update(state="timed_out", reason="Wall budget exhausted during startup.")
-                    code = 124
-                else:
-                    recorder = codex.EventRecorder(project / ".research_pipeline")
-                    state.update(state="running", reason="One Codex research session is active.")
+                    raise TimeoutError("Active-work allowance exhausted during startup")
+                def record_identity(identity):
+                    state["native_session_id"] = identity
                     workspace.write_state(project, state)
-                    state["service_attempted"] = True
-                    result = isolation.run_isolated(config, project, codex.build_command(config),
-                                                    codex.build_prompt(intake, {**config.limits(),
-                                                        "remaining_wall_seconds": max(0, config.deadline-time.monotonic())}),
-                                                    recorder, auth)
-                    state["execution"] = asdict(result)
-                    state["cleanup_ok"] = result.cleanup_ok
-                    if not result.cleanup_ok:
-                        state.update(state="failed", reason="Cannot confirm service/descendant cleanup.")
-                        code = 4
-                    elif result.interrupted:
-                        state.update(state="interrupted", reason="User interrupted; partial artifacts retained.")
-                        code = 130
-                    elif result.timed_out:
-                        state.update(state="timed_out", reason="Aggregate wall deadline reached; partial artifacts retained.")
-                        code = 124
-                    elif result.returncode:
-                        state.update(state="failed", reason=result.error or
-                                     f"Codex/service exited {result.returncode}; inspect stderr.txt.")
-                        code = 4
+                def record_usage(usage):
+                    if isinstance(usage, dict):
+                        for key, value in usage.items():
+                            if isinstance(value, (int, float)) and not isinstance(value, bool):
+                                for field in ("usage_totals", "current_usage_totals"):
+                                    totals = state.get(field) or {}
+                                    totals[key] = totals.get(key, 0) + value
+                                    state[field] = totals
                     else:
-                        failures = workspace.validate_deliverables(project)
-                        if not recorder.successful_commands:
-                            failures.append("No successful scientific command observed in Codex events")
-                        state["validation_failures"] = failures
-                        state.update(state="incomplete" if failures else "completed",
-                                     reason="; ".join(failures) if failures else
-                                     "Session and structural artifact checks completed; findings remain preliminary.")
-                        code = 4 if failures else 0
+                        state["usage_complete"] = False
+                    # Persist completed-turn usage before another model turn.
+                    workspace.write_state(project, state)
+                recorder = codex.EventRecorder(session, on_identity=record_identity, on_usage=record_usage)
+                # Durable launch intent precedes any spawn.
+                state.update(state="running", reason="Primary researcher active.", service_attempted=True)
+                workspace.write_state(project, state)
+                result = isolation.run_isolated(
+                    config, project, codex.build_command(config),
+                    codex.build_prompt(intake, {**config.limits(),
+                        "remaining_wall_seconds": max(0, config.deadline-time.monotonic())}, continuation),
+                    recorder, auth)
+                state["execution"] = asdict(result)
+                state["cleanup_ok"] = result.cleanup_ok
+                if not result.cleanup_ok:
+                    state.update(state="failed", reason="Cannot confirm service/descendant cleanup.")
+                elif result.interrupted:
+                    state.update(state="interrupted", reason="User interrupted; partial science retained.")
+                    code = 130
+                elif result.timed_out:
+                    state.update(state="timed_out", reason="Active-work deadline reached; partial science retained.")
+                    code = 124
+                elif result.returncode:
+                    state.update(state="failed", reason=result.error or
+                                 f"Codex/service exited {result.returncode}; inspect session stderr.txt.")
+                else:
+                    state.update(state="completed", reason="Session ended; validating saved science.")
+                    code = 0
         except isolation.RuntimeUnavailable as exc:
             state.update(state="blocked", reason=str(exc))
             code = 3
@@ -142,46 +317,117 @@ def start(project, config):
             state.update(state="timed_out", reason=str(exc))
             code = 124
         except KeyboardInterrupt:
-            state.update(state="interrupted", reason="Interrupted during startup or finalization; partial work retained.")
+            state.update(state="interrupted", reason="Interrupted; retained work may be incomplete.")
             code = 130
         except Exception as exc:
             state.update(state="failed", reason=f"{type(exc).__name__}: {exc}")
-            code = 4
         finally:
             if recorder:
                 recorder.close()
-                state["telemetry"] = recorder.summary()
-            # run_isolated always cleans the service even if its event callback fails.
-            # No service has been started when preflight fails its environment gate.
-            if result is None and state["service_attempted"]:
-                state["cleanup_ok"] = isolation.stop_service(config.unit)
-                if not state["cleanup_ok"]:
-                    state.update(state="failed", reason=state["reason"] + " Cleanup could not be confirmed.")
-                    code = 4
+                telemetry = recorder.summary()
+                state["telemetry"] = telemetry
+                state["usage_complete"] &= telemetry["usage_complete"] and not (
+                    result is None or result.returncode or result.error)
+                state["successful_commands"] = state.get("successful_commands", 0) + telemetry["successful_commands"]
+            else:
+                telemetry = {}
+            if result is None:
+                cleanup = []
+                for key, attempted in (("service", "service_attempted"), ("probe_service", "probe_attempted")):
+                    if state[attempted]:
+                        cleanup.append(isolation.stop_service(state[key]))
+                state["cleanup_ok"] = all(cleanup)
+            if not state["cleanup_ok"]:
+                state.update(state="failed", reason=state["reason"] + " Cleanup could not be confirmed.")
+                code = 4
             try:
                 state["inputs_unchanged"] = workspace.fingerprints(project) == intake.fingerprints
                 if not state["inputs_unchanged"]:
-                    state.update(state="incomplete", reason="Human inputs changed during the run; findings require reassessment.")
-                    code = 4
-            except (OSError, workspace.InputError) as exc:
-                state.update(state="incomplete", inputs_unchanged=False,
-                             reason=f"Cannot confirm protected input integrity: {exc}")
+                    state["pending_intake_changes"] = True
+                    if state["state"] == "completed":
+                        state.update(state="incomplete", reason="Human inputs changed; reassessment required.")
+                        code = 4
+                if state["cleanup_ok"]:
+                    external = sorted(set(external) | set(workspace.changed_files(
+                        baseline, workspace.science_fingerprints(project))))
+                    state["external_changes"] = external
+                    conflicts, preserved = workspace.publish_drafts(project, config.drafts, baseline, external)
+                    state["pending_reconciliation"] = conflicts
+                    state["preserved_edits"] = preserved
+                    published = {p.relative_to(config.drafts).as_posix()
+                                 for p in config.drafts.rglob("*.md")}
+                    published -= {c["path"] for c in conflicts}
+                    state["pending_human_changes"] = sorted(
+                        (set(external) | {c["path"] for c in conflicts}) - published)
+                    # Reconcile indexes only while no researcher can mutate paths.
+                    workspace.refresh_indexes(project, expected=state.get("science_fingerprints", baseline))
+                    if result is not None:
+                        try:
+                            if any(c["path"] == "handoffs/primary.md" for c in conflicts):
+                                raise workspace.InputError("Handoff draft conflicts with a human edit")
+                            if not (config.drafts / "handoffs/primary.md").is_file():
+                                raise workspace.InputError("No new handoff draft; previous checkpoint retained")
+                            workspace.commit_checkpoint(project, state, intake, session)
+                            state.pop("checkpoint_error", None)
+                        except (OSError, workspace.InputError) as exc:
+                            state["checkpoint_error"] = str(exc)
+                    if state["state"] == "completed":
+                        failures = workspace.validate_deliverables(project)
+                        if not state.get("successful_commands"):
+                            failures.append("No successful scientific command observed in this investigation")
+                        if state.get("checkpoint_error"):
+                            failures.append(state["checkpoint_error"])
+                        if conflicts:
+                            failures.append("Human note changes preserved; proposed replacements need reconciliation")
+                        state["validation_failures"] = failures
+                        state.update(state="incomplete" if failures else "completed",
+                                     reason="; ".join(failures) if failures else
+                                     "Checkpoint and structural artifact checks completed; science remains preliminary.")
+                        code = 4 if failures else 0
+                    state["science_fingerprints"] = workspace.science_fingerprints(project)
+            except (OSError, workspace.InputError, UnicodeError) as exc:
+                state.update(state="failed", reason=f"Checkpoint finalization failed: {exc}")
                 code = 4
+            charged = min(remaining, max(0, time.monotonic() - began))
+            state["active_seconds"] = min(config.wall_seconds, state.get("active_seconds", 0) + charged)
+            state["activation_charged_seconds"] = charged
+            state["remaining_active_seconds"] = max(0, config.wall_seconds - state["active_seconds"])
+            state["accounting_pending"] = not state["cleanup_ok"]
             state["finished_at"] = now()
-            try:
-                # Index only at quiescent checkpoints. Never traverse live,
-                # agent-mutated paths in the host controller.
-                workspace.refresh_indexes(project, include_science=state["cleanup_ok"] is not False)
-            except (OSError, workspace.InputError) as exc:
-                state.update(state="failed", reason=f"Artifact index finalization failed: {exc}")
-                code = 4
+            state["sessions"].append({"activation_id": activation, "native_session_id": state["native_session_id"],
+                                      "outcome": state["state"], "active_seconds": charged,
+                                      "usage_totals": telemetry.get("usage_totals"),
+                                      "logs": session.relative_to(project).as_posix()})
             workspace.write_state(project, state)
         print(f"{state['state']}: {state['reason']}\nStatus: {project / 'RESEARCH_STATUS.md'}")
         return code
 
 
+def human_direction(project, source, feedback=False):
+    project = validate_project(project)
+    text = workspace.read_input(source)
+    if not text.strip():
+        raise workspace.InputError("Human contribution must not be empty")
+    with workspace.acquire_project_lock(project):
+        state = load_state(project)
+        recover_owner(project, state)
+        workspace.regular_tree(project / "starting_evidence")
+        target = workspace.safe_path(project, "HUMAN_FEEDBACK.md" if feedback
+                                     else "starting_evidence/RESEARCH_QUESTIONS.md")
+        if feedback:
+            previous = workspace.read_input(target) if target.exists() else "# Human scientific feedback\n"
+            text = previous + f"\n\n## Human contribution ({now()})\n\n" + text + "\n"
+        if len(text.encode("utf-8")) > 256 * 1024:
+            raise workspace.InputError("Combined human input exceeds 256 KiB")
+        workspace.atomic_text(target, text)
+        state["pending_intake_changes"] = True
+        workspace.write_state(project, state)
+    print("Human direction saved; next resume reloads current inputs.")
+    return 0
+
+
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Run one bounded Codex scientific investigation (M1).")
+    parser = argparse.ArgumentParser(description="Bounded scientific investigation with persistent checkpoints.")
     sub = parser.add_subparsers(dest="command", required=True)
     launch = sub.add_parser("start", help="start a fresh foreground investigation")
     launch.add_argument("project", type=Path)
@@ -190,6 +436,14 @@ def main(argv=None):
     launch.add_argument("--wall-seconds", type=positive, default=600)
     launch.add_argument("--memory-mib", type=positive_int, default=2048)
     launch.add_argument("--max-tasks", type=positive_int, default=128)
+    restart = sub.add_parser("resume", help="continue saved science in a fresh foreground context")
+    restart.add_argument("project", type=Path)
+    restart.add_argument("--codex", default="codex")
+    restart.add_argument("--model")
+    for name, option in (("redirect", "--questions-file"), ("feedback", "--file")):
+        command = sub.add_parser(name, help="record human input while the project is quiescent")
+        command.add_argument("project", type=Path)
+        command.add_argument(option, dest="source", required=True, type=Path)
     show = sub.add_parser("inspect", help="inspect saved status without inference or authentication")
     show.add_argument("project", type=Path)
     show.add_argument("--json", action="store_true")
@@ -204,20 +458,28 @@ def main(argv=None):
             if args.json:
                 print(json.dumps(state, indent=2))
             else:
-                print(f"{state['state']}: {state.get('reason', '')}")
-                print(state["activity_check"])
-                print("Limits: " + json.dumps(state.get("limits", {})))
+                print(f"{state['state']}: {state.get('reason', '')}\n{state['activity_check']}")
+                for key in ("limits", "remaining_active_seconds", "usage_totals", "usage_complete",
+                            "checkpoint", "native_session_id", "pending_reconciliation",
+                            "pending_intake_changes", "checkpoint_error", "recovery", "accounting_uncertainties"):
+                    print(f"{key}: {json.dumps(state.get(key))}")
                 for artifact in state.get("artifacts", []):
                     present = "present" if state["artifact_availability"][artifact] else "missing"
                     print(f"Artifact ({present}): {args.project / artifact}")
                 for limitation in state.get("limitations", []):
                     print(f"Limitation: {limitation}")
             return 0
+        if args.command in ("redirect", "feedback"):
+            return human_direction(args.project, args.source, feedback=args.command == "feedback")
+        if args.command == "resume":
+            return resume(args.project, args.codex, args.model)
         config = isolation.Config(codex=args.codex, model=args.model, wall_seconds=args.wall_seconds,
                                   memory_mib=args.memory_mib, max_tasks=args.max_tasks)
         return start(args.project, config)
-    except (workspace.InputError, OSError, ValueError) as exc:
+    except (workspace.InputError, OSError, ValueError, KeyError, argparse.ArgumentTypeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     finally:
         signal.signal(signal.SIGTERM, previous)
+
+

@@ -17,11 +17,12 @@ from research_pipeline import isolation
 
 
 def fixture(root):
-    for name in ('starting_evidence', 'sources', 'work', 'outputs', '.research_pipeline'):
+    for name in ('starting_evidence', 'sources', 'work', 'outputs', 'handoffs', '.research_pipeline'):
         (root / name).mkdir()
     (root / 'starting_evidence/sentinel').write_text('protected')
     (root / 'AGENTS.md').write_text('protected')
     (root / 'RESEARCH_STATUS.md').write_text('protected')
+    (root / 'work/protected.md').write_text('# Protected canonical note')
     (root / '.research_pipeline/private').write_text('hidden operational state')
 
 class PreflightResourceTests(unittest.TestCase):
