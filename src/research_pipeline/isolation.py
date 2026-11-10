@@ -33,6 +33,11 @@ class Config:
     memory_mib: int = 2048
     max_tasks: int = 128
     primary_session_seconds: float = 300
+    delegated_session_seconds: float = 300
+    max_agents: int = 1
+    task_id: str = "primary"
+    task_workspaces: tuple = ()
+    frozen_inputs: tuple = ()
     deadline: float = 0
     unit: str = field(default_factory=lambda: f"research-{uuid.uuid4().hex}.service")
     drafts: Path | None = None
@@ -46,7 +51,7 @@ class Config:
         return {"wall_seconds": self.wall_seconds, "memory_mib": self.memory_mib, "swap_bytes": 0,
                 "max_tasks": self.max_tasks,
                 "per_file_bytes": 64 * 1024 * 1024, "log_bytes_per_stream": 4 * 1024 * 1024,
-                "concurrent_researchers": 1}
+                "concurrent_researchers": self.max_agents}
 
 
 @dataclass
@@ -60,29 +65,34 @@ class ExecutionResult:
     requested_stop: str | None = None
 
 
-def _control(*args):
+def _control(*args, deadline=None):
+    timeout = 5 if deadline is None else min(5, deadline - time.monotonic())
+    if timeout <= 0:
+        raise subprocess.TimeoutExpired(["systemctl", "--user", *args], 0)
     return subprocess.run(["systemctl", "--user", *args], capture_output=True,
-                          text=True, timeout=5, check=False)
+                          text=True, timeout=timeout, check=False)
 
 
-def service_properties(unit):
+def service_properties(unit, *, deadline=None):
     result = _control("show", unit, "--property=LoadState,ActiveState,SubState,Result,"
-                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent,InactiveEnterTimestampMonotonic")
+                      "ControlGroup,ExecMainStatus,MemoryPeak,TasksCurrent,InactiveEnterTimestampMonotonic",
+                      **({"deadline": deadline} if deadline is not None else {}))
     props = dict(line.split("=", 1) for line in result.stdout.splitlines() if "=" in line)
     if not props:
         raise RuntimeUnavailable("Cannot query transient service: " + result.stderr.strip())
     return props
 
 
-def stop_service(unit):
+def stop_service(unit, *, deadline=None):
     """Never report completion while a control group may still contain work."""
+    options = {"deadline": deadline} if deadline is not None else {}
     try:
-        props = service_properties(unit)
+        props = service_properties(unit, **options)
         cgroup = props.get("ControlGroup", "")
         if props.get("LoadState") != "not-found":
             # Stop is bounded by TimeoutStopSec; systemd sends SIGKILL to the group.
-            _control("stop", unit)
-        props = service_properties(unit)
+            _control("stop", unit, **options)
+        props = service_properties(unit, **options)
         stopped = (props.get("LoadState") == "not-found"
                    or props.get("ActiveState") in ("inactive", "failed"))
         if cgroup:
@@ -90,11 +100,11 @@ def stop_service(unit):
             if events.exists():
                 stopped = stopped and "populated 0" in events.read_text()
         if props.get("ActiveState") == "failed":
-            _control("reset-failed", unit)
+            _control("reset-failed", unit, **options)
         if not stopped:
-            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit)
-            _control("stop", unit)
-            props = service_properties(unit)
+            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit, **options)
+            _control("stop", unit, **options)
+            props = service_properties(unit, **options)
             stopped = (props.get("LoadState") == "not-found"
                        or props.get("ActiveState") in ("inactive", "failed"))
             if cgroup and events.exists():
@@ -103,14 +113,15 @@ def stop_service(unit):
     except (OSError, subprocess.TimeoutExpired, RuntimeUnavailable):
         # Best effort escalation; inability to confirm still prevents completion.
         try:
-            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit)
+            _control("kill", "--kill-whom=all", "--signal=SIGKILL", unit, **options)
         except (OSError, subprocess.TimeoutExpired):
             pass
         return False
 
 
 def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
-                       control=None, response=None):
+                       control=None, response=None, task_id="primary", task_workspaces=(),
+                       frozen_inputs=()):
     from . import workspace
     args = ["bwrap", "--die-with-parent", "--unshare-user", "--unshare-pid",
             "--unshare-ipc", "--unshare-uts", "--cap-drop", "ALL", "--new-session",
@@ -130,12 +141,19 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
     args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
              "--tmpfs", "/run", "--dir", "/home/researcher/.codex",
              "--ro-bind", str(project), "/project"]
-    for name in workspace.MANAGED:
+    writable = workspace.writable_directories(task_id)
+    for name in writable:
         if (project / name).exists():
             args += ["--bind", str(project / name), f"/project/{name}"]
+    if task_id == "primary":
+        for rel in task_workspaces:
+            args += ["--ro-bind", str(project / rel), f"/project/{rel}"]
+    for rel in frozen_inputs:
+        path = workspace.safe_path(project, rel)
+        args += ["--ro-bind", str(path), f"/project/{rel}"]
     # Protect existing notes with file mounts: unlink/rename are blocked as well
     # as writes. Never replace these inodes until the namespace has been stopped.
-    for rel, digest in workspace.science_fingerprints(project).items():
+    for rel, digest in workspace.science_fingerprints(project, task_id).items():
         if digest not in ("symlink", "special"):
             args += ["--ro-bind", str(project / rel), f"/project/{rel}"]
     if drafts is None:
@@ -150,107 +168,140 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
     args += ["--tmpfs", "/project/.research_pipeline", "--remount-ro", "/project/.research_pipeline"]
     if codex:
         # Standalone Codex distribution, including its sibling exec helper binaries.
-        args += ["--ro-bind", str(Path(codex).parent), "/opt/codex"]
+        # CPU-sized Tokio pools in Codex and its exec server can exhaust a task
+        # slot before V8 starts. Bound backend overhead without raising TasksMax.
+        args += ["--setenv", "TOKIO_WORKER_THREADS", "1",
+                 "--ro-bind", str(Path(codex).parent), "/opt/codex"]
     if auth_home:
         args += ["--bind", str(auth_home), "/home/researcher/.codex"]
-    return args + ["--chdir", "/project/work", "--", *argv]
+    return args + ["--chdir", f"/project/{workspace.task_directory(task_id)}", "--", *argv]
 
 
-def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data: None,
+class RunningService:
+    """One nonblocking transport. All callbacks run in its foreground owner."""
+    def __init__(self, config, project, argv, stdin="", on_event=lambda channel, data: None,
                  auth_home=None, poll=None, launch_guard=None):
-    remaining = config.deadline - time.monotonic()
-    if remaining <= 0:
-        return ExecutionResult(124, timed_out=True, cleanup_ok=True)
-    command = ["systemd-run", "--user", "--quiet", "--wait", "--pipe",
-               "--service-type=exec", f"--unit={config.unit}",
-               "--property=KillMode=control-group", "--property=TimeoutStopSec=2s",
-               "--property=SendSIGKILL=yes", "--property=NoNewPrivileges=yes",
-               f"--property=RuntimeMaxSec={max(0.001, remaining):.3f}s",
-               f"--property=MemoryMax={config.memory_mib}M",
-               "--property=MemorySwapMax=0",
-               f"--property=TasksMax={config.max_tasks}",
-               "--property=LimitFSIZE=67108864", "--",
-               *bubblewrap_command(project, argv, config.codex if auth_home else None,
-                                   auth_home, config.drafts, config.control, config.response)]
-    poll = poll or config.on_poll
-    launch_guard = launch_guard or config.launch_guard
-    process = None
-    result = ExecutionResult(4)
-    selector = selectors.DefaultSelector()
-    try:
-        with launch_guard() if launch_guard else nullcontext():
-            process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, start_new_session=True)
-        payload = memoryview(stdin.encode())
-        for stream, channel in ((process.stdout, "stdout"), (process.stderr, "stderr")):
-            os.set_blocking(stream.fileno(), False)
-            selector.register(stream, selectors.EVENT_READ, channel)
-        if payload:
-            os.set_blocking(process.stdin.fileno(), False)
-            selector.register(process.stdin, selectors.EVENT_WRITE, "stdin")
-        else:
-            process.stdin.close()
-        # Even a worker that closes both output streams remains controllable.
-        while selector.get_map() or process.poll() is None:
-            if time.monotonic() >= config.deadline:
-                result.timed_out = True
-                break
-            reason = poll() if poll else None
-            if reason:
-                result.requested_stop = reason
-                break
-            if not selector.get_map():
-                time.sleep(min(.2, max(0, config.deadline - time.monotonic())))
-                continue
-            for key, _ in selector.select(min(0.2, max(0, config.deadline - time.monotonic()))):
+        self.config, self.on_event = config, on_event
+        self.poll_callback = poll or config.on_poll
+        self.process = None
+        self.selector = selectors.DefaultSelector()
+        self.payload = memoryview(stdin.encode())
+        self.result = ExecutionResult(4)
+        self.done = False
+        remaining = config.deadline - time.monotonic()
+        if remaining <= 0:
+            self.result = ExecutionResult(124, timed_out=True, cleanup_ok=True)
+            self.done = True
+            return
+        command = ["systemd-run", "--user", "--quiet", "--wait", "--pipe",
+                   "--service-type=exec", f"--unit={config.unit}",
+                   "--property=KillMode=control-group", "--property=TimeoutStopSec=2s",
+                   "--property=SendSIGKILL=yes", "--property=NoNewPrivileges=yes",
+                   f"--property=RuntimeMaxSec={max(0.001, remaining):.3f}s",
+                   f"--property=MemoryMax={config.memory_mib}M", "--property=MemorySwapMax=0",
+                   f"--property=TasksMax={config.max_tasks}", "--property=LimitFSIZE=67108864", "--",
+                   *bubblewrap_command(project, argv, config.codex if auth_home else None,
+                                       auth_home, config.drafts, config.control, config.response,
+                                       config.task_id, config.task_workspaces, config.frozen_inputs)]
+        guard = launch_guard or config.launch_guard
+        try:
+            with guard() if guard else nullcontext():
+                self.process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                stderr=subprocess.PIPE, start_new_session=True)
+            for stream, channel in ((self.process.stdout, "stdout"), (self.process.stderr, "stderr")):
+                os.set_blocking(stream.fileno(), False)
+                self.selector.register(stream, selectors.EVENT_READ, channel)
+            if self.payload:
+                os.set_blocking(self.process.stdin.fileno(), False)
+                self.selector.register(self.process.stdin, selectors.EVENT_WRITE, "stdin")
+            else:
+                self.process.stdin.close()
+        except RequestedStop as exc:
+            self.result.requested_stop = str(exc)
+            self.done = True
+        except Exception as exc:
+            self.result.error = f"{type(exc).__name__}: {exc}"
+            self.done = True
+
+    def poll(self, timeout=0):
+        if self.done:
+            return True
+        try:
+            if time.monotonic() >= self.config.deadline:
+                self.result.timed_out = True
+                self.done = True
+            elif self.poll_callback and (reason := self.poll_callback()):
+                self.result.requested_stop = reason
+                self.done = True
+            if self.done:
+                return True
+            for key, _ in self.selector.select(timeout):
                 stream = key.fileobj
                 if key.data == "stdin":
                     try:
-                        sent = os.write(stream.fileno(), payload[:65536])
-                        payload = payload[sent:]
+                        sent = os.write(stream.fileno(), self.payload[:65536])
+                        self.payload = self.payload[sent:]
                     except BrokenPipeError:
-                        payload = payload[:0]
-                    if not payload:
-                        selector.unregister(stream)
+                        self.payload = self.payload[:0]
+                    if not self.payload:
+                        self.selector.unregister(stream)
                         stream.close()
                 else:
                     data = os.read(stream.fileno(), 65536)
                     if data:
-                        on_event(key.data, data)
+                        self.on_event(key.data, data)
                     else:
-                        selector.unregister(stream)
+                        self.selector.unregister(stream)
                         stream.close()
-        if not result.timed_out and not result.requested_stop:
-            result.returncode = process.wait(timeout=.5)
-    except RequestedStop as exc:
-        result.requested_stop = str(exc)
-    except KeyboardInterrupt:
-        result.interrupted = True
-    except Exception as exc:
-        result.error = f"{type(exc).__name__}: {exc}"
-    finally:
-        selector.close()
+            # Closed output pipes alone do not mean the service has stopped.
+            if not self.selector.get_map() and self.process.poll() is not None:
+                self.result.returncode = self.process.returncode
+                self.done = True
+        except Exception as exc:
+            self.result.error = f"{type(exc).__name__}: {exc}"
+            self.done = True
+        return self.done
+
+    def finish(self):
+        self.selector.close()
         try:
-            result.service_properties = service_properties(config.unit)
-            if result.service_properties.get("Result") == "timeout":
-                result.timed_out = True
+            self.result.service_properties = service_properties(self.config.unit)
+            if self.result.service_properties.get("Result") == "timeout":
+                self.result.timed_out = True
         except (OSError, subprocess.TimeoutExpired, RuntimeUnavailable):
             pass
-        result.cleanup_ok = stop_service(config.unit)
-        if process:
-            if process.poll() is None:
-                # Kill only the local systemd-run client; stop_service owns the jobs.
-                os.killpg(process.pid, signal.SIGKILL)
-            process.wait(timeout=5)
-            for stream in (process.stdin, process.stdout, process.stderr):
+        self.result.cleanup_ok = stop_service(self.config.unit)
+        if self.process:
+            if self.process.poll() is None:
+                try:
+                    os.killpg(self.process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            self.process.wait(timeout=5)
+            for stream in (self.process.stdin, self.process.stdout, self.process.stderr):
                 if stream and not stream.closed:
                     stream.close()
-    if result.timed_out:
-        result.returncode = 124
-    if result.interrupted:
-        result.returncode = 130
-    if result.requested_stop:
-        result.returncode = 0
+        if self.result.timed_out:
+            self.result.returncode = 124
+        if self.result.interrupted:
+            self.result.returncode = 130
+        if self.result.requested_stop:
+            self.result.returncode = 0
+        self.done = True
+        return self.result
+
+
+def run_isolated(config, project, argv, stdin="", on_event=lambda channel, data: None,
+                 auth_home=None, poll=None, launch_guard=None):
+    service = RunningService(config, project, argv, stdin, on_event, auth_home, poll, launch_guard)
+    try:
+        while not service.poll(.2):
+            if not service.selector.get_map():
+                time.sleep(min(.2, max(0, config.deadline - time.monotonic())))
+    except KeyboardInterrupt:
+        service.result.interrupted = True
+    finally:
+        result = service.finish()
     return result
 
 

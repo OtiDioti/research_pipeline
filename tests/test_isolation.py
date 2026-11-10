@@ -1,5 +1,6 @@
 """Real enforcement checks. Skips mean the host has not passed live acceptance."""
 import os
+import sys
 import json
 from pathlib import Path
 import shutil
@@ -19,7 +20,7 @@ from research_pipeline import cli, isolation, workspace
 
 
 def live_enabled():
-    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2))
+    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2, 3))
 
 
 def fixture(root):
@@ -31,11 +32,95 @@ def fixture(root):
     (root / 'work/protected.md').write_text('# Protected canonical note')
     (root / '.research_pipeline/private').write_text('hidden operational state')
 
+
+# No inference or credentials: exercise the installed native runtimes together.
+# The model catalog requires code mode; feature-list checks alone missed its
+# disabled host, and CPU-sized runtime pools overflowed a 64-task research slot.
+CODEX_RUNTIME_PROBE = r'''
+import json, struct, subprocess, time
+from pathlib import Path
+processes = []
+try:
+    for argv in (['/opt/codex/codex', 'app-server'], ['/opt/codex/codex-exec-server']):
+        processes.append(subprocess.Popen(argv, stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+    backend = processes[0]
+    backend.stdin.write(b'{"id":1,"method":"initialize","params":{"clientInfo":{"name":"runtime-probe","version":"1"}}}\n')
+    backend.stdin.flush()
+    assert json.loads(backend.stdout.readline())['id'] == 1
+    host = subprocess.Popen(['/opt/codex/codex-code-mode-host'], stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    processes.append(host)
+    def receive():
+        header = host.stdout.read(4)
+        assert len(header) == 4, 'code-mode host closed stdout'
+        size = struct.unpack('<I', header)[0]
+        assert size <= 65536, size
+        return json.loads(host.stdout.read(size))
+    def send(message):
+        encoded = json.dumps(message).encode()
+        host.stdin.write(struct.pack('<I', len(encoded)) + encoded)
+        host.stdin.flush()
+        return receive()
+    ready = send({'type':'connection/hello', 'supportedVersions':[1],
+                  'requiredCapabilities':[], 'optionalCapabilities':[]})
+    assert ready['type'] == 'connection/ready', ready
+    opened = send({'type':'operation/request', 'id':1,
+                   'request':{'method':'session/open', 'sessionId':'probe'}})
+    assert opened['result']['status'] == 'ok', opened
+    started = send({'type':'operation/request', 'id':2, 'request':{
+        'method':'session/execute', 'sessionId':'probe', 'request':{
+            'tool_call_id':'probe', 'source':'text(6 * 7)', 'enabled_tools':[],
+            'yield_time_ms':1000, 'max_output_tokens':1000}}})
+    assert started['result']['status'] == 'ok', started
+    completed = receive()
+    result = completed['result']['value']['Result']
+    assert result['error_text'] is None, result
+    assert result['content_items'] == [{'type':'input_text', 'text':'42'}], result
+    # Let the idle exec server finish startup before counting its worker pool.
+    time.sleep(.2)
+    assert all(p.poll() is None for p in processes), 'native runtime exited'
+    threads = sum(len(list(p.glob('task/*'))) for p in Path('/proc').glob('[0-9]*'))
+    assert threads <= 64, f'native runtime exhausted the 64-task slot: {threads}'
+    subprocess.run(['/usr/bin/python3', '-c', 'assert 6 * 7 == 42'], check=True, timeout=2)
+    print(f'code-mode runtime check passed; namespace tasks={threads}', flush=True)
+finally:
+    for p in processes:
+        if p.poll() is None:
+            p.terminate()
+        p.communicate(timeout=3)
+'''
+
+
+def native_codex(case):
+    binary = shutil.which('codex')
+    if not binary:
+        if live_enabled():
+            case.fail('Codex missing during enabled live acceptance')
+        case.skipTest('Codex missing; native runtime startup unverified')
+    return str(Path(binary).resolve())
+
+
 class PreflightResourceTests(unittest.TestCase):
     """Service/environment doubles test rejection, not real resource enforcement."""
 
+    def test_cleanup_deadline_exhaustion_does_not_grant_escalation_time(self):
+        with patch.object(isolation.time, "monotonic", return_value=100), \
+             patch.object(isolation.subprocess, "run") as run:
+            self.assertFalse(isolation.stop_service("research-deadline.service", deadline=100))
+            run.assert_not_called()
+
+    def test_cleanup_controls_share_remaining_deadline(self):
+        def control(argv, **kwargs):
+            self.assertLessEqual(kwargs["timeout"], .25)
+            raise subprocess.TimeoutExpired(argv, kwargs["timeout"])
+        with patch.object(isolation.time, "monotonic", return_value=100), \
+             patch.object(isolation.subprocess, "run", side_effect=control) as run:
+            self.assertFalse(isolation.stop_service("research-deadline.service", deadline=100.25))
+            self.assertEqual(run.call_count, 2)  # query and best-effort kill share the deadline
+
     def test_live_acceptance_cannot_skip_missing_user_bus(self):
-        for milestone in (1, 2):
+        for milestone in (1, 2, 3):
             with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True):
                 with self.assertRaisesRegex(AssertionError, "user bus unavailable"):
                     ServiceIsolationTests.setUpClass()
@@ -90,6 +175,26 @@ class PreflightResourceTests(unittest.TestCase):
 
 
 class BubblewrapBoundaryTests(unittest.TestCase):
+    def test_native_code_mode_runtime_fits_task_slot(self):
+        binary = native_codex(self)
+        if not shutil.which('bwrap'):
+            if live_enabled():
+                self.fail('Bubblewrap missing during enabled live acceptance')
+            self.skipTest('Bubblewrap missing; native runtime startup unverified')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            fixture(root)
+            result = subprocess.run(isolation.bubblewrap_command(
+                root, ['/usr/bin/python3', '-c', CODEX_RUNTIME_PROBE], codex=binary),
+                capture_output=True, text=True, timeout=12)
+            if result.returncode and any(s in result.stderr for s in
+                                         ('Operation not permitted', 'No permissions', 'namespace')):
+                if live_enabled():
+                    self.fail('Bubblewrap namespaces unavailable: ' + result.stderr)
+                self.skipTest('Bubblewrap namespaces unavailable: ' + result.stderr)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('code-mode runtime check passed', result.stdout)
+
     def test_actual_mount_boundary_and_permitted_computation(self):
         if not shutil.which('bwrap'):
             if live_enabled():
@@ -125,6 +230,139 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--che
             self.assertEqual((root / 'outputs/value').read_text(), '285')
             self.assertEqual(outside.read_text(), 'not mounted')
             self.assertEqual((response / 'probe').read_text(), 'writable')
+
+
+    def test_actual_task_boundary_and_live_delivery_visibility(self):
+        if not shutil.which('bwrap'):
+            if live_enabled():
+                self.fail('Bubblewrap missing during enabled live acceptance')
+            self.skipTest('Bubblewrap missing; task boundary unverified')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            fixture(root)
+            child_id, sibling_id = 'task-' + 'a'*32, 'task-' + 'b'*32
+            child_rel = workspace.task_directory(child_id)
+            sibling_rel = workspace.task_directory(sibling_id)
+            for rel in (child_rel, sibling_rel):
+                (root / rel).mkdir(parents=True)
+                (root / rel / 'RESULT.md').write_text('# Preliminary old result')
+                (root / rel / 'code.py').write_text('protected native code')
+            drafts = root / '.research_pipeline/child-drafts'
+            drafts.mkdir()
+            script = f"""
+from pathlib import Path
+own = Path('/project/{child_rel}')
+for target in ('/project/work/protected.md', '/project/outputs/original.py',
+               '/project/AGENTS.md', '/project/starting_evidence/sentinel',
+               '/project/{sibling_rel}/code.py', '/project/{sibling_rel}/RESULT.md'):
+    p = Path(target)
+    for operation in (lambda: p.write_text('hostile'), lambda: p.unlink(),
+                      lambda: p.rename(p.with_name('stolen'))):
+        try: operation()
+        except OSError: pass
+        else: raise AssertionError('foreign research writable: ' + target)
+(own / 'calculation.py').write_text('print(42)')
+import subprocess
+assert subprocess.check_output(['/usr/bin/python3', str(own / 'calculation.py')]).strip() == b'42'
+p = Path('/run/research-drafts/{child_rel}/RESULT.md')
+p.parent.mkdir(parents=True)
+p.write_text('# Preliminary new result: correction 0.1; applicability remains uncertain.')
+"""
+            (root / 'outputs/original.py').write_text('protected parent code')
+            command = isolation.bubblewrap_command(root, ['/usr/bin/python3','-c',script],
+                                                   task_id=child_id, drafts=drafts)
+            child = subprocess.run(command, capture_output=True, text=True, timeout=5)
+            if child.returncode and any(t in child.stderr for t in ('Operation not permitted','No permissions','namespace')):
+                if live_enabled():
+                    self.fail('Bubblewrap task namespaces unavailable: ' + child.stderr)
+                self.skipTest('Bubblewrap task namespaces unavailable: ' + child.stderr)
+            self.assertEqual(child.returncode, 0, child.stderr)
+            reader_code = f"""
+from pathlib import Path
+import time
+p = Path('/project/{child_rel}/RESULT.md')
+print('reader ready', flush=True)
+end = time.monotonic() + 3
+while time.monotonic() < end:
+    if 'correction 0.1' in p.read_text():
+        print('live delivery visible', flush=True)
+        break
+    time.sleep(.02)
+else: raise AssertionError('reader pinned an obsolete delivery')
+for path in (p, p.parent, Path('/project/handoffs/foreign.md')):
+    try: path.rename(path.with_name('stolen')) if path.exists() else path.write_text('bad')
+    except OSError: pass
+    else: raise AssertionError('primary can modify child research or handoffs')
+"""
+            reader = subprocess.Popen(isolation.bubblewrap_command(root, ['/usr/bin/python3','-c',reader_code],
+                                      task_workspaces=('work/tasks',)), stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE, text=True)
+            try:
+                self.assertEqual(reader.stdout.readline().strip(), 'reader ready')
+                workspace.publish_drafts(root, drafts, workspace.science_fingerprints(root, child_id), [], child_id)
+                stdout, stderr = reader.communicate(timeout=5)
+                self.assertEqual(reader.returncode, 0, stderr)
+                self.assertIn('live delivery visible', stdout)
+            finally:
+                if reader.poll() is None:
+                    reader.kill()
+                    reader.communicate()
+
+
+    def test_verifier_frozen_code_data_and_original_research_are_read_only(self):
+        if not shutil.which('bwrap'):
+            if live_enabled():
+                self.fail('Bubblewrap missing during enabled live acceptance')
+            self.skipTest('Bubblewrap missing; verifier boundary unverified')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            fixture(root)
+            task_id = 'task-' + 'c' * 32
+            rel = workspace.task_directory(task_id)
+            inputs = rel + '/inputs'
+            (root / inputs / 'initial').mkdir(parents=True)
+            for name in ('method.py', 'data.csv', 'PACKET.md'):
+                (root / inputs / 'initial' / name).write_text('frozen evidence')
+            (root / rel / 'CHECK.md').write_text('# Accepted objection')
+            (root / 'outputs/original.py').write_text('protected original')
+            drafts = root / '.research_pipeline/verifier-drafts'
+            drafts.mkdir()
+            script = f"""
+from pathlib import Path
+for target in ('/project/{inputs}/initial/method.py', '/project/{inputs}/initial/data.csv',
+               '/project/{inputs}/initial/PACKET.md', '/project/{rel}/CHECK.md',
+               '/project/outputs/original.py', '/project/work/protected.md'):
+    p = Path(target)
+    for action in (lambda: p.write_text('changed'), lambda: p.unlink(),
+                   lambda: p.rename(p.with_name('stolen'))):
+        try: action()
+        except OSError: pass
+        else: raise AssertionError('verification evidence writable: ' + target)
+for p in (Path('/project/{inputs}/initial/new.py'), Path('/project/{inputs}/new.csv')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('frozen input creation allowed')
+own = Path('/project/{rel}/independent.py')
+own.write_text('print(42)')
+import subprocess
+assert subprocess.check_output(['/usr/bin/python3', str(own)]).strip() == b'42'
+p = Path('/run/research-drafts/{rel}/REEXAMINATION.md')
+p.parent.mkdir(parents=True)
+p.write_text('# Independent re-examination')
+"""
+            command = isolation.bubblewrap_command(root, ['/usr/bin/python3', '-c', script],
+                task_id=task_id, frozen_inputs=(inputs,), drafts=drafts)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=5)
+            if result.returncode and any(t in result.stderr for t in ('Operation not permitted', 'No permissions', 'namespace')):
+                if live_enabled():
+                    self.fail('Bubblewrap verifier namespaces unavailable: ' + result.stderr)
+                self.skipTest('Bubblewrap verifier namespaces unavailable: ' + result.stderr)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            protected = (rel + '/CHECK.md',)
+            workspace.publish_drafts(root, drafts, workspace.science_fingerprints(root, task_id), [],
+                                     task_id, protected)
+            self.assertEqual((root / rel / 'CHECK.md').read_text(), '# Accepted objection')
+            self.assertTrue((root / rel / 'REEXAMINATION.md').exists())
 
 
 class ServiceIsolationTests(unittest.TestCase):
@@ -164,6 +402,22 @@ class ServiceIsolationTests(unittest.TestCase):
         result, output = self.run_code(isolation.PROBE)
         self.assertEqual(result.returncode, 0, output.decode(errors='replace'))
         self.assertTrue(self.capabilities['observed_cgroup_limits'])
+
+    def test_native_code_mode_runtime_with_enforced_task_slot(self):
+        binary = native_codex(self)
+        config = isolation.Config(codex=binary, wall_seconds=12,
+                                  memory_mib=1024, max_tasks=64,
+                                  deadline=time.monotonic() + 12)
+        # Empty private home: the probe creates no research session or inference.
+        home = self.root / '.research_pipeline/runtime-home'
+        home.mkdir()
+        output = bytearray()
+        result = isolation.run_isolated(
+            config, self.root, ['/usr/bin/python3', '-c', CODEX_RUNTIME_PROBE],
+            auth_home=home, on_event=lambda channel, data: output.extend(data))
+        self.assertTrue(result.cleanup_ok, output.decode(errors='replace'))
+        self.assertEqual(result.returncode, 0, output.decode(errors='replace'))
+        self.assertIn(b'code-mode runtime check passed', output)
 
     def test_swap_is_disabled(self):
         # Production preflight reads the running service's actual cgroup setting.
@@ -291,6 +545,128 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check
         self.assertEqual((self.root / "work/PLAN.md").read_text(), "# Saved worker plan")
         self.assertIn("checkpoint", state)
         self.assert_child_stopped()
+
+
+    def test_schema3_cli_pause_stops_all_roles_and_detached_compute(self):
+        """Real owner, helper, services and CLI pause; explicit non-model backend."""
+        # Unlike the paid gate these workers supply engineering fixture artifacts.
+        # Only backend identity/auth/command construction are substituted.
+        runner = r"""
+from contextlib import contextmanager
+from pathlib import Path
+import sys
+from unittest.mock import patch
+from tests.test_collaboration import ASSIGNMENT, handoff
+from tests.test_verification import PACKET
+from research_pipeline import cli, codex, workspace
+
+WORKER = r'''
+from pathlib import Path
+import json, subprocess, time
+root, task_id, handoff_text, assignment, packet = INPUTS
+own = Path('/project') / root
+heartbeat = str(own / 'heartbeat')
+child = "from pathlib import Path; import time; p=Path(%r);\nwhile True: p.write_text(str(time.monotonic())); time.sleep(.03)" % heartbeat
+subprocess.Popen(['/usr/bin/python3', '-c', child], start_new_session=True)
+drafts = Path('/run/research-drafts')
+for rel, text in ((f'handoffs/{task_id}.md', handoff_text),
+                  (f'{root}/PLAN.md', '# Engineering fixture saved progress')):
+    p = drafts / rel
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text)
+(own / 'reference.csv').write_text('x,value\n1,2\n')
+if task_id == 'primary':
+    (own / 'method.py').write_text('print(2 - 1.9)')
+    for rel, text in (('work/ASSIGNMENT.md', assignment), ('work/PACKET.md', packet)):
+        p = drafts / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(text)
+    for operation, rel in (('--delegate', 'work/ASSIGNMENT.md'), ('--verify', 'work/PACKET.md')):
+        subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', operation, rel], check=True)
+print('all fixture work saved', flush=True)
+while not Path('/run/research-control/request.json').exists(): time.sleep(.02)
+subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check=True)
+'''
+
+def command(config):
+    root = workspace.task_directory(config.task_id)
+    script = 'INPUTS = ' + repr((root, config.task_id,
+        handoff(config.task_id, root + '/reference.csv'), ASSIGNMENT, PACKET)) + '\n' + WORKER
+    return ['/usr/bin/python3', '-c', script]
+
+@contextmanager
+def auth(project):
+    yield None
+
+with patch.object(codex, 'verify_backend', return_value={'version': 'engineering worker'}), \
+     patch.object(codex, 'private_auth', auth), patch.object(codex, 'build_command', side_effect=command):
+    raise SystemExit(cli.main(['start', sys.argv[1], '--max-agents', '3', '--wall-seconds', '120',
+                              '--memory-mib', '768', '--max-tasks', '96']))
+"""
+        # Start requires a fresh scientific project, unlike the isolation probe fixture.
+        project = self.root / 'investigation'
+        (project / 'starting_evidence').mkdir(parents=True)
+        (project / 'starting_evidence/RESEARCH_QUESTIONS.md').write_text('Engineering pause fixture.')
+        end = time.monotonic() + 100
+        work_end = end - 25  # Retain time to stop every unit after a failed assertion.
+        owner = None
+        units = set()
+        with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+            try:
+                owner = subprocess.Popen([sys.executable, '-c', runner, str(project)], stdout=out, stderr=err)
+                while time.monotonic() < work_end:
+                    path = project / '.research_pipeline/run.json'
+                    if path.exists():
+                        state = json.loads(path.read_text())
+                        for task in state['tasks'].values():
+                            activation = task.get('activation') or {}
+                            for key, flag in (('service', 'service_attempted'), ('probe_service', 'probe_attempted')):
+                                if activation.get(flag):
+                                    units.add(activation[key])
+                        if len(state['tasks']) == 3 and all(
+                                (project / t['workspace'] / 'heartbeat').exists() for t in state['tasks'].values()):
+                            break
+                    if owner.poll() is not None:
+                        err.seek(0)
+                        self.fail('Engineering owner exited before three-role pause: ' + err.read().decode())
+                    time.sleep(.05)
+                else:
+                    self.fail('Three actual role services did not start before deadline')
+                self.assertEqual({t['role'] for t in state['tasks'].values()}, {'primary', 'researcher', 'verifier'})
+                pause = subprocess.run([sys.executable, '-m', 'research_pipeline', 'pause', str(project)],
+                                       capture_output=True, text=True, timeout=max(.001, work_end-time.monotonic()))
+                self.assertEqual(pause.returncode, 0, pause.stdout + pause.stderr)
+                self.assertEqual(owner.wait(timeout=max(.001, work_end-time.monotonic())), 0)
+                state = json.loads(path.read_text())
+                self.assertEqual(state['state'], 'paused')
+                self.assertTrue(state['cleanup_ok'])
+                self.assertEqual(len(state['sessions']), 3, 'Pause must prevent successors')
+                for task in state['tasks'].values():
+                    self.assertTrue(task.get('checkpoint'), task.get('checkpoint_error'))
+                    activation = task['activation']
+                    session = project / '.research_pipeline/sessions' / activation['activation_id']
+                    self.assertTrue(workspace.read_control(session / 'control/ack.json')['accepted'])
+                before = [(project / t['workspace'] / 'heartbeat').read_bytes() for t in state['tasks'].values()]
+                time.sleep(.15)
+                self.assertEqual(before, [(project / t['workspace'] / 'heartbeat').read_bytes() for t in state['tasks'].values()])
+                for unit in units:
+                    props = isolation.service_properties(unit, deadline=end)
+                    self.assertTrue(props.get('LoadState') == 'not-found' or props.get('ActiveState') in ('inactive', 'failed'), props)
+                with workspace.acquire_project_lock(project):
+                    pass  # Successful pause releases the real foreground lock.
+            finally:
+                if owner and owner.poll() is None:
+                    owner.kill()
+                    owner.wait(timeout=max(.001, min(5, end-time.monotonic())))
+                path = project / '.research_pipeline/run.json'
+                if path.exists():
+                    state = json.loads(path.read_text())
+                    for entry in [*state.get('sessions', []), *(t.get('activation') or {} for t in state.get('tasks', {}).values())]:
+                        for key, flag in (('service', 'service_attempted'), ('probe_service', 'probe_attempted')):
+                            if entry.get(flag):
+                                units.add(entry[key])
+                unclean = [unit for unit in units if not isolation.stop_service(unit, deadline=end)]
+                self.assertFalse(unclean, 'Unconfirmed engineering fixture cleanup: ' + ', '.join(unclean))
 
     def test_memory_and_file_limits(self):
         result, _ = self.run_code("x = bytearray(256 * 1024 * 1024)", memory=64)

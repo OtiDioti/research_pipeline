@@ -1,7 +1,7 @@
 # Research Pipeline — persistent scientific investigations
 
-A Python/Linux CLI runs one researcher-directed Codex session at a time in a scientific
-project. It reads human questions and evidence, asks the researcher to plan, assess
+A Python/Linux CLI runs a primary Codex researcher, optionally with bounded delegated
+researchers and independent verifiers, in a scientific project. It reads human questions and evidence, asks the researcher to plan, assess
 primary literature, derive and compute, and saves ordinary linked Markdown and
 reproducible scientific artifacts. `start` stays in the foreground; `inspect` uses
 saved files and needs no model access. `resume` continues the same investigation
@@ -24,9 +24,193 @@ each suite passed 85 tests with only the separate M1 live gate skipped. Both rea
 investigations preserved baseline data and human edits, adapted the plan, continued
 the same logical task in a distinct native session after an acknowledged rollover,
 reproduced the successor computation in isolation, and confirmed service cleanup.
-M3 collaboration
-and independent verification; M4 cross-project reuse and remaining controls; and
-M5 physics-benchmark investigation and human scientific acceptance remain deferred.
+M3 now supports dependent research and separate independent verification with a finite
+exchange, described below. Its opt-in real Codex gate is implemented; enabled
+controller-host verification is still required for M3 acceptance. M4 cross-project reuse
+and M5 physics-benchmark investigation remain deferred.
+
+## Dependent collaboration
+
+```sh
+research-pipeline start /path/to/investigation --max-agents 2 \
+  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 \
+  --primary-session-seconds 300 --delegated-session-seconds 300
+```
+
+The primary decides whether a dependent question has a scientific benefit. Inside
+its isolated session it writes a Markdown assignment draft, for example
+`/run/research-drafts/work/ASSIGNMENT.md`, with substantive `## Objective`,
+`## Parent question`, `## Scientific benefit`, `## Assumptions`,
+`## Requested result`, and `## Artifacts` sections. Relative artifact links resolve
+against the assignment's canonical location. The primary submits and inspects it with:
+
+```sh
+python3 /run/research-checkpoint-helper.py --delegate work/ASSIGNMENT.md --parent primary
+python3 /run/research-checkpoint-helper.py --tasks
+```
+
+Task summaries expose `activation_id`, `predecessor_activation`, `saving_reason` and
+the scheduled `rollover_at_monotonic`. The primary's routine `--check` prints concurrent
+status with a current `rollover_in_seconds` countdown when it has no saving request
+of its own. This lets it stage short scientific commands around saving. A child's
+`saving_reason=rollover` is visible before handoff publication; the successor's ID and
+predecessor relationship remain available if that brief notice was missed. The primary
+can check status and perform its chosen calculation within one command to avoid another
+model turn before acting. These notices do not request that the primary save.
+
+An acknowledgement identifies a stable `task-...` and `work/tasks/<task-id>/`.
+The assignment and referenced private Markdown drafts are copied into that workspace;
+canonical scientific inputs stay linked. Only the primary may authorize assignments.
+An existing delegated task can be the scientific parent, so scientific decomposition
+can be recursive without nested controllers. Full capacity returns a refusal and
+launches nothing. There is no pending assignment queue. To retry an unfinished
+existing task, the primary submits that task's saved `ASSIGNMENT.md` path with its
+original `--parent`; the same logical identity, objective and workspace continue.
+On resume, unfinished tasks beyond the available slots stay interrupted for explicit
+primary selection. Re-observing a request returns
+its recorded outcome, and the helper permits one outstanding request per activation.
+
+Researchers read shared science but write native code/data only within their own
+workspace and Markdown only through scoped drafts. The primary cannot modify child
+workspaces or handoffs. A child saves `RESULT.md` with methods, assumptions, linked
+artifacts, uncertainties, limitations and remaining questions, plus
+`handoffs/<task-id>.md`. Its handoff includes logical identity, objective, parent
+question, progress, artifacts, assumptions, uncertainty, interrupted computation,
+next action, and whether to resume or reconsider. The primary continues useful work,
+reads deliveries, and incorporates their implications and retained uncertainties into
+its own notes/report with links to each `RESULT.md`. Structural integration checks
+require those links; they do not certify the quality of the scientific synthesis.
+Unchecked findings remain **preliminary**. Consequential results can receive a separate,
+version-scoped independent check through the verification flow below.
+
+The count includes the primary. Every probe/research service receives fixed shares
+`floor(memory_mib / max_agents)` and `floor(max_tasks / max_agents)`, with zero swap.
+Zero shares are rejected. Unused shares stay unused. A slot is reserved before a
+probe and cannot be reused before predecessor/probe descendant cleanup is confirmed.
+Concurrent roles share one cumulative active-wall allowance, including controller
+work; overlapping durations are charged once. Usage totals sum observed turns from
+all roles; missing usage stays unknown. Hard spending, CPU fraction/aggregate time
+and reliable context occupancy remain unavailable.
+
+Each role independently uses acknowledged handoff, cleanup, guarded publication and
+fresh `codex exec --ephemeral` context to roll over while siblings keep running.
+`--delegated-session-seconds` defaults to 300, must exceed 15 seconds, and survives
+resume alongside the primary policy and original resource grant. Collaboration
+sessions reserve one quarter of their duration for rollover saving, bounded between
+15 and 60 seconds, inside the existing session cap. This allows a model turn and
+handoff validation to finish without extending the resource grant. A human pause
+overrides rollover and retains its shared 15-second saving deadline.
+These fixed durations provide **no exact 60% occupancy guarantee**. Billing
+tokens are never treated as occupancy. Fresh contexts reload current questions,
+instructions, feedback and saved science, retaining task/parent/workspace identity.
+Clean child failures preserve partial artifacts and recovery guidance; unconfirmed
+cleanup stops further launches. A primary that ends with unfinished children triggers
+whole-investigation saving/stopping and an incomplete outcome.
+
+`pause` targets the foreground owner independently of task activations, fans out one
+shared saving deadline and confirms all recorded services/descendants stopped.
+`resume` recovers all old owned services before reading drafts or launching work.
+Crash accounting covers the owner interval rather than an ended primary's lifetime.
+Malformed child preparation cannot prevent stopping siblings; accepted science and
+older checkpoints survive failed saving/publication. A successful pause may still
+report an unusable newest handoff.
+
+Collaboration projects use schema 3 with task records separate from activations and
+compact task-tagged session history. The accepted single-agent M2 path remains schema
+2 and continues using its existing synchronous controller; existing evidence projects
+are not migrated. This intentionally defers the plan's automatic schema-2
+normalization rather than replacing the accepted M2 execution path in this increment.
+Schema-1 evidence remains inspectable. `inspect --json` exposes task status, deliveries,
+integration references, activation identities and cumulative accounting for schema 3.
+
+Engineering coverage includes actual Bubblewrap role separation and live publication
+visibility, concurrent service/descendant stopping where the host supports systemd,
+and explicit doubles for independent task rollover, parent progress, budgets,
+pause/resume, human edits, full capacity and killed-controller recovery. Enabled
+`RESEARCH_PIPELINE_M3_LIVE=1` makes unavailable enforcement prerequisites fail.
+The opt-in M3 gate below exercises actual Codex science. Code readiness and
+disabled discovery do not establish independent scientific verification or M3 acceptance.
+
+## Independent verification and finite disagreement
+
+Within a schema-3 investigation the primary prepares a scientific Markdown packet with
+`## Claim and scope`, `## Parent question`, `## Scientific benefit`,
+`## Assumptions and approximation regime`, `## Sources and artifacts`, and
+`## Reproduction instructions` (parameters and dependencies). Explicitly link every
+local evidence file needed, including dependencies of linked Markdown. The packet
+can be a canonical primary note or the primary's private draft; other sessions'
+private drafts and operational logs are never verification input.
+
+```sh
+python3 /run/research-checkpoint-helper.py --verify work/PACKET.md --parent TASK_ID
+python3 /run/research-checkpoint-helper.py --tasks
+```
+
+The verifier gets a new logical ID/workspace and a fresh native context. Its parent
+is the research task checked; the primary remains the assigning owner. Only supplied
+evidence is copied into `work/tasks/<verifier>/inputs/initial/`, with source paths,
+SHA-256 hashes and a reviewed version in `manifest.json`. Markdown links are rebased;
+reproduction commands are preserved for the verifier to adapt and record explicitly.
+Admission executes no evidence. Inputs must be regular files: at most 128 supplied
+files, 16 MiB each and 64 MiB total, within the original investigation deadline.
+The entire `inputs/` tree is read-only, including code/data. The verifier writes its
+own checks in its workspace and Markdown through scoped drafts, without editing
+original research or shared synthesis.
+
+The verifier independently reconstructs or challenges consequential work, preferably
+using another method. `CHECK.md` requires `Disposition: checked`, `objection`, or
+`inconclusive`, and substantive sections `## Claim and scope`, `## Independent approach`,
+`## Observations`, `## Objections and limitations`, and
+`## Reproduction or analytical evidence`, with saved evidence/check links. Scientific
+reasoning and actual observations establish the check; these structural requirements
+cannot certify its quality. An inconclusive initial check closes as preliminary.
+At acceptance, the controller records SHA-256 fingerprints of every explicitly linked
+local check artifact, including code, data and supporting Markdown. Changing or deleting
+these artifacts requires reassessment and prevents continuation or successful integration.
+Preserve accepted evidence and save revised calculations under new paths.
+
+An initial objection saves a handoff and **releases its service and agent slot**.
+It stays stopped on resume while awaiting the primary. The primary can continue
+other work, decline further exchange, or submit **one** response/revision:
+
+```sh
+python3 /run/research-checkpoint-helper.py --respond VERIFIER_ID --response work/RESPONSE.md
+python3 /run/research-checkpoint-helper.py --close-verification VERIFIER_ID --reason work/CLOSURE.md
+```
+
+A response needs `## Response to objections`, `## Revised claim`,
+`## Sources and artifacts`, and `## Reproduction instructions`. Its explicitly supplied
+revised evidence is frozen separately under `inputs/response/`; the original packet
+and accepted `CHECK.md` remain unchanged. Acceptance commits the single exchange
+allowance before launching the same logical verifier in a fresh context. A justified
+targeted test can be performed in the response or re-examination, within the existing
+grant. The verifier saves `REEXAMINATION.md` with the same check sections/disposition.
+Resolved work closes checked for the reviewed version; unresolved objections or an
+inconclusive final check close disputed with both arguments retained. Declining an
+awaiting exchange also closes disputed and links the primary's `CLOSURE.md` explanation.
+Closure needs no slot; a new check or re-examination needs a free slot. Full capacity
+consumes no exchange allowance and creates no pending work.
+
+Repeating the same request returns its saved outcome. Resubmitting a packet identifies
+its existing check, without another exchange budget; materially different future claims
+need a new packet with scientific explanation of the relationship. Retrying a failed or
+interrupted check with the same packet/accepted response preserves its phase and frozen
+version. Closed checks cannot reopen. Pause and crash recovery retain accepted phases,
+responses and allowances. Preparing and rolling-over verifiers keep their reservations;
+waiting verifiers consume none. Both verifier phases use the same acknowledged rollover,
+fresh context, cumulative accounting and full cleanup as researchers.
+
+The primary integrates the check, accepted response and final check/closure through
+ordinary Markdown links, explaining scope, assumptions, uncertainty, objections and
+superseded conclusions. Disputed work can be integrated without preventing unrelated
+research from completing. Labels apply to the frozen version, never automatically to
+later original edits. Changed frozen packets or accepted reports require reassessment;
+human edits are preserved. `--tasks` and `inspect --json` expose phase, disposition,
+reviewed versions and evidence/report paths. Original changes detected at integration
+are recorded and require an explicit version limitation in the synthesis.
+Structural integration validation checks the outcome label, links to all accepted
+exchange stages and evidence integrity. It does not require specific words in the
+scientific explanation or assess whether that explanation is scientifically adequate.
 
 ## Installation and prerequisites
 
@@ -92,6 +276,11 @@ the controller does not assert a particular resolved model. All limits must be
 positive and finite.
 `--max-tasks` counts processes and threads, including backend overhead.
 The research service has no swap allowance (`MemorySwapMax=0`).
+The controlled Codex launcher enables code mode and its host, as required by current
+model metadata. Inside backend services, `TOKIO_WORKER_THREADS=1` bounds runtime
+thread-pool overhead so the backend and its helpers can share the process/thread
+grant. This does not cap scientific CPU use or increase the grant; sandbox and
+model selection remain as configured.
 
 `start` accepts only fresh projects: existing scientific directories/status/indexes or a
 previous run are conflicts. Symlinks/special files in the supplied project and symlink
@@ -284,8 +473,8 @@ unconfirmed/stale activity explicitly. Partial artifacts are retained on failure
 
 Completion requires backend success, investigation-level observed successful command execution,
 nonempty required Markdown, a report link to a local computational artifact (code or
-data) under `work/`, a preliminary
-label, a usable new handoff and confirmed cleanup. These structural checks cannot establish scientific
+data) under `work/`, an explicit scientific status label (preliminary on the single-agent
+path), a usable new handoff and confirmed cleanup. These structural checks cannot establish scientific
 correctness, literature quality, novelty, or reproducibility. M1 has **no independent
 scientific verifier**. Failed experimental commands are retained in telemetry; a
 corrected command or useful negative finding is not automatically a failed investigation.
@@ -294,7 +483,7 @@ corrected command or useful negative finding is not automatically a failed inves
 
 The supported launcher is a systemd user transient service containing Bubblewrap.
 It mounts `/project` read-only, overlays only `sources/`, `work/`, and `outputs/`
-writable along with `handoffs/`, read-only mounts for existing scientific Markdown,
+writable, read-only mounts for existing scientific Markdown,
 and a separate writable draft mount; it hides `.research_pipeline/`. System programs/libraries, certificates
 and resolver files are mounted explicitly read-only; the host root and home are
 not mounted. Temporary storage and Codex home are private. The actual Codex session
@@ -319,7 +508,7 @@ Limits that are **not** guaranteed:
 - CPU fraction and aggregate CPU time are not capped. Scientific commands can use
   available CPUs within the shared wall, memory and task limits.
 - No separate per-command runtime or scientific-job scheduler. All commands share
-  the remaining investigation lifetime and aggregate quotas; there is one researcher.
+  the remaining investigation lifetime and aggregate quotas; single-agent runs have one researcher; collaboration uses bounded slots.
 - A 64 MiB per-file limit and 4 MiB per operational log are **not** a total disk quota.
   Private tmpfs consumes the service's memory allowance.
 - Literature/inference networking has no destination filter. No host sockets, user
@@ -327,7 +516,7 @@ Limits that are **not** guaranteed:
   native credentials exist in its private namespace during the run.
 - Abrupt host/controller SIGKILL cannot finalize status; systemd still enforces its
   lifetime bound. Checkpoint recovery and forced pause can lose uncheckpointed work.
-  Collaboration remains a later increment.
+  Concurrent collaboration uses the fixed slot shares described above.
 
 ## Checks and demonstration
 
@@ -352,9 +541,7 @@ and startup, pause precedence and a killed controller between publication and la
 `test_isolation.py`
 adds cooperative and ignored-request scientific-worker fixtures through the production
 launcher, including closed output streams and detached heartbeat descendants. These
-fixtures supply no paid scientific evidence. This increment's
-code-readiness handoff proceeds to pipeline controller final verification; it does
-not assert the full M2 demonstration gate.
+fixtures supply enforcement evidence separate from the paid scientific gates below.
 Ordinary tests do not launch inference. The pipeline's integrated-test stage can
 explicitly enable the real, potentially paid acceptance run in its existing authorized
 host context:
@@ -368,7 +555,7 @@ RESEARCH_PIPELINE_M1_OUTPUT_DIR=/absolute/private/request-output/m1 \
 Both variables must be supplied to that process. Enabled acceptance fails on missing
 prerequisites; the service/filesystem integration checks cannot skip unavailable
 capabilities when either `RESEARCH_PIPELINE_M1_LIVE=1` or
-`RESEARCH_PIPELINE_M2_LIVE=1`.
+`RESEARCH_PIPELINE_M2_LIVE=1` or `RESEARCH_PIPELINE_M3_LIVE=1`.
 Do not give a restricted Writer access to another execution context.
 
 For M2, enable only its dedicated gate (M1 inference remains opt-in separately):
@@ -413,6 +600,66 @@ Receipts report about 351 and 359 seconds of cumulative activity, respectively,
 with missing model usage explicitly unknown. Fixed-duration rollover does not
 establish an exact 60% context threshold. These are bounded engineering and
 scientific-continuity demonstrations, not independent scientific certification.
+
+For M3, keep both earlier paid gates disabled and enable only this gate:
+
+```sh
+RESEARCH_PIPELINE_M3_LIVE=1 \
+RESEARCH_PIPELINE_M3_OUTPUT_DIR=/absolute/private/request-output/m3 \
+  .venv/bin/python -m unittest discover -s tests -v
+```
+
+`test_m3_live.py` runs one fresh investigation through the production CLI, coordinator,
+Codex backend and isolation launcher. Actual researchers author all scientific code,
+assignments, derivations, checks, responses and synthesis. For a near-boundary integral
+approximation, the primary delegates a dependent quadrature study, continues its own
+parameter/error analysis while the child rolls over, incorporates the fresh successor's
+reserved calculation, and requests an independent approximation challenge. The gate
+submits both the derived near-boundary regime and the exploratory hypothesis of
+one-percent accuracy across the parameter study, including the stress case, as
+distinct verification subjects. A refuted exploratory extension can receive an
+objection while the restricted theorem is confirmed; no false theorem or verdict
+is prescribed. The gate requires an actual objection, one response and one
+re-examination; a checked-only first
+examination is retained honestly as failed demonstration evidence. Final disagreement
+may pass with a scientifically explained disputed synthesis and opposing arguments.
+The gate does not seed answers, forge helper requests or retry paid investigations.
+
+Bounds are 900 seconds cumulative owner activity, 540 seconds per primary session,
+240 seconds per delegated/verifier session, 60 seconds for isolated reproduction,
+a 1200-second ordinary-work cutoff and 1800 seconds overall including failure cleanup.
+Two simultaneous slots share the original 2048 MiB/128-process grant. At most two
+primary contexts, exactly two delegated contexts and two verifier examination contexts
+are accepted. Fixed-duration handoff reserves 60 seconds inside these sessions; context
+occupancy remains unavailable, without an exact 60% guarantee. CPU/spending limitations
+remain as disclosed above. Existing engineering tests also cover verifier rollover.
+
+Every invocation retains a private fresh `m3-live-*` directory, command logs, project
+and receipt, including failed runs. Receipts preserve stable task/parent/workspace and
+distinct native identities, acknowledged handoff, baseline hashes, successor numerics,
+parent calculations between the observed rollover-saving request and successor
+calculation, frozen evidence versions, objection /
+response / final outcome, cumulative accounting and unknown telemetry, exact commands,
+available control groups and confirmed descendant cleanup. Both child and verifier
+programs are reproduced through the production isolation launcher from their original
+task working directories, recorded with each command in the receipt. Original
+accepted evidence is checked again for mutation. Each verifier report explicitly lists
+its consequential JSON tables under `## Numerical observations`; every selected table
+must satisfy the numerical interface and have a recorded executed calculation.
+Initial and new targeted tables are reproduced with their saved scripts and parameters.
+Other linked integrity/provenance records retain the platform's authoritative fingerprints
+and frozen snapshots, without interpreting optional sidecar assertions as proof.
+Numerical observations and scientific
+excerpts appear in the unittest report for manager assessment; structural labels or
+exit zero alone cannot pass. The real schema-3 CLI pause path additionally has a
+three-role production-service test with explicitly non-model engineering workers and
+detached computations. It supplies enforcement evidence, not paid scientific evidence.
+
+On a restricted Writer host, enabled missing prerequisites fail and retain diagnostics;
+no alternate bus, authentication or unisolated fallback is used. Writer readiness and
+Reviewer approval proceed to Architect completion, which must trigger the existing
+enabled controller final tests and local integration. Only those successful enabled
+checks and their actual scientific observations complete M3 acceptance.
 
 The preserved M1 gate remains available separately.
 Each invocation saves a fresh private `m1-live-*` directory containing the project,

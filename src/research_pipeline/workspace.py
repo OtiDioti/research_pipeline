@@ -37,6 +37,37 @@ REQUIRED = ("work/PLAN.md", "sources/LITERATURE.md", "outputs/REPORT.md")
 ACTIVE_STATES = ("starting", "running", "pausing", "rolling_over")
 
 
+def task_directory(task_id="primary"):
+    if task_id == "primary":
+        return "work"
+    if not re.fullmatch(r"task-[a-f0-9]{32}", task_id):
+        raise InputError("Invalid logical task identity")
+    return f"work/tasks/{task_id}"
+
+
+def writable_directories(task_id="primary"):
+    return ("sources", "work", "outputs") if task_id == "primary" else (task_directory(task_id),)
+
+
+def allowed_science(rel, task_id="primary", protected=()):
+    path = Path(rel)
+    if rel in protected:
+        return False
+    if task_id == "primary":
+        return (rel == "RESEARCH_STATUS.md" or rel == "handoffs/primary.md"
+                or path.parts[0] in ("sources", "outputs")
+                or path.parts[0] == "work" and not path.is_relative_to("work/tasks"))
+    return (path.is_relative_to(task_directory(task_id))
+            and not path.is_relative_to(f"{task_directory(task_id)}/inputs")
+            and rel != f"{task_directory(task_id)}/ASSIGNMENT.md"
+            or rel == f"handoffs/{task_id}.md")
+
+
+def handoff_path(task_id="primary"):
+    task_directory(task_id)
+    return f"handoffs/{task_id}.md"
+
+
 @contextmanager
 def control_lock(project):
     """Never wait for run.lock while holding this short-lived lock."""
@@ -48,7 +79,8 @@ def control_lock(project):
 
 
 def owner_fields(state):
-    result = {k: state[k] for k in ("run_id", "activation_id", "ownership_nonce")}
+    keys = ("run_id", "ownership_nonce") if state.get("schema_version") == 3 else ("run_id", "activation_id", "ownership_nonce")
+    result = {k: state[k] for k in keys}
     if any(not isinstance(v, str) or not re.fullmatch(r"[a-f0-9]{32}", v)
            for v in result.values()):
         raise InputError("Invalid investigation ownership identifiers")
@@ -57,7 +89,10 @@ def owner_fields(state):
 
 def control_paths(project, state):
     owner_fields(state)
-    session = safe_path(project, f".research_pipeline/sessions/{state['activation_id']}")
+    if state.get("schema_version") == 3:
+        session = safe_path(project, f".research_pipeline/owners/{state['ownership_nonce']}")
+    else:
+        session = safe_path(project, f".research_pipeline/sessions/{state['activation_id']}")
     return session, safe_path(project, session.relative_to(project) / "control"), \
         safe_path(project, session.relative_to(project) / "response")
 
@@ -207,6 +242,9 @@ def atomic_text(path, text):
 
 
 def write_state(project, state):
+    if hasattr(state, "persist"):
+        state.persist()
+        return
     state["artifact_availability"] = {
         p: (project / p).is_file() and not (project / p).is_symlink() for p in REQUIRED
     }
@@ -244,19 +282,21 @@ DESCRIPTIONS = {
 }
 
 
-def refresh_indexes(project, include_science=True, expected=None):
+def refresh_indexes(project, include_science=True, expected=None, task_id=None):
     edited_indexes = {}
     if expected is not None and include_science:
-        for rel, digest in science_fingerprints(project).items():
+        for rel, digest in science_fingerprints(project, task_id).items():
             if (Path(rel).name == "FOLDER_CONTENT.md"
                     and digest != expected.get(rel)):
                 edited_indexes[rel] = preserve_edit(project, project / rel)
     # Walk only managed directories; never follow links made by scientific scripts.
-    roots = [project, project / ".research_pipeline"]
-    for name in MANAGED if include_science else ():
+    roots = [project, project / ".research_pipeline"] if task_id in (None, "primary") else []
+    managed = MANAGED if task_id is None else (*writable_directories(task_id), *( ("handoffs",) if task_id == "primary" else ()))
+    for name in managed if include_science else ():
         if (project / name).is_dir() and not (project / name).is_symlink():
             for base, dirs, _ in os.walk(project / name, followlinks=False):
-                dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()]
+                dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()
+                           and not (task_id == "primary" and Path(base) / d == project / "work/tasks")]
                 roots.append(Path(base))
     for directory in roots:
         rows = ["# Folder contents", ""]
@@ -328,16 +368,20 @@ def file_digest(path, deadline=None):
     return digest.hexdigest()
 
 
-def science_fingerprints(project):
+def science_fingerprints(project, task_id=None):
     """Never follow scientific symlinks or open special artifacts."""
-    paths = [project / "RESEARCH_STATUS.md", project / "FOLDER_CONTENT.md"]
-    for name in MANAGED:
+    paths = ([project / "RESEARCH_STATUS.md", project / "FOLDER_CONTENT.md"]
+             if task_id in (None, "primary") else [])
+    if task_id is not None:
+        paths.append(project / handoff_path(task_id))
+    for name in MANAGED if task_id is None else writable_directories(task_id):
         root = project / name
         if root.is_symlink():
             raise InputError(f"Managed directory is a symlink: {name}")
         if root.is_dir():
             for base, dirs, files in os.walk(root, followlinks=False):
-                dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()]
+                dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()
+                           and not (task_id == "primary" and Path(base) / d == project / "work/tasks")]
                 paths.extend(Path(base) / f for f in files if f.lower().endswith(".md"))
     return {p.relative_to(project).as_posix(): file_digest(p)
             for p in paths if p.exists() or p.is_symlink()}
@@ -391,8 +435,8 @@ def read_input_unbounded(path, deadline=None):
         raise InputError(f"Cannot read Markdown {path}: {exc}") from exc
 
 
-def publish_drafts(project, drafts, baseline, external_changes):
-    """Validate the batch, then compare each target immediately before replacing."""
+def draft_proposals(project, drafts, task_id="primary", protected=()):
+    """Validate the complete role-scoped batch before making any replacements."""
     regular_tree(drafts)
     proposals = []
     for draft in sorted(drafts.rglob("*")):
@@ -400,12 +444,17 @@ def publish_drafts(project, drafts, baseline, external_changes):
             continue
         rel = draft.relative_to(drafts)
         if (draft.suffix != ".md" or draft.name == "FOLDER_CONTENT.md"
-                or not (rel.as_posix() == "RESEARCH_STATUS.md" or rel.parts[0] in MANAGED)):
+                or not allowed_science(rel.as_posix(), task_id, protected)):
             raise InputError(f"Invalid scientific draft destination: {rel}")
         target = safe_path(project, rel)
         if target.exists() and not target.is_file():
             raise InputError(f"Draft destination is not a file: {rel}")
         proposals.append((rel.as_posix(), target, read_input_unbounded(draft)))
+    return proposals
+
+
+def publish_drafts(project, drafts, baseline, external_changes, task_id="primary", protected=()):
+    proposals = draft_proposals(project, drafts, task_id, protected)
     conflicts, preserved = [], []
     for rel, target, text in proposals:
         if file_digest(target) != baseline.get(rel):
@@ -427,9 +476,16 @@ def intake_snapshot(intake):
             + "\n\n## Human feedback\n\n" + (intake.feedback or "(absent)") + "\n")
 
 
-def validate_handoff(project, text, drafts=None, deadline=None):
-    for field in ("Logical researcher: primary", "## Objective", "## Completed",
-                  "## Artifacts", "## Assumptions", "## Unresolved", "## Next action"):
+def handoff_fields(task_id="primary"):
+    fields = (f"Logical researcher: {task_id}", "## Objective", "## Completed",
+              "## Artifacts", "## Assumptions", "## Unresolved", "## Next action")
+    if task_id != "primary":
+        fields += ("## Parent question", "## Interrupted computation", "## Resume or reconsider")
+    return fields
+
+
+def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary"):
+    for field in handoff_fields(task_id):
         check_deadline(deadline)
         if field not in text:
             raise InputError(f"Handoff missing required field: {field}")
@@ -469,9 +525,9 @@ def validate_handoff(project, text, drafts=None, deadline=None):
     return sorted(set(artifacts))
 
 
-def commit_checkpoint(project, state, intake, session, accepted_intake=None):
-    text = read_input_unbounded(project / "handoffs/primary.md")
-    artifacts = validate_handoff(project, text)
+def commit_checkpoint(project, state, intake, session, accepted_intake=None, task_id="primary"):
+    text = read_input_unbounded(project / handoff_path(task_id))
+    artifacts = validate_handoff(project, text, task_id=task_id)
     atomic_text(session / "handoff.md", text)
     atomic_text(session / "intake.md", accepted_intake or intake_snapshot(intake))
     checkpoint = {
@@ -480,7 +536,7 @@ def commit_checkpoint(project, state, intake, session, accepted_intake=None):
         "handoff_sha256": file_digest(session / "handoff.md"),
         "intake": (session / "intake.md").relative_to(project).as_posix(),
         "artifacts": artifacts, "input_fingerprints": intake.fingerprints,
-        "science_fingerprints": science_fingerprints(project),
+        "science_fingerprints": science_fingerprints(project, task_id),
     }
     # Publish the new reference only after all its files are validated. Keep one
     # previous immutable handoff for a damaged newest checkpoint.
@@ -491,13 +547,15 @@ def commit_checkpoint(project, state, intake, session, accepted_intake=None):
     return checkpoint
 
 
-def prepare_checkpoint(project, state, intake, session, drafts, baseline, external, deadline=None):
+def prepare_checkpoint(project, state, intake, session, drafts, baseline, external, deadline=None, task_id="primary"):
     """Confirm saved work before acknowledging; canonical files stay pinned."""
     check_deadline(deadline)
-    text = read_input_unbounded(safe_path(drafts, "handoffs/primary.md"), deadline)
-    artifacts = validate_handoff(project, text, drafts=drafts, deadline=deadline)
-    references = {str((drafts / "handoffs/primary.md").relative_to(project)):
-                  file_digest(drafts / "handoffs/primary.md", deadline)}
+    draft_proposals(project, drafts, task_id, protected_reports(state))
+    check_deadline(deadline)
+    text = read_input_unbounded(safe_path(drafts, handoff_path(task_id)), deadline)
+    artifacts = validate_handoff(project, text, drafts=drafts, deadline=deadline, task_id=task_id)
+    references = {str((drafts / handoff_path(task_id)).relative_to(project)):
+                  file_digest(drafts / handoff_path(task_id), deadline)}
     for rel in artifacts:
         check_deadline(deadline)
         candidate = safe_path(drafts, rel) if Path(rel).suffix == ".md" else project / rel
@@ -544,29 +602,34 @@ def load_prepared(project, state):
 
 
 def finalize_science(project, state, intake, session, drafts, baseline, external,
-                     expected=None, accepted_intake=None):
+                     expected=None, accepted_intake=None, task_id="primary"):
     """Only called after confirmed cleanup, for normal, paused or recovered work."""
-    external = sorted(set(external) | set(changed_files(baseline, science_fingerprints(project))))
+    external = sorted(set(external) | set(changed_files(baseline, science_fingerprints(project, task_id))))
     state["external_changes"] = external
-    conflicts, preserved = publish_drafts(project, drafts, baseline, external)
+    conflicts, preserved = publish_drafts(project, drafts, baseline, external, task_id, protected_reports(state))
     state["pending_reconciliation"] = conflicts
     state["preserved_edits"] = preserved
     published = {p.relative_to(drafts).as_posix() for p in drafts.rglob("*.md")}
     published -= {c["path"] for c in conflicts}
     state["pending_human_changes"] = sorted(
         (set(external) | {c["path"] for c in conflicts}) - published)
-    refresh_indexes(project, expected=expected if expected is not None else baseline)
+    refresh_indexes(project, expected=expected if expected is not None else baseline, task_id=task_id)
     try:
-        if any(c["path"] == "handoffs/primary.md" for c in conflicts):
+        if any(c["path"] == handoff_path(task_id) for c in conflicts):
             raise InputError("Handoff draft conflicts with a human edit")
-        if not (drafts / "handoffs/primary.md").is_file():
+        if not (drafts / handoff_path(task_id)).is_file():
             raise InputError("No new handoff draft; previous checkpoint retained")
-        commit_checkpoint(project, state, intake, session, accepted_intake)
+        commit_checkpoint(project, state, intake, session, accepted_intake, task_id)
         state.pop("checkpoint_error", None)
     except (OSError, InputError) as exc:
         state["checkpoint_error"] = str(exc)
-    state["science_fingerprints"] = science_fingerprints(project)
+    state["science_fingerprints"] = science_fingerprints(project, task_id)
     return conflicts
+
+
+def protected_reports(state):
+    record = state.get("verification") or {}
+    return tuple(record[key] for key in ("initial_check", "final_check", "closure") if record.get(key))
 
 
 def load_checkpoint(project, state):
@@ -588,7 +651,7 @@ def load_checkpoint(project, state):
     return None, "", ""
 
 
-def validate_deliverables(project):
+def validate_deliverables(project, labels=("preliminary",)):
     failures = []
     linked_computation = False
     for rel in REQUIRED:
@@ -615,8 +678,8 @@ def validate_deliverables(project):
     # These are structural gates, not a scientific quality or execution certificate.
     if not failures:
         report = (project / "outputs/REPORT.md").read_text()
-        if "preliminary" not in report.lower():
-            failures.append("Report must label unchecked results preliminary")
+        if not any(re.search(r"\b" + re.escape(label) + r"\b", report, re.I) for label in labels):
+            failures.append("Report must use an explicit scientific status label: " + ", ".join(labels))
         if not linked_computation:
             failures.append("Report must link to a local computational artifact (code or data) in work/")
     return failures
