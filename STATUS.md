@@ -14,12 +14,12 @@
 - Request ID: `m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf`.
 - Frozen directory: `coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/` containing `request.md`, `config.toml`, and planned `receipt.json`.
 - Effective config: standard; auto_merge=true; Architect gpt-6.1-sol/xhigh; Writer and Reviewer gpt-6.1-sol/high; writer_network preauthorized; other settings preserved.
-- Submission: prepared; commit this checkpoint first. No active pipeline owner/run yet; previous work fully reconciled. One active implementation request at a time.
+- Submitted from checkpoint `6201787`. Actual run `20261110T111316_7e4bef43`, reported running in planning; branch `cwi/20261110T111316_7e4bef43`; worktree `coding_pipeline/logs/20261110T111316_7e4bef43/worktree`. Live owner: exec session `72841`, native PID `62544` / start ticks `1822351` (request-directory `ownership.json`). Receipt present. Do not resume/retry concurrently; one active implementation request at a time.
 - Controller-host live settings for submission/recovery/approval: `RESEARCH_PIPELINE_M2_LIVE=1`; `RESEARCH_PIPELINE_M2_OUTPUT_DIR` = absolute request-directory path plus `/live-host-acceptance`. M1 live opt-in stays disabled. Writer/Reviewer implementation readiness must hand off to Architect completion and mandatory controller final tests; no circular Writer host-verification milestone.
 
 ## Continuation
 
-- Submit M2, record actual receipt/run/ownership, and trust pipeline implementation/testing/review/live reports; manager performs no independent product inspection/review/testing.
+- Monitor exec `72841` and flow status/report for `20261110T111316_7e4bef43`; reconcile native process/lock state before recovery. Trust pipeline implementation/testing/review/live reports; manager performs no independent product inspection/review/testing.
 - Require actual pause/edit/resume and fresh-session task continuation, cumulative limits and cleanup evidence before accepting M2 or proceeding to M3. Use documented conservative short-session fallback rather than a false occupancy guarantee. Preserve protected inputs and existing M1 evidence.
 - Components: pipeline clean main `6c7b4d4`; controller clean `project-manager/setup` at `d0771db`. No manager component repairs or restart needed.
 - No COMPLETE until all current PROJECT.md gates, including human M5 scientific acceptance, pass and all jobs stop.
