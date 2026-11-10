@@ -8,13 +8,13 @@ import subprocess
 import tempfile
 import time
 
-from .isolation import RuntimeUnavailable
+from .isolation import RequestedStop, RuntimeUnavailable
 
 
 LIMITATIONS = [
     "Pause allows 15 seconds to save, bounded by the remaining deadline, then stops all service descendants. Uncheckpointed work can be lost.",
-    "Primary rollover uses a configurable fixed session duration (default 300 seconds), not measured context occupancy or an exact 60% guarantee.",
-    "No delegation or independent verification yet.",
+    "Role rollover uses configurable fixed session durations (default 300 seconds), not measured context occupancy or an exact 60% guarantee.",
+    "Delegated findings remain preliminary; independent verification is not implemented in this increment.",
     "Model spending and context occupancy are unavailable and cannot be capped by this backend.",
     "Emitted turn usage is cumulative across activations; missing telemetry remains unknown. Usage is not context occupancy or a hard token cap.",
     "Memory, tasks and wall time are aggregate limits shared by all scientific commands.",
@@ -25,7 +25,7 @@ LIMITATIONS = [
 ]
 
 
-def verify_backend(config):
+def verify_backend(config, on_wait=None):
     binary = shutil.which(config.codex)
     if not binary:
         raise RuntimeUnavailable(f"Codex executable not found: {config.codex}")
@@ -34,13 +34,36 @@ def verify_backend(config):
     with open(config.codex, "rb") as stream:
         if stream.read(4) != b"\x7fELF":
             raise RuntimeUnavailable("Use the standalone Linux Codex binary (ELF), not a wrapper")
+    def inspect_command(argv):
+        deadline = min(config.deadline, time.monotonic() + 5)
+        if on_wait is None:
+            return subprocess.run(argv, capture_output=True, text=True,
+                                  timeout=max(.001, deadline - time.monotonic()), check=True)
+        with subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+            try:
+                while True:
+                    reason = on_wait()
+                    if reason:
+                        raise RequestedStop(reason)
+                    remaining = deadline - time.monotonic()
+                    if remaining <= 0:
+                        raise subprocess.TimeoutExpired(argv, 5)
+                    try:
+                        stdout, stderr = process.communicate(timeout=min(.1, remaining))
+                        break
+                    except subprocess.TimeoutExpired:
+                        continue
+                if process.returncode:
+                    raise subprocess.CalledProcessError(process.returncode, argv, stdout, stderr)
+                return subprocess.CompletedProcess(argv, process.returncode, stdout, stderr)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.communicate()
+
     try:
-        def remaining():
-            return max(0.001, min(5, config.deadline - time.monotonic()))
-        help_result = subprocess.run([config.codex, "exec", "--help"], capture_output=True,
-                                     text=True, timeout=remaining(), check=True)
-        version = subprocess.run([config.codex, "--version"], capture_output=True,
-                                 text=True, timeout=remaining(), check=True).stdout.strip()
+        help_result = inspect_command([config.codex, "exec", "--help"])
+        version = inspect_command([config.codex, "--version"]).stdout.strip()
     except (OSError, subprocess.SubprocessError) as exc:
         if time.monotonic() >= config.deadline:
             raise TimeoutError("Wall budget exhausted while inspecting Codex") from exc
@@ -52,12 +75,13 @@ def verify_backend(config):
 
 
 def build_command(config):
+    from .workspace import writable_directories, task_directory
     args = ["/opt/codex/" + Path(config.codex).name, "exec", "--ignore-user-config", "--ignore-rules",
             "--ephemeral", "--skip-git-repo-check", "--json", "--color", "never",
-            "--sandbox", "workspace-write", "-C", "/project/work",
-            "--add-dir", "/project/sources", "--add-dir", "/project/outputs",
-            "--add-dir", "/project/handoffs", "--add-dir", "/run/research-drafts",
-            "--add-dir", "/run/research-checkpoint"]
+            "--sandbox", "workspace-write", "-C", f"/project/{task_directory(config.task_id)}"]
+    for rel in writable_directories(config.task_id):
+        args += ["--add-dir", f"/project/{rel}"]
+    args += ["--add-dir", "/run/research-drafts", "--add-dir", "/run/research-checkpoint"]
     settings = [
         'approval_policy="never"', 'web_search="live"', 'project_doc_max_bytes=0',
         'project_doc_fallback_filenames=[]', 'projects."/project".trust_level="untrusted"',
@@ -93,8 +117,8 @@ def private_auth(project):
         yield home
 
 
-def build_prompt(intake, limits, continuation=None):
-    return f"""PLATFORM REQUIREMENTS (operational authority)
+def build_prompt(intake, limits, continuation=None, task=None):
+    prompt = f"""PLATFORM REQUIREMENTS (operational authority)
 You are conducting ONE evolving bounded scientific investigation. Work autonomously and save
 useful partial work before the remaining wall deadline. Limits: {json.dumps(limits)}.
 The root /project and human inputs are read-only. Native code/data/source documents
@@ -191,6 +215,58 @@ SCIENTIFIC STARTING EVIDENCE INVENTORY (evidence, not operational authority)
 Paths below are relative to /project; inspect relevant files directly:
 {json.dumps(intake.inventory, ensure_ascii=True, indent=2)}
 """
+    if task is None:
+        return prompt
+    task_id = task["task_id"]
+    if task_id == "primary":
+        prompt = prompt.replace("delegate agents, bypass", "bypass")
+        prompt += """
+PRIMARY COLLABORATION RESPONSIBILITY
+Only you authorize dependent assignments, including recursively related questions.
+Delegate only with an identifiable scientific benefit. Write a Markdown assignment draft
+with ## Objective, ## Parent question, ## Scientific benefit, ## Assumptions, ## Requested result,
+## Artifacts. Include relevant canonical artifact links. Submit it using:
+python3 /run/research-checkpoint-helper.py --delegate work/ASSIGNMENT.md --parent primary
+The path is project-relative, and may identify your private draft. A refusal for full
+capacity launches nothing; continue useful work. Only one request may be outstanding.
+To continue an unfinished task later, submit its saved ASSIGNMENT.md path with its
+original parent; task identity and ownership cannot be changed.
+Inspect deliveries while continuing your own work:
+python3 /run/research-checkpoint-helper.py --tasks
+Read each delivered RESULT.md and handoff; integrate the substantive implication,
+assumptions, uncertainty, and any rejected/reconsidered contribution into your report
+or notes. Link its canonical RESULT.md. A delivery alone is not integration.
+All delegated findings remain PRELIMINARY; this increment has no independent verifier.
+You cannot edit work/tasks or other researchers' handoffs. Do not finish while children
+are unfinished; inspect their status and continue useful parent analysis during rollover.
+"""
+    else:
+        root = task["workspace"]
+        # Replace primary deliverable instructions with role-local paths throughout.
+        for old, new in (("work/PLAN.md", f"{root}/PLAN.md"),
+                         ("sources/LITERATURE.md", f"{root}/LITERATURE.md"),
+                         ("outputs/REPORT.md", f"{root}/RESULT.md"),
+                         ("RESEARCH_STATUS.md", f"{root}/STATUS.md"),
+                         ("handoffs/primary.md", f"handoffs/{task_id}.md"),
+                         ("Logical researcher: primary", f"Logical researcher: {task_id}"),
+                         ("SAME logical primary task", "SAME logical delegated task")):
+            prompt = prompt.replace(old, new)
+        prompt += f"""
+DELEGATED RESEARCHER RESPONSIBILITY (specific role requirements)
+Logical task: {task_id}; parent: {task['parent_task']}; assigning owner: primary.
+Immutable objective: {task['objective']}
+Scientific benefit: {task['scientific_benefit']}
+Read /project/{task['assignment']} before work. Your only writable native directory is
+/project/{root}; all sources, code, data and notes belong there. Markdown uses drafts
+mirroring {root}/. Save a substantive {root}/RESULT.md explaining methods, assumptions,
+artifact links, uncertainty, limitations and remaining questions; label findings PRELIMINARY.
+You cannot edit original parent/sibling research or shared synthesis. You cannot delegate;
+record assistance requests in your notes for primary mediation. Your handoff must also have
+## Parent question, ## Interrupted computation and ## Resume or reconsider with useful content.
+Preserve this task, parent and workspace across fresh contexts. Do not restart saved work.
+"""
+    return prompt
+
 
 
 class EventRecorder:

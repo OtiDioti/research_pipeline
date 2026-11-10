@@ -1,4 +1,5 @@
 """Namespace-local cooperative checkpoint helper; grants no operational authority."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -8,13 +9,54 @@ import uuid
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--tasks", action="store_true")
+    parser.add_argument("--delegate", metavar="ASSIGNMENT")
+    parser.add_argument("--parent", default="primary")
+    args = parser.parse_args()
     control = Path("/run/research-control")
+    if args.tasks:
+        print((control / "tasks.json").read_text())
+        return 0
+    if args.delegate:
+        owner = json.loads((control / "owner.json").read_text())
+        if owner.get("task_id") != "primary":
+            print("Only the primary can authorize assignments.")
+            return 1
+        response = Path("/run/research-checkpoint")
+        path = response / "delegation.json"
+        previous = json.loads(path.read_text()) if path.exists() else None
+        try:
+            ack = json.loads((control / "delegation-ack.json").read_text())
+        except (OSError, ValueError):
+            ack = {}
+        if previous and ack.get("nonce") != previous.get("nonce"):
+            print("An assignment request is already outstanding.")
+            return 1
+        request = {**owner, "assignment": args.delegate, "parent_task": args.parent,
+                   "nonce": uuid.uuid4().hex}
+        temp = response / f".delegation-{request['nonce']}"
+        temp.write_text(json.dumps(request) + "\n")
+        os.replace(temp, path)
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            try:
+                ack = json.loads((control / "delegation-ack.json").read_text())
+            except (OSError, ValueError):
+                ack = {}
+            if ack.get("nonce") == request["nonce"]:
+                print(json.dumps(ack))
+                return 0 if ack.get("accepted") else 1
+            time.sleep(.1)
+        print("Assignment acknowledgement unavailable; inspect --tasks before retrying.")
+        return 1
     request_path = control / "request.json"
     if not request_path.exists():
         print("No checkpoint requested.")
         return 0
     request = json.loads(request_path.read_text())
-    if "--check" in sys.argv:
+    if args.check:
         reason = request.get("reason", "checkpoint").upper()
         print(f"{reason} REQUESTED: save progress and handoff, then invoke this helper without --check.")
         return 0

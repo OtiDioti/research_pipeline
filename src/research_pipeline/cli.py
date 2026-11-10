@@ -15,7 +15,7 @@ import sys
 import time
 import uuid
 
-from . import codex, isolation, workspace
+from . import codex, isolation, workspace, collaboration
 
 SAVING_GRACE = 15
 PAUSE_TIMEOUT = 60
@@ -238,6 +238,8 @@ def load_state(project):
     if not path.is_file():
         raise workspace.InputError("Investigation state must be a regular file")
     state = json.loads(path.read_text())
+    if state.get("schema_version") == 3:
+        return collaboration.validate_state(state, project)
     if state.get("schema_version") != 2:
         raise workspace.InputError("Unsupported state schema; M1 projects are inspectable but cannot resume")
     if state.get("project") != str(project) or state.get("logical_researcher_id") != "primary":
@@ -289,6 +291,8 @@ def finish_recovery_accounting(state, interrupted=False):
 
 def recover_owner(project, state):
     """Called under the exclusive lock before reading agent-mutated science."""
+    if state.get("schema_version") == 3:
+        return collaboration.recover(project, state)
     unresolved = state.get("state") in workspace.ACTIVE_STATES or state.get("cleanup_ok") is False
     service_ends = []
     for key in ("probe_service", "service"):
@@ -411,6 +415,9 @@ def continuation_inputs(project, state):
 
 def activate(project, config, resume=False):
     session_seconds(str(config.primary_session_seconds))
+    session_seconds(str(config.delegated_session_seconds))
+    if config.memory_mib // config.max_agents < 1 or config.max_tasks // config.max_agents < 1:
+        raise workspace.InputError("Investigation limits produce zero slot shares")
     project = validate_project(project)
     with workspace.acquire_project_lock(project):
         began = time.monotonic()
@@ -418,6 +425,8 @@ def activate(project, config, resume=False):
         if resume:
             state = load_state(project)
             recover_owner(project, state)
+            if state.get("schema_version") == 3:
+                return collaboration.activate(project, config, state)
             began = time.monotonic()
             for key in ("wall_seconds", "memory_mib", "max_tasks"):
                 setattr(config, key, state["limits"][key])
@@ -427,6 +436,8 @@ def activate(project, config, resume=False):
                 raise workspace.InputError("Investigation active-work allowance exhausted; resume cannot increase limits")
             intake, baseline, external, continuation = continuation_inputs(project, state)
         else:
+            if config.max_agents > 1:
+                return collaboration.activate(project, config)
             workspace.validate_fresh(project)
             intake = workspace.read_intake(project)
             remaining = config.wall_seconds
@@ -779,6 +790,8 @@ def main(argv=None):
     launch.add_argument("--memory-mib", type=positive_int, default=2048)
     launch.add_argument("--max-tasks", type=positive_int, default=128)
     launch.add_argument("--primary-session-seconds", type=session_seconds, default=300)
+    launch.add_argument("--delegated-session-seconds", type=session_seconds, default=300)
+    launch.add_argument("--max-agents", type=positive_int, default=1)
     restart = sub.add_parser("resume", help="continue saved science in a fresh foreground context")
     restart.add_argument("project", type=Path)
     restart.add_argument("--codex", default="codex")
@@ -806,7 +819,7 @@ def main(argv=None):
                 print(json.dumps(state, indent=2))
             else:
                 print(f"{state['state']}: {state.get('reason', '')}\n{state['activity_check']}")
-                for key in ("limits", "primary_session_policy", "rollover", "sessions",
+                for key in ("limits", "primary_session_policy", "delegated_session_policy", "tasks", "rollover", "sessions",
                             "remaining_active_seconds", "usage_totals", "usage_complete",
                             "checkpoint", "native_session_id", "pending_reconciliation",
                             "pending_intake_changes", "checkpoint_error", "checkpoint_prepared",
@@ -824,7 +837,8 @@ def main(argv=None):
             return resume(args.project, args.codex, args.model)
         config = isolation.Config(codex=args.codex, model=args.model, wall_seconds=args.wall_seconds,
                                   memory_mib=args.memory_mib, max_tasks=args.max_tasks,
-                                  primary_session_seconds=args.primary_session_seconds)
+                                  primary_session_seconds=args.primary_session_seconds,
+                                  delegated_session_seconds=args.delegated_session_seconds, max_agents=args.max_agents)
         return start(args.project, config)
     except (workspace.InputError, OSError, ValueError, KeyError, argparse.ArgumentTypeError) as exc:
         print(f"error: {exc}", file=sys.stderr)

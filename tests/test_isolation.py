@@ -19,7 +19,7 @@ from research_pipeline import cli, isolation, workspace
 
 
 def live_enabled():
-    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2))
+    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2, 3))
 
 
 def fixture(root):
@@ -35,7 +35,7 @@ class PreflightResourceTests(unittest.TestCase):
     """Service/environment doubles test rejection, not real resource enforcement."""
 
     def test_live_acceptance_cannot_skip_missing_user_bus(self):
-        for milestone in (1, 2):
+        for milestone in (1, 2, 3):
             with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True):
                 with self.assertRaisesRegex(AssertionError, "user bus unavailable"):
                     ServiceIsolationTests.setUpClass()
@@ -125,6 +125,83 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--che
             self.assertEqual((root / 'outputs/value').read_text(), '285')
             self.assertEqual(outside.read_text(), 'not mounted')
             self.assertEqual((response / 'probe').read_text(), 'writable')
+
+
+    def test_actual_task_boundary_and_live_delivery_visibility(self):
+        if not shutil.which('bwrap'):
+            if live_enabled():
+                self.fail('Bubblewrap missing during enabled live acceptance')
+            self.skipTest('Bubblewrap missing; task boundary unverified')
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            fixture(root)
+            child_id, sibling_id = 'task-' + 'a'*32, 'task-' + 'b'*32
+            child_rel = workspace.task_directory(child_id)
+            sibling_rel = workspace.task_directory(sibling_id)
+            for rel in (child_rel, sibling_rel):
+                (root / rel).mkdir(parents=True)
+                (root / rel / 'RESULT.md').write_text('# Preliminary old result')
+                (root / rel / 'code.py').write_text('protected native code')
+            drafts = root / '.research_pipeline/child-drafts'
+            drafts.mkdir()
+            script = f"""
+from pathlib import Path
+own = Path('/project/{child_rel}')
+for target in ('/project/work/protected.md', '/project/outputs/original.py',
+               '/project/AGENTS.md', '/project/starting_evidence/sentinel',
+               '/project/{sibling_rel}/code.py', '/project/{sibling_rel}/RESULT.md'):
+    p = Path(target)
+    for operation in (lambda: p.write_text('hostile'), lambda: p.unlink(),
+                      lambda: p.rename(p.with_name('stolen'))):
+        try: operation()
+        except OSError: pass
+        else: raise AssertionError('foreign research writable: ' + target)
+(own / 'calculation.py').write_text('print(42)')
+import subprocess
+assert subprocess.check_output(['/usr/bin/python3', str(own / 'calculation.py')]).strip() == b'42'
+p = Path('/run/research-drafts/{child_rel}/RESULT.md')
+p.parent.mkdir(parents=True)
+p.write_text('# Preliminary new result: correction 0.1; applicability remains uncertain.')
+"""
+            (root / 'outputs/original.py').write_text('protected parent code')
+            command = isolation.bubblewrap_command(root, ['/usr/bin/python3','-c',script],
+                                                   task_id=child_id, drafts=drafts)
+            child = subprocess.run(command, capture_output=True, text=True, timeout=5)
+            if child.returncode and any(t in child.stderr for t in ('Operation not permitted','No permissions','namespace')):
+                if live_enabled():
+                    self.fail('Bubblewrap task namespaces unavailable: ' + child.stderr)
+                self.skipTest('Bubblewrap task namespaces unavailable: ' + child.stderr)
+            self.assertEqual(child.returncode, 0, child.stderr)
+            reader_code = f"""
+from pathlib import Path
+import time
+p = Path('/project/{child_rel}/RESULT.md')
+print('reader ready', flush=True)
+end = time.monotonic() + 3
+while time.monotonic() < end:
+    if 'correction 0.1' in p.read_text():
+        print('live delivery visible', flush=True)
+        break
+    time.sleep(.02)
+else: raise AssertionError('reader pinned an obsolete delivery')
+for path in (p, p.parent, Path('/project/handoffs/foreign.md')):
+    try: path.rename(path.with_name('stolen')) if path.exists() else path.write_text('bad')
+    except OSError: pass
+    else: raise AssertionError('primary can modify child research or handoffs')
+"""
+            reader = subprocess.Popen(isolation.bubblewrap_command(root, ['/usr/bin/python3','-c',reader_code],
+                                      task_workspaces=('work/tasks',)), stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE, text=True)
+            try:
+                self.assertEqual(reader.stdout.readline().strip(), 'reader ready')
+                workspace.publish_drafts(root, drafts, workspace.science_fingerprints(root, child_id), [], child_id)
+                stdout, stderr = reader.communicate(timeout=5)
+                self.assertEqual(reader.returncode, 0, stderr)
+                self.assertIn('live delivery visible', stdout)
+            finally:
+                if reader.poll() is None:
+                    reader.kill()
+                    reader.communicate()
 
 
 class ServiceIsolationTests(unittest.TestCase):
@@ -291,6 +368,40 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py'], check
         self.assertEqual((self.root / "work/PLAN.md").read_text(), "# Saved worker plan")
         self.assertIn("checkpoint", state)
         self.assert_child_stopped()
+
+
+    def test_concurrent_role_services_full_stop_owns_detached_compute(self):
+        child_id = 'task-' + 'a'*32
+        child_rel = workspace.task_directory(child_id)
+        (self.root / child_rel).mkdir(parents=True)
+        services, outputs = [], []
+        began = time.monotonic()
+        try:
+            for task_id, rel in (('primary','work'), (child_id,child_rel)):
+                output = bytearray()
+                outputs.append(output)
+                config = isolation.Config(task_id=task_id, task_workspaces=('work/tasks',),
+                    deadline=began + 5, memory_mib=128, max_tasks=32,
+                    on_poll=lambda: 'pause' if time.monotonic() - began > 1 else None)
+                heartbeat = f'/project/{rel}/heartbeat'
+                child = f"from pathlib import Path; import time; p=Path({heartbeat!r});\nwhile True: p.write_text(str(time.monotonic())); time.sleep(.03)"
+                script = f"import subprocess,time; subprocess.Popen(['/usr/bin/python3','-c',{child!r}],start_new_session=True); print('ready',flush=True); time.sleep(30)"
+                services.append(isolation.RunningService(config, self.root,
+                    ['/usr/bin/python3','-c',script], on_event=lambda ch,data,out=output: out.extend(data)))
+            while not all(s.done for s in services):
+                for service in services:
+                    service.poll(.02)
+            for service, output in zip(services, outputs):
+                result = service.finish()
+                self.assertEqual(result.requested_stop, 'pause', output)
+                self.assertTrue(result.cleanup_ok, output)
+            before = [(self.root / rel / 'heartbeat').read_bytes() for rel in ('work',child_rel)]
+            time.sleep(.15)
+            self.assertEqual(before, [(self.root / rel / 'heartbeat').read_bytes() for rel in ('work',child_rel)])
+        finally:
+            for service in services:
+                if not service.result.cleanup_ok:
+                    service.finish()
 
     def test_memory_and_file_limits(self):
         result, _ = self.run_code("x = bytearray(256 * 1024 * 1024)", memory=64)

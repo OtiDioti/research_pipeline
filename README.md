@@ -1,7 +1,7 @@
 # Research Pipeline — persistent scientific investigations
 
-A Python/Linux CLI runs one researcher-directed Codex session at a time in a scientific
-project. It reads human questions and evidence, asks the researcher to plan, assess
+A Python/Linux CLI runs a primary Codex researcher, optionally with bounded delegated
+researchers, in a scientific project. It reads human questions and evidence, asks the researcher to plan, assess
 primary literature, derive and compute, and saves ordinary linked Markdown and
 reproducible scientific artifacts. `start` stays in the foreground; `inspect` uses
 saved files and needs no model access. `resume` continues the same investigation
@@ -24,9 +24,98 @@ each suite passed 85 tests with only the separate M1 live gate skipped. Both rea
 investigations preserved baseline data and human edits, adapted the plan, continued
 the same logical task in a distinct native session after an acknowledged rollover,
 reproduced the successor computation in isolation, and confirmed service cleanup.
-M3 collaboration
-and independent verification; M4 cross-project reuse and remaining controls; and
-M5 physics-benchmark investigation and human scientific acceptance remain deferred.
+M3 now has an opt-in delegated-research increment described below. Independent
+verification, bounded disagreement and the real M3 acceptance demonstration remain
+deferred; this increment does not establish M3 acceptance. M4 cross-project reuse
+and M5 physics-benchmark investigation remain deferred.
+
+## Dependent collaboration (M3 first increment)
+
+```sh
+research-pipeline start /path/to/investigation --max-agents 2 \
+  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 \
+  --primary-session-seconds 300 --delegated-session-seconds 300
+```
+
+The primary decides whether a dependent question has a scientific benefit. Inside
+its isolated session it writes a Markdown assignment draft, for example
+`/run/research-drafts/work/ASSIGNMENT.md`, with substantive `## Objective`,
+`## Parent question`, `## Scientific benefit`, `## Assumptions`,
+`## Requested result`, and `## Artifacts` sections. Relative artifact links resolve
+against the assignment's canonical location. The primary submits and inspects it with:
+
+```sh
+python3 /run/research-checkpoint-helper.py --delegate work/ASSIGNMENT.md --parent primary
+python3 /run/research-checkpoint-helper.py --tasks
+```
+
+An acknowledgement identifies a stable `task-...` and `work/tasks/<task-id>/`.
+The assignment and referenced private Markdown drafts are copied into that workspace;
+canonical scientific inputs stay linked. Only the primary may authorize assignments.
+An existing delegated task can be the scientific parent, so scientific decomposition
+can be recursive without nested controllers. Full capacity returns a refusal and
+launches nothing. There is no pending assignment queue. To retry an unfinished
+existing task, the primary submits that task's saved `ASSIGNMENT.md` path with its
+original `--parent`; the same logical identity, objective and workspace continue.
+On resume, unfinished tasks beyond the available slots stay interrupted for explicit
+primary selection. Re-observing a request returns
+its recorded outcome, and the helper permits one outstanding request per activation.
+
+Researchers read shared science but write native code/data only within their own
+workspace and Markdown only through scoped drafts. The primary cannot modify child
+workspaces or handoffs. A child saves `RESULT.md` with methods, assumptions, linked
+artifacts, uncertainties, limitations and remaining questions, plus
+`handoffs/<task-id>.md`. Its handoff includes logical identity, objective, parent
+question, progress, artifacts, assumptions, uncertainty, interrupted computation,
+next action, and whether to resume or reconsider. The primary continues useful work,
+reads deliveries, and incorporates their implications and retained uncertainties into
+its own notes/report with links to each `RESULT.md`. Structural integration checks
+require those links; they do not certify the quality of the scientific synthesis.
+All findings remain **preliminary** until a later independent-verification increment.
+
+The count includes the primary. Every probe/research service receives fixed shares
+`floor(memory_mib / max_agents)` and `floor(max_tasks / max_agents)`, with zero swap.
+Zero shares are rejected. Unused shares stay unused. A slot is reserved before a
+probe and cannot be reused before predecessor/probe descendant cleanup is confirmed.
+Concurrent roles share one cumulative active-wall allowance, including controller
+work; overlapping durations are charged once. Usage totals sum observed turns from
+all roles; missing usage stays unknown. Hard spending, CPU fraction/aggregate time
+and reliable context occupancy remain unavailable.
+
+Each role independently uses acknowledged handoff, cleanup, guarded publication and
+fresh `codex exec --ephemeral` context to roll over while siblings keep running.
+`--delegated-session-seconds` defaults to 300, must exceed the 15-second saving
+reserve, and survives resume alongside the primary policy and original resource
+grant. These fixed durations provide **no exact 60% occupancy guarantee**. Billing
+tokens are never treated as occupancy. Fresh contexts reload current questions,
+instructions, feedback and saved science, retaining task/parent/workspace identity.
+Clean child failures preserve partial artifacts and recovery guidance; unconfirmed
+cleanup stops further launches. A primary that ends with unfinished children triggers
+whole-investigation saving/stopping and an incomplete outcome.
+
+`pause` targets the foreground owner independently of task activations, fans out one
+shared saving deadline and confirms all recorded services/descendants stopped.
+`resume` recovers all old owned services before reading drafts or launching work.
+Crash accounting covers the owner interval rather than an ended primary's lifetime.
+Malformed child preparation cannot prevent stopping siblings; accepted science and
+older checkpoints survive failed saving/publication. A successful pause may still
+report an unusable newest handoff.
+
+Collaboration projects use schema 3 with task records separate from activations and
+compact task-tagged session history. The accepted single-agent M2 path remains schema
+2 and continues using its existing synchronous controller; existing evidence projects
+are not migrated. This intentionally defers the plan's automatic schema-2
+normalization rather than replacing the accepted M2 execution path in this increment.
+Schema-1 evidence remains inspectable. `inspect --json` exposes task status, deliveries,
+integration references, activation identities and cumulative accounting for schema 3.
+
+Engineering coverage includes actual Bubblewrap role separation and live publication
+visibility, concurrent service/descendant stopping where the host supports systemd,
+and explicit doubles for independent task rollover, parent progress, budgets,
+pause/resume, human edits, full capacity and killed-controller recovery. Enabled
+`RESEARCH_PIPELINE_M3_LIVE=1` makes unavailable enforcement prerequisites fail.
+The real opt-in M3 Codex demonstration and verification/disagreement flow belong to
+the subsequent milestone; no M3 paid gate is supplied or claimed here.
 
 ## Installation and prerequisites
 
@@ -294,7 +383,7 @@ corrected command or useful negative finding is not automatically a failed inves
 
 The supported launcher is a systemd user transient service containing Bubblewrap.
 It mounts `/project` read-only, overlays only `sources/`, `work/`, and `outputs/`
-writable along with `handoffs/`, read-only mounts for existing scientific Markdown,
+writable, read-only mounts for existing scientific Markdown,
 and a separate writable draft mount; it hides `.research_pipeline/`. System programs/libraries, certificates
 and resolver files are mounted explicitly read-only; the host root and home are
 not mounted. Temporary storage and Codex home are private. The actual Codex session
@@ -319,7 +408,7 @@ Limits that are **not** guaranteed:
 - CPU fraction and aggregate CPU time are not capped. Scientific commands can use
   available CPUs within the shared wall, memory and task limits.
 - No separate per-command runtime or scientific-job scheduler. All commands share
-  the remaining investigation lifetime and aggregate quotas; there is one researcher.
+  the remaining investigation lifetime and aggregate quotas; single-agent runs have one researcher; collaboration uses bounded slots.
 - A 64 MiB per-file limit and 4 MiB per operational log are **not** a total disk quota.
   Private tmpfs consumes the service's memory allowance.
 - Literature/inference networking has no destination filter. No host sockets, user
@@ -327,7 +416,7 @@ Limits that are **not** guaranteed:
   native credentials exist in its private namespace during the run.
 - Abrupt host/controller SIGKILL cannot finalize status; systemd still enforces its
   lifetime bound. Checkpoint recovery and forced pause can lose uncheckpointed work.
-  Collaboration remains a later increment.
+  Concurrent collaboration uses the fixed slot shares described above.
 
 ## Checks and demonstration
 
@@ -368,7 +457,7 @@ RESEARCH_PIPELINE_M1_OUTPUT_DIR=/absolute/private/request-output/m1 \
 Both variables must be supplied to that process. Enabled acceptance fails on missing
 prerequisites; the service/filesystem integration checks cannot skip unavailable
 capabilities when either `RESEARCH_PIPELINE_M1_LIVE=1` or
-`RESEARCH_PIPELINE_M2_LIVE=1`.
+`RESEARCH_PIPELINE_M2_LIVE=1` or `RESEARCH_PIPELINE_M3_LIVE=1`.
 Do not give a restricted Writer access to another execution context.
 
 For M2, enable only its dedicated gate (M1 inference remains opt-in separately):
