@@ -184,6 +184,11 @@ def build_command(config):
         'mcp_servers.research_jobs.startup_timeout_sec=15',
         'mcp_servers.research_jobs.tool_timeout_sec=20',
     ]
+    # MCP tools otherwise require approval even under approval_policy="never".
+    # Preauthorize only the fixed adapter operations; their controller admission,
+    # ownership, scoped writes and isolation still enforce the original grant.
+    for tool in ("job_run", "job_wait", "job_status", "job_cancel", "write_draft", "control"):
+        settings.append(f'mcp_servers.research_jobs.tools.{tool}.approval_mode="approve"')
     for setting in settings:
         args += ["-c", setting]
     if config.model:

@@ -9,6 +9,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import tomllib
 import unittest
 import uuid
 from unittest.mock import patch
@@ -102,6 +103,22 @@ class AdmissionTests(unittest.TestCase):
         self.assertIn('mcp_servers.research_jobs.required=true', command)
         self.assertIn("workspace-write", command)
         self.assertIn("--ignore-user-config", command)
+
+    def test_noninteractive_backend_preauthorizes_only_bounded_adapter_tools(self):
+        server = create_server(Adapter(json.loads(self.config.job_context.read_text())))
+        names = {tool.name for tool in asyncio.run(server.list_tools())}
+        command = codex.build_command(self.config)
+        settings = tomllib.loads("\n".join(command[i + 1] for i, arg in enumerate(command)
+                                         if arg == "-c"))
+        self.assertEqual(settings["approval_policy"], "never")
+        self.assertFalse(settings["features"]["shell_tool"])
+        self.assertEqual(set(settings["mcp_servers"]), {"research_jobs"})
+        adapter = settings["mcp_servers"]["research_jobs"]
+        self.assertEqual(set(adapter["enabled_tools"]), names)
+        self.assertEqual(adapter["tools"],
+                         {name: {"approval_mode": "approve"} for name in names})
+        self.assertNotIn("default_tools_approval_mode", adapter)
+        self.assertTrue(adapter["required"])
 
     def test_native_catalog_check_rejects_bypasses_and_missing_adapter(self):
         catalog = [{"name": "mcp__research_jobs__" + name} for name in

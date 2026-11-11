@@ -282,3 +282,64 @@ remain mandatory in the next milestone. Enable only M4 with its output directory
 M1/M2/M3 stay disabled. This is milestone-2 code readiness, not M4 closeout,
 M5 or project completion. PROJECT.md, engineering AGENTS.md, manager STATUS.md
 and accepted earlier evidence were preserved.
+
+## Integration-2 repair — bounded MCP operation approval
+
+Read the complete `tests/final-003.txt` report and its command log, the supplied
+recovery note, and the failed research activation's native `backend.jsonl`.
+The artifact reader refused the supplied paths, so these were read directly
+from the preserved local run directory. Final-003 reported 228 tests with one
+failure and three disabled paid gates. Its native production job fixtures
+passed; the actual M4 researcher produced no scientific jobs or deliverables.
+
+The native log for `m4-live-8qz6saub`, activation
+`7ace60131a844dd5955bd5b8c6f7c5ee`, records the concrete cause:
+`control`, `job_run` and `write_draft` all failed with
+“MCP tool call requires approval, but approval policy is never”.
+The SDK transport fixture did not exercise Codex's approval layer. The declared
+MCP dependency was present in this attempt and is not the source defect.
+
+`build_command` now sets per-tool `approval_mode="approve"` for exactly the
+six existing adapter operations, alongside the same explicit tool allowlist.
+No server-wide default approval was added. The existing noninteractive policy,
+inner workspace sandbox, disabled stock shell tools, native authentication,
+admission/ownership checks, scoped drafts and original cumulative grants remain
+in force. This is configuration for the already authorized bounded operations,
+not a new command path. README describes the scope.
+The official [configuration reference](https://developers.openai.com/codex/config-reference/)
+and [MCP documentation](https://developers.openai.com/codex/mcp/), fetched during
+this repair using the OpenAI Docs skill, document the per-tool approval setting.
+
+A regression parses the actual generated TOML overrides, compares preauthorized
+operations with the real adapter catalog, and requires the fixed allowlist,
+required server, never-approval policy and disabled stock shell tools.
+It does not claim a native inference observation.
+
+Verification with the configured interpreter and existing prepared dependencies:
+
+```sh
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps /home/francesco/miniconda3/bin/python -m unittest tests.test_jobs tests.test_cli
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 /home/francesco/miniconda3/bin/python -m unittest discover -s tests -v
+```
+
+Focused: **40 reported, 38 passed, two skipped, 6.959 seconds**.
+Full: **214 reported, 207 passed, seven skipped, 21.994 seconds**.
+Full output is retained at `../runtime/tmp/integration-2-approval-full.txt`.
+The nested Bubblewrap/MCP fixture passed, including normal calculation,
+timeout, partial artifacts, bounded admission, detached descendants and saving.
+The seven skips comprise four disabled paid gates, the unavailable systemd
+service test class and two service job checks. The cleanup-unconfirmed error is
+expected injected failure coverage.
+
+The restricted environment has no systemd user bus. Fresh enabled controller-host
+final and required combined checks must still exercise Codex's actual approval
+layer, obtain the effective native tool catalog, complete model-authored M4
+science and isolated reproduction, and confirm integrity/accounting/full cleanup.
+The failed activation also lacks the required catalog result; no prose claim
+or configuration listing replaces it. Existing gate assertions remain intact.
+Only M4 is to be enabled on that host, with the existing frozen output directory
+and original grant ceilings. No paid research, Git orchestration, component
+repair, dependency installation or session/permission management was performed
+here. PROJECT.md, engineering AGENTS.md, manager STATUS.md and accepted prior
+evidence were preserved. This is repair readiness, not M4 acceptance or LOCAL
+integration.

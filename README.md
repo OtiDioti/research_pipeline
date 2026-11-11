@@ -486,7 +486,10 @@ service. Trusted adapter/supervisor launches exclude the research working direct
 and user site from Python's import search (`-P -s`); scientific argv retains ordinary
 workspace imports. Codex retains `workspace-write`, ignored inherited configuration/rules,
 ephemeral contexts and native file authentication; its stock command-launch tools,
-apps, plugins and backend agent spawning are disabled. The enabled M4 host gate
+apps, plugins and backend agent spawning are disabled. Its noninteractive approval
+policy preauthorizes only the adapter's six allowlisted operations; job admission,
+ownership, scoped Markdown writes and original resource limits still apply.
+The enabled M4 host gate
 must observe the fresh native effective tool catalog and reject any unrestricted
 or unknown execution route or missing controlled tool. Config/features listings
 and controller test doubles do not establish that capability.
