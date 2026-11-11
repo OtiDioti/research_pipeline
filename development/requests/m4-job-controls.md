@@ -208,3 +208,77 @@ The expected injected cleanup-failure diagnostic remains part of passing tests.
 Controller-host acceptance,
 fresh enabled final/combined checks, actual M4 science/reproduction and LOCAL
 integration remain pending; the repairs do not waive those requirements.
+
+## Milestone 2 — shared scientific budget observations
+
+Extracted the existing read-only calculation into `budget.py`, shared by CLI
+inspection and controller-published agent status. Charging and ownership remain
+in the existing controllers. Reports now copy the original configured limits,
+identify their observation timestamp, qualify completed-turn model counters, and
+describe the supported job boundary and unknown spending/context telemetry.
+Historical missing job settings remain unknown during inspection.
+
+`job_status()` now includes the same investigation-wide `budget_report` for every
+role while retaining role-scoped job records, the 32-summary bound and separate
+full-result access. Inspection reserves no slot. Job/result/usage changes publish
+immediately; elapsed-time-only observations refresh about once a second rather
+than rewriting every role's snapshot on every poll. Missing status explicitly
+returns an unknown budget without extrapolating remaining allowance.
+
+The extraction includes three small correctness clarifications: absent boot
+identity cannot establish a live clock, a settled coordinator interval does not
+accrue more observed time, and an unobservable preparation interval cannot fall
+back to an older session's clock. Unsettled time remains unknown until the
+existing recovery path settles it. No new charging or resource authorization was
+introduced.
+
+Human `inspect` output includes configured cumulative time, observed spent and
+remaining time, memory/zero-swap/tasks/researcher/job limits and model counters.
+Fresh role prompts explain shared totals versus role-session deadlines, unknown
+telemetry, stopping at limits and grants persisting through waiting, tool checks
+and fresh contexts. Scientific Markdown publication and human-edit handling
+remain separate. README documents start, calculation, agent/CLI inspection and
+pause/resume together.
+
+The existing M4 gate now retains a live CLI budget observation, final readable
+and JSON CLI output with exact commands, settled report/state/emitted-usage
+comparisons, and `RESEARCH_STATUS.md` alongside the scientific excerpts.
+Inspection subprocesses have separate handles and use the existing absolute
+deadlines. The researcher-authored study, critical reuse, 18-row oracle, isolated
+reproduction, protected inputs and original grant ceilings remain unchanged.
+The existing native MCP fixture additionally reads and prints the budget through
+the actual tool while capacity is full, before the original job expires.
+
+Verification used the supplied Python and existing installed dependency directory:
+
+```sh
+PYTHONPATH=src:../runtime/tmp/job-deps python -m unittest tests.test_jobs tests.test_cli tests.test_continuity tests.test_collaboration
+PYTHONPATH=src:../runtime/tmp/job-deps RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 python -m unittest discover -s tests
+```
+
+Focused: **87 reported, 85 passed, two unavailable user-bus checks skipped,
+12.581 seconds**. Full after the final code/test changes: **213 reported,
+206 passed, seven skipped, 22.033 seconds**. Full output:
+`../runtime/tmp/m2-reporting-full.txt`; focused output:
+`../runtime/tmp/m2-reporting-focused.txt`, relative to the supplied worktree.
+`git diff --check` passed. The cleanup-unconfirmed error is expected injected
+failure coverage.
+
+Coverage includes live single-agent/coordinator/preparation accounting without
+double charging, stopped and exhausted allowances, changed/missing boots,
+unknown/partial usage, shared snapshots and throttled refresh, inspection at full
+capacity, retained cumulative totals in fresh activations, and read-only human/JSON
+CLI inspection. Existing continuation, pause, recovery, scientific publication,
+tool validation and independent-verification checks passed. The real nested
+Bubblewrap/MCP fixture passed with full-capacity budget inspection, calculation,
+runtime expiry, retained partial files and detached-descendant teardown.
+
+The seven full-suite skips are the four disabled paid gates, the unavailable
+production-service test class and two unavailable service job checks. No host
+service/cgroup observation or fresh native Codex catalog/scientific acceptance
+is claimed from these restricted checks. Normal review, enabled controller-host
+M4 final/required combined verification and pipeline-confirmed LOCAL integration
+remain mandatory in the next milestone. Enable only M4 with its output directory;
+M1/M2/M3 stay disabled. This is milestone-2 code readiness, not M4 closeout,
+M5 or project completion. PROJECT.md, engineering AGENTS.md, manager STATUS.md
+and accepted earlier evidence were preserved.

@@ -526,6 +526,34 @@ buffers are separate: `job_status(job_id)` returns a full retained result, inclu
 earlier activations for the primary. History truncation does not change aggregate
 capacity counts, and reading an archived result does not authorize canceling it.
 
+For the investigation started above, the agent can run
+`job_run(["python3", "-c", "print(sum(i*i for i in range(10)))"], "/project/work")`,
+then call `job_status()` to see its jobs and the shared `budget_report`, even at full
+capacity. The report copies the original configured limits and shows cumulative
+spent/remaining active seconds, reservations and observed completed-turn model
+counters. `observed_at` identifies the controller observation; elapsed time refreshes
+about once per second. All roles see the same investigation totals, distinct from
+their individual session deadlines. Missing status, unsettled intervals and missing
+usage remain unknown; waiting, new jobs, checks and fresh contexts add no allowance.
+At a reached limit, save useful progress and stop the affected work.
+
+The human can read the same budget in the compact `inspect` summary or the structured
+`inspect --json` diagnostic output shown above. To suspend and later continue:
+
+```sh
+.venv/bin/research-pipeline pause /path/to/investigation
+.venv/bin/research-pipeline resume /path/to/investigation
+.venv/bin/research-pipeline inspect /path/to/investigation
+```
+
+Resume retains the job limits and cumulative allowance. Inspection is read-only and
+reserves no slot. Configured limits describe authorization; they alone do not prove
+a service is running or that an enforcement check passed. Model counters cover emitted
+completed-turn usage observed so far, with a completeness flag; missing usage is not
+zero. Spending and context occupancy remain unknown, and fixed session rollover is
+the conservative fallback. These operational observations accompany researcher-authored
+Markdown status, findings, provenance and handoffs.
+
 Reusable-tool discovery, staging, registration and invocation commands shown
 elsewhere in this README run through `job_run`. Declared checks/runs inherit that
 job's slot and deadline; helper execution outside an admitted job fails. Dependency

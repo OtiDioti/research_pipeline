@@ -266,6 +266,10 @@ class ContinuityTests(unittest.TestCase):
                 self.assertEqual(saved["sessions"], before["sessions"])
                 self.assertEqual(saved["usage_totals"], before["usage_totals"])
                 self.assertNotIn("resume_preparation_pending", saved)
+                report = cli.inspect_project(self.project)["budget_report"]
+                self.assertEqual(report["configured_limits"], before["limits"])
+                self.assertEqual(report["active_seconds_observed"], saved["active_seconds"])
+                self.assertEqual(report["remaining_seconds_observed"], saved["remaining_active_seconds"])
         before = self.state()
         load = references.load_registry
         with patch.object(cli.time, "monotonic", return_value=200) as clock:

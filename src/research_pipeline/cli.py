@@ -16,6 +16,7 @@ import time
 import uuid
 
 from . import codex, isolation, workspace, collaboration, references, tools, jobs
+from .budget import boot_identity, budget_report
 
 SAVING_GRACE = 15
 PAUSE_TIMEOUT = 60
@@ -189,13 +190,6 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def boot_identity():
-    try:
-        return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
-    except OSError:
-        return None
-
-
 def inspect_project(project):
     project = Path(os.path.abspath(project))
     try:
@@ -229,46 +223,6 @@ def inspect_project(project):
                 pass
     state["budget_report"] = budget_report(state, live=held)
     return state
-
-
-def budget_report(state, live=False):
-    """Read-only observations; never charges time or changes an authorization."""
-    recorded = state.get("active_seconds", 0)
-    spent = recorded
-    preparation = state.get("resume_preparation_pending") or state.get("recovery_finalization_pending")
-    pending = preparation or state.get("accounting_pending") or state.get("owner_interval", {}).get("pending")
-    complete = not pending
-    if live:
-        interval = state.get("owner_interval")
-        if preparation and preparation.get("boot_id") == boot_identity():
-            spent = recorded + min(preparation["allowance"],
-                                   max(0, time.monotonic() - preparation["started_monotonic"]))
-            complete = True
-        elif (interval and interval.get("boot_id") == boot_identity()
-                and interval.get("started_monotonic") is not None):
-            spent = max(recorded, interval["initial_active_seconds"]
-                        + max(0, time.monotonic() - interval["started_monotonic"]))
-            complete = True
-        elif (state.get("accounting_pending") and state.get("boot_id") == boot_identity()
-              and state.get("activation_started_monotonic") is not None):
-            spent = recorded + max(0, time.monotonic() - state["activation_started_monotonic"]
-                                    - state.get("activation_charged_seconds", 0))
-            complete = True
-    allowance = state.get("limits", {}).get("wall_seconds")
-    if allowance is not None:
-        spent = min(allowance, spent)
-    return {"active_seconds_observed": spent, "active_seconds_recorded": recorded,
-            "remaining_seconds_observed": max(0, allowance - spent) if complete and allowance is not None else None,
-            "active_time_complete": complete,
-            "observation": "Live controller interval included." if live and complete else
-                           "Recorded accounting; unobserved work is unknown." if not complete else "Settled accounting.",
-            "job_runtime_seconds": state.get("limits", {}).get("job_runtime_seconds"),
-            "max_jobs": state.get("limits", {}).get("max_jobs"),
-            "occupied_job_reservations": sum(r["state"] in jobs.ACTIVE for r in state.get("jobs", {}).values()),
-            "model_usage_observed": state.get("usage_totals"),
-            "model_usage_complete": bool(state.get("usage_totals") is not None and state.get("usage_complete", False)),
-            "model_spending": "unknown; backend cannot cap spending",
-            "context_occupancy": "unknown; fixed session rollover is a conservative fallback"}
 
 
 def validate_project(project):
@@ -992,12 +946,27 @@ def main(argv=None):
                 print(f"{state['state']}: {state.get('reason', '')}\n{state['activity_check']}")
                 budget = state["budget_report"]
                 remaining = budget["remaining_seconds_observed"]
+                limits = budget["configured_limits"]
+                def configured(key, suffix=""):
+                    value = limits.get(key)
+                    return f"{value}{suffix}" if value is not None else "unknown"
+                print(f"Budget observed at {budget['observed_at']}; configured cumulative "
+                      f"active-work allowance: {configured('wall_seconds', 's')}.")
                 print(f"Active time spent: {budget['active_seconds_observed']:.3f}s; "
                       f"remaining: {f'{remaining:.3f}s' if remaining is not None else 'unknown'}. "
                       + budget["observation"])
-                print(f"Jobs: runtime {budget['job_runtime_seconds']}s; "
-                      f"capacity {budget['occupied_job_reservations']}/{budget['max_jobs']} reserved.")
+                print(f"Jobs: runtime {configured('job_runtime_seconds', 's')}; "
+                      f"capacity {budget['occupied_job_reservations']}/{configured('max_jobs')} reserved.")
+                print(f"Configured memory: {configured('memory_mib', ' MiB')}; "
+                      f"swap: {configured('swap_bytes', ' bytes')}; tasks: {configured('max_tasks')}; "
+                      f"simultaneous researchers: {configured('concurrent_researchers')}.")
+                usage = budget["model_usage_observed"]
+                print("Observed model counters: " + (json.dumps(usage) if usage is not None else "unknown")
+                      + ("; complete for emitted observations." if budget["model_usage_complete"]
+                         else "; incomplete, missing usage is unknown."))
+                print(budget["model_usage_scope"])
                 print(f"Model spending: {budget['model_spending']}. Context occupancy: {budget['context_occupancy']}.")
+                print("Job enforcement scope: " + budget["job_enforcement_scope"])
                 for job in state.get("jobs", {}).values():
                     print(f"Job {job['job_id']} ({job['task_id']}): {job['state']}; "
                           f"elapsed {job.get('elapsed_seconds', 'unknown')}s; {job['reason']}")

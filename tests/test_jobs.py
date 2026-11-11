@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 from tests import use_checkout
 use_checkout()
-from research_pipeline import cli, codex, isolation, jobs, references, tools, workspace
+from research_pipeline import budget, codex, isolation, jobs, references, tools, workspace
 from research_pipeline.job_server import Adapter, create_server
 from tests.test_isolation import fixture, live_enabled
 
@@ -136,16 +136,113 @@ class AdmissionTests(unittest.TestCase):
     def test_budget_report_keeps_unknown_usage_and_lost_intervals_explicit(self):
         self.state.update(accounting_pending=True, activation_started_monotonic=90,
                           boot_id="known", usage_complete=False, usage_totals=None)
-        with patch.object(cli, "boot_identity", return_value="known"), \
-             patch.object(cli.time, "monotonic", return_value=100):
-            live = cli.budget_report(self.state, live=True)
+        with patch.object(budget, "boot_identity", return_value="known"), \
+             patch.object(budget.time, "monotonic", return_value=100):
+            live = budget.budget_report(self.state, live=True)
             self.assertEqual(live["active_seconds_observed"], 13)
             self.assertEqual(live["remaining_seconds_observed"], 587)
-            lost = cli.budget_report(self.state, live=False)
+            lost = budget.budget_report(self.state, live=False)
             self.assertIsNone(lost["remaining_seconds_observed"])
             self.assertFalse(lost["active_time_complete"])
             self.assertIsNone(live["model_usage_observed"])
         self.assertEqual(self.state["active_seconds"], 3)
+
+    def test_budget_observes_intervals_without_double_charging_or_changing_grants(self):
+        self.state.update(usage_totals={"input_tokens": 20, "cached_input_tokens": 5},
+                          usage_complete=False)
+        base = json.loads(json.dumps(self.state))
+        cases = [
+            ("single", {"accounting_pending": True, "activation_started_monotonic": 90,
+                        "activation_charged_seconds": 4, "boot_id": "known"}, 9, True),
+            ("coordinator", {"active_seconds": 11, "owner_interval": {
+                "pending": True, "initial_active_seconds": 3, "started_monotonic": 90,
+                "boot_id": "known"}}, 13, True),
+            ("resume preparation", {"resume_preparation_pending": {
+                "started_monotonic": 90, "allowance": 5, "boot_id": "known"}}, 8, True),
+            ("recovery preparation", {"recovery_finalization_pending": {
+                "started_monotonic": 90, "allowance": 20, "boot_id": "known"}}, 13, True),
+            ("settled", {}, 3, True),
+            ("settled coordinator", {"owner_interval": {
+                "pending": False, "initial_active_seconds": 0, "started_monotonic": 90,
+                "boot_id": "known"}}, 3, True),
+            ("unobservable preparation", {
+                "resume_preparation_pending": {"boot_id": "older", "allowance": 5},
+                "accounting_pending": True, "boot_id": "known",
+                "activation_started_monotonic": 90}, 3, False),
+            ("different boot", {"accounting_pending": True, "activation_started_monotonic": 90,
+                                "boot_id": "older"}, 3, False),
+            ("missing boot", {"accounting_pending": True, "activation_started_monotonic": 90,
+                              "boot_id": None}, 3, False),
+            ("exhausted", {"active_seconds": 600}, 600, True),
+        ]
+        for label, update, spent, complete in cases:
+            with self.subTest(label=label), \
+                 patch.object(budget, "boot_identity", return_value="known"), \
+                 patch.object(budget.time, "monotonic", return_value=100):
+                state = {**base, **update}
+                before = json.dumps(state, sort_keys=True)
+                report = budget.budget_report(state, live=True)
+                self.assertEqual(report["active_seconds_observed"], spent)
+                self.assertEqual(report["active_time_complete"], complete)
+                self.assertEqual(report["remaining_seconds_observed"], 600 - spent if complete else None)
+                self.assertEqual(report["configured_limits"], base["limits"])
+                self.assertEqual(report["model_usage_observed"], base["usage_totals"])
+                self.assertFalse(report["model_usage_complete"])
+                self.assertIn("unknown", report["model_usage_scope"])
+                self.assertIn("unknown", report["context_occupancy"])
+                self.assertIn("observed_at", report)
+                self.assertEqual(json.dumps(state, sort_keys=True), before)
+        with patch.object(budget, "boot_identity", return_value=None):
+            missing = {**base, "accounting_pending": True, "boot_id": None,
+                       "activation_started_monotonic": 90}
+            self.assertIsNone(budget.budget_report(missing, live=True)["remaining_seconds_observed"])
+
+    def test_shared_budget_status_at_full_capacity_is_read_only_and_periodically_refreshed(self):
+        self.state.update(accounting_pending=True, activation_started_monotonic=90,
+                          boot_id="known", usage_totals=None, usage_complete=False)
+        adapter = Adapter(json.loads(self.config.job_context.read_text()),
+                          incoming=self.owner["root"] / "in")
+        record = self.manager.admit(self.owner, self.request)
+        # A subordinate sees only its jobs, but the same investigation totals.
+        activation = uuid.uuid4().hex
+        session = self.root / ".research_pipeline/child-session"
+        session.mkdir()
+        child_config = replace(self.config, task_id="task-" + uuid.uuid4().hex)
+        self.manager.configure(child_config, session, {**self.state, "activation_id": activation})
+        child = Adapter(json.loads(child_config.job_context.read_text()),
+                        incoming=self.manager.owners[activation]["root"] / "in")
+        before = json.dumps(self.state, sort_keys=True)
+        with patch.object(budget, "boot_identity", return_value="known"), \
+             patch.object(jobs.time, "monotonic", return_value=100) as clock:
+            self.manager.poll()
+            first = adapter.status()
+            self.assertEqual(first["budget_report"], child.status()["budget_report"])
+            self.assertEqual(child.status()["jobs"], [])
+            self.assertEqual(first["occupied"], first["max_jobs"])
+            self.assertEqual(first["budget_report"]["active_seconds_observed"], 13)
+            self.assertIsNone(first["budget_report"]["model_usage_observed"])
+            with patch.object(jobs, "atomic", wraps=jobs.atomic) as publish:
+                clock.return_value = 100.2
+                self.manager.poll()
+                publish.assert_not_called()
+                self.assertEqual(adapter.status()["budget_report"], first["budget_report"])
+                clock.return_value = 101.1
+                self.manager.poll()
+                self.assertEqual(publish.call_count, 2)  # one status for each role
+            self.assertAlmostEqual(adapter.status()["budget_report"]["active_seconds_observed"], 14.1)
+            # Usage and job completion publish without waiting for the timer.
+            self.state.update(usage_totals={"input_tokens": 9}, usage_complete=True)
+            self.manager.poll()
+            self.assertEqual(adapter.status()["budget_report"]["model_usage_observed"], {"input_tokens": 9})
+            self.state.update(usage_totals=None, usage_complete=False)
+            self.assertEqual(json.dumps(self.state, sort_keys=True), before)
+            jobs.atomic(self.owner["root"] / "out" / f"{record['job_id']}.json",
+                        {**record, "state": "completed", "cleanup_ok": True})
+            self.manager.poll()
+            self.assertEqual(adapter.status()["occupied"], 0)
+        unavailable = Adapter({}, incoming=self.root / "missing").status()
+        self.assertIsNone(unavailable["budget_report"])
+        self.assertIn("unknown", unavailable["reason"])
 
     def test_capacity_waits_for_namespace_reaping_after_launcher_exit(self):
         record = self.manager.admit(self.owner, self.request)
@@ -184,6 +281,7 @@ class AdmissionTests(unittest.TestCase):
         for _ in range(47):
             job_id = uuid.uuid4().hex
             self.state["jobs"][job_id] = {**template, "job_id": job_id}
+        self.state.update(active_seconds=30, usage_totals={"input_tokens": 21}, usage_complete=False)
         old_activation = self.state["activation_id"]
         self.assertGreater(len(json.dumps({"jobs": list(self.state["jobs"].values())})), 256 * 1024)
         self.manager.poll()
@@ -203,6 +301,10 @@ class AdmissionTests(unittest.TestCase):
         self.assertLess((adapter.incoming / "status.json").stat().st_size, 256 * 1024)
         self.assertEqual(snapshot["occupied"], 1)
         self.assertEqual(snapshot["max_jobs"], 1)
+        self.assertEqual(snapshot["budget_report"]["configured_limits"], self.state["limits"])
+        self.assertEqual(snapshot["budget_report"]["active_seconds_observed"], 30)
+        self.assertEqual(snapshot["budget_report"]["model_usage_observed"], {"input_tokens": 21})
+        self.assertFalse(snapshot["budget_report"]["model_usage_complete"])
         self.assertEqual(snapshot["jobs_total"], 49)
         self.assertEqual(snapshot["jobs_omitted"], 49 - jobs.STATUS_JOB_LIMIT)
         self.assertEqual(snapshot["jobs"][0]["job_id"], running["job_id"])
@@ -256,6 +358,28 @@ async def main():
             status_call = await session.call_tool('job_status', {})
             status = status_call.structuredContent or json.loads(status_call.content[0].text)
             assert 'jobs' in status and 'occupied' in status and 'max_jobs' in status, status
+            call = await session.call_tool('job_run', {
+                'argv':['/usr/bin/python3','-c','import time; time.sleep(20)'],
+                'cwd':'/project/work', 'yield_seconds':0})
+            assert not call.isError, call
+            pending = call.structuredContent or json.loads(call.content[0].text)
+            status_call = await session.call_tool('job_status', {})
+            assert not status_call.isError, status_call
+            full_status = status_call.structuredContent or json.loads(status_call.content[0].text)
+            assert full_status['occupied'] == full_status['max_jobs'] == 1, full_status
+            budget = full_status['budget_report']
+            assert budget['occupied_job_reservations'] == 1, budget
+            assert budget['configured_limits']['job_runtime_seconds'] == 1.5, budget
+            assert budget['active_seconds_observed'] == 3, budget
+            assert budget['model_usage_observed'] is None and not budget['model_usage_complete'], budget
+            print('MCP full-capacity budget observation: ' + json.dumps(full_status), flush=True)
+            # Inspection left the original job running and consumed no capacity.
+            while pending['state'] in jobs.ACTIVE:
+                call = await session.call_tool('job_wait', {
+                    'job_id':pending['job_id'], 'bounded_wait_seconds':1})
+                assert not call.isError, call
+                pending = call.structuredContent or json.loads(call.content[0].text)
+            assert pending['state'] == 'timed_out' and pending['cleanup_ok'], pending
             print('MCP result received', file=sys.stderr, flush=True)
     print('MCP transport closed', file=sys.stderr, flush=True)
     adapter = Adapter(jobs.read(Path('/run/research-jobs.json')))

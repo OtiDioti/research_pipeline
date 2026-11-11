@@ -425,6 +425,14 @@ ALL calculations, file inspection/editing, scientific shells, dependency install
 reference helpers and reusable-tool checks/runs. An explicit /bin/bash -c is allowed.
 Use job_wait/job_status/job_cancel to observe or stop existing jobs. Wait/yield is at
 most five seconds per call; a returned running job retains its original deadline.
+job_status() also reports the investigation-wide budget, original configured limits,
+cumulative active time and observed completed-turn model counters at observed_at.
+All roles share these totals. This observation differs from your role-session deadline
+and refreshes about once a second. Missing status or telemetry is UNKNOWN and supplies
+no additional allowance. Waiting, starting jobs, tool validation and fresh contexts
+never replenish grants. At a reached limit preserve useful progress and stop affected
+work. Keep substantive scientific status, findings, provenance and continuation guidance
+in Markdown; operational snapshots do not replace reports, handoffs or verification.
 Every descendant shares its job's lifetime and original memory/task/service grants.
 Job capacity is investigation-wide, separate from researcher count or thread limits.
 Full capacity refuses immediately without a queue. Runtime expiry kills the job tree,

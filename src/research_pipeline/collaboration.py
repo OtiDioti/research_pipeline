@@ -199,7 +199,7 @@ class Coordinator:
         workspace.write_state(self.project, self.state)
 
     def begin_interval(self):
-        from .cli import boot_identity
+        from .budget import boot_identity
         self.began = time.monotonic()
         self.initial_active = self.state.get("active_seconds", 0)
         remaining = max(0, self.state["limits"]["wall_seconds"] - self.initial_active)

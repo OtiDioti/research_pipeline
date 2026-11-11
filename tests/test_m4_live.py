@@ -244,11 +244,56 @@ class LiveM4Acceptance(unittest.TestCase):
             with (run / f"{name}.stdout").open("wb") as out, (run / f"{name}.stderr").open("wb") as err:
                 process = subprocess.Popen(args, stdout=out, stderr=err)
                 while process.poll() is None and time.monotonic() < deadline:
-                    inventory(state_now())
+                    current = state_now()
+                    inventory(current)
+                    if (name == "start" and current.get("state") == "running"
+                            and current.get("service_attempted") and "live_budget" not in receipt):
+                        observed = inspect_cli("live", structured=True, outer_deadline=deadline)
+                        report = observed["budget_report"]
+                        receipt["live_budget"] = report
+                        self.assertEqual(report["configured_limits"], current["limits"])
+                        self.assertTrue(report["active_time_complete"])
+                        self.assertIn("Live controller", report["observation"])
+                        self.assertGreaterEqual(report["active_seconds_observed"], 0)
+                        self.assertGreaterEqual(report["remaining_seconds_observed"], 0)
+                        self.assertAlmostEqual(report["active_seconds_observed"]
+                                               + report["remaining_seconds_observed"], 600)
+                        self.assertTrue(report["observed_at"])
                     time.sleep(.1)
                 if process.poll() is None:
                     raise TimeoutError(f"{name} exceeded its absolute allowance")
                 return process.returncode
+
+        def inspect_cli(name, *, structured, outer_deadline):
+            args = [sys.executable, "-m", "research_pipeline", "inspect", str(project)]
+            if structured:
+                args.append("--json")
+            receipt["commands"].append(shlex.join(args))
+            print("M4 command: " + shlex.join(args), flush=True)
+            deadline = min(work_end, outer_deadline, time.monotonic() + 10)
+            # This handle must never replace the running research-process handle.
+            with (run / f"inspect-{name}.stdout").open("wb") as out, \
+                 (run / f"inspect-{name}.stderr").open("wb") as err:
+                inspection = subprocess.Popen(args, stdout=out, stderr=err)
+                try:
+                    inspection.wait(timeout=max(.001, deadline - time.monotonic()))
+                finally:
+                    if inspection.poll() is None:
+                        inspection.kill()
+                        inspection.wait(timeout=max(.001, min(5, end - time.monotonic())))
+            with (run / f"inspect-{name}.stdout").open("rb") as stream:
+                stdout = stream.read(4 * 1024 * 1024)
+            with (run / f"inspect-{name}.stderr").open("rb") as stream:
+                stderr = stream.read(32768)
+            receipt.setdefault("public_inspections", {})[name] = {
+                "command": shlex.join(args), "returncode": inspection.returncode,
+                "stdout_excerpt": stdout[:65536].decode(errors="replace"),
+                "stderr_excerpt": stderr.decode(errors="replace"),
+                "stdout_clipped": (run / f"inspect-{name}.stdout").stat().st_size > 65536}
+            self.assertEqual(inspection.returncode, 0, stderr.decode(errors="replace"))
+            if structured:
+                return json.loads(stdout)
+            return stdout.decode()
 
         try:
             authorize = [sys.executable, "-m", "research_pipeline", "reference", "add",
@@ -269,12 +314,43 @@ class LiveM4Acceptance(unittest.TestCase):
             self.assertLessEqual(state["active_seconds"], 600)
             self.assertEqual(len(state["sessions"]), 1, "This demo uses one bounded session")
             self.assertFalse(workspace.validate_deliverables(project))
+            self.assertIn("live_budget", receipt, "No budget observation from the running investigation")
+            human = inspect_cli("final-human", structured=False, outer_deadline=work_end)
+            final_inspection = inspect_cli("final-json", structured=True, outer_deadline=work_end)
+            final_budget = final_inspection["budget_report"]
+            receipt["final_budget"] = final_budget
+            self.assertEqual(final_budget["configured_limits"], state["limits"])
+            self.assertEqual(final_budget["active_seconds_observed"], state["active_seconds"])
+            self.assertEqual(final_budget["active_seconds_recorded"], state["active_seconds"])
+            self.assertEqual(final_budget["remaining_seconds_observed"], 600 - state["active_seconds"])
+            self.assertTrue(final_budget["active_time_complete"])
+            self.assertEqual(final_budget["observation"], "Settled accounting.")
+            self.assertEqual(final_budget["occupied_job_reservations"], 0)
+            self.assertEqual(final_budget["model_usage_observed"], state.get("usage_totals"))
+            self.assertEqual(final_budget["model_usage_complete"],
+                             bool(state.get("usage_totals") is not None and state.get("usage_complete")))
+            self.assertIn(f'{state["active_seconds"]:.3f}s', human)
+            self.assertIn(f'runtime {final_budget["job_runtime_seconds"]}s', human)
+            self.assertIn("capacity 0/1", human)
+            self.assertIn("unknown", final_budget["model_spending"])
+            self.assertIn("unknown", final_budget["context_occupancy"])
+            if not final_budget["model_usage_complete"]:
+                self.assertIn("incomplete", human)
+                self.assertIn("unknown", human)
 
             events = []
             for session in state["sessions"]:
                 path = project / session["logs"] / "backend.jsonl"
                 for line in path.read_text().splitlines():
                     events.append(json.loads(line))
+            emitted_usage = {}
+            for event in events:
+                if event.get("type") == "turn.completed":
+                    for key, value in (event.get("usage") or {}).items():
+                        if isinstance(value, (int, float)) and not isinstance(value, bool):
+                            emitted_usage[key] = emitted_usage.get(key, 0) + value
+            self.assertEqual(final_budget["model_usage_observed"], emitted_usage or None)
+            receipt["emitted_usage_comparison"] = emitted_usage or None
             catalogs = codex.native_catalog_observations(events)
             self.assertTrue(catalogs, "Fresh native effective-tool-catalog result missing; capability is unverified")
             receipt["native_tool_catalogs"] = [codex.validate_tool_catalog(c) for c in catalogs]
@@ -339,7 +415,8 @@ class LiveM4Acceptance(unittest.TestCase):
             self.assertAlmostEqual(user_result["constant"], 2 * math.pi)
             self.assertLess(abs(user_result["harmonic"]), 1e-12)
             excerpts = {}
-            for rel in ("work/DERIVATION.md", "sources/REUSE.md", "outputs/REPORT.md", "handoffs/primary.md"):
+            for rel in ("RESEARCH_STATUS.md", "work/DERIVATION.md", "sources/REUSE.md",
+                        "outputs/REPORT.md", "handoffs/primary.md"):
                 text = (project / rel).read_text()
                 self.assertTrue(text.strip())
                 excerpts[rel] = text[:12000]

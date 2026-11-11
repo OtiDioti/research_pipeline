@@ -162,6 +162,8 @@ class JobManager:
         return record
 
     def poll(self):
+        from .budget import budget_report
+
         for owner in self.owners.values():
             root = owner["root"]
             changed = False
@@ -194,6 +196,8 @@ class JobManager:
             owner["last"] = request_id
             atomic(root / "in" / "ack.json", ack)
         # A status snapshot is operational data, not a scientific publication.
+        budget = budget_report(self.state, live=True)
+        observed_monotonic = time.monotonic()
         for owner in self.owners.values():
             records = [r for r in self.state.get("jobs", {}).values()
                        if owner["identity"]["task_id"] == "primary"
@@ -212,11 +216,20 @@ class JobManager:
                 "jobs_total": len(records), "jobs_omitted": len(records) - len(visible),
                 "active_jobs_omitted": max(0, len(active) - STATUS_JOB_LIMIT),
                 "occupied": sum(r["state"] in ACTIVE for r in self.state.get("jobs", {}).values()),
-                "max_jobs": self.state["limits"].get("max_jobs", 1)}
-            signature = json.dumps(snapshot, sort_keys=True)
-            if signature != owner.get("snapshot"):
+                "max_jobs": self.state["limits"].get("max_jobs"),
+                "budget_report": budget}
+            # Clock-only changes refresh at most once per second. New jobs,
+            # results, limits and usage publish immediately, without delaying
+            # admission or completion processing above.
+            timed_fields = {"observed_at", "active_seconds_observed",
+                            "active_seconds_recorded", "remaining_seconds_observed"}
+            signature = json.dumps({**snapshot, "budget_report": {
+                k: v for k, v in budget.items() if k not in timed_fields}}, sort_keys=True)
+            if (signature != owner.get("snapshot")
+                    or observed_monotonic - owner.get("snapshot_monotonic", 0) >= 1):
                 atomic(owner["root"] / "in" / "status.json", snapshot)
                 owner["snapshot"] = signature
+                owner["snapshot_monotonic"] = observed_monotonic
 
     def owner_stopped(self, activation, cleanup_ok):
         if activation in self.owners:

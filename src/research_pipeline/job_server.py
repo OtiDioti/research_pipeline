@@ -75,7 +75,10 @@ class Adapter:
                          or record.get("activation_id") == self.context["activation_id"])):
                 return record
             raise jobs.JobError("Unknown job or job belongs to another activation")
-        status = jobs.read(self.incoming / "status.json") or {"status": "unknown"}
+        status = jobs.read(self.incoming / "status.json") or {
+            "status": "unknown", "budget_report": None,
+            "reason": "Controller status unavailable; budget and capacity are unknown. "
+                      "Missing telemetry grants no additional allowance."}
         for record in status.get("jobs", []):
             if record["state"] in jobs.ACTIVE:
                 record["elapsed_seconds"] = max(0, time.monotonic() - record["admitted_monotonic"])
@@ -148,7 +151,10 @@ def create_server(adapter):
 
     @server.tool()
     async def job_status(job_id: str | None = None) -> dict:
-        """Capacity and up to 32 compact summaries, active jobs first.
+        """Investigation budget observation, capacity and up to 32 compact summaries.
+        Active jobs first. budget_report is observed_at the controller timestamp,
+        refreshed about once a second; it never replenishes or authorizes work.
+        Missing status/usage is unknown. Inspection consumes no job slot.
         jobs_omitted reports truncated history. Supply a job_id for full retained
         output; the primary can also read earlier activations' results.
         """

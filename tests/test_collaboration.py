@@ -265,6 +265,11 @@ class CollaborationTests(unittest.TestCase):
         self.assertTrue(all(s.config.memory_mib == 256 and s.config.max_tasks == 32 for s in self.services))
         self.assertLess(state['active_seconds'], sum(s['active_seconds'] for s in state['sessions']))
         self.assertEqual(state['remaining_active_seconds'], 100 - state['active_seconds'])
+        report = cli.inspect_project(self.project)["budget_report"]
+        self.assertEqual(report["configured_limits"], state["limits"])
+        self.assertEqual(report["active_seconds_observed"], state["active_seconds"])
+        self.assertEqual(report["remaining_seconds_observed"], state["remaining_active_seconds"])
+        self.assertEqual(report["model_usage_observed"], state["usage_totals"])
         self.assertIn((self.project / child['workspace'] / 'comparison.csv').read_text(), 'x,error\n1,0.1\n')
         self.assertTrue(any(n == 2 for _, n in self.parent_progress))
         self.assertTrue(any(n == 3 for _, n in self.parent_progress))

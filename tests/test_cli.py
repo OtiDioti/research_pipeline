@@ -108,6 +108,48 @@ class ProjectCase(unittest.TestCase):
         self.addCleanup(p.chmod, 0o600)
         self.assertEqual(self.call('start', str(self.project))[0], 2)
 
+    def test_human_and_json_budget_inspection_agree_and_preserve_saved_state(self):
+        with self.backend_double():
+            self.assertEqual(self.call('start', str(self.project), '--wall-seconds', '120',
+                                       '--job-runtime-seconds', '2.5', '--max-jobs', '2')[0], 0)
+        path = self.project / '.research_pipeline/run.json'
+        before = path.read_bytes()
+        code, human, errors = self.call('inspect', str(self.project))
+        self.assertEqual(code, 0, errors)
+        code, structured, errors = self.call('inspect', str(self.project), '--json')
+        self.assertEqual(code, 0, errors)
+        report = json.loads(structured)["budget_report"]
+        self.assertEqual(report["configured_limits"], self.state()["limits"])
+        self.assertEqual(report["active_seconds_observed"], self.state()["active_seconds"])
+        self.assertEqual(report["remaining_seconds_observed"], 120 - self.state()["active_seconds"])
+        self.assertIn(f'{report["active_seconds_observed"]:.3f}s', human)
+        self.assertIn(f'{report["remaining_seconds_observed"]:.3f}s', human)
+        for text in ('120.0s', 'runtime 2.5s', '/2 reserved', 'Settled accounting',
+                     'input_tokens', '12', 'output_tokens', '5', 'fixed session rollover',
+                     'swap: 0 bytes', 'simultaneous researchers:', 'completed-turn'):
+            self.assertIn(text, human)
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_historical_or_stale_inspection_keeps_unknown_values_readable(self):
+        state = {'state': 'running', 'active_seconds': 8, 'accounting_pending': True,
+                 'limits': {'wall_seconds': 60}, 'usage_totals': None}
+        with workspace.acquire_project_lock(self.project):
+            workspace.write_state(self.project, state)
+        path = self.project / '.research_pipeline/run.json'
+        before = path.read_bytes()
+        code, human, errors = self.call('inspect', str(self.project))
+        self.assertEqual(code, 0, errors)
+        self.assertIn('remaining: unknown', human)
+        self.assertIn('runtime unknown; capacity 0/unknown', human)
+        self.assertIn('memory: unknown', human)
+        self.assertIn('Observed model counters: unknown; incomplete', human)
+        self.assertNotIn('None', human)
+        report = json.loads(self.call('inspect', str(self.project), '--json')[1])["budget_report"]
+        self.assertEqual(report["configured_limits"], state["limits"])
+        self.assertIsNone(report["job_runtime_seconds"])
+        self.assertIsNone(report["remaining_seconds_observed"])
+        self.assertEqual(path.read_bytes(), before)
+
     def test_symlinks_and_managed_conflicts(self):
         p = self.project / 'starting_evidence/link'
         p.symlink_to('/etc/passwd')
@@ -287,6 +329,9 @@ class ProjectCase(unittest.TestCase):
         after = self.state()
         self.assertEqual(after["limits"], before["limits"])
         self.assertGreaterEqual(after["active_seconds"], before["active_seconds"])
+        report = cli.inspect_project(self.project)["budget_report"]
+        self.assertEqual(report["configured_limits"], before["limits"])
+        self.assertEqual(report["active_seconds_observed"], after["active_seconds"])
         for key, bad in (("max_jobs", True), ("max_jobs", 1.5), ("job_runtime_seconds", "2.5"),
                          ("job_runtime_seconds", False)):
             state = self.state()
