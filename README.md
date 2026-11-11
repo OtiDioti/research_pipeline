@@ -1093,11 +1093,16 @@ all rows and user output; source/input integrity and cleanup of three services p
 passed. Reported active activity was about 277 and 282 seconds within the grants.
 These demonstrations establish the retrieval/tool increment, not whole-M4 or M5 acceptance.
 
-PROJECT.md §7.2 job controls and operational reporting now have implementation and
-available engineering tests. M4 closeout still requires normal review, fresh enabled
-controller-host final/combined verification, the updated real M4 study and isolated
-reproduction, confirmed cleanup and pipeline-confirmed LOCAL integration.
-Accepted earlier evidence above remains intact. Known backend limitations
+PROJECT.md §7.2 job controls and operational reporting completed normal review,
+passed enabled final/combined verification and integrated locally at `8f275fb`.
+The accepted demonstrations (`m4-live-t9itjkl7` and `m4-live-jwdlafq4`) are preserved
+under `coding_pipeline/logs/manager/m4-compute-job-limits-reporting-20261111T002118Z-e8b7fdea/live-host-acceptance/`.
+Both reproduced all 18 numerical rows in production isolation, preserved inputs
+and confirmed cleanup. Pipeline report
+`coding_pipeline/logs/20261111T002338_830acaa4/summary.md` records the passed outcome.
+M1–M4 engineering milestones are accepted; M5 awaits authoritative researcher
+questions and starting materials, followed by human scientific acceptance.
+Known backend limitations
 remain disclosed: no hard spending cap or reliable context occupancy; CPU fraction
 and aggregate CPU time are uncapped; missing usage stays unknown; per-file limits
 are not an aggregate disk quota. Tool validation supplies none of these guarantees.
