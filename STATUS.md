@@ -2,7 +2,7 @@
 
 ## Current checkpoint
 
-- PROJECT.md and root AGENTS.md are unchanged. **M1–M3 and the M4 retrieval/reusable-tool increment are accepted and locally integrated. M4 compute-job/budget-reporting closeout is prepared; M5 not started.** COMPLETE and COMPLETE.ack are absent. All work/commits remain local; this invocation has no publication authority.
+- PROJECT.md and root AGENTS.md are unchanged. **M1–M3 and the M4 retrieval/reusable-tool increment are accepted and locally integrated. M4 compute-job/budget-reporting closeout is running; M5 not started.** COMPLETE and COMPLETE.ack are absent. All work/commits remain local; this invocation has no publication authority.
 - M1: `development/requests/m1-implementation.md`, integrated `dd2efc9` / `a39d454`. M2: run `20261110T111316_7e4bef43`, merge `53a68e19e6e695788dc2ba0b8673665e1f80c370`, two real pause/edit/resume/fresh-primary demonstrations. Evidence: `coding_pipeline/logs/manager/m2-persistence-human-direction-rollover-20261110T111256Z-aa5787cf/`. Do not restart accepted milestones.
 
 ## Accepted M3
@@ -18,11 +18,11 @@
 - Source, protected inputs, original artifacts and indexes passed integrity checks. All three owned services per run stopped, cgroups absent/empty. Accounted active activity **276.876 / 281.689s**, both usage-complete flags reported true; no hard spending/context guarantee follows. Review corrected preparation polling/accounting, detached-child output draining and malformed-record discovery using consequential regressions. No manager product inspection/review/tests.
 - `integrated-manager-receipt.json` and `final002-manager-assessment.json` record report-only acceptance and cleanup. Former owner **252541**, ticks **6021248**, exec **3384**, exited **0**; actual owner absent/run lock free. No active M4 retrieval implementation/research job remains. Whole M4 is NOT yet accepted.
 
-## Selected M4 closeout — submit after management checkpoint
+## Active M4 closeout
 
 - Objective: PROJECT.md §7.2 configurable compute-job runtime/concurrency, actual owned execution/cleanup and clear budget reporting. Current README explicitly has no separate per-command runtime/job control, only the shared investigation deadline; this is a required functional gap. Keep normal scientific execution/tools within advertised controls and original grants; do not claim enforcement from prompts/conventions or release capacity while descendants run.
 - Scope judgment: PROJECT.md explicitly permits disclosing unavailable model-spending/context measurement/caps and a conservative rollover fallback. CPU-fraction/aggregate-time caps and aggregate disk quotas are listed limitations, not additional V0 implementation requirements. Do not build new infrastructure merely to erase that limitations list. Scientific rigor/independent checking remains binding.
-- Request **`m4-compute-job-limits-reporting-20261111T002118Z-e8b7fdea`**. Frozen directory **`coding_pipeline/logs/manager/m4-compute-job-limits-reporting-20261111T002118Z-e8b7fdea/`** contains `request.md`, effective `config.toml`, `submission.json` input hashes; `receipt.json` will identify the actual run. Submit once; discover by ID before retrying/replacing, since a timeout does not prove termination or failed submission.
+- Request **`m4-compute-job-limits-reporting-20261111T002118Z-e8b7fdea`**. Frozen directory **`coding_pipeline/logs/manager/m4-compute-job-limits-reporting-20261111T002118Z-e8b7fdea/`** contains `request.md`, effective `config.toml`, `submission.json` input hashes; Run **`20261111T002338_830acaa4`**, **running**, phase **baseline**. Submitted once. `receipt.json` identifies creation; `owner.json` records actual owner/start ticks and exec **25435**. Discover/status/report the same run before recovery; timeout/session loss does not prove termination.
 - Standard mode and explicit config/receipt. Enable **RESEARCH_PIPELINE_M4_LIVE=1**, output = this absolute directory plus `/live-host-acceptance`; disable M1–M3 paid gates. Reuse/update the existing small M4 gate for the changed execution path; no extra paid gate. Scientific sessions ≤600s, cumulative demonstration ≤900s, isolated reproduction ≤60s, whole test including cleanup ≤1200s. Require normal review, fresh enabled final/required combined checks and pipeline-confirmed LOCAL integration. All product changes/config/dependencies/tests/demonstrations/review stay in coding_pipeline.
 
 ## Component repairs — committed, active, unmerged
