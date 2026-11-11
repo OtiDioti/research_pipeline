@@ -206,3 +206,40 @@ class ReferenceTests(unittest.TestCase):
         self.assertFalse(catalog["prior"]["available"])
         self.assertIn("Special", catalog["prior"]["reason"])
         self.assertTrue(references.search(catalog, "needle")["incomplete"])
+
+    def test_deliverables_accept_authorized_namespace_citations(self):
+        self.authorize()
+        for directory in ("work", "sources", "outputs"):
+            (self.target / directory).mkdir()
+        (self.target / "work/PLAN.md").write_text("# Plan\nAssess prior evidence.")
+        literature = self.target / "sources/LITERATURE.md"
+        literature.write_text("# Literature\n[Prior](/references/prior/outputs/result.md#assumptions)")
+        (self.target / "work/result.csv").write_text("n,value\n1,2\n")
+        report = self.target / "outputs/REPORT.md"
+        report.write_text("# Preliminary\n[Data](../work/result.csv)\n"
+                          "[Prior](/references/prior/outputs/result.md)")
+        self.assertEqual(workspace.validate_deliverables(self.target), [])
+
+        # A reference citation cannot replace this investigation's computation.
+        report.write_text("# Preliminary\n[Prior](/references/prior/outputs/result.md)")
+        self.assertEqual(workspace.validate_deliverables(self.target),
+                         ["Report must link to a local computational artifact (code or data) in work/"])
+        report.write_text("# Preliminary\n[Data](../work/result.csv)")
+        for target in (
+            "/references/unknown/outputs/result.md", "/references/prior/outputs/missing.md",
+            "/references/prior/../prior/outputs/result.md",
+            "/references/prior/%2e%2e/prior/outputs/result.md",
+            "/references/prior/.codex/private", "/references/prior/outputs",
+            "/references/prior", str(self.artifact),
+        ):
+            with self.subTest(target=target):
+                literature.write_text(f"# Literature\n[Prior]({target})")
+                self.assertTrue(workspace.validate_deliverables(self.target))
+
+        literature.write_text("# Literature\n[Prior](/references/prior/outputs/result.md)")
+        link = self.prior / "outputs/link.md"
+        link.symlink_to(self.artifact)
+        self.assertTrue(workspace.validate_deliverables(self.target))
+        link.unlink()
+        self.prior.rename(self.root / "moved")
+        self.assertTrue(workspace.validate_deliverables(self.target))

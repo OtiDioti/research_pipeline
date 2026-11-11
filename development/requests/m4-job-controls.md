@@ -416,3 +416,46 @@ reproduction/integrity/cleanup evidence and pipeline-confirmed LOCAL integration
 remain mandatory. Use the same frozen `RESEARCH_PIPELINE_M4_OUTPUT_DIR` with
 only `RESEARCH_PIPELINE_M4_LIVE=1`; M1/M2/M3 stay disabled. This is code readiness,
 not M4 acceptance, M5 or project completion.
+
+## Integration repair: final-005 reference citation
+
+Read the complete `tests/final-005.txt.commands/0001.txt` artifact. Despite the
+summary's `unavailable: True`, its command output records 232 tests with one
+failure and three deliberately disabled M1–M3 gates. The primary exited
+successfully after 409.979 active seconds, but final deliverable validation
+rejected `/references/prior/outputs/METHOD.md` in `sources/LITERATURE.md`.
+That is an authorized scientific namespace path, which the host validator
+incorrectly interpreted as an outside-project host path. The failed receipt
+records preserved source/input integrity and confirmed service cleanup; its
+later acceptance/reproduction checks were not reached. No earlier receipt or
+scientific artifact was changed or promoted to passed evidence.
+
+Deliverable validation now resolves `/references/ALIAS/relative-file` with the
+existing reference catalog and retrieval path checks. Missing aliases/files,
+unavailable or unsafe roots, private paths, traversal (including URL encoding),
+symlinks and directory targets fail. Arbitrary outside-project host links
+remain rejected, and reference citations cannot satisfy the requirement for a
+local computational artifact in `work/`. The README documents citation scope
+and recommends the helper's original `source_uri` for links outside isolation.
+No execution, grant, scientific-status or native-tool-surface rules changed.
+
+Verification in this restricted worker, using the existing installed dependency:
+
+```sh
+PYTHONPATH=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T002338_830acaa4/runtime/tmp/milestone-003-deps /home/francesco/miniconda3/bin/python -m unittest tests.test_references tests.test_cli -v
+PYTHONPATH=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T002338_830acaa4/runtime/tmp/milestone-003-deps /home/francesco/miniconda3/bin/python -m unittest discover -s tests -v
+```
+
+Focused: **32 passed, 0.369 seconds**. Full: **218 reported, 211 passed,
+seven skipped, 21.974 seconds**. Full output is retained at
+`runtime/tmp/integration-4-unittest.txt` relative to the pipeline run directory.
+The regression covers authorized citations with fragments, rejected reference
+targets and the retained local-computation requirement. Seven skips comprise
+four opt-in live gates and three unavailable systemd user-bus checks; the
+Bubblewrap boundary checks passed. This worker has no production user bus and
+did not launch paid research or reproduce scientific code on the host.
+
+Fresh enabled controller-host M4 final and required combined verification remain
+mandatory, with only `RESEARCH_PIPELINE_M4_LIVE=1`, the existing frozen
+`RESEARCH_PIPELINE_M4_OUTPUT_DIR`, and M1/M2/M3 disabled. This repair establishes
+code readiness only; it does not establish M4 acceptance or local integration.

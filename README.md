@@ -69,6 +69,12 @@ python3 /run/research-references.py search 'convergence' --source prior --max-re
 python3 /run/research-references.py read prior outputs/REPORT.md --start-line 101 --max-lines 100
 ```
 
+Scientific Markdown may cite `/references/ALIAS/relative-file`; deliverable validation
+resolves these through the current authorization and rejects missing or unsafe sources.
+For links usable outside isolation, prefer the helper's original `source_uri` and
+retain the alias, source path and observed hash. Reference citations do not replace
+the report's required link to local computational code or data in `work/`.
+
 Browse lists immediate entries, types and sizes; source `FOLDER_CONTENT.md` files can
 also be read. Search streams actual UTF-8 file contents, including Markdown, text,
 scripts and structured text, using **literal, case-sensitive** line matching.

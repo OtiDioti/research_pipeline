@@ -664,6 +664,7 @@ def load_checkpoint(project, state):
 def validate_deliverables(project, labels=("preliminary",)):
     failures = []
     linked_computation = False
+    reference_catalog = None
     for rel in REQUIRED:
         p = project / rel
         if p.is_symlink() or not p.is_file() or not p.stat().st_size:
@@ -678,7 +679,22 @@ def validate_deliverables(project, labels=("preliminary",)):
             url = urlsplit(target)
             if url.scheme or url.netloc or not url.path:
                 continue
-            local = (p.parent / unquote(url.path)).resolve()
+            path = Path(unquote(url.path))
+            if path.is_relative_to("/references"):
+                # These are source paths in the scientific namespace, not host
+                # paths. Apply the same authorization/path checks as retrieval.
+                from . import references
+                try:
+                    if reference_catalog is None:
+                        reference_catalog = references.load_catalog(project)
+                    parts = path.relative_to("/references").parts
+                    if len(parts) < 2:
+                        raise references.ReferenceError("Expected reference alias and file")
+                    references.resolve(reference_catalog, parts[0], Path(*parts[1:]))
+                except (OSError, ValueError) as exc:
+                    failures.append(f"Broken or unavailable reference link in {rel}: {target}: {exc}")
+                continue
+            local = (p.parent / path).resolve()
             if not local.is_relative_to(project) or not local.exists():
                 failures.append(f"Broken or outside-project link in {rel}: {target}")
             elif (rel == "outputs/REPORT.md"
