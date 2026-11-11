@@ -14,7 +14,7 @@ import time
 import uuid
 from urllib.parse import unquote, urlsplit
 
-from . import codex, isolation, verification, workspace
+from . import codex, isolation, verification, workspace, tools
 
 SCIENCE_FIELDS = {
     "checkpoint", "checkpoints", "checkpoint_prepared", "checkpoint_error",
@@ -348,6 +348,7 @@ class Coordinator:
             auth = stack.enter_context(codex.private_auth(self.project))
             duration = self.state["primary_session_policy" if task["task_id"] == "primary" else "delegated_session_policy"]["session_seconds"]
             config.deadline = min(self.deadline, time.monotonic() + duration)
+            tools.configure(config, self.project, session, activation)
             # A model turn plus handoff validation can exceed the pause grace.
             # Reserve headroom *inside* the fixed session, never extend its cap.
             control.rollover_grace = min(60, max(15, duration / 4))

@@ -15,7 +15,7 @@ from unittest.mock import patch
 from tests import use_checkout
 
 use_checkout()
-from research_pipeline import cli, codex, isolation, references, workspace
+from research_pipeline import cli, codex, isolation, references, workspace, tools
 
 
 HANDOFF = """# Primary handoff
@@ -148,6 +148,48 @@ class ContinuityTests(unittest.TestCase):
         self.assertIn("Human:", (self.project / "sources/REUSE.md").read_text())
         self.assertTrue(any(p["path"] == "sources/REUSE.md" for p in second["pending_reconciliation"]))
         self.assertEqual((prior / "result.md").read_text(), "# Preliminary result\nAssumes positive n.")
+
+    def test_tool_records_resume_revalidation_and_concurrent_human_edit(self):
+        from tests.test_tools import tool_fixture, success
+        rel = "work/tools/sum/tool.json"
+        assessment = "work/tools/sum/USE.md"
+        seen = []
+        def tool_work(config):
+            context = json.loads(config.tool_context.read_text())
+            self.assertEqual(context["deadline"], config.deadline)
+            self.assertEqual(context["activation"], self.state()["activation_id"])
+            context.update(project=str(self.project), drafts=str(config.drafts),
+                           control=str(config.control))
+            seen.append(context["activation"])
+            if len(seen) == 1:
+                tool_fixture(self.project / "work/tools/sum")
+            else:
+                with self.assertRaisesRegex(tools.ToolError, "Fresh activation"):
+                    tools.run(context, rel, [], runner=success)
+                validation = self.project / "work/tools/sum/VALIDATION.md"
+                validation.write_text(validation.read_text() + "\nHuman: limit scope to positive finite inputs.")
+            use = config.drafts / assessment
+            use.parent.mkdir(parents=True, exist_ok=True)
+            use.write_text("# Intended use\nElementary checks for finite sums; overflow untested.")
+            tools.register(context, rel, assessment, runner=success)
+            tools.run(context, rel, [], runner=success)
+        handoff = HANDOFF + "\n[Tool validation](../work/tools/sum/VALIDATION.md)\n"
+        with self.backend(during=tool_work, handoff=handoff):
+            code, out = self.call("start", "--wall-seconds", "60")
+        self.assertEqual(code, 0, out)
+        first = self.state()
+        self.assertIn("work/tools/sum/VALIDATION.md", first["checkpoint"]["artifacts"])
+        self.assertTrue((self.project / "work/tools/sum/FOLDER_CONTENT.md").exists())
+        with self.backend(during=tool_work, handoff=handoff):
+            code, out = self.call("resume")
+        self.assertEqual(code, 4, out)
+        second = self.state()
+        self.assertNotEqual(*seen)
+        self.assertEqual(first["limits"], second["limits"])
+        self.assertGreater(second["active_seconds"], first["active_seconds"])
+        self.assertIn("Human:", (self.project / "work/tools/sum/VALIDATION.md").read_text())
+        self.assertTrue(any(p["path"] == "work/tools/sum/VALIDATION.md"
+                            for p in second["pending_reconciliation"]))
 
     def test_authorization_refuses_mutation_until_stale_service_cleanup_confirmed(self):
         state = self.start()

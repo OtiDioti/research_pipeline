@@ -10,3 +10,4 @@
 - [isolation.py](isolation.py) — Bubblewrap/systemd launch, resource probe and descendant cleanup with optional shared control deadlines.
 - [codex.py](codex.py) — Controlled Codex arguments, scientific prompt, private auth and bounded events.
 - [references.py](references.py) — Explicit authorization catalog, cancellable preparation, bounded full-text navigation and source-version reading shared with the isolated helper.
+- [tools.py](tools.py) — Namespace-local tool discovery, attributed working copies, declared checks, activation-scoped validation and bounded execution receipts.

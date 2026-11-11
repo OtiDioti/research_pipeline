@@ -13,3 +13,5 @@
 - [test_m3_live.py](test_m3_live.py) — Opt-in real dependent collaboration, acknowledged child rollover, parent progress, independent challenge, finite response, isolated reproduction and private receipts.
 - [test_m3_evidence.py](test_m3_evidence.py) — Unpaid regressions for rollover progress, numerical evidence and fingerprint audits, executed-call provenance and task-local reproduction.
 - [test_references.py](test_references.py) — Public authorization/retrieval, source identity, full text, private/unsafe paths, missing sources, format errors and pagination.
+- [test_tools.py](test_tools.py) — Tool qualification, malformed-record discovery, foreground completion with inherited pipes, ownership and live-gate evidence using explicit execution doubles.
+- [test_m4_live.py](test_m4_live.py) — Opt-in real discovery and qualified tool reuse, researcher-authored new calculation, bounded isolated reproduction and private receipts.

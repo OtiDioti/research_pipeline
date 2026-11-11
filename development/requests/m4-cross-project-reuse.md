@@ -1,140 +1,188 @@
-# M4 reference retrieval: implementation readiness
+# M4 reference and reusable-tool implementation readiness
 
-This implements supplied milestone 1 only: explicit reference authorization,
-navigation, actual full-text retrieval, read-only scientific access and qualified
-reuse continuity. It does not establish whole-M4 acceptance. Tool description,
-validation/registration/execution and the opt-in real Codex reuse demonstration
-belong to the subsequent supplied increment. No paid M1–M3 gate was rerun.
+Supplied milestones 1 and 2 are implemented. This is code/demonstration readiness,
+not whole-M4 acceptance. Enabled controller-host final/combined verification,
+pipeline review and pipeline-confirmed LOCAL integration remain required. No paid
+M1–M3 gate was repeated. PROJECT.md, engineering AGENTS.md and manager STATUS.md
+remain unchanged.
 
-## Decisions and behavior
+## Implementation decisions
 
-- The target's human-controlled `.research_pipeline/references.json` holds only
-  version-1 alias-to-absolute-path authorizations. Public `reference add`, `remove`,
-  `list`, `browse`, `search` and `read` commands return JSON. Registration works before
-  first start; later mutations reuse the investigation lock, stale-owner recovery
-  and cleanup confirmation. Conflicting aliases, invalid roots, overlap, links and
-  special exposed files fail without replacing the previous registry.
-- `references.py` uses the standard library and runs unchanged as an isolated
-  standalone retrieval helper. No index service, dependency, claim registry or
-  automatic qualification system was introduced. Search streams all actual UTF-8
-  contents, including Markdown, scripts and structured text, with literal,
-  case-sensitive matching. Results include original source identity, relative file,
-  one-based location and bounded excerpt. Reads paginate numbered lines, hash the
-  full observed file and reject unstable/disappeared versions.
-- Binary/PDF extraction and OCR are unsupported. UTF-8 failures, binary/NUL content,
-  unreadable files, unavailable references and result/error clipping are explicit.
-  Incomplete search cannot establish an exhaustive absence. Missing sources remain
-  registered; other sources and saved science remain usable.
-- Every activation refreshes references under its existing preparation deadline.
-  Each available source exposes only individual non-hidden top-level entries,
-  with regular-tree validation and no symlink following. Hidden controller/backend
-  roots are excluded. Bubblewrap mounts scientific entries, the immutable catalog
-  and helper read-only under `/references` and `/run`. Native working paths,
-  drafts, authentication, Codex instruction-discovery controls, frozen verifier
-  inputs, ownership, cleanup and cumulative grants retain their existing behavior.
-- Intake/checkpoint snapshots retain authorizations and availability; registry
-  fingerprints enter normal current-input reconciliation. Source projects are not
-  recursively hashed or treated as target instructions. Source changes cannot
-  automatically upgrade scientific verification status.
-- Prompts require source qualifications and applicability assessment. Material reuse
-  is documented by the researcher in `sources/REUSE.md` (or task-local `REUSE.md`),
-  through existing scoped drafts and human-edit preservation. Entries retain
-  source links/hash, assumptions, source verification and basis, uncertainty,
-  intended use/applicability and checks. Exact external evidence needed by a
-  verifier must be copied into permitted local science and explicitly included in
-  the existing frozen packet. Live references do not replace frozen inputs.
+The existing explicit-reference catalog and read-only mounts remain the retrieval
+boundary. Host `reference add/remove/list/browse/search/read` commands authorize and
+navigate actual UTF-8 full text, with original identity, line locations and hashes.
+Missing sources, binary/PDF extraction limitations, clipping and incomplete searches
+remain explicit. Reference instructions never become target authority. Scoped
+`sources/REUSE.md`, current-input reconciliation, ordinary checkpoints and explicit
+frozen verification packets continue to carry scientific qualifications and exact
+reused evidence. No retrieval index service, claim database or new controller was
+added.
 
-No scope deviation was needed. An existing
-rollover test double was updated to accept the preparation deadline. New tests use
-engineering fixtures/doubles, not prewritten scientific findings or model receipts.
-PROJECT.md, engineering AGENTS.md and manager STATUS.md remain unchanged.
+`tools.py` is a standalone standard-library helper mounted read-only alongside an
+activation-specific immutable context. Its namespace CLI lists candidates or
+matching registrations, stages attributed working copies, runs declared checks to
+register them and executes registered argv. There is no host command to execute
+scientific tools and no automatic dependency installation. Python functions remain
+ordinary imports. The description explicitly lists origin (user/agent), purpose,
+native payloads, invocation, dependencies, checks and limitations.
 
-## Review repair
+- Discovery never validates or executes. Source registrations are only evidence of
+  successful checks in their source environment. Imported copies require local
+  checks even when their source registration matches.
+- Local scientific inputs, including protected starting evidence and frozen inputs,
+  can be copied into the caller's workspace. Registration and execution require its
+  own working copy; other tasks, protected inputs and frozen originals stay read-only.
+- Staging copies only the description and declared files, rejects collisions,
+  traversal, symlinks and private paths, and preserves root/alias, original paths,
+  origin and hashes in SOURCE.json. Source instability leaves a preserved failed
+  copy and diagnostic reason rather than a registration.
+- Registration requires a nonempty researcher-authored Markdown assessment of
+  intended use/checks/applicability. VALIDATION.md records pending before checks,
+  then success or failure with description/payload hashes, source identity,
+  assessment/hash/scope, activation, commands/cwd, Python/PATH observations and
+  bounded stdout/stderr excerpts with explicit clipping. Checks must succeed with
+  unchanged files/assessment. A changed description cannot validate different argv.
+- Invocation requires a matching success in the current activation. Fresh contexts
+  revalidate because dependency environments may have disappeared. Researchers
+  must also revalidate after changing their environment. Failed execution retains
+  partial science and an exact-argv Markdown receipt; it does not erase the earlier
+  useful files or turn a failed calculation into scientific success.
+- Assessments, validation, receipts and copied Markdown use existing scoped drafts
+  and human-edit publication. Native runtime payloads reside in the permitted copy;
+  a Markdown runtime dependency must pass ordinary publication before native access.
+  SOURCE.json is small attribution metadata, not another state/resource ledger.
+- Checks/runs are foreground children of the current production service. They poll
+  its effective monotonic deadline and pending suspension request, drain output with
+  bounded capture, and inherit filesystem/network/memory/tasks/lifetime controls.
+  Detached descendants remain service-owned and existing controller cleanup stops
+  them. No operation extends a grant, creates a service or authorizes a reference.
 
-The review identified two consequential preparation defects, both corrected:
+Both primary and coordinator launch paths generate the context after setting the
+effective session deadline, poll through existing preparation callbacks and retain
+recoverable cumulative accounting. The existing checkpoint, verification and
+reference mechanisms were not changed. Prompts/README explain both tool origins,
+working-copy adaptation, attribution, local dependency installation, revalidation,
+REUSE.md and frozen evidence. Execution checks, source claim status and independent
+scientific verification remain distinct.
 
-- Reference enumeration/validation now polls and cancels through the existing
-  foreground preparation callback. Intake, catalog refresh and mount assembly all
-  receive it; `scandir` polls between enumerated entries instead of first collecting
-  a whole large directory. The coordinator installs its task control before intake,
-  services running contexts during traversal and publishes a reserved successor's
-  current status before early callbacks. Preparing tasks have no context countdown
-  until running. Primary continuation between contexts also honors pause during
-  reference traversal and settles its existing pending interval on cancellation.
-- Schema-2 resume now persists a recoverable `resume_preparation_pending` interval
-  before intake. On success, the next durable activation takes ownership of that
-  same interval; failed preparation settles elapsed work against the saved remaining
-  allowance. Timeout and interruption persist their outcomes without launching a
-  backend. Recovery of a killed preparation charges once, conservatively bounded
-  by the original remaining allowance, without cleaning already-stopped historical
-  services or rewriting the previous model session/usage.
+## Bounded actual demonstration
 
-Regression fixtures simulate slow source filesystem operations while a live parent
-needs rollover, a whole-owner pause during mount assembly, and a pause between
-primary contexts. Accounting checks cover exhaustion preventing another allocation,
-failure/interruption with retry, successful transfer without double charging and a
-SIGKILL before activation registration followed by repeated recovery. These are
-engineering tests, not paid scientific demonstrations.
+`tests/test_m4_live.py` is ordinarily discovered and runs only with
+RESEARCH_PIPELINE_M4_LIVE=1 plus RESEARCH_PIPELINE_M4_OUTPUT_DIR. Enabled missing
+output/authentication/services/isolation fails; no alternate execution context,
+authentication bypass or unisolated reproduction is used.
 
-Final repair verification used the ordinary discovery command below with all paid
-gates disabled: **178 tests passed, four expected skips** (disabled M1/M2/M3 paid
-gates and the unavailable systemd user-service test class). This includes all six
-new regressions plus the existing actual Bubblewrap boundary checks. Full service
-enforcement still requires the controller host's existing enabled verification;
-no host capability or broader M4 acceptance is claimed by these repair checks.
+A fresh private directory holds a disclosed prior-input fixture: a preliminary
+heuristic, a general user quadrature function/script and meaningful elementary
+checks. It supplies no target derivation, target program, target results or fake
+successful registration. The actual researcher must discover/search/read the
+source, assess its qualifications and applicability, stage/register/invoke the
+user tool, then author/register/invoke an attributed agent-developed study of the
+squared-denominator periodic integral. The limited explored cases remain explicitly
+preliminary; consequential claims still require the existing separate verifier.
 
-## Initial validation
+The harness requires actual successful standalone retrieval/helper execution events,
+matching validation/invocation identities and finite grid results with resolved
+convergence against a hidden independent composite-Simpson oracle. Documentation
+strings, shell authoring and successful trailing shell statements cannot stand in
+for helper execution. Both saved tools are revalidated/reproduced through
+isolation.run_isolated with explicit output substitutions and original artifacts
+checked unchanged. Harness numerical comparisons are engineering evidence, not
+independent Codex scientific verification.
 
-With all paid gates disabled:
+Bounds are one investigation/session of at most 600 seconds, all demonstration
+activity/startup/checks/reproduction within a 900-second absolute deadline,
+reproduction within 60 seconds of that same allowance, and the entire test including
+failure cleanup within 1200 seconds. Finally inventories attempted services, stops
+every owned unit and confirms cgroups empty or removed. Failure evidence is retained.
+The private receipt and test report contain exact commands, authorizations/source
+hashes and fixture disclosure, scientific excerpts, numerical/reproduction
+observations, cumulative accounting/unknown telemetry, input/source integrity,
+folder indexes and every cleanup observation. Researcher-authored scientific
+excerpts and study payloads are also printed as readable text for manager assessment.
+
+## Validation and host limits
+
+Ordinary discovery with all paid gates disabled:
 
 ```sh
 env RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 \
   RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 \
-  python -m unittest discover -s tests
+  python -m unittest discover -s tests -v
 ```
 
-Ordinary discovery passed: **172 tests, four skips** (the three disabled paid gates
-and the systemd-user-service test class). The actual Bubblewrap boundary checks
-passed, including reference/helper/catalog write, create, unlink and rename refusal;
-hidden source controls absent; full-text helper search/read; permitted target
-computation; unchanged source files/indexes and protected-input fingerprints.
+Initial readiness checks passed: **193 tests, five expected skips** (four disabled paid gates and the
+unavailable systemd user-service test class). Actual Bubblewrap filesystem/task/
+frozen-evidence boundaries and native code-mode runtime checks passed. Existing
+M1–M3 engineering tests retained preparation cancellation/accounting, cumulative
+grants, task ownership, rollover, independent criticism, pause and crash recovery.
+After the final receipt presentation change, the focused tool/live-gate module
+checks also passed: **14 tests, one expected disabled-live skip**.
 
-Focused retrieval, continuity, rollover, isolation, collaboration and independent
-verification checks passed: **101 tests, one skip**. A verbose isolation run passed
-**nine tests, one skip**, confirming
-actual mount enforcement, task/frozen-evidence boundaries and native code-mode
-runtime startup. M4 now participates in enabled prerequisite-failure checks.
+New tests cover both tool origins, local user-input discovery, successful checks
+and reuse with explicit execution doubles; malformed descriptions, missing payloads,
+missing executable/dependency, check/runtime/interruption failures, changed files or
+assessments, unstable staging, stale/fresh activation records, private/traversal/
+symlink boundaries, attribution/source integrity, pending suspension/deadlines,
+Markdown publication, checkpoint/resume, cumulative grants and concurrent human edits.
+The evidence-parser regression initially rejected a test because shell punctuation
+was not tokenized; it was corrected to reject compound shells, then passed.
 
-Tests cover deep full-text discovery beyond the 256 KiB intake limit, scientific
-script/structured-text formats, pagination/clipping, source version changes,
-authorization boundaries, malformed registries preventing launch, unavailable
-sources alongside usable ones, realistic decoding/binary/unreadable failures,
-reference refresh across all roles and fresh primary contexts, source instructions
-remaining evidence, qualified reuse notes and concurrent human edits. Existing
-M1–M3 engineering checks retain cumulative budgets, independent verification,
-whole-owner cleanup and suspension coverage.
+Production-service tests were added for actual tool registration/check/run
+computation, bounded verbose diagnostics, dependency/runtime failures, immutable
+sources/helper/context, an agent tool, and detached descendants on normal completion,
+timeout and whole-service pause. **These service tests and the actual Codex M4 gate
+are unverified on this Writer host, which has no systemd user bus.** The service
+class's restricted-host skip is not acceptance evidence. Enabled M4 verification
+cannot skip missing prerequisites. Writer/Reviewer readiness transfers to the
+existing enabled controller final/combined checks; host receipts are outstanding.
 
-This Writer host lacks the required systemd user bus. Full production-service
-cgroup/lifetime enforcement remains unverified here; no alternate bus, execution
-context or unisolated scientific fallback was used. Enabled controller-host final
-verification must establish those capabilities. `RESEARCH_PIPELINE_M4_LIVE=1`
-cannot silently skip missing isolation prerequisites. The real M4 Codex test itself
-is intentionally outstanding until the tool-reuse increment.
+No architectural plan deviation was required. Copying local user inputs before
+validation explicitly supports supplied tools without mutating starting evidence.
+No Git orchestration, permission changes or agent-session management was performed.
 
-## Remaining M4 work and known control/reporting gaps
+## Review repair
 
-Tool registration and sufficient intended-use checks must distinguish user-supplied
-and agent-developed tools without trusting discovery. Reuse/adaptation will need
-permitted working copies and explicit dependencies/invocation; source scripts must
-never run directly on the controller or gain authority through descriptions.
-The subsequent real new-investigation demonstration, independent checking where
-consequential, private receipts, bounded isolated reproduction, controller final
-checks, review and pipeline-confirmed local integration remain required.
+Both supplied findings were reproduced by new unpaid regressions before repair.
+Successful and failed foreground processes each waited until the three-second test
+deadline when another process retained their output descriptors. The structured
+record reader also accepted non-object records and malformed nested fields.
 
-Existing limitations are concrete: no backend hard model-spending cap or reliable
-context-occupancy control; fixed session durations cannot guarantee exact 60%
-occupancy; CPU fraction and aggregate CPU time are uncapped; missing model usage
-telemetry remains unknown despite cumulative observed totals; per-file limits do
-not impose an aggregate workspace disk quota. Reporting/resource-control closeout
-must assess these gaps separately within M4. This change supplies no broader
-controls and does not reset investigation grants or claim M4/M5 completion.
+- Foreground completion now starts a drain interval of at most 0.2 seconds, bounded
+  by the existing effective deadline. The helper then closes inherited output pipes,
+  retains the foreground exit status and captured diagnostics, and records
+  `output_drain_incomplete` plus affected clipping flags. The existing service
+  continues to own detached descendants and cleanup; no lifetime grant was extended.
+- Record loading now requires a version-1 JSON object with valid activation/outcome
+  types. Assessments and check entries receive type validation before consumption,
+  including explicit argv arrays and integer/null exit codes. Invalid records raise
+  actionable ToolErrors, remain ineligible and do not prevent discovery of healthy
+  local or reference registrations.
+
+The unpaid subprocess regression uses explicit engineering process/pipe doubles,
+never supplied scientific code. It checks successful and failed foreground exits,
+retained stdout/stderr, incomplete-capture flags and a detached pipe holder still
+alive until its owner cleans it up. Every fixture process is stopped and reaped.
+The discovery regression places malformed local and reference registrations beside
+healthy tools and confirms candidate reasons and continued eligible listing.
+README and the test index document these behaviors.
+
+Repair validation with all paid gates disabled:
+
+- Focused tools, continuity and isolation checks: **44 tests, one expected skip**.
+- Full ordinary discovery: **195 tests, five expected skips**, in 12.470 seconds.
+
+Actual Bubblewrap/native-runtime checks passed. The systemd user-service class is
+still unavailable on this Writer host, and all four paid gates remain disabled.
+Production-service and enabled M4 live verification still require the existing
+controller-host handoff; these repairs do not establish whole-M4 acceptance.
+
+## Concrete remaining M4 closeout gaps
+
+Enabled real demonstration evidence, normal review, final/combined verification and
+pipeline-confirmed LOCAL integration still determine acceptance. General V0 control/
+reporting gaps remain: no backend hard spending cap or reliable context-occupancy
+control (fixed session durations cannot guarantee exact 60% occupancy), uncapped CPU
+fraction/aggregate CPU time, incomplete model-usage telemetry and no aggregate disk
+quota. Tool validation supplies none of these controls. M4/M5 completion and human
+scientific acceptance are not claimed.

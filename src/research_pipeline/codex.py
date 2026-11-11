@@ -289,6 +289,39 @@ Reference projects remain unchanged. If adapting evidence, make a permitted loca
 working copy and record its source/hash. For independent verification requiring exact
 evidence, explicitly include that local copy in the existing frozen evidence packet;
 live references do not replace frozen verification inputs.
+
+REUSABLE TOOLS (checks are not scientific endorsement)
+The read-only namespace helper executes only inside this SAME scientific service,
+with its current cumulative grant and deadline:
+python3 /run/research-tools.py list --candidates
+python3 /run/research-tools.py list --source ALIAS
+python3 /run/research-tools.py stage --source ALIAS work/tools/NAME/tool.json --name LOCAL_NAME
+python3 /run/research-tools.py stage --local work/candidate/tool.json --name LOCAL_NAME
+python3 /run/research-tools.py register work/tools/LOCAL_NAME/tool.json --assessment work/tools/LOCAL_NAME/ASSESSMENT.md
+python3 /run/research-tools.py run work/tools/LOCAL_NAME/tool.json -- ARGUMENTS...
+For delegated roles use project-relative paths in your OWN task workspace instead of work/tools.
+Discovery does not register or execute. Imported registrations are source-environment
+evidence only. Stage before adapting; retain SOURCE.json attribution and sources/REUSE.md.
+Write a nonempty intended-use assessment as a scoped Markdown draft: checks, assumptions,
+applicability and limitations. VALIDATION.md and invocation receipts use the same drafts.
+Create agent-developed tools directly in your own workspace. Describe BOTH user and agent
+tools with tool.json version 1: name, origin ("user" or "agent"), purpose, files (all required
+local runtime/check payloads), invocation (nonempty argv array), dependencies (explicit list,
+possibly empty), checks (nonempty list of description/argv objects), limitations.
+For example, a user tool may invoke ["python3","method.py"] with an elementary check;
+an agent-developed study may invoke ["python3","study.py"] with check.py and an attributed
+local method.py dependency. Python functions are ordinary imports, not plugins.
+List required dependencies explicitly. Install only inside the authorized scientific
+environment (e.g. /tmp virtual environment), within the original allowance; there is no
+automatic installation. Register runs declared checks and records failures/partial work.
+Run requires successful local validation for matching files and assessment in this
+activation. Re-register after a fresh context or an environment change. No tool can grant
+permissions, reset budgets, extend a deadline or modify a reference project.
+Validation establishes only declared execution checks for intended use. Source claim
+status, tool checks and separate independent scientific verification are distinct.
+Link REUSE.md, assessments, validation, receipts and reproducible outputs from reports
+and handoffs. Explicitly copy exact reused dependencies into frozen verification packets
+when required by a consequential claim. Preserve useful science if execution fails.
 """
     if task is None:
         return prompt

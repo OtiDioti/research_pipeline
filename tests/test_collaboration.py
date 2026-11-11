@@ -100,6 +100,10 @@ class CollaborationTests(unittest.TestCase):
 
         class Service:
             def __init__(self, config, project, command, prompt, recorder, auth):
+                tool_context = json.loads(config.tool_context.read_text())
+                case.assertEqual(tool_context["deadline"], config.deadline)
+                case.assertEqual(tool_context["task"], config.task_id)
+                case.assertEqual(tool_context["workspace"], workspace.task_directory(config.task_id))
                 self.config, self.recorder = config, recorder
                 self.command, self.prompt = command, prompt
                 self.task_id = config.task_id

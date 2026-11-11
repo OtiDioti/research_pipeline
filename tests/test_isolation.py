@@ -16,7 +16,7 @@ from unittest.mock import patch
 from tests import use_checkout
 
 use_checkout()
-from research_pipeline import cli, isolation, references, workspace
+from research_pipeline import cli, isolation, references, workspace, tools
 
 
 def live_enabled():
@@ -442,6 +442,120 @@ class ServiceIsolationTests(unittest.TestCase):
         result, output = self.run_code(isolation.PROBE)
         self.assertEqual(result.returncode, 0, output.decode(errors='replace'))
         self.assertTrue(self.capabilities['observed_cgroup_limits'])
+
+    def tool_config(self, wall):
+        from tests.test_tools import tool_fixture
+        if not hasattr(self, "tool_prior"):
+            temp = tempfile.TemporaryDirectory()
+            self.addCleanup(temp.cleanup)
+            self.tool_prior = Path(temp.name) / "prior"
+        prior = self.tool_prior
+        if not prior.exists():
+            path = tool_fixture(prior / "work/tools/sum")
+            (path.parent / "method.py").write_text(
+                "from pathlib import Path\nimport subprocess,sys,time\n"
+                "if 'fail' in sys.argv:\n Path('partial.csv').write_text('partial result'); raise RuntimeError('runtime failure')\n"
+                f"if 'child' in sys.argv:\n subprocess.Popen(['/usr/bin/python3','-c',{self.CHILD!r}], start_new_session=True); time.sleep(.2)\n"
+                "if 'wait' in sys.argv: time.sleep(30)\n"
+                "if 'verbose' in sys.argv: print('x'*20000)\n"
+                "print(sum(i*i for i in range(10)))\n")
+        workspace.atomic_text(self.root / references.REGISTRY,
+                              json.dumps({"version": 1, "references": {"prior": str(prior)}}))
+        config = isolation.Config(wall_seconds=wall, deadline=time.monotonic() + wall,
+                                  memory_mib=128, max_tasks=32)
+        session = self.root / ".research_pipeline" / uuid.uuid4().hex
+        session.mkdir()
+        config.drafts, config.control, config.response = (session / n for n in ("drafts", "control", "response"))
+        for directory in (config.drafts, config.control, config.response):
+            directory.mkdir()
+        references.configure(config, self.root, session, workspace.Intake(self.root, "", "", [], {}))
+        tools.configure(config, self.root, session, session.name)
+        return config, prior
+
+    TOOL_SETUP = """
+from pathlib import Path
+import json, subprocess
+helper = ['/usr/bin/python3', '/run/research-tools.py']
+def call(*args, ok=True):
+    p = subprocess.run(helper + list(args), capture_output=True, text=True)
+    assert (p.returncode == 0) == ok, p.stdout + p.stderr
+    return p
+call('stage','--source','prior','work/tools/sum/tool.json','--name','sum')
+use = Path('/run/research-drafts/work/tools/sum/USE.md')
+use.parent.mkdir(parents=True, exist_ok=True)
+use.write_text('# Intended use\\nFinite standard-library sums only; elementary check, no scientific endorsement.')
+rel = 'work/tools/sum/tool.json'
+assessment = 'work/tools/sum/USE.md'
+call('register',rel,'--assessment',assessment)
+"""
+
+    def test_actual_tool_registration_computation_dependency_and_runtime_failures(self):
+        config, prior = self.tool_config(8)
+        before = {str(p): p.read_bytes() for p in prior.rglob("*") if p.is_file()}
+        script = self.TOOL_SETUP + """
+for p in (Path('/run/research-tools.py'), Path('/run/research-tools.json')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('tool authority writable')
+assert json.loads(call('run',rel).stdout)['stdout'].strip() == '285'
+verbose = json.loads(call('run',rel,'--','verbose').stdout)
+assert verbose['stdout_clipped'] and len(verbose['stdout']) == 8192
+failed = json.loads(call('run',rel,'--','fail',ok=False).stdout)
+assert failed['outcome'] == 'failed'
+assert Path('/project/work/tools/sum/partial.csv').read_text() == 'partial result'
+call('stage','--source','prior','work/tools/sum/tool.json','--name','failed')
+p = Path('/project/work/tools/failed/tool.json')
+d = json.loads(p.read_text()); d['origin'] = 'agent'; d['checks'][0]['argv'] = ['missing-executable']
+p.write_text(json.dumps(d))
+use = Path('/run/research-drafts/work/tools/failed/USE.md'); use.parent.mkdir(parents=True)
+use.write_text('# Intended use\\nExercise a dependency failure honestly.')
+call('register','work/tools/failed/tool.json','--assessment','work/tools/failed/USE.md',ok=False)
+record = Path('/run/research-drafts/work/tools/failed/VALIDATION.md').read_text()
+assert 'FileNotFoundError' in record
+d['checks'][0]['argv'] = ['python3','check.py']; p.write_text(json.dumps(d))
+Path('/project/work/tools/failed/check.py').write_text('import unavailable_research_dependency')
+call('register','work/tools/failed/tool.json','--assessment','work/tools/failed/USE.md',ok=False)
+assert 'ModuleNotFoundError' in Path('/run/research-drafts/work/tools/failed/VALIDATION.md').read_text()
+Path('/project/work/tools/failed/check.py').write_text('assert 2 + 2 == 4')
+call('register','work/tools/failed/tool.json','--assessment','work/tools/failed/USE.md')
+assert json.loads(call('run','work/tools/failed/tool.json').stdout)['stdout'].strip() == '285'
+call('stage','--local','work/tasks/foreign/tool.json','--name','bad',ok=False)
+call('stage','--source','prior','../private','--name','bad',ok=False)
+assert len(json.loads(call('list').stdout)['tools']) == 2
+call('run',rel,'--','child')
+print('tool checks, reuse, dependency/runtime failures passed', flush=True)
+"""
+        output = bytearray()
+        result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+                                        on_event=lambda channel, data: output.extend(data))
+        self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
+        self.assertEqual(result.returncode, 0, output.decode(errors="replace"))
+        self.assertEqual(before, {str(p): p.read_bytes() for p in prior.rglob("*") if p.is_file()})
+        self.assert_child_stopped()
+
+    def test_tool_descendants_stop_with_timeout_and_whole_service_pause(self):
+        for reason in ("timeout", "pause"):
+            with self.subTest(reason=reason):
+                (self.root / "work/heartbeat").unlink(missing_ok=True)
+                # New working-copy name is needed because staging never overwrites.
+                config, _ = self.tool_config(3)
+                setup = self.TOOL_SETUP.replace("'sum'", repr(reason)).replace(
+                    "work/tools/sum/", f"work/tools/{reason}/")
+                setup = setup.replace(f"'prior','work/tools/{reason}/tool.json'",
+                                      "'prior','work/tools/sum/tool.json'")
+                script = setup + "\ncall('run',rel,'--','child','wait')\n"
+                output = bytearray()
+                began = time.monotonic()
+                result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+                    poll=(lambda: "pause" if time.monotonic() - began > 1.5 else None)
+                         if reason == "pause" else None,
+                    on_event=lambda channel, data: output.extend(data))
+                self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
+                if reason == "timeout":
+                    self.assertTrue(result.timed_out)
+                else:
+                    self.assertEqual(result.requested_stop, "pause")
+                self.assert_child_stopped()
 
     def test_native_code_mode_runtime_with_enforced_task_slot(self):
         binary = native_codex(self)

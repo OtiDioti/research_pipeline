@@ -15,7 +15,7 @@ import sys
 import time
 import uuid
 
-from . import codex, isolation, workspace, collaboration, references
+from . import codex, isolation, workspace, collaboration, references, tools
 
 SAVING_GRACE = 15
 PAUSE_TIMEOUT = 60
@@ -641,6 +641,7 @@ def run_session(project, config, state, intake, baseline, external, continuation
             recorder = codex.EventRecorder(session, on_identity=record_identity, on_usage=record_usage)
             research_began = time.monotonic()
             config.deadline = min(investigation_deadline, research_began + config.primary_session_seconds)
+            tools.configure(config, project, session, activation)
             if config.deadline < investigation_deadline:
                 controller.rollover_at = config.deadline - SAVING_GRACE
             # Crash accounting uses the effective session allocation, including startup.

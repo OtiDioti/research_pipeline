@@ -40,6 +40,7 @@ class Config:
     frozen_inputs: tuple = ()
     reference_mounts: tuple = ()
     reference_catalog: Path | None = None
+    tool_context: Path | None = None
     deadline: float = 0
     unit: str = field(default_factory=lambda: f"research-{uuid.uuid4().hex}.service")
     drafts: Path | None = None
@@ -123,7 +124,8 @@ def stop_service(unit, *, deadline=None):
 
 def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
                        control=None, response=None, task_id="primary", task_workspaces=(),
-                       frozen_inputs=(), reference_mounts=(), reference_catalog=None):
+                       frozen_inputs=(), reference_mounts=(), reference_catalog=None,
+                       tool_context=None):
     from . import workspace
     args = ["bwrap", "--die-with-parent", "--unshare-user", "--unshare-pid",
             "--unshare-ipc", "--unshare-uts", "--cap-drop", "ALL", "--new-session",
@@ -143,6 +145,10 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
     args += ["--proc", "/proc", "--dev", "/dev", "--tmpfs", "/tmp",
              "--tmpfs", "/run", "--dir", "/home/researcher/.codex",
              "--ro-bind", str(project), "/project"]
+    if tool_context is not None:
+        args += ["--ro-bind", str(tool_context), "/run/research-tools.json",
+                 "--ro-bind", str(Path(__file__).with_name("tools.py")),
+                 "/run/research-tools.py"]
     if reference_catalog is not None:
         args += ["--tmpfs", "/references",
                  "--ro-bind", str(reference_catalog), "/run/research-references.json",
@@ -215,7 +221,8 @@ class RunningService:
                    *bubblewrap_command(project, argv, config.codex if auth_home else None,
                                        auth_home, config.drafts, config.control, config.response,
                                        config.task_id, config.task_workspaces, config.frozen_inputs,
-                                       config.reference_mounts, config.reference_catalog)]
+                                       config.reference_mounts, config.reference_catalog,
+                                       config.tool_context)]
         guard = launch_guard or config.launch_guard
         try:
             with guard() if guard else nullcontext():
