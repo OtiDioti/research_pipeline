@@ -1,9 +1,10 @@
 # Development status — research_pipeline
 
-## Safe retirement checkpoint
+## Current checkpoint
 
 - Target root: `/home/francesco/Desktop/gits/research_project/research_pipeline`, branch `main`. PROJECT.md and root AGENTS.md are unchanged. **M1–M3 and M4 retrieval/reusable tools are accepted and locally integrated. M4 job-control/reporting closeout is interrupted before implementation; M5 not started.** Project unfinished; COMPLETE and COMPLETE.ack are absent. All commits/work remain local; no remote changes or publication occurred.
-- Requested shutdown was honored: no new requests after the stop instruction; current pipeline owner was sent verified SIGINT, exited **130**, and actual process/service cleanup was confirmed. Controller owns its lifecycle and was not stopped/restarted.
+- Previous requested shutdown was honored: owner exited **130**, with actual process/service cleanup confirmed. This invocation resumes the same unfinished M4 request; no duplicate implementation request is authorized or needed. Controller owns its lifecycle and was not stopped/restarted.
+- **Restart reconciled 2026-11-11 00:33:42 UTC:** discovery/status/report confirm the interrupted planning checkpoint; no matching pipeline owner remains, the exclusive run lock is free, and all three previously recorded services are inactive with empty cgroups. Receipt: frozen request directory, `restart-reconciled-20261111.json`. Frozen request/configuration and passed baseline are preserved. Resume is the next action, with only the M4 paid gate enabled and local-only publication authority.
 
 ## Accepted progress
 
@@ -22,7 +23,7 @@
 
 ## Next session action
 
-1. Rediscover/status/report the SAME request/run and reconcile actual owner, descendants, lock and owned services again. Preserve its clean feature worktree and saved reports.
+1. Restart reconciliation is complete; preserve the SAME request/run, clean feature worktree and saved reports. Commit this management checkpoint before resuming.
 2. Re-establish **RESEARCH_PIPELINE_M4_LIVE=1** and **RESEARCH_PIPELINE_M4_OUTPUT_DIR** = absolute frozen closeout directory plus `/live-host-acceptance`; disable M1/M2/M3 paid gates. Then ordinary **`flow resume 20261111T002338_830acaa4`** to continue Architect planning. No `--retry`, budget renewal, duplicate request or component repair is presently needed. Resume uses saved effective configuration.
 3. Finish normal pipeline implementation/review and fresh passed enabled final/required combined verification, then confirm LOCAL integration before whole-M4 acceptance. Sessions ≤600s, demonstration cumulative ≤900s, isolated reproduction ≤60s, whole test/cleanup ≤1200s. Reuse the existing small M4 gate; no extra paid gate or forced M1–M3 science is commissioned.
 4. M5 remains blocked on the researcher's local investigation/materials path and authoritative `starting_evidence/RESEARCH_QUESTIONS.md`/Valvo inputs. The text-path question is pending; no answer/approval was inferred. M5 also requires actual human scientific acceptance. Do not invent inputs, acceptance or COMPLETE.
