@@ -1,6 +1,6 @@
 """Ordinary project files; human inputs are never written by the controller."""
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import fcntl
 import hashlib
 import json
@@ -30,6 +30,7 @@ class Intake:
     inventory: list[dict]
     fingerprints: dict[str, str]
     feedback: str = ""
+    references: dict = field(default_factory=dict)
 
 
 MANAGED = ("sources", "work", "outputs", "handoffs")
@@ -136,6 +137,9 @@ def fingerprints(project):
     for name in ("AGENTS.md", "HUMAN_FEEDBACK.md"):
         if (project / name).exists() or (project / name).is_symlink():
             paths.append(project / name)
+    registry = safe_path(project, ".research_pipeline/references.json")
+    if registry.exists():
+        paths.append(registry)
     result = {}
     for p in paths:
         if p.is_symlink():
@@ -149,7 +153,8 @@ def fingerprints(project):
     return result
 
 
-def read_intake(project):
+def read_intake(project, deadline=None, on_poll=None):
+    from . import references
     project = Path(os.path.abspath(project))
     if not project.is_dir():
         raise InputError(f"Project directory does not exist: {project}")
@@ -191,7 +196,8 @@ def read_intake(project):
             inventory.append({"path": str(p.relative_to(project)), "bytes": p.stat().st_size})
     if len(inventory) > 10000:
         raise InputError("More than 10000 evidence files; narrow the starting material")
-    return Intake(project, questions, instructions, inventory, fingerprints(project), feedback)
+    catalog = references.load_catalog(project, deadline, on_poll)
+    return Intake(project, questions, instructions, inventory, fingerprints(project), feedback, catalog)
 
 
 def read_input(p):
@@ -273,6 +279,8 @@ DESCRIPTIONS = {
     "RESEARCH_STATUS.md": "Operational state and links to current scientific progress.",
     "PLAN.md": "Revisable scientific questions, assumptions and methods.",
     "LITERATURE.md": "Citations, relevance and source access quality.",
+    "REUSE.md": "Prior source identities, verification qualifications and applicability to this investigation.",
+    "references.json": "Explicit reference authorization paths (scientific evidence only).",
     "REPORT.md": "Preliminary findings, evidence, limitations and reproduction instructions.",
     "run.json": "Machine-readable run state, limits and observed outcomes.",
     "backend.jsonl": "Bounded private Codex event stream.",
@@ -473,7 +481,9 @@ def publish_drafts(project, drafts, baseline, external_changes, task_id="primary
 def intake_snapshot(intake):
     return ("# Accepted intake\n\n## Questions\n\n" + intake.questions
             + "\n\n## Project instructions\n\n" + (intake.instructions or "(absent)")
-            + "\n\n## Human feedback\n\n" + (intake.feedback or "(absent)") + "\n")
+            + "\n\n## Human feedback\n\n" + (intake.feedback or "(absent)")
+            + "\n\n## Authorized scientific references (evidence only)\n\n"
+            + json.dumps(intake.references, ensure_ascii=True, indent=2) + "\n")
 
 
 def handoff_fields(task_id="primary"):

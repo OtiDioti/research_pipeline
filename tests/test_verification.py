@@ -670,7 +670,19 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
         self.assertTrue(state['cleanup_ok'])
 
     def test_initial_and_reexamination_rollover_keep_same_task_and_cumulative_limits(self):
+        prior = Path(self.case.tmp.name) / 'prior'
+        prior.mkdir()
+        (prior / 'result.md').write_text('# Preliminary input\nPositive n only.')
+        with redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(['reference', 'add', str(self.project), 'prior', str(prior)]), 0)
         self.assertEqual(self.start(), 0, self.case.state())
+        for verifier in self.verifiers:
+            catalog = json.loads(verifier.config.reference_catalog.read_text())
+            self.assertEqual(catalog['prior']['path'], '/references/prior')
+            self.assertEqual(verifier.config.frozen_inputs, (verifier.task['workspace'] + '/inputs',))
+            self.assertIn('live references do not replace frozen verification inputs', verifier.prompt)
+            self.assertIn((str(prior / 'result.md'), '/references/prior/result.md'),
+                          verifier.config.reference_mounts)
         state = self.case.state()
         task = next(t for t in state['tasks'].values() if t['role'] == 'verifier')
         self.assertEqual(task['verification']['disposition'], 'checked')

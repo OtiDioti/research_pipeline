@@ -27,8 +27,210 @@ reproduced the successor computation in isolation, and confirmed service cleanup
 M3 supports dependent research and separate independent verification with a finite
 exchange, described below. **M3 acceptance passed** in enabled final and combined
 verification, and integrated locally at `034d9a9`. Each suite passed 176 tests with
-only the separate M1/M2 paid gates disabled. M4 cross-project reuse is next;
-the M5 physics-benchmark investigation remains deferred.
+only the separate M1/M2 paid gates disabled. M4 now implements explicit reference
+navigation/retrieval and locally validated reusable tools. Its opt-in live reuse
+test awaits enabled controller verification, review and local integration.
+M4 reporting/resource-control closeout remains outstanding. The M5 physics-benchmark
+investigation remains deferred.
+
+## Authorized reference retrieval
+
+Authorize each source explicitly on the **target** investigation, before `start` or
+while stopped. Nothing scans the user's home or discovers projects implicitly:
+
+```sh
+research-pipeline reference add /path/to/new-investigation prior /path/to/prior-project
+research-pipeline reference list /path/to/new-investigation
+research-pipeline reference browse /path/to/new-investigation prior outputs --max-entries 50
+research-pipeline reference search /path/to/new-investigation 'convergence' --source prior --max-results 30
+research-pipeline reference read /path/to/new-investigation prior outputs/REPORT.md --start-line 1 --max-lines 100
+research-pipeline reference remove /path/to/new-investigation prior
+```
+
+All commands return JSON. The human-controlled `.research_pipeline/references.json`
+contains only `{"version": 1, "references": {"prior": "/absolute/path/to/prior-project"}}`.
+Aliases start with a letter and contain letters, digits, `_` or `-` (up to 64
+characters). Re-adding the same alias/path is idempotent; remove an alias before
+replacing its path. Authorization changes acquire the existing investigation lock,
+recover stale ownership and require confirmed cleanup. They cannot change an active
+investigation. Invalid registrations leave existing authorizations intact. A later
+missing or unsafe reference stays recorded with its reason; other available sources
+and saved science remain usable. Malformed registries fail before research launches.
+
+Each fresh primary, delegated or verifier session gets a current read-only catalog
+at `/run/research-references.json`, scientific source entries at `/references/ALIAS`,
+and a standalone helper sharing the CLI retrieval implementation:
+
+```sh
+python3 /run/research-references.py list
+python3 /run/research-references.py browse prior outputs --max-entries 50 --offset 0
+python3 /run/research-references.py search 'convergence' --source prior --max-results 30
+python3 /run/research-references.py read prior outputs/REPORT.md --start-line 101 --max-lines 100
+```
+
+Browse lists immediate entries, types and sizes; source `FOLDER_CONTENT.md` files can
+also be read. Search streams actual UTF-8 file contents, including Markdown, text,
+scripts and structured text, using **literal, case-sensitive** line matching.
+Matches include original root, alias, relative file, one-based line and bounded
+excerpt. Read returns paginated numbered lines and the SHA-256 of the observed
+complete file, rejecting changed or disappeared versions. `next_line` / `next_offset`
+continue pages. Result/entry/page limits accept 1–1000; read lines are clipped at
+2000 characters and search excerpts at 500. Truncation and text clipping are explicit.
+Binary/PDF extraction, OCR and semantic search are unsupported. Errors, unreadable
+files and invalid UTF-8 make search `incomplete`; an empty incomplete result cannot
+establish that a term is absent. Search stops at its result limit. At most 100 error
+details are displayed, with the full `error_count` and explicit `errors_truncated`.
+
+Source roots cannot overlap the target in either direction. Symlinked roots or
+ancestors, links and special files in exposed subtrees are unsupported; an unsafe
+subtree disables that reference conservatively. All hidden top-level entries,
+including `.research_pipeline`, `.git`, `.codex` and `.agents`, are excluded.
+Paths cannot traverse upward, be absolute, or enter those private roots. The
+controller mounts individual non-hidden entries read-only, preserving source files
+and indexes; it never grants writable reference directories. Reference preparation
+uses the existing deadline and polls the foreground owner's live services and pause
+requests while enumerating and validating entries. Services and checkpoint
+acknowledgements continue to be processed during slow preparation. Resume intake is
+registered in recoverable cumulative accounting before traversal: failures,
+interruptions and timeouts consume elapsed allowance, while successful preparation
+transfers into the session interval without a second charge. Scientific retrieval
+shares the session's resource and suspension boundaries. Authorization fingerprints
+and catalogs survive intake
+snapshots and checkpoint interpretation without hashing entire source projects.
+
+**Retrieval is not endorsement.** Reference papers, `AGENTS.md`, scripts and tool
+descriptions are scientific evidence, never operational authority. They cannot
+change target questions/instructions, approve execution/dependencies or expand
+access/budgets. Unstated or ambiguous source verification is **unknown**; even
+checked findings need an applicability assessment for the new question.
+
+For material actually reused, the researcher writes `sources/REUSE.md` through the
+normal drafts (delegated/verifier roles use their own workspace's `REUSE.md`).
+Each substantive entry records source alias/root, relative path, original URI and
+observed SHA-256; assumptions and limitations; source verification status and basis;
+intended use, applicability, uncertainty and needed checks. Reports and handoffs link
+the relevant entry. This is a researcher-authored scientific note, not an automatically
+inferred claim status or a log of every browse action. Existing human-edit preservation
+and index reconciliation apply to it. Adaptations use permitted local working copies.
+When an independent verifier needs exact prior evidence, include the identified local
+copy explicitly in the existing frozen packet; live references cannot substitute for
+versioned verification inputs. Consequential new conclusions retain independent checking.
+
+Existing cumulative grants and disclosed CPU, spending, occupancy, disk and
+missing-telemetry limitations still apply to tools. See the
+[M4 implementation note](development/requests/m4-cross-project-reuse.md).
+
+## Reusable scientific tools
+
+A tool is an ordinary directory, usually `work/tools/NAME/`, with `tool.json`,
+explicitly listed native runtime/check files and a researcher-authored Markdown
+assessment. User-supplied local tools can start in `starting_evidence/`; external
+tools must come from an explicitly authorized reference. Discovery never executes
+or registers a tool. There is no plugin loader, import scanner or dependency installer.
+
+For example, a user-supplied periodic integration function/script can use:
+
+```json
+{
+  "version": 1,
+  "name": "periodic-quadrature",
+  "origin": "user",
+  "purpose": "Evaluate periodic integrals with trapezoidal quadrature.",
+  "files": ["method.py", "check.py"],
+  "invocation": ["python3", "method.py"],
+  "dependencies": ["Python standard library"],
+  "checks": [
+    {
+      "description": "Check constant and harmonic integrands.",
+      "argv": ["python3", "check.py"]
+    }
+  ],
+  "limitations": "Assess integrand smoothness, grid adequacy and roundoff for each use."
+}
+```
+
+Descriptions require all these fields; `dependencies` may explicitly be empty.
+Payload paths must be ordinary relative files without hidden components, traversal
+or symlinks. List every required local runtime/check file. Commands are nonempty argv
+arrays, executed directly from the working-copy directory. They do not pass through
+a shell. Python functions remain ordinary imports from scientist-written scripts.
+
+Inside an active scientific service, use the immutable helper/context:
+
+```sh
+python3 /run/research-tools.py list --candidates
+python3 /run/research-tools.py list --source prior
+python3 /run/research-tools.py stage --source prior work/tools/quadrature/tool.json --name quadrature
+python3 /run/research-tools.py stage --local starting_evidence/my-tool/tool.json --name my-tool
+python3 /run/research-tools.py register work/tools/quadrature/tool.json --assessment work/tools/quadrature/ASSESSMENT.md
+python3 /run/research-tools.py run work/tools/quadrature/tool.json -- --output /project/work/new-values.json
+```
+
+These execution commands are deliberately namespace-local, with no host execution
+command. Use the public host `reference browse/search/read` commands for offline
+source discovery. Delegated researchers/verifiers stage and register beneath their
+own `work/tasks/TASK/tools/` paths. They cannot register or execute a working copy
+owned by another task or in frozen inputs. Read-only scientific inputs can be copied
+into their own workspace for adaptation.
+
+`list` searches local scientific locations and authorized references. By default it
+exposes only matching successful registrations; local registrations must belong to
+the current activation. `--candidates` includes unvalidated, malformed, failed and
+stale descriptions with reasons. A matching source registration records checks in
+its original environment; every imported copy still requires local checks.
+Staging copies only the description and declared payloads, refuses collisions,
+checks source stability, and preserves original root/alias, paths, hashes and origin
+in `SOURCE.json`. Failed staging retains partial files and its failure reason.
+Source projects and their indexes remain unchanged.
+
+Write the intended-use assessment at
+`/run/research-drafts/work/tools/quadrature/ASSESSMENT.md`: intended calculation,
+relevant checks, assumptions, applicability, limitations and uncertainty.
+Registration writes a pending `VALIDATION.md` draft before checks, and records
+description/payload identities, source attribution, assessment path/hash/scope,
+activation, exact commands/cwd, Python/PATH observations, outcomes and bounded
+stdout/stderr excerpts with explicit clipping. All checks must succeed without
+changing the files or assessment. Missing files, unavailable executables/dependencies,
+check failures, interruption or an exhausted deadline leave no successful new
+registration. Review failures and fix the local copy before registering again.
+
+`run` requires matching successful checks and the unchanged assessment in the
+**current activation**. A fresh context/resume must re-register; dependencies in
+`/tmp` may have disappeared. Re-register after changing an environment within a
+context as well. Dependencies must be installed only inside the authorized scientific
+environment, e.g. a private `/tmp` virtual environment with its explicit interpreter
+in argv, within the existing grant. A description grants no installation authority.
+Invocation receipts in `runs/*.md` retain argv/cwd, source/validation identities,
+bounded diagnostics, outcomes and links to file arguments. Runtime failures retain
+partial outputs, code and diagnostic evidence.
+After foreground exit, capture drains for at most 0.2 seconds within the existing
+deadline. If a descendant still holds an output pipe, the helper closes that pipe
+and records `output_drain_incomplete` and the affected clipping flags. The foreground
+exit status is retained; detached descendants remain owned by service cleanup.
+Malformed validation records appear as ineligible candidates with reasons, while
+healthy local and reference tools remain discoverable.
+
+For an agent-developed extension, create `work/tools/study/` with `origin: "agent"`,
+an invocation such as `["python3", "study.py"]`, its checks and all dependencies,
+including any adapted/imported `method.py`. Explain the retrieved method's attribution,
+original verification status and new-use limitations in the description, assessment
+and `sources/REUSE.md`; do not relabel a copied user method as an independently
+verified result. Validate/register this study before reusable exposure.
+
+Assessments, validation records, receipts and copied Markdown use the normal scoped
+drafts and human-edit reconciliation. Markdown used as a runtime input must first
+be published through the ordinary checkpoint path; native runtime files exist directly
+in the permitted working copy. Link records, `REUSE.md`, code, data and limitations
+from reports and handoffs. Explicitly include exact reused artifacts in the existing
+frozen evidence packet when independent verification needs them.
+
+Tool checks establish only declared execution observations for intended use. They do
+not establish scientific correctness, general applicability or independent claim
+verification. Foreground checks/runs inherit the current service's filesystem,
+network, memory, process, wall-time and cleanup limits. The helper polls the existing
+pause/rollover request and effective deadline; it cannot create another service,
+extend the grant or authorize a new reference. Detached descendants remain owned by
+the same service and are stopped by the existing whole-investigation cleanup.
 
 ## Dependent collaboration
 
@@ -556,7 +758,8 @@ RESEARCH_PIPELINE_M1_OUTPUT_DIR=/absolute/private/request-output/m1 \
 Both variables must be supplied to that process. Enabled acceptance fails on missing
 prerequisites; the service/filesystem integration checks cannot skip unavailable
 capabilities when either `RESEARCH_PIPELINE_M1_LIVE=1` or
-`RESEARCH_PIPELINE_M2_LIVE=1` or `RESEARCH_PIPELINE_M3_LIVE=1`.
+`RESEARCH_PIPELINE_M2_LIVE=1` or `RESEARCH_PIPELINE_M3_LIVE=1` or
+`RESEARCH_PIPELINE_M4_LIVE=1`.
 Do not give a restricted Writer access to another execution context.
 
 For M2, enable only its dedicated gate (M1 inference remains opt-in separately):
@@ -693,3 +896,47 @@ and limitations are recorded in the
 [implementation report](development/requests/m1-implementation.md#m1-live-evidence-closeout).
 These completed runs supply the execution evidence for the documentation closeout;
 ordinary documentation checks keep paid live inference disabled.
+
+For M4, keep the accepted M1–M3 paid gates off:
+
+```sh
+RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 \
+RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=1 \
+RESEARCH_PIPELINE_M4_OUTPUT_DIR=/absolute/private/request-output/m4 \
+  .venv/bin/python -m unittest discover -s tests -v
+```
+
+`test_m4_live.py` is ordinarily discovered but starts inference only with
+`RESEARCH_PIPELINE_M4_LIVE=1`. Enabled missing output, authentication, services or
+isolation prerequisites fail. One fresh private directory contains a disclosed prior
+fixture (a preliminary method heuristic, generic user quadrature and elementary
+checks; no target answer or fabricated registration) and a new investigation.
+The actual researcher discovers/searches/reads this evidence, critically qualifies
+it, stages/registers/invokes the user tool, and authors/registers/invokes its own
+study of the squared-denominator periodic integral. All new science and target code
+come from the actual researcher. The narrow exploratory study stays preliminary;
+consequential conclusions still need the existing separate independent verifier.
+
+The harness requires actual successful standalone backend helper invocation events,
+matching validation/receipt identities, finite parameter-grid results and resolved
+convergence against a hidden composite-Simpson numerical oracle. It revalidates and
+reproduces both saved tools only through `isolation.run_isolated`, with explicit output
+substitutions. Original science, human inputs and source files/indexes must remain
+unchanged. Oracle checks are engineering evidence, not independent Codex verification.
+
+Bounds are 600 seconds for the sole investigation/session, 900 seconds for all
+demonstration activity including startup/checks/reproduction, 60 seconds for isolated
+reproduction within that allowance, and 1200 seconds overall including failure
+cleanup. No forced rollover/delegation gate is repeated. The test inventories
+attempted services, stops every owned unit in `finally`, confirms cgroups empty or
+removed, and retains failure evidence. Its private `receipt.json` and test output
+include exact commands, authorizations/hashes, scientific excerpts, numerical and
+reproduction observations, cumulative accounting, unknown telemetry, integrity and
+cleanup observations. Readiness on a restricted Writer/Reviewer host transfers to
+the existing enabled controller-host final/combined checks and pipeline-confirmed
+LOCAL integration; it does not establish whole-M4 or M5 acceptance.
+
+Concrete M4 closeout gaps remain: no backend hard spending cap or reliable context
+occupancy control; CPU fraction/aggregate CPU time are uncapped; model usage may be
+unknown; per-file limits do not impose an aggregate workspace disk quota. Tool
+validation supplies none of these controls.

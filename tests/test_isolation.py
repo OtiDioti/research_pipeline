@@ -16,11 +16,11 @@ from unittest.mock import patch
 from tests import use_checkout
 
 use_checkout()
-from research_pipeline import cli, isolation, workspace
+from research_pipeline import cli, isolation, references, workspace, tools
 
 
 def live_enabled():
-    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2, 3))
+    return any(os.environ.get(f'RESEARCH_PIPELINE_M{n}_LIVE') == '1' for n in (1, 2, 3, 4))
 
 
 def fixture(root):
@@ -120,17 +120,18 @@ class PreflightResourceTests(unittest.TestCase):
             self.assertEqual(run.call_count, 2)  # query and best-effort kill share the deadline
 
     def test_live_acceptance_cannot_skip_missing_user_bus(self):
-        for milestone in (1, 2, 3):
+        for milestone in (1, 2, 3, 4):
             with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True):
                 with self.assertRaisesRegex(AssertionError, "user bus unavailable"):
                     ServiceIsolationTests.setUpClass()
 
     def test_live_acceptance_cannot_skip_missing_bubblewrap(self):
-        with patch.dict(os.environ, {"RESEARCH_PIPELINE_M1_LIVE": "1"}), \
-             patch.object(shutil, "which", return_value=None):
-            case = BubblewrapBoundaryTests("test_actual_mount_boundary_and_permitted_computation")
-            with self.assertRaisesRegex(AssertionError, "Bubblewrap missing"):
-                case.test_actual_mount_boundary_and_permitted_computation()
+        for milestone in (1, 2, 3, 4):
+            with patch.dict(os.environ, {f"RESEARCH_PIPELINE_M{milestone}_LIVE": "1"}, clear=True), \
+                 patch.object(shutil, "which", return_value=None):
+                case = BubblewrapBoundaryTests("test_actual_mount_boundary_and_permitted_computation")
+                with self.assertRaisesRegex(AssertionError, "Bubblewrap missing"):
+                    case.test_actual_mount_boundary_and_permitted_computation()
 
     def test_preflight_requires_memory_zero_swap_and_tasks_without_cpu_controller(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -209,6 +210,19 @@ class BubblewrapBoundaryTests(unittest.TestCase):
             response.mkdir()
             outside = Path(temp) / 'host-private-sentinel'
             outside.write_text('not mounted')
+            prior = Path(temp) / 'prior'
+            (prior / 'outputs').mkdir(parents=True)
+            (prior / 'outputs/value.md').write_text('# Preliminary source\nreference-needle: n > 0\n')
+            (prior / 'FOLDER_CONTENT.md').write_text('# Immutable source index\n')
+            (prior / '.research_pipeline').mkdir()
+            (prior / '.research_pipeline/private').write_text('not authorized')
+            workspace.atomic_text(root / references.REGISTRY, json.dumps({
+                'version': 1, 'references': {'prior': str(prior)}}))
+            config = isolation.Config(deadline=time.monotonic() + 5)
+            references.configure(config, root, control.parent, workspace.Intake(root, '', '', [], {}))
+            source_before = {p.relative_to(prior).as_posix(): workspace.file_digest(p)
+                             for p in prior.rglob('*') if p.is_file()}
+            protected_before = workspace.fingerprints(root)
             script = isolation.PROBE + f'\nassert not Path({str(outside)!r}).exists()\n'
             script += """
 for p in (Path('/run/research-control/forbidden'), Path('/run/research-checkpoint-helper.py')):
@@ -217,9 +231,32 @@ for p in (Path('/run/research-control/forbidden'), Path('/run/research-checkpoin
     else: raise AssertionError('checkpoint control or helper is writable')
 Path('/run/research-checkpoint/probe').write_text('writable')
 subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--check'], check=True)
+import json
+ref = Path('/references/prior')
+assert (ref / 'outputs/value.md').read_text().startswith('# Preliminary')
+assert not (ref / '.research_pipeline').exists()
+for p in (ref / 'outputs/value.md', ref / 'FOLDER_CONTENT.md',
+          Path('/run/research-references.json'), Path('/run/research-references.py')):
+    for action in (lambda: p.write_text('changed'), lambda: p.unlink(),
+                   lambda: p.rename(p.with_name('replacement'))):
+        try: action()
+        except OSError: pass
+        else: raise AssertionError('reference or retrieval control changed')
+for p in (ref / 'outputs/created', ref / 'created', Path('/references/unauthorized')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('reference creation succeeded')
+found = subprocess.run(['/usr/bin/python3', '/run/research-references.py',
+                        'search', 'reference-needle'], check=True, capture_output=True, text=True)
+assert json.loads(found.stdout)['matches'][0]['line'] == 2
+read = subprocess.run(['/usr/bin/python3', '/run/research-references.py',
+                       'read', 'prior', 'outputs/value.md'], check=True, capture_output=True, text=True)
+assert json.loads(read.stdout)['sha256']
 """
             result = subprocess.run(isolation.bubblewrap_command(root, ['/usr/bin/python3', '-c', script],
-                                                                 control=control, response=response),
+                                        control=control, response=response,
+                                        reference_mounts=config.reference_mounts,
+                                        reference_catalog=config.reference_catalog),
                                     capture_output=True, text=True, timeout=5)
             if result.returncode and any(s in result.stderr for s in ('Operation not permitted', 'No permissions', 'namespace')):
                 if live_enabled():
@@ -230,6 +267,9 @@ subprocess.run(['/usr/bin/python3', '/run/research-checkpoint-helper.py', '--che
             self.assertEqual((root / 'outputs/value').read_text(), '285')
             self.assertEqual(outside.read_text(), 'not mounted')
             self.assertEqual((response / 'probe').read_text(), 'writable')
+            self.assertEqual(source_before, {p.relative_to(prior).as_posix(): workspace.file_digest(p)
+                                            for p in prior.rglob('*') if p.is_file()})
+            self.assertEqual(protected_before, workspace.fingerprints(root))
 
 
     def test_actual_task_boundary_and_live_delivery_visibility(self):
@@ -402,6 +442,120 @@ class ServiceIsolationTests(unittest.TestCase):
         result, output = self.run_code(isolation.PROBE)
         self.assertEqual(result.returncode, 0, output.decode(errors='replace'))
         self.assertTrue(self.capabilities['observed_cgroup_limits'])
+
+    def tool_config(self, wall):
+        from tests.test_tools import tool_fixture
+        if not hasattr(self, "tool_prior"):
+            temp = tempfile.TemporaryDirectory()
+            self.addCleanup(temp.cleanup)
+            self.tool_prior = Path(temp.name) / "prior"
+        prior = self.tool_prior
+        if not prior.exists():
+            path = tool_fixture(prior / "work/tools/sum")
+            (path.parent / "method.py").write_text(
+                "from pathlib import Path\nimport subprocess,sys,time\n"
+                "if 'fail' in sys.argv:\n Path('partial.csv').write_text('partial result'); raise RuntimeError('runtime failure')\n"
+                f"if 'child' in sys.argv:\n subprocess.Popen(['/usr/bin/python3','-c',{self.CHILD!r}], start_new_session=True); time.sleep(.2)\n"
+                "if 'wait' in sys.argv: time.sleep(30)\n"
+                "if 'verbose' in sys.argv: print('x'*20000)\n"
+                "print(sum(i*i for i in range(10)))\n")
+        workspace.atomic_text(self.root / references.REGISTRY,
+                              json.dumps({"version": 1, "references": {"prior": str(prior)}}))
+        config = isolation.Config(wall_seconds=wall, deadline=time.monotonic() + wall,
+                                  memory_mib=128, max_tasks=32)
+        session = self.root / ".research_pipeline" / uuid.uuid4().hex
+        session.mkdir()
+        config.drafts, config.control, config.response = (session / n for n in ("drafts", "control", "response"))
+        for directory in (config.drafts, config.control, config.response):
+            directory.mkdir()
+        references.configure(config, self.root, session, workspace.Intake(self.root, "", "", [], {}))
+        tools.configure(config, self.root, session, session.name)
+        return config, prior
+
+    TOOL_SETUP = """
+from pathlib import Path
+import json, subprocess
+helper = ['/usr/bin/python3', '/run/research-tools.py']
+def call(*args, ok=True):
+    p = subprocess.run(helper + list(args), capture_output=True, text=True)
+    assert (p.returncode == 0) == ok, p.stdout + p.stderr
+    return p
+call('stage','--source','prior','work/tools/sum/tool.json','--name','sum')
+use = Path('/run/research-drafts/work/tools/sum/USE.md')
+use.parent.mkdir(parents=True, exist_ok=True)
+use.write_text('# Intended use\\nFinite standard-library sums only; elementary check, no scientific endorsement.')
+rel = 'work/tools/sum/tool.json'
+assessment = 'work/tools/sum/USE.md'
+call('register',rel,'--assessment',assessment)
+"""
+
+    def test_actual_tool_registration_computation_dependency_and_runtime_failures(self):
+        config, prior = self.tool_config(8)
+        before = {str(p): p.read_bytes() for p in prior.rglob("*") if p.is_file()}
+        script = self.TOOL_SETUP + """
+for p in (Path('/run/research-tools.py'), Path('/run/research-tools.json')):
+    try: p.write_text('changed')
+    except OSError: pass
+    else: raise AssertionError('tool authority writable')
+assert json.loads(call('run',rel).stdout)['stdout'].strip() == '285'
+verbose = json.loads(call('run',rel,'--','verbose').stdout)
+assert verbose['stdout_clipped'] and len(verbose['stdout']) == 8192
+failed = json.loads(call('run',rel,'--','fail',ok=False).stdout)
+assert failed['outcome'] == 'failed'
+assert Path('/project/work/tools/sum/partial.csv').read_text() == 'partial result'
+call('stage','--source','prior','work/tools/sum/tool.json','--name','failed')
+p = Path('/project/work/tools/failed/tool.json')
+d = json.loads(p.read_text()); d['origin'] = 'agent'; d['checks'][0]['argv'] = ['missing-executable']
+p.write_text(json.dumps(d))
+use = Path('/run/research-drafts/work/tools/failed/USE.md'); use.parent.mkdir(parents=True)
+use.write_text('# Intended use\\nExercise a dependency failure honestly.')
+call('register','work/tools/failed/tool.json','--assessment','work/tools/failed/USE.md',ok=False)
+record = Path('/run/research-drafts/work/tools/failed/VALIDATION.md').read_text()
+assert 'FileNotFoundError' in record
+d['checks'][0]['argv'] = ['python3','check.py']; p.write_text(json.dumps(d))
+Path('/project/work/tools/failed/check.py').write_text('import unavailable_research_dependency')
+call('register','work/tools/failed/tool.json','--assessment','work/tools/failed/USE.md',ok=False)
+assert 'ModuleNotFoundError' in Path('/run/research-drafts/work/tools/failed/VALIDATION.md').read_text()
+Path('/project/work/tools/failed/check.py').write_text('assert 2 + 2 == 4')
+call('register','work/tools/failed/tool.json','--assessment','work/tools/failed/USE.md')
+assert json.loads(call('run','work/tools/failed/tool.json').stdout)['stdout'].strip() == '285'
+call('stage','--local','work/tasks/foreign/tool.json','--name','bad',ok=False)
+call('stage','--source','prior','../private','--name','bad',ok=False)
+assert len(json.loads(call('list').stdout)['tools']) == 2
+call('run',rel,'--','child')
+print('tool checks, reuse, dependency/runtime failures passed', flush=True)
+"""
+        output = bytearray()
+        result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+                                        on_event=lambda channel, data: output.extend(data))
+        self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
+        self.assertEqual(result.returncode, 0, output.decode(errors="replace"))
+        self.assertEqual(before, {str(p): p.read_bytes() for p in prior.rglob("*") if p.is_file()})
+        self.assert_child_stopped()
+
+    def test_tool_descendants_stop_with_timeout_and_whole_service_pause(self):
+        for reason in ("timeout", "pause"):
+            with self.subTest(reason=reason):
+                (self.root / "work/heartbeat").unlink(missing_ok=True)
+                # New working-copy name is needed because staging never overwrites.
+                config, _ = self.tool_config(3)
+                setup = self.TOOL_SETUP.replace("'sum'", repr(reason)).replace(
+                    "work/tools/sum/", f"work/tools/{reason}/")
+                setup = setup.replace(f"'prior','work/tools/{reason}/tool.json'",
+                                      "'prior','work/tools/sum/tool.json'")
+                script = setup + "\ncall('run',rel,'--','child','wait')\n"
+                output = bytearray()
+                began = time.monotonic()
+                result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+                    poll=(lambda: "pause" if time.monotonic() - began > 1.5 else None)
+                         if reason == "pause" else None,
+                    on_event=lambda channel, data: output.extend(data))
+                self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
+                if reason == "timeout":
+                    self.assertTrue(result.timed_out)
+                else:
+                    self.assertEqual(result.requested_stop, "pause")
+                self.assert_child_stopped()
 
     def test_native_code_mode_runtime_with_enforced_task_slot(self):
         binary = native_codex(self)

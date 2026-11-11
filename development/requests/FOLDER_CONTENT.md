@@ -5,3 +5,4 @@
 - [m1-implementation.md](m1-implementation.md) — Implementation readiness and validation report; M1 acceptance awaits controller final verification.
 
 - [m3-collaboration.md](m3-collaboration.md) — Collaboration, finite verification, bounded real M3 gate, engineering evidence and enabled controller acceptance handoff.
+- [m4-cross-project-reuse.md](m4-cross-project-reuse.md) — Reference/tool reuse decisions, qualification and failure checks, bounded M4 gate and controller verification handoff.
