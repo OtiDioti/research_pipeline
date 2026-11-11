@@ -41,7 +41,11 @@ describes the bounded execution surface and its disclosed limitations. **M1–M4
 engineering milestones are accepted.** The researcher has supplied the M5 question,
 Valvo manuscript and six-band notes in `research_example/starting_evidence/`.
 The first M5 increment investigates the mechanisms contributing to linear light-hole
-spin–orbit interaction. M5 still requires human scientific acceptance.
+spin–orbit interaction. Its first live attempt saved draft derivations and numerical
+artifacts, then stopped without a usable rollover handoff. Scientific continuation,
+independent criticism and isolated reproduction remain incomplete; see
+[the current checkpoint](STATUS.md) for recovery state. M5 still requires human
+scientific acceptance.
 
 ## Authorized reference retrieval
 
