@@ -28,9 +28,10 @@ M3 supports dependent research and separate independent verification with a fini
 exchange, described below. **M3 acceptance passed** in enabled final and combined
 verification, and integrated locally at `034d9a9`. Each suite passed 176 tests with
 only the separate M1/M2 paid gates disabled. M4 now implements explicit reference
-navigation/retrieval and locally validated reusable tools. Its opt-in live reuse
-test awaits enabled controller verification, review and local integration.
-M4 reporting/resource-control closeout remains outstanding. The M5 physics-benchmark
+navigation/retrieval and locally validated reusable tools. **This M4 increment passed**
+enabled final/combined verification and integrated locally at `37f35d6`: both suites
+passed 210 tests with only the separate M1–M3 paid gates disabled.
+M4 compute-job runtime/concurrency and budget-reporting closeout remains outstanding. The M5 physics-benchmark
 investigation remains deferred.
 
 ## Authorized reference retrieval
@@ -936,7 +937,19 @@ cleanup observations. Readiness on a restricted Writer/Reviewer host transfers t
 the existing enabled controller-host final/combined checks and pipeline-confirmed
 LOCAL integration; it does not establish whole-M4 or M5 acceptance.
 
-Concrete M4 closeout gaps remain: no backend hard spending cap or reliable context
-occupancy control; CPU fraction/aggregate CPU time are uncapped; model usage may be
-unknown; per-file limits do not impose an aggregate workspace disk quota. Tool
-validation supplies none of these controls.
+The accepted retrieval/tool demonstrations (`m4-live-s2qz1lq_` and
+`m4-live-9dm5m_7w`) are preserved under
+`coding_pipeline/logs/manager/m4-cross-project-reuse-tools-20261110T225137Z-ac955108/live-host-acceptance/`.
+Pipeline report `coding_pipeline/logs/20261110T225305_1f92cb97/summary.md` records
+passed final/combined checks and local integration. Each actual researcher critically
+qualified the prior source, validated and invoked both user and agent tools, computed
+18 new quadrature rows and retained preliminary status. Isolated reproduction matched
+all rows and user output; source/input integrity and cleanup of three services per run
+passed. Reported active activity was about 277 and 282 seconds within the grants.
+These demonstrations establish the retrieval/tool increment, not whole-M4 or M5 acceptance.
+
+PROJECT.md §7.2 still requires separate compute-job runtime/concurrency controls and
+clear budget reporting; these are the next M4 increment. Known backend limitations
+remain disclosed: no hard spending cap or reliable context occupancy; CPU fraction
+and aggregate CPU time are uncapped; missing usage stays unknown; per-file limits
+are not an aggregate disk quota. Tool validation supplies none of these guarantees.
