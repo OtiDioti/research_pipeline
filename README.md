@@ -31,8 +31,15 @@ only the separate M1/M2 paid gates disabled. M4 now implements explicit referenc
 navigation/retrieval and locally validated reusable tools. **This M4 increment passed**
 enabled final/combined verification and integrated locally at `37f35d6`: both suites
 passed 210 tests with only the separate M1–M3 paid gates disabled.
-M4 job controls and reporting are implemented pending fresh enabled controller-host verification and local integration. The M5 physics-benchmark
-investigation remains deferred.
+**M4 job controls and reporting also passed** enabled final and combined verification
+and integrated locally at `8f275fb`: each suite ran 237 tests with only the separate
+M1–M3 paid gates disabled. Both actual investigations exposed the six bounded
+adapter operations, critically reused prior science and tools, reproduced all 18
+numerical rows in production isolation, preserved inputs and confirmed cleanup.
+The [implementation and recovery report](development/requests/m4-job-controls.md)
+describes the bounded execution surface and its disclosed limitations. **M1–M4
+engineering milestones are accepted.** M5 awaits the researcher's authoritative
+questions and Valvo starting materials; it requires human scientific acceptance.
 
 ## Authorized reference retrieval
 
