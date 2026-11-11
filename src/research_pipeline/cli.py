@@ -15,7 +15,8 @@ import sys
 import time
 import uuid
 
-from . import codex, isolation, workspace, collaboration, references, tools
+from . import codex, isolation, workspace, collaboration, references, tools, jobs
+from .budget import boot_identity, budget_report
 
 SAVING_GRACE = 15
 PAUSE_TIMEOUT = 60
@@ -33,6 +34,7 @@ class CheckpointControl:
         self.ack_deadline = None
         self.last_readiness = None
         self.rollover_at = None
+        self.jobs = None
 
     def current_request(self):
         request = workspace.read_control(self.config.control / "request.json")
@@ -47,6 +49,11 @@ class CheckpointControl:
             yield
 
     def poll(self, research=True):
+        if self.jobs:
+            self.jobs.poll()
+            if any(r["state"] == "cleanup_unconfirmed" and r["activation_id"] == self.state["activation_id"]
+                   for r in self.state.get("jobs", {}).values()):
+                raise isolation.RuntimeUnavailable("Previous job cleanup unconfirmed; stopping owning service.")
         if research and self.rollover_at is not None and time.monotonic() >= self.rollover_at:
             with workspace.control_lock(self.project):
                 if not self.current_request():
@@ -183,13 +190,6 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def boot_identity():
-    try:
-        return Path("/proc/sys/kernel/random/boot_id").read_text().strip()
-    except OSError:
-        return None
-
-
 def inspect_project(project):
     project = Path(os.path.abspath(project))
     try:
@@ -203,8 +203,8 @@ def inspect_project(project):
     state["activity_check"] = ("Cleanup unconfirmed; residual work may still be active."
                                if state.get("cleanup_ok") is False else
                                "Terminal state recorded; no live session requested.")
+    held = False
     if state.get("state") in workspace.ACTIVE_STATES:
-        held = False
         try:
             with (project / ".research_pipeline/run.lock").open() as stream:
                 try:
@@ -221,6 +221,7 @@ def inspect_project(project):
                 state["activity_check"] += f" Service ActiveState={props.get('ActiveState', 'unknown')}."
             except (isolation.RuntimeUnavailable, OSError, subprocess.TimeoutExpired):
                 pass
+    state["budget_report"] = budget_report(state, live=held)
     return state
 
 
@@ -251,6 +252,7 @@ def load_state(project):
         if state.get(key) and not re.fullmatch(r"research-[a-f0-9]{32}\.service", state[key]):
             raise workspace.InputError(f"Invalid saved {key}")
     limits = state["limits"]
+    jobs.validate_limits(limits)
     if (positive(str(limits["wall_seconds"])) != limits["wall_seconds"]
             or positive_int(str(limits["memory_mib"])) != limits["memory_mib"]
             or positive_int(str(limits["max_tasks"])) != limits["max_tasks"]):
@@ -363,6 +365,8 @@ def recover_owner(project, state):
     # Cleanup/accounting can already be durable when an earlier recovery dies.
     # Pending preparation must remain independently recoverable in that state.
     if state.get("cleanup_ok") is True:
+        jobs.reconcile(state)
+        jobs.validate_limits(state["limits"], defaults=True)
         if state.get("recovery_finalization_pending"):
             finish_recovery_accounting(state, interrupted=True)
             workspace.write_state(project, state)
@@ -456,6 +460,7 @@ def resume_inputs(project, state, began, deadline):
 
 
 def activate(project, config, resume=False):
+    jobs.validate_limits(config.limits())
     session_seconds(str(config.primary_session_seconds))
     session_seconds(str(config.delegated_session_seconds))
     if config.memory_mib // config.max_agents < 1 or config.max_tasks // config.max_agents < 1:
@@ -470,7 +475,7 @@ def activate(project, config, resume=False):
             if state.get("schema_version") == 3:
                 return collaboration.activate(project, config, state)
             began = time.monotonic()
-            for key in ("wall_seconds", "memory_mib", "max_tasks"):
+            for key in ("wall_seconds", "memory_mib", "max_tasks", "job_runtime_seconds", "max_jobs"):
                 setattr(config, key, state["limits"][key])
             config.primary_session_seconds = state["primary_session_policy"]["session_seconds"]
             remaining = max(0, config.wall_seconds - state.get("active_seconds", 0))
@@ -543,6 +548,8 @@ def activate(project, config, resume=False):
 def run_session(project, config, state, intake, baseline, external, continuation,
                 began, investigation_deadline, previous):
     """One fresh backend context; caller retains run.lock across all sessions."""
+    if not state.get("jobs"):
+        state.setdefault("successful_commands_before_job_controls", state.get("successful_commands", 0))
     remaining = max(0, config.wall_seconds - state.get("active_seconds", 0))
     predecessor = state.get("activation_id") if previous else None
     config.deadline = investigation_deadline
@@ -613,7 +620,7 @@ def run_session(project, config, state, intake, baseline, external, continuation
         with controller.launch_guard():
             pass
         state["capabilities"] = isolation.preflight(config, project)
-        with codex.private_auth(project) as auth:
+        with codex.private_auth(project) as auth, codex.native_tool_trace(auth, session):
             if time.monotonic() >= config.deadline:
                 raise TimeoutError("Active-work allowance exhausted during startup")
             def record_identity(identity):
@@ -642,6 +649,10 @@ def run_session(project, config, state, intake, baseline, external, continuation
             research_began = time.monotonic()
             config.deadline = min(investigation_deadline, research_began + config.primary_session_seconds)
             tools.configure(config, project, session, activation)
+            controller.jobs = jobs.JobManager(project, state, lambda: workspace.write_state(project, state))
+            controller.jobs.configure(config, session, state)
+            workspace.atomic_text(config.control / "owner.json",
+                                 json.dumps({**workspace.owner_fields(state), "task_id": "primary"}))
             if config.deadline < investigation_deadline:
                 controller.rollover_at = config.deadline - SAVING_GRACE
             # Crash accounting uses the effective session allocation, including startup.
@@ -699,7 +710,6 @@ def run_session(project, config, state, intake, baseline, external, continuation
             state["telemetry"] = telemetry
             state["usage_complete"] &= telemetry["usage_complete"] and not (
                 result is None or result.returncode or result.error or result.requested_stop)
-            state["successful_commands"] = state.get("successful_commands", 0) + telemetry["successful_commands"]
         else:
             telemetry = {}
         if result is None:
@@ -711,6 +721,12 @@ def run_session(project, config, state, intake, baseline, external, continuation
         if not state["cleanup_ok"]:
             state.update(state="failed", reason=state["reason"] + " Cleanup could not be confirmed.")
             code = 4
+        if controller.jobs:
+            controller.jobs.owner_stopped(activation, state["cleanup_ok"])
+            state["successful_commands"] = (state.get("successful_commands_before_job_controls", 0)
+                                            + jobs.observed(state)["successful_commands"])
+            telemetry.update(jobs.observed(state, activation))
+            state["telemetry"] = telemetry
         request = controller.current_request()
         rolling = bool(request and request["reason"] == "rollover")
         rollover_error = None
@@ -897,6 +913,8 @@ def main(argv=None):
     launch.add_argument("--primary-session-seconds", type=session_seconds, default=300)
     launch.add_argument("--delegated-session-seconds", type=session_seconds, default=300)
     launch.add_argument("--max-agents", type=positive_int, default=1)
+    launch.add_argument("--job-runtime-seconds", type=positive, default=60)
+    launch.add_argument("--max-jobs", type=positive_int, default=1)
     restart = sub.add_parser("resume", help="continue saved science in a fresh foreground context")
     restart.add_argument("project", type=Path)
     restart.add_argument("--codex", default="codex")
@@ -926,6 +944,32 @@ def main(argv=None):
                 print(json.dumps(state, indent=2))
             else:
                 print(f"{state['state']}: {state.get('reason', '')}\n{state['activity_check']}")
+                budget = state["budget_report"]
+                remaining = budget["remaining_seconds_observed"]
+                limits = budget["configured_limits"]
+                def configured(key, suffix=""):
+                    value = limits.get(key)
+                    return f"{value}{suffix}" if value is not None else "unknown"
+                print(f"Budget observed at {budget['observed_at']}; configured cumulative "
+                      f"active-work allowance: {configured('wall_seconds', 's')}.")
+                print(f"Active time spent: {budget['active_seconds_observed']:.3f}s; "
+                      f"remaining: {f'{remaining:.3f}s' if remaining is not None else 'unknown'}. "
+                      + budget["observation"])
+                print(f"Jobs: runtime {configured('job_runtime_seconds', 's')}; "
+                      f"capacity {budget['occupied_job_reservations']}/{configured('max_jobs')} reserved.")
+                print(f"Configured memory: {configured('memory_mib', ' MiB')}; "
+                      f"swap: {configured('swap_bytes', ' bytes')}; tasks: {configured('max_tasks')}; "
+                      f"simultaneous researchers: {configured('concurrent_researchers')}.")
+                usage = budget["model_usage_observed"]
+                print("Observed model counters: " + (json.dumps(usage) if usage is not None else "unknown")
+                      + ("; complete for emitted observations." if budget["model_usage_complete"]
+                         else "; incomplete, missing usage is unknown."))
+                print(budget["model_usage_scope"])
+                print(f"Model spending: {budget['model_spending']}. Context occupancy: {budget['context_occupancy']}.")
+                print("Job enforcement scope: " + budget["job_enforcement_scope"])
+                for job in state.get("jobs", {}).values():
+                    print(f"Job {job['job_id']} ({job['task_id']}): {job['state']}; "
+                          f"elapsed {job.get('elapsed_seconds', 'unknown')}s; {job['reason']}")
                 for key in ("limits", "primary_session_policy", "delegated_session_policy", "tasks", "rollover", "sessions",
                             "remaining_active_seconds", "usage_totals", "usage_complete",
                             "checkpoint", "native_session_id", "pending_reconciliation",
@@ -945,7 +989,8 @@ def main(argv=None):
         config = isolation.Config(codex=args.codex, model=args.model, wall_seconds=args.wall_seconds,
                                   memory_mib=args.memory_mib, max_tasks=args.max_tasks,
                                   primary_session_seconds=args.primary_session_seconds,
-                                  delegated_session_seconds=args.delegated_session_seconds, max_agents=args.max_agents)
+                                  delegated_session_seconds=args.delegated_session_seconds, max_agents=args.max_agents,
+                                  job_runtime_seconds=args.job_runtime_seconds, max_jobs=args.max_jobs)
         return start(args.project, config)
     except (workspace.InputError, OSError, ValueError, KeyError, argparse.ArgumentTypeError) as exc:
         print(f"error: {exc}", file=sys.stderr)

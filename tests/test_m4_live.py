@@ -11,10 +11,12 @@ import sys
 import tempfile
 import time
 import unittest
+import uuid
 
-from tests import use_checkout
+from tests import use_checkout, job_driver, check_native_adapter_schemas
 use_checkout()
-from research_pipeline import codex, isolation, references, tools, workspace
+from research_pipeline import codex, isolation, references, tools, workspace, jobs
+from tests import test_jobs as job_tests
 
 
 METHOD = '''"""User-supplied general periodic trapezoidal quadrature; no accuracy guarantee."""
@@ -86,7 +88,7 @@ a=1.01,1.1,2.0 and n=16,32,64,128,256,512. Accept a different --output for repro
 You author all new science, code, checks, reasoning and results; the prior fixture
 contains only a generic method and elementary checks, not the target solution.
 
-Use STANDALONE exec_command calls containing only each helper invocation for:
+Use STANDALONE job_run calls containing only each helper argv invocation for:
 reference search, reference read, tool list --candidates, stage, both registrations
 and both tool runs. Do not combine them with authoring or checkpoint commands;
 run checkpoint checks separately. This retains actual executed-call evidence.
@@ -140,7 +142,7 @@ def standalone(command):
             lexer.whitespace_split = True
             lexer.commenters = ""
             return list(lexer)
-        args = parse(command)
+        args = list(command) if isinstance(command, list) else parse(command)
         if args and Path(args[0]).name in ("bash", "sh"):
             if len(args) != 3 or args[1] not in ("-c", "-lc"):
                 return []
@@ -195,6 +197,14 @@ class LiveM4Acceptance(unittest.TestCase):
         self.assertTrue(output, "Enabled M4 requires RESEARCH_PIPELINE_M4_OUTPUT_DIR")
         base = Path(output).absolute()
         base.mkdir(parents=True, exist_ok=True)
+        # unittest discovery continues after failures. Establish this prerequisite
+        # here too, before starting any paid research, rather than relying on the
+        # separately collected diagnostic having passed earlier in the suite.
+        prerequisite = unittest.TestResult()
+        job_tests.NativeJobTests("test_native_direct_adapter_request_without_credentials_or_inference").run(prerequisite)
+        self.assertTrue(prerequisite.wasSuccessful() and not prerequisite.skipped,
+                        "Native boundary prerequisite failed; no paid research authorized: "
+                        + str(prerequisite.errors + prerequisite.failures + prerequisite.skipped))
         run = Path(tempfile.mkdtemp(prefix="m4-live-", dir=base))
         run.chmod(0o700)
         project, prior = run / "project", run / "prior"
@@ -243,11 +253,56 @@ class LiveM4Acceptance(unittest.TestCase):
             with (run / f"{name}.stdout").open("wb") as out, (run / f"{name}.stderr").open("wb") as err:
                 process = subprocess.Popen(args, stdout=out, stderr=err)
                 while process.poll() is None and time.monotonic() < deadline:
-                    inventory(state_now())
+                    current = state_now()
+                    inventory(current)
+                    if (name == "start" and current.get("state") == "running"
+                            and current.get("service_attempted") and "live_budget" not in receipt):
+                        observed = inspect_cli("live", structured=True, outer_deadline=deadline)
+                        report = observed["budget_report"]
+                        receipt["live_budget"] = report
+                        self.assertEqual(report["configured_limits"], current["limits"])
+                        self.assertTrue(report["active_time_complete"])
+                        self.assertIn("Live controller", report["observation"])
+                        self.assertGreaterEqual(report["active_seconds_observed"], 0)
+                        self.assertGreaterEqual(report["remaining_seconds_observed"], 0)
+                        self.assertAlmostEqual(report["active_seconds_observed"]
+                                               + report["remaining_seconds_observed"], 600)
+                        self.assertTrue(report["observed_at"])
                     time.sleep(.1)
                 if process.poll() is None:
                     raise TimeoutError(f"{name} exceeded its absolute allowance")
                 return process.returncode
+
+        def inspect_cli(name, *, structured, outer_deadline):
+            args = [sys.executable, "-m", "research_pipeline", "inspect", str(project)]
+            if structured:
+                args.append("--json")
+            receipt["commands"].append(shlex.join(args))
+            print("M4 command: " + shlex.join(args), flush=True)
+            deadline = min(work_end, outer_deadline, time.monotonic() + 10)
+            # This handle must never replace the running research-process handle.
+            with (run / f"inspect-{name}.stdout").open("wb") as out, \
+                 (run / f"inspect-{name}.stderr").open("wb") as err:
+                inspection = subprocess.Popen(args, stdout=out, stderr=err)
+                try:
+                    inspection.wait(timeout=max(.001, deadline - time.monotonic()))
+                finally:
+                    if inspection.poll() is None:
+                        inspection.kill()
+                        inspection.wait(timeout=max(.001, min(5, end - time.monotonic())))
+            with (run / f"inspect-{name}.stdout").open("rb") as stream:
+                stdout = stream.read(4 * 1024 * 1024)
+            with (run / f"inspect-{name}.stderr").open("rb") as stream:
+                stderr = stream.read(32768)
+            receipt.setdefault("public_inspections", {})[name] = {
+                "command": shlex.join(args), "returncode": inspection.returncode,
+                "stdout_excerpt": stdout[:65536].decode(errors="replace"),
+                "stderr_excerpt": stderr.decode(errors="replace"),
+                "stdout_clipped": (run / f"inspect-{name}.stdout").stat().st_size > 65536}
+            self.assertEqual(inspection.returncode, 0, stderr.decode(errors="replace"))
+            if structured:
+                return json.loads(stdout)
+            return stdout.decode()
 
         try:
             authorize = [sys.executable, "-m", "research_pipeline", "reference", "add",
@@ -257,7 +312,8 @@ class LiveM4Acceptance(unittest.TestCase):
             receipt["authorizations"] = json.loads((project / references.REGISTRY).read_text())
             start = [sys.executable, "-m", "research_pipeline", "start", str(project),
                      "--wall-seconds", "600", "--primary-session-seconds", "600",
-                     "--memory-mib", "2048", "--max-tasks", "128"]
+                     "--memory-mib", "2048", "--max-tasks", "128",
+                     "--job-runtime-seconds", "60", "--max-jobs", "1"]
             code = command(start, "start", 630)
             state = state_now()
             receipt["state"] = state
@@ -267,15 +323,60 @@ class LiveM4Acceptance(unittest.TestCase):
             self.assertLessEqual(state["active_seconds"], 600)
             self.assertEqual(len(state["sessions"]), 1, "This demo uses one bounded session")
             self.assertFalse(workspace.validate_deliverables(project))
+            self.assertIn("live_budget", receipt, "No budget observation from the running investigation")
+            human = inspect_cli("final-human", structured=False, outer_deadline=work_end)
+            final_inspection = inspect_cli("final-json", structured=True, outer_deadline=work_end)
+            final_budget = final_inspection["budget_report"]
+            receipt["final_budget"] = final_budget
+            self.assertEqual(final_budget["configured_limits"], state["limits"])
+            self.assertEqual(final_budget["active_seconds_observed"], state["active_seconds"])
+            self.assertEqual(final_budget["active_seconds_recorded"], state["active_seconds"])
+            self.assertEqual(final_budget["remaining_seconds_observed"], 600 - state["active_seconds"])
+            self.assertTrue(final_budget["active_time_complete"])
+            self.assertEqual(final_budget["observation"], "Settled accounting.")
+            self.assertEqual(final_budget["occupied_job_reservations"], 0)
+            self.assertEqual(final_budget["model_usage_observed"], state.get("usage_totals"))
+            self.assertEqual(final_budget["model_usage_complete"],
+                             bool(state.get("usage_totals") is not None and state.get("usage_complete")))
+            self.assertIn(f'{state["active_seconds"]:.3f}s', human)
+            self.assertIn(f'runtime {final_budget["job_runtime_seconds"]}s', human)
+            self.assertIn("capacity 0/1", human)
+            self.assertIn("unknown", final_budget["model_spending"])
+            self.assertIn("unknown", final_budget["context_occupancy"])
+            if not final_budget["model_usage_complete"]:
+                self.assertIn("incomplete", human)
+                self.assertIn("unknown", human)
 
             events = []
+            catalogs = []
             for session in state["sessions"]:
                 path = project / session["logs"] / "backend.jsonl"
                 for line in path.read_text().splitlines():
                     events.append(json.loads(line))
-            executed = [e["item"]["command"] for e in events if e.get("type") == "item.completed"
-                        and e.get("item", {}).get("type") == "command_execution"
-                        and e["item"].get("exit_code") == 0]
+                receipt.setdefault("native_tool_evidence", []).append(
+                    json.loads((path.parent / "native-tools.json").read_text()))
+                observed = codex.native_catalog_observations(path.parent, session["native_session_id"])
+                self.assertTrue(observed, "Fresh native request tool declarations missing; capability is unverified")
+                catalogs.extend(observed)
+                receipt.setdefault("native_adapter_schemas", []).extend(
+                    check_native_adapter_schemas(self, receipt["native_tool_evidence"][-1]))
+            emitted_usage = {}
+            for event in events:
+                if event.get("type") == "turn.completed":
+                    for key, value in (event.get("usage") or {}).items():
+                        if isinstance(value, (int, float)) and not isinstance(value, bool):
+                            emitted_usage[key] = emitted_usage.get(key, 0) + value
+            self.assertEqual(final_budget["model_usage_observed"], emitted_usage or None)
+            receipt["emitted_usage_comparison"] = emitted_usage or None
+            receipt["native_tool_catalogs"] = [codex.validate_tool_catalog(c) for c in catalogs]
+            executed = [r["argv"] for r in state.get("jobs", {}).values()
+                        if r["state"] == "completed" and r.get("returncode") == 0 and r.get("cleanup_ok") is True]
+            self.assertEqual(state["limits"]["job_runtime_seconds"], 60)
+            self.assertEqual(state["limits"]["max_jobs"], 1)
+            self.assertTrue(executed, "No admitted scientific jobs observed")
+            self.assertTrue(all(r["cleanup_ok"] and r["state"] not in jobs.ACTIVE
+                                for r in state["jobs"].values()))
+            receipt["job_limit_observations"] = {"limits": state["limits"], "jobs": state["jobs"]}
             calls = [standalone(c) for c in executed if standalone(c)]
             receipt["successful_standalone_helper_calls"] = calls
             for helper, action in (("references", "search"), ("references", "read"),
@@ -329,7 +430,8 @@ class LiveM4Acceptance(unittest.TestCase):
             self.assertAlmostEqual(user_result["constant"], 2 * math.pi)
             self.assertLess(abs(user_result["harmonic"]), 1e-12)
             excerpts = {}
-            for rel in ("work/DERIVATION.md", "sources/REUSE.md", "outputs/REPORT.md", "handoffs/primary.md"):
+            for rel in ("RESEARCH_STATUS.md", "work/DERIVATION.md", "sources/REUSE.md",
+                        "outputs/REPORT.md", "handoffs/primary.md"):
                 text = (project / rel).read_text()
                 self.assertTrue(text.strip())
                 excerpts[rel] = text[:12000]
@@ -362,7 +464,13 @@ class LiveM4Acceptance(unittest.TestCase):
             reproduction.control.mkdir()
             reproduction.response.mkdir()
             references.configure(reproduction, project, session, workspace.read_intake(project, reproduction.deadline))
-            tools.configure(reproduction, project, session, "m4-reproduction")
+            repro_activation = uuid.uuid4().hex
+            tools.configure(reproduction, project, session, repro_activation)
+            repro_state = {"run_id": uuid.uuid4().hex, "activation_id": repro_activation,
+                           "ownership_nonce": uuid.uuid4().hex, "limits": reproduction.limits()}
+            manager = jobs.JobManager(project, repro_state, lambda: None)
+            manager.configure(reproduction, session, repro_state)
+            reproduction.on_poll = lambda: manager.poll()
             commands = []
             for name, output_name in (("periodic", "reproduced-example"), ("study", "reproduced-results")):
                 commands += [
@@ -371,7 +479,7 @@ class LiveM4Acceptance(unittest.TestCase):
                     ["python3", "/run/research-tools.py", "run", f"work/tools/{name}/tool.json",
                      "--", "--output", f"/project/work/{output_name}.json"]]
             driver = "import subprocess\n" + "\n".join(f"subprocess.run({c!r}, check=True)" for c in commands)
-            argv = ["/usr/bin/python3", "-c", driver]
+            argv = job_driver(reproduction, ["/usr/bin/python3", "-c", driver])
             receipt["reproduction_invocation"] = {"api": "research_pipeline.isolation.run_isolated",
                 "config": asdict(reproduction), "project": str(project), "argv": argv,
                 "exact_helper_commands": [shlex.join(c) for c in commands],
@@ -384,6 +492,8 @@ class LiveM4Acceptance(unittest.TestCase):
                     stream.write(data[:max(0, 4 * 1024 * 1024 - stream.tell())])
                 result = isolation.run_isolated(reproduction, project, argv, on_event=capture)
             receipt["reproduction"] = asdict(result)
+            manager.owner_stopped(repro_activation, result.cleanup_ok)
+            receipt["reproduction_jobs"] = repro_state.get("jobs")
             groups[reproduction.unit] = result.service_properties.get("ControlGroup", "")
             self.assertTrue(result.cleanup_ok)
             self.assertEqual(result.returncode, 0, f"Isolated reproduction failed; see {run}")

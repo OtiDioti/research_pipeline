@@ -35,6 +35,9 @@ class Config:
     primary_session_seconds: float = 300
     delegated_session_seconds: float = 300
     max_agents: int = 1
+    job_runtime_seconds: float = 60
+    max_jobs: int = 1
+    job_context: Path | None = None
     task_id: str = "primary"
     task_workspaces: tuple = ()
     frozen_inputs: tuple = ()
@@ -53,6 +56,7 @@ class Config:
     def limits(self):
         return {"wall_seconds": self.wall_seconds, "memory_mib": self.memory_mib, "swap_bytes": 0,
                 "max_tasks": self.max_tasks,
+                "job_runtime_seconds": self.job_runtime_seconds, "max_jobs": self.max_jobs,
                 "per_file_bytes": 64 * 1024 * 1024, "log_bytes_per_stream": 4 * 1024 * 1024,
                 "concurrent_researchers": self.max_agents}
 
@@ -125,7 +129,7 @@ def stop_service(unit, *, deadline=None):
 def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
                        control=None, response=None, task_id="primary", task_workspaces=(),
                        frozen_inputs=(), reference_mounts=(), reference_catalog=None,
-                       tool_context=None):
+                       tool_context=None, job_context=None):
     from . import workspace
     args = ["bwrap", "--die-with-parent", "--unshare-user", "--unshare-pid",
             "--unshare-ipc", "--unshare-uts", "--cap-drop", "ALL", "--new-session",
@@ -149,6 +153,14 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
         args += ["--ro-bind", str(tool_context), "/run/research-tools.json",
                  "--ro-bind", str(Path(__file__).with_name("tools.py")),
                  "/run/research-tools.py"]
+    if job_context is not None:
+        from .jobs import adapter_mounts
+        args += ["--ro-bind", str(job_context), "/run/research-jobs.json",
+                 "--ro-bind", str(job_context.parent / "in"), "/run/research-jobs-in",
+                 "--bind", str(job_context.parent / "out"), "/run/research-jobs-out",
+                 "--ro-bind", str(Path(__file__).parent.parent), "/opt/research-src"]
+        for source in adapter_mounts():
+            args += ["--ro-bind", source, source]
     if reference_catalog is not None:
         args += ["--tmpfs", "/references",
                  "--ro-bind", str(reference_catalog), "/run/research-references.json",
@@ -191,7 +203,8 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
         args += ["--setenv", "TOKIO_WORKER_THREADS", "1",
                  "--ro-bind", str(Path(codex).parent), "/opt/codex"]
     if auth_home:
-        args += ["--bind", str(auth_home), "/home/researcher/.codex"]
+        args += ["--bind", str(auth_home), "/home/researcher/.codex",
+                 "--setenv", "CODEX_ROLLOUT_TRACE_ROOT", "/home/researcher/.codex/native-trace"]
     return args + ["--chdir", f"/project/{workspace.task_directory(task_id)}", "--", *argv]
 
 
@@ -222,7 +235,7 @@ class RunningService:
                                        auth_home, config.drafts, config.control, config.response,
                                        config.task_id, config.task_workspaces, config.frozen_inputs,
                                        config.reference_mounts, config.reference_catalog,
-                                       config.tool_context)]
+                                       config.tool_context, config.job_context)]
         guard = launch_guard or config.launch_guard
         try:
             with guard() if guard else nullcontext():

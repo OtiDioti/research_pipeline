@@ -13,10 +13,10 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from tests import use_checkout
+from tests import use_checkout, job_driver
 
 use_checkout()
-from research_pipeline import cli, isolation, references, workspace, tools
+from research_pipeline import cli, isolation, references, workspace, tools, jobs
 
 
 def live_enabled():
@@ -470,6 +470,11 @@ class ServiceIsolationTests(unittest.TestCase):
             directory.mkdir()
         references.configure(config, self.root, session, workspace.Intake(self.root, "", "", [], {}))
         tools.configure(config, self.root, session, session.name)
+        state = {"run_id": uuid.uuid4().hex, "activation_id": session.name,
+                 "ownership_nonce": uuid.uuid4().hex, "limits": config.limits()}
+        manager = jobs.JobManager(self.root, state, lambda: None)
+        manager.configure(config, session, state)
+        config.on_poll = lambda: manager.poll()
         return config, prior
 
     TOOL_SETUP = """
@@ -526,7 +531,7 @@ call('run',rel,'--','child')
 print('tool checks, reuse, dependency/runtime failures passed', flush=True)
 """
         output = bytearray()
-        result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
+        result = isolation.run_isolated(config, self.root, job_driver(config, ["/usr/bin/python3", "-c", script]),
                                         on_event=lambda channel, data: output.extend(data))
         self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
         self.assertEqual(result.returncode, 0, output.decode(errors="replace"))
@@ -546,9 +551,11 @@ print('tool checks, reuse, dependency/runtime failures passed', flush=True)
                 script = setup + "\ncall('run',rel,'--','child','wait')\n"
                 output = bytearray()
                 began = time.monotonic()
-                result = isolation.run_isolated(config, self.root, ["/usr/bin/python3", "-c", script],
-                    poll=(lambda: "pause" if time.monotonic() - began > 1.5 else None)
-                         if reason == "pause" else None,
+                def poll():
+                    config.on_poll()
+                    return "pause" if reason == "pause" and time.monotonic() - began > 1.5 else None
+                result = isolation.run_isolated(config, self.root, job_driver(config, ["/usr/bin/python3", "-c", script]),
+                    poll=poll,
                     on_event=lambda channel, data: output.extend(data))
                 self.assertTrue(result.cleanup_ok, output.decode(errors="replace"))
                 if reason == "timeout":

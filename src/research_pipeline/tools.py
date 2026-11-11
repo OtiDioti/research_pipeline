@@ -234,7 +234,14 @@ def check_ready(context):
 
 
 def execute(context, argv, cwd):
-    """Foreground child inside the owning service. Capture is bounded while draining."""
+    """Descendant of one admitted job; never obtains a new slot or deadline."""
+    try:
+        job = read_json(Path("/run/research-job.json"))
+    except (OSError, ValueError) as exc:
+        raise ToolError("Tool checks/runs require an admitted scientific job") from exc
+    if (not job.get("job_id") or job.get("activation") != context["activation"]
+            or context["deadline"] > job["deadline"]):
+        raise ToolError("Tool execution does not match the immutable admitted job deadline/owner")
     check_ready(context)
     result = {"argv": argv, "cwd": str(cwd), "outcome": "failed",
               "returncode": None, "stdout": "", "stderr": "",
@@ -255,7 +262,7 @@ def execute(context, argv, cwd):
                 if process.poll() is not None:
                     # A detached descendant can retain these descriptors after the
                     # foreground process exits. Drain briefly, then close our pipes;
-                    # the existing service controller still owns descendant cleanup.
+                    # the job PID namespace supervisor owns complete teardown.
                     drain_deadline = drain_deadline or min(context["deadline"], now + .2)
                     if now >= drain_deadline:
                         result["output_drain_incomplete"] = bool(selector.get_map())
@@ -278,7 +285,7 @@ def execute(context, argv, cwd):
     finally:
         if process:
             # Foreground completion never intentionally leaves its process group.
-            # Detached descendants remain owned by the existing service controller.
+            # Detached descendants remain inside this job's PID namespace.
             try:
                 os.killpg(process.pid, signal.SIGKILL)
             except ProcessLookupError:

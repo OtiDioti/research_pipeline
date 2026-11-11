@@ -13,7 +13,7 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from tests import use_checkout
+from tests import use_checkout, record_job
 use_checkout()
 from research_pipeline import checkpoint, cli, codex, collaboration, isolation, references, workspace
 
@@ -115,6 +115,7 @@ class CollaborationTests(unittest.TestCase):
                 self.request_seen_at = None
                 case.services.append(self)
                 recorder('stdout', (json.dumps({'type':'thread.started', 'thread_id':f'native-{len(case.services)}'}) + '\n').encode())
+                record_job(config)
                 recorder('stdout', b'{"type":"item.completed","item":{"type":"command_execution","exit_code":0}}\n')
                 recorder('stdout', b'{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}\n')
                 if self.task_id == 'primary':
@@ -264,6 +265,11 @@ class CollaborationTests(unittest.TestCase):
         self.assertTrue(all(s.config.memory_mib == 256 and s.config.max_tasks == 32 for s in self.services))
         self.assertLess(state['active_seconds'], sum(s['active_seconds'] for s in state['sessions']))
         self.assertEqual(state['remaining_active_seconds'], 100 - state['active_seconds'])
+        report = cli.inspect_project(self.project)["budget_report"]
+        self.assertEqual(report["configured_limits"], state["limits"])
+        self.assertEqual(report["active_seconds_observed"], state["active_seconds"])
+        self.assertEqual(report["remaining_seconds_observed"], state["remaining_active_seconds"])
+        self.assertEqual(report["model_usage_observed"], state["usage_totals"])
         self.assertIn((self.project / child['workspace'] / 'comparison.csv').read_text(), 'x,error\n1,0.1\n')
         self.assertTrue(any(n == 2 for _, n in self.parent_progress))
         self.assertTrue(any(n == 3 for _, n in self.parent_progress))
@@ -501,7 +507,7 @@ class CollaborationTests(unittest.TestCase):
         popen = subprocess.Popen
         processes, polls = [], []
         def inspect_process(argv, **kwargs):
-            output = ('--ignore-user-config --ignore-rules --ephemeral --json --sandbox'
+            output = ('--strict-config --ignore-user-config --ignore-rules --ephemeral --json --sandbox'
                       if argv[-1] == '--help' else 'inspection test backend')
             process = popen([sys.executable, '-c',
                              f'import time; time.sleep(.25); print({output!r})'], **kwargs)
@@ -797,7 +803,7 @@ case.project = Path(sys.argv[1])
 atomic_text = workspace.atomic_text
 def crash_after_ack(path, text):
     atomic_text(path, text)
-    if path.name == 'ack.json' and json.loads(text).get('accepted'):
+    if path.name == 'ack.json' and path.parent.name == 'control' and json.loads(text).get('accepted'):
         child = next(t for t in case.state()['tasks'].values() if t['role'] != 'primary')
         assert child['checkpoint_prepared']
         assert not child.get('checkpoint')

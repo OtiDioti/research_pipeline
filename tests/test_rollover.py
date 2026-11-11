@@ -12,6 +12,7 @@ import uuid
 from unittest.mock import patch
 
 from tests import test_continuity as fixtures
+from tests import record_job
 
 HANDOFF = fixtures.HANDOFF
 from research_pipeline import cli, codex, isolation, references, workspace
@@ -97,6 +98,7 @@ class RolloverTests(unittest.TestCase):
                     (project / "work/data.csv").write_text("n,value\n1,2\n")
                 else:
                     (project / f"work/comparison-{n}.csv").write_text("n,error\n2,0.1\n")
+                record_job(config)
                 recorder("stdout", b'{"type":"item.completed","item":{"type":"command_execution","exit_code":0}}\n')
                 if usage is True or callable(usage) and usage(n):
                     recorder("stdout", b'{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}\n')

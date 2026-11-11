@@ -1,10 +1,13 @@
 """Small Codex CLI boundary; no inherited config, tools, or instruction discovery."""
 from contextlib import contextmanager
+import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -18,12 +21,169 @@ LIMITATIONS = [
     "Verification labels apply only to explicitly frozen evidence versions; structural checks do not certify scientific independence or correctness.",
     "Model spending and context occupancy are unavailable and cannot be capped by this backend.",
     "Emitted turn usage is cumulative across activations; missing telemetry remains unknown. Usage is not context occupancy or a hard token cap.",
-    "Memory, tasks and wall time are aggregate limits shared by all scientific commands.",
+    "Memory, tasks and wall time remain aggregate limits; admitted jobs also have runtime and investigation-wide concurrency limits.",
+    "A job is an argv invocation and its complete descendant tree. Job count does not cap threads or CPU fraction.",
     "CPU fraction and aggregate CPU time are not capped.",
     "Network access is available for literature and inference; destinations are not filtered.",
     "The 64 MiB file limit and bounded logs are not an aggregate workspace disk quota.",
     "Artifact checks establish structure, not scientific correctness or successful reproduction.",
 ]
+
+
+def validate_tool_catalog(catalog):
+    """Fail closed on native request tool declarations, never on config text."""
+    expected = {"job_run", "job_status", "job_wait", "job_cancel", "write_draft", "control"}
+    harmless = {"exec", "wait", "apply_patch", "view_image", "list_mcp_resources",
+                "list_mcp_resource_templates", "read_mcp_resource", "web", "web_search",
+                "web__run", "request_user_input", "request_user_input_async",
+                "clock.sleep", "clock__curr_time", "create_goal", "get_goal", "update_goal",
+                "collaboration.list_agents", "collaboration.wait_agent"}
+    # Native goals manage backend continuation, not investigation authorization.
+    # Goals, reads and waits remain inside the original service deadline/grants.
+    # Agent spawning/messaging and other execution routes are deliberately absent.
+    found = set()
+    names = []
+    problems = []
+    if not isinstance(catalog, list) or not catalog:
+        raise RuntimeUnavailable("Native effective tool catalog missing or malformed")
+    for entry in catalog:
+        name = entry.get("name") if isinstance(entry, dict) else None
+        if not isinstance(name, str):
+            raise RuntimeUnavailable("Native effective tool catalog contains an unnamed tool")
+        names.append(name)
+        base = name.removeprefix("functions.")
+        suffix = base.removeprefix("mcp__research_jobs__")
+        if suffix == base:
+            suffix = base.removeprefix("mcp__research_jobs.")
+        if suffix != base and suffix in expected:
+            found.add(suffix)
+        elif name == "web.run":
+            continue
+        elif name.removeprefix("functions.") not in harmless:
+            problems.append(f"Unsupported native tool surface: {name}; unrestricted or unknown route")
+        elif name.removeprefix("functions.") == "exec" and not any(
+                phrase in entry.get("description", "").lower() for phrase in ("javascript", "code mode")):
+            problems.append(f"Unsupported native execution tool: {name}; code-mode orchestration unconfirmed")
+    if found != expected:
+        problems.append("Controlled adapter unavailable in native tool catalog: missing "
+                        + ", ".join(sorted(expected - found)))
+    if problems:
+        raise RuntimeUnavailable("; ".join(problems))
+    return names
+
+
+def request_tool_catalog(declarations):
+    """Read native request declarations, including nested code-mode exposure."""
+    catalog = []
+    def visit(items, namespace=""):
+        for item in items:
+            name = namespace + item.get("name", item.get("type", ""))
+            if item.get("type") == "namespace":
+                visit(item["tools"], name + ".")
+                continue
+            description = item.get("description", "")
+            catalog.append({"name": name, "description": description})
+            if name == "functions.exec":
+                # Codex 0.167 renders enabled nested tools in this declaration.
+                # These are backend-generated tool metadata, not message prose.
+                nested = re.findall(
+                    r"^### `([^`\n]+)`\n(.*?)\nexec tool declaration:\n```ts\n"
+                    r"declare const tools: \{ ([A-Za-z0-9_]+)\(",
+                    description, re.MULTILINE | re.DOTALL)
+                if not nested or description.count("declare const tools: {") != len(nested):
+                    raise RuntimeUnavailable("Native code-mode tool declarations unavailable or unsupported")
+                for heading, detail, identifier in nested:
+                    if heading != identifier:
+                        raise RuntimeUnavailable("Native code-mode tool declaration names disagree")
+                    catalog.append({"name": identifier, "description": detail})
+    visit(declarations)
+    return catalog
+
+
+@contextmanager
+def native_tool_trace(auth_home, session):
+    """Retain actual request tool metadata before the private backend home is removed.
+
+    Full native traces stay in that temporary home, outside all scientific jobs.
+    Keep only tool declarations and their native provenance, bounded like other
+    operational logs; no credentials, scientific prompts or conversations.
+    """
+    try:
+        yield
+    finally:
+        receipt = {"source": "Codex native rollout trace schema 2", "observations": [],
+                   "error": None}
+        used = 0
+        try:
+            for manifest_path in sorted((auth_home / "native-trace").glob("*/manifest.json")):
+                manifest = json.loads(manifest_path.read_text())
+                if manifest.get("schema_version") != 2:
+                    raise ValueError("Unsupported native trace schema")
+                bundle = manifest_path.parent
+                seen = set()
+                with (bundle / "trace.jsonl").open() as events:
+                    for line in events:
+                        event = json.loads(line)
+                        payload = event["payload"]
+                        if payload.get("type") != "inference_started":
+                            continue
+                        ref = payload["request_payload"]
+                        relative = Path(ref["path"])
+                        if ref["kind"] != {"type": "inference_request"} or (
+                                relative.parent != Path("payloads") or relative.suffix != ".json"):
+                            raise ValueError("Unsupported native request reference")
+                        raw = (bundle / relative).read_bytes()
+                        request = json.loads(raw)
+                        # additional_tools is a native protocol item, not user text.
+                        declarations = [item for item in request["input"]
+                                        if item.get("type") == "additional_tools"]
+                        if any(item.get("role") not in (None, "system", "developer")
+                               for item in declarations):
+                            raise ValueError("Unsupported native additional_tools role")
+                        tools = request.get("tools", [])
+                        if not isinstance(tools, list):
+                            raise ValueError("Unsupported native tools field")
+                        if not tools and not declarations:
+                            continue
+                        surface = {"tools": tools, "additional_tools": declarations}
+                        digest = hashlib.sha256(json.dumps(surface, sort_keys=True).encode()).hexdigest()
+                        if digest in seen:
+                            continue
+                        seen.add(digest)
+                        observation = {"manifest": manifest, "event": event,
+                            "request_sha256": hashlib.sha256(raw).hexdigest(),
+                            "model": request["model"], **surface}
+                        used += len(json.dumps(observation).encode())
+                        if used > 4 * 1024 * 1024:
+                            raise ValueError("Native tool evidence exceeds 4 MiB; capability unverified")
+                        receipt["observations"].append(observation)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            receipt["error"] = f"Native tool evidence incomplete: {exc}"
+        from .workspace import atomic_text
+        atomic_text(session / "native-tools.json", json.dumps(receipt, indent=2) + "\n")
+
+
+def native_catalog_observations(session, native_session_id):
+    """Only accept request evidence belonging to this actual fresh session."""
+    receipt = json.loads((session / "native-tools.json").read_text())
+    if receipt.get("error"):
+        raise RuntimeUnavailable(receipt["error"])
+    catalogs = []
+    for observation in receipt["observations"]:
+        manifest, event = observation["manifest"], observation["event"]
+        payload = event["payload"]
+        if not native_session_id or any(value != native_session_id for value in (
+                manifest["root_thread_id"], manifest["rollout_id"],
+                event["thread_id"], event["rollout_id"], payload["thread_id"])):
+            raise RuntimeUnavailable("Native tool evidence belongs to a different session")
+        if event["schema_version"] != 2 or payload["type"] != "inference_started":
+            raise RuntimeUnavailable("Unsupported native tool evidence")
+        if not isinstance(observation.get("tools"), list):
+            raise RuntimeUnavailable("Native top-level tool evidence missing; capture is incomplete")
+        catalogs.append(request_tool_catalog([
+            *observation["tools"],
+            *(tool for item in observation["additional_tools"] for tool in item["tools"])]))
+    return catalogs
 
 
 def verify_backend(config, on_wait=None):
@@ -69,7 +229,7 @@ def verify_backend(config, on_wait=None):
         if time.monotonic() >= config.deadline:
             raise TimeoutError("Wall budget exhausted while inspecting Codex") from exc
         raise RuntimeUnavailable(f"Cannot inspect installed Codex: {exc}") from exc
-    for flag in ("--ignore-user-config", "--ignore-rules", "--ephemeral", "--json", "--sandbox"):
+    for flag in ("--strict-config", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--json", "--sandbox"):
         if flag not in help_result.stdout:
             raise RuntimeUnavailable(f"Installed Codex lacks required controlled-execution option: {flag}")
     return {"version": version, "executable": config.codex, "model": config.model or "backend default"}
@@ -78,7 +238,7 @@ def verify_backend(config, on_wait=None):
 def build_command(config):
     from .workspace import writable_directories, task_directory
     args = ["/opt/codex/" + Path(config.codex).name, "exec", "--ignore-user-config", "--ignore-rules",
-            "--ephemeral", "--skip-git-repo-check", "--json", "--color", "never",
+            "--strict-config", "--ephemeral", "--skip-git-repo-check", "--json", "--color", "never",
             "--sandbox", "workspace-write", "-C", f"/project/{task_directory(config.task_id)}"]
     for rel in writable_directories(config.task_id):
         args += ["--add-dir", f"/project/{rel}"]
@@ -88,10 +248,35 @@ def build_command(config):
         'project_doc_fallback_filenames=[]', 'projects."/project".trust_level="untrusted"',
         'sandbox_workspace_write.network_access=true', 'features.multi_agent=false',
         'features.apps=false', 'cli_auth_credentials_store="file"',
-        # Current model metadata requires code mode even if its feature is disabled.
-        'features.code_mode.enabled=true', 'features.code_mode_host=true',
+        'features.shell_tool=false', 'features.plugins=false',
+        # Native Code Mode collaboration has a separate gate from multi_agent.
+        'features.multi_agent_v2={enabled=false,disable_native_tools=true}',
+        'features.image_generation=false', 'features.skip_host_skill_discovery=true',
+        'features.code_mode_host=false', 'features.code_mode_host_grpc=false',
+        # Keep all six MCP schemas in the actual request, outside deferred tools.
+        'features.code_mode={enabled=true,direct_only_tool_namespaces=["mcp__research_jobs"],excluded_tool_namespaces=["collaboration"]}',
         'check_for_update_on_startup=false',
     ]
+    from .jobs import adapter_mounts, TRUSTED_PYTHON_FLAGS
+    mounts = adapter_mounts()
+    # The source and the installed MCP dependency are mounted read-only. Keep
+    # the interpreter's normal prefix, including native extension dependencies.
+    pythonpath = os.pathsep.join(["/opt/research-src", *mounts])
+    settings += [
+        f"mcp_servers.research_jobs.command={json.dumps(sys.executable)}",
+        "mcp_servers.research_jobs.args=" + json.dumps(
+            [*TRUSTED_PYTHON_FLAGS, "-m", "research_pipeline.job_server"]),
+        f"mcp_servers.research_jobs.env.PYTHONPATH={json.dumps(pythonpath)}",
+        'mcp_servers.research_jobs.required=true',
+        'mcp_servers.research_jobs.enabled_tools=["job_run","job_wait","job_status","job_cancel","write_draft","control"]',
+        'mcp_servers.research_jobs.startup_timeout_sec=15',
+        'mcp_servers.research_jobs.tool_timeout_sec=20',
+    ]
+    # MCP tools otherwise require approval even under approval_policy="never".
+    # Preauthorize only the fixed adapter operations; their controller admission,
+    # ownership, scoped writes and isolation still enforce the original grant.
+    for tool in ("job_run", "job_wait", "job_status", "job_cancel", "write_draft", "control"):
+        settings.append(f'mcp_servers.research_jobs.tools.{tool}.approval_mode="approve"')
     for setting in settings:
         args += ["-c", setting]
     if config.model:
@@ -219,10 +404,8 @@ Use ordinary links relative to the canonical handoff in handoffs/,
 e.g. [Plan](../work/PLAN.md). Do not copy conversations.
 End with an honest account of progress and blockers.
 
-COOPERATIVE CHECKPOINT: FULL SUSPENSION OR AUTOMATIC ROLLOVER
-Before substantial operations and after each command, check
-/run/research-control/request.json, or run:
-python3 /run/research-checkpoint-helper.py --check
+CHECKPOINT: FULL SUSPENSION OR AUTOMATIC ROLLOVER
+Before substantial operations and after each command, use control(action="check").
 If a pause or rollover is requested, immediately stop scientific work. Pause fully
 suspends the investigation; rollover continues this SAME logical primary task in a
 fresh conversation after the old service stops. Pause has a fixed 15-second saving
@@ -230,7 +413,7 @@ grace; rollover reserves {rollover_saving:g} seconds inside the fixed session du
 Both are bounded by the remaining wall deadline. Save useful
 progress, plan/status updates and the required handoff in /run/research-drafts.
 Include interrupted computations and the next concrete action. As your FINAL tool
-command run: python3 /run/research-checkpoint-helper.py
+operation use control(action="acknowledge").
 This saves readiness and waits for the controller to validate your handoff/artifacts.
 On rejection correct the stated issue within the original grace and retry. After
 acknowledgement finish immediately with no further scientific commands. The helper
@@ -323,6 +506,39 @@ Link REUSE.md, assessments, validation, receipts and reproducible outputs from r
 and handoffs. Explicitly copy exact reused dependencies into frozen verification packets
 when required by a consequential claim. Preserve useful science if execution fails.
 """
+    prompt += """
+CONTROLLED SCIENTIFIC EXECUTION
+The research_jobs MCP tools are the supported command path. Stock command-launch
+tools are disabled. Use job_run(argv, cwd, runtime_seconds?, yield_seconds?) for
+ALL calculations, file inspection/editing, scientific shells, dependency installation,
+reference helpers and reusable-tool checks/runs. An explicit /bin/bash -c is allowed.
+Use job_wait/job_status/job_cancel to observe or stop existing jobs. Wait/yield is at
+most five seconds per call; a returned running job retains its original deadline.
+job_status() also reports the investigation-wide budget, original configured limits,
+cumulative active time and observed completed-turn model counters at observed_at.
+All roles share these totals. This observation differs from your role-session deadline
+and refreshes about once a second. Missing status or telemetry is UNKNOWN and supplies
+no additional allowance. Waiting, starting jobs, tool validation and fresh contexts
+never replenish grants. At a reached limit preserve useful progress and stop affected
+work. Keep substantive scientific status, findings, provenance and continuation guidance
+in Markdown; operational snapshots do not replace reports, handoffs or verification.
+Every descendant shares its job's lifetime and original memory/task/service grants.
+Job capacity is investigation-wide, separate from researcher count or thread limits.
+Full capacity refuses immediately without a queue. Runtime expiry kills the job tree,
+retains partial files, and reports the reason. Inspect partial work before retrying.
+Do not submit scientific work while a saving request is pending.
+
+Saving does NOT require a job: use write_draft(project_relative_path, content) to
+save scoped Markdown, and control(action="check"|"acknowledge"|"tasks") for checkpoints.
+Use control(action="delegate"|"verify", path=..., parent=...) for assignments,
+control(action="respond", target=..., path=...) for a verifier response, or
+control(action="close", target=..., path=...) for closure. These replace executing
+the checkpoint-helper command examples above. After saving the required handoff,
+control(action="acknowledge") is your final operation on a pause/rollover request.
+New science is blocked while this separate saving interface remains available.
+Tool receipts still pending after interruption are UNKNOWN/unsuccessful; consult
+the controller's job diagnostics, never infer successful checks from partial output.
+"""
     if task is None:
         return prompt
     prompt = prompt.replace("Label unchecked results PRELIMINARY: there is no independent verifier in M1.",
@@ -342,16 +558,16 @@ Only you authorize dependent assignments, including recursively related question
 Delegate only with an identifiable scientific benefit. Write a Markdown assignment draft
 with ## Objective, ## Parent question, ## Scientific benefit, ## Assumptions, ## Requested result,
 ## Artifacts. Include relevant canonical artifact links. Submit it using:
-python3 /run/research-checkpoint-helper.py --delegate work/ASSIGNMENT.md --parent primary
+control(action="delegate", path="work/ASSIGNMENT.md", parent="primary")
 The path is project-relative, and may identify your private draft. A refusal for full
 capacity launches nothing; continue useful work. Only one request may be outstanding.
 To continue an unfinished task later, submit its saved ASSIGNMENT.md path with its
 original parent; task identity and ownership cannot be changed.
 Inspect deliveries while continuing your own work:
-python3 /run/research-checkpoint-helper.py --tasks
-The --tasks summary includes activation_id, predecessor_activation, saving_reason
+control(action="tasks")
+The tasks summary includes activation_id, predecessor_activation, saving_reason
 and rollover_at_monotonic (the scheduled saving time on the local monotonic clock).
-Your routine --check also prints concurrent task status and rollover_in_seconds
+Your routine control(action="check") also prints concurrent task status and rollover_in_seconds
 when you have no saving request of your own. Use the approaching cutoff to stage
 short useful commands rather than lengthy report-writing commands across the transition.
 A child's saving_reason=rollover signals that it is saving now, before publication
@@ -370,14 +586,14 @@ Select consequential independent checks proportionately. Write a packet draft wi
 ## Reproduction instructions (parameters/dependencies). Explicitly link every local
 file needed, including dependencies of linked Markdown. Code/data and supplied notes
 are frozen; later original edits do not inherit the outcome. Submit:
-python3 /run/research-checkpoint-helper.py --verify work/PACKET.md --parent TASK_ID
+control(action="verify", path="work/PACKET.md", parent="TASK_ID")
 Read CHECK.md and its independent reasoning/observations. A reported objection releases
 the verifier slot. Answer with scientific evidence or a justified targeted test in a
 response draft with ## Response to objections, ## Revised claim, ## Sources and artifacts,
 ## Reproduction instructions. Explicitly link revised evidence. Submit:
-python3 /run/research-checkpoint-helper.py --respond VERIFIER_ID --response work/RESPONSE.md
+control(action="respond", target="VERIFIER_ID", path="work/RESPONSE.md")
 Only ONE response/re-examination is permitted. Or close an awaiting exchange with:
-python3 /run/research-checkpoint-helper.py --close-verification VERIFIER_ID --reason work/CLOSURE.md
+control(action="close", target="VERIFIER_ID", path="work/CLOSURE.md")
 Continue useful work while verifiers run or wait. Read the final REEXAMINATION.md.
 In synthesis explain scope, assumptions, uncertainty, objection and its effect; identify
 superseded conclusions after revision. Use preliminary, checked, disputed and superseded
