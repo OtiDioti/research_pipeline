@@ -38,8 +38,10 @@ adapter operations, critically reused prior science and tools, reproduced all 18
 numerical rows in production isolation, preserved inputs and confirmed cleanup.
 The [implementation and recovery report](development/requests/m4-job-controls.md)
 describes the bounded execution surface and its disclosed limitations. **M1–M4
-engineering milestones are accepted.** M5 awaits the researcher's authoritative
-questions and Valvo starting materials; it requires human scientific acceptance.
+engineering milestones are accepted.** The researcher has supplied the M5 question,
+Valvo manuscript and six-band notes in `research_example/starting_evidence/`.
+The first M5 increment investigates the mechanisms contributing to linear light-hole
+spin–orbit interaction. M5 still requires human scientific acceptance.
 
 ## Authorized reference retrieval
 
@@ -1100,8 +1102,10 @@ under `coding_pipeline/logs/manager/m4-compute-job-limits-reporting-20261111T002
 Both reproduced all 18 numerical rows in production isolation, preserved inputs
 and confirmed cleanup. Pipeline report
 `coding_pipeline/logs/20261111T002338_830acaa4/summary.md` records the passed outcome.
-M1–M4 engineering milestones are accepted; M5 awaits authoritative researcher
-questions and starting materials, followed by human scientific acceptance.
+M1–M4 engineering milestones are accepted. M5 inputs are now supplied in
+`research_example/starting_evidence/`; its initial study concerns the mechanism
+contributions to linear light-hole spin–orbit interaction. Human scientific
+acceptance remains outstanding.
 Known backend limitations
 remain disclosed: no hard spending cap or reliable context occupancy; CPU fraction
 and aggregate CPU time are uncapped; missing usage stays unknown; per-file limits
