@@ -491,22 +491,42 @@ dependency and Python runtime are mounted read-only inside each original researc
 service. Trusted adapter/supervisor launches exclude the research working directory
 and user site from Python's import search (`-P -s`); scientific argv retains ordinary
 workspace imports. Codex retains `workspace-write`, ignored inherited configuration/rules,
-ephemeral contexts and native file authentication; its stock command-launch tools,
-apps, plugins and backend agent spawning are disabled. Its noninteractive approval
+ephemeral contexts and native file authentication. Strict configuration disables
+stock command-launch tools, apps, plugins, image generation and backend agent
+spawning, including the separate native Code Mode collaboration gate. The adapter
+namespace is direct-only, so its six actual schemas appear in the model request.
+Its noninteractive approval
 policy preauthorizes only the adapter's six allowlisted operations; job admission,
 ownership, scoped Markdown writes and original resource limits still apply.
 Each backend records its native request trace inside its temporary private home,
 which scientific jobs cannot access. On closure the controller retains only the
-actual model-request tool declarations and native session/request provenance in
+actual top-level request tools, `additional_tools` declarations and native
+session/request provenance in
 the session's private `native-tools.json`; full prompt/response traces are removed
 with the temporary home. This uses the installed Codex native rollout trace
 (`CODEX_ROLLOUT_TRACE_ROOT`, schema 2), including the nested code-mode tool
 declarations. It adds no inference session. `codex exec --json` does not expose
 the code-mode catalog output, so asking the model to print it cannot establish
 this evidence. Missing, incomplete or unsupported trace metadata remains unverified.
-The enabled M4 host gate must observe these fresh declarations and reject any unrestricted
-or unknown execution route or missing controlled tool. Config/features listings
-and controller test doubles do not establish that capability.
+Both locations are examined, including nested Code Mode declarations; changes in
+either location create a new observation. Earlier receipts that omitted top-level
+tools cannot certify complete capture. Successful adapter calls cannot substitute
+for declared schemas. The enabled M4 host gate must observe fresh session-bound
+declarations, compare all six direct schemas with the adapter and reject any
+unrestricted or unknown execution route or missing controlled tool.
+A credential-free loopback diagnostic exercises the installed strict configuration,
+real stdio adapter, request capture and namespace mounts without inference.
+It is diagnostic evidence; fresh enabled controller-host M4 science, reproduction,
+resource/cleanup checks and LOCAL integration remain required for closeout.
+See [the implementation record](development/requests/m4-job-controls.md).
+Config/features listings and controller test doubles do not establish capability.
+The validator recognizes the native goal lifecycle (`create_goal`, `get_goal`,
+`update_goal`), read-only agent listing/waiting, clock and web utilities by explicit
+names. Native goals do not change investigation grants or service deadlines.
+Validation reports all unsupported declarations and missing adapter operations
+together. Agent spawning/messaging, image generation and unknown routes remain
+unsupported. Omitted adapter declarations cannot be inferred from successful
+calls or a description advertising deferred tools.
 
 The agent uses `job_run(argv, cwd, runtime_seconds?, yield_seconds?)`; for example,
 `job_run(["python3", "calculate.py"], "/project/work")`. It may explicitly run

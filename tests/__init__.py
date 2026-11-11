@@ -14,6 +14,34 @@ def use_checkout():
         os.environ["PYTHONPATH"] = source + (os.pathsep + inherited if inherited else "")
 
 
+def check_native_adapter_schemas(case, evidence):
+    """Compare actual direct request schemas with the SDK, retaining exact schemas."""
+    import asyncio
+    from research_pipeline.job_server import create_server
+    # Native serialization omits these SDK annotations.
+    def shape(value):
+        if isinstance(value, dict):
+            return {k: shape(v) for k, v in value.items() if k not in ("title", "default")}
+        if isinstance(value, list):
+            return [shape(v) for v in value]
+        return value
+    expected = {t.name: shape(t.inputSchema) for t in asyncio.run(create_server(None).list_tools())}
+    schemas = []
+    for observation in evidence["observations"]:
+        direct = [*observation["tools"],
+                  *(tool for item in observation["additional_tools"] for tool in item["tools"])]
+        actual = {}
+        for tool in direct:
+            if tool.get("type") == "namespace" and tool["name"] == "mcp__research_jobs":
+                for child in tool["tools"]:
+                    case.assertNotIn(child["name"], actual, "Duplicate native adapter operation")
+                    actual[child["name"]] = child["parameters"]
+        case.assertEqual(actual, expected, "Six direct native adapter schemas must match the SDK")
+        schemas.append(actual)
+    case.assertTrue(schemas, "Native request schemas missing")
+    return schemas
+
+
 def record_job(config, returncode=0):
     """Controller tests emulate the trusted adapter's admission and result files.
 

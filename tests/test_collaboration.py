@@ -507,7 +507,7 @@ class CollaborationTests(unittest.TestCase):
         popen = subprocess.Popen
         processes, polls = [], []
         def inspect_process(argv, **kwargs):
-            output = ('--ignore-user-config --ignore-rules --ephemeral --json --sandbox'
+            output = ('--strict-config --ignore-user-config --ignore-rules --ephemeral --json --sandbox'
                       if argv[-1] == '--help' else 'inspection test backend')
             process = popen([sys.executable, '-c',
                              f'import time; time.sleep(.25); print({output!r})'], **kwargs)

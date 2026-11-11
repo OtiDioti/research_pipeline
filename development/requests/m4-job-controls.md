@@ -459,3 +459,279 @@ Fresh enabled controller-host M4 final and required combined verification remain
 mandatory, with only `RESEARCH_PIPELINE_M4_LIVE=1`, the existing frozen
 `RESEARCH_PIPELINE_M4_OUTPUT_DIR`, and M1/M2/M3 disabled. This repair establishes
 code readiness only; it does not establish M4 acceptance or local integration.
+
+## Integration repair: final-006 native utilities and unsupported surface
+
+The artifact reader refused the command log and recovery report as unavailable.
+Read both complete files through their existing read-only controller paths instead:
+`tests/final-006.txt.commands/0001.txt` (331495 bytes, 2538 lines) and
+`milestones/004/integration-4/recovery-63dc01f6.md`, relative to the pipeline run.
+The recovery report explicitly authorizes harmless native utility classification
+and requires reporting genuine unsupported routes rather than accepting them.
+
+Final-006 reports 233 tests, one error and three disabled M1–M3 gates. The
+preserved `live-host-acceptance/m4-live-qm3yf9ki` receipt records research closure
+after 304.198 active seconds, preserved inputs/sources and confirmed service
+cleanup. Its numerical reproduction and later acceptance checks were not reached.
+No failed receipt or scientific artifact was edited or promoted to passed evidence.
+
+Inspected the entire retained native declaration set, not just `create_goal`.
+Its single observation belongs to session `425d6144518a45a481eaf4f349cbff0e`,
+model `gpt-6.1-sol`, request SHA-256
+`9637e9d5c6ef3d275550d9ad7a4f66d780632e6ab52288580da221b9564eb292`.
+The session-bound production parser accepts the provenance and extracts 22 names:
+
+- Nested in code mode: `apply_patch`, `create_goal`, `get_goal`,
+  `list_mcp_resource_templates`, `list_mcp_resources`, `read_mcp_resource`,
+  `update_goal`, `view_image`, `clock__curr_time`, `image_gen__imagegen`, `web__run`.
+- Direct: `functions.exec`, `functions.wait`, `functions.request_user_input`,
+  `functions.request_user_input_async`, `clock.sleep`,
+  `collaboration.followup_task`, `collaboration.interrupt_agent`,
+  `collaboration.list_agents`, `collaboration.send_message`,
+  `collaboration.spawn_agent`, `collaboration.wait_agent`.
+
+The native goal schemas only create/read/change backend goal status; they do not
+authorize scientific execution, alter controller grants or extend service
+deadlines. Added explicit classification for those three operations, the native
+web alias and read-only agent listing/waiting. No wildcard or description-based
+utility acceptance was added. Validation now reports all unsupported declarations
+and all missing adapter operations together, avoiding successive paid studies to
+discover each name. Existing session identity checks and the six-operation adapter
+requirement remain intact. Regression tests cover the observed namespace layout,
+harmless utilities, deceptive descriptions, unknown names and unsafe operations.
+
+Fetched the [official Codex configuration reference](https://developers.openai.com/codex/config-reference/):
+`features.multi_agent=false` is the documented switch for disabling multi-agent
+tools, and goals manage persisted goals/automatic continuation. Production already
+sets the former. Configuration is not evidence that the actual tool surface
+honors it. The actual native declarations explicitly describe `spawn_agent` as
+spawning agents, `followup_task` as triggering turns, `send_message` as messaging,
+and `interrupt_agent` as interrupting agent work. These remain rejected.
+`image_gen__imagegen` is an additional image generation/editing operation, outside
+this supported execution surface, and remains rejected.
+
+**Escalation:** the preserved actual request still advertises all five unsupported
+operations above. It also contains none of the six required adapter declarations,
+and its code-mode description explicitly says deferred tools may be omitted.
+Successful adapter calls cannot substitute for complete native surface evidence.
+No unsafe operation was invoked to probe its reachability. Neither harmless goal
+classification nor the existing feature flag establishes the required bounded
+surface. An owner-level decision is needed on obtaining a supported native tool
+surface and complete effective catalog evidence; this repair does not authorize
+component changes or relaxing the gate. Repeating paid science with this unchanged
+surface cannot resolve the known rejection.
+
+Verification, with the existing declared MCP dependency and no new installation:
+
+```sh
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps TMPDIR=../runtime/tmp RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 /home/francesco/miniconda3/bin/python -m unittest discover -s tests -v
+```
+
+Full suite: **220 reported, 213 passed, seven skipped, 21.954 seconds**. Output:
+`runtime/tmp/integration-5-unittest.txt` relative to the pipeline run. Skips are
+four disabled paid gates and three unavailable systemd user-bus checks; all four
+real Bubblewrap boundary/runtime checks passed. An initial focused run exposed
+an incorrect count assertion in the new fixture, corrected to compare the exact
+names; the subsequent full suite includes both passing new regressions.
+
+Revalidated the original `native-tools.json` through
+`native_catalog_observations(session, native_session_id)` and
+`validate_tool_catalog`, without inference or executing scientific code.
+`runtime/tmp/integration-5-native-validation.txt` records its exact source path,
+all declared names and the expected simultaneous rejection of the five unsupported
+operations plus missing `control`, `job_cancel`, `job_run`, `job_status`,
+`job_wait`, `write_draft`. This is diagnostic validation of failed evidence,
+not a replacement acceptance receipt.
+
+No paid session, alternative execution context, permission change, grant change,
+Git orchestration or component repair was performed. PROJECT.md, engineering
+AGENTS.md, manager STATUS.md and earlier science/evidence remain unchanged.
+Fresh enabled M4-only final/combined checks, review and LOCAL integration remain
+outstanding after the native boundary/evidence issue is resolved.
+
+## Recovery diagnosis: native provenance versus complete tool enumeration
+
+Read the integration-5 recovery response and final-006 command output through
+their preserved read-only controller paths after the artifact provider refused
+both requests. Inspected the original private receipt, native declaration receipt
+and backend JSONL without modifying them. The original raw request and registry
+trace were deleted with the temporary authentication home by the existing capture
+policy; the retained declarations cannot reconstruct those discarded fields.
+
+Correct the identity wording in the preceding repair report: `425d6144518a45a481eaf4f349cbff0e`
+is the **controller activation**, not the native session. The backend JSONL begins
+with native `thread.started` ID `01a1c8a7-3dbb-7670-a306-64b7fcebc7e5`.
+That native ID matches the retained manifest's root/rollout IDs, the event's
+thread/rollout IDs and its inference payload's thread ID. The manifest trace ID
+is `3fcf75f2-bfb3-4c3f-8cec-986108bd4839`; event sequence 14, inference call
+`b4b25c02-66cb-4fec-8c79-f27fa7d91fe5`, references native
+`payloads/5.json` of kind `inference_request`, model `gpt-6.1-sol`.
+Its recorded request hash remains
+`9637e9d5c6ef3d275550d9ad7a4f66d780632e6ab52288580da221b9564eb292`.
+These identify the recorded request; neither the hash nor these IDs certify a
+complete effective registry.
+
+Traced the source path in code: `cli.run_session` opens a newly created `private_auth`
+home containing only copied native file authentication, enters `native_tool_trace`,
+then invokes the production isolation launcher with `build_command`. Bubblewrap
+uses `--clearenv`, supplies private HOME/CODEX_HOME, and sets
+`CODEX_ROLLOUT_TRACE_ROOT` inside that home. Caller CODEX session/thread variables,
+configuration and developer conversations are not passed through that environment.
+`EventRecorder` obtains the native ID from backend stdout. On closure,
+`native_tool_trace` reads the backend-written manifest and
+`inference_started.request_payload`, retaining developer `additional_tools`
+items from the request's **input**. It does not retain the request's other
+tool/metadata fields or a deferred MCP inventory. This is not a call to
+`codex debug prompt-input`. The original tracing/capture code and inner
+permissions have not been changed.
+
+To distinguish native defaults from caller environment without any inference,
+ran the installed standalone's local `debug prompt-input` renderer with an empty
+working directory, empty temporary HOME/CODEX_HOME, no credentials and an explicit
+environment containing only PATH, HOME, CODEX_HOME, TMPDIR, LANG and
+TOKIO_WORKER_THREADS. Applied the original shell/multi-agent/apps/plugins disable
+flags and code-mode settings. The resulting context contains no original project
+path. It still declares `collaboration.followup_task`, `interrupt_agent`,
+`send_message` and `spawn_agent`. Exact argv, environment, declaration content,
+hash and diagnostic classification are retained in
+`runtime/tmp/recovery-native-clean-debug.json`, relative to the pipeline run.
+This renderer starts no research/inference session and is **not** acceptance
+evidence for the production session, deferred tools or operation reachability.
+It does establish that catalog resemblance alone does not identify inherited
+controller context: the standalone renderer produces these collaboration
+declarations even in this empty environment. The earlier prerequisite warning
+against using a debug rendering as isolated-session acceptance remains binding.
+
+The [official configuration reference](https://developers.openai.com/codex/config-reference/)
+documents `features.multi_agent=false` for disabling collaboration, while the
+[app-server reference](https://developers.openai.com/codex/app-server/) documents
+`mcpServerStatus/list` with `threadId` to reuse the actual thread's MCP connection.
+Both pages were fetched during diagnosis. An inventory from a different
+app-server thread, an independently launched MCP client, desired configuration or
+successful calls is not an inventory of this `exec` session. No such substitute
+was created. The production session's static declarations advertise the four
+collaboration operations and image generation; all five remain rejected.
+Their actual reachability was not probed.
+
+**Escalation remains required, with narrower conclusions.** The native request
+attribution and clean renderer observation do not support blaming inherited OS
+environment for these declarations. They also do not prove that all advertised
+operations are executable or that all deferred tools were enumerated. The
+installed `exec` boundary has not established a supported bounded effective
+surface under its configured feature flags. Complete same-session MCP evidence
+could establish the six adapter operations, but would not remove the rejected
+static declarations. An owner-level backend decision is needed to establish a
+supported way to suppress those routes and obtain complete same-session
+enumeration. No additional paid study is justified while this remains unresolved.
+No allowlist expansion, guessed backend setting, alternative research launcher,
+authentication change or component repair was made. M4 acceptance and integration
+remain outstanding; earlier accepted science and failed receipts are preserved.
+
+Verification used the existing prepared MCP dependency:
+
+```sh
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps TMPDIR=../runtime/tmp RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 /home/francesco/miniconda3/bin/python -m unittest discover -s tests -v
+```
+
+**220 reported, 213 passed, seven skipped, 21.892 seconds; exit zero.**
+Output: `runtime/tmp/recovery-provenance-unittest.txt` relative to the pipeline
+run. Skips remain the four opt-in paid gates and three unavailable systemd
+user-bus checks; the real Bubblewrap boundary/runtime tests passed. Existing
+tests cover native request retention/identity mismatch, rejection of prose as
+declarations, interrupted/incomplete capture, nested command bypasses, missing
+adapter operations and simultaneous reporting of the five rejected routes.
+No production behavior changed and no new implementation-mirroring test was
+added. This recovery updates disclosure and diagnoses the blocker; it does not
+establish effective registry completeness, enabled-host acceptance or integration.
+PROJECT.md, engineering AGENTS.md and manager STATUS.md remain untouched.
+
+## Recovery repair: supported native gates and complete request capture
+
+The supplied integration-5 recovery response supersedes the preceding escalation.
+It authorizes the installed component's narrow native gates as a reference and
+requires non-paid configuration/capture evidence before further paid research.
+Read PROJECT.md and engineering AGENTS.md fully, the recovery response, preserved
+diff and complete final-006 command log (331495 bytes, 2538 lines). The artifact
+provider refused these paths; the preserved local files supplied read-only access.
+Final-006 remains failed evidence, with its science and receipts unchanged.
+
+Inspected `coding_pipeline/cwi/backend.py` and its native offline-inventory test,
+plus the manager's `manager-native-gates-hwmefown/receipt-supported-debug.json`.
+Fetched the official [configuration reference](https://developers.openai.com/codex/config-reference/),
+which documents direct-only and excluded Code Mode namespaces. The installed
+implementation/diagnostic supplies the separate native collaboration gate;
+documentation or configuration listings alone are not acceptance evidence.
+
+The research command now uses strict configuration and
+`features.multi_agent_v2={enabled=false,disable_native_tools=true}`, disables
+image generation, both Code Mode hosts and host skill discovery, and makes
+`mcp__research_jobs` direct-only while excluding native collaboration. It retains
+the installed backend, configured production model, native authentication,
+workspace permissions, six-operation adapter and original cumulative grants.
+The five unsupported operations remain rejected; no allowlist was expanded.
+
+Capture now retains both top-level `tools` and every native `additional_tools`
+protocol item, including nested declarations, before private-home cleanup.
+An absent optional request `tools` field is recorded explicitly as an empty list;
+old receipts with no retained `tools` field remain incomplete. Deduplication
+includes both locations, so a changed top-level route cannot disappear behind
+unchanged nested declarations. User-role declarations are rejected, message
+prose is excluded and native session identity validation remains mandatory.
+The existing 4 MiB evidence bound and removal of full private traces remain.
+
+Added a credential-free native diagnostic using the actual strict research
+command, Bubblewrap mounts, installed MCP server and a loopback request receiver
+that returns HTTP 400 before inference. It compares retained declarations with
+the receiver's actual request and all six direct parameter schemas with the
+SDK (Codex removes SDK title/default annotations). This diagnostic uses no
+systemd service and is not a service-grant or actual research acceptance receipt.
+It admits no scientific job. The existing enabled M4 gate runs this prerequisite
+before launching paid research even if unittest continues after another failure.
+A regression confirms failure starts no paid process or science directory.
+Fresh actual-session schemas are also compared and retained by that same M4 gate.
+No additional paid gate or paid probe was added.
+
+Fresh retained diagnostic:
+
+- Directory: `runtime/tmp/research-native-request-x4j2s24l`, relative to this run.
+  `.research_pipeline/receipt.json` contains exact argv, configuration, schemas
+  and diagnostic scope; `session/native-tools.json` retains request provenance.
+- Native session: `01a1c8cc-140f-7161-9d13-b75dfa6e3989`.
+  Request SHA-256: `ca4adb39957040ff91607ea86b34b74858bef811c6c89c50e4841e47b7cd1c27`.
+- Twenty declared operations include all six direct adapter schemas.
+  No collaboration, image generation, nested shell execution or unknown route
+  was declared. No Authorization header, credentials or scientific job was used.
+  The temporary native home was removed after selected evidence retention.
+- `runtime/tmp/recovery-native-request-diagnostic.txt` records the passed
+  0.425-second diagnostic. Its small runner is
+  `runtime/tmp/capture-research-native-request.py`.
+
+Verification command, from the supplied worktree:
+
+```sh
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps TMPDIR=../runtime/tmp RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 /home/francesco/miniconda3/bin/python -m unittest discover -s tests -v
+```
+
+**222 reported, 215 passed, seven skipped, 22.497 seconds; exit zero.**
+Full output: `runtime/tmp/recovery-native-surface-full.txt`, relative to this run.
+Skips are four disabled paid gates, the unavailable systemd service test class
+and two service job checks. Native Bubblewrap/MCP calculation, runtime expiry,
+partial artifacts, detached-descendant cleanup and the new request diagnostic
+passed. Existing accounting, continuity, human-edit and verification checks passed.
+The cleanup-unconfirmed diagnostic is expected injected-failure coverage.
+
+Initial diagnostic development exposed the native request's optional absent
+`tools` field and removal of SDK schema annotations; capture/comparison now
+handles those observed formats. No unsafe route was accepted to obtain a pass.
+
+This resolves the implementation prerequisite to code readiness only. Normal
+review and fresh enabled controller-host final/required combined verification
+must still establish the actual research-session surface, model-authored critical
+reuse, isolated numerical reproduction, integrity, cumulative accounting and full
+owned-service cleanup, followed by pipeline-confirmed LOCAL integration.
+Only M4 and the frozen output directory may be enabled there; all original time
+ceilings remain. This restricted worker has no user bus and ran no paid research,
+alternative service context, component repair, Git orchestration or integration.
+PROJECT.md, engineering AGENTS.md, manager STATUS.md, original authentication and
+accepted earlier evidence were preserved. M4 closeout, M5 and project completion
+are not claimed.

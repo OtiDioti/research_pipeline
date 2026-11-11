@@ -35,9 +35,15 @@ def validate_tool_catalog(catalog):
     expected = {"job_run", "job_status", "job_wait", "job_cancel", "write_draft", "control"}
     harmless = {"exec", "wait", "apply_patch", "view_image", "list_mcp_resources",
                 "list_mcp_resource_templates", "read_mcp_resource", "web", "web_search",
-                "request_user_input", "request_user_input_async", "clock.sleep", "clock__curr_time"}
+                "web__run", "request_user_input", "request_user_input_async",
+                "clock.sleep", "clock__curr_time", "create_goal", "get_goal", "update_goal",
+                "collaboration.list_agents", "collaboration.wait_agent"}
+    # Native goals manage backend continuation, not investigation authorization.
+    # Goals, reads and waits remain inside the original service deadline/grants.
+    # Agent spawning/messaging and other execution routes are deliberately absent.
     found = set()
     names = []
+    problems = []
     if not isinstance(catalog, list) or not catalog:
         raise RuntimeUnavailable("Native effective tool catalog missing or malformed")
     for entry in catalog:
@@ -54,18 +60,20 @@ def validate_tool_catalog(catalog):
         elif name == "web.run":
             continue
         elif name.removeprefix("functions.") not in harmless:
-            raise RuntimeUnavailable(f"Unsupported native tool surface: {name}; unrestricted or unknown route")
+            problems.append(f"Unsupported native tool surface: {name}; unrestricted or unknown route")
         elif name.removeprefix("functions.") == "exec" and not any(
                 phrase in entry.get("description", "").lower() for phrase in ("javascript", "code mode")):
-            raise RuntimeUnavailable(f"Unsupported native execution tool: {name}; code-mode orchestration unconfirmed")
+            problems.append(f"Unsupported native execution tool: {name}; code-mode orchestration unconfirmed")
     if found != expected:
-        raise RuntimeUnavailable("Controlled adapter unavailable in native tool catalog: missing "
-                                 + ", ".join(sorted(expected - found)))
+        problems.append("Controlled adapter unavailable in native tool catalog: missing "
+                        + ", ".join(sorted(expected - found)))
+    if problems:
+        raise RuntimeUnavailable("; ".join(problems))
     return names
 
 
 def request_tool_catalog(declarations):
-    """Read the native additional_tools format, including code-mode exposure."""
+    """Read native request declarations, including nested code-mode exposure."""
     catalog = []
     def visit(items, namespace=""):
         for item in items:
@@ -128,17 +136,23 @@ def native_tool_trace(auth_home, session):
                         request = json.loads(raw)
                         # additional_tools is a native protocol item, not user text.
                         declarations = [item for item in request["input"]
-                                        if item.get("type") == "additional_tools"
-                                        and item.get("role") == "developer"]
-                        if not declarations:
+                                        if item.get("type") == "additional_tools"]
+                        if any(item.get("role") not in (None, "system", "developer")
+                               for item in declarations):
+                            raise ValueError("Unsupported native additional_tools role")
+                        tools = request.get("tools", [])
+                        if not isinstance(tools, list):
+                            raise ValueError("Unsupported native tools field")
+                        if not tools and not declarations:
                             continue
-                        digest = hashlib.sha256(json.dumps(declarations, sort_keys=True).encode()).hexdigest()
+                        surface = {"tools": tools, "additional_tools": declarations}
+                        digest = hashlib.sha256(json.dumps(surface, sort_keys=True).encode()).hexdigest()
                         if digest in seen:
                             continue
                         seen.add(digest)
                         observation = {"manifest": manifest, "event": event,
                             "request_sha256": hashlib.sha256(raw).hexdigest(),
-                            "model": request["model"], "additional_tools": declarations}
+                            "model": request["model"], **surface}
                         used += len(json.dumps(observation).encode())
                         if used > 4 * 1024 * 1024:
                             raise ValueError("Native tool evidence exceeds 4 MiB; capability unverified")
@@ -164,8 +178,11 @@ def native_catalog_observations(session, native_session_id):
             raise RuntimeUnavailable("Native tool evidence belongs to a different session")
         if event["schema_version"] != 2 or payload["type"] != "inference_started":
             raise RuntimeUnavailable("Unsupported native tool evidence")
-        catalogs.append(request_tool_catalog(
-            [tool for item in observation["additional_tools"] for tool in item["tools"]]))
+        if not isinstance(observation.get("tools"), list):
+            raise RuntimeUnavailable("Native top-level tool evidence missing; capture is incomplete")
+        catalogs.append(request_tool_catalog([
+            *observation["tools"],
+            *(tool for item in observation["additional_tools"] for tool in item["tools"])]))
     return catalogs
 
 
@@ -212,7 +229,7 @@ def verify_backend(config, on_wait=None):
         if time.monotonic() >= config.deadline:
             raise TimeoutError("Wall budget exhausted while inspecting Codex") from exc
         raise RuntimeUnavailable(f"Cannot inspect installed Codex: {exc}") from exc
-    for flag in ("--ignore-user-config", "--ignore-rules", "--ephemeral", "--json", "--sandbox"):
+    for flag in ("--strict-config", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--json", "--sandbox"):
         if flag not in help_result.stdout:
             raise RuntimeUnavailable(f"Installed Codex lacks required controlled-execution option: {flag}")
     return {"version": version, "executable": config.codex, "model": config.model or "backend default"}
@@ -221,7 +238,7 @@ def verify_backend(config, on_wait=None):
 def build_command(config):
     from .workspace import writable_directories, task_directory
     args = ["/opt/codex/" + Path(config.codex).name, "exec", "--ignore-user-config", "--ignore-rules",
-            "--ephemeral", "--skip-git-repo-check", "--json", "--color", "never",
+            "--strict-config", "--ephemeral", "--skip-git-repo-check", "--json", "--color", "never",
             "--sandbox", "workspace-write", "-C", f"/project/{task_directory(config.task_id)}"]
     for rel in writable_directories(config.task_id):
         args += ["--add-dir", f"/project/{rel}"]
@@ -232,8 +249,12 @@ def build_command(config):
         'sandbox_workspace_write.network_access=true', 'features.multi_agent=false',
         'features.apps=false', 'cli_auth_credentials_store="file"',
         'features.shell_tool=false', 'features.plugins=false',
-        # Current model metadata requires code mode even if its feature is disabled.
-        'features.code_mode.enabled=true', 'features.code_mode_host=true',
+        # Native Code Mode collaboration has a separate gate from multi_agent.
+        'features.multi_agent_v2={enabled=false,disable_native_tools=true}',
+        'features.image_generation=false', 'features.skip_host_skill_discovery=true',
+        'features.code_mode_host=false', 'features.code_mode_host_grpc=false',
+        # Keep all six MCP schemas in the actual request, outside deferred tools.
+        'features.code_mode={enabled=true,direct_only_tool_namespaces=["mcp__research_jobs"],excluded_tool_namespaces=["collaboration"]}',
         'check_for_update_on_startup=false',
     ]
     from .jobs import adapter_mounts, TRUSTED_PYTHON_FLAGS

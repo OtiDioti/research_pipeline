@@ -3,11 +3,14 @@ import asyncio
 from contextlib import contextmanager
 from dataclasses import asdict, replace
 import json
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import os
 from pathlib import Path
 import subprocess
+import shutil
 import sys
 import tempfile
+import threading
 import time
 import tomllib
 import unittest
@@ -15,7 +18,7 @@ import uuid
 from unittest.mock import patch
 from types import SimpleNamespace
 
-from tests import use_checkout
+from tests import use_checkout, check_native_adapter_schemas
 use_checkout()
 from research_pipeline import budget, codex, isolation, jobs, references, tools, workspace
 from research_pipeline.job_server import Adapter, create_server
@@ -112,6 +115,15 @@ class AdmissionTests(unittest.TestCase):
                                          if arg == "-c"))
         self.assertEqual(settings["approval_policy"], "never")
         self.assertFalse(settings["features"]["shell_tool"])
+        self.assertEqual(settings["features"]["multi_agent_v2"],
+                         {"enabled": False, "disable_native_tools": True})
+        self.assertFalse(settings["features"]["image_generation"])
+        self.assertFalse(settings["features"]["code_mode_host"])
+        self.assertFalse(settings["features"]["code_mode_host_grpc"])
+        self.assertEqual(settings["features"]["code_mode"], {
+            "enabled": True, "direct_only_tool_namespaces": ["mcp__research_jobs"],
+            "excluded_tool_namespaces": ["collaboration"]})
+        self.assertIn("--strict-config", command)
         self.assertEqual(set(settings["mcp_servers"]), {"research_jobs"})
         adapter = settings["mcp_servers"]["research_jobs"]
         self.assertEqual(set(adapter["enabled_tools"]), names)
@@ -119,6 +131,19 @@ class AdmissionTests(unittest.TestCase):
                          {name: {"approval_mode": "approve"} for name in names})
         self.assertNotIn("default_tools_approval_mode", adapter)
         self.assertTrue(adapter["required"])
+
+    def test_failed_native_prerequisite_blocks_m4_before_paid_launch(self):
+        from tests import test_m4_live
+        with patch.dict(os.environ, {"RESEARCH_PIPELINE_M4_OUTPUT_DIR": str(self.root)}), \
+             patch.object(test_m4_live.job_tests.NativeJobTests,
+                          "test_native_direct_adapter_request_without_credentials_or_inference",
+                          side_effect=RuntimeError("incomplete native inventory")), \
+             patch.object(subprocess, "Popen") as launch:
+            case = test_m4_live.LiveM4Acceptance("test_actual_discovery_qualified_reuse_and_tools")
+            with self.assertRaisesRegex(AssertionError, "no paid research authorized"):
+                case.test_actual_discovery_qualified_reuse_and_tools()
+            launch.assert_not_called()
+        self.assertFalse(list(self.root.glob("m4-live-*")))
 
     def test_native_catalog_check_rejects_bypasses_and_missing_adapter(self):
         catalog = [{"name": "mcp__research_jobs__" + name} for name in
@@ -133,6 +158,66 @@ class AdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(isolation.RuntimeUnavailable, "execution tool"):
             codex.validate_tool_catalog([*catalog, {"name": "exec", "description": "Runs host commands"}])
 
+    def test_native_utilities_do_not_authorize_other_routes_or_replace_adapter(self):
+        adapter = [{"name": "mcp__research_jobs__" + name} for name in
+                   ("job_run", "job_wait", "job_status", "job_cancel", "write_draft", "control")]
+        utilities = ("create_goal", "get_goal", "update_goal", "clock__curr_time", "web__run",
+                     "collaboration.list_agents", "collaboration.wait_agent")
+        for prefix in ("", "functions."):
+            catalog = adapter + [{"name": prefix + name} for name in utilities]
+            self.assertEqual(codex.validate_tool_catalog(catalog), [c["name"] for c in catalog])
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "adapter unavailable"):
+            codex.validate_tool_catalog([{"name": name} for name in utilities])
+        for unsafe in ("create_goal_and_run", "goals.exec", "collaboration.spawn_agent",
+                       "collaboration.followup_task", "collaboration.send_message",
+                       "collaboration.interrupt_agent", "image_gen__imagegen",
+                       "exec_command", "shell_command", "write_stdin", "mcp__other__job_run"):
+            with self.subTest(unsafe=unsafe), self.assertRaisesRegex(
+                    isolation.RuntimeUnavailable, "Unsupported native"):
+                codex.validate_tool_catalog([*catalog, {
+                    "name": unsafe, "description": "Harmless read-only lifecycle utility"}])
+
+    def test_final_006_surface_reports_all_unsupported_routes_and_missing_adapter(self):
+        # Names/namespace layout from the session-bound native request in the
+        # preserved m4-live-qm3yf9ki receipt. No adapter declarations were present.
+        nested = ("apply_patch", "create_goal", "get_goal", "list_mcp_resource_templates",
+                  "list_mcp_resources", "read_mcp_resource", "update_goal", "view_image",
+                  "clock__curr_time", "image_gen__imagegen", "web__run")
+        description = "Run JavaScript code to orchestrate/compose tool calls\n" + "".join(
+            f"\n### `{name}`\nNative operation.\n\nexec tool declaration:\n"
+            f"```ts\ndeclare const tools: {{ {name}(args: {{}}): Promise<unknown>; }};\n```\n"
+            for name in nested)
+        declarations = [
+            {"type": "namespace", "name": "functions", "tools": [
+                {"type": "custom", "name": "exec", "description": description},
+                *({"type": "function", "name": name} for name in
+                  ("wait", "request_user_input", "request_user_input_async"))]},
+            {"type": "namespace", "name": "clock", "tools": [
+                {"type": "function", "name": "sleep"}]},
+            {"type": "namespace", "name": "collaboration", "tools": [
+                {"type": "function", "name": name} for name in
+                ("followup_task", "interrupt_agent", "list_agents",
+                 "send_message", "spawn_agent", "wait_agent")]}]
+        catalog = codex.request_tool_catalog(declarations)
+        self.assertEqual([c["name"] for c in catalog], [
+            "functions.exec", *nested, "functions.wait", "functions.request_user_input",
+            "functions.request_user_input_async", "clock.sleep", "collaboration.followup_task",
+            "collaboration.interrupt_agent", "collaboration.list_agents",
+            "collaboration.send_message", "collaboration.spawn_agent", "collaboration.wait_agent"])
+        with self.assertRaises(isolation.RuntimeUnavailable) as caught:
+            codex.validate_tool_catalog(catalog)
+        diagnostic = str(caught.exception)
+        for unsupported in ("image_gen__imagegen", "collaboration.followup_task",
+                            "collaboration.interrupt_agent", "collaboration.send_message",
+                            "collaboration.spawn_agent"):
+            self.assertIn("Unsupported native tool surface: " + unsupported, diagnostic)
+        self.assertIn("Controlled adapter unavailable", diagnostic)
+        for name in ("job_run", "job_status", "job_wait", "job_cancel", "write_draft", "control"):
+            self.assertIn(name, diagnostic)
+        for harmless in ("create_goal", "get_goal", "update_goal", "web__run",
+                         "collaboration.list_agents", "collaboration.wait_agent"):
+            self.assertNotIn("Unsupported native tool surface: " + harmless, diagnostic)
+
     def test_native_request_evidence_retained_and_bound_to_fresh_session(self):
         home, session = self.root / "private-home", self.config.job_context.parent.parent
         bundle = home / "native-trace/trace-fixture"
@@ -146,9 +231,9 @@ class AdmissionTests(unittest.TestCase):
                  "payload": {"type": "inference_started", "thread_id": "fresh",
                              "request_payload": {"kind": {"type": "inference_request"},
                                                  "path": "payloads/1.json"}}}
-        request = {"model": "fixture", "input": [
+        request = {"model": "fixture", "tools": declarations[:3], "input": [
             {"type": "message", "role": "user", "content": "Not tool evidence"},
-            {"type": "additional_tools", "role": "developer", "tools": declarations}]}
+            {"type": "additional_tools", "role": "developer", "tools": declarations[3:]}]}
         (bundle / "manifest.json").write_text(json.dumps(manifest))
         (bundle / "trace.jsonl").write_text(json.dumps(event) + "\n")
         (bundle / "payloads/1.json").write_text(json.dumps(request))
@@ -166,7 +251,28 @@ class AdmissionTests(unittest.TestCase):
         (bundle / "payloads/1.json").write_text(json.dumps(request))
         with codex.native_tool_trace(home, session):
             pass
-        self.assertEqual(codex.native_catalog_observations(session, "fresh"), [])
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "additional_tools role"):
+            codex.native_catalog_observations(session, "fresh")
+        # A change only in top-level tools must not be deduplicated away.
+        request["input"][1]["role"] = "developer"
+        (bundle / "payloads/1.json").write_text(json.dumps(request))
+        request["tools"].append({"type": "function", "name": "exec_command"})
+        (bundle / "payloads/2.json").write_text(json.dumps(request))
+        event["payload"]["request_payload"]["path"] = "payloads/2.json"
+        with (bundle / "trace.jsonl").open("a") as stream:
+            stream.write(json.dumps(event) + "\n")
+        with codex.native_tool_trace(home, session):
+            pass
+        catalogs = codex.native_catalog_observations(session, "fresh")
+        self.assertEqual(len(catalogs), 2)
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "exec_command"):
+            codex.validate_tool_catalog(catalogs[1])
+        # Earlier receipts omitted top-level tools; they cannot certify completeness.
+        receipt = json.loads((session / "native-tools.json").read_text())
+        del receipt["observations"][0]["tools"]
+        (session / "native-tools.json").write_text(json.dumps(receipt))
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "capture is incomplete"):
+            codex.native_catalog_observations(session, "fresh")
         (bundle / "payloads/1.json").write_text("{incomplete")
         with codex.native_tool_trace(home, session):
             pass
@@ -540,6 +646,95 @@ asyncio.run(main())
 
 
 class NativeJobTests(unittest.TestCase):
+    def test_native_direct_adapter_request_without_credentials_or_inference(self):
+        """Capture the installed CLI request, using real MCP and isolation mounts.
+
+        The loopback server returns an error before inference. This diagnostic
+        never supplies authentication or executes a scientific command.
+        """
+        binary = shutil.which("codex")
+        if not binary:
+            if live_enabled():
+                self.fail("Enabled native job diagnostic requires installed Codex")
+            self.skipTest("Codex unavailable; native job catalog unverified")
+        captured = []
+        authenticated = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                authenticated.append("Authorization" in self.headers)
+                captured.append(json.loads(self.rfile.read(int(self.headers["Content-Length"]))))
+                self.send_response(400)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(b'{"error":{"message":"Offline tool inventory captured",'
+                                 b'"type":"invalid_request_error"}}')
+
+            def log_message(self, *unused):
+                pass
+
+        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": .02},
+                                  daemon=True)
+        thread.start()
+        try:
+            with self.directory() as root:
+                state, config, manager = setup(root)
+                config.codex = str(Path(binary).resolve())
+                config.model = "gpt-6.1-sol"
+                home = root / ".research_pipeline/empty-native-home"
+                home.mkdir(mode=0o700)
+                argv = codex.build_command(config)
+                # Only this diagnostic changes the provider, to a local receiver
+                # with no inference capability and no credential requirement.
+                argv[-1:-1] = [
+                    "-c", 'model_provider="inventory"',
+                    "-c", 'model_providers.inventory={name="Offline inventory",base_url="http://127.0.0.1:'
+                    + str(server.server_port)
+                    + '/v1",wire_api="responses",requires_openai_auth=false,'
+                      'request_max_retries=0,stream_max_retries=0}']
+                command = isolation.bubblewrap_command(
+                    root, argv, codex=config.codex, auth_home=home,
+                    drafts=config.drafts, control=config.control, response=config.response,
+                    reference_mounts=config.reference_mounts, reference_catalog=config.reference_catalog,
+                    tool_context=config.tool_context, job_context=config.job_context)
+                session = config.job_context.parent.parent
+                with codex.native_tool_trace(home, session):
+                    result = subprocess.run(command, input="Offline tool inventory only.",
+                                            capture_output=True, text=True, timeout=25)
+                self.assertTrue(captured, result.stdout + result.stderr)
+                recorder = codex.EventRecorder(session / "offline-events")
+                try:
+                    recorder("stdout", result.stdout.encode())
+                finally:
+                    recorder.close()
+                catalogs = codex.native_catalog_observations(session, recorder.native_session_id)
+                self.assertTrue(catalogs, "Native request evidence missing")
+                inventories = [codex.validate_tool_catalog(c) for c in catalogs]
+                # Establish the six actual schemas from the serialized request,
+                # independently comparing them with the real SDK declarations.
+                evidence = json.loads((session / "native-tools.json").read_text())
+                schemas = check_native_adapter_schemas(self, evidence)
+                # Check that retained evidence matches what reached the receiver.
+                self.assertEqual(evidence["observations"][0]["tools"], captured[0].get("tools", []))
+                self.assertEqual(evidence["observations"][0]["additional_tools"],
+                                 [i for i in captured[0]["input"] if i.get("type") == "additional_tools"])
+                self.assertTrue(all(not n.startswith("collaboration.") for n in inventories[0]))
+                self.assertFalse((home / "auth.json").exists())
+                self.assertFalse(any(authenticated), "Diagnostic sent authentication")
+                self.assertFalse(state.get("jobs"), "Inventory diagnostic admitted scientific work")
+                shutil.rmtree(home)  # keep only selected tool evidence, as in production
+                self.receipt(root, config, state, command, {
+                    "kind": "Credential-free native request diagnostic; no inference",
+                    "returncode": result.returncode, "catalogs": inventories,
+                    "actual_adapter_schemas": schemas, "authentication_present": False,
+                    "provider_request": "loopback capture only",
+                    "native_session_id": recorder.native_session_id}, result.stderr)
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
     def require_service(self):
         if not os.environ.get("DBUS_SESSION_BUS_ADDRESS") or not os.environ.get("XDG_RUNTIME_DIR"):
             if live_enabled():

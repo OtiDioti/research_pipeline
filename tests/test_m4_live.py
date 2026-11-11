@@ -13,9 +13,10 @@ import time
 import unittest
 import uuid
 
-from tests import use_checkout, job_driver
+from tests import use_checkout, job_driver, check_native_adapter_schemas
 use_checkout()
 from research_pipeline import codex, isolation, references, tools, workspace, jobs
+from tests import test_jobs as job_tests
 
 
 METHOD = '''"""User-supplied general periodic trapezoidal quadrature; no accuracy guarantee."""
@@ -196,6 +197,14 @@ class LiveM4Acceptance(unittest.TestCase):
         self.assertTrue(output, "Enabled M4 requires RESEARCH_PIPELINE_M4_OUTPUT_DIR")
         base = Path(output).absolute()
         base.mkdir(parents=True, exist_ok=True)
+        # unittest discovery continues after failures. Establish this prerequisite
+        # here too, before starting any paid research, rather than relying on the
+        # separately collected diagnostic having passed earlier in the suite.
+        prerequisite = unittest.TestResult()
+        job_tests.NativeJobTests("test_native_direct_adapter_request_without_credentials_or_inference").run(prerequisite)
+        self.assertTrue(prerequisite.wasSuccessful() and not prerequisite.skipped,
+                        "Native boundary prerequisite failed; no paid research authorized: "
+                        + str(prerequisite.errors + prerequisite.failures + prerequisite.skipped))
         run = Path(tempfile.mkdtemp(prefix="m4-live-", dir=base))
         run.chmod(0o700)
         project, prior = run / "project", run / "prior"
@@ -349,6 +358,8 @@ class LiveM4Acceptance(unittest.TestCase):
                 observed = codex.native_catalog_observations(path.parent, session["native_session_id"])
                 self.assertTrue(observed, "Fresh native request tool declarations missing; capability is unverified")
                 catalogs.extend(observed)
+                receipt.setdefault("native_adapter_schemas", []).extend(
+                    check_native_adapter_schemas(self, receipt["native_tool_evidence"][-1]))
             emitted_usage = {}
             for event in events:
                 if event.get("type") == "turn.completed":

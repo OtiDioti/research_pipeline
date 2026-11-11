@@ -344,8 +344,8 @@ class ProjectCase(unittest.TestCase):
         command = codex.build_command(isolation.Config())
         self.assertIn('project_doc_max_bytes=0', command)
         self.assertIn('features.multi_agent=false', command)
-        self.assertIn('features.code_mode.enabled=true', command)
-        self.assertIn('features.code_mode_host=true', command)
+        self.assertIn('features.code_mode_host=false', command)
+        self.assertIn('--strict-config', command)
         self.assertIn('/run/research-checkpoint', command)
         self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', command)
 
