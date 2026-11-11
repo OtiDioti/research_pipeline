@@ -7,7 +7,7 @@ name = "research-pipeline"
 version = "0.1.0"
 description = "A bounded, artifact-centered Codex research investigation"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = ["mcp>=1.26,<2"]
 
 [project.scripts]
 research-pipeline = "research_pipeline.cli:main"

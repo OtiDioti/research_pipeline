@@ -31,7 +31,7 @@ only the separate M1/M2 paid gates disabled. M4 now implements explicit referenc
 navigation/retrieval and locally validated reusable tools. **This M4 increment passed**
 enabled final/combined verification and integrated locally at `37f35d6`: both suites
 passed 210 tests with only the separate M1–M3 paid gates disabled.
-M4 compute-job runtime/concurrency and budget-reporting closeout remains outstanding. The M5 physics-benchmark
+M4 job controls and reporting are implemented pending fresh enabled controller-host verification and local integration. The M5 physics-benchmark
 investigation remains deferred.
 
 ## Authorized reference retrieval
@@ -469,7 +469,8 @@ mkdir -p /path/to/investigation/starting_evidence
 # Write the human questions in starting_evidence/RESEARCH_QUESTIONS.md.
 # Add relevant notes, papers, code or datasets and optional root AGENTS.md.
 .venv/bin/research-pipeline start /path/to/investigation \
-  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 --primary-session-seconds 300
+  --wall-seconds 600 --memory-mib 2048 --max-tasks 128 --primary-session-seconds 300 \
+  --job-runtime-seconds 60 --max-jobs 1
 .venv/bin/research-pipeline inspect /path/to/investigation
 .venv/bin/research-pipeline inspect /path/to/investigation --json
 ```
@@ -478,6 +479,69 @@ mkdir -p /path/to/investigation/starting_evidence
 and account-supported model. Without `--model`, Codex selects its backend default;
 the controller does not assert a particular resolved model. All limits must be
 positive and finite.
+
+Scientific commands use the `research_jobs` stdio MCP adapter. The installed `mcp`
+dependency and Python runtime are mounted read-only inside each original research
+service. Trusted adapter/supervisor launches exclude the research working directory
+and user site from Python's import search (`-P -s`); scientific argv retains ordinary
+workspace imports. Codex retains `workspace-write`, ignored inherited configuration/rules,
+ephemeral contexts and native file authentication; its stock command-launch tools,
+apps, plugins and backend agent spawning are disabled. The enabled M4 host gate
+must observe the fresh native effective tool catalog and reject any unrestricted
+or unknown execution route or missing controlled tool. Config/features listings
+and controller test doubles do not establish that capability.
+
+The agent uses `job_run(argv, cwd, runtime_seconds?, yield_seconds?)`; for example,
+`job_run(["python3", "calculate.py"], "/project/work")`. It may explicitly run
+`["/bin/bash", "-c", "..."]`, edit/debug its own code and install scientific
+dependencies in its activation's `/tmp`. Scientific scripts remain ordinary
+researcher-authored files and do not pass through coding_pipeline. Shell pipelines,
+threads and detached descendants all belong to the same admitted job. Code mode
+orchestrates these tools inside the backend; in-process model/tool orchestration
+remains part of the aggregate service grant, rather than an admitted argv job.
+
+`--job-runtime-seconds` defaults to **60 seconds** and `--max-jobs` to **1 across
+the investigation**, including primary, researchers and verifiers. A caller may
+request a shorter runtime. Preparation consumes that runtime, and the effective
+deadline is the minimum of admission plus runtime, role-session deadline and the
+original investigation deadline. A trusted supervisor outside each job's nested
+Bubblewrap PID namespace enforces its timer independently of other preparation
+or MCP calls. All supervisors and descendants remain in the original service's
+memory, zero-swap, task and wall grants. Concurrency counts argv jobs, not threads,
+CPU fractions or researcher slots.
+
+`job_run` returns a terminal observation or a job ID. `job_status`, `job_wait`
+(at most five seconds per call) and `job_cancel` inspect or stop owned work.
+Primary status also shows aggregate reservations. Full capacity refuses immediately:
+`Job capacity exhausted (1/1); no command launched.` There is no queue or retry.
+A reservation persists through preparation and stopping. Capacity is released only
+after namespace teardown is confirmed; exited parents and closed pipes are not
+completion evidence. Unconfirmed cleanup retains that reservation and stops the owning role using
+the original service cleanup authority. Runtime expiry reports
+`Job runtime exhausted; partial artifacts retained.` Missing executables and failed
+commands retain bounded stdout/stderr and useful files.
+`job_status()` returns up to 32 compact summaries, prioritizing active jobs and then
+recent finished jobs, with `jobs_omitted` and `active_jobs_omitted` counts. Output
+buffers are separate: `job_status(job_id)` returns a full retained result, including
+earlier activations for the primary. History truncation does not change aggregate
+capacity counts, and reading an archived result does not authorize canceling it.
+
+Reusable-tool discovery, staging, registration and invocation commands shown
+elsewhere in this README run through `job_run`. Declared checks/runs inherit that
+job's slot and deadline; helper execution outside an admitted job fails. Dependency
+environments persist across jobs in the same activation, while fresh contexts still
+require local tool revalidation. Interrupted pending validation/receipts remain
+unsuccessful or unknown, with the controller's job diagnostics recording termination.
+
+Saving does not require a job. `write_draft("handoffs/primary.md", content)` saves
+scoped Markdown; `control(action="check"|"acknowledge"|"tasks")` handles checkpoints.
+`control(action="delegate"|"verify", path=..., parent=...)`,
+`control(action="respond", target=..., path=...)`, and
+`control(action="close", target=..., path=...)` replace the checkpoint-helper shell
+examples elsewhere in this README. New science is blocked during saving; these
+fixed operations remain available within the existing saving deadline. They
+cannot launch commands. Existing human-edit reconciliation and scientific Markdown
+publication still occur after full owned-service cleanup.
 `--max-tasks` counts processes and threads, including backend overhead.
 The research service has no swap allowance (`MemorySwapMax=0`).
 The controlled Codex launcher enables code mode and its host, as required by current
@@ -552,6 +616,13 @@ budget-increase flags. Missing usage/native identity is explicitly unknown; obse
 turn usage accumulates without adding cached input tokens a second time.
 Inspection exposes cumulative usage, completeness, remaining active time, checkpoint,
 session policy, rollover outcome, session identities and pending reconciliation.
+It also reports spent active time, persisted job limits, reservations and each
+job's state/reason. Live accounting includes the current observed controller
+interval; lost-controller intervals remain unknown until recovery settles them.
+JSON inspection includes the separate operational `budget_report` and `jobs`;
+these do not replace scientific status, findings, provenance or handoff prose.
+Supported older schema-2/3 states missing job settings adopt the conservative
+defaults after ownership cleanup; continuation cannot increase any allowance.
 
 Each activation has a stable investigation ID and logical researcher `primary`,
 and fresh activation/native session identities (native identity only when emitted).
@@ -711,13 +782,15 @@ Limits that are **not** guaranteed:
   turn usage is stored verbatim and never interpreted as context occupancy.
 - CPU fraction and aggregate CPU time are not capped. Scientific commands can use
   available CPUs within the shared wall, memory and task limits.
-- No separate per-command runtime or scientific-job scheduler. All commands share
-  the remaining investigation lifetime and aggregate quotas; single-agent runs have one researcher; collaboration uses bounded slots.
+- No CPU/thread allocation per scientific job. Runtime and concurrent argv-job
+  limits supplement the original aggregate quotas; there is no queued scheduler.
 - A 64 MiB per-file limit and 4 MiB per operational log are **not** a total disk quota.
   Private tmpfs consumes the service's memory allowance.
 - Literature/inference networking has no destination filter. No host sockets, user
-  home or custom MCP/connector configuration are supplied. The authorized backend's
-  native credentials exist in its private namespace during the run.
+  home or inherited MCP/connector configuration are supplied. The controlled job
+  adapter is platform-owned. The authorized backend's native credentials exist in
+  its private namespace; scientific job namespaces do not mount those credentials
+  or adapter admission storage.
 - Abrupt host/controller SIGKILL cannot finalize status; systemd still enforces its
   lifetime bound. Checkpoint recovery and forced pause can lose uncheckpointed work.
   Concurrent collaboration uses the fixed slot shares described above.
@@ -948,8 +1021,11 @@ all rows and user output; source/input integrity and cleanup of three services p
 passed. Reported active activity was about 277 and 282 seconds within the grants.
 These demonstrations establish the retrieval/tool increment, not whole-M4 or M5 acceptance.
 
-PROJECT.md §7.2 still requires separate compute-job runtime/concurrency controls and
-clear budget reporting; these are the next M4 increment. Known backend limitations
+PROJECT.md §7.2 job controls and operational reporting now have implementation and
+available engineering tests. M4 closeout still requires normal review, fresh enabled
+controller-host final/combined verification, the updated real M4 study and isolated
+reproduction, confirmed cleanup and pipeline-confirmed LOCAL integration.
+Accepted earlier evidence above remains intact. Known backend limitations
 remain disclosed: no hard spending cap or reliable context occupancy; CPU fraction
 and aggregate CPU time are uncapped; missing usage stays unknown; per-file limits
 are not an aggregate disk quota. Tool validation supplies none of these guarantees.

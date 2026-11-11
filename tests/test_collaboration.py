@@ -13,7 +13,7 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from tests import use_checkout
+from tests import use_checkout, record_job
 use_checkout()
 from research_pipeline import checkpoint, cli, codex, collaboration, isolation, references, workspace
 
@@ -115,6 +115,7 @@ class CollaborationTests(unittest.TestCase):
                 self.request_seen_at = None
                 case.services.append(self)
                 recorder('stdout', (json.dumps({'type':'thread.started', 'thread_id':f'native-{len(case.services)}'}) + '\n').encode())
+                record_job(config)
                 recorder('stdout', b'{"type":"item.completed","item":{"type":"command_execution","exit_code":0}}\n')
                 recorder('stdout', b'{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}\n')
                 if self.task_id == 'primary':
@@ -797,7 +798,7 @@ case.project = Path(sys.argv[1])
 atomic_text = workspace.atomic_text
 def crash_after_ack(path, text):
     atomic_text(path, text)
-    if path.name == 'ack.json' and json.loads(text).get('accepted'):
+    if path.name == 'ack.json' and path.parent.name == 'control' and json.loads(text).get('accepted'):
         child = next(t for t in case.state()['tasks'].values() if t['role'] != 'primary')
         assert child['checkpoint_prepared']
         assert not child.get('checkpoint')

@@ -6,3 +6,5 @@
 
 - [m3-collaboration.md](m3-collaboration.md) — Collaboration, finite verification, bounded real M3 gate, engineering evidence and enabled controller acceptance handoff.
 - [m4-cross-project-reuse.md](m4-cross-project-reuse.md) — Reference/tool reuse decisions, qualification and failure checks, bounded M4 gate and controller verification handoff.
+- [m4-job-boundary-prerequisite.md](m4-job-boundary-prerequisite.md) — Preserved initial capability-check escalation; the supplied sequencing response now permits implementation with mandatory host verification.
+- [m4-job-controls.md](m4-job-controls.md) — Job-boundary implementation, reporting, available verification and remaining controller-host acceptance requirements.

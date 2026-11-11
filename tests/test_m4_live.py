@@ -11,10 +11,11 @@ import sys
 import tempfile
 import time
 import unittest
+import uuid
 
-from tests import use_checkout
+from tests import use_checkout, job_driver
 use_checkout()
-from research_pipeline import codex, isolation, references, tools, workspace
+from research_pipeline import codex, isolation, references, tools, workspace, jobs
 
 
 METHOD = '''"""User-supplied general periodic trapezoidal quadrature; no accuracy guarantee."""
@@ -86,7 +87,7 @@ a=1.01,1.1,2.0 and n=16,32,64,128,256,512. Accept a different --output for repro
 You author all new science, code, checks, reasoning and results; the prior fixture
 contains only a generic method and elementary checks, not the target solution.
 
-Use STANDALONE exec_command calls containing only each helper invocation for:
+Use STANDALONE job_run calls containing only each helper argv invocation for:
 reference search, reference read, tool list --candidates, stage, both registrations
 and both tool runs. Do not combine them with authoring or checkpoint commands;
 run checkpoint checks separately. This retains actual executed-call evidence.
@@ -140,7 +141,7 @@ def standalone(command):
             lexer.whitespace_split = True
             lexer.commenters = ""
             return list(lexer)
-        args = parse(command)
+        args = list(command) if isinstance(command, list) else parse(command)
         if args and Path(args[0]).name in ("bash", "sh"):
             if len(args) != 3 or args[1] not in ("-c", "-lc"):
                 return []
@@ -257,7 +258,8 @@ class LiveM4Acceptance(unittest.TestCase):
             receipt["authorizations"] = json.loads((project / references.REGISTRY).read_text())
             start = [sys.executable, "-m", "research_pipeline", "start", str(project),
                      "--wall-seconds", "600", "--primary-session-seconds", "600",
-                     "--memory-mib", "2048", "--max-tasks", "128"]
+                     "--memory-mib", "2048", "--max-tasks", "128",
+                     "--job-runtime-seconds", "60", "--max-jobs", "1"]
             code = command(start, "start", 630)
             state = state_now()
             receipt["state"] = state
@@ -273,9 +275,17 @@ class LiveM4Acceptance(unittest.TestCase):
                 path = project / session["logs"] / "backend.jsonl"
                 for line in path.read_text().splitlines():
                     events.append(json.loads(line))
-            executed = [e["item"]["command"] for e in events if e.get("type") == "item.completed"
-                        and e.get("item", {}).get("type") == "command_execution"
-                        and e["item"].get("exit_code") == 0]
+            catalogs = codex.native_catalog_observations(events)
+            self.assertTrue(catalogs, "Fresh native effective-tool-catalog result missing; capability is unverified")
+            receipt["native_tool_catalogs"] = [codex.validate_tool_catalog(c) for c in catalogs]
+            executed = [r["argv"] for r in state.get("jobs", {}).values()
+                        if r["state"] == "completed" and r.get("returncode") == 0 and r.get("cleanup_ok") is True]
+            self.assertEqual(state["limits"]["job_runtime_seconds"], 60)
+            self.assertEqual(state["limits"]["max_jobs"], 1)
+            self.assertTrue(executed, "No admitted scientific jobs observed")
+            self.assertTrue(all(r["cleanup_ok"] and r["state"] not in jobs.ACTIVE
+                                for r in state["jobs"].values()))
+            receipt["job_limit_observations"] = {"limits": state["limits"], "jobs": state["jobs"]}
             calls = [standalone(c) for c in executed if standalone(c)]
             receipt["successful_standalone_helper_calls"] = calls
             for helper, action in (("references", "search"), ("references", "read"),
@@ -362,7 +372,13 @@ class LiveM4Acceptance(unittest.TestCase):
             reproduction.control.mkdir()
             reproduction.response.mkdir()
             references.configure(reproduction, project, session, workspace.read_intake(project, reproduction.deadline))
-            tools.configure(reproduction, project, session, "m4-reproduction")
+            repro_activation = uuid.uuid4().hex
+            tools.configure(reproduction, project, session, repro_activation)
+            repro_state = {"run_id": uuid.uuid4().hex, "activation_id": repro_activation,
+                           "ownership_nonce": uuid.uuid4().hex, "limits": reproduction.limits()}
+            manager = jobs.JobManager(project, repro_state, lambda: None)
+            manager.configure(reproduction, session, repro_state)
+            reproduction.on_poll = lambda: manager.poll()
             commands = []
             for name, output_name in (("periodic", "reproduced-example"), ("study", "reproduced-results")):
                 commands += [
@@ -371,7 +387,7 @@ class LiveM4Acceptance(unittest.TestCase):
                     ["python3", "/run/research-tools.py", "run", f"work/tools/{name}/tool.json",
                      "--", "--output", f"/project/work/{output_name}.json"]]
             driver = "import subprocess\n" + "\n".join(f"subprocess.run({c!r}, check=True)" for c in commands)
-            argv = ["/usr/bin/python3", "-c", driver]
+            argv = job_driver(reproduction, ["/usr/bin/python3", "-c", driver])
             receipt["reproduction_invocation"] = {"api": "research_pipeline.isolation.run_isolated",
                 "config": asdict(reproduction), "project": str(project), "argv": argv,
                 "exact_helper_commands": [shlex.join(c) for c in commands],
@@ -384,6 +400,8 @@ class LiveM4Acceptance(unittest.TestCase):
                     stream.write(data[:max(0, 4 * 1024 * 1024 - stream.tell())])
                 result = isolation.run_isolated(reproduction, project, argv, on_event=capture)
             receipt["reproduction"] = asdict(result)
+            manager.owner_stopped(repro_activation, result.cleanup_ok)
+            receipt["reproduction_jobs"] = repro_state.get("jobs")
             groups[reproduction.unit] = result.service_properties.get("ControlGroup", "")
             self.assertTrue(result.cleanup_ok)
             self.assertEqual(result.returncode, 0, f"Isolated reproduction failed; see {run}")

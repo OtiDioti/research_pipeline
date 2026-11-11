@@ -8,7 +8,7 @@ import time
 import uuid
 
 
-def main():
+def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     operations = parser.add_mutually_exclusive_group()
     operations.add_argument("--check", action="store_true")
@@ -20,7 +20,7 @@ def main():
     parser.add_argument("--response", metavar="RESPONSE.md")
     parser.add_argument("--reason", metavar="CLOSURE.md")
     parser.add_argument("--parent", default="primary")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if bool(args.respond) != bool(args.response) or bool(args.close_verification) != bool(args.reason):
         parser.error("--respond requires --response; --close-verification requires --reason")
     control = Path("/run/research-control")

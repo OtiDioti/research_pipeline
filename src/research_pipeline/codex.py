@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -18,12 +19,87 @@ LIMITATIONS = [
     "Verification labels apply only to explicitly frozen evidence versions; structural checks do not certify scientific independence or correctness.",
     "Model spending and context occupancy are unavailable and cannot be capped by this backend.",
     "Emitted turn usage is cumulative across activations; missing telemetry remains unknown. Usage is not context occupancy or a hard token cap.",
-    "Memory, tasks and wall time are aggregate limits shared by all scientific commands.",
+    "Memory, tasks and wall time remain aggregate limits; admitted jobs also have runtime and investigation-wide concurrency limits.",
+    "A job is an argv invocation and its complete descendant tree. Job count does not cap threads or CPU fraction.",
     "CPU fraction and aggregate CPU time are not capped.",
     "Network access is available for literature and inference; destinations are not filtered.",
     "The 64 MiB file limit and bounded logs are not an aggregate workspace disk quota.",
     "Artifact checks establish structure, not scientific correctness or successful reproduction.",
 ]
+
+CATALOG_MARKER = "RESEARCH_NATIVE_TOOLS\n"
+CATALOG_SOURCE = 'text("RESEARCH_NATIVE_TOOLS\\n" + JSON.stringify(ALL_TOOLS));'
+
+
+def validate_tool_catalog(catalog):
+    """Fail closed on a fresh native code-mode catalog, never on config text."""
+    expected = {"job_run", "job_status", "job_wait", "job_cancel", "write_draft", "control"}
+    harmless = {"exec", "wait", "apply_patch", "view_image", "list_mcp_resources",
+                "list_mcp_resource_templates", "read_mcp_resource", "web", "web_search"}
+    found = set()
+    names = []
+    if not isinstance(catalog, list) or not catalog:
+        raise RuntimeUnavailable("Native effective tool catalog missing or malformed")
+    for entry in catalog:
+        name = entry.get("name") if isinstance(entry, dict) else None
+        if not isinstance(name, str):
+            raise RuntimeUnavailable("Native effective tool catalog contains an unnamed tool")
+        names.append(name)
+        suffix = name.rsplit("__", 1)[-1]
+        if "research_jobs" in name and suffix in expected:
+            found.add(suffix)
+        elif name == "web.run":
+            continue
+        elif name.removeprefix("functions.") not in harmless:
+            raise RuntimeUnavailable(f"Unsupported native tool surface: {name}; unrestricted or unknown route")
+        elif name.removeprefix("functions.") == "exec" and not any(
+                phrase in entry.get("description", "").lower() for phrase in ("javascript", "code mode")):
+            raise RuntimeUnavailable(f"Unsupported native execution tool: {name}; code-mode orchestration unconfirmed")
+    if found != expected:
+        raise RuntimeUnavailable("Controlled adapter unavailable in native tool catalog: missing "
+                                 + ", ".join(sorted(expected - found)))
+    return names
+
+
+def native_catalog_observations(events):
+    """Read actual tool-result output, excluding prompts, generated source and prose."""
+    catalogs = []
+    def scan(value):
+        if isinstance(value, str) and value.startswith(CATALOG_MARKER):
+            try:
+                catalogs.append(json.loads(value[len(CATALOG_MARKER):]))
+            except ValueError:
+                pass
+        elif isinstance(value, dict):
+            for key, child in value.items():
+                if key not in ("arguments", "input", "source", "code"):
+                    scan(child)
+        elif isinstance(value, list):
+            for child in value:
+                scan(child)
+    for event in events:
+        item = event.get("item", {})
+        if event.get("type") != "item.completed" or not isinstance(item, dict):
+            continue
+        kind = item.get("type")
+        if kind not in ("code_execution", "code_mode") and not (
+                kind == "mcp_tool_call" and item.get("server") in ("code_mode", "functions")
+                and item.get("tool") == "exec"):
+            continue
+        arguments = item.get("arguments", {})
+        if isinstance(arguments, str):
+            try:
+                arguments = json.loads(arguments)
+            except ValueError:
+                arguments = {"source": arguments}
+        source = item.get("source") or item.get("code") or (
+            arguments.get("source") or arguments.get("code") if isinstance(arguments, dict) else None)
+        if not isinstance(source, str) or source.strip() != CATALOG_SOURCE:
+            continue
+        for key in ("result", "output", "content"):
+            if key in item:
+                scan(item[key])
+    return catalogs
 
 
 def verify_backend(config, on_wait=None):
@@ -88,9 +164,25 @@ def build_command(config):
         'project_doc_fallback_filenames=[]', 'projects."/project".trust_level="untrusted"',
         'sandbox_workspace_write.network_access=true', 'features.multi_agent=false',
         'features.apps=false', 'cli_auth_credentials_store="file"',
+        'features.shell_tool=false', 'features.plugins=false',
         # Current model metadata requires code mode even if its feature is disabled.
         'features.code_mode.enabled=true', 'features.code_mode_host=true',
         'check_for_update_on_startup=false',
+    ]
+    from .jobs import adapter_mounts, TRUSTED_PYTHON_FLAGS
+    mounts = adapter_mounts()
+    # The source and the installed MCP dependency are mounted read-only. Keep
+    # the interpreter's normal prefix, including native extension dependencies.
+    pythonpath = os.pathsep.join(["/opt/research-src", *mounts])
+    settings += [
+        f"mcp_servers.research_jobs.command={json.dumps(sys.executable)}",
+        "mcp_servers.research_jobs.args=" + json.dumps(
+            [*TRUSTED_PYTHON_FLAGS, "-m", "research_pipeline.job_server"]),
+        f"mcp_servers.research_jobs.env.PYTHONPATH={json.dumps(pythonpath)}",
+        'mcp_servers.research_jobs.required=true',
+        'mcp_servers.research_jobs.enabled_tools=["job_run","job_wait","job_status","job_cancel","write_draft","control"]',
+        'mcp_servers.research_jobs.startup_timeout_sec=15',
+        'mcp_servers.research_jobs.tool_timeout_sec=20',
     ]
     for setting in settings:
         args += ["-c", setting]
@@ -219,10 +311,8 @@ Use ordinary links relative to the canonical handoff in handoffs/,
 e.g. [Plan](../work/PLAN.md). Do not copy conversations.
 End with an honest account of progress and blockers.
 
-COOPERATIVE CHECKPOINT: FULL SUSPENSION OR AUTOMATIC ROLLOVER
-Before substantial operations and after each command, check
-/run/research-control/request.json, or run:
-python3 /run/research-checkpoint-helper.py --check
+CHECKPOINT: FULL SUSPENSION OR AUTOMATIC ROLLOVER
+Before substantial operations and after each command, use control(action="check").
 If a pause or rollover is requested, immediately stop scientific work. Pause fully
 suspends the investigation; rollover continues this SAME logical primary task in a
 fresh conversation after the old service stops. Pause has a fixed 15-second saving
@@ -230,7 +320,7 @@ grace; rollover reserves {rollover_saving:g} seconds inside the fixed session du
 Both are bounded by the remaining wall deadline. Save useful
 progress, plan/status updates and the required handoff in /run/research-drafts.
 Include interrupted computations and the next concrete action. As your FINAL tool
-command run: python3 /run/research-checkpoint-helper.py
+operation use control(action="acknowledge").
 This saves readiness and waits for the controller to validate your handoff/artifacts.
 On rejection correct the stated issue within the original grace and retry. After
 acknowledgement finish immediately with no further scientific commands. The helper
@@ -323,6 +413,35 @@ Link REUSE.md, assessments, validation, receipts and reproducible outputs from r
 and handoffs. Explicitly copy exact reused dependencies into frozen verification packets
 when required by a consequential claim. Preserve useful science if execution fails.
 """
+    prompt += """
+CONTROLLED SCIENTIFIC EXECUTION
+At the start of each fresh context, use code mode to emit its actual tool catalog:
+text("RESEARCH_NATIVE_TOOLS\\n" + JSON.stringify(ALL_TOOLS));
+This is an operational capability observation, not scientific evidence. Do not
+substitute a remembered catalog, configuration/features listing, or invented names.
+The research_jobs MCP tools are the supported command path. Stock command-launch
+tools are disabled. Use job_run(argv, cwd, runtime_seconds?, yield_seconds?) for
+ALL calculations, file inspection/editing, scientific shells, dependency installation,
+reference helpers and reusable-tool checks/runs. An explicit /bin/bash -c is allowed.
+Use job_wait/job_status/job_cancel to observe or stop existing jobs. Wait/yield is at
+most five seconds per call; a returned running job retains its original deadline.
+Every descendant shares its job's lifetime and original memory/task/service grants.
+Job capacity is investigation-wide, separate from researcher count or thread limits.
+Full capacity refuses immediately without a queue. Runtime expiry kills the job tree,
+retains partial files, and reports the reason. Inspect partial work before retrying.
+Do not submit scientific work while a saving request is pending.
+
+Saving does NOT require a job: use write_draft(project_relative_path, content) to
+save scoped Markdown, and control(action="check"|"acknowledge"|"tasks") for checkpoints.
+Use control(action="delegate"|"verify", path=..., parent=...) for assignments,
+control(action="respond", target=..., path=...) for a verifier response, or
+control(action="close", target=..., path=...) for closure. These replace executing
+the checkpoint-helper command examples above. After saving the required handoff,
+control(action="acknowledge") is your final operation on a pause/rollover request.
+New science is blocked while this separate saving interface remains available.
+Tool receipts still pending after interruption are UNKNOWN/unsuccessful; consult
+the controller's job diagnostics, never infer successful checks from partial output.
+"""
     if task is None:
         return prompt
     prompt = prompt.replace("Label unchecked results PRELIMINARY: there is no independent verifier in M1.",
@@ -342,16 +461,16 @@ Only you authorize dependent assignments, including recursively related question
 Delegate only with an identifiable scientific benefit. Write a Markdown assignment draft
 with ## Objective, ## Parent question, ## Scientific benefit, ## Assumptions, ## Requested result,
 ## Artifacts. Include relevant canonical artifact links. Submit it using:
-python3 /run/research-checkpoint-helper.py --delegate work/ASSIGNMENT.md --parent primary
+control(action="delegate", path="work/ASSIGNMENT.md", parent="primary")
 The path is project-relative, and may identify your private draft. A refusal for full
 capacity launches nothing; continue useful work. Only one request may be outstanding.
 To continue an unfinished task later, submit its saved ASSIGNMENT.md path with its
 original parent; task identity and ownership cannot be changed.
 Inspect deliveries while continuing your own work:
-python3 /run/research-checkpoint-helper.py --tasks
-The --tasks summary includes activation_id, predecessor_activation, saving_reason
+control(action="tasks")
+The tasks summary includes activation_id, predecessor_activation, saving_reason
 and rollover_at_monotonic (the scheduled saving time on the local monotonic clock).
-Your routine --check also prints concurrent task status and rollover_in_seconds
+Your routine control(action="check") also prints concurrent task status and rollover_in_seconds
 when you have no saving request of your own. Use the approaching cutoff to stage
 short useful commands rather than lengthy report-writing commands across the transition.
 A child's saving_reason=rollover signals that it is saving now, before publication
@@ -370,14 +489,14 @@ Select consequential independent checks proportionately. Write a packet draft wi
 ## Reproduction instructions (parameters/dependencies). Explicitly link every local
 file needed, including dependencies of linked Markdown. Code/data and supplied notes
 are frozen; later original edits do not inherit the outcome. Submit:
-python3 /run/research-checkpoint-helper.py --verify work/PACKET.md --parent TASK_ID
+control(action="verify", path="work/PACKET.md", parent="TASK_ID")
 Read CHECK.md and its independent reasoning/observations. A reported objection releases
 the verifier slot. Answer with scientific evidence or a justified targeted test in a
 response draft with ## Response to objections, ## Revised claim, ## Sources and artifacts,
 ## Reproduction instructions. Explicitly link revised evidence. Submit:
-python3 /run/research-checkpoint-helper.py --respond VERIFIER_ID --response work/RESPONSE.md
+control(action="respond", target="VERIFIER_ID", path="work/RESPONSE.md")
 Only ONE response/re-examination is permitted. Or close an awaiting exchange with:
-python3 /run/research-checkpoint-helper.py --close-verification VERIFIER_ID --reason work/CLOSURE.md
+control(action="close", target="VERIFIER_ID", path="work/CLOSURE.md")
 Continue useful work while verifiers run or wait. Read the final REEXAMINATION.md.
 In synthesis explain scope, assumptions, uncertainty, objection and its effect; identify
 superseded conclusions after revision. Use preliminary, checked, disputed and superseded

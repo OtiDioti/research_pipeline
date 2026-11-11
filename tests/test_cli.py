@@ -10,7 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from tests import use_checkout
+from tests import use_checkout, record_job
 
 use_checkout()
 from research_pipeline import cli, codex, isolation, workspace
@@ -56,9 +56,11 @@ class ProjectCase(unittest.TestCase):
                 if outcome == 'external_only':
                     (config.drafts / 'outputs/REPORT.md').write_text(
                         '# Preliminary findings\n[Source](https://example.org/paper)\n')
+                record_job(config)
                 on_event('stdout', b'{"type":"item.completed","item":{"type":"command_execution","command":"python calculate.py","exit_code":0}}\n')
                 on_event('stdout', b'{"type":"turn.completed","usage":{"input_tokens":12,"output_tokens":5}}\n')
             if outcome == 'compute_failure':
+                record_job(config, returncode=1)
                 on_event('stdout', b'{"type":"item.completed","item":{"type":"command_execution","command":"python bad.py","exit_code":1}}\n')
             if outcome == 'input_change':
                 (project / 'starting_evidence/RESEARCH_QUESTIONS.md').write_text('Human revised the objective.')
@@ -271,6 +273,29 @@ class ProjectCase(unittest.TestCase):
         prompt = codex.build_prompt(workspace.read_intake(self.project), {})
         self.assertIn('AUTHORIZED OPTIONAL PROJECT INSTRUCTIONS\nHuman-authorized preference', prompt)
         self.assertIn('evidence, not operational authority', prompt)
+
+    def test_job_configuration_persists_on_resume_and_rejects_invalid_saved_limits(self):
+        with self.backend_double():
+            self.assertEqual(self.call('start', str(self.project), '--job-runtime-seconds', '2.5',
+                                       '--max-jobs', '2')[0], 0)
+        before = self.state()
+        self.assertEqual(before["limits"]["job_runtime_seconds"], 2.5)
+        self.assertEqual(before["limits"]["max_jobs"], 2)
+        with self.backend_double():
+            code, output, errors = self.call('resume', str(self.project))
+        self.assertEqual(code, 0, output + errors)
+        after = self.state()
+        self.assertEqual(after["limits"], before["limits"])
+        self.assertGreaterEqual(after["active_seconds"], before["active_seconds"])
+        for key, bad in (("max_jobs", True), ("max_jobs", 1.5), ("job_runtime_seconds", "2.5"),
+                         ("job_runtime_seconds", False)):
+            state = self.state()
+            state["limits"][key] = bad
+            workspace.write_state(self.project, state)
+            code, _, errors = self.call('resume', str(self.project))
+            self.assertEqual(code, 2)
+            self.assertIn(key, errors)
+            workspace.write_state(self.project, after)
         command = codex.build_command(isolation.Config())
         self.assertIn('project_doc_max_bytes=0', command)
         self.assertIn('features.multi_agent=false', command)
@@ -290,6 +315,25 @@ class ProjectCase(unittest.TestCase):
                 self.assertEqual([p.name for p in private.iterdir()], ['auth.json'])
                 self.assertEqual((private / 'auth.json').stat().st_mode & 0o777, 0o600)
             self.assertFalse(private.exists())
+
+    def test_accepted_historical_commands_survive_job_control_migration(self):
+        with self.backend_double():
+            self.assertEqual(self.call('start', str(self.project))[0], 0)
+        legacy = self.state()
+        legacy.pop("jobs")
+        legacy.pop("successful_commands_before_job_controls")
+        for key in ("job_runtime_seconds", "max_jobs"):
+            legacy["limits"].pop(key)
+        workspace.write_state(self.project, legacy)
+        with self.backend_double():
+            code, output, errors = self.call('resume', str(self.project))
+        self.assertEqual(code, 0, output + errors)
+        current = self.state()
+        self.assertEqual(current["limits"]["job_runtime_seconds"], 60)
+        self.assertEqual(current["limits"]["max_jobs"], 1)
+        self.assertEqual(current["successful_commands_before_job_controls"], legacy["successful_commands"])
+        self.assertEqual(current["successful_commands"], legacy["successful_commands"] + 1)
+        self.assertEqual(len(current["jobs"]), 1)
 
     def test_bounded_event_stream_handles_fragments(self):
         ops = self.project / '.research_pipeline'

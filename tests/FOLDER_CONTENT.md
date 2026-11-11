@@ -15,3 +15,4 @@
 - [test_references.py](test_references.py) — Public authorization/retrieval, source identity, full text, private/unsafe paths, missing sources, format errors and pagination.
 - [test_tools.py](test_tools.py) — Tool qualification, malformed-record discovery, foreground completion with inherited pipes, ownership and live-gate evidence using explicit execution doubles.
 - [test_m4_live.py](test_m4_live.py) — Opt-in real discovery and qualified tool reuse, researcher-authored new calculation, bounded isolated reproduction and private receipts.
+- [test_jobs.py](test_jobs.py) — Shared admission, deadlines, bounded history, trusted imports with workspace shadow packages, native MCP transport, PID-namespace teardown and production-service cleanup.

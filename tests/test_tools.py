@@ -291,6 +291,12 @@ class ToolTests(unittest.TestCase):
             tools.stage(self.context, {}, "AGENTS.md", "bad")
 
     def test_missing_executable_observation_and_no_launch_after_suspension(self):
+        with patch.object(tools.subprocess, "Popen") as launch:
+            with self.assertRaisesRegex(tools.ToolError, "admitted scientific job"):
+                tools.execute(self.context, ["unavailable"], self.project / "work")
+            launch.assert_not_called()
+        self.addCleanup(patch.stopall)
+        patch.object(tools, "read_json", return_value={**self.context, "job_id": "execution-double"}).start()
         with patch.object(tools.subprocess, "Popen", side_effect=FileNotFoundError("missing executable")) as launch:
             result = tools.execute(self.context, ["unavailable"], self.project / "work")
             self.assertEqual(result["outcome"], "failed")
@@ -332,7 +338,8 @@ class ToolTests(unittest.TestCase):
                 try:
                     began = time.monotonic()
                     context = {**self.context, "deadline": began + 3}
-                    with patch.object(tools.subprocess, "Popen", side_effect=spawn):
+                    with patch.object(tools.subprocess, "Popen", side_effect=spawn), \
+                         patch.object(tools, "read_json", return_value={**context, "job_id": "execution-double"}):
                         result = tools.execute(context, ["engineering-tool-double"], self.project / "work")
                     self.assertLess(time.monotonic() - began, 2)
                     self.assertEqual(result["returncode"], code)

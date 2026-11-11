@@ -10,7 +10,7 @@ import unittest
 import uuid
 from unittest.mock import patch
 
-from tests import use_checkout
+from tests import use_checkout, record_job
 use_checkout()
 from tests import test_collaboration as fixtures
 from tests.test_m3_live import check_synthesis
@@ -524,6 +524,7 @@ with patch.object(collaboration.Coordinator, 'launch', crash):
                     test.verifiers.append(self)
                     case.services.append(self)
                     recorder('stdout', (json.dumps({'type':'thread.started', 'thread_id': 'verifier-' + uuid.uuid4().hex})+'\n').encode())
+                    record_job(config)
                     recorder('stdout', b'{"type":"item.completed","item":{"type":"command_execution","exit_code":0}}\n')
                     recorder('stdout', b'{"type":"turn.completed","usage":{"input_tokens":10,"output_tokens":2}}\n')
                     assert config.frozen_inputs == (self.task['workspace'] + '/inputs',)

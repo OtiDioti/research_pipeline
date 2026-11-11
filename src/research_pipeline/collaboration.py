@@ -14,7 +14,7 @@ import time
 import uuid
 from urllib.parse import unquote, urlsplit
 
-from . import codex, isolation, verification, workspace, tools
+from . import codex, isolation, verification, workspace, tools, jobs
 
 SCIENCE_FIELDS = {
     "checkpoint", "checkpoints", "checkpoint_prepared", "checkpoint_error",
@@ -61,6 +61,7 @@ def validate_state(state, project):
         raise workspace.InputError("Invalid collaboration investigation identity")
     workspace.owner_fields(state)
     limits = state["limits"]
+    jobs.validate_limits(limits)
     if limits["wall_seconds"] <= 0:
         raise workspace.InputError("Invalid saved wall allowance")
     for key in ("memory_mib", "max_tasks", "concurrent_researchers"):
@@ -137,6 +138,7 @@ def recover(project, state):
         settle_interval(state)
         state.update(state="interrupted", cleanup_ok=True, usage_complete=False,
                      reason="Lost controller recovered; all owned descendants stopped.")
+        jobs.reconcile(state)
         state.setdefault("accounting_uncertainties", []).append(
             "Lost controller: owner elapsed wall charged once, capped at the original remaining grant. "
             "Unobserved usage and exact lost work remain unknown.")
@@ -155,6 +157,8 @@ def recover(project, state):
     if state.get("owner_interval", {}).get("pending"):
         settle_interval(state)
         workspace.write_state(project, state)
+    if state.get("cleanup_ok") is True:
+        jobs.validate_limits(state["limits"], defaults=True)
     if not unresolved and not any(t.get("checkpoint_prepared") for t in state["tasks"].values()):
         return
     coordinator = Coordinator(project, state, isolation.Config())
@@ -189,17 +193,20 @@ class Coordinator:
         self.stop_reason = None
         self.began = None
         self.deadline = None
+        self.jobs = jobs.JobManager(project, state, self.save)
 
     def save(self):
         workspace.write_state(self.project, self.state)
 
     def begin_interval(self):
+        from .cli import boot_identity
         self.began = time.monotonic()
         self.initial_active = self.state.get("active_seconds", 0)
         remaining = max(0, self.state["limits"]["wall_seconds"] - self.initial_active)
         self.deadline = self.began + remaining
         self.state["owner_interval"] = {"started_epoch": time.time(), "pending": True,
-            "initial_active_seconds": self.initial_active, "allowance": remaining}
+            "initial_active_seconds": self.initial_active, "allowance": remaining,
+            "started_monotonic": self.began, "boot_id": boot_identity()}
         self.save()
 
     def charge(self):
@@ -250,6 +257,7 @@ class Coordinator:
 
     def poll_preparation(self, control):
         """Keep live contexts saving/draining while another slot is prepared."""
+        self.jobs.poll()
         if self.global_request() and self.stop_reason != "pause":
             self.request_stop("pause")
         if time.monotonic() >= self.deadline and not self.stop_reason:
@@ -349,6 +357,7 @@ class Coordinator:
             duration = self.state["primary_session_policy" if task["task_id"] == "primary" else "delegated_session_policy"]["session_seconds"]
             config.deadline = min(self.deadline, time.monotonic() + duration)
             tools.configure(config, self.project, session, activation)
+            self.jobs.configure(config, session, view)
             # A model turn plus handoff validation can exceed the pause grace.
             # Reserve headroom *inside* the fixed session, never extend its cap.
             control.rollover_grace = min(60, max(15, duration / 4))
@@ -401,6 +410,7 @@ class Coordinator:
             if recorder:
                 recorder.close()
             stack.close()
+            self.jobs.owner_stopped(activation, clean)
             view.update(cleanup_ok=clean, state="failed", error=f"{type(exc).__name__}: {exc}")
             task["status"] = "failed"
             view["checkpoint_error"] = f"Launch failed: {exc}; resume from saved science."
@@ -448,8 +458,10 @@ class Coordinator:
         runtime = self.running[task_id]
         task, view, control = runtime["task"], runtime["view"], runtime["control"]
         result = runtime["service"].finish()
+        self.jobs.owner_stopped(view["activation_id"], result.cleanup_ok)
         runtime["recorder"].close()
         telemetry = runtime["recorder"].summary()
+        telemetry.update(jobs.observed(self.state, view["activation_id"]))
         runtime["stack"].close()
         self.state["usage_complete"] &= telemetry["usage_complete"] and not bool(result.error or result.returncode)
         view.update(execution=asdict(result), cleanup_ok=result.cleanup_ok, state="stopped",
@@ -822,6 +834,7 @@ class Coordinator:
                         self.save()
             while self.running or (not self.stop_reason and any(
                     task["status"] == "rolling_over" for task in self.state["tasks"].values())):
+                self.jobs.poll()
                 if self.global_request() and self.stop_reason != "pause":
                     self.request_stop("pause")
                 if time.monotonic() >= self.deadline and not self.stop_reason:
@@ -939,6 +952,10 @@ class TaskControl:
         self.coordinator.publish_status()
 
     def poll(self, research=True):
+        self.coordinator.jobs.poll()
+        if any(r["state"] == "cleanup_unconfirmed" and r["activation_id"] == self.view["activation_id"]
+               for r in self.coordinator.state.get("jobs", {}).values()):
+            raise isolation.RuntimeUnavailable("Previous job cleanup unconfirmed; stopping owning service.")
         if self.coordinator.global_request():
             if self.coordinator.stop_reason != "pause":
                 self.coordinator.request_stop("pause")

@@ -12,7 +12,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from tests import use_checkout
+from tests import use_checkout, record_job
 
 use_checkout()
 from research_pipeline import cli, codex, isolation, references, workspace, tools
@@ -87,6 +87,7 @@ class ContinuityTests(unittest.TestCase):
                 (config.drafts / "run.json").write_text("forbidden")
             (project / "work/data.csv").write_text("n,value\n1,2\n")
             if commands:
+                record_job(config)
                 recorder("stdout", b'{"type":"item.completed","item":{"type":"command_execution","exit_code":0}}\n')
             if usage:
                 for n in (10, 20):
