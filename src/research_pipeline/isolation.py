@@ -203,7 +203,8 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
         args += ["--setenv", "TOKIO_WORKER_THREADS", "1",
                  "--ro-bind", str(Path(codex).parent), "/opt/codex"]
     if auth_home:
-        args += ["--bind", str(auth_home), "/home/researcher/.codex"]
+        args += ["--bind", str(auth_home), "/home/researcher/.codex",
+                 "--setenv", "CODEX_ROLLOUT_TRACE_ROOT", "/home/researcher/.codex/native-trace"]
     return args + ["--chdir", f"/project/{workspace.task_directory(task_id)}", "--", *argv]
 
 

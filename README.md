@@ -489,8 +489,16 @@ ephemeral contexts and native file authentication; its stock command-launch tool
 apps, plugins and backend agent spawning are disabled. Its noninteractive approval
 policy preauthorizes only the adapter's six allowlisted operations; job admission,
 ownership, scoped Markdown writes and original resource limits still apply.
-The enabled M4 host gate
-must observe the fresh native effective tool catalog and reject any unrestricted
+Each backend records its native request trace inside its temporary private home,
+which scientific jobs cannot access. On closure the controller retains only the
+actual model-request tool declarations and native session/request provenance in
+the session's private `native-tools.json`; full prompt/response traces are removed
+with the temporary home. This uses the installed Codex native rollout trace
+(`CODEX_ROLLOUT_TRACE_ROOT`, schema 2), including the nested code-mode tool
+declarations. It adds no inference session. `codex exec --json` does not expose
+the code-mode catalog output, so asking the model to print it cannot establish
+this evidence. Missing, incomplete or unsupported trace metadata remains unverified.
+The enabled M4 host gate must observe these fresh declarations and reject any unrestricted
 or unknown execution route or missing controlled tool. Config/features listings
 and controller test doubles do not establish that capability.
 

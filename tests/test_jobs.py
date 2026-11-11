@@ -124,21 +124,88 @@ class AdmissionTests(unittest.TestCase):
         catalog = [{"name": "mcp__research_jobs__" + name} for name in
                    ("job_run", "job_wait", "job_status", "job_cancel", "write_draft", "control")]
         self.assertEqual(len(codex.validate_tool_catalog(catalog)), 6)
-        for unsafe in ("exec_command", "functions.write_stdin", "shell_command", "mcp__other__run"):
+        for unsafe in ("exec_command", "functions.write_stdin", "shell_command", "mcp__other__run",
+                       "mcp__other_research_jobs__job_run", "collaboration.spawn_agent"):
             with self.assertRaisesRegex(isolation.RuntimeUnavailable, "Unsupported native"):
                 codex.validate_tool_catalog([*catalog, {"name": unsafe}])
         with self.assertRaisesRegex(isolation.RuntimeUnavailable, "adapter unavailable"):
             codex.validate_tool_catalog(catalog[:-1])
         with self.assertRaisesRegex(isolation.RuntimeUnavailable, "execution tool"):
             codex.validate_tool_catalog([*catalog, {"name": "exec", "description": "Runs host commands"}])
-        text = codex.CATALOG_MARKER + json.dumps(catalog)
-        events = [{"type": "item.completed", "item": {"type": "agent_message", "text": text}},
-                  {"type": "item.completed", "item": {"type": "code_execution", "arguments": text}}]
-        self.assertEqual(codex.native_catalog_observations(events), [])
-        events.append({"type": "item.completed", "item": {"type": "code_execution",
-                       "source": codex.CATALOG_SOURCE,
-                       "result": {"content": [{"text": text}]}}})
-        self.assertEqual(codex.native_catalog_observations(events), [catalog])
+
+    def test_native_request_evidence_retained_and_bound_to_fresh_session(self):
+        home, session = self.root / "private-home", self.config.job_context.parent.parent
+        bundle = home / "native-trace/trace-fixture"
+        (bundle / "payloads").mkdir(parents=True)
+        names = ["mcp__research_jobs__" + name for name in
+                 ("job_run", "job_wait", "job_status", "job_cancel", "write_draft", "control")]
+        declarations = [{"type": "function", "name": name, "description": "Controlled adapter"}
+                        for name in names]
+        manifest = {"schema_version": 2, "root_thread_id": "fresh", "rollout_id": "fresh"}
+        event = {"schema_version": 2, "thread_id": "fresh", "rollout_id": "fresh",
+                 "payload": {"type": "inference_started", "thread_id": "fresh",
+                             "request_payload": {"kind": {"type": "inference_request"},
+                                                 "path": "payloads/1.json"}}}
+        request = {"model": "fixture", "input": [
+            {"type": "message", "role": "user", "content": "Not tool evidence"},
+            {"type": "additional_tools", "role": "developer", "tools": declarations}]}
+        (bundle / "manifest.json").write_text(json.dumps(manifest))
+        (bundle / "trace.jsonl").write_text(json.dumps(event) + "\n")
+        (bundle / "payloads/1.json").write_text(json.dumps(request))
+        with codex.native_tool_trace(home, session):
+            pass
+        catalogs = codex.native_catalog_observations(session, "fresh")
+        self.assertEqual([codex.validate_tool_catalog(c) for c in catalogs], [names])
+        receipt = json.loads((session / "native-tools.json").read_text())
+        self.assertNotIn("Not tool evidence", json.dumps(receipt))
+        self.assertEqual(len(receipt["observations"][0]["request_sha256"]), 64)
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "different session"):
+            codex.native_catalog_observations(session, "previous")
+        # Native message prose and user-supplied declarations cannot substitute.
+        request["input"][1]["role"] = "user"
+        (bundle / "payloads/1.json").write_text(json.dumps(request))
+        with codex.native_tool_trace(home, session):
+            pass
+        self.assertEqual(codex.native_catalog_observations(session, "fresh"), [])
+        (bundle / "payloads/1.json").write_text("{incomplete")
+        with codex.native_tool_trace(home, session):
+            pass
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "incomplete"):
+            codex.native_catalog_observations(session, "fresh")
+
+    def test_native_code_mode_declarations_include_nested_command_routes(self):
+        names = ["mcp__research_jobs__" + name for name in
+                 ("job_run", "job_wait", "job_status", "job_cancel", "write_draft", "control")]
+        def declarations(names):
+            detail = "Run JavaScript code with no filesystem or network.\n" + "".join(
+                f"\n### `{name}`\nControlled operation.\n\nexec tool declaration:\n"
+                f"```ts\ndeclare const tools: {{ {name}(args: {{}}): Promise<unknown>; }};\n```\n"
+                for name in names)
+            return [{"type": "namespace", "name": "functions", "tools": [
+                {"type": "custom", "name": "exec", "description": detail}]}]
+        self.assertEqual(codex.validate_tool_catalog(codex.request_tool_catalog(declarations(names))),
+                         ["functions.exec", *names])
+        direct = [{"type": "namespace", "name": "mcp__research_jobs", "tools": [
+            {"type": "function", "name": name.rsplit("__", 1)[-1]} for name in names]},
+            {"type": "web_search"}]
+        self.assertEqual(len(codex.validate_tool_catalog(codex.request_tool_catalog(direct))), 7)
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "Unsupported native"):
+            codex.validate_tool_catalog(codex.request_tool_catalog(declarations([*names, "exec_command"])))
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, "declarations unavailable"):
+            codex.request_tool_catalog([{"type": "namespace", "name": "functions", "tools": [
+                {"type": "custom", "name": "exec", "description": "JavaScript, missing nested metadata"}]}])
+
+    def test_native_trace_stays_outside_scientific_job_and_retains_unknown_on_interruption(self):
+        home, session = self.root / "private-home", self.config.job_context.parent.parent
+        command = isolation.bubblewrap_command(self.root, ["/bin/true"], auth_home=home)
+        self.assertIn("CODEX_ROLLOUT_TRACE_ROOT", command)
+        scientific = isolation.bubblewrap_command(self.root, ["/bin/true"])
+        self.assertNotIn("CODEX_ROLLOUT_TRACE_ROOT", scientific)
+        self.assertNotIn(str(home), scientific)
+        with self.assertRaises(KeyboardInterrupt):
+            with codex.native_tool_trace(home, session):
+                raise KeyboardInterrupt
+        self.assertEqual(codex.native_catalog_observations(session, "fresh"), [])
 
     def test_lost_adapter_reservation_is_retained_until_service_cleanup(self):
         record = self.manager.admit(self.owner, self.request)

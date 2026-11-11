@@ -1,8 +1,10 @@
 """Small Codex CLI boundary; no inherited config, tools, or instruction discovery."""
 from contextlib import contextmanager
+import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -27,15 +29,13 @@ LIMITATIONS = [
     "Artifact checks establish structure, not scientific correctness or successful reproduction.",
 ]
 
-CATALOG_MARKER = "RESEARCH_NATIVE_TOOLS\n"
-CATALOG_SOURCE = 'text("RESEARCH_NATIVE_TOOLS\\n" + JSON.stringify(ALL_TOOLS));'
-
 
 def validate_tool_catalog(catalog):
-    """Fail closed on a fresh native code-mode catalog, never on config text."""
+    """Fail closed on native request tool declarations, never on config text."""
     expected = {"job_run", "job_status", "job_wait", "job_cancel", "write_draft", "control"}
     harmless = {"exec", "wait", "apply_patch", "view_image", "list_mcp_resources",
-                "list_mcp_resource_templates", "read_mcp_resource", "web", "web_search"}
+                "list_mcp_resource_templates", "read_mcp_resource", "web", "web_search",
+                "request_user_input", "request_user_input_async", "clock.sleep", "clock__curr_time"}
     found = set()
     names = []
     if not isinstance(catalog, list) or not catalog:
@@ -45,8 +45,11 @@ def validate_tool_catalog(catalog):
         if not isinstance(name, str):
             raise RuntimeUnavailable("Native effective tool catalog contains an unnamed tool")
         names.append(name)
-        suffix = name.rsplit("__", 1)[-1]
-        if "research_jobs" in name and suffix in expected:
+        base = name.removeprefix("functions.")
+        suffix = base.removeprefix("mcp__research_jobs__")
+        if suffix == base:
+            suffix = base.removeprefix("mcp__research_jobs.")
+        if suffix != base and suffix in expected:
             found.add(suffix)
         elif name == "web.run":
             continue
@@ -61,44 +64,108 @@ def validate_tool_catalog(catalog):
     return names
 
 
-def native_catalog_observations(events):
-    """Read actual tool-result output, excluding prompts, generated source and prose."""
+def request_tool_catalog(declarations):
+    """Read the native additional_tools format, including code-mode exposure."""
+    catalog = []
+    def visit(items, namespace=""):
+        for item in items:
+            name = namespace + item.get("name", item.get("type", ""))
+            if item.get("type") == "namespace":
+                visit(item["tools"], name + ".")
+                continue
+            description = item.get("description", "")
+            catalog.append({"name": name, "description": description})
+            if name == "functions.exec":
+                # Codex 0.167 renders enabled nested tools in this declaration.
+                # These are backend-generated tool metadata, not message prose.
+                nested = re.findall(
+                    r"^### `([^`\n]+)`\n(.*?)\nexec tool declaration:\n```ts\n"
+                    r"declare const tools: \{ ([A-Za-z0-9_]+)\(",
+                    description, re.MULTILINE | re.DOTALL)
+                if not nested or description.count("declare const tools: {") != len(nested):
+                    raise RuntimeUnavailable("Native code-mode tool declarations unavailable or unsupported")
+                for heading, detail, identifier in nested:
+                    if heading != identifier:
+                        raise RuntimeUnavailable("Native code-mode tool declaration names disagree")
+                    catalog.append({"name": identifier, "description": detail})
+    visit(declarations)
+    return catalog
+
+
+@contextmanager
+def native_tool_trace(auth_home, session):
+    """Retain actual request tool metadata before the private backend home is removed.
+
+    Full native traces stay in that temporary home, outside all scientific jobs.
+    Keep only tool declarations and their native provenance, bounded like other
+    operational logs; no credentials, scientific prompts or conversations.
+    """
+    try:
+        yield
+    finally:
+        receipt = {"source": "Codex native rollout trace schema 2", "observations": [],
+                   "error": None}
+        used = 0
+        try:
+            for manifest_path in sorted((auth_home / "native-trace").glob("*/manifest.json")):
+                manifest = json.loads(manifest_path.read_text())
+                if manifest.get("schema_version") != 2:
+                    raise ValueError("Unsupported native trace schema")
+                bundle = manifest_path.parent
+                seen = set()
+                with (bundle / "trace.jsonl").open() as events:
+                    for line in events:
+                        event = json.loads(line)
+                        payload = event["payload"]
+                        if payload.get("type") != "inference_started":
+                            continue
+                        ref = payload["request_payload"]
+                        relative = Path(ref["path"])
+                        if ref["kind"] != {"type": "inference_request"} or (
+                                relative.parent != Path("payloads") or relative.suffix != ".json"):
+                            raise ValueError("Unsupported native request reference")
+                        raw = (bundle / relative).read_bytes()
+                        request = json.loads(raw)
+                        # additional_tools is a native protocol item, not user text.
+                        declarations = [item for item in request["input"]
+                                        if item.get("type") == "additional_tools"
+                                        and item.get("role") == "developer"]
+                        if not declarations:
+                            continue
+                        digest = hashlib.sha256(json.dumps(declarations, sort_keys=True).encode()).hexdigest()
+                        if digest in seen:
+                            continue
+                        seen.add(digest)
+                        observation = {"manifest": manifest, "event": event,
+                            "request_sha256": hashlib.sha256(raw).hexdigest(),
+                            "model": request["model"], "additional_tools": declarations}
+                        used += len(json.dumps(observation).encode())
+                        if used > 4 * 1024 * 1024:
+                            raise ValueError("Native tool evidence exceeds 4 MiB; capability unverified")
+                        receipt["observations"].append(observation)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            receipt["error"] = f"Native tool evidence incomplete: {exc}"
+        from .workspace import atomic_text
+        atomic_text(session / "native-tools.json", json.dumps(receipt, indent=2) + "\n")
+
+
+def native_catalog_observations(session, native_session_id):
+    """Only accept request evidence belonging to this actual fresh session."""
+    receipt = json.loads((session / "native-tools.json").read_text())
+    if receipt.get("error"):
+        raise RuntimeUnavailable(receipt["error"])
     catalogs = []
-    def scan(value):
-        if isinstance(value, str) and value.startswith(CATALOG_MARKER):
-            try:
-                catalogs.append(json.loads(value[len(CATALOG_MARKER):]))
-            except ValueError:
-                pass
-        elif isinstance(value, dict):
-            for key, child in value.items():
-                if key not in ("arguments", "input", "source", "code"):
-                    scan(child)
-        elif isinstance(value, list):
-            for child in value:
-                scan(child)
-    for event in events:
-        item = event.get("item", {})
-        if event.get("type") != "item.completed" or not isinstance(item, dict):
-            continue
-        kind = item.get("type")
-        if kind not in ("code_execution", "code_mode") and not (
-                kind == "mcp_tool_call" and item.get("server") in ("code_mode", "functions")
-                and item.get("tool") == "exec"):
-            continue
-        arguments = item.get("arguments", {})
-        if isinstance(arguments, str):
-            try:
-                arguments = json.loads(arguments)
-            except ValueError:
-                arguments = {"source": arguments}
-        source = item.get("source") or item.get("code") or (
-            arguments.get("source") or arguments.get("code") if isinstance(arguments, dict) else None)
-        if not isinstance(source, str) or source.strip() != CATALOG_SOURCE:
-            continue
-        for key in ("result", "output", "content"):
-            if key in item:
-                scan(item[key])
+    for observation in receipt["observations"]:
+        manifest, event = observation["manifest"], observation["event"]
+        payload = event["payload"]
+        if not native_session_id or any(value != native_session_id for value in (
+                manifest["root_thread_id"], manifest["rollout_id"],
+                event["thread_id"], event["rollout_id"], payload["thread_id"])):
+            raise RuntimeUnavailable("Native tool evidence belongs to a different session")
+        if event["schema_version"] != 2 or payload["type"] != "inference_started":
+            raise RuntimeUnavailable("Unsupported native tool evidence")
+        catalogs.append(request_tool_catalog(
+            [tool for item in observation["additional_tools"] for tool in item["tools"]]))
     return catalogs
 
 
@@ -420,10 +487,6 @@ when required by a consequential claim. Preserve useful science if execution fai
 """
     prompt += """
 CONTROLLED SCIENTIFIC EXECUTION
-At the start of each fresh context, use code mode to emit its actual tool catalog:
-text("RESEARCH_NATIVE_TOOLS\\n" + JSON.stringify(ALL_TOOLS));
-This is an operational capability observation, not scientific evidence. Do not
-substitute a remembered catalog, configuration/features listing, or invented names.
 The research_jobs MCP tools are the supported command path. Stock command-launch
 tools are disabled. Use job_run(argv, cwd, runtime_seconds?, yield_seconds?) for
 ALL calculations, file inspection/editing, scientific shells, dependency installation,

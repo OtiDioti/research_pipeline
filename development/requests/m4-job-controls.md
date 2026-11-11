@@ -78,13 +78,12 @@ isolation launcher. The study's scientific question, model-authored derivation,
 critical source/tool reuse, 18-row numerical oracle, source/input integrity,
 preliminary scope and original grant ceilings are retained.
 
-The same fresh research session must emit code mode's actual `ALL_TOOLS` catalog.
-The gate accepts catalog output only from completed tool-result output, rejecting
-agent prose, input/source text, missing controlled tools and unrestricted or
-unknown routes. This is a mandatory new controller-host observation, not a claim
-that a configuration listing or engineering double proves the effective surface.
-If native event/catalog shape or capabilities differ, the enabled gate fails;
-inspect the exact fresh native receipt before changing any assumptions.
+The gate requires the actual fresh native model-request tool declarations,
+including the nested code-mode surface, bound to the emitted native session ID.
+The integration-3 repair below replaces the original `ALL_TOOLS` output request:
+`codex exec --json` did not expose that evidence. Agent prose, configuration
+listings and engineering doubles cannot satisfy the gate. Missing controlled
+tools, unrestricted or unknown routes and unsupported native formats fail it.
 
 Enabled host job fixtures retain private directories, exact argv/configuration,
 job and output observations, service cleanup results and observed original
@@ -343,3 +342,77 @@ repair, dependency installation or session/permission management was performed
 here. PROJECT.md, engineering AGENTS.md, manager STATUS.md and accepted prior
 evidence were preserved. This is repair readiness, not M4 acceptance or LOCAL
 integration.
+
+## Integration repair — final-004 native tool evidence
+
+The complete final-004 log reports 229 tests, one failure and three disabled
+M1–M3 gates. The failure is `test_m4_live.py`'s missing fresh catalog assertion,
+after successful research completion and budget checks. The preserved session
+at `live-host-acceptance/m4-live-ahg4neos/project/.research_pipeline/sessions/166eecc520454d50b435600c4a033dcd`
+contains 55 completed MCP calls, two web searches, five agent messages and no
+code-mode result items. Its stderr is empty. The parser expected code-mode
+result items that the installed CLI's JSON stream did not emit. Nothing here
+upgrades that failed run or claims its unreached reproduction checks passed.
+Its scientific work, reports, inputs and source files remain untouched.
+
+The installed `codex-cli 0.167.0` supports `CODEX_ROLLOUT_TRACE_ROOT` and
+`codex debug trace-reduce`. Native trace schema 2 records `inference_started`
+events referring to actual serialized request payloads. Those requests include
+backend-generated `additional_tools` protocol items, with direct tool schemas
+and the enabled nested tool declarations in `functions.exec`'s description.
+Inspection used native metadata rendering without inference or credentials;
+an unauthenticated diagnostic request returned 401 and confirmed the trace
+payload shape. No paid probe, science execution or authentication bypass was
+used. That diagnostic is format evidence only, never host acceptance.
+
+The production backend now writes this trace inside its existing temporary
+private authentication home. Scientific job namespaces do not mount that home
+or receive the trace environment variable. On primary/subordinate/verifier
+closure, before removing the home, the controller retains only deduplicated tool
+declarations, native manifest/event provenance, model and request SHA-256 in the
+session's `native-tools.json`. Full native prompts/responses are removed with the
+temporary home. Retained evidence is bounded to 4 MiB; truncation, malformed
+data and unsupported formats remain unverified. No workflow, replay mechanism,
+extra research session, larger grant or new execution route was added.
+
+The existing M4 gate reads this evidence, matches its root/thread/rollout IDs
+against the actual session ID emitted in `backend.jsonl`, validates direct and
+nested tool declarations and retains the raw evidence in its private receipt.
+Only the exact research_jobs server's six operations satisfy the adapter check.
+Command tools, backend spawning and unknown routes still fail. Harmless native
+clock and user-input operations are recognized explicitly. The failed
+model-output catalog prompt/parser was removed.
+
+Verification in this restricted worker:
+
+```sh
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps TMPDIR=../runtime/tmp /home/francesco/miniconda3/bin/python -m unittest tests.test_jobs.AdmissionTests tests.test_cli tests.test_collaboration
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps TMPDIR=../runtime/tmp /home/francesco/miniconda3/bin/python -m unittest discover -s tests
+PYTHONPATH=src:../runtime/tmp/milestone-003-deps TMPDIR=../runtime/tmp /home/francesco/miniconda3/bin/python -m unittest -v tests.test_isolation.BubblewrapBoundaryTests
+```
+
+Paths were expanded to the supplied run's absolute paths when executed.
+Focused: **68 passed, 5.271 seconds**. Full after the parser changes:
+**217 reported, 210 passed, seven skipped, 21.954 seconds**. The four real
+Bubblewrap boundary/native runtime tests also passed separately (1.585 seconds).
+Coverage includes native request retention, session identity mismatch, rejecting
+user/prose substitutes, incomplete traces, interrupted closure, nested/direct
+command bypass detection and retaining all six adapter operations. Existing job
+expiry/concurrency/cleanup, budget, continuity, human-edit and verification tests
+pass. The cleanup-unconfirmed diagnostic is expected injected-failure coverage.
+
+The metadata renderer's separate diagnostic surface includes collaboration
+operations, which the validator deliberately rejects; it is not a substitute for
+the effective surface of the actual isolated `exec` session. The enabled host
+gate must establish the latter from its own request trace and fail if those
+routes are exposed. No diagnostic catalog is imported as research evidence.
+
+The seven skips remain four disabled paid gates and three unavailable systemd
+user-bus checks. `systemctl --user show --property=ActiveState` reports that
+`DBUS_SESSION_BUS_ADDRESS` and `XDG_RUNTIME_DIR` are undefined. This worker does
+not configure an alternative bus or run paid science. Normal review, a fresh
+enabled controller-host M4 final and required combined check, numerical
+reproduction/integrity/cleanup evidence and pipeline-confirmed LOCAL integration
+remain mandatory. Use the same frozen `RESEARCH_PIPELINE_M4_OUTPUT_DIR` with
+only `RESEARCH_PIPELINE_M4_LIVE=1`; M1/M2/M3 stay disabled. This is code readiness,
+not M4 acceptance, M5 or project completion.

@@ -354,6 +354,7 @@ class Coordinator:
             view["probe_cleanup_ok"] = True
             config.on_poll = control.poll
             auth = stack.enter_context(codex.private_auth(self.project))
+            stack.enter_context(codex.native_tool_trace(auth, session))
             duration = self.state["primary_session_policy" if task["task_id"] == "primary" else "delegated_session_policy"]["session_seconds"]
             config.deadline = min(self.deadline, time.monotonic() + duration)
             tools.configure(config, self.project, session, activation)

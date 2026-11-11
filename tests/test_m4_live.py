@@ -339,10 +339,16 @@ class LiveM4Acceptance(unittest.TestCase):
                 self.assertIn("unknown", human)
 
             events = []
+            catalogs = []
             for session in state["sessions"]:
                 path = project / session["logs"] / "backend.jsonl"
                 for line in path.read_text().splitlines():
                     events.append(json.loads(line))
+                receipt.setdefault("native_tool_evidence", []).append(
+                    json.loads((path.parent / "native-tools.json").read_text()))
+                observed = codex.native_catalog_observations(path.parent, session["native_session_id"])
+                self.assertTrue(observed, "Fresh native request tool declarations missing; capability is unverified")
+                catalogs.extend(observed)
             emitted_usage = {}
             for event in events:
                 if event.get("type") == "turn.completed":
@@ -351,8 +357,6 @@ class LiveM4Acceptance(unittest.TestCase):
                             emitted_usage[key] = emitted_usage.get(key, 0) + value
             self.assertEqual(final_budget["model_usage_observed"], emitted_usage or None)
             receipt["emitted_usage_comparison"] = emitted_usage or None
-            catalogs = codex.native_catalog_observations(events)
-            self.assertTrue(catalogs, "Fresh native effective-tool-catalog result missing; capability is unverified")
             receipt["native_tool_catalogs"] = [codex.validate_tool_catalog(c) for c in catalogs]
             executed = [r["argv"] for r in state.get("jobs", {}).values()
                         if r["state"] == "completed" and r.get("returncode") == 0 and r.get("cleanup_ok") is True]

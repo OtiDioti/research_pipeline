@@ -620,7 +620,7 @@ def run_session(project, config, state, intake, baseline, external, continuation
         with controller.launch_guard():
             pass
         state["capabilities"] = isolation.preflight(config, project)
-        with codex.private_auth(project) as auth:
+        with codex.private_auth(project) as auth, codex.native_tool_trace(auth, session):
             if time.monotonic() >= config.deadline:
                 raise TimeoutError("Active-work allowance exhausted during startup")
             def record_identity(identity):
