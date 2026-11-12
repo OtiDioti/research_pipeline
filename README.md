@@ -5,8 +5,12 @@ Codex app-server driver, and computations that outlive individual model contexts
 The human specification is [PROJECT.md](PROJECT.md); the authoritative amendment
 is [the V0 lifecycle design](2026-11-12-v0-context-lifecycle-design.md).
 
-**Implementation verification is pending production-host validation and independent
-pipeline review.** See [the L1 report](development/requests/v0-l1-durable-runtime.md).
+**V0-L1 is accepted and integrated at `542ac0d`.** Pipeline final and combined
+verification each passed 126 tests with four historical paid gates disabled. Both
+production-native receipts confirmed context/job continuity, isolation, shared caps,
+timeout/cancellation/supervisor-loss handling and cleanup. See [STATUS.md](STATUS.md)
+for the actual run, receipts and remaining gates, and [the L1 report](development/requests/v0-l1-durable-runtime.md)
+for implementation decisions and invocation details.
 L1 does not implement or establish acceptance of the full V0 extension. Historical
 M1–M4 receipts remain evidence of their original implementation. M5 is unaccepted,
 unmerged and inactive; no private benchmark run is part of this increment.

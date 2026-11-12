@@ -1,138 +1,40 @@
 # Development status — research_pipeline
 
-Updated 2026-11-12. **M1–M4 evidence is accepted; M5 remains unaccepted and unmerged. The human requires the new V0 research lifecycle features to be implemented and verified before proceeding with M5.** The earlier workspace/budget amendment is preserved. The next manager task is the V0 lifecycle extension, not a fresh M5 scientific demonstration.
+Updated 2026-11-12. **V0-L1 is accepted and integrated. V0-L2–L6 remain required before M5.** M1–M4 retain their historical accepted evidence; M5 is unaccepted, inactive and unmerged. Human scientific acceptance remains mandatory for M5. PROJECT.md, AGENTS.md and the human lifecycle amendment are unchanged.
 
-## Human-required V0 work before M5
+## Current checkpoint and next action
 
-The authoritative [V0 implementation request](2026-11-12-v0-context-lifecycle-design.md) defines the scope, roles, behavioral rules and six ordered milestones. Apply it where older timer, verification, completion or reopening requirements conflict. The human-authored specification is preserved unchanged. Implementation now starts through the established pipeline workflow; no lifecycle milestone is accepted yet.
+- **Completed increment:** V0-L1 research-owned app-server runtime, persistent shared allocations, durable owned computations and explicit successor attachment. Automatic measured rollover is not yet implemented.
+- **Request/run:** `v0-l1-durable-runtime-20261112T190503Z-55d80ebf` / `20261112T190532_377a68b3`; pipeline state **merged / final, verification passed**, lock unowned and feature worktree removed. Feature head `47cebab975e50f0b23fdf067c127c1b944aa40bf`; actual `main` integration **`542ac0dbfa7a9fa13b99773f19e876054f035e54`**.
+- **Evidence:** [pipeline summary](coding_pipeline/logs/20261112T190532_377a68b3/summary.md), [implementation report](development/requests/v0-l1-durable-runtime.md). Final `tests/final-004.txt` and combined `tests/pre-merge-005.txt` each passed **126 tests with four historical paid gates disabled**. The enabled L1 native fixture ran in both stages. The manager assessed reports/receipts without independently repeating product tests or review.
+- **Production receipts:** under `coding_pipeline/logs/manager/v0-l1-durable-runtime-20261112T190503Z-55d80ebf/`, final `native-host-20261112T205843Z-705144-yjgexnhj/receipt.json` and combined `native-host-20261112T205843Z-705144-lrsxsoun/receipt.json` both report `passed`, `cleanup_ok=true`. Each records 16 controlled commands, native context/tool evidence, same surviving job ID/service invocation/deadline and one launch across a successor, handoff consumption, enforced 2048 MiB/zero-swap/128-task aggregate allocation, timeout/descendant cleanup with partial output, isolation/ownership denials, 61/7200-second admission and cancellation, supervisor loss and confirmed final cleanup.
+- **Preserved failures:** the first host failed on cross-process `/proc` mount sources; the pipeline replaced them with private read-only snapshots. Its failed/cleanup-unconfirmed receipt is unchanged; separate `failed-host-process-reconciliation.json` records the failed service with no main process and an empty recorded cgroup tree. The second host failed on unsupported `systemctl --kill-whom=main`; the fixture now uses `--kill-who=main`. Its original failed receipt reports confirmed cleanup. Neither failure was relabeled as passing. Restricted Writer bus failures remain historical diagnostics.
+- **Next increment:** commission **V0-L2 measured per-context rollover at 55%** for primary, delegated researchers and opponent, continuing useful science and the same running jobs. Preserve L1 grants, native boundary and useful artifact access. Do not start/resume M5 or rerun accepted M1–M4 demonstrations. No implementation request is currently active; reconcile actual state before submission.
 
-Deliver **V0-L1–V0-L6** in dependency order: runtime and durable jobs; measured context rollover; weekly quota and secondary staleness; scientific opposition and terminal decisions; resumption/recovery; integrated live validation before M5.
+## Binding V0 scope
 
-- All agents, including the same continuing scientific opponent, use the **55% measured-context rollover threshold**. Jobs survive rollover with their identity, original researcher-selected timeout and shared resource allocation. Fixed investigation/session/demo work allowances are removed.
-- Only the primary's control path monitors **account-wide weekly quota**. At **15% remaining or less**, invoke investigation-wide STOP directly, **bypassing the opponent**, save useful handoffs and interrupt agents and simulations. Cleanup acknowledgements must reflect confirmed outcomes.
-- Each secondary context has a fresh inactivity clock, reset by every measured context-length change. Warn the primary at every multiple of **2700 uninterrupted seconds by default**, with a configurable interval. The primary chooses the response; the human supervises primary inactivity.
-- The opponent challenges scientific results only when the primary proposes **COMPLETE or scientific STOP**, and follows revised results as the same logical opponent. COMPLETE requires both agents to agree that every current question has an adequate answer or supported reason it cannot be answered. Unresolved substantive objections require continued research or STOP. For scientific STOP, the primary hears the opponent and retains the final decision, recording why suggested continuation is unpromising if it stops.
-- Explicit resume after changes to questions, evidence/documentation or human feedback can reopen COMPLETE, clearing its marker/acknowledgement and highlighting the changed material while preserving prior science. STOP resumption requires exclusive ownership and successful preflight. Human pause remains full suspension.
-- **No backward compatibility is required.** Preserve historical scientific artifacts and receipts, but do not build migrations or retain old runtime protocols. Existing hard aggregate resource caps, isolation, private-input protections and human scientific acceptance of M5 remain binding.
+The authoritative [human lifecycle amendment](2026-11-12-v0-context-lifecycle-design.md) supersedes older conflicting timers, 60% thresholds, verification exchanges and reopening rules. Deliver the remaining milestones in order: L2 measured rollover; L3 centralized weekly reserve and secondary staleness; L4 scientific opposition and terminal decisions; L5 reopening/recovery; L6 integrated public live validation and M5 harness reconciliation.
 
-Preserve PROJECT.md and useful retained M5 implementation work. Implement and verify the complete extension before commissioning or resuming M5 science. The manager assesses pipeline reports and maintains this checkpoint rather than independently repeating completed product checks.
+- All roles use the observed **55% usable-context threshold**. Logical identity, scientific artifacts, job identity/original researcher-selected timeout and cumulative resource accounting survive fresh contexts. Cumulative token spending is not occupancy. No fixed investigation/session/demo work allowance or legacy-state migration.
+- Only the primary control path monitors account-wide weekly quota. At **15% remaining or less**, invoke investigation-wide STOP directly, bypassing opposition; preserve handoffs and confirm all owned cleanup. Missing required quota telemetry blocks admission.
+- Each secondary context gets a fresh inactivity clock, reset by every measured context-length change. Warn the primary at each multiple of **2700 uninterrupted seconds** by default; warnings alone do not stop or restart work. Human supervision controls primary inactivity.
+- The same logical scientific opponent challenges presented results when the primary proposes COMPLETE or scientific STOP, retaining objections across rollovers. COMPLETE requires both agents to agree every current question is adequately answered or supported as unanswerable; substantive disagreement prevents it. Scientific STOP hears the opponent but remains the primary's decision. Runtime failure is not a fabricated scientific decision.
+- Explicit resumption can reopen COMPLETE for changed questions, evidence/documentation or corrective feedback, highlighting changes and retaining prior science. STOP resumption requires exclusive ownership and successful preflight before clearing markers. Pause fully stops agents and computations. Preserve human edits and truthful crash/cleanup limitations.
+- Existing scientific rigor, isolation, private-input protections and aggregate caps remain binding. Defaults are **two simultaneous agents sharing 2048 MiB, zero swap, 128 process/thread tasks and one concurrent job**. Agents cannot enlarge grants. L1 supports explicit positive finite computation timeouts, including hours; operational test/RPC/cleanup bounds are not scientific lifetimes.
 
-## V0-L1 implementation handoff (production verification pending)
+## Retained M5 work and scientific workspace
 
-Milestone 001 code review approved the L1 candidate at
-`df844341d4465a740704df23cb2e3dc4bc6c738f`, based on
-`22213b2aba2514c0ba72034bd7e92ee98931a49d`, with a research-owned app-server driver,
-persistent shared allocation slices, independently supervised jobs and explicit
-successor attachment. See [the implementation report](development/requests/v0-l1-durable-runtime.md)
-for provenance, unsupported legacy protocols, commands and limits. PROJECT.md and
-the human lifecycle amendment remain byte-for-byte unchanged; the retained M5
-candidate remains untouched and unaccepted.
+- Preserve branch **`cwi/20261111T063907_2732fff6`** at **`1b70aea25f6c5f8496acdea12e9a27c6f3d4ecbd`**, worktree `coding_pipeline/logs/20261111T063907_2732fff6/worktree/`. Its request is `m5-linear-soi-mechanisms-20261111T063725Z-cf4d5b09`; run remains **blocked / Reviewer, turn 21**, lock previously reconciled unowned. Do not reset, blindly merge or approve it merely to unblock development.
+- L1 selectively reused `workspace.validate_fresh(..., preserve_existing)` and early handoff guidance from that candidate, with provenance in its implementation report. It did not copy/resume old scientific runtime state or the timed M5 harness. Reconcile useful remaining workspace/harness work during L6, then obtain fresh M5 evidence through the pipeline.
+- The human-designated scientific project is **`research_example/`**. New science belongs directly in its `sources/`, `work/`, `outputs/`, `handoffs/`, research status and indexes; runtime state may use `.research_pipeline/`, acceptance diagnostics `.m5-acceptance/`. Science stays outside `starting_evidence/` and `coding_pipeline/logs/`.
+- **Protected inputs:** `research_example/starting_evidence/RESEARCH_QUESTIONS.md`, original manuscript/notes and `failed_m5_20261111/`. Read any research AGENTS.md subsequently supplied. Starting evidence is read-only and exempt from agent-written indexes. The archived investigation is preliminary evidence, not a runtime to resume. [Archive provenance](research_example/starting_evidence/failed_m5_20261111/ARCHIVE_MANIFEST.json) preserves original hashes; all 141 archived files and supplied originals were previously verified after relocation.
+- The old science failed with `No new handoff draft; previous checkpoint retained`; continuation, independent science verification and isolated reproduction were not completed. Preserve its original usage (430.693 demonstration / 421.244 product seconds), grants, receipts and failed outcome. Historical 3600/3480/3900-second allocation settings were superseded by the V0 lifecycle request; do not revive them or reset spending.
+- The completed [workspace/budget/evidence amendment](development/requests/m5-workspace-and-budget.md) must not be commissioned again. Existing consent for native OpenAI Codex processing of relevant private materials persists for later authorized M5; no new publication authority for those materials is added.
+- After L1–L6 acceptance, the pipeline-owned M5 harness must use updated `src/`, `RESEARCH_PIPELINE_M5_LIVE=1`, input `research_example/starting_evidence`, and fresh private output under `research_example/.m5-acceptance/`; keep M1–M4 gates disabled and unset old M5 check/resume receipt overrides. Actual scientific continuation, independent criticism, reproduction, changed-question response and **human scientific acceptance** remain gates.
 
-After both milestone 001 review-repair rounds, Writer routine validation ran 122 tests:
-117 passed, with five deliberate opt-in skips. Immutable scoped document reads preserve live
-successor/parent continuity, and successful cleanup retries reconcile per-context
-state and pending publication. The
-enabled L1 production fixture failed before inference because this Writer has no
-`XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`. Its failed receipt is
-`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-repair-002/receipt.json`.
-This is **not** native tool, service-survival or L1 acceptance evidence. Pipeline
-host verification, independent review and final/combined checks remain required;
-the report supplies an invocation using the retained MCP dependency. L1 readiness
-must not be relabeled as completed V0 or as permission to resume M5. V0-L2 measured
-rollover is the next product dependency after L1 verification.
+## Pipeline operation and components
 
-Milestone 002 prepares repeated host checks: the native fixture now creates the
-requested private output directory on first use and fresh private siblings on
-subsequent invocations. It prints the selected path and records both paths in
-each receipt, preserving previous evidence. No runtime code changed. Three new
-output-retention/preflight-failure regressions pass; Writer discovery ran 125 tests:
-120 passed, five deliberate opt-in skips. Log:
-`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/milestone-002-writer-discovery.txt`.
-An enabled Writer check still fails before inference on the missing authorized bus
-environment; its separate failed receipt is
-`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-milestone-002/receipt.json`.
-Milestone 002 independent review and trusted final/combined discovery must now run
-with the inherited enabled L1 gate, authorized host environment and configured
-output destination. Every stage must produce its own production receipt; none
-has been established by these Writer checks. Do not mark L1 accepted before those
-checks and confirmed cleanup pass.
-
-Milestone 003 integration repair addresses the host final-check failure
-`bwrap: Can't find source path /proc/<controller-pid>/fd/9: Permission denied`.
-Protected Markdown mount sources now use private read-only file snapshots,
-prepared through the existing safe reader, with separate context/job lifetimes.
-A real process regression covers denied cross-process descriptor access and
-successful snapshot retrieval. Writer focused validation passes 48 tests;
-discovery passes 126 tests with five opt-in skips. Logs and decisions are in
-[the implementation report](development/requests/v0-l1-durable-runtime.md).
-The enabled Writer native retry still fails at preflight on missing
-`XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`, retaining
-`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-integration-1/receipt.json`.
-Required authorized host final/combined checks and passing production receipts,
-including confirmed cleanup, remain pending. This repair does not accept L1 or M5.
-
-The second milestone 003 integration repair corrects the native supervisor-loss
-fixture to use installed systemd 249's `--kill-who=main` option; the supplied host
-failure used unsupported `--kill-whom=main`. Writer focused checks ran 40 tests
-with one opt-in skip; discovery ran 126 tests with five opt-in skips, all others
-passing. Logs: `runtime/tmp/integration-2-{focused,discovery}.txt` relative to run
-`20261112T190532_377a68b3`. The enabled Writer check again fails before inference
-on missing `XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`; its failed receipt is
-`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-integration-2/receipt.json`.
-The implementation report retains the authorized host rerun command. Passing
-production evidence, including the corrected supervisor-loss/cleanup exercise,
-remains required before L1 acceptance.
-
-## Active manager checkpoint
-
-- **Objective:** V0-L1 production runtime boundary and durable scientific jobs; implement only this dependency before V0-L2.
-- **Request:** `v0-l1-durable-runtime-20261112T190503Z-55d80ebf`; standard mode, `auto_merge = true`, Architect `gpt-6.1-sol/xhigh`, Writer and Reviewer `gpt-6.1-sol/high`. Explicit configuration retains `writer_network` preauthorization from the applicable earlier configuration.
-- **Frozen submission:** `coding_pipeline/logs/manager/v0-l1-durable-runtime-20261112T190503Z-55d80ebf/request.md` and `config.toml`; receipt will be `receipt.json` in that directory. **Run `20261112T190532_377a68b3`**, feature branch `cwi/20261112T190532_377a68b3`, worktree `coding_pipeline/logs/20261112T190532_377a68b3/worktree/`.
-- **Startup reconciliation:** old M5 run `20261111T063907_2732fff6` remains blocked/unmerged, its lock unowned and recovery worktree preserved at `1b70aea`; no old implementation resumed. Host process inventory shows the current manager/controller and no prior pipeline/research job. Components are unchanged.
-- **Preservation:** initial human changes comprise this lifecycle checkpoint, the new lifecycle specification and its one-line root directory-index entry. Record the latter two unchanged as explicit human-authored management inputs, independently of product implementation. No staged files existed at startup. Input hashes are retained in the request directory.
-- **Operational recovery:** baseline reported missing declared `mcp` dependency (not a product regression). Gracefully interrupted the owned pipeline root with SIGINT; run checkpoint is `interrupted / plan`, lock confirmed unowned. Retained MCP import succeeds from `coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies/`. The same run was resumed with that directory on `PYTHONPATH`; milestone 001 is **code-review approved and committed at `df844341d4465a740704df23cb2e3dc4bc6c738f`**. The host-gated run is now **running / integration Writer repair, milestone 003, turn 16, integration attempt 2** after the second trusted final failure, and its lock is owned. Preserve the original unavailable baseline evidence. No dependency install or product workaround was needed. Do not resume or duplicate the run while its process/lock remains active.
-- **Pipeline progression:** internal milestone 001 implemented and reviewed the runtime; 002 prepared repeatable native host validation. The first trusted final attempt failed on context startup, so internal milestone 003 is an automatic integration repair. Plans and immutable Writer/review evidence are under `coding_pipeline/logs/20261112T190532_377a68b3/milestones/`; current integration findings must be repaired and re-reviewed before fresh host checks.
-
-- **Review and refs:** milestone 001 code approved at `df844341d4465a740704df23cb2e3dc4bc6c738f`; milestone 002 repeated-output preparation approved and committed at `e54e1f09ffdcd96fda015a155d99847ab92d37f4`. Turn 12 found no actionable fixture-change defects. Writer reported 125 tests (120 passed, five opt-in skips). The descriptor-mount runtime repair was independently approved and committed at `54a9deca794cc9dad3127e4f55333cb0e17d024e`; fresh native checks progressed into actual context/job scenarios. The current repair concerns the observed supervisor-loss fixture command, with fresh review/required native checks still pending.
-
-- **Observed native limitation:** the enabled Writer native check failed before inference because its sandbox lacks the authorized systemd user bus (`XDG_RUNTIME_DIR` / `DBUS_SESSION_BUS_ADDRESS`). Failed receipts: `coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-001/receipt.json` and `runtime/tmp/l1-native-writer-repair-001/receipt.json` and `runtime/tmp/l1-native-writer-repair-002/receipt.json` within that run; no production contexts/jobs/cap/survival evidence exists there. This is not a passing skip or science outcome. Host verification must remain pipeline-owned. The existing host launch environment has both bus variables set and `/run/user/1000/bus` is a socket; this metadata observation is not native validation.
-- **First host failure (preserved):** trusted `tests/final-002.txt` ran 125 tests with one failure and four disabled historical paid gates. Native validation observed the configured parent/slot cgroup controls (2048 MiB, zero swap, 128 aggregate tasks), then context startup failed before inference: `bwrap: Can't find source path /proc/358127/fd/9: Permission denied`. Startup ownership was not captured, and the fixture truthfully reported cleanup unconfirmed. No scientific job was admitted. Receipt: `coding_pipeline/logs/manager/v0-l1-durable-runtime-20261112T190503Z-55d80ebf/native-host-20261112T205843Z-705144/receipt.json`. This is failed production evidence, not L1 acceptance.
-- **Latest host result:** `tests/final-003.txt` ran 126 tests with one error and four disabled historical paid gates. The native fixture reached survival/successor collection, scoped command/credential/write denials, timeout after context closure with partial output and confirmed cleanup, unrelated computation, and 61/7200-second admission/cancellation. It then failed at supervisor-loss injection because installed `systemctl` rejects `--kill-whom=main`. The overall receipt remains failed, with `cleanup_ok=true`: `coding_pipeline/logs/manager/v0-l1-durable-runtime-20261112T190503Z-55d80ebf/native-host-20261112T205843Z-705144-yvyz14oi/receipt.json`. Useful partial production observations do not establish L1 acceptance; the pipeline is repairing the fixture and will rerun required checks.
-- **Operational reconciliation:** the exact failed fixture service has `MainPID=0`, empty `ControlGroup` and failed state; its recorded parent/slot cgroups have no PIDs and `populated 0`; no jobs were recorded. Read-only host observations are in `coding_pipeline/logs/manager/v0-l1-durable-runtime-20261112T190503Z-55d80ebf/failed-host-process-reconciliation.json`. Original failed receipt and runtime state were not rewritten; this is process reconciliation, not a product test or cleanup-acknowledgement override.
-- **Production gate:** the current trusted controller retains `RESEARCH_PIPELINE_V0_L1_NATIVE=1`, existing MCP dependencies and host bus, with all M1–M5 science gates unset. Recovery input/environment are frozen in this request directory's `host-verification-recovery.json` / `host-resume-input.txt`. The fixture now reserves fresh private siblings for repeated final/combined invocations and prints each actual path. Pipeline-owned repairs, independent review, fresh final/combined production receipts and confirmed cleanup must pass before L1 acceptance. Do not independently repeat product tests or bypass the production boundary.
-
-- **Component refs (unchanged):** `coding_pipeline` branch `manager/final-retry-20261110` at `5bc0fbb04ad4e104f252f0dbd61361f62f3085d5`; controller branch `project-manager/setup` at `80063c7a7bbcc615146385b543ea6f921873ccaf`. No repair or controller restart is required.
-- **Publication:** management commits through `ef60595` were non-force pushed successfully to the existing `origin/main` during this authorized invocation.
-- **Next action:** monitor automatic integration repair of the installed-systemctl supervisor-loss fixture command, resolve questions and assess fresh pipeline final/combined native evidence. Reconcile its process and lock before any later resume; do not duplicate active work. Do not resume M5 science until V0-L1–L6 are verified. Current invocation permits necessary non-force Git pushes to existing remotes only; component repair branches must remain unmerged.
-
-## Next manager session
-
-1. Read PROJECT.md, AGENTS.md and the linked V0 implementation request. Implement and verify the human-required extension above before M5. Reconcile the retained worktree, run lock and actual process ownership; preserve any new edits. The earlier M5 invocation ended blocked at Reviewer turn 21 pending live scientific evidence; the human has now added the V0 extension as a prerequisite.
-2. Preserve **`coding_pipeline/logs/20261111T063907_2732fff6/worktree/`**, branch **`cwi/20261111T063907_2732fff6`**, at recorded HEAD `1b70aea25f6c5f8496acdea12e9a27c6f3d4ecbd` as the reviewed, unmerged M5 recovery source. Choose a safe base for the lifecycle work and reuse or port its relevant changes. Do not reset it, blindly merge the candidate into main, or approve the old blocked M5 run merely to unblock development. Lifecycle integration does not establish M5 acceptance.
-3. Have the pipeline verify the lifecycle with engineering checks and a representative public/test-input live investigation before starting the private M5 benchmark. Then have it reconcile the retained M5 candidate and updated harness with the new runtime. The eventual pipeline-owned M5 invocation is `python -m unittest tests.test_m5_live -v`, using the updated implementation's `src/` and existing dependencies on `PYTHONPATH`; do not run the old timed harness unchanged. Native Codex/systemd/Bubblewrap prerequisites remain required before inference.
-4. For pipeline-owned M5 validation, supply `RESEARCH_PIPELINE_M5_INPUT_DIR` as **`/home/francesco/Desktop/gits/research_project/research_pipeline/research_example/starting_evidence`** and `RESEARCH_PIPELINE_M5_OUTPUT_DIR` as a fresh private directory under **`/home/francesco/Desktop/gits/research_project/research_pipeline/research_example/.m5-acceptance/`**. Enable only `RESEARCH_PIPELINE_M5_LIVE=1`; keep M1–M4 live gates disabled and unset `RESEARCH_PIPELINE_M5_CHECK_RECEIPT` and `RESEARCH_PIPELINE_M5_RESUME_RECEIPT`.
-5. Assess pipeline-reported actual handoff/continuation, separate scientific criticism, isolated reproduction, input-integrity checks and confirmed cleanup. Record the receipt, scientific artifact paths, actual outcome and remaining gates here. M5 integration requires its outstanding live evidence and required checks; **human scientific acceptance is required for M5**.
-
-Reuse the retained implementation where appropriate; do not repeat the completed workspace/budget amendment or accepted M1–M4 paid demonstrations merely to reconstruct history. New lifecycle behavior needs its own engineering checks and representative live evidence.
-
-## Scientific workspace and allocation
-
-- **Project root:** `/home/francesco/Desktop/gits/research_project/research_pipeline/research_example/`. New science belongs directly in its `work/`, `sources/`, `outputs/`, `handoffs/`, research status and indexes. Runtime state uses `.research_pipeline/`; acceptance diagnostics use `.m5-acceptance/`. Scientific work must stay outside `starting_evidence/` and `coding_pipeline/logs/`.
-- **Protected inputs:** the original question, manuscript and six-band notes, plus `starting_evidence/failed_m5_20261111/`. The archived investigation is preliminary prior evidence. Assess it critically and run working copies outside starting evidence; do not resume its embedded runtime state. Research AGENTS.md was absent at last inspection; preserve and read it if supplied.
-- **Resource caps to preserve:** two simultaneous agents sharing 2048 MiB with zero swap and 128 process/thread tasks, and one concurrent admitted job, until the human configures otherwise. The new V0 request replaces fixed investigation, session and live-demonstration lifetimes with 55% context rollover and the centrally enforced 15% weekly reserve; individual computation timeouts are chosen by their researcher.
-- **Historical allocation:** the earlier amendment specified 3600 seconds of demonstration work, 3480 seconds of research and 3900 seconds including cleanup. Those settings describe the retained pre-extension harness, not the requested new V0 lifecycle. Do not revive expired deadlines or rewrite historical grants, usage or receipts. Existing consent for native OpenAI Codex processing of relevant private manuscript/notes excerpts persists; M5 must wait for the required V0 work.
-
-## Implementation readiness
-
-- Retained request `m5-linear-soi-mechanisms-20261111T063725Z-cf4d5b09`, run `20261111T063907_2732fff6`: **blocked / Reviewer, turn 21**. The handoff-first repair and new workspace/budget implementation are preserved. The harness uses the actual example root, recursive protected-evidence inventory and explicit `start PROJECT --preserve-existing` initialization; existing or orphaned runtime state still prevents a fresh start.
-- Latest publication checks (2026-11-12): **274 discovery tests passed with five skips**, with live research gates disabled and the existing host prerequisites/dependencies available. The earlier implementation report recorded 116 focused tests (one skip) and 259 discovery tests (eight skips). Final separate review confirmed the initialization issue resolved and found no additional actionable code defects. These checks concern the pre-extension candidate; they do not verify the new lifecycle or demonstrate successful M5 scientific continuation/acceptance.
-- Final review: `coding_pipeline/logs/20261111T063907_2732fff6/milestones/003/integration-2/attempts/000021/reviewer.md`.
-- Existing MCP dependency: `coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies/`; fallback retained installation: `coding_pipeline/logs/20261111T002338_830acaa4/runtime/tmp/milestone-003-deps/`. Do not install replacements unnecessarily.
-- The human instructed **not to use coding_pipeline for the completed workspace/budget/evidence edits**. Do not reopen that amendment through it. General development policy remains in PROJECT.md, subject to the latest human requirements. The next task is the new V0 lifecycle extension; the M5 scientific demonstration follows it.
-
-## Preserved evidence and references
-
-- The failed investigation was moved into `research_example/starting_evidence/failed_m5_20261111/`. All 141 original archived files, the three supplied originals and failed receipt matched their recorded hashes after relocation. [Archive provenance](research_example/starting_evidence/failed_m5_20261111/ARCHIVE_MANIFEST.json) records exact paths and hashes.
-- Its actual failure was `No new handoff draft; previous checkpoint retained`. Scientific continuation, independent verification and isolated reproduction did not complete. Historical usage is 430.693 demonstration seconds / 421.244 product seconds; retain it separately. Preserve original receipts, grants and failed outcomes unchanged. Prompt and unit-test repairs do not prove the live failure resolved.
-- Current [development amendment](development/requests/m5-workspace-and-budget.md); operational amendment and migration checks in `coding_pipeline/logs/manager/m5-workspace-and-budget-20261112/`. Detailed earlier recovery history remains in Git and the original request's immutable reports/receipts.
-- The human explicitly authorized pushing all local project/component branches on 2026-11-12. The M5 candidate is committed separately and remains unmerged and scientifically unaccepted. Preserve component checkouts and human edits. No COMPLETE/COMPLETE.ack has been created; M5 is unfinished.
+- Use one active implementation request at a time, standard mode and explicit frozen TOML: `auto_merge=true`, Architect `gpt-6.1-sol/xhigh`, Writer and Reviewer `gpt-6.1-sol/high`; retain applicable `writer_network` preauthorization. Requests, effective config and receipts live under ignored `coding_pipeline/logs/manager/`.
+- Trusted pipeline Python: `/home/francesco/miniconda3/bin/python`. Reuse MCP dependencies at `coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies/`; fallback retained installation is under `coding_pipeline/logs/20261111T002338_830acaa4/runtime/tmp/milestone-003-deps/`. Set trusted-test `PYTHONPATH` correctly rather than reinstalling. Native Codex/systemd/Bubblewrap prerequisites remain required. L1's final/combined production receipts are accepted; keep its opt-in native gate disabled for routine later baselines unless new changes justify rerunning it.
+- Components are unchanged: `coding_pipeline` branch `manager/final-retry-20261110` at `5bc0fbb04ad4e104f252f0dbd61361f62f3085d5`; controller branch `project-manager/setup` at `80063c7a7bbcc615146385b543ea6f921873ccaf`. No repair/restart was required. Component repair branches must remain unmerged.
+- Publication authority is per controller invocation. This invocation supplied `--push` and permits necessary non-force Git pushes only to existing configured remotes. Do not infer future authorization from this history. L1/management publication will be recorded in the request directory's `publication.json`. No COMPLETE or STOP signal has been written; the project is unfinished.
