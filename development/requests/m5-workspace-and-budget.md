@@ -47,7 +47,7 @@ The failed investigation has been moved into `starting_evidence/failed_m5_202611
 
 ## Implementation ownership
 
-The human explicitly instructed **not to use `coding_pipeline` for these changes**. Complete this amendment through direct file edits; do not invoke, resume, retry, approve or merge a coding-pipeline workflow for it. An earlier invocation already produced candidate code in retained worktree `coding_pipeline/logs/20261111T063907_2732fff6/worktree`; that invocation has ended and its changes remain unmerged. Preserve its outcome as history, without treating the earlier delegation instruction as current authority. The operational amendment and migration verification remain in `coding_pipeline/logs/manager/m5-workspace-and-budget-20261112/`. All changes remain local; no research or controller restart is requested.
+The human explicitly instructed **not to use `coding_pipeline` for these changes**. Complete this amendment through direct file edits; do not invoke, resume, retry, approve or merge a coding-pipeline workflow for it. An earlier invocation already produced candidate code in retained worktree `coding_pipeline/logs/20261111T063907_2732fff6/worktree`; that invocation has ended and its changes remain unmerged. Preserve its outcome as history, without treating the earlier delegation instruction as current authority. The operational amendment and migration verification remain in `coding_pipeline/logs/manager/m5-workspace-and-budget-20261112/`. The human subsequently authorized publication of all local branches on 2026-11-12; this does not authorize a research run, controller restart or M5 integration.
 
 ## Implementation checkpoint
 
