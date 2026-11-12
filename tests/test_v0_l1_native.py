@@ -4,11 +4,15 @@ No M1–M5 gate is enabled. Uses public deterministic sums and short engineering
 expiry/survival exercises, including minimal native inference for actual inventory.
 """
 import asyncio
+from contextlib import redirect_stdout
+import io
 import json
 import os
 from pathlib import Path
+import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import uuid
 
 from tests import use_checkout
@@ -16,16 +20,94 @@ use_checkout()
 from research_pipeline import collaboration, isolation, jobs, workspace
 
 
+def reserve_validation_output(destination):
+    """Reserve private evidence storage without touching earlier invocations."""
+    if not destination:
+        raise ValueError('Enabled V0-L1 validation requires RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR')
+    output = Path(destination).absolute()
+    if any(p.is_symlink() for p in (output, *output.parents)):
+        raise ValueError(f'Output and ancestors must not be symlinks: {output}')
+    try:
+        try:
+            output.mkdir(parents=True, mode=0o700)
+        except FileExistsError:
+            if not output.is_dir():
+                raise ValueError(f'Output must be a directory: {output}')
+            output = Path(tempfile.mkdtemp(prefix=output.name + '-', dir=output.parent))
+    except OSError as exc:
+        raise ValueError(f'Cannot reserve V0-L1 output beside {output}; use a writable directory parent: {exc}') from exc
+    return output
+
+
+class ValidationOutputTests(unittest.TestCase):
+    def test_repeated_destination_retains_original_private_evidence(self):
+        with tempfile.TemporaryDirectory() as root:
+            requested = Path(root) / 'validation'
+            first = reserve_validation_output(requested)
+            self.assertEqual(first, requested)
+            (first/'receipt.json').write_text('original receipt')
+            (first/'sentinel').write_text('original evidence')
+            second = reserve_validation_output(requested)
+            third = reserve_validation_output(requested)
+            self.assertEqual(len({first, second, third}), 3)
+            for output in (first, second, third):
+                self.assertEqual(output.parent, requested.parent)
+                self.assertEqual(output.stat().st_mode & 0o777, 0o700)
+            self.assertEqual((first/'receipt.json').read_text(), 'original receipt')
+            self.assertEqual((first/'sentinel').read_text(), 'original evidence')
+            self.assertFalse(list(second.iterdir()))
+            self.assertFalse(list(third.iterdir()))
+
+    def test_files_symlinks_and_unusable_parents_are_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            root = Path(root)
+            file = root/'file'
+            file.write_text('preserve')
+            directory = root/'directory'
+            directory.mkdir()
+            (root/'link').symlink_to(directory, target_is_directory=True)
+            (root/'dangling').symlink_to(root/'absent')
+            for destination in (None, file, file/'child', root/'link',
+                                root/'link'/'child', root/'dangling'):
+                with self.subTest(destination=destination), self.assertRaises(ValueError):
+                    reserve_validation_output(destination)
+            self.assertEqual(file.read_text(), 'preserve')
+            self.assertFalse(list(directory.iterdir()))
+
+    def test_preflight_failure_retains_separate_failed_receipts(self):
+        with tempfile.TemporaryDirectory() as root:
+            requested = Path(root)/'validation'
+            reports = []
+            # Call the fixture method directly: no native services or inference
+            # run, and this regression remains active with the paid gate disabled.
+            fixture = NativeL1Tests('test_production_context_job_survival_timeout_and_boundary')
+            with patch.dict(os.environ, {'RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR': str(requested)}):
+                for attempt in range(2):
+                    logged = io.StringIO()
+                    with patch.object(isolation, 'preflight', side_effect=isolation.RuntimeUnavailable(f'fixture bus failure {attempt}')), \
+                            redirect_stdout(logged), self.assertRaisesRegex(isolation.RuntimeUnavailable, f'fixture bus failure {attempt}'):
+                        fixture.test_production_context_job_survival_timeout_and_boundary()
+                    output = Path(logged.getvalue().strip().split('V0-L1 output: ', 1)[1])
+                    receipt = json.loads((output/'receipt.json').read_text())
+                    self.assertEqual(receipt['requested_output_dir'], str(requested))
+                    self.assertEqual(receipt['output_dir'], str(output))
+                    self.assertEqual(receipt['outcome'], 'failed')
+                    self.assertIn(f'fixture bus failure {attempt}', receipt['error'])
+                    self.assertEqual(receipt['commands'], [])
+                    self.assertEqual(receipt['evidence'], {})
+                    reports.append(output/'receipt.json')
+            self.assertNotEqual(*reports)
+            self.assertIn('fixture bus failure 0', reports[0].read_text())
+
+
 @unittest.skipUnless(os.environ.get('RESEARCH_PIPELINE_V0_L1_NATIVE') == '1', 'V0-L1 production validation opt-in disabled')
 class NativeL1Tests(unittest.TestCase):
     def test_production_context_job_survival_timeout_and_boundary(self):
         destination = os.environ.get('RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR')
-        self.assertTrue(destination, 'Enabled V0-L1 validation requires RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR (fresh private directory)')
-        output = Path(destination).absolute()
-        self.assertFalse(output.exists(), 'Use a fresh output directory; retained receipts are never overwritten')
-        self.assertFalse(any(p.is_symlink() for p in (output, *output.parents)), 'Output ancestors must not be symlinks')
-        output.mkdir(parents=True, mode=0o700)
+        output = reserve_validation_output(destination)
+        print(f'V0-L1 output: {output}', flush=True)
         receipt = {'validation': 'V0-L1 production isolation + minimal native inference + public process fixtures',
+                   'requested_output_dir': str(Path(destination).absolute()), 'output_dir': str(output),
                    'outcome': 'failed', 'commands': [], 'evidence': {}, 'limitations': ['Does not establish V0-L2–L6 or M5 acceptance.']}
         runtime = None
 

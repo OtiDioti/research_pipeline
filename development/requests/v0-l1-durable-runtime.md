@@ -1,7 +1,8 @@
 # V0-L1 implementation and verification handoff
 
-L1 implementation is ready for independent engineering review and required host
-verification. **Production L1 acceptance is not established.** The enabled native
+Milestone 001 code review approved `df844341d4465a740704df23cb2e3dc4bc6c738f`.
+Milestone 002 prepares repeated required host verification; its changes still
+require independent review. **Production L1 acceptance is not established.** The enabled native
 check failed on the Writer's missing authorized systemd user bus. No private science,
 M5 work, external publication or remote action occurred.
 
@@ -239,23 +240,79 @@ identities, actual cap observations or production survival/timeout results exist
 that receipt: `commands` and `evidence` are empty. Do not describe it as passing or
 skip the native test in required host verification.
 
+## Milestone 002: repeated verification preparation
+
+The recovery preserved the approved milestone 001 candidate and supplied host
+environment metadata for trusted pipeline testing. Inspection confirmed the
+native fixture's fresh-directory assertion would reject the second required
+stage inheriting the same destination. A test-local reservation helper now
+creates the first requested directory or a unique private sibling on later runs.
+This changes evidence storage only; production preflight, assertions, failure
+receipts and cleanup requirements remain enforced. No runtime repair was needed.
+
+Three ordinary regressions cover private/distinct directories, retention of
+earlier evidence, file/symlink/invalid-parent rejection, and two independent
+preflight failures retaining separate failed receipts. The latter use an explicit
+preflight double and establish fixture behavior only.
+
+Writer checks from this checkout, with the retained dependency on `PYTHONPATH`:
+
+```sh
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest tests.test_v0_l1_native.ValidationOutputTests -v
+RESEARCH_PIPELINE_V0_L1_NATIVE=0 /home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests
+RESEARCH_PIPELINE_V0_L1_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR="$PWD/../runtime/tmp/l1-native-writer-milestone-002" \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest tests.test_v0_l1_native.NativeL1Tests -v
+sha256sum -c ../runtime/tmp/human-inputs.sha256
+```
+
+Results: three focused tests pass; discovery runs **125 tests: 120 passed, five
+disabled opt-in skips**. Both protected specification checksums match. Routine
+discovery disables the L1 gate only in that Writer subprocess; it does not alter
+the trusted pipeline's launch environment. Log:
+`runtime/tmp/milestone-002-writer-discovery.txt`.
+
+The enabled native invocation **fails**, retaining
+`runtime/tmp/l1-native-writer-milestone-002/receipt.json`; log:
+`runtime/tmp/milestone-002-writer-native.txt`. This Writer still lacks
+`XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`. No inference or service admission
+occurred: `commands` and `evidence` remain empty. Cleanup was not exercised.
+The controller's authorized bus metadata is not passing product evidence, and no
+alternative execution context was requested. Paths above are relative to run
+`20261112T190532_377a68b3`.
+
+These changes are prepared for independent review and the trusted final/required
+combined checks. Their outcomes, actual candidate/integration refs and distinct
+production receipt paths remain pending pipeline stages. V0-L1 is not yet accepted.
+The next product dependency remains V0-L2 measured automatic context rollover.
+
 ## Required controller-host verification
 
 Use the final integrated candidate's checkout, the existing dependency and the
 already authorized host environment (including native file auth, Codex, Bubblewrap,
 user bus and cgroup controls). Keep **all M1–M5 live gates disabled**. The invocation
-below creates a new output directory via the fixture; do not precreate it or reuse a
-retained receipt directory:
+below runs discovery with the L1 gate enabled. During pipeline final/combined
+stages, retain the controller's inherited `RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR`
+recorded in `host-verification-recovery.json`. For a separate authorized invocation,
+set it to a caller-chosen private destination first. Do not replace the inherited
+controller environment with Writer settings:
 
 ```sh
 cd /home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T190532_377a68b3/worktree
 export PYTHONPATH="$PWD/src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies"
 unset RESEARCH_PIPELINE_M1_LIVE RESEARCH_PIPELINE_M2_LIVE RESEARCH_PIPELINE_M3_LIVE RESEARCH_PIPELINE_M4_LIVE RESEARCH_PIPELINE_M5_LIVE
+export RESEARCH_PIPELINE_V0_L1_NATIVE=1
+: "${RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR:?Set a private validation destination}"
 /home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests
-RESEARCH_PIPELINE_V0_L1_NATIVE=1 \
-RESEARCH_PIPELINE_V0_L1_OUTPUT_DIR="$PWD/../runtime/tmp/l1-native-host-final-repair-2" \
-/home/francesco/miniconda3/bin/python -m unittest tests.test_v0_l1_native -v
 ```
+
+Each invocation creates the exact requested directory if absent, or reserves a
+fresh mode-`0700` sibling if it already exists as an ordinary directory. Symlinks,
+including ancestors, files and unusable parents fail. Existing receipts are never
+overwritten or reused as evidence. The actual path is printed before preflight;
+`requested_output_dir` and `output_dir` in each new receipt identify the selection.
+Every required stage must execute the native fixture and retain its own receipt.
+Four disabled historical paid gates may remain skipped; the enabled L1 gate may not.
 
 The opt-in fixture uses the actual production coordinator, slices, services,
 Bubblewrap, app-server and controlled MCP schemas/operations. It is intended to

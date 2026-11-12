@@ -19,7 +19,8 @@ Preserve PROJECT.md and useful retained M5 implementation work. Implement and ve
 
 ## V0-L1 implementation handoff (production verification pending)
 
-The pipeline recovery now has an L1 implementation candidate based on
+Milestone 001 code review approved the L1 candidate at
+`df844341d4465a740704df23cb2e3dc4bc6c738f`, based on
 `22213b2aba2514c0ba72034bd7e92ee98931a49d`, with a research-owned app-server driver,
 persistent shared allocation slices, independently supervised jobs and explicit
 successor attachment. See [the implementation report](development/requests/v0-l1-durable-runtime.md)
@@ -27,8 +28,8 @@ for provenance, unsupported legacy protocols, commands and limits. PROJECT.md an
 the human lifecycle amendment remain byte-for-byte unchanged; the retained M5
 candidate remains untouched and unaccepted.
 
-After both review-repair rounds, Writer routine validation ran 122 tests: 117 passed,
-with five deliberate opt-in skips. Immutable scoped document reads preserve live
+After both milestone 001 review-repair rounds, Writer routine validation ran 122 tests:
+117 passed, with five deliberate opt-in skips. Immutable scoped document reads preserve live
 successor/parent continuity, and successful cleanup retries reconcile per-context
 state and pending publication. The
 enabled L1 production fixture failed before inference because this Writer has no
@@ -39,6 +40,22 @@ host verification, independent review and final/combined checks remain required;
 the report supplies an invocation using the retained MCP dependency. L1 readiness
 must not be relabeled as completed V0 or as permission to resume M5. V0-L2 measured
 rollover is the next product dependency after L1 verification.
+
+Milestone 002 prepares repeated host checks: the native fixture now creates the
+requested private output directory on first use and fresh private siblings on
+subsequent invocations. It prints the selected path and records both paths in
+each receipt, preserving previous evidence. No runtime code changed. Three new
+output-retention/preflight-failure regressions pass; Writer discovery ran 125 tests:
+120 passed, five deliberate opt-in skips. Log:
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/milestone-002-writer-discovery.txt`.
+An enabled Writer check still fails before inference on the missing authorized bus
+environment; its separate failed receipt is
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-milestone-002/receipt.json`.
+Milestone 002 independent review and trusted final/combined discovery must now run
+with the inherited enabled L1 gate, authorized host environment and configured
+output destination. Every stage must produce its own production receipt; none
+has been established by these Writer checks. Do not mark L1 accepted before those
+checks and confirmed cleanup pass.
 
 ## Active manager checkpoint
 

@@ -188,7 +188,7 @@ When the declared MCP dependency is supplied externally, append its existing
 installation to `PYTHONPATH`; do not replace it to conceal an environment issue.
 The old timed M1–M4 live harnesses reject enabled use; their evidence parsers remain
 covered. The public L1 production fixture uses the same runtime launch path and
-requires a fresh private output directory:
+requires a private output destination:
 
 ```sh
 RESEARCH_PIPELINE_V0_L1_NATIVE=1 \
@@ -202,3 +202,11 @@ descendant timeout, partial output, long-duration admission with prompt cancella
 ownership denials and shared cgroup membership/caps. Enabled missing prerequisites
 are failures with a retained `receipt.json`, never accepted skips. The complete
 controller-host command and current missing evidence are in the L1 report.
+
+The first invocation creates the requested output directory with mode `0700`.
+If that directory already exists, each invocation reserves a fresh private sibling
+with the same basename as a prefix. Existing receipts and evidence are retained.
+Files, symlinks (including ancestors) and unusable parents are rejected. The fixture
+prints its actual output path immediately; its receipt records both requested and
+actual paths. Final and combined checks can inherit the same destination and still
+execute independently with distinct receipts.
