@@ -20,8 +20,7 @@ ALIAS = re.compile(r"[A-Za-z][A-Za-z0-9_-]{0,63}")
 
 def check_deadline(deadline, on_poll=None):
     if on_poll and (reason := on_poll()):
-        from .isolation import RequestedStop
-        raise RequestedStop(reason)
+        raise ReferenceError(f"Reference preparation interrupted: {reason}")
     if deadline is not None and time.monotonic() >= deadline:
         raise TimeoutError("Reference preparation deadline reached")
 
@@ -117,19 +116,19 @@ def load_catalog(project, deadline=None, on_poll=None):
 def configure(config, project, session, intake):
     """Refresh on every activation; catalog is outside writable scientific drafts."""
     from . import workspace
-    on_poll = (lambda: config.on_poll(research=False)) if config.on_poll else None
-    catalog = load_catalog(project, config.deadline, on_poll)
+    on_poll = None
+    catalog = load_catalog(project, None, on_poll)
     intake.references = catalog
     mounts, isolated = [], {}
     for alias, record in catalog.items():
         isolated[alias] = {**record, "path": record["namespace"]}
         if record["available"]:
             mounts.append((None, record["namespace"]))
-            for entry in reference_entries(Path(record["root"]), config.deadline, on_poll):
+            for entry in reference_entries(Path(record["root"]), None, on_poll):
                 mounts.append((str(entry), f"{record['namespace']}/{entry.name}"))
     config.reference_mounts = tuple(mounts)
     config.reference_catalog = session / "references.json"
-    check_deadline(config.deadline, on_poll)
+    check_deadline(None, on_poll)
     workspace.atomic_text(config.reference_catalog, json.dumps(isolated, indent=2) + "\n")
 
 

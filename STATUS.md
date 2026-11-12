@@ -17,6 +17,72 @@ Deliver **V0-L1–V0-L6** in dependency order: runtime and durable jobs; measure
 
 Preserve PROJECT.md and useful retained M5 implementation work. Implement and verify the complete extension before commissioning or resuming M5 science. The manager assesses pipeline reports and maintains this checkpoint rather than independently repeating completed product checks.
 
+## V0-L1 implementation handoff (production verification pending)
+
+Milestone 001 code review approved the L1 candidate at
+`df844341d4465a740704df23cb2e3dc4bc6c738f`, based on
+`22213b2aba2514c0ba72034bd7e92ee98931a49d`, with a research-owned app-server driver,
+persistent shared allocation slices, independently supervised jobs and explicit
+successor attachment. See [the implementation report](development/requests/v0-l1-durable-runtime.md)
+for provenance, unsupported legacy protocols, commands and limits. PROJECT.md and
+the human lifecycle amendment remain byte-for-byte unchanged; the retained M5
+candidate remains untouched and unaccepted.
+
+After both milestone 001 review-repair rounds, Writer routine validation ran 122 tests:
+117 passed, with five deliberate opt-in skips. Immutable scoped document reads preserve live
+successor/parent continuity, and successful cleanup retries reconcile per-context
+state and pending publication. The
+enabled L1 production fixture failed before inference because this Writer has no
+`XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`. Its failed receipt is
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-repair-002/receipt.json`.
+This is **not** native tool, service-survival or L1 acceptance evidence. Pipeline
+host verification, independent review and final/combined checks remain required;
+the report supplies an invocation using the retained MCP dependency. L1 readiness
+must not be relabeled as completed V0 or as permission to resume M5. V0-L2 measured
+rollover is the next product dependency after L1 verification.
+
+Milestone 002 prepares repeated host checks: the native fixture now creates the
+requested private output directory on first use and fresh private siblings on
+subsequent invocations. It prints the selected path and records both paths in
+each receipt, preserving previous evidence. No runtime code changed. Three new
+output-retention/preflight-failure regressions pass; Writer discovery ran 125 tests:
+120 passed, five deliberate opt-in skips. Log:
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/milestone-002-writer-discovery.txt`.
+An enabled Writer check still fails before inference on the missing authorized bus
+environment; its separate failed receipt is
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-milestone-002/receipt.json`.
+Milestone 002 independent review and trusted final/combined discovery must now run
+with the inherited enabled L1 gate, authorized host environment and configured
+output destination. Every stage must produce its own production receipt; none
+has been established by these Writer checks. Do not mark L1 accepted before those
+checks and confirmed cleanup pass.
+
+Milestone 003 integration repair addresses the host final-check failure
+`bwrap: Can't find source path /proc/<controller-pid>/fd/9: Permission denied`.
+Protected Markdown mount sources now use private read-only file snapshots,
+prepared through the existing safe reader, with separate context/job lifetimes.
+A real process regression covers denied cross-process descriptor access and
+successful snapshot retrieval. Writer focused validation passes 48 tests;
+discovery passes 126 tests with five opt-in skips. Logs and decisions are in
+[the implementation report](development/requests/v0-l1-durable-runtime.md).
+The enabled Writer native retry still fails at preflight on missing
+`XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`, retaining
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-integration-1/receipt.json`.
+Required authorized host final/combined checks and passing production receipts,
+including confirmed cleanup, remain pending. This repair does not accept L1 or M5.
+
+The second milestone 003 integration repair corrects the native supervisor-loss
+fixture to use installed systemd 249's `--kill-who=main` option; the supplied host
+failure used unsupported `--kill-whom=main`. Writer focused checks ran 40 tests
+with one opt-in skip; discovery ran 126 tests with five opt-in skips, all others
+passing. Logs: `runtime/tmp/integration-2-{focused,discovery}.txt` relative to run
+`20261112T190532_377a68b3`. The enabled Writer check again fails before inference
+on missing `XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`; its failed receipt is
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-integration-2/receipt.json`.
+The implementation report retains the authorized host rerun command. Passing
+production evidence, including the corrected supervisor-loss/cleanup exercise,
+remains required before L1 acceptance.
+
 ## Active manager checkpoint
 
 - **Objective:** V0-L1 production runtime boundary and durable scientific jobs; implement only this dependency before V0-L2.

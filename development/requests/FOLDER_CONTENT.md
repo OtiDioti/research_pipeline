@@ -10,3 +10,5 @@
 - [m4-cross-project-reuse.md](m4-cross-project-reuse.md) — Reference/tool reuse decisions, qualification and failure checks, bounded M4 gate and controller verification handoff.
 - [m4-job-boundary-prerequisite.md](m4-job-boundary-prerequisite.md) — Preserved initial capability-check escalation; the supplied sequencing response now permits implementation with mandatory host verification.
 - [m4-job-controls.md](m4-job-controls.md) — Job-boundary implementation, reporting, available verification and remaining controller-host acceptance requirements.
+
+- [v0-l1-durable-runtime.md](v0-l1-durable-runtime.md) — L1 implementation decisions, tests, exact native host blocker and required verification invocation.

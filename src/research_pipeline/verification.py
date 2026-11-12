@@ -1,4 +1,4 @@
-"""Version-scoped scientific packets and a single finite verification exchange."""
+"""Freeze explicitly supplied stable scientific evidence for an independent check."""
 import hashlib
 import json
 import os
@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 import stat
 import tempfile
-from urllib.parse import unquote, urlsplit
+from urllib.parse import quote, unquote, urlsplit
 
 from . import workspace
 
@@ -20,6 +20,8 @@ RESPONSE_FIELDS = ("Response to objections", "Revised claim", "Sources and artif
                    "Reproduction instructions")
 LINK = re.compile(r"\[[^\]]*\]\(([^\s)]+)\)")
 PHASES = ("initial", "awaiting_response", "reexamination", "closed")
+ASSIGNMENT_FIELDS = ("Objective", "Parent question", "Scientific benefit",
+                     "Assumptions", "Requested result", "Artifacts")
 
 
 def sections(text, fields):
@@ -71,8 +73,7 @@ def link_path(project, rel, target):
 def read_bytes(path, deadline):
     """Bounded nonblocking regular-file read, with before/after identity checks."""
     workspace.check_deadline(deadline)
-    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
-    with os.fdopen(fd, "rb") as stream:
+    with workspace.open_regular(path) as stream:
         before = os.fstat(stream.fileno())
         if not stat.S_ISREG(before.st_mode) or before.st_size > 16 * 1024 * 1024:
             raise workspace.InputError("Verification input must be a regular file at most 16 MiB")
@@ -92,6 +93,51 @@ def read_bytes(path, deadline):
             or path.lstat() != after):
         raise workspace.InputError("Verification evidence changed during copying")
     return b"".join(chunks)
+
+
+def prepare_assignment(project, rel, drafts, destination):
+    """Keep canonical links anchored; retain recursively linked private drafts."""
+    copies = {}
+
+    def rewrite(candidate, text):
+        for target in LINK.findall(text):
+            dependency = link_path(project, candidate, target)
+            if dependency is None:
+                continue
+            proposed = workspace.safe_path(drafts, dependency)
+            if proposed.exists():
+                if not workspace.allowed_science(dependency) or proposed.suffix != ".md":
+                    raise workspace.InputError("Assignment draft dependencies must be scoped Markdown")
+                mapped = f"{destination}/files/{dependency}"
+                if dependency not in copies:
+                    if len(copies) >= 128:
+                        raise workspace.InputError("Too many assignment draft dependencies")
+                    blob = read_bytes(proposed, None)
+                    copies[dependency] = b""  # break cycles before recursive rewriting
+                    copies[dependency] = rewrite(dependency, blob.decode("utf-8")).encode()
+                    if sum(map(len, copies.values())) > 64 * 1024 * 1024:
+                        raise workspace.InputError("Assignment drafts exceed 64 MiB")
+            else:
+                with workspace.open_regular(scientific_path(project, dependency)):
+                    pass
+                mapped = dependency
+            url = urlsplit(target)
+            suffix = ("?" + url.query if url.query else "") + ("#" + url.fragment if url.fragment else "")
+            text = text.replace(f"]({target})", f"](/project/{quote(mapped)}{suffix})")
+        return text
+
+    proposed = workspace.safe_path(drafts, rel)
+    source = proposed if proposed.exists() else scientific_path(project, rel)
+    text = read_bytes(source, None).decode("utf-8")
+    content = sections(text, ASSIGNMENT_FIELDS)
+    rewritten = rewrite(rel, text)
+    # Finish all reads/validation before installing any delegated artifacts.
+    workspace.safe_path(project, destination).mkdir(parents=True, exist_ok=True)
+    for candidate, blob in copies.items():
+        target = workspace.safe_path(project, f"{destination}/files/{candidate}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(blob)
+    return rewritten, content
 
 
 def freeze(project, rel, drafts, destination, fields, deadline):
@@ -174,116 +220,3 @@ def freeze(project, rel, drafts, destination, fields, deadline):
     return {"packet": mapped[rel], "manifest": manifest_path, "evidence": manifest,
             "version": version}, content
 
-
-def validate_record(task):
-    record = task.get("verification")
-    if not isinstance(record, dict):
-        raise workspace.InputError("Verifier missing verification record")
-    if (record.get("phase") not in PHASES or record.get("exchange_limit") != 1
-            or type(record.get("response_committed")) is not bool
-            or record.get("disposition") not in ("preliminary", "checked", "disputed")
-            or not isinstance(record.get("initial"), dict)):
-        raise workspace.InputError("Invalid verifier phase or finite exchange allowance")
-    if ((record["phase"] == "reexamination" or record.get("response"))
-            and not record["response_committed"]):
-        raise workspace.InputError("Re-examination requires the committed response")
-    if record["phase"] == "reexamination" and not record.get("response"):
-        raise workspace.InputError("Missing accepted verification response")
-    if record["phase"] == "awaiting_response" and record["response_committed"]:
-        raise workspace.InputError("Response allowance already consumed")
-    if record["phase"] in ("awaiting_response", "reexamination", "closed") and not record.get("initial_check"):
-        raise workspace.InputError("Verification exchange is missing its accepted initial check")
-    for key in ("initial", "response"):
-        packet = record.get(key)
-        if packet:
-            prefix = f"{task['workspace']}/inputs/{key}/"
-            if (not isinstance(packet.get("evidence"), list) or not packet["evidence"]
-                    or not re.fullmatch(r"[a-f0-9]{64}", packet.get("version", ""))):
-                raise workspace.InputError("Invalid verification evidence manifest")
-            for path in (packet.get("packet"), packet.get("manifest"),
-                         *(e.get("path") for e in packet["evidence"])):
-                if not isinstance(path, str) or not path.startswith(prefix) or ".." in Path(path).parts:
-                    raise workspace.InputError("Invalid frozen verification path")
-            if hashlib.sha256(json.dumps(packet["evidence"], sort_keys=True).encode()).hexdigest() != packet["version"]:
-                raise workspace.InputError("Invalid verification evidence version")
-            for entry in packet["evidence"]:
-                if (not isinstance(entry.get("source"), str)
-                        or any(not re.fullmatch(r"[a-f0-9]{64}", entry.get(k, ""))
-                               for k in ("sha256", "source_sha256"))):
-                    raise workspace.InputError("Invalid verification evidence digest")
-    for key, name in (("initial_check", "CHECK.md"), ("final_check", "REEXAMINATION.md"),
-                      ("closure", "CLOSURE.md")):
-        if record.get(key) and record[key] != f"{task['workspace']}/{name}":
-            raise workspace.InputError("Invalid verification report path")
-        if record.get(key) and not re.fullmatch(r"[a-f0-9]{64}", record.get(key + "_sha256", "")):
-            raise workspace.InputError("Invalid accepted verification report digest")
-        if record.get(key) and key != "closure":
-            artifacts = record.get(key + "_artifacts")
-            if not isinstance(artifacts, dict) or not artifacts:
-                raise workspace.InputError("Accepted verification report is missing its evidence fingerprints")
-            for path, digest in artifacts.items():
-                if (not isinstance(path, str) or Path(path).is_absolute() or ".." in Path(path).parts
-                        or not re.fullmatch(r"[a-f0-9]{64}", digest)):
-                    raise workspace.InputError("Invalid accepted verification artifact fingerprint")
-
-
-def check_unchanged(project, task, deadline=None):
-    """A changed accepted packet/report cannot silently inherit an endorsement."""
-    validate_record(task)
-    record = task["verification"]
-    for key in ("initial", "response"):
-        packet = record.get(key)
-        if not packet:
-            continue
-        manifest = read_bytes(workspace.safe_path(project, packet["manifest"]), deadline)
-        if json.loads(manifest) != packet["evidence"]:
-            raise workspace.InputError("Frozen verification manifest changed; reassessment required")
-        for entry in packet["evidence"]:
-            blob = read_bytes(workspace.safe_path(project, entry["path"]), deadline)
-            if hashlib.sha256(blob).hexdigest() != entry["sha256"]:
-                raise workspace.InputError("Frozen verification evidence changed; reassessment required")
-    for key in ("initial_check", "final_check", "closure"):
-        if record.get(key) and workspace.file_digest(workspace.safe_path(project, record[key]), deadline) != record[key + "_sha256"]:
-            raise workspace.InputError("Accepted verification report changed; reassessment required")
-        if record.get(key) and key != "closure":
-            for rel, digest in record[key + "_artifacts"].items():
-                if workspace.file_digest(scientific_path(project, rel), deadline) != digest:
-                    raise workspace.InputError(
-                        f"Accepted verification check artifact changed or missing: {rel}; reassessment required")
-
-
-def deliver(project, task, deadline=None):
-    record = task["verification"]
-    check_unchanged(project, task, deadline)
-    final = record["phase"] == "reexamination"
-    if record["phase"] not in ("initial", "reexamination"):
-        raise workspace.InputError("Verification phase is not executable")
-    path = f"{task['workspace']}/{'REEXAMINATION.md' if final else 'CHECK.md'}"
-    text = workspace.read_input(workspace.safe_path(project, path))
-    sections(text, CHECK_FIELDS)
-    local = {}
-    for target in LINK.findall(text):
-        candidate = link_path(project, path, target)
-        if candidate is not None:
-            artifact = workspace.safe_path(project, candidate)
-            if not artifact.is_file():
-                raise workspace.InputError(f"Missing verification check artifact: {candidate}")
-            local[candidate] = workspace.file_digest(artifact, deadline)
-            if not re.fullmatch(r"[a-f0-9]{64}", local[candidate] or ""):
-                raise workspace.InputError(f"Missing or invalid verification check artifact: {candidate}")
-    if not local:
-        raise workspace.InputError("Verification check must link saved evidence or independent check artifacts")
-    matches = re.findall(r"^Disposition: (checked|objection|inconclusive)\s*$", text, re.M)
-    if len(matches) != 1:
-        raise workspace.InputError("Check requires Disposition: checked, objection or inconclusive")
-    outcome = matches[0]
-    key = "final_check" if final else "initial_check"
-    record[key], record[key + "_sha256"] = path, workspace.file_digest(project / path, deadline)
-    record[key + "_artifacts"] = local
-    record["reviewed_version"] = record["response" if final else "initial"]["version"]
-    record["disposition"] = ("checked" if outcome == "checked" else
-                             "disputed" if outcome == "objection" or final else "preliminary")
-    record["phase"] = "awaiting_response" if outcome == "objection" and not final else "closed"
-    task["delivery"] = {"result": path, "handoff": workspace.handoff_path(task["task_id"]),
-                        "label": record["disposition"], "version": record["reviewed_version"]}
-    return "awaiting_response" if record["phase"] == "awaiting_response" else "completed"

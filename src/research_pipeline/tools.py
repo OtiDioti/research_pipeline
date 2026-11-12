@@ -128,25 +128,6 @@ def identities(path, description):
     return hashes
 
 
-def configure(config, project, session, activation):
-    """Called after the effective session deadline; preparation retains its owner."""
-    from . import workspace, references
-    poll = (lambda: config.on_poll(research=False)) if config.on_poll else None
-    references.check_deadline(config.deadline, poll)
-    root = workspace.task_directory(config.task_id)
-    excluded = list(config.frozen_inputs)
-    if config.task_id == "primary":
-        excluded.append("work/tasks")
-    else:
-        excluded += [f"{root}/inputs", f"{root}/ASSIGNMENT.md"]
-    context = {"version": 1, "activation": activation, "task": config.task_id,
-               "project": "/project", "workspace": root, "drafts": "/run/research-drafts",
-               "excluded": excluded, "deadline": config.deadline,
-               "control": "/run/research-control"}
-    config.tool_context = session / "tools.json"
-    workspace.atomic_text(config.tool_context, json.dumps(context, indent=2) + "\n")
-    references.check_deadline(config.deadline, poll)
-
 
 def own_path(context, rel, *, file=False):
     rel = relative(str(rel))
@@ -227,10 +208,8 @@ def read_record(path):
 
 def check_ready(context):
     if time.monotonic() >= context["deadline"]:
-        raise ToolError("Effective session deadline exhausted; no new tool work authorized")
-    request = Path(context["control"]) / "request.json"
-    if request.exists():
-        raise ToolError("Suspension/rollover pending; save a handoff and acknowledge the checkpoint")
+        raise ToolError("Admitted job deadline exhausted; no new tool work authorized")
+
 
 
 def execute(context, argv, cwd):

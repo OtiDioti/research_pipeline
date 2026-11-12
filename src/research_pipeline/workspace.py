@@ -2,6 +2,7 @@
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import fcntl
+import errno
 import hashlib
 import json
 import os
@@ -79,25 +80,6 @@ def control_lock(project):
         yield
 
 
-def owner_fields(state):
-    keys = ("run_id", "ownership_nonce") if state.get("schema_version") == 3 else ("run_id", "activation_id", "ownership_nonce")
-    result = {k: state[k] for k in keys}
-    if any(not isinstance(v, str) or not re.fullmatch(r"[a-f0-9]{32}", v)
-           for v in result.values()):
-        raise InputError("Invalid investigation ownership identifiers")
-    return result
-
-
-def control_paths(project, state):
-    owner_fields(state)
-    if state.get("schema_version") == 3:
-        session = safe_path(project, f".research_pipeline/owners/{state['ownership_nonce']}")
-    else:
-        session = safe_path(project, f".research_pipeline/sessions/{state['activation_id']}")
-    return session, safe_path(project, session.relative_to(project) / "control"), \
-        safe_path(project, session.relative_to(project) / "response")
-
-
 def read_control(path):
     """Untrusted responses must never hang on FIFOs or follow symbolic links."""
     try:
@@ -112,14 +94,6 @@ def read_control(path):
         return value if isinstance(value, dict) else None
     except (OSError, ValueError, UnicodeError):
         return None
-
-
-def matching_request(value, state):
-    return (isinstance(value, dict) and value.get("version") == 1
-            and value.get("reason") in ("pause", "rollover")
-            and all(value.get(k) == v for k, v in owner_fields(state).items())
-            and isinstance(value.get("request_id"), str)
-            and re.fullmatch(r"[a-f0-9]{32}", value["request_id"]) is not None)
 
 
 def regular_tree(root):
@@ -211,11 +185,22 @@ def read_input(p):
         raise InputError(f"Cannot read {p}: {exc}") from exc
 
 
-def validate_fresh(project):
+def validate_fresh(project, preserve_existing=False):
+    """Require a new runtime; adopting existing science needs explicit opt-in."""
     regular_tree(project)
-    for name in (*MANAGED, "RESEARCH_STATUS.md", "FOLDER_CONTENT.md", ".research_pipeline/run.json"):
+    paths = (".research_pipeline/run.json", ".research_pipeline/session",
+             ".research_pipeline/sessions", ".research_pipeline/owners",
+             ".research_pipeline/checkpoints", ".research_pipeline/contexts", ".research_pipeline/jobs",
+             ".research_pipeline/documents")
+    if not preserve_existing:
+        paths = (*MANAGED, "RESEARCH_STATUS.md", "FOLDER_CONTENT.md", *paths)
+    for name in paths:
         if (project / name).exists():
             raise InputError(f"Fresh project required; managed path already exists: {name}")
+    for name in ("RESEARCH_STATUS.md", "FOLDER_CONTENT.md"):
+        path = project / name
+        if path.exists() and not path.is_file():
+            raise InputError(f"Scientific note must be a regular file: {name}")
 
 
 @contextmanager
@@ -241,7 +226,14 @@ def atomic_text(path, text):
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as stream:
             stream.write(text)
+            stream.flush()
+            os.fsync(stream.fileno())
         os.replace(tmp, path)
+        directory_fd = os.open(path.parent, os.O_DIRECTORY)
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
     finally:
         if os.path.exists(tmp):
             os.unlink(tmp)
@@ -304,7 +296,8 @@ def refresh_indexes(project, include_science=True, expected=None, task_id=None):
         if (project / name).is_dir() and not (project / name).is_symlink():
             for base, dirs, _ in os.walk(project / name, followlinks=False):
                 dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()
-                           and not (task_id == "primary" and Path(base) / d == project / "work/tasks")]
+                           and not (task_id == "primary" and Path(base) / d == project / "work/tasks")
+                           and not (task_id not in (None, "primary") and Path(base) / d == project / task_directory(task_id) / "inputs")]
                 roots.append(Path(base))
     for directory in roots:
         rows = ["# Folder contents", ""]
@@ -355,23 +348,47 @@ def check_deadline(deadline):
         raise TimeoutError("Checkpoint preparation saving deadline reached")
 
 
+@contextmanager
+def open_regular(path):
+    """Pin each ancestor without following links; a replaced FIFO cannot block."""
+    path = Path(path).absolute()
+    if ".." in path.parts:
+        raise InputError(f"Parent traversal in file path: {path}")
+    directory = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for part in path.parts[1:-1]:
+            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=directory)
+            os.close(directory)
+            directory = child
+        fd = os.open(path.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
+    finally:
+        os.close(directory)
+    with os.fdopen(fd, "rb") as stream:
+        if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+            raise InputError(f"Expected regular file: {path}")
+        yield stream
+
+
 def file_digest(path, deadline=None):
     check_deadline(deadline)
-    if path.is_symlink():
-        return "symlink"
-    if not path.exists():
-        return None
-    if not path.is_file():
-        return "special"
     digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        while True:
-            check_deadline(deadline)
-            chunk = stream.read(64 * 1024)
-            check_deadline(deadline)
-            if not chunk:
-                break
-            digest.update(chunk)
+    try:
+        with open_regular(path) as stream:
+            while True:
+                check_deadline(deadline)
+                chunk = stream.read(64 * 1024)
+                check_deadline(deadline)
+                if not chunk:
+                    break
+                digest.update(chunk)
+    except FileNotFoundError:
+        return None
+    except InputError:
+        return "special"
+    except OSError as exc:
+        if exc.errno in (errno.ELOOP, errno.ENOTDIR):
+            return "symlink"
+        raise
     check_deadline(deadline)
     return digest.hexdigest()
 
@@ -387,12 +404,13 @@ def science_fingerprints(project, task_id=None):
         if root.is_symlink():
             raise InputError(f"Managed directory is a symlink: {name}")
         if root.is_dir():
-            for base, dirs, files in os.walk(root, followlinks=False):
+            for base, dirs, files, _ in os.fwalk(root, follow_symlinks=False):
                 dirs[:] = [d for d in dirs if not (Path(base) / d).is_symlink()
-                           and not (task_id == "primary" and Path(base) / d == project / "work/tasks")]
+                           and not (task_id == "primary" and Path(base) / d == project / "work/tasks")
+                           and not (task_id not in (None, "primary") and Path(base) / d == project / task_directory(task_id) / "inputs")]
                 paths.extend(Path(base) / f for f in files if f.lower().endswith(".md"))
-    return {p.relative_to(project).as_posix(): file_digest(p)
-            for p in paths if p.exists() or p.is_symlink()}
+    result = {p.relative_to(project).as_posix(): file_digest(p) for p in paths}
+    return {rel: digest for rel, digest in result.items() if digest is not None}
 
 
 def changed_files(previous, current):
@@ -422,11 +440,9 @@ def preserve_edit(project, path):
 
 def read_input_unbounded(path, deadline=None):
     check_deadline(deadline)
-    if path.is_symlink() or not path.is_file():
-        raise InputError(f"Expected regular Markdown file: {path}")
     try:
         chunks = []
-        with path.open(encoding="utf-8") as stream:
+        with open_regular(path) as stream:
             while True:
                 check_deadline(deadline)
                 chunk = stream.read(64 * 1024)
@@ -434,7 +450,7 @@ def read_input_unbounded(path, deadline=None):
                 if not chunk:
                     break
                 chunks.append(chunk)
-        text = "".join(chunks)
+        text = b"".join(chunks).decode("utf-8")
         check_deadline(deadline)
         return text
     except TimeoutError:
@@ -533,132 +549,6 @@ def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary
         raise InputError("Handoff must link at least one saved scientific artifact")
     check_deadline(deadline)
     return sorted(set(artifacts))
-
-
-def commit_checkpoint(project, state, intake, session, accepted_intake=None, task_id="primary"):
-    text = read_input_unbounded(project / handoff_path(task_id))
-    artifacts = validate_handoff(project, text, task_id=task_id)
-    atomic_text(session / "handoff.md", text)
-    atomic_text(session / "intake.md", accepted_intake or intake_snapshot(intake))
-    checkpoint = {
-        "id": state["activation_id"],
-        "handoff": (session / "handoff.md").relative_to(project).as_posix(),
-        "handoff_sha256": file_digest(session / "handoff.md"),
-        "intake": (session / "intake.md").relative_to(project).as_posix(),
-        "artifacts": artifacts, "input_fingerprints": intake.fingerprints,
-        "science_fingerprints": science_fingerprints(project, task_id),
-    }
-    # Publish the new reference only after all its files are validated. Keep one
-    # previous immutable handoff for a damaged newest checkpoint.
-    state["checkpoints"] = ([c for c in state.get("checkpoints", [])
-                             if c["id"] != checkpoint["id"]] + [checkpoint])[-2:]
-    state["checkpoint"] = checkpoint
-    write_state(project, state)
-    return checkpoint
-
-
-def prepare_checkpoint(project, state, intake, session, drafts, baseline, external, deadline=None, task_id="primary"):
-    """Confirm saved work before acknowledging; canonical files stay pinned."""
-    check_deadline(deadline)
-    draft_proposals(project, drafts, task_id, protected_reports(state))
-    check_deadline(deadline)
-    text = read_input_unbounded(safe_path(drafts, handoff_path(task_id)), deadline)
-    artifacts = validate_handoff(project, text, drafts=drafts, deadline=deadline, task_id=task_id)
-    references = {str((drafts / handoff_path(task_id)).relative_to(project)):
-                  file_digest(drafts / handoff_path(task_id), deadline)}
-    for rel in artifacts:
-        check_deadline(deadline)
-        candidate = safe_path(drafts, rel) if Path(rel).suffix == ".md" else project / rel
-        if not candidate.exists():
-            candidate = safe_path(project, rel)
-        references[str(candidate.relative_to(project))] = file_digest(candidate, deadline)
-    check_deadline(deadline)
-    atomic_text(session / "prepared-handoff.md", text)
-    check_deadline(deadline)
-    atomic_text(session / "prepared-intake.md", intake_snapshot(intake))
-    check_deadline(deadline)
-    metadata = {
-        "owner": owner_fields(state), "baseline": baseline, "external_changes": external,
-        "input_fingerprints": intake.fingerprints, "references": references,
-        "handoff_sha256": file_digest(session / "prepared-handoff.md", deadline),
-        "intake_sha256": file_digest(session / "prepared-intake.md", deadline),
-    }
-    serialized = json.dumps(metadata, indent=2) + "\n"
-    check_deadline(deadline)
-    atomic_text(session / "prepared.json", serialized)
-    check_deadline(deadline)
-    state["checkpoint_prepared"] = str((session / "prepared.json").relative_to(project))
-    write_state(project, state)
-    check_deadline(deadline)
-
-
-def load_prepared(project, state):
-    metadata_path = safe_path(project, state["checkpoint_prepared"])
-    metadata = json.loads(read_input_unbounded(metadata_path))
-    if not isinstance(metadata, dict) or not isinstance(metadata.get("references"), dict):
-        raise InputError("Invalid prepared checkpoint metadata")
-    if metadata["owner"] != owner_fields(state):
-        raise InputError("Prepared checkpoint ownership mismatch")
-    session = metadata_path.parent
-    for name, key in (("prepared-handoff.md", "handoff_sha256"),
-                      ("prepared-intake.md", "intake_sha256")):
-        if file_digest(safe_path(project, (session / name).relative_to(project))) != metadata[key]:
-            raise InputError("Prepared checkpoint changed after validation")
-    for rel, digest in metadata["references"].items():
-        if file_digest(safe_path(project, rel)) != digest:
-            raise InputError(f"Prepared artifact changed after validation: {rel}")
-    intake = Intake(project, "", "", [], metadata["input_fingerprints"])
-    return metadata, session, intake, read_input_unbounded(session / "prepared-intake.md")
-
-
-def finalize_science(project, state, intake, session, drafts, baseline, external,
-                     expected=None, accepted_intake=None, task_id="primary"):
-    """Only called after confirmed cleanup, for normal, paused or recovered work."""
-    external = sorted(set(external) | set(changed_files(baseline, science_fingerprints(project, task_id))))
-    state["external_changes"] = external
-    conflicts, preserved = publish_drafts(project, drafts, baseline, external, task_id, protected_reports(state))
-    state["pending_reconciliation"] = conflicts
-    state["preserved_edits"] = preserved
-    published = {p.relative_to(drafts).as_posix() for p in drafts.rglob("*.md")}
-    published -= {c["path"] for c in conflicts}
-    state["pending_human_changes"] = sorted(
-        (set(external) | {c["path"] for c in conflicts}) - published)
-    refresh_indexes(project, expected=expected if expected is not None else baseline, task_id=task_id)
-    try:
-        if any(c["path"] == handoff_path(task_id) for c in conflicts):
-            raise InputError("Handoff draft conflicts with a human edit")
-        if not (drafts / handoff_path(task_id)).is_file():
-            raise InputError("No new handoff draft; previous checkpoint retained")
-        commit_checkpoint(project, state, intake, session, accepted_intake, task_id)
-        state.pop("checkpoint_error", None)
-    except (OSError, InputError) as exc:
-        state["checkpoint_error"] = str(exc)
-    state["science_fingerprints"] = science_fingerprints(project, task_id)
-    return conflicts
-
-
-def protected_reports(state):
-    record = state.get("verification") or {}
-    return tuple(record[key] for key in ("initial_check", "final_check", "closure") if record.get(key))
-
-
-def load_checkpoint(project, state):
-    for checkpoint in reversed(state.get("checkpoints", [])):
-        try:
-            handoff = safe_path(project, checkpoint["handoff"])
-            if file_digest(handoff) != checkpoint["handoff_sha256"]:
-                continue
-            text = read_input_unbounded(handoff)
-            # Referenced science can change; missing files are explicitly reported
-            # to the researcher rather than silently discarding the handoff.
-            safe_path(project, checkpoint["intake"])
-            snapshot = read_input_unbounded(project / checkpoint["intake"])
-            for rel in checkpoint["artifacts"]:
-                safe_path(project, rel)
-            return checkpoint, text, snapshot
-        except (OSError, InputError, KeyError, TypeError):
-            continue
-    return None, "", ""
 
 
 def validate_deliverables(project, labels=("preliminary",)):
