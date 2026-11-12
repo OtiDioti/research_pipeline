@@ -56,7 +56,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
 
     async def asyncTearDown(self):
         # Admission/service doubles have no actual namespaces; release their
-        # pinned mount descriptors once the fixture ends.
+        # private mount snapshots once the fixture ends.
         for mounts in self.manager.mount_stacks.values():
             mounts.close()
         self.manager.mount_stacks.clear()

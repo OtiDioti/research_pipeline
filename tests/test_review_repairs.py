@@ -206,10 +206,49 @@ class ReadReplacementTests(unittest.TestCase):
                 command = isolation.bubblewrap_command(project, ['true'], mount_stack=mounts)
                 destination = command.index('/project/work/NOTE.md')
                 source = Path(command[destination-1])
-                self.assertTrue(str(source).startswith(f'/proc/{os.getpid()}/fd/'))
+                self.assertTrue(source.is_relative_to(project/'.research_pipeline'))
+                self.assertEqual(source.stat().st_mode & 0o777, 0o400)
+                note.write_text('# Modified after mount preparation')
                 note.rename(project/'work/old.md')
                 note.symlink_to(outside)
                 self.assertEqual(source.read_text(), '# Original canonical note')
+            self.assertFalse(source.exists())
+
+    def test_note_mount_sources_work_without_controller_proc_access(self):
+        # A nondumpable producer models the controller's restricted /proc files.
+        # The independent consumer models a systemd-launched mount process.
+        with tempfile.TemporaryDirectory() as temp:
+            project = make_project(Path(temp))
+            collaboration.Coordinator.initialize(project, isolation.Config())
+            (project/'work/NOTE.md').write_text('# Protected note')
+            producer = subprocess.Popen([sys.executable, '-u', '-c', r'''
+from contextlib import ExitStack
+import ctypes, json, os, sys
+from pathlib import Path
+from research_pipeline import isolation
+assert ctypes.CDLL(None, use_errno=True).prctl(4, 0, 0, 0, 0) == 0
+with ExitStack() as mounts, open(Path(sys.argv[1])/'work/NOTE.md') as original:
+    argv = isolation.bubblewrap_command(Path(sys.argv[1]), ['true'], mount_stack=mounts)
+    source = argv[argv.index('/project/work/NOTE.md')-1]
+    print(json.dumps({'source': source, 'fd': f'/proc/{os.getpid()}/fd/{original.fileno()}'}), flush=True)
+    sys.stdin.readline()
+''', str(project)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            try:
+                paths = json.loads(producer.stdout.readline())
+                with self.assertRaises(PermissionError):
+                    Path(paths['fd']).read_text()
+                consumer = subprocess.run([sys.executable, '-c',
+                    'from pathlib import Path; import sys; print(Path(sys.argv[1]).read_text())',
+                    paths['source']], capture_output=True, text=True, timeout=5)
+                self.assertEqual(consumer.returncode, 0, consumer.stderr)
+                self.assertEqual(consumer.stdout.strip(), '# Protected note')
+                _, error = producer.communicate('\n', timeout=5)
+                self.assertEqual(producer.returncode, 0, error)
+                self.assertFalse(Path(paths['source']).exists())
+            finally:
+                if producer.poll() is None:
+                    producer.kill()
+                producer.communicate(timeout=5)
 
     def test_descriptor_read_pins_parent_and_refuses_synchronized_fifo(self):
         with tempfile.TemporaryDirectory() as temp:

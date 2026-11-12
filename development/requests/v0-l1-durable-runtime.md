@@ -90,9 +90,10 @@ All six supplied findings have corresponding repairs and regressions:
    flushed by the last confirmed cleanup; no computation is stopped merely to
    publish. Status/results/data remain available during the delay. Concurrent-read
    helpers pin ancestors with Linux directory descriptors, refuse symlinks/FIFOs,
-   and traverse via `os.fwalk`. Production Markdown mount sources use held file
-   descriptors so a directory replacement cannot redirect a later Bubblewrap bind.
-   Context and job mount descriptors have separate ownership/lifetimes. Synchronized
+   and traverse via `os.fwalk`. Production Markdown mount sources initially used held
+   file descriptors; the integration repair below replaces those with private
+   snapshots so separate systemd services can read them. Context and job mount
+   snapshots have separate ownership/lifetimes. Synchronized
    process tests exercise symlink/FIFO replacement, parent pinning, delayed publication,
    and eventual safe publication. Global quiescence intentionally delays canonical
    draft visibility while another context/job remains live; this is explicit in README.
@@ -285,6 +286,56 @@ These changes are prepared for independent review and the trusted final/required
 combined checks. Their outcomes, actual candidate/integration refs and distinct
 production receipt paths remain pending pipeline stages. V0-L1 is not yet accepted.
 The next product dependency remains V0-L2 measured automatic context rollover.
+
+## Milestone 003 integration repair
+
+Read both supplied test summaries and their complete sibling command logs directly
+from the artifact filesystem, because the artifact reader refused the sibling logs.
+`tests/final-002.txt.commands/0001.txt` identifies the current failure:
+the first context's Bubblewrap service cannot read
+`/proc/<controller-pid>/fd/9` (`Permission denied`), then reports unconfirmed cleanup.
+The historical baseline's missing-MCP and superseded-runtime failures do not
+describe this candidate's current discovery failure.
+
+Protected Markdown now mounts private ordinary-file snapshots under
+`.research_pipeline/`, copied from the existing ancestor-pinned, no-follow regular
+file reader. These sources do not depend on cross-process `/proc` permissions or
+descriptor inheritance through systemd. Each snapshot directory is private
+(`0700`), its files are read-only (`0400`), and context/job cleanup retains its
+existing separate lifetime. Scientific namespaces mask runtime storage; scoped
+read-only file mounts and deferred canonical publication remain enforced. An
+already prepared snapshot also remains unchanged if the canonical note is edited
+or replaced before service startup.
+
+Regression evidence includes an actual nondumpable producer process and a
+separate consumer: the consumer cannot read the producer's `/proc` file descriptor
+but can read the protected snapshot. The existing path-replacement check now also
+verifies immutable content, private placement, file permissions and removal on
+resource-stack closure. No host process-access rules or resource grants changed.
+
+Writer validation, using the retained MCP installation and
+`/home/francesco/miniconda3/bin/python`:
+
+- `-W error::ResourceWarning -m unittest tests.test_review_repairs.ReadReplacementTests tests.test_v0_l1 tests.test_pending_documents -v`:
+  **48 passed**; `runtime/tmp/integration-1-focused.txt`.
+- `-W error::ResourceWarning -m unittest discover -s tests`:
+  **126 tests, 121 passed, five opt-in skips**;
+  `runtime/tmp/integration-1-discovery.txt`.
+- Enabled `RESEARCH_PIPELINE_V0_L1_NATIVE=1` invocation of
+  `-m unittest tests.test_v0_l1_native.NativeL1Tests -v`: **failed at preflight**,
+  missing both `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS`;
+  `runtime/tmp/integration-1-native.txt` and
+  `runtime/tmp/l1-native-writer-integration-1/receipt.json`. No inference, context
+  launch or cleanup exercise occurred; command/evidence fields are empty.
+- PROJECT.md and the complete human lifecycle amendment still match
+  `runtime/tmp/human-inputs.sha256`.
+
+All paths above are relative to pipeline run `20261112T190532_377a68b3`.
+The production repair is ready for the required authorized controller-host
+final/combined rerun below. Its passing production receipt, including confirmed
+cleanup, remains required; Writer evidence does not establish L1 acceptance.
+V0-L2 measured rollover remains the next product dependency. No Git orchestration,
+M5 science or retained-candidate modification occurred.
 
 ## Required controller-host verification
 

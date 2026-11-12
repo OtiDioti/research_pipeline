@@ -57,6 +57,20 @@ output destination. Every stage must produce its own production receipt; none
 has been established by these Writer checks. Do not mark L1 accepted before those
 checks and confirmed cleanup pass.
 
+Milestone 003 integration repair addresses the host final-check failure
+`bwrap: Can't find source path /proc/<controller-pid>/fd/9: Permission denied`.
+Protected Markdown mount sources now use private read-only file snapshots,
+prepared through the existing safe reader, with separate context/job lifetimes.
+A real process regression covers denied cross-process descriptor access and
+successful snapshot retrieval. Writer focused validation passes 48 tests;
+discovery passes 126 tests with five opt-in skips. Logs and decisions are in
+[the implementation report](development/requests/v0-l1-durable-runtime.md).
+The enabled Writer native retry still fails at preflight on missing
+`XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`, retaining
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-integration-1/receipt.json`.
+Required authorized host final/combined checks and passing production receipts,
+including confirmed cleanup, remain pending. This repair does not accept L1 or M5.
+
 ## Active manager checkpoint
 
 - **Objective:** V0-L1 production runtime boundary and durable scientific jobs; implement only this dependency before V0-L2.

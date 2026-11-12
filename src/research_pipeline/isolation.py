@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 import socket
 import subprocess
+import tempfile
 import time
 import uuid
 
@@ -305,13 +306,22 @@ def bubblewrap_command(project, argv, codex=None, auth_home=None, drafts=None,
         path = workspace.safe_path(project, rel)
         args += ["--ro-bind", str(path), f"/project/{rel}"]
     # Protect existing notes with file mounts: unlink/rename are blocked as well
-    # as writes. Never replace these inodes until the namespace has been stopped.
-    for rel, digest in workspace.science_fingerprints(project, task_id).items():
+    # as writes. Copy from safely opened files into private mount sources: a
+    # separate systemd service cannot dereference the controller's /proc fd paths.
+    # Retain these snapshots until confirmed service cleanup.
+    snapshots = None
+    for number, (rel, digest) in enumerate(workspace.science_fingerprints(project, task_id).items()):
         if digest not in ("symlink", "special"):
             source = str(project / rel)
             if mount_stack is not None:
-                stream = mount_stack.enter_context(workspace.open_regular(project / rel))
-                source = f"/proc/{os.getpid()}/fd/{stream.fileno()}"
+                if snapshots is None:
+                    snapshots = Path(mount_stack.enter_context(tempfile.TemporaryDirectory(
+                        prefix='note-mounts-', dir=project / '.research_pipeline')))
+                target = snapshots / str(number)
+                with workspace.open_regular(project / rel) as stream, target.open('xb') as saved:
+                    shutil.copyfileobj(stream, saved)
+                target.chmod(0o400)
+                source = str(target)
             args += ["--ro-bind", source, f"/project/{rel}"]
     if drafts is not None:
         args += ["--bind", str(drafts), "/run/research-drafts"]
