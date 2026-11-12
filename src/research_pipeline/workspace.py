@@ -569,7 +569,9 @@ def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary
             p = safe_path(project, candidate.relative_to(project))
         rel = p.relative_to(project).as_posix()
         if task is not None and rel == handoff_path(task_id):
-            raise InputError("Handoff must link saved science beyond itself")
+            # A navigation link to this handoff is harmless, but cannot serve as
+            # evidence of saved science or become its own artifact dependency.
+            continue
         if rel != "RESEARCH_STATUS.md" and (not Path(rel).parts or Path(rel).parts[0] not in MANAGED):
             raise InputError(f"Handoff must reference scientific artifacts: {rel}")
         if drafts is not None and p.suffix == ".md":

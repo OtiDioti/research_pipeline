@@ -220,6 +220,39 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         self.runtime.draft(ctx,'handoffs/primary.md',quoted)
         self.assertEqual(self.runtime.validate_context_handoff('first'),['work/NOTE.md'])
 
+    async def test_handoff_self_navigation_keeps_science_and_immutable_versions(self):
+        ctx=context_fixture(self.runtime)
+        task=self.runtime.state['tasks']['primary']
+        self.runtime.draft(ctx,'work/BEFORE.md',
+            '# Preliminary analysis\nFor x squared, each trapezoidal panel has excess h cubed / 6.')
+        science=handoff(task,artifact='../work/BEFORE.md')
+        # Reproduces the native handoff: useful science plus a navigation link
+        # back to the current handoff, rather than self-reference as evidence.
+        for target in ('primary.md', '/project/handoffs/primary.md', 'primary%2Emd#jobs'):
+            text=science.replace('## Assumptions',
+                f'[Current handoff]({target})\n\n## Assumptions')
+            self.runtime.draft(ctx,'handoffs/primary.md',text)
+            self.assertEqual(self.runtime.validate_context_handoff('first'),['work/BEFORE.md'])
+        await self.runtime.close_context('first')
+        self.assertEqual(self.runtime.validate_context_handoff('first',final=True),['work/BEFORE.md'])
+        validated=ctx['record']['validated_handoff']
+        self.assertEqual(set(validated['artifact_versions']),{'work/BEFORE.md'})
+        self.assertEqual(set(validated['artifact_evidence']),{'work/BEFORE.md'})
+        document_id=validated['artifact_versions']['work/BEFORE.md']
+        self.assertIn(b'panel has excess',self.runtime.documents.raw('primary',document_id))
+
+    async def test_handoff_self_navigation_alone_cannot_replace_saved_science(self):
+        ctx=context_fixture(self.runtime)
+        task=self.runtime.state['tasks']['primary']
+        for target in ('primary.md', '/project/handoffs/primary.md', 'primary%2Emd#jobs'):
+            self.runtime.draft(ctx,'handoffs/primary.md',handoff(task,artifact=target))
+            with self.assertRaisesRegex(workspace.InputError,'at least one saved scientific artifact'):
+                self.runtime.validate_context_handoff('first')
+        await self.runtime.close_context('first')
+        with self.assertRaisesRegex(workspace.InputError,'at least one saved scientific artifact'):
+            self.runtime.validate_context_handoff('first',final=True)
+        self.assertNotIn('validated_handoff',ctx['record'])
+
     async def test_missing_telemetry_and_failed_checkpoint_preserve_truthful_failure(self):
         self.missing=True
         runner=await self.start_runner()

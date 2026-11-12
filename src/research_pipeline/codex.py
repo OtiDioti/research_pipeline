@@ -326,7 +326,8 @@ Do not retry a lost admission acknowledgement; inspect retained jobs first.
 Use write_draft for scoped scientific Markdown, including a handoff, without a job.
 Save the handoff immediately after intake, before substantial research, and update
 it as evidence changes. Required fields: {json.dumps(handoff_fields(task['task_id']))}.
-Use ordinary links relative to handoffs/. Include job IDs, purpose, command/cwd,
+Use ordinary links relative to handoffs/. Link at least one saved scientific artifact
+beyond the handoff itself. Include job IDs, purpose, command/cwd,
 original deadline, outputs and how to inspect/wait/stop them. A live job is running,
 not interrupted merely because a context ends. Do not present changing outputs as
 frozen evidence. Use control(check/tasks) for observations and primary-only

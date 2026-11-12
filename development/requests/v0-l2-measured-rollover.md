@@ -349,3 +349,41 @@ enabled failure receipt and all earlier evidence remain unchanged. Independent
 review and required trusted final/combined native discovery remain pending using
 the enabled L2 gate and inherited authorized host environment; no L2 acceptance
 or integration is claimed.
+
+**Integration repair (milestone 002, attempt 1; 2026-11-13).** Read the complete
+`tests/final-002.txt.commands/0001.txt` and retained host handoff/receipt. The only
+integrated failure was primary rollover: the validator rejected an otherwise usable
+handoff because its Artifacts section contained both `[BEFORE.md](../work/BEFORE.md)`
+and `[primary.md](primary.md)`. Saved science contained substantive finite-sum and
+panel-integral derivations. The original host receipt remains failed with confirmed
+cleanup; it is not passing native evidence.
+
+Self-navigation now contributes no artifact evidence or immutable dependency;
+validation continues through the remaining links and still requires at least one
+accessible saved scientific artifact. The researcher prompt makes that requirement
+explicit. Two regressions exercise relative, absolute `/project/` and URL-encoded
+fragment self-links, before closure and against final immutable snapshots. A mixed
+handoff retains only the science artifact/version; self-only handoffs are rejected
+and never recorded as validated. No native gate, retry bound, threshold, allocation
+or scientific decision behavior changed.
+
+Using the Python/PYTHONPATH and disabled gates in the routine command above:
+
+```sh
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest tests.test_v0_l2 tests.test_pending_documents tests.test_review_repairs -q
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v
+```
+
+Focused result: **67 tests passed**. Full routine discovery: **182 tests,
+176 passed and six opt-in gates skipped**, exit 0. Full output:
+`runtime/tmp/l2-integration-1-routine-tests.txt` under this pipeline run.
+The enabled native module invocation documented above was also run with fresh
+`RESEARCH_PIPELINE_V0_L2_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T214235_70d09e50/runtime/tmp/l2-integration-1-native`.
+Its unpaid receipt regression passed; native preflight failed because
+`XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` are absent. No services, inference,
+commands or scenarios launched. Fresh retained evidence is
+`runtime/tmp/l2-integration-1-native/receipt.json` and
+`runtime/tmp/l2-integration-1-native-tests.txt`. Prior receipts are unchanged.
+The repaired native continuation still requires trusted final/combined discovery
+with the inherited enabled L2 gate, authorized host bus and a fresh receipt.
+No L2 acceptance is claimed; L3 remains the next dependency afterward.
