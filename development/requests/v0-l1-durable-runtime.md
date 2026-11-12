@@ -337,6 +337,41 @@ cleanup, remains required; Writer evidence does not establish L1 acceptance.
 V0-L2 measured rollover remains the next product dependency. No Git orchestration,
 M5 science or retained-candidate modification occurred.
 
+## Milestone 003 second integration repair
+
+The complete `tests/final-003.txt.commands/0001.txt` reports one error in 126
+tests: installed systemd 249 rejects the native fixture's
+`systemctl kill --kill-whom=main`. Use its supported `--kill-who=main` option.
+This changes only the supervisor-loss exercise; the preceding service invocation
+identity check, SIGKILL target and subsequent failed-job/confirmed-cleanup
+assertions remain in place. Runtime behavior and resource grants are unchanged.
+No additional implementation-mirroring test was added for this command correction.
+
+Writer checks with the retained MCP dependency and
+`/home/francesco/miniconda3/bin/python`:
+
+- `-W error::ResourceWarning -m unittest tests.test_v0_l1 tests.test_v0_l1_native -v`,
+  with the native gate disabled: **40 tests, 39 passed, one opt-in skip**;
+  `runtime/tmp/integration-2-focused.txt`.
+- `-W error::ResourceWarning -m unittest discover -s tests`, with the native gate
+  disabled: **126 tests, 121 passed, five opt-in skips**;
+  `runtime/tmp/integration-2-discovery.txt`.
+- Installed `systemctl --user kill --kill-who=main --signal=SIGKILL` accepts the
+  options and reports `Too few arguments.` because no unit was supplied. No signal
+  was sent; this verifies CLI parsing only.
+- Enabled `-m unittest tests.test_v0_l1_native.NativeL1Tests -v`:
+  **failed before inference**, missing `XDG_RUNTIME_DIR` and
+  `DBUS_SESSION_BUS_ADDRESS`. See `runtime/tmp/integration-2-native.txt` and
+  `runtime/tmp/l1-native-writer-integration-2/receipt.json`; its command/evidence
+  fields are empty. A passing authorized host rerun remains required.
+- `sha256sum -c ../runtime/tmp/human-inputs.sha256`:
+  PROJECT.md and the human lifecycle amendment both match.
+
+Artifact paths above are relative to pipeline run `20261112T190532_377a68b3`.
+Use the controller-host invocation below to exercise the corrected supervisor
+loss and actual cleanup. This Writer result does not establish production
+acceptance; V0-L2 remains the next product dependency after L1 verification.
+
 ## Required controller-host verification
 
 Use the final integrated candidate's checkout, the existing dependency and the

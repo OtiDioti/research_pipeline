@@ -71,6 +71,18 @@ The enabled Writer native retry still fails at preflight on missing
 Required authorized host final/combined checks and passing production receipts,
 including confirmed cleanup, remain pending. This repair does not accept L1 or M5.
 
+The second milestone 003 integration repair corrects the native supervisor-loss
+fixture to use installed systemd 249's `--kill-who=main` option; the supplied host
+failure used unsupported `--kill-whom=main`. Writer focused checks ran 40 tests
+with one opt-in skip; discovery ran 126 tests with five opt-in skips, all others
+passing. Logs: `runtime/tmp/integration-2-{focused,discovery}.txt` relative to run
+`20261112T190532_377a68b3`. The enabled Writer check again fails before inference
+on missing `XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`; its failed receipt is
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-integration-2/receipt.json`.
+The implementation report retains the authorized host rerun command. Passing
+production evidence, including the corrected supervisor-loss/cleanup exercise,
+remains required before L1 acceptance.
+
 ## Active manager checkpoint
 
 - **Objective:** V0-L1 production runtime boundary and durable scientific jobs; implement only this dependency before V0-L2.
