@@ -387,3 +387,59 @@ commands or scenarios launched. Fresh retained evidence is
 The repaired native continuation still requires trusted final/combined discovery
 with the inherited enabled L2 gate, authorized host bus and a fresh receipt.
 No L2 acceptance is claimed; L3 remains the next dependency afterward.
+
+**Integration repair (milestone 002, integration-2; 2026-11-13).** Read the complete
+`tests/final-003.txt.commands/0001.txt` directly from this run's retained logs after
+the artifact reader refused that file. Discovery failed only in the enabled L2
+native test. The unchanged host receipt at the request's
+`native-host-v5sp3nuy/receipt.json` records a passed primary scenario, including
+original-job continuity and collection, followed by a failed researcher scenario
+and confirmed cleanup for both. It does not establish all-role native acceptance.
+
+The researcher had saved substantive `BEFORE.md` science and a `HANDOFF.md` inside
+its task workspace. The runtime requires `handoffs/<task-id>.md`, but initial and
+checkpoint prompts did not name that destination. Validation reported only
+`FileNotFoundError: ... 'handoffs'`, and the repair turn incorrectly moved the
+handoff into the workspace. Prompts now specify the exact project-relative
+`write_draft` destination, its authorization for delegated tasks and automatic
+parent-directory creation. A missing draft now reports its required path and
+repair action. Keep the existing single repair attempt, exact destination,
+artifact validation and immutable successor intake; do not infer a handoff from
+arbitrarily named workspace notes. No threshold, deadline, grant, tool inventory
+or scientific decision rule changed.
+
+A local runner regression reproduced the original missing-directory failure
+before the production change. Two final regressions exercise researcher and
+opponent tasks under the existing two-agent cap: an initially misplaced handoff,
+actionable repair, validated immutable science, preserved objections and fresh
+successor attachment. Their backend/service doubles are explicit, not native
+scientific evidence. README now documents the destination and path basis.
+
+Using `PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies`:
+
+```sh
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest tests.test_v0_l2 tests.test_pending_documents tests.test_review_repairs -q
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v
+```
+
+Focused: **69 passed**. Routine discovery: **184 discovered, 178 passed, six
+opt-in gates skipped**, exit 0. Retained full output under this run:
+`runtime/tmp/l2-integration-2-routine-tests.txt`.
+
+The enabled native retry used the same Python/PYTHONPATH:
+
+```sh
+RESEARCH_PIPELINE_V0_L2_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L2_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T214235_70d09e50/runtime/tmp/l2-integration-2-native \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest tests.test_v0_l2_native -v
+```
+
+Exit 1: the unpaid receipt regression passed, and native preflight failed because
+both `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` are absent. Fresh receipt:
+`runtime/tmp/l2-integration-2-native/receipt.json`; log:
+`runtime/tmp/l2-integration-2-native-tests.txt`. No commands, scenarios, services or
+inference launched; no owned processes required cleanup. Earlier host/Writer
+receipts remain unchanged. Trusted final/combined discovery must inherit the
+enabled L2 gate, authorized existing bus, dependency path and private output
+destination. No all-role live acceptance is claimed. L3 reserve/staleness remains
+next after reviewed L2 acceptance.

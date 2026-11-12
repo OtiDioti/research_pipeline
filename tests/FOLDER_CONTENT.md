@@ -15,5 +15,5 @@
 - [test_v0_l1.py](test_v0_l1.py) — Consequential L1 admission/ownership tests. Service doubles are NOT native proof.
 - [test_v0_l1_native.py](test_v0_l1_native.py) — Opt-in production-boundary validation. Enabled missing prerequisites FAIL.
 - [test_context_usage.py](test_context_usage.py) — Deterministic native-shape telemetry, boundary and independent accounting fixtures.
-- [test_v0_l2.py](test_v0_l2.py) — Continuous role runners, telemetry-loss RPC/trace fixtures, deferred publication with human-edit incorporation and local process continuity with explicit backend/service doubles.
+- [test_v0_l2.py](test_v0_l2.py) — Continuous role runners, misplaced-handoff recovery, telemetry-loss RPC/trace fixtures, deferred publication with human-edit incorporation and local process continuity with explicit backend/service doubles.
 - [test_v0_l2_native.py](test_v0_l2_native.py) — Opt-in native scientific continuation, injected threshold, production job survival and retained receipts.

@@ -15,7 +15,7 @@ from tests import use_checkout
 use_checkout()
 from tests.test_context_usage import params
 from tests.test_review_repairs import context_fixture, make_project
-from research_pipeline import collaboration, context_usage, isolation, jobs, workspace
+from research_pipeline import codex, collaboration, context_usage, isolation, jobs, workspace
 
 
 def handoff(task, artifact=None, job_ids=()):
@@ -252,6 +252,58 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(workspace.InputError,'at least one saved scientific artifact'):
             self.runtime.validate_context_handoff('first',final=True)
         self.assertNotIn('validated_handoff',ctx['record'])
+
+    async def test_misplaced_researcher_handoff_is_repaired_at_required_destination(self):
+        await self.check_misplaced_handoff_repair('researcher')
+
+    async def test_misplaced_opponent_handoff_is_repaired_at_required_destination(self):
+        await self.check_misplaced_handoff_repair('opponent')
+
+    async def check_misplaced_handoff_repair(self, role):
+        task_id='task-'+uuid.uuid4().hex
+        self.runtime.add_task(task_id, 'Check the public finite sum.', 'primary', role=role)
+        task=self.runtime.state['tasks'][task_id]
+        required=workspace.handoff_path(task_id)
+        runner=await self.start_runner(task_id)
+        await self.wait_for(lambda: task['context_id'] and
+            self.runtime.clients[task['context_id']].science_turns==2)
+        cid=task['context_id']
+        ctx=self.runtime.contexts[cid]
+        client=self.runtime.clients[cid]
+        original_turn=client.turn
+        checkpoints=[]
+
+        async def misplaced_turn(text):
+            result=await original_turn(text)
+            if 'threshold' in text or 'Repair this' in text:
+                checkpoints.append(text)
+                if len(checkpoints)==1 or required not in text:
+                    # Native failure: draft saves succeeded at a workspace
+                    # path, leaving no canonical handoff directory at all.
+                    self.runtime.draft(ctx,task['workspace']+'/HANDOFF.md',handoff(task))
+                    (ctx['drafts']/required).unlink()
+                    (ctx['drafts']/'handoffs').rmdir()
+            return result
+
+        client.turn=misplaced_turn
+        await self.trigger(task_id)
+        await self.wait_for(lambda: task.get('context_error') or
+            task['context_id'] and task['context_id']!=cid)
+        self.assertNotIn('context_error',task)
+        self.assertEqual(len(checkpoints),2)
+        self.assertIn(required,checkpoints[0])
+        self.assertIn(required,ctx['record']['handoff_validation_error'])
+        validated=ctx['record']['validated_handoff']
+        self.assertEqual(validated['path'],required)
+        self.assertEqual(set(validated['artifact_versions']),{task['workspace']+'/NOTE.md'})
+        self.assertTrue(ctx['record']['cleanup_ok'])
+        packet=self.runtime.successor_documents(task_id)['validated_handoff']
+        self.assertIn('Finite checks alone',packet['content'])
+        intake_prompt=codex.prompt(workspace.read_intake(self.runtime.project),task,[])
+        self.assertIn(required,intake_prompt)
+        self.assertIn('project-relative',intake_prompt)
+        await self.runtime.block_and_cleanup('Engineering fixture pause')
+        await asyncio.wait_for(runner,2)
 
     async def test_missing_telemetry_and_failed_checkpoint_preserve_truthful_failure(self):
         self.missing=True

@@ -278,7 +278,7 @@ async def validate_mcp_inventory(status):
 
 
 def prompt(intake, task, live_jobs, documents=None):
-    from .workspace import handoff_fields
+    from .workspace import handoff_fields, handoff_path
     return f"""You are the scientific researcher for logical task {task['task_id']}.
 Objective: {task['objective']}. Parent: {task.get('parent_task')}.
 Role: {task.get('role')}. Phase: {task.get('phase')}.
@@ -324,6 +324,10 @@ cancelled command preserves partial output and does not stop unrelated research.
 Do not retry a lost admission acknowledgement; inspect retained jobs first.
 
 Use write_draft for scoped scientific Markdown, including a handoff, without a job.
+Paths are project-relative, not relative to your task workspace. Save this task's
+handoff with write_draft(path="{handoff_path(task['task_id'])}", content=...).
+That exact destination is writable for this logical task, including delegates;
+write_draft creates missing parent directories. Delegates keep other notes in their task workspace.
 Save the handoff immediately after intake, before substantial research, and update
 it as evidence changes. Required fields: {json.dumps(handoff_fields(task['task_id']))}.
 Use ordinary links relative to handoffs/. Link at least one saved scientific artifact

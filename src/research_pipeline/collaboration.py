@@ -609,7 +609,12 @@ class Coordinator:
                 raise workspace.InputError('Final handoff snapshot unavailable')
             text = self.documents.raw(task_id, versions[rel]).decode('utf-8')
         else:
-            text = verification.read_bytes(workspace.safe_path(ctx['drafts'], rel), None).decode('utf-8')
+            try:
+                text = verification.read_bytes(workspace.safe_path(ctx['drafts'], rel), None).decode('utf-8')
+            except FileNotFoundError as exc:
+                raise workspace.InputError(
+                    f'Missing handoff draft: {rel}. Save it with write_draft at that exact '
+                    'project-relative path; missing parent directories are created automatically.') from exc
         active = [r for r in self.state['jobs'].values() if r['task_id'] == task_id and r['state'] in jobs.ACTIVE]
         artifacts = workspace.validate_handoff(self.project, text, task_id=task_id, task=task,
             resolve_artifact=resolve, owned_jobs=active)
@@ -631,6 +636,9 @@ class Coordinator:
         checkpoint = (
             'Context reached the measured 55% threshold. Save useful science and repair the concise handoff now. '
             'No new computations or assignments. Use write_draft and document reads/job_status only. '
+            f'Save the handoff with write_draft(path="{workspace.handoff_path(task_id)}", content=...). '
+            'This is an authorized project-relative destination, not relative to your workspace. '
+            'Missing parent directories are created automatically. Link artifacts relative to handoffs/. '
             'Use exact Objective, Parent question, Phase and Role sections from this metadata '
             '(prefix every Objective line with > if it contains Markdown headings): '
             + json.dumps({k: task[k] for k in ('task_id', 'objective', 'parent_task', 'phase', 'role')})

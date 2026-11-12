@@ -150,6 +150,10 @@ from stopped state or promise controller-crash continuation.
 ## Scientific files, references and independent checks
 
 Scientific notes and handoffs use Markdown; code and data keep ordinary formats.
+`write_draft` paths are project-relative. Save each handoff at exactly
+`handoffs/<logical-task-id>.md` (`handoffs/primary.md` for primary), including for
+delegated researchers and opponents. The tool creates missing parent directories;
+other delegated notes stay under the task's `work/tasks/<logical-task-id>/` workspace.
 The runtime pins existing canonical Markdown read-only while a context/job runs,
 and holds descriptor-pinned mount sources for each service. Scoped draft publication
 and index generation wait until **all owned contexts and jobs are confirmed stopped**.
