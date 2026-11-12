@@ -17,6 +17,29 @@ Deliver **V0-L1–V0-L6** in dependency order: runtime and durable jobs; measure
 
 Preserve PROJECT.md and useful retained M5 implementation work. Implement and verify the complete extension before commissioning or resuming M5 science. The manager assesses pipeline reports and maintains this checkpoint rather than independently repeating completed product checks.
 
+## V0-L1 implementation handoff (production verification pending)
+
+The pipeline recovery now has an L1 implementation candidate based on
+`22213b2aba2514c0ba72034bd7e92ee98931a49d`, with a research-owned app-server driver,
+persistent shared allocation slices, independently supervised jobs and explicit
+successor attachment. See [the implementation report](development/requests/v0-l1-durable-runtime.md)
+for provenance, unsupported legacy protocols, commands and limits. PROJECT.md and
+the human lifecycle amendment remain byte-for-byte unchanged; the retained M5
+candidate remains untouched and unaccepted.
+
+After both review-repair rounds, Writer routine validation ran 122 tests: 117 passed,
+with five deliberate opt-in skips. Immutable scoped document reads preserve live
+successor/parent continuity, and successful cleanup retries reconcile per-context
+state and pending publication. The
+enabled L1 production fixture failed before inference because this Writer has no
+`XDG_RUNTIME_DIR`/`DBUS_SESSION_BUS_ADDRESS`. Its failed receipt is
+`coding_pipeline/logs/20261112T190532_377a68b3/runtime/tmp/l1-native-writer-repair-002/receipt.json`.
+This is **not** native tool, service-survival or L1 acceptance evidence. Pipeline
+host verification, independent review and final/combined checks remain required;
+the report supplies an invocation using the retained MCP dependency. L1 readiness
+must not be relabeled as completed V0 or as permission to resume M5. V0-L2 measured
+rollover is the next product dependency after L1 verification.
+
 ## Active manager checkpoint
 
 - **Objective:** V0-L1 production runtime boundary and durable scientific jobs; implement only this dependency before V0-L2.

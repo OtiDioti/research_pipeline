@@ -193,10 +193,6 @@ class ToolTests(unittest.TestCase):
                     "work/tasks/task-a/inputs/tool.json", "work/tasks/task-a/ASSIGNMENT.md"):
             with self.assertRaises(tools.ToolError):
                 tools.own_path(child, rel)
-        (self.control / "request.json").write_text('{"reason":"pause"}')
-        with self.assertRaisesRegex(tools.ToolError, "Suspension"):
-            tools.register(self.context, "work/tools/local/tool.json", self.assessment, runner=success)
-        (self.control / "request.json").unlink()
         with self.assertRaisesRegex(tools.ToolError, "deadline"):
             tools.run({**self.context, "deadline": 0}, "work/tools/local/tool.json", [], runner=success)
 
@@ -248,23 +244,13 @@ class ToolTests(unittest.TestCase):
         record = tools.read_record(self.drafts / Path(rel).with_name(tools.RECORD))
         self.assertEqual(record["outcome"], "failed")
 
-    def test_context_mounts_effective_deadline_and_polling(self):
-        session = self.project / ".research_pipeline/session"
-        session.mkdir()
-        config = isolation.Config(deadline=time.monotonic() + 1)
-        polls = []
-        config.on_poll = lambda research=False: polls.append(research)
-        tools.configure(config, self.project, session, "owner")
-        value = json.loads(config.tool_context.read_text())
-        self.assertEqual(value["deadline"], config.deadline)
-        self.assertEqual(value["activation"], "owner")
-        self.assertTrue(polls)
-        command = isolation.bubblewrap_command(self.project, ["true"], tool_context=config.tool_context)
-        self.assertIn("/run/research-tools.py", command)
-        self.assertIn("/run/research-tools.json", command)
-        config.on_poll = lambda research=False: "pause"
-        with self.assertRaises(isolation.RequestedStop):
-            tools.configure(config, self.project, session, "new")
+    def test_job_context_mounts_do_not_expose_backend_control(self):
+        context = self.project / '.research_pipeline/job-tools.json'
+        context.write_text(json.dumps(self.context))
+        command = isolation.bubblewrap_command(self.project, ['true'], tool_context=context)
+        self.assertIn('/run/research-tools.json', command)
+        self.assertNotIn('/run/research-control', command)
+        self.assertNotIn('/run/research-rpc', command)
 
     def test_public_helper_argument_boundary(self):
         def read(path):
@@ -302,11 +288,9 @@ class ToolTests(unittest.TestCase):
             self.assertEqual(result["outcome"], "failed")
             self.assertIn("FileNotFoundError", result["error"])
             launch.assert_called_once()
-        with patch.object(tools.subprocess, "Popen") as launch:
-            (self.control / "request.json").write_text("{}")
-            with self.assertRaisesRegex(tools.ToolError, "Suspension"):
-                tools.execute(self.context, ["unavailable"], self.project / "work")
-            launch.assert_not_called()
+        # A context rollover marker cannot stop a computation's tool checks.
+        (self.control / 'request.json').write_text('{}')
+        tools.check_ready(self.context)
 
     def test_foreground_completion_does_not_wait_for_inherited_pipe_eof(self):
         """Engineering pipe/process doubles; no supplied scientific code is executed."""

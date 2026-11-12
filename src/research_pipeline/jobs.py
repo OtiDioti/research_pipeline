@@ -1,11 +1,11 @@
-"""Investigation-wide admission, and namespace-local supervision of owned jobs.
+"""Durable, logical-owner jobs. The research runtime owns admission and services.
 
-The foreground controller alone reserves capacity. Only the trusted adapter sees
-the request/result directories; scientific commands run in a nested PID namespace.
-No process is started on the controller host by this module.
+The model-side MCP process owns neither allocations nor computations. Files retain
+intent and outcomes; a Unix RPC connection waits for events without model polling.
 """
+import asyncio
+from contextlib import ExitStack
 import importlib.util
-from contextlib import nullcontext
 import json
 import math
 import os
@@ -17,465 +17,411 @@ import sys
 import time
 import uuid
 
+from . import isolation, workspace
+
 
 class JobError(ValueError):
     pass
 
 
-ACTIVE = {"reserved", "running", "stopping", "cleanup_unconfirmed"}
-# Keep trusted module imports independent of the research cwd and user site.
-# PYTHONPATH contains only the runtime/source mounts supplied by the controller.
-TRUSTED_PYTHON_FLAGS = ("-P", "-s")
-STATUS_JOB_LIMIT = 32
-
-
-def status_summary(record):
-    fields = ("job_id", "task_id", "activation_id", "state", "cleanup_ok", "returncode",
-              "admitted_monotonic", "admitted_epoch", "deadline", "elapsed_seconds",
-              "configured_runtime_seconds", "requested_runtime_seconds", "effective_runtime_seconds",
-              "finished_epoch", "stdout_clipped", "stderr_clipped")
-    return {**{k: record[k] for k in fields if k in record},
-            "executable": record["argv"][0][:200], "reason": record["reason"][:512]}
-
-
-def validate_limits(limits, *, defaults=False):
-    for key, default in (("job_runtime_seconds", 60), ("max_jobs", 1)):
-        if key not in limits and defaults:
-            limits[key] = default
-        if key not in limits:
-            continue  # historical state: migrate only after ownership cleanup
-        value = limits[key]
-        valid = (type(value) is int and value > 0 if key == "max_jobs" else
-                 type(value) in (int, float) and math.isfinite(value) and value > 0)
-        if not valid:
-            raise JobError(f"Invalid saved {key}: expected a positive "
-                           + ("integer" if key == "max_jobs" else "finite runtime"))
+ACTIVE = {'reserved', 'running', 'stopping', 'cleanup_unconfirmed'}
+TRUSTED_PYTHON_FLAGS = ('-P', '-s')
 
 
 def atomic(path, value):
-    from .workspace import atomic_text
-    atomic_text(path, json.dumps(value, ensure_ascii=True) + "\n")
+    workspace.atomic_text(path, json.dumps(value, ensure_ascii=True, allow_nan=False) + '\n')
 
 
-def read(path):
+def read(path, max_bytes=1024 * 1024):
     try:
-        if path.is_symlink() or path.stat().st_size > 256 * 1024:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(fd, 'rb') as stream:
+            import stat
+            if not stat.S_ISREG(os.fstat(stream.fileno()).st_mode):
+                return None
+            raw = stream.read(max_bytes + 1)
+        if len(raw) > max_bytes:
             return None
-        value = json.loads(path.read_text())
+        value = json.loads(raw)
         return value if isinstance(value, dict) else None
     except (OSError, ValueError):
         return None
 
 
+def public(record):
+    return {key: value for key, value in record.items() if key != 'science_baseline'}
+
+
+def status_summary(record):
+    fields = ('job_id', 'task_id', 'origin_context_id', 'state', 'cleanup_ok',
+              'runtime_seconds', 'deadline', 'returncode', 'launch_count', 'slot', 'reason')
+    return {key: record[key] for key in fields if key in record}
+
+
+def science_quiescent(state):
+    """Path-based publication requires every owned writer to be confirmed stopped."""
+    return all(record.get('cleanup_ok') is True
+               for record in (*state['contexts'].values(), *state['jobs'].values()))
+
+
 def adapter_mounts():
-    """Use the installed Python/MCP runtime, not the researcher's dependencies."""
-    spec = importlib.util.find_spec("mcp")
+    spec = importlib.util.find_spec('mcp')
     if spec is None:
-        from .isolation import RuntimeUnavailable
-        raise RuntimeUnavailable("Controlled jobs require the installed mcp dependency")
+        raise isolation.RuntimeUnavailable('Controlled jobs require the declared mcp dependency')
     return sorted({sys.base_prefix, sys.prefix, str(Path(spec.origin).parent.parent)})
 
 
+def duration(value):
+    if type(value) not in (int, float) or value <= 0 or value >= (2**64 - 1) / 1_000_000 or not math.isfinite(value):
+        raise JobError('runtime_seconds is required and must be positive and finite')
+    # systemd times are unsigned microseconds; reject overflow, never clamp.
+    if value >= (2**64 - 1) / 1_000_000 or not math.isfinite(time.monotonic() + value):
+        raise JobError('runtime_seconds cannot be represented by the service supervisor')
+    return value
+
+
 class JobManager:
-    def __init__(self, project, state, save):
-        self.project, self.state, self.save = project, state, save
-        self.owners = {}
+    def __init__(self, project, state, save, allocation):
+        self.project, self.state, self.save, self.allocation = project, state, save, allocation
+        self.lock = asyncio.Lock()
+        self.events = {}
+        self.mount_stacks = {}
+        self.on_quiescent = None
+        self.on_stopped = None
+        self.root = project / '.research_pipeline/jobs'
+        self.root.mkdir(exist_ok=True)
 
-    def configure(self, config, session, owner):
-        from .workspace import owner_fields, task_directory
-        validate_limits(self.state["limits"], defaults=True)
-        config.job_runtime_seconds = self.state["limits"]["job_runtime_seconds"]
-        config.max_jobs = self.state["limits"]["max_jobs"]
-        root = session / "jobs"
-        root.mkdir()
-        for name in ("in", "out"):
-            (root / name).mkdir()
-        identity = {**owner_fields(owner), "task_id": config.task_id}
-        context = {**identity, "deadline": config.deadline,
-                   "job_runtime_seconds": config.job_runtime_seconds,
-                   "workspace": task_directory(config.task_id),
-                   "task_workspaces": config.task_workspaces,
-                   "frozen_inputs": config.frozen_inputs,
-                   "references": [dest for _, dest in config.reference_mounts]}
-        config.job_context = root / "context.json"
-        atomic(config.job_context, context)
-        self.owners[identity["activation_id"]] = {
-            "identity": identity, "root": root, "config": config, "last": None}
-        self.save()
-
-    def admit(self, owner, request):
-        from .isolation import RequestedStop
-        guard = owner["config"].launch_guard
-        try:
-            with guard() if guard else nullcontext():
-                return self._admit(owner, request)
-        except RequestedStop as exc:
-            raise JobError("Saving requested; new scientific jobs are blocked.") from exc
-
-    def _admit(self, owner, request):
-        from . import workspace
-        config = owner["config"]
-        if owner.get("stopped"):
-            raise JobError("Owning service stopped; no command launched.")
-        if any(request.get(k) != v for k, v in owner["identity"].items()):
-            raise JobError("Job activation ownership mismatch")
-        if (config.control / "request.json").exists():
-            raise JobError("Saving requested; new scientific jobs are blocked.")
-        if time.monotonic() >= config.deadline:
-            raise JobError("Effective session deadline exhausted; no command launched.")
-        records = self.state.setdefault("jobs", {})
-        occupied = sum(r["state"] in ACTIVE for r in records.values())
-        if occupied >= config.max_jobs:
-            raise JobError(f"Job capacity exhausted ({occupied}/{config.max_jobs}); no command launched.")
-        argv = request.get("argv")
-        if (not isinstance(argv, list) or not argv
-                or not all(isinstance(a, str) and a and "\0" not in a for a in argv)):
-            raise JobError("Expected a nonempty argv array")
-        cwd = request.get("cwd")
-        if not isinstance(cwd, str) or not cwd.startswith("/project/"):
-            raise JobError("Job cwd must be in the caller's permitted workspace")
-        rel = cwd.removeprefix("/project/")
-        path = workspace.safe_path(self.project, rel)
-        from .workspace import writable_directories
-        if not any(Path(rel).is_relative_to(p) for p in writable_directories(config.task_id)):
-            raise JobError("Job cwd must be in the caller's permitted workspace")
-        excluded = (*config.frozen_inputs, *config.task_workspaces) if config.task_id == "primary" else (
-            *config.frozen_inputs, f"work/tasks/{config.task_id}/inputs")
-        if any(Path(rel).is_relative_to(p) for p in excluded) or not path.is_dir():
-            raise JobError("Job cwd must be an existing writable workspace directory")
-        requested = request.get("runtime_seconds")
-        runtime = config.job_runtime_seconds if requested is None else requested
-        if (type(runtime) not in (int, float) or not math.isfinite(runtime)
-                or runtime <= 0 or runtime > config.job_runtime_seconds):
-            raise JobError("Requested runtime must be positive and cannot exceed the configured job runtime")
-        began = time.monotonic()
-        record = {**owner["identity"], "job_id": uuid.uuid4().hex,
-                  "argv": argv, "cwd": cwd, "state": "reserved",
-                  "admitted_monotonic": began, "admitted_epoch": time.time(),
-                  "configured_runtime_seconds": config.job_runtime_seconds,
-                  "requested_runtime_seconds": runtime,
-                  "deadline": min(config.deadline, began + runtime),
-                  "cleanup_ok": False, "reason": "Reserved before launch."}
-        record["effective_runtime_seconds"] = max(0, record["deadline"] - began)
-        records[record["job_id"]] = record
-        self.save()  # reservation is durable before authorizing a launch
+    def owned(self, task_id, job_id):
+        record = self.state['jobs'].get(job_id)
+        if not record or record['task_id'] != task_id:
+            raise JobError('Unknown job or job belongs to another logical owner')
         return record
 
-    def poll(self):
-        from .budget import budget_report
-
-        for owner in self.owners.values():
-            root = owner["root"]
-            changed = False
-            for record in self.state.get("jobs", {}).values():
-                if record["activation_id"] != owner["identity"]["activation_id"] or record["state"] not in ACTIVE:
-                    continue
-                result = read(root / "out" / f"{record['job_id']}.json")
-                if result and result.get("job_id") == record["job_id"]:
-                    # Never accept changed ownership, argv or effective deadline.
-                    fields = ("state", "reason", "returncode", "cleanup_ok", "stdout", "stderr",
-                              "stdout_clipped", "stderr_clipped", "elapsed_seconds", "finished_epoch")
-                    updates = {k: result[k] for k in fields if k in result}
-                    changed |= any(record.get(k) != v for k, v in updates.items())
-                    record.update(updates)
-                    if record["state"] not in ACTIVE and record.get("cleanup_ok") is not True:
-                        record["state"] = "cleanup_unconfirmed"
-            if changed:
-                self.save()
-            request = read(root / "out" / "request.json")
-            if not request or request.get("request_id") == owner["last"]:
-                continue
-            request_id = request.get("request_id")
-            if not isinstance(request_id, str) or len(request_id) != 32:
-                continue
-            ack = {"request_id": request_id, "accepted": False}
-            try:
-                ack.update(accepted=True, job=self.admit(owner, request))
-            except (ValueError, OSError) as exc:
-                ack.update(accepted=False, error=str(exc))
-            owner["last"] = request_id
-            atomic(root / "in" / "ack.json", ack)
-        # A status snapshot is operational data, not a scientific publication.
-        budget = budget_report(self.state, live=True)
-        observed_monotonic = time.monotonic()
-        for owner in self.owners.values():
-            records = [r for r in self.state.get("jobs", {}).values()
-                       if owner["identity"]["task_id"] == "primary"
-                       or r["activation_id"] == owner["identity"]["activation_id"]]
-            # Keep full, individually readable results outside the bounded list.
-            # This also makes retained output available in fresh primary contexts.
-            details = owner.setdefault("details", {})
-            for record in records:
-                if details.get(record["job_id"]) != record:
-                    atomic(owner["root"] / "in" / f"{record['job_id']}.json", record)
-                    details[record["job_id"]] = record.copy()
-            active = [r for r in records if r["state"] in ACTIVE]
-            recent = [r for r in reversed(records) if r["state"] not in ACTIVE]
-            visible = (active + recent)[:STATUS_JOB_LIMIT]
-            snapshot = {"jobs": [status_summary(r) for r in visible],
-                "jobs_total": len(records), "jobs_omitted": len(records) - len(visible),
-                "active_jobs_omitted": max(0, len(active) - STATUS_JOB_LIMIT),
-                "occupied": sum(r["state"] in ACTIVE for r in self.state.get("jobs", {}).values()),
-                "max_jobs": self.state["limits"].get("max_jobs"),
-                "budget_report": budget}
-            # Clock-only changes refresh at most once per second. New jobs,
-            # results, limits and usage publish immediately, without delaying
-            # admission or completion processing above.
-            timed_fields = {"observed_at", "active_seconds_observed",
-                            "active_seconds_recorded", "remaining_seconds_observed"}
-            signature = json.dumps({**snapshot, "budget_report": {
-                k: v for k, v in budget.items() if k not in timed_fields}}, sort_keys=True)
-            if (signature != owner.get("snapshot")
-                    or observed_monotonic - owner.get("snapshot_monotonic", 0) >= 1):
-                atomic(owner["root"] / "in" / "status.json", snapshot)
-                owner["snapshot"] = signature
-                owner["snapshot_monotonic"] = observed_monotonic
-
-    def owner_stopped(self, activation, cleanup_ok):
-        if activation in self.owners:
-            self.owners[activation]["stopped"] = True
-        self.poll()
-        reconcile(self.state, activation, cleanup_ok)
-        self.owners.pop(activation, None)
+    def changed(self, record):
         self.save()
+        event = self.events.pop(record['job_id'], None)
+        if event:
+            event.set()
 
+    async def run(self, task_id, context_id, argv, cwd, runtime_seconds):
+        runtime = duration(runtime_seconds)
+        async with self.lock:
+            if self.state['admission_block']:
+                raise JobError('Admissions blocked: ' + self.state['admission_block'])
+            task = self.state['tasks'][task_id]
+            if task.get('context_id') != context_id or not task.get('inventory_verified'):
+                raise JobError('Context attachment or production tool inventory unverified')
+            if sum(r['state'] in ACTIVE for r in self.state['jobs'].values()) >= self.state['limits']['max_jobs']:
+                raise JobError('Concurrent job capacity exhausted; no queue and no command launched')
+            if not isinstance(argv, list) or not argv or not all(isinstance(a, str) and a and '\0' not in a for a in argv):
+                raise JobError('Expected a nonempty argv array')
+            if not isinstance(cwd, str) or not cwd.startswith('/project/'):
+                raise JobError('cwd must be in the logical owner workspace')
+            rel = cwd.removeprefix('/project/')
+            path = workspace.safe_path(self.project, rel)
+            excluded = task.get('frozen_inputs', []) + (['work/tasks'] if task_id == 'primary' else [f'{task["workspace"]}/inputs', f'{task["workspace"]}/ASSIGNMENT.md'])
+            if (not any(Path(rel).is_relative_to(p) for p in workspace.writable_directories(task_id))
+                    or any(Path(rel).is_relative_to(p) for p in excluded) or not path.is_dir()):
+                raise JobError('cwd must be an existing writable directory in the logical owner workspace')
+            if len(json.dumps(argv).encode()) > 256 * 1024:
+                raise JobError('Command argv exceeds 256 KiB')
+            began = time.monotonic()
+            if began + runtime == began:
+                raise JobError('runtime_seconds is below clock precision')
+            job_id = uuid.uuid4().hex
+            record = {'job_id': job_id, 'task_id': task_id, 'origin_context_id': context_id,
+                      'argv': argv, 'cwd': cwd, 'state': 'reserved', 'cleanup_ok': False,
+                      'admitted_monotonic': began, 'admitted_epoch': time.time(),
+                      'runtime_seconds': runtime, 'deadline': began + runtime,
+                      'boot_id': isolation.boot_identity(), 'slot': task['slot'],
+                      'unit': f'research-job-{job_id}.service', 'launch_count': 0,
+                      'reason': 'Reserved before launch; launch outcome not yet established'}
+            root = self.root / job_id
+            root.mkdir()
+            record['result_path'] = str(root / 'result.json')
+            self.state['jobs'][job_id] = record
+            self.changed(record)  # durable reservation before preparation or launch
+            attempted = False
+            try:
+                self.prepare(record, task, root)
+                record['launch_count'] = 1
+                self.changed(record)
+                args = ['/usr/bin/env', '-i', 'PATH=/usr/local/bin:/usr/bin:/bin',
+                        f'PYTHONPATH={Path(__file__).parent.parent}', sys.executable, *TRUSTED_PYTHON_FLAGS,
+                        '-m', 'research_pipeline.jobs', '--supervise', str(root / 'request.json')]
+                launch_args = self.allocation.launch(task['slot'], record['unit'], args, deadline=record['deadline'])
+                attempted = True
+                await isolation.command(*launch_args)
+                record['service'] = await isolation.capture_ownership(record['unit'], self.allocation.slots[task['slot']]['cgroup'])
+                self.changed(record)  # ownership is saved before permitting the command
+                if self.state['admission_block']:
+                    cleanup = await isolation.stop_owned(record['service'])
+                    record.update(state='cancelled' if cleanup['confirmed'] else 'cleanup_unconfirmed',
+                                  cleanup_ok=cleanup['confirmed'], cleanup=cleanup,
+                                  reason='Admissions blocked before command release; command not started')
+                    if cleanup['confirmed']:
+                        self.close_mounts(record)
+                    self.changed(record)
+                    if self.on_quiescent:
+                        self.on_quiescent()
+                    return public(record)
+                atomic(root / 'launch.json', {'job_id': job_id})
+                record.update(state='running', reason='Owned computation service running')
+            except Exception as exc:
+                # A failed/lost launch ack never authorizes a retry or frees capacity.
+                record.update(state='cleanup_unconfirmed' if attempted else 'timed_out' if time.monotonic() >= record['deadline'] else 'failed',
+                              cleanup_ok=not attempted,
+                              reason=f'Admission/launch outcome uncertain: {type(exc).__name__}: {exc}' if attempted else
+                                     f'Preparation failed before service launch: {type(exc).__name__}: {exc}')
+                if not attempted:
+                    self.close_mounts(record)
+            self.changed(record)
+            if self.on_quiescent:
+                self.on_quiescent()
+            return public(record)
 
-def reconcile(state, activation=None, cleanup_ok=True):
-    """Only call after the existing service cleanup authority has confirmed stop."""
-    for record in state.get("jobs", {}).values():
-        if activation is not None and record["activation_id"] != activation:
-            continue
-        if record["state"] in ACTIVE:
-            record.update(state="interrupted" if cleanup_ok else "cleanup_unconfirmed",
-                          cleanup_ok=cleanup_ok,
-                          reason="Owning service stopped; unfinished work is unknown; inspect partial artifacts."
-                          if cleanup_ok else "Previous job cleanup unconfirmed; further admission blocked.")
+    def prepare(self, record, task, root):
+        tool = {'version': 1, 'activation': record['job_id'], 'task': record['task_id'],
+                'job_id': record['job_id'], 'project': '/project', 'workspace': task['workspace'],
+                'drafts': '/run/research-drafts', 'excluded': task.get('frozen_inputs', []) +
+                (['work/tasks'] if record['task_id'] == 'primary' else [f'{task["workspace"]}/inputs', f'{task["workspace"]}/ASSIGNMENT.md']),
+                'deadline': record['deadline'], 'control': '/run/no-context-control'}
+        atomic(root / 'tools.json', tool)
+        atomic(root / 'job.json', {**record, 'activation': record['job_id']})
+        # A separate draft batch prevents a live command racing context publication.
+        drafts = root / 'drafts'
+        drafts.mkdir()
+        mounts = self.mount_stacks[record['job_id']] = ExitStack()
+        argv = isolation.bubblewrap_command(self.project, record['argv'], drafts=drafts,
+                    task_id=record['task_id'], task_workspaces=tuple(self.state['tasks'][k]['workspace'] for k in self.state['tasks'] if k != 'primary'),
+                    frozen_inputs=task.get('frozen_inputs', []),
+                    reference_catalog=Path(task['reference_catalog']) if task.get('reference_catalog') else None,
+                    reference_mounts=task.get('reference_mounts', []), tool_context=root / 'tools.json',
+                    job_record=root / 'job.json', mount_stack=mounts)
+        argv[argv.index('--chdir') + 1] = record['cwd']
+        atomic(root / 'request.json', {'record': record, 'argv': argv})
+        record['drafts'] = str(drafts)
+        record['science_baseline'] = workspace.science_fingerprints(self.project, record['task_id'])
 
+    async def reconcile(self, record):
+        async with self.lock:
+            return await self._reconcile(record)
 
-def observed(state, activation=None):
-    records = [r for r in state.get("jobs", {}).values()
-               if activation is None or r["activation_id"] == activation]
-    return {"command_count": len(records),
-            "successful_commands": sum(r["state"] == "completed" and r.get("returncode") == 0
-                                       and r.get("cleanup_ok") is True for r in records),
-            "failed_commands": [{"command": r["argv"], "reason": r["reason"],
-                                 "exit_code": r.get("returncode")}
-                                for r in records if r["state"] not in ACTIVE | {"completed"}][:20]}
-
-
-class RunningJob:
-    """Run only inside an owned production service, outside the job PID namespace."""
-    def __init__(self, record, context, root=Path("/run/research-jobs-out")):
-        self.record, self.root = dict(record), root
-        self.process = None
-        self.launch_attempted = False
-        self.selector = selectors.DefaultSelector()
-        self.buffers = {"stdout": bytearray(), "stderr": bytearray()}
-        self.info = root / f"{record['job_id']}.info"
-        self.context = context
-
-    def launch(self):
-        from .isolation import bubblewrap_command
-        record, context, root = self.record, self.context, self.root
-        local = root / f"{record['job_id']}.context"
-        tool_context = read(Path("/run/research-tools.json"))
-        atomic(local, {**tool_context, "deadline": record["deadline"], "job_id": record["job_id"]})
-        # Persistent dependency scratch is activation-local and still in the role grant.
-        scratch = Path("/tmp/research-job-scratch")
-        scratch.mkdir(exist_ok=True)
-        args = bubblewrap_command(Path("/project"), record["argv"], drafts=Path("/run/research-drafts"),
-            control=Path("/run/research-control"), response=Path("/run/research-checkpoint"),
-            task_id=context["task_id"], task_workspaces=context["task_workspaces"],
-            frozen_inputs=context["frozen_inputs"],
-            reference_mounts=[(p, p) for p in context["references"]],
-            reference_catalog=Path("/run/research-references.json"),
-            tool_context=local)
-        # Hide collaboration/checkpoint write endpoints as well as adapter private storage.
-        offset = args.index("--chdir")
-        args[offset:offset] = ["--bind", str(scratch), "/tmp",
-                              "--ro-bind", str(local), "/run/research-job.json",
-                              "--tmpfs", "/run/research-checkpoint",
-                              "--remount-ro", "/run/research-checkpoint"]
-        args[args.index("--chdir") + 1] = record["cwd"]
-        info_fd = os.open(self.info, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    async def _reconcile(self, record):
+        if record['state'] not in ACTIVE:
+            return
         try:
-            args[1:1] = ["--info-fd", str(info_fd)]
-            if time.monotonic() >= record["deadline"]:
-                self.record.update(state="timed_out", returncode=None, cleanup_ok=True,
-                                   reason="Job runtime exhausted during preparation; partial artifacts retained.")
-                return
-            self.launch_attempted = True
-            self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                            start_new_session=True, pass_fds=(info_fd,))
-            for stream, name in ((self.process.stdout, "stdout"), (self.process.stderr, "stderr")):
-                os.set_blocking(stream.fileno(), False)
-                self.selector.register(stream, selectors.EVENT_READ, name)
-            self.record.update(state="running", reason="Command running in owned PID namespace.")
-        except OSError as exc:
-            self.record.update(state="failed", returncode=None, cleanup_ok=True,
-                               reason=f"Executable unavailable: {exc}")
+            if record['boot_id'] != isolation.boot_identity():
+                raise isolation.RuntimeUnavailable('Job boot identity changed; reconciliation required')
+            if not record.get('service'):
+                record['service'] = await isolation.capture_ownership(record['unit'], self.allocation.slots[record['slot']]['cgroup'])
+                self.changed(record)
+            owner = record['service']
+            props = await isolation.service_properties(owner['unit'])
+            if (props['LoadState'] != 'not-found' and props.get('InvocationID') != owner['invocation_id']
+                    and not (props.get('ActiveState') in ('inactive', 'failed') and not props.get('InvocationID')
+                             and not props.get('ControlGroup') and isolation.group_empty(owner['cgroup']))):
+                raise isolation.RuntimeUnavailable('Job invocation identity changed')
+            result = read(Path(record['result_path']))
+            if result and result.get('job_id') != record['job_id']:
+                raise isolation.RuntimeUnavailable('Supervisor result identity mismatch')
+            ended = props['LoadState'] == 'not-found' or props.get('ActiveState') in ('inactive', 'failed')
+            if result and result.get('finished') or ended:
+                cleanup = await isolation.stop_owned(owner)
+                updates = {k: result[k] for k in (
+                    'stdout', 'stderr', 'stdout_clipped', 'stderr_clipped', 'returncode',
+                    'supervisor_error', 'finished_monotonic', 'termination_cause') if result and k in result}
+                finished = result.get('finished_monotonic') if result and result.get('finished') else None
+                cause = result.get('termination_cause') if result else None
+                if (cause == 'completed' and type(finished) in (int, float)
+                        and record['admitted_monotonic'] <= finished < record['deadline']):
+                    outcome = 'completed' if result.get('returncode') == 0 else 'failed'
+                elif cause == 'expired' or props.get('Result') == 'timeout':
+                    outcome = 'timed_out'
+                elif cause == 'cancelled':
+                    outcome = 'cancelled'
+                else:
+                    outcome = 'failed'
+                record.update(**updates, state=outcome if cleanup['confirmed'] else 'cleanup_unconfirmed',
+                              cleanup_ok=cleanup['confirmed'], cleanup=cleanup,
+                              reason='Service timeout; partial outputs retained' if outcome == 'timed_out' else
+                                     f'Supervisor failed: {result["supervisor_error"]}' if result and result.get('supervisor_error') else
+                                     'Command outcome and service cleanup observed' if result and result.get('finished') else 'Supervisor lost; command outcome unavailable',
+                              finished_epoch=time.time())
+                if cleanup['confirmed']:
+                    self.close_mounts(record)
+                    self.publish(record)
+                self.changed(record)
+                if self.on_quiescent:
+                    self.on_quiescent()
+        except (OSError, ValueError, isolation.RuntimeUnavailable, asyncio.TimeoutError) as exc:
+            if record.get('cleanup_ok') is True:
+                record['persistence_error'] = str(exc)
+                raise
+            reason = f'Job supervision/cleanup unconfirmed: {exc}'
+            if record['state'] != 'cleanup_unconfirmed' or record['reason'] != reason:
+                record.update(state='cleanup_unconfirmed', cleanup_ok=False, reason=reason)
+                self.changed(record)
+
+    def close_mounts(self, record):
+        mounts = self.mount_stacks.pop(record['job_id'], None)
+        if mounts:
+            mounts.close()
+
+    def publish(self, record):
+        if not record.get('drafts'):
+            return
+        record['publication_pending'] = True
+        if record.get('cleanup_ok') is True and self.on_stopped:
+            self.on_stopped(record)
+        if not science_quiescent(self.state):
+            return
+        try:
+            record['publication_conflicts'], _ = workspace.publish_drafts(
+                self.project, Path(record['drafts']), record['science_baseline'], [], record['task_id'],
+                self.state['tasks'][record['task_id']].get('frozen_inputs', ()))
+        except (OSError, ValueError) as exc:
+            # Finalization failure is distinct from confirmed process cleanup.
+            record['publication_error'] = str(exc)
         finally:
-            os.close(info_fd)
-            self.persist()
+            record['publication_pending'] = False
 
-    def persist(self):
-        self.record["elapsed_seconds"] = max(0, time.monotonic() - self.record["admitted_monotonic"])
-        for name, data in self.buffers.items():
-            self.record[name] = data.decode(errors="replace")
-        atomic(self.root / f"{self.record['job_id']}.json", self.record)
+    async def inspect(self, task_id, job_id=None):
+        if job_id:
+            record = self.owned(task_id, job_id)
+            await self.reconcile(record)
+            return public(record)
+        records = [r for r in self.state['jobs'].values() if r['task_id'] == task_id]
+        ordered = [r for r in records if r['state'] in ACTIVE] + [r for r in reversed(records) if r['state'] not in ACTIVE]
+        return {'jobs': [status_summary(r) for r in ordered[:32]],
+                'jobs_total': len(records), 'jobs_omitted': max(0, len(records)-32),
+                'occupied': sum(r['state'] in ACTIVE for r in self.state['jobs'].values()),
+                'max_jobs': self.state['limits']['max_jobs']}
 
-    def stop(self, reason, state="cancelled"):
-        if self.process and self.process.poll() is None:
+    async def wait(self, task_id, job_id):
+        record = self.owned(task_id, job_id)
+        while record['state'] in {'reserved', 'running', 'stopping'}:
+            event = self.events.setdefault(job_id, asyncio.Event())
+            await event.wait()
+        return public(record)
+
+    async def cancel(self, task_id, job_id):
+        async with self.lock:
+            record = self.owned(task_id, job_id)
+            if record['state'] not in ACTIVE:
+                return public(record)
+            record.update(state='stopping', reason='Cancellation requested; termination not yet confirmed')
             try:
-                os.killpg(self.process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-        self.finish(state, reason)
+                self.changed(record)
+            except OSError as exc:
+                record['persistence_error'] = str(exc)
+            cleanup = await isolation.stop_owned(record.get('service'))
+            # Capture bounded partial output even when SIGKILL prevented finalization.
+            result = read(Path(record['result_path'])) or {}
+            for key in ('stdout', 'stderr', 'stdout_clipped', 'stderr_clipped', 'returncode',
+                        'supervisor_error', 'finished_monotonic', 'termination_cause'):
+                if key in result:
+                    record[key] = result[key]
+            record.update(state='cancelled' if cleanup['confirmed'] else 'cleanup_unconfirmed',
+                          cleanup_ok=cleanup['confirmed'], cleanup=cleanup,
+                          reason='Cancellation confirmed; partial outputs retained' if cleanup['confirmed'] else cleanup['reason'])
+            if cleanup['confirmed']:
+                self.close_mounts(record)
+                self.publish(record)
+            self.changed(record)
+            if self.on_quiescent:
+                self.on_quiescent()
+            return public(record)
 
-    def poll(self):
-        if self.record["state"] not in ACTIVE:
-            return True
-        if time.monotonic() >= self.record["deadline"]:
-            self.stop("Job runtime exhausted; partial artifacts retained.", "timed_out")
-            return True
-        if Path("/run/research-control/request.json").exists():
-            self.stop("Saving requested; job stopped; partial artifacts retained.", "interrupted")
-            return True
-        for key, _ in self.selector.select(0):
-            data = os.read(key.fileobj.fileno(), 65536)
-            if not data:
-                self.selector.unregister(key.fileobj)
-            else:
-                available = max(0, 8192 - len(self.buffers[key.data]))
-                self.buffers[key.data].extend(data[:available])
-                self.record[key.data + "_clipped"] = self.record.get(key.data + "_clipped", False) or len(data) > available
-        if self.process.poll() is not None:
-            code = self.process.returncode
-            self.finish("completed" if code == 0 else "failed",
-                        "Command completed." if code == 0 else f"Command failed (exit {code}); inspect stderr; executable may be unavailable.")
-            return True
-        return False
-
-    def finish(self, state, reason):
-        if self.process:
-            try:
-                self.process.wait(timeout=2)
-                info = read(self.info)
-                # --info-fd identifies the namespace init in the supervisor's PID
-                # namespace. A reaped launcher alone is not the capacity condition.
-                pid = info.get("child-pid") if info else None
-                teardown_deadline = time.monotonic() + .5
-                while (type(pid) is int and Path(f"/proc/{pid}").exists()
-                       and time.monotonic() < teardown_deadline):
-                    time.sleep(.005)
-                clean = type(pid) is int and not Path(f"/proc/{pid}").exists()
-            except subprocess.TimeoutExpired:
-                clean = False
-            self.record["returncode"] = self.process.poll()
-            for stream in (self.process.stdout, self.process.stderr):
-                try:
-                    os.set_blocking(stream.fileno(), False)
-                    while data := os.read(stream.fileno(), 65536):
-                        name = "stdout" if stream is self.process.stdout else "stderr"
-                        available = max(0, 8192 - len(self.buffers[name]))
-                        self.buffers[name].extend(data[:available])
-                        self.record[name + "_clipped"] = self.record.get(name + "_clipped", False) or len(data) > available
-                except BlockingIOError:
-                    pass
-                stream.close()
-        else:
-            clean = not self.launch_attempted
-        if clean:
-            # All scientific work has stopped; no timeout may interrupt output
-            # finalization and turn a confirmed teardown into a lost supervisor.
-            signal.setitimer(signal.ITIMER_REAL, 0)
-        self.selector.close()
-        if state == "failed" and b"bwrap: execvp " in self.buffers["stderr"]:
-            reason = f"Executable unavailable: {self.record['argv'][0]}"
-        self.record.update(state=state if clean else "cleanup_unconfirmed", reason=reason if clean else
-                           "Previous job cleanup unconfirmed; further admission blocked.",
-                           cleanup_ok=clean, finished_epoch=time.time())
-        self.persist()
+    async def monitor(self):
+        while True:
+            for record in list(self.state['jobs'].values()):
+                await self.reconcile(record)
+            await asyncio.sleep(.1)  # trusted service observation; no model turns
 
 
-class Worker:
-    """A separate trusted supervisor per job; adapter calls cannot delay its timer."""
-    def __init__(self, record, root):
-        self.record, self.root = dict(record), root
-        request = root / f"{record['job_id']}.request"
-        atomic(request, record)
-        self.process = subprocess.Popen([sys.executable, *TRUSTED_PYTHON_FLAGS, "-m", "research_pipeline.jobs",
-                                         "--supervise", str(request)],
-                                        stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                                        stderr=subprocess.DEVNULL)
-
-    def poll(self):
-        if self.record["state"] not in ACTIVE:
-            self.process.poll()
-            return True
-        value = read(self.root / f"{self.record['job_id']}.json")
-        if value:
-            self.record.update(value)
-        if self.record["state"] in ACTIVE:
-            self.record["elapsed_seconds"] = max(0, time.monotonic() - self.record["admitted_monotonic"])
-        if self.process.poll() is not None and self.record["state"] in {"reserved", "running", "stopping"}:
-            self.record.update(state="cleanup_unconfirmed", cleanup_ok=False,
-                reason="Job supervisor lost; owning-service cleanup required before further admission.")
-            atomic(self.root / f"{self.record['job_id']}.json", self.record)
-        return self.record["state"] not in ACTIVE
-
-    def stop(self, reason, state="cancelled"):
-        if self.process.poll() is None:
-            self.process.terminate()
-            try:
-                self.process.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                # Do not kill only the immediate parent and claim cleanup.
-                self.record.update(state="cleanup_unconfirmed", cleanup_ok=False,
-                                   reason="Supervisor cleanup unconfirmed; owning-service cleanup required.")
-                atomic(self.root / f"{self.record['job_id']}.json", self.record)
-                return
-        self.poll()
-
-
-class JobExpired(Exception):
+class SupervisorInterrupted(Exception):
     pass
 
 
-class JobCancelled(Exception):
-    pass
+def supervise(path):
+    """Trusted service supervisor on Linux, outside the scientific PID namespace.
 
-
-def supervise(request_path):
-    """Private entry point in an existing service, never a controller launcher."""
-    record = read(request_path)
-    context = read(Path("/run/research-jobs.json"))
-    job = RunningJob(record, context, request_path.parent)
-    def expire(signum, frame):
-        raise JobExpired()
-    def cancel(signum, frame):
-        raise JobCancelled()
-    signal.signal(signal.SIGALRM, expire)
-    signal.signal(signal.SIGTERM, cancel)
-    signal.setitimer(signal.ITIMER_REAL, max(.001, record["deadline"] - time.monotonic()))
+    systemd's independent RuntimeMaxSec and cgroup kill remain if this worker dies.
+    Only bounded stdout/stderr are retained; ordinary scientific files persist.
+    """
+    request = read(path)
+    record, argv = request['record'], request['argv']
+    buffers = {'stdout': bytearray(), 'stderr': bytearray()}
+    clipped = {'stdout': False, 'stderr': False}
+    process = None
+    supervisor_error = None
+    finished_monotonic = None
+    termination_cause = None
+    selector = selectors.DefaultSelector()
+    def persist(finished=False):
+        atomic(path.parent / 'result.json', {'job_id': record['job_id'], 'finished': finished,
+            'returncode': process.poll() if process else None, 'supervisor_error': supervisor_error,
+            'finished_monotonic': finished_monotonic, 'termination_cause': termination_cause,
+            **{key: value.decode(errors='replace') for key, value in buffers.items()},
+            **{key + '_clipped': value for key, value in clipped.items()}})
+    def stop(signum, frame):
+        raise SupervisorInterrupted('expired' if signum == signal.SIGALRM
+                                    or time.monotonic() >= record['deadline'] else 'cancelled')
+    signal.signal(signal.SIGTERM, stop)
+    signal.signal(signal.SIGALRM, stop)
+    signal.setitimer(signal.ITIMER_REAL, max(.000001, record['deadline'] - time.monotonic()))
     try:
-        job.launch()
-        while not job.poll():
-            time.sleep(.02)
-    except (JobExpired, JobCancelled) as exc:
+        persist()
+        # Hold the service alive until the runtime has captured and saved its
+        # invocation/cgroup. Very short commands cannot outrun ownership capture.
+        while (read(path.parent / 'launch.json') or {}).get('job_id') != record['job_id']:
+            time.sleep(.01)
+        if time.monotonic() >= record['deadline']:
+            termination_cause = 'expired'
+            return
+        process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+        for key in buffers:
+            stream = getattr(process, key)
+            os.set_blocking(stream.fileno(), False)
+            selector.register(stream, selectors.EVENT_READ, key)
+        persist()
+        while process.poll() is None or selector.get_map():
+            for key, _ in selector.select(.05):
+                data = os.read(key.fileobj.fileno(), 65536)
+                if not data:
+                    selector.unregister(key.fileobj)
+                    continue
+                space = max(0, 8192 - len(buffers[key.data]))
+                buffers[key.data].extend(data[:space])
+                clipped[key.data] |= len(data) > space
+                persist()
+        finished_monotonic = time.monotonic()
+        termination_cause = 'completed' if finished_monotonic < record['deadline'] else 'expired'
+        # Completion evidence must survive delayed result writes or observation.
         signal.setitimer(signal.ITIMER_REAL, 0)
-        signal.signal(signal.SIGTERM, signal.SIG_IGN)
-        job.stop("Job runtime exhausted; partial artifacts retained." if isinstance(exc, JobExpired)
-                 else "Job cancelled; partial artifacts retained.",
-                 "timed_out" if isinstance(exc, JobExpired) else "cancelled")
-    except BaseException as exc:
-        signal.setitimer(signal.ITIMER_REAL, 0)
-        job.stop(f"Job preparation/execution failed: {type(exc).__name__}: {exc}", "failed")
+    except SupervisorInterrupted as exc:
+        termination_cause = str(exc)
+    except OSError as exc:
+        supervisor_error = f'{type(exc).__name__}: {exc}'
+        termination_cause = 'supervisor_error'
     finally:
         signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        if process and process.poll() is None:
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait(timeout=2)
+        selector.close()
+        if finished_monotonic is None:
+            finished_monotonic = time.monotonic()
+        # Service cleanup is verified separately; this file never asserts it.
+        persist(True)
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 3 or sys.argv[1] != "--supervise":
-        raise SystemExit("Private job supervisor requires an owned request")
+if __name__ == '__main__':
+    if len(sys.argv) != 3 or sys.argv[1] != '--supervise':
+        raise SystemExit('Private supervisor requires an owned request')
     supervise(Path(sys.argv[2]))

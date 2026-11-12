@@ -176,25 +176,22 @@ class ReferenceTests(unittest.TestCase):
         self.assertIn(references.REGISTRY, workspace.changed_files(intake0.fingerprints, intake.fingerprints))
         self.assertIn(str(self.prior), workspace.intake_snapshot(intake))
         self.assertNotIn("REFERENCE INSTRUCTION", intake.instructions)
-        self.assertNotIn("REFERENCE INSTRUCTION", codex.build_prompt(intake, {}))
-        prompt = codex.build_prompt(intake, {})
-        for text in ("UNKNOWN", "applicability", "sources/REUSE.md", "frozen evidence packet"):
+        self.assertNotIn("REFERENCE INSTRUCTION", codex.prompt(intake, {"task_id": "primary", "objective": "test", "workspace": "work"}, []))
+        prompt = codex.prompt(intake, {"task_id": "primary", "objective": "test", "workspace": "work"}, [])
+        for text in ("applicability", "REUSE.md", "frozen"):
             self.assertIn(text, prompt)
         self.artifact.write_text("# Checked result\nChanged source.")
         self.assertEqual(intake.fingerprints, workspace.read_intake(self.target).fingerprints)
         # Source changes cannot silently alter target qualifications.
         session = self.target / ".research_pipeline/session"
         session.mkdir()
-        config = isolation.Config(deadline=references.time.monotonic() + 5)
+        config = isolation.Config()
         references.configure(config, self.target, session, intake)
         isolated = json.loads(config.reference_catalog.read_text())
         self.assertEqual(isolated["prior"]["path"], "/references/prior")
         mounted = [s for s, _ in config.reference_mounts if s is not None]
         self.assertNotIn(str(self.prior), mounted)
         self.assertFalse(any(Path(s).name.startswith(".") for s in mounted))
-        config.deadline = 1
-        with self.assertRaises(TimeoutError):
-            references.configure(config, self.target, session, intake)
         with patch.object(references, "reference_entries", side_effect=TimeoutError("slow source traversal")):
             with self.assertRaises(TimeoutError):
                 references.load_catalog(self.target, references.time.monotonic() + 5)
