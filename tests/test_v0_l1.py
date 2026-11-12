@@ -344,6 +344,31 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
             os.close(directory_fd)
             await self.manager.cancel('primary', first['job_id'])
 
+    async def test_rollover_reconciles_an_admission_already_settling_under_job_lock(self):
+        entered, release = asyncio.Event(), asyncio.Event()
+        async def settling(*argv, **kwargs):
+            entered.set()
+            await release.wait()
+            self.launches.append(argv)
+            return ''
+        self.command.side_effect = settling
+        admission = asyncio.create_task(self.launch(7200))
+        await entered.wait()
+        self.task['operational_state'] = 'rollover_pending'
+        reconcile = asyncio.create_task(self.runtime.reconciled_jobs('primary'))
+        await asyncio.sleep(0)
+        self.assertFalse(reconcile.done(), 'Successor must wait for admitted launch outcome')
+        release.set()
+        job = await admission
+        observed = await reconcile
+        self.assertEqual(observed[0]['job_id'], job['job_id'])
+        self.assertEqual(observed[0]['deadline'], job['deadline'])
+        self.assertEqual(observed[0]['launch_count'], 1)
+        self.assertEqual(len(self.launches), 1)
+        with self.assertRaisesRegex(jobs.JobError, 'lifecycle'):
+            await self.launch(7200)
+        await self.manager.cancel('primary', job['job_id'])
+
     async def test_admission_block_during_launch_prevents_command_release(self):
         async def block_before_ack(*argv, **kwargs):
             self.state['admission_block'] = 'Human pause'
@@ -518,7 +543,7 @@ class ScientificFilesTests(unittest.TestCase):
 
     def test_unsupported_operational_versions_rejected_without_migration(self):
         (self.project/'.research_pipeline').mkdir()
-        for version in (None, 1, 2, 3, 5):
+        for version in (None, 1, 2, 3, 4, 6):
             jobs.atomic(self.project/'.research_pipeline/run.json', {'schema_version': version})
             with self.assertRaisesRegex(workspace.InputError, 'Unsupported operational state'):
                 collaboration.load_state(self.project)

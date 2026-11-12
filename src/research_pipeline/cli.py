@@ -1,4 +1,4 @@
-"""V0-L1 foreground runtime and ordinary-file controls."""
+"""V0-L2 foreground runtime and ordinary-file controls."""
 import argparse
 import asyncio
 import json
@@ -36,8 +36,8 @@ async def run(project, config, preserve_existing=False):
         try:
             await runtime.start()
             runtime.turns['primary'] = asyncio.create_task(runtime.run_task('primary'))
-            # A normal primary turn closes only that context. Surviving jobs and
-            # other agents keep the runtime active, without creating scientific COMPLETE.
+            # Logical runners continue across turns and measured context replacements.
+            # Only pause or operational failure ends this L2 runtime.
             while True:
                 if runtime.state['admission_block']:
                     break
@@ -126,7 +126,7 @@ def pause(project):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Research-owned V0-L1 runtime')
+    parser = argparse.ArgumentParser(description='Research-owned V0-L2 runtime')
     sub = parser.add_subparsers(dest='command', required=True)
     launch = sub.add_parser('start')
     launch.add_argument('project', type=Path)

@@ -72,15 +72,22 @@ class Documents:
                 'next_offset': offset + len(page) if offset + len(page) < len(visible) else None,
                 'document_errors': errors[-LIST_LIMIT:]}
 
+    def raw(self, reader, document_id):
+        document = self.state.get("documents", {}).get(document_id)
+        if not document or not self.allowed(reader, document):
+            raise jobs.JobError("Unknown document or foreign logical task")
+        raw = verification.read_bytes(self.root / (document_id + ".md"), None)
+        if hashlib.sha256(raw).hexdigest() != document["sha256"]:
+            raise jobs.JobError("Document integrity check failed")
+        return raw
+
     def read(self, reader, document_id, offset=0):
         self.check_offset(offset)
         document = self.state.get('documents', {}).get(document_id) if isinstance(document_id, str) else None
         if not document or not self.allowed(reader, document):
             raise jobs.JobError('Unknown document or document belongs to another logical task')
         # Resolve only controller-generated IDs; callers cannot supply a host path.
-        raw = verification.read_bytes(self.root / (document['document_id'] + '.md'), None)
-        if hashlib.sha256(raw).hexdigest() != document['sha256']:
-            raise jobs.JobError('Document integrity check failed; no replacement content returned')
+        raw = self.raw(reader, document_id)
         text = raw.decode('utf-8')
         content = text[offset:offset + PAGE_CHARACTERS]
         end = offset + len(content)

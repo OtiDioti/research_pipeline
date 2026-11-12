@@ -477,11 +477,14 @@ def draft_proposals(project, drafts, task_id="primary", protected=()):
     return proposals
 
 
-def publish_drafts(project, drafts, baseline, external_changes, task_id="primary", protected=()):
+def publish_drafts(project, drafts, baseline, external_changes, task_id="primary", protected=(),
+                   superseded=(), unresolved=()):
     proposals = draft_proposals(project, drafts, task_id, protected)
     conflicts, preserved = [], []
     for rel, target, text in proposals:
-        if file_digest(target) != baseline.get(rel):
+        if rel in superseded:
+            continue
+        if rel in unresolved or file_digest(target) != baseline.get(rel):
             proposed = safe_path(project, f"handoffs/proposed/{uuid.uuid4().hex}-{target.name}")
             proposed.parent.mkdir(parents=True, exist_ok=True)
             atomic_text(proposed, f"<!-- Proposed replacement for {rel}; human state preserved. -->\n\n{text}")
@@ -504,13 +507,36 @@ def intake_snapshot(intake):
 
 def handoff_fields(task_id="primary"):
     fields = (f"Logical researcher: {task_id}", "## Objective", "## Completed",
-              "## Artifacts", "## Assumptions", "## Unresolved", "## Next action")
+              "## Artifacts", "## Assumptions", "## Unresolved", "## Next action",
+              "## Parent question", "## Phase", "## Role", "## Jobs")
     if task_id != "primary":
-        fields += ("## Parent question", "## Interrupted computation", "## Resume or reconsider")
+        fields += ("## Interrupted computation", "## Resume or reconsider")
     return fields
 
 
-def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary"):
+def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary",
+                     task=None, resolve_artifact=None, owned_jobs=()):
+    from . import verification
+    if task is not None:
+        fields = ("Objective", "Parent question", "Phase", "Role", "Jobs")
+        if task["role"] == "opponent":
+            fields += ("Review history", "Objections")
+        sections = verification.sections(text, fields)
+        # Quote multiline objectives so their headings remain inside this section.
+        if sections["Objective"] != task["objective"].strip():
+            sections["Objective"] = "\n".join(
+                line.removeprefix("> ") for line in sections["Objective"].splitlines())
+        expected = {"Objective": task["objective"], "Parent question": str(task["parent_task"]),
+                    "Phase": task["phase"], "Role": task["role"]}
+        if any(sections[k] != str(v).strip() for k, v in expected.items()):
+            raise InputError("Handoff logical objective/parent/phase/role mismatch")
+        if f"Logical researcher: {task_id}" not in text.splitlines():
+            raise InputError("Handoff logical identity mismatch")
+        for job in owned_jobs:
+            if job["job_id"] not in sections["Jobs"]:
+                raise InputError("Handoff omits surviving job purpose/reference")
+        if owned_jobs and not all(word in sections["Jobs"].lower() for word in ("purpose", "output", "checkpoint", "job_status", "job_wait", "job_cancel")):
+            raise InputError("Handoff requires job purpose, outputs/checkpoints and inspection/wait/cancellation guidance")
     for field in handoff_fields(task_id):
         check_deadline(deadline)
         if field not in text:
@@ -524,6 +550,12 @@ def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary
         check_deadline(deadline)
         target = match.group(1)
         url = urlsplit(target)
+        if target.startswith("document:"):
+            if resolve_artifact is None:
+                raise InputError("Immutable document resolver unavailable")
+            resolve_artifact(target)
+            artifacts.append(target)
+            continue
         if url.scheme or url.netloc or not url.path:
             continue
         link = unquote(url.path)
@@ -536,14 +568,20 @@ def validate_handoff(project, text, drafts=None, deadline=None, task_id="primary
                 raise InputError(f"Outside-project handoff link: {link}")
             p = safe_path(project, candidate.relative_to(project))
         rel = p.relative_to(project).as_posix()
+        if task is not None and rel == handoff_path(task_id):
+            raise InputError("Handoff must link saved science beyond itself")
         if rel != "RESEARCH_STATUS.md" and (not Path(rel).parts or Path(rel).parts[0] not in MANAGED):
             raise InputError(f"Handoff must reference scientific artifacts: {rel}")
         if drafts is not None and p.suffix == ".md":
             proposed = safe_path(drafts, rel)
             if proposed.exists():
                 p = proposed
-        if not p.is_file():
-            raise InputError(f"Missing handoff artifact: {rel}")
+        if resolve_artifact is not None:
+            resolve_artifact(rel)
+        else:
+            if not p.is_file():
+                raise InputError(f"Missing handoff artifact: {rel}")
+            verification.read_bytes(p, deadline)
         artifacts.append(rel)
     if not artifacts:
         raise InputError("Handoff must link at least one saved scientific artifact")

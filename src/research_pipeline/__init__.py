@@ -1,1 +1,1 @@
-"""The M1 scientific research loop."""
+"""Research-owned scientific runtime with measured context continuity."""

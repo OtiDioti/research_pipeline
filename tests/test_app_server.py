@@ -29,16 +29,24 @@ for line in sys.stdin:
         if behavior == 'eof': sys.exit(0)
         if behavior == 'malformed':
             print('not json', flush=True); continue
+        if behavior == 'compacted':
+            print(json.dumps({'method':'thread/compacted','params':{'threadId':'native-thread-double','turnId':'turn-double'}}),flush=True); continue
         if behavior == 'unexpected':
             print(json.dumps({'id': 999, 'method': 'item/commandExecution/requestApproval'}), flush=True); continue
         if behavior == 'rpc-error':
             print(json.dumps({'id': request['id'], 'error': {'code': -1, 'message': 'unsupported'}}), flush=True); continue
         print(json.dumps({'method': 'thread/tokenUsage/updated', 'params': {'threadId': 'native-thread-double', 'turnId': 'turn-double', 'tokenUsage': {'last': {'totalTokens': 123}, 'total': {'totalTokens': 999}, 'modelContextWindow': 10000}}}), flush=True)
+        if behavior == 'waiting':
+            print(json.dumps({'id':request['id'],'result':{'turn':{'id':'turn-double'}}}),flush=True)
+            continue
         # Exercise completion arriving before the turn/start response.
         status = behavior if behavior in ('failed', 'interrupted') else 'completed'
         error = {'message': 'retained native failure'} if status != 'completed' else None
         print(json.dumps({'method': 'turn/completed', 'params': {'threadId': 'native-thread-double', 'turn': {'id': 'turn-double', 'status': status, 'error': error}}}), flush=True)
         result = {'turn': {'id': 'turn-double'}}
+    elif method == 'turn/interrupt':
+        print(json.dumps({'method':'turn/completed','params':{'threadId':'native-thread-double','turn':{'id':'turn-double','status':'interrupted'}}}),flush=True)
+        result = {}
     else: result = {}
     print(json.dumps({'id': request['id'], 'result': result}), flush=True)
 '''
@@ -67,8 +75,24 @@ for line in sys.stdin:
         self.assertEqual(client.telemetry['modelContextWindow'], 10000)
         self.assertIsNone(client.failure)
 
+    async def test_active_turn_interrupt_and_close_resolve_waiters(self):
+        client = await self.fixture('waiting')
+        pending = asyncio.create_task(client.turn('Wait for a controlled interrupt'))
+        await asyncio.wait_for(client.turn_ready.wait(), 2)
+        self.assertEqual(client.active_turn_id, 'turn-double')
+        await client.interrupt(client.active_turn_id)
+        result = await asyncio.wait_for(pending, 2)
+        self.assertEqual(result['status'], 'interrupted')
+        self.assertIsNone(client.active_turn_id)
+        pending = asyncio.create_task(client.turn('Wait for operational closure'))
+        await asyncio.sleep(.02)
+        await client.close()
+        with self.assertRaises(isolation.RuntimeUnavailable):
+            await asyncio.wait_for(pending, 2)
+        self.assertFalse(client.turns)
+
     async def test_eof_rpc_errors_malformed_messages_and_requests_fail_observably(self):
-        for behavior in ('eof', 'rpc-error', 'malformed', 'unexpected'):
+        for behavior in ('eof', 'rpc-error', 'malformed', 'unexpected', 'compacted'):
             with self.subTest(behavior=behavior):
                 client = await self.fixture(behavior)
                 with self.assertRaises(isolation.RuntimeUnavailable):

@@ -138,6 +138,11 @@ class NativeL1Tests(unittest.TestCase):
                         'Production inventory validation only. Call research_jobs job_status and control(check), save a short scoped handoff draft with write_draft, then end the turn. Do not run a computation or claim COMPLETE.'), 90)
                     self.assertEqual(turn['status'], 'completed', turn)
                     self.assertTrue(runtime.validate_inventory(context_id))
+                    # This lower-level L1 fixture explicitly admits work only
+                    # after the same native measurement required by L2 intake.
+                    self.assertEqual(ctx['record']['measurement']['status'], 'measured')
+                    self.assertFalse(ctx['record'].get('threshold_observation'))
+                    runtime.state['tasks'][task_id]['operational_state'] = 'working'
                     ctx['record']['state'] = 'attached'
                     runtime.save()
                     return context_id
