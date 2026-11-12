@@ -1,5 +1,7 @@
 # Folder contents
 
+- [m5-workspace-and-budget.md](m5-workspace-and-budget.md) — Current human-authorized M5 allocation, archived starting evidence and dedicated research-example workspace; supersedes earlier conflicting M5 instructions.
+
 - [m2-checkpoints.md](m2-checkpoints.md) — Checkpoint, pause, rollover and real M2 gate decisions, local checks and controller verification handoff.
 
 - [m1-implementation.md](m1-implementation.md) — Implementation readiness and validation report; M1 acceptance awaits controller final verification.

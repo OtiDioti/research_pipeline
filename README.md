@@ -1110,6 +1110,50 @@ M1–M4 engineering milestones are accepted. M5 inputs are now supplied in
 `research_example/starting_evidence/`; its initial study concerns the mechanism
 contributions to linear light-hole spin–orbit interaction. Human scientific
 acceptance remains outstanding.
+
+## M5 example workspace and revised allocation (2026-11-12)
+
+The human instructed that this workspace/budget/evidence amendment be completed
+through direct file edits, without further use of `coding_pipeline`. Its earlier
+invocation has ended; its candidate code remains unmerged. No new scientific run
+or development-controller restart is commissioned by this amendment.
+
+The actual scientific project is `research_example/`. New derivations and calculations
+belong in `research_example/work/`, retrieved literature in `research_example/sources/`,
+reports in `research_example/outputs/`, and handoffs in `research_example/handoffs/`.
+Research status and the directory index live at that project root. Scientific work
+must not be staged into an investigation inside `coding_pipeline/logs/`. Those logs
+contain engineering records and historical receipts. Research runtime state may use
+`research_example/.research_pipeline/`; M5 acceptance receipts may use
+`research_example/.m5-acceptance/`.
+
+The retained M5 implementation uses the explicit CLI startup option
+`start PROJECT --preserve-existing` for this prepared project. That option preserves
+existing science and human Markdown versions while initializing missing scientific
+directories; it still refuses existing or orphaned runtime state. Ordinary starts
+retain their fresh-project requirement. This option belongs to the pending M5
+implementation, whose integration/readiness is recorded in `STATUS.md`.
+
+The original supplied inputs remain in `research_example/starting_evidence/`. The
+failed investigation's complete results were moved into
+[`starting_evidence/failed_m5_20261111/`](research_example/starting_evidence/failed_m5_20261111/README.md)
+as preliminary, unverified prior evidence. Its 141 original files retain their
+hashes. Everything under starting evidence is protected against subsequent agent
+writes; use working copies in `work/` for further calculations. The next intake
+must include and integrity-check the archive as well as the three originals.
+
+The next M5 attempt has a **3600-second work allowance**, **3480-second research
+cap**, and **3900-second overall allowance including cleanup**. Existing session,
+memory, agent, task and job bounds remain in force. Historical attempts and accepted
+M1–M4 demonstrations retain their original recorded limits and usage.
+
+The current [development amendment](development/requests/m5-workspace-and-budget.md)
+and operational plan in `coding_pipeline/logs/manager/m5-workspace-and-budget-20261112/request.md`
+govern this change;
+[`STATUS.md`](STATUS.md) records implementation readiness. Frozen old M5 requests,
+receipts and archived scientific notes are historical evidence and do not override
+this workspace or allocation. No new science is launched by this settings change.
+
 Known backend limitations
 remain disclosed: no hard spending cap or reliable context occupancy; CPU fraction
 and aggregate CPU time are uncapped; missing usage stays unknown; per-file limits

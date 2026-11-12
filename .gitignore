@@ -3,6 +3,8 @@
 /coding_pipeline/
 /COMPLETE
 /COMPLETE.ack
+/STOP
+/STOP.ack
 
 # Local implementation checks and bounded research demonstration
 /.m1-local/

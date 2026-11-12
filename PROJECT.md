@@ -99,6 +99,8 @@ An illustrative minimal layout is:
 
 Only the minimal top-level conventions are standardized. Subdirectories under `sources/`, `work/`, `outputs/`, and `handoffs/` are created as needed according to the scientific problem. Do not create empty directory hierarchies or force a physics-specific arrangement onto other disciplines.
 
+For this repository's M5 benchmark, the human-designated scientific project root is `research_example/`. Keep its active scientific directories, research status and indexes directly within that directory; `starting_evidence/` is exclusively protected input. The failed 2026-11-11 investigation is preserved as preliminary prior evidence in `research_example/starting_evidence/failed_m5_20261111/`. Scientific calculations and new results belong outside starting evidence and outside `coding_pipeline/logs/`; pipeline logs retain engineering diagnostics and historical receipts. Runtime state may use `research_example/.research_pipeline/` and acceptance receipts may use `research_example/.m5-acceptance/`.
+
 ### 5.1 Starting evidence and human-owned files
 
 - `starting_evidence/` contains original user-provided notes, papers, code, datasets, and `RESEARCH_QUESTIONS.md`. Agents **must not modify or delete** anything within it. They may make working copies elsewhere.
@@ -170,6 +172,8 @@ Support both user-supplied tools and tools independently discovered or developed
 - When a limit is reached, preserve useful work, report progress, and stop or request additional authorization. Where model usage cannot be measured or capped reliably, disclose that limitation instead of claiming a hard limit.
 
 Remote clusters, remote GPUs, and cloud execution are not prerequisites for V0.
+
+The human's 2026-11-12 M5 amendment authorizes a 3600-second demonstration-work allocation for the next attempt, with up to 3480 seconds for research and 3900 seconds overall including the existing cleanup reserve. Keep existing per-session and other resource bounds. These values supersede the former 900/780/1200-second M5 request settings; they do not retroactively change historical deadlines, usage or outcomes, and do not apply to accepted M1–M4 demonstrations. Preserve previous usage separately. Updating these instructions does not itself start another scientific run. The human explicitly instructed that this workspace/budget/evidence amendment be handled by direct file edits, without invoking `coding_pipeline`; that task-specific instruction overrides the general development-delegation policy below for these changes.
 
 ## 8. Human interaction, edits, and continuity
 
