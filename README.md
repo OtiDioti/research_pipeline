@@ -25,6 +25,9 @@ private M5 attempt. Historical M1–M4 receipts retain their original meaning. T
 retained M5 candidate remains inactive, unmerged and scientifically unaccepted;
 human scientific acceptance is mandatory.
 
+[Known conflicts](KNOWN_CONFLICTS.md) records unresolved artifact/input behavior
+and design tradeoffs, distinguishing reproduced failures from source-only concerns.
+
 ## Setup and use
 
 Use Python 3.11+, the declared `mcp` dependency, a standalone Linux Codex executable,
