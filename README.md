@@ -5,29 +5,20 @@ Codex app-server driver, and computations that outlive individual model contexts
 The human specification is [PROJECT.md](PROJECT.md); the authoritative amendment
 is [the V0 lifecycle design](2026-11-12-v0-context-lifecycle-design.md).
 
-**V0-L1 and V0-L2 are accepted and integrated.** L2 integrated at `f9119e3`.
-Pipeline final and combined verification each passed 184 tests with five gates
-disabled. Fresh native receipts passed primary, delegated-researcher and opponent
-continuation, with job identity/deadline/allocation preserved and cleanup confirmed.
-Threshold crossings used labelled telemetry fixtures alongside actual native
-telemetry and scientific inference. See [STATUS.md](STATUS.md) for refs, receipts
-and remaining gates, and the [L1](development/requests/v0-l1-durable-runtime.md) and
-[L2](development/requests/v0-l2-measured-rollover.md) implementation reports.
+**V0-L1–L3 are accepted and integrated.** L3 integrated at `c544bf1` after
+independent review and fresh final/combined verification. Each stage passed 232
+tests with six gates disabled. Both native researcher/opponent scenarios passed,
+with actual sufficient weekly admission, labelled warning/rollover/cutoff fixtures,
+and confirmed context/job cleanup. Earlier failed receipts remain preserved.
+See [STATUS.md](STATUS.md) for refs and receipts, and the
+[L1](development/requests/v0-l1-durable-runtime.md),
+[L2](development/requests/v0-l2-measured-rollover.md) and
+[L3](development/requests/v0-l3-quota-staleness.md) implementation reports.
 
-L3 implements centralized weekly reserve and secondary inactivity warnings.
-The supplied pipeline review approves the earlier runtime and scheduling repairs.
-The recovery response authorizes progression to the existing trusted validation stages.
-The first trusted final run exposed a warning-fixture synchronization failure;
-the repaired fixture holds secondary dispatch between measured turns during the
-rollover check. Final-003 passed, but combined verification hit the primary
-successor's 90-second intake completion bound. The current repair focuses intake,
-allows 180 seconds for it, and records explicit timeout diagnostics.
-Independent review and fresh successful trusted final/combined checks remain required;
-see the [L3 report](development/requests/v0-l3-quota-staleness.md) for actual results
-and the preserved Writer prerequisite failure. L3–L6 acceptance remains required
-before another private M5 attempt. Historical M1–M4 receipts
-retain their original meaning. M5 remains inactive, unmerged and scientifically
-unaccepted; human scientific acceptance is mandatory.
+L4 scientific opposition/terminal decisions, L5 reopening/recovery and L6 integrated
+validation remain required before another private M5 attempt. Historical M1–M4
+receipts retain their original meaning. The retained M5 candidate remains inactive,
+unmerged and scientifically unaccepted; human scientific acceptance is mandatory.
 
 ## Setup and use
 
@@ -400,9 +391,10 @@ The continuation fixture allows 360 seconds for the bounded intake followed by
 the ordinary scientific artifact; expiry fails the test. This fixture bound
 does not limit ordinary scientific turns. Receipts retain task errors and
 context timeout diagnostics as well as cleanup observations.
-The Writer cannot supply its absent authorized user bus; that failed receipt is
-not native production evidence. The intake repair awaits independent review; successful
-trusted final/combined runs remain required for L3 acceptance and integration is pending.
+The restricted Writer prerequisite failure remains historical diagnostic evidence.
+Independent review approved the intake repair; fresh enabled trusted final and
+combined stages subsequently passed. L3 is accepted and integrated; STATUS.md links
+the distinct production receipts and preserved failure history.
 
 The first invocation creates the requested output directory with mode `0700`.
 If that directory already exists, each invocation reserves a fresh private sibling
