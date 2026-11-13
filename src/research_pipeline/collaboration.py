@@ -575,16 +575,20 @@ class Coordinator:
             return await client.turn(text)
         work = asyncio.create_task(dispatch_turn())
         signal = asyncio.create_task(ctx['lifecycle_event'].wait()) if responsive else None
+        started = time.monotonic()
+        wait_phase, wait_bound = 'turn completion', timeout
         try:
             if signal:
                 done, _ = await asyncio.wait((work, signal), return_when=asyncio.FIRST_COMPLETED, timeout=timeout)
                 if not done:
-                    raise isolation.RuntimeUnavailable('Operational telemetry intake bound exceeded')
+                    raise asyncio.TimeoutError
                 if signal in done and not work.done():
                     # Never run lifecycle RPCs from the reader callback.
+                    wait_phase, wait_bound = 'turn readiness before interruption', 15
                     await asyncio.wait_for(client.turn_ready.wait(), 15)
                     if not work.done() and client.active_turn_id:
                         await client.interrupt(client.active_turn_id)
+                    wait_phase = 'interruption completion'
                     result = await asyncio.wait_for(asyncio.shield(work), 15)
                 else:
                     result = await work
@@ -622,6 +626,15 @@ class Coordinator:
                 ctx['lifecycle_event'].set()
                 self.save()
             return result
+        except asyncio.TimeoutError as exc:
+            record['operational_timeout'] = {
+                'phase': wait_phase, 'bound_seconds': wait_bound,
+                'elapsed_seconds': time.monotonic() - started,
+                'turn_id': getattr(client, 'active_turn_id', None)}
+            self.save()
+            raise isolation.RuntimeUnavailable(
+                f'Operational {wait_phase} bound exceeded ({wait_bound} seconds); '
+                f'context {context_id}; no scientific terminal decision') from exc
         finally:
             if signal:
                 signal.cancel()
@@ -635,9 +648,11 @@ class Coordinator:
         task['operational_state'] = 'telemetry_recovery'
         await self.native_turn(context_id,
             'Measurement intake/recovery only. Read the supplied validated handoff and current inputs. '
-            'Call job_status for each reconciled owned job before any replacement. Save useful existing '
-            'science and a scoped handoff using write_draft. No new jobs or assignments. End the turn.',
-            responsive=False, timeout=90)
+            'Call job_status for each reconciled owned job before any replacement. Preserve work at risk '
+            'using write_draft, but do not rewrite already saved science or handoffs just to acknowledge intake. '
+            'Defer scientific next actions to the ordinary work turn after intake. '
+            'No new jobs or assignments. End this focused intake turn promptly.',
+            responsive=False, timeout=180)
         record = self.contexts[context_id]['record']
         if record.get('measurement', {}).get('status') != 'measured':
             raise isolation.RuntimeUnavailable('Reliable context telemetry unavailable after bounded intake/recovery')

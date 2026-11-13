@@ -48,6 +48,94 @@ class L3Tests(unittest.IsolatedAsyncioTestCase):
         self.runtime.observe_context('secondary', params(length=10000, thread='native-secondary'), now=now)
         return ctx
 
+    async def intake_protocol(self):
+        from tests.test_app_server import ProtocolTests
+        primary = self.primary()
+        client = await ProtocolTests.fixture(self, 'waiting')
+        self.runtime.clients['first'] = client
+        primary['record']['native_thread_id'] = client.thread_id
+        async def event(value):
+            await self.runtime.context_event('first', value)
+        client.on_event = event
+        return primary, client
+
+    async def test_intake_can_finish_after_old_bound_with_measured_protocol_progress(self):
+        primary, client = await self.intake_protocol()
+        wait_for = asyncio.wait_for
+        bounds = []
+        async def scaled_wait(awaitable, timeout):
+            # Scale only operational turn bounds, never the event-loop clock,
+            # quota age or job deadline. The previous 90-second bound expires
+            # before the fixture releases completion; the new one allows it.
+            if timeout in (90, 180):
+                bounds.append(timeout)
+                timeout = .02 if timeout == 90 else .6
+            return await wait_for(awaitable, timeout)
+        with patch.object(self.runtime, 'validate_inventory', return_value=True), \
+             patch.object(asyncio, 'wait_for', side_effect=scaled_wait):
+            intake = asyncio.create_task(self.runtime.measured_intake('first'))
+            try:
+                await wait_for(client.turn_ready.wait(), 2)
+                with self.assertRaises(asyncio.TimeoutError):
+                    await wait_for(asyncio.shield(intake), .06)
+                self.assertEqual(primary['record']['measurement']['status'], 'measured')
+                self.assertFalse(self.state['admission_block'])
+                self.assertFalse(primary['record']['cleanup_ok'])
+                await client.request('fixture/complete-turn', {})
+                await wait_for(intake, 2)
+                self.assertEqual(self.state['tasks']['primary']['operational_state'], 'working')
+                self.assertEqual(bounds, [180])
+                self.assertNotIn('operational_timeout', primary['record'])
+            finally:
+                if not intake.done():
+                    intake.cancel()
+                await asyncio.gather(intake, return_exceptions=True)
+
+    async def test_stalled_intake_reports_completion_bound_and_cleans_partial_work(self):
+        primary, client = await self.intake_protocol()
+        self.runtime.draft(primary, 'work/PARTIAL.md', '# Useful partial argument\nRetain this work.')
+        wait_for = asyncio.wait_for
+        async def scaled_wait(awaitable, timeout):
+            return await wait_for(awaitable, .03 if timeout in (90, 180) else timeout)
+        with patch.object(self.runtime, 'validate_inventory', return_value=True), \
+             patch.object(asyncio, 'wait_for', side_effect=scaled_wait):
+            runner = asyncio.create_task(self.runtime.run_task('primary'))
+            await wait_for(runner, 2)
+        error = self.state['tasks']['primary']['context_error']
+        self.assertIn('Operational turn completion bound exceeded (180 seconds)', error)
+        self.assertIn('first', error)
+        details = primary['record']['operational_timeout']
+        self.assertEqual(details['phase'], 'turn completion')
+        self.assertEqual(details['bound_seconds'], 180)
+        self.assertEqual(details['turn_id'], 'turn-double')
+        self.assertGreaterEqual(details['elapsed_seconds'], .03)
+        self.assertTrue(self.state['cleanup_ok'])
+        self.assertEqual(self.state['state'], 'failed')
+        self.assertIsNotNone(client.service.process.returncode)
+        self.assertIn('Retain this work', (self.runtime.project/'work/PARTIAL.md').read_text())
+        for marker in ('COMPLETE', 'STOP', 'STOP_ACK'):
+            self.assertFalse((self.runtime.project/marker).exists())
+
+    async def test_quota_cutoff_interrupts_intake_without_awaiting_completion_bound(self):
+        primary, client = await self.intake_protocol()
+        with patch.object(self.runtime, 'validate_inventory', return_value=True):
+            runner = asyncio.create_task(self.runtime.run_task('primary'))
+            try:
+                await asyncio.wait_for(client.turn_ready.wait(), 2)
+                self.runtime.observe_quota('first', payload(85), provenance='injected-intake-cutoff')
+                self.assertTrue(self.state['admission_block'])
+                self.assertTrue(await asyncio.wait_for(self.runtime.shutdown_task, 2))
+                await asyncio.wait_for(runner, 2)
+            finally:
+                if not runner.done():
+                    runner.cancel()
+                await asyncio.gather(runner, return_exceptions=True)
+        self.assertEqual(self.state['state'], 'quota_stopped')
+        self.assertTrue(primary['record']['cleanup_ok'])
+        self.assertIsNotNone(client.service.process.returncode)
+        self.assertNotIn('operational_timeout', primary['record'])
+        self.assertFalse((self.runtime.project/'COMPLETE').exists())
+
     async def test_no_preflight_blocks_tasks_contexts_jobs_and_inference(self):
         with self.assertRaisesRegex(jobs.JobError, 'quota'):
             self.runtime.add_task('task-'+'a'*32, 'No admission', 'primary')

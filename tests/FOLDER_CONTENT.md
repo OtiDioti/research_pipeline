@@ -1,7 +1,7 @@
 # Folder contents
 
 - [__init__.py](__init__.py) — Test setup for running directly from an uninstalled source checkout.
-- [test_app_server.py](test_app_server.py) — Real local protocol/process fixtures, delayed optional steering replies and strict response correlation; no production-isolation claim.
+- [test_app_server.py](test_app_server.py) — Real local protocol/process fixtures, controlled turn completion, delayed optional steering replies and strict response correlation; no production-isolation claim.
 - [test_m1_live.py](test_m1_live.py) — Python package entry point.
 - [test_m2_live.py](test_m2_live.py) — Python package entry point.
 - [test_m3_evidence.py](test_m3_evidence.py) — Unpaid engineering regressions for the M3 gate's evidence and reproduction.
@@ -20,5 +20,5 @@
 - [quota_fixture.py](quota_fixture.py) — Labelled sufficient account observations for local engineering doubles.
 - [test_quota.py](test_quota.py) — Weekly boundaries, multiple buckets, sparse notification ages, reset and missing data.
 - [test_staleness.py](test_staleness.py) — Controlled clocks, raw increasing/decreasing lengths, independent resets and repeated warnings.
-- [test_v0_l3.py](test_v0_l3.py) — Native dispatch admission races, human index preservation, delayed warning replies, synchronized warning intake/recovery and real local quota cleanup.
-- [test_v0_l3_native.py](test_v0_l3_native.py) — Opt-in actual quota preflight, native primary replacement, measured-turn synchronization for injected warnings, cutoff and owned cleanup receipts.
+- [test_v0_l3.py](test_v0_l3.py) — Native dispatch admission races, human index preservation, delayed warning replies, intake completion bounds/diagnostics, synchronized warnings and real local quota cleanup.
+- [test_v0_l3_native.py](test_v0_l3_native.py) — Opt-in actual quota preflight, native primary replacement, measured-turn warning synchronization, explicit continuation bound and task/timeout/owned-cleanup receipts.

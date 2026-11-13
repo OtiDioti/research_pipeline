@@ -178,7 +178,11 @@ while True: time.sleep(.1)
                     task = runtime.state['tasks']['primary']
                     successor = await until(lambda: task['context_id'] if task['context_id'] and task['context_id']!=first else None,
                         'fresh primary attachment')
-                    after = await until(lambda: note('primary','AFTER.md'), 'native continuation and warning intake')
+                    # Intake (180s operational bound) precedes ordinary science.
+                    # Allow another 180s for the fixture artifact, without imposing
+                    # a scientific turn/session lifetime on the runtime.
+                    after = await until(lambda: note('primary','AFTER.md'),
+                        'native continuation and warning intake', seconds=360)
                     self.assertIn(secondary_cid, entry['successor_intake_warnings'])
                     barriers.close()
                     self.assertTrue(record['cleanup_ok'])
@@ -216,6 +220,7 @@ while True: time.sleep(.1)
                 try:
                     entry['cleanup_ok'] = await runtime.block_and_cleanup('Explicit engineering fixture cleanup')
                     entry['contexts'] = runtime.state['contexts']
+                    entry['tasks'] = runtime.state['tasks']
                     entry['jobs'] = runtime.state['jobs']
                     entry['quota'] = runtime.state['quota']
                     entry['cleanup'] = runtime.state.get('cleanup')

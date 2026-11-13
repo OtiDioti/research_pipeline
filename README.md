@@ -15,11 +15,14 @@ and remaining gates, and the [L1](development/requests/v0-l1-durable-runtime.md)
 [L2](development/requests/v0-l2-measured-rollover.md) implementation reports.
 
 L3 implements centralized weekly reserve and secondary inactivity warnings.
-The supplied pipeline review approves the runtime and final scheduling repair.
+The supplied pipeline review approves the earlier runtime and scheduling repairs.
 The recovery response authorizes progression to the existing trusted validation stages.
 The first trusted final run exposed a warning-fixture synchronization failure;
 the repaired fixture holds secondary dispatch between measured turns during the
-rollover check. Successful production and trusted final/combined checks remain required;
+rollover check. Final-003 passed, but combined verification hit the primary
+successor's 90-second intake completion bound. The current repair focuses intake,
+allows 180 seconds for it, and records explicit timeout diagnostics.
+Independent review and fresh successful trusted final/combined checks remain required;
 see the [L3 report](development/requests/v0-l3-quota-staleness.md) for actual results
 and the preserved Writer prerequisite failure. L3–L6 acceptance remains required
 before another private M5 attempt. Historical M1–M4 receipts
@@ -138,11 +141,15 @@ bounded recovery succeeds; ordinary turns cannot bypass it. These
 request counts check measurement freshness; occupancy still comes solely from the
 native length/window fields. Completed turns also require per-inference reports.
 An unchanged valid sample
-during a long job wait has no wall-clock expiry. Intake/recovery and checkpoint
-turns have 90-second operational bounds; interruption completion has a 15-second
-bound. Failure preserves partial science, records operational failure and cleans
-owned work. These bounds never establish scientific completion or investigation
-work allowances. One handoff repair is permitted; successor failure is not retried
+during a long job wait has no wall-clock expiry. Focused intake/recovery has a
+180-second operational completion bound, allowing immutable document reads and
+owned-job reconciliation across several native inferences. Scientific next actions
+follow in ordinary work turns. Checkpoint turns retain a 90-second operational
+bound; interruption completion has a 15-second bound. Failure preserves partial
+science, records operational failure and cleans owned work. Timeout diagnostics
+identify the waiting phase, bound, context, native turn and elapsed turn time.
+These bounds never establish scientific completion or investigation work allowances.
+One handoff repair is permitted; successor failure is not retried
 indefinitely. Scientific COMPLETE/STOP remain later increments.
 
 `pause` latches the admission block and interrupts all owned contexts and jobs,
@@ -389,8 +396,12 @@ For the warning check, the fixture holds the secondary between measured native
 turns through primary successor intake and continuation, then releases dispatch.
 The secondary context stays owned and the computation continues; the receipt
 labels this synchronization separately from clock injections and native telemetry.
+The continuation fixture allows 360 seconds for the bounded intake followed by
+the ordinary scientific artifact; expiry fails the test. This fixture bound
+does not limit ordinary scientific turns. Receipts retain task errors and
+context timeout diagnostics as well as cleanup observations.
 The Writer cannot supply its absent authorized user bus; that failed receipt is
-not native production evidence. Runtime review has supplied approval; successful
+not native production evidence. The intake repair awaits independent review; successful
 trusted final/combined runs remain required for L3 acceptance and integration is pending.
 
 The first invocation creates the requested output directory with mode `0700`.

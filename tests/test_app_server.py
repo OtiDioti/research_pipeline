@@ -48,6 +48,9 @@ for line in sys.stdin:
     elif method == 'fixture/unknown-response':
         print(json.dumps({'id': 0, 'result': {}}), flush=True)
         result = {}
+    elif method == 'fixture/complete-turn':
+        print(json.dumps({'method':'turn/completed','params':{'threadId':'native-thread-double','turn':{'id':'turn-double','status':'completed'}}}),flush=True)
+        result = {}
     elif method == 'turn/start':
         if behavior == 'eof': sys.exit(0)
         if behavior == 'malformed':
