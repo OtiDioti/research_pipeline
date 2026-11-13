@@ -16,10 +16,7 @@ PACKET_FIELDS = ("Claim and scope", "Parent question", "Scientific benefit",
                  "Reproduction instructions")
 CHECK_FIELDS = ("Claim and scope", "Independent approach", "Observations",
                 "Objections and limitations", "Reproduction or analytical evidence")
-RESPONSE_FIELDS = ("Response to objections", "Revised claim", "Sources and artifacts",
-                   "Reproduction instructions")
 LINK = re.compile(r"\[[^\]]*\]\(([^\s)]+)\)")
-PHASES = ("initial", "awaiting_response", "reexamination", "closed")
 ASSIGNMENT_FIELDS = ("Objective", "Parent question", "Scientific benefit",
                      "Assumptions", "Requested result", "Artifacts")
 
@@ -140,7 +137,8 @@ def prepare_assignment(project, rel, drafts, destination):
     return rewritten, content
 
 
-def freeze(project, rel, drafts, destination, fields, deadline):
+def freeze(project, rel, drafts, destination, fields, deadline, *,
+           extra=(), resolve_document=None, document_origin=None, resolve_source=None):
     """Copy only explicitly supplied evidence, rebasing notes into a frozen packet."""
     canonical = scientific_path(project, rel)
     if canonical.suffix != ".md":
@@ -154,12 +152,32 @@ def freeze(project, rel, drafts, destination, fields, deadline):
                 return proposed
         return original
 
-    data = read_bytes(source(rel), deadline)
+    def read(candidate):
+        if candidate.startswith("document:"):
+            if resolve_document is None:
+                raise workspace.InputError("Immutable document resolver unavailable")
+            blob = resolve_document(candidate.removeprefix("document:"))
+            if len(blob) > 16 * 1024 * 1024:
+                raise workspace.InputError("Verification document exceeds 16 MiB")
+            return blob
+        return resolve_source(candidate) if resolve_source else read_bytes(source(candidate), deadline)
+
+    def dependency(candidate, target):
+        if target.startswith("document:"):
+            identifier = target.removeprefix("document:")
+            if not re.fullmatch(r"[0-9a-f]{64}", identifier):
+                raise workspace.InputError("Invalid immutable document ID")
+            return target
+        if candidate.startswith("document:") and document_origin:
+            candidate = document_origin(candidate.removeprefix("document:"))
+        return link_path(project, candidate, target)
+
+    data = read(rel)
     text = data.decode("utf-8")
     content = sections(text, fields)
-    supplied = [rel]
+    supplied = list(dict.fromkeys((rel, *extra)))
     for target in LINK.findall(text):
-        candidate = link_path(project, rel, target)
+        candidate = dependency(rel, target)
         if candidate is not None and candidate not in supplied:
             supplied.append(candidate)
     if len(supplied) < 2:
@@ -168,30 +186,34 @@ def freeze(project, rel, drafts, destination, fields, deadline):
         raise workspace.InputError("Too many explicitly supplied verification artifacts")
     blobs = {rel: data}
     for candidate in supplied[1:]:
-        blobs[candidate] = read_bytes(source(candidate), deadline)
+        blobs[candidate] = read(candidate)
         if sum(map(len, blobs.values())) > 64 * 1024 * 1024:
             raise workspace.InputError("Verification evidence exceeds 64 MiB")
-    mapped = {candidate: f"{destination}/files/{candidate}" for candidate in supplied}
+    mapped = {candidate: f"{destination}/files/" + (
+        "documents/" + candidate.removeprefix("document:") + ".md"
+        if candidate.startswith("document:") else candidate) for candidate in supplied}
     manifest = []
     rewritten = {}
     for candidate, blob in blobs.items():
         original_hash = hashlib.sha256(blob).hexdigest()
-        if Path(candidate).suffix == ".md":
+        if Path(candidate).suffix == ".md" or candidate.startswith("document:"):
             note = blob.decode("utf-8")
             for target in LINK.findall(note):
-                dependency = link_path(project, candidate, target)
-                if dependency is not None:
-                    if dependency not in mapped:
+                linked = dependency(candidate, target)
+                if linked is not None:
+                    if linked not in mapped:
                         raise workspace.InputError(
                             "Include local Markdown dependencies explicitly in the verification submission")
-                    note = note.replace(f"]({target})", f"](/project/{mapped[dependency]})")
+                    note = note.replace(f"]({target})", f"](/project/{mapped[linked]})")
             blob = note.encode()
         rewritten[mapped[candidate]] = blob
         manifest.append({"source": candidate, "source_sha256": original_hash,
                          "path": mapped[candidate], "sha256": hashlib.sha256(blob).hexdigest()})
+        if candidate.startswith("document:") and document_origin:
+            manifest[-1]["original_path"] = document_origin(candidate.removeprefix("document:"))
     # Recheck every source before writing anything; admission never executes evidence.
     for entry in manifest:
-        if hashlib.sha256(read_bytes(source(entry["source"]), deadline)).hexdigest() != entry["source_sha256"]:
+        if hashlib.sha256(read(entry["source"])).hexdigest() != entry["source_sha256"]:
             raise workspace.InputError("Verification evidence changed during copying")
     version = hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest()
     manifest_path = f"{destination}/manifest.json"

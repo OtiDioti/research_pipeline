@@ -22,3 +22,5 @@
 - [test_staleness.py](test_staleness.py) — Controlled clocks, raw increasing/decreasing lengths, independent resets and repeated warnings.
 - [test_v0_l3.py](test_v0_l3.py) — Native dispatch admission races, human index preservation, delayed warning replies, intake completion bounds/diagnostics, synchronized warnings and real local quota cleanup.
 - [test_v0_l3_native.py](test_v0_l3_native.py) — Opt-in actual quota preflight, native primary replacement, measured-turn warning synchronization, explicit continuation bound and task/timeout/owned-cleanup receipts.
+- [test_v0_l4.py](test_v0_l4.py) — Labelled scientific decision fixtures: revisions, coverage, authority, source/review/countercheck corrections, scoped review evidence and explicit primary sharing, opponent continuity, publication/cleanup races and large repeated submissions through paginated RPC.
+- [test_v0_l4_cleanup.py](test_v0_l4_cleanup.py) — Scientific/quota finalization failures, preserved human edits, matching acknowledgements and actual local agent/job/descendant cleanup; not native proof.
