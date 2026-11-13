@@ -1,0 +1,18 @@
+{
+  "observed_utc": "2026-11-13T12:40:48.153026+00:00",
+  "operation": "resume",
+  "retry": true,
+  "run_id": "20261113T063709_7f21ba4a",
+  "tool_session": 81728,
+  "log": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/resume-004.log",
+  "input": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/retry-003-input.md",
+  "checkpoint_commit": "a62fd1297cc5dffaa874eaff13b36b7010e00e9d",
+  "state": {
+    "status": "running",
+    "phase": "writer",
+    "turn": 37,
+    "attempt": 0,
+    "integration_attempt": 3,
+    "blocking_reason": null
+  }
+}

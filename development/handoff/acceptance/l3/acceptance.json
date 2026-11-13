@@ -1,0 +1,29 @@
+{
+  "accepted_utc": "2026-11-13T02:58:28.629645+00:00",
+  "request_id": "v0-l3-quota-staleness-20261113T002524Z-1c26dbfa",
+  "run_id": "20261113T002546_9500464b",
+  "feature_head": "e1030013f69fcc558d3edd2066d90a4f8d9e8b27",
+  "merged_commit": "c544bf1eefb9dca9da0b96963aff6e7b351c829d",
+  "pipeline_status": "merged",
+  "review": "approved",
+  "final": {
+    "report": "tests/final-005.txt",
+    "receipt": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l3-quota-staleness-20261113T002524Z-1c26dbfa/native-host-awv0zfq4/receipt.json",
+    "tests": 232,
+    "skipped_gates": 6,
+    "outcome": "passed"
+  },
+  "combined": {
+    "report": "tests/pre-merge-006.txt",
+    "receipt": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l3-quota-staleness-20261113T002524Z-1c26dbfa/native-host-9od_2x_s/receipt.json",
+    "tests": 232,
+    "skipped_gates": 6,
+    "outcome": "passed"
+  },
+  "native_scenarios": "researcher and opponent each passed in both stages; cleanup confirmed; actual 84% weekly remaining before labelled injections",
+  "manager_independently_retested_or_reviewed": false,
+  "prior_failed_receipts_preserved": true,
+  "process_session": 35260,
+  "process_exit_code": 0,
+  "next_increment": "V0-L4 scientific opposition and terminal decisions"
+}

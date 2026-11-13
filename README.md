@@ -28,6 +28,11 @@ human scientific acceptance is mandatory.
 [Known conflicts](KNOWN_CONFLICTS.md) records unresolved artifact/input behavior
 and design tradeoffs, distinguishing reproduced failures from source-only concerns.
 
+To continue development on another machine, start with the
+[portable development handoff](development/handoff/README.md). It includes the
+interrupted L5 checkpoint, selected evidence, pinned component revisions and
+offline restoration instructions. Cloning source alone does not restore a pipeline run.
+
 ## Setup and use
 
 Use Python 3.11+, the declared `mcp` dependency, a standalone Linux Codex executable,

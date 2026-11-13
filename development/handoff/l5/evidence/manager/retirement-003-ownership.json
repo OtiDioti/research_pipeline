@@ -1,0 +1,690 @@
+{
+  "observed_utc": "2026-11-13T13:23:15.615675+00:00",
+  "locks": {
+    "20261113T063709_7f21ba4a": "unowned",
+    "20261111T063907_2732fff6": "unowned"
+  },
+  "matching_workers": [
+    {
+      "pid": 83763,
+      "argv": [
+        "/home/francesco/miniconda3/bin/python",
+        "research_pipeline.codex_controller/codex_controller.py",
+        "--project-dir",
+        "/home/francesco/Desktop/gits/research_project/research_pipeline",
+        "--stop-file",
+        "/home/francesco/Desktop/gits/research_project/research_pipeline/COMPLETE",
+        "--push"
+      ],
+      "state": "S",
+      "ppid": 83466,
+      "pgid": 83763,
+      "start_ticks": 1804540
+    }
+  ],
+  "authorized_host_prerequisites": {
+    "XDG_RUNTIME_DIR": true,
+    "DBUS_SESSION_BUS_ADDRESS": true
+  },
+  "owned_cgroups": [
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot0.slice/research-context-a2c9d075a4664bef998b3445a9b6fb10.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot0.slice/research-job-00e632b2060d486c976dfbfd31773e1f.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot0.slice/research-job-8a8ac0e8eadb41d293358ea9d3282603.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot0.slice/research-job-92423412cbfe4fcca6a9ba94e1eccae8.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot0.slice/research-job-a45e6278545e41a093b0e3baf8101e3b.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-context-ad823df1c49541db9ef3e065d21fd0b9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-context-bf54eb1ac787401fa32ec1da371d43b0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-26942dd47a85468ea8a4b438865ae341.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-3c33e99d783b47448991ff690fa6a671.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-4cda58670a974ce3a38ddc593d2bb734.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-55beac15100c49f591534c24416fc552.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-9f88df8990744a68b132f84b3b713ac4.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-a8eea5be6b6b40db8a9f09d9c1e375d4.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-ab37b1c6e9df4bfe809cc23dbaece781.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-ba89ffcea6ef41f9a5d3e447e964bf67.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research2775e8d4b85d4fd5b872010dfa6d8590.slice/research2775e8d4b85d4fd5b872010dfa6d8590-slot1.slice/research-job-e4777d890d0c4311a66b8bef1c730521.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research44323e64edae49e9824f73a522465239.slice/research44323e64edae49e9824f73a522465239-slot0.slice/research-context-44323e64edae49e9824f73a522465239-0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research44323e64edae49e9824f73a522465239.slice/research44323e64edae49e9824f73a522465239-slot0.slice/research-job-81bf73e7c8b14bfa8cc0e42d821bceb7.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research44323e64edae49e9824f73a522465239.slice/research44323e64edae49e9824f73a522465239-slot1.slice/research-context-44323e64edae49e9824f73a522465239-1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-context-a4f72f866a974120b4756a6861acb4a1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-context-f826e12841d14b42a1da254986cebbe8.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-023020798e3845a898ac022f409dcead.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-14701d09603e40b7b3177da5ef4ca474.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-440d09332f1542ac868d5367d20686fe.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-8bc635b2758a4c2d976dadf4a7d9ff52.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-94c42e5742a742058369912c01673977.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-9db99e52c47c493ca81e6c176708d77a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot0.slice/research-job-dacd0ae023b14f22b46b1102d0099993.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-context-411c845ac4184d4780281ec24e3669e7.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-context-6fdc16af106a4e2d82ff990edb7a66a9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-context-9c57404d82b34c53a70d916a52d2b3ef.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-context-a5e44982afaf416e9e3875d01882a604.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-08188a0f7bed45ce82b1ffde1624b0de.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-2fa269e547e64f55881e2e6cd4f66ebc.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-5ad70f0a25114ced83cb6d085b2d0d04.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-83cf7e9ab2324ab992637fb40970c3b5.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-8b6cb703853c4c7ab6e594b7ff7304d0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-c485e774e41a457a92f0a009c48c3fc6.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-c60d755ff9064c9a87abf4bd16a67568.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-cf173b89381a4e7da046e690057da881.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-d38b8e62474945c69f05f2bfa663ee2b.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-d790a30c9ed4495f98861c8db7a3907b.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-e24a38467e9c449ca08f3292c5ea939e.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-e70d9c5c1d56474ab9f2639f83740857.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research6b9e55625060476cb7f22ca8b5ff443e.slice/research6b9e55625060476cb7f22ca8b5ff443e-slot1.slice/research-job-f9c815f064a44badaafac9e4b07f9b27.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research7c18676889b643038943660a75024c9f.slice/research7c18676889b643038943660a75024c9f-slot0.slice/research-context-7c18676889b643038943660a75024c9f-0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research7c18676889b643038943660a75024c9f.slice/research7c18676889b643038943660a75024c9f-slot0.slice/research-job-8e66c835a8704139901e41f2bd75152c.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research7c18676889b643038943660a75024c9f.slice/research7c18676889b643038943660a75024c9f-slot1.slice/research-context-7c18676889b643038943660a75024c9f-1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research9d21201ace4e4973928fabea3d7e393b.slice/research9d21201ace4e4973928fabea3d7e393b-slot0.slice/research-context-9d21201ace4e4973928fabea3d7e393b-0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research9d21201ace4e4973928fabea3d7e393b.slice/research9d21201ace4e4973928fabea3d7e393b-slot0.slice/research-job-38535450faf74ac6b1933c72e8af6435.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/research9d21201ace4e4973928fabea3d7e393b.slice/research9d21201ace4e4973928fabea3d7e393b-slot1.slice/research-context-9d21201ace4e4973928fabea3d7e393b-1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-context-4ca9c43ca8c84c768f58ce6f5a4c3be6.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-context-ca36df4aba4d455bbd458c172c20a2ce.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-0a26780e87194965bc4fa8f21aa1e323.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-13da7fdd2b364394a076ccb2be0af5d7.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-2022c77ad7b04630aad5063b10456afa.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-2829e9cb85e341fdb0dd72c95a1f1231.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-2eb480493e3041328a05fac488231f6c.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-7b6b0aabe2fd48fabbef3f53b96662bc.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-bb522e86f7024258a386aa6264998422.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-c01c240862e3425d8734b1c329de339a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-f6c28e8984cf471ba75a212370c13863.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot0.slice/research-job-fac957042e87474b834d38a451c88a39.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-context-22da0c02f5a94887bfc053ce6047ed02.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-context-74de6a3efbb841238020742ebdcd47ab.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-context-80e496f17e724e71be3b0fa6a75b34c9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-context-db42233fe4c84394b95f1132a0ab4e4a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-context-fb19d706abc547359a8da5a3d4842a07.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-0316929e84d34de4b5d2038bdf68fee5.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-2a1aff257aac421fa6acb355d66023d5.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-362915475a3b465ba1adebab7ac0b2b9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-444e89ee1c76403f85a84aa092aeaf35.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-60a787470a534388946c656129ad2e3b.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-65e706e2b8d6473f8b21e2eec71d92f0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-77ffb26b991b4e3c9d95f2f2dc5bbc0d.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-8693b1f98ed8426c9e585fe911c23277.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-9b55107607cf4c9ea6c20fb4e70ed641.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-a683de65f60c43359dd2727cfbc405a2.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-a7d5ee8fd49944238ab8ab18ff324a53.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-ac9eb5baf7d84f7183822896c57d2a39.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-b793c9e0d67843ce96ded438ea51445f.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-d335795acd974448a98bebfc03408fe8.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-db2113c6fa054cbda539be88338a0887.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha3cd65116fdc4747b772401a86a08e49.slice/researcha3cd65116fdc4747b772401a86a08e49-slot1.slice/research-job-f896bdb3122e4ba8bbcc60920a751ec0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-context-44cf2fb7adb047ee931dc981d45b1fc5.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-12a200e325ff4e17b80638e25a8eef26.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-501e67cf495e458f874d621e4f1304c9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-6bc835336a8a4564b94dcf95742a59d0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-9ad7e1c1f6c642a6a65064d44d07744e.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-a56445d0df9644729c4894a69a060fb6.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-d327e1416db9491495498940c5878f34.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot0.slice/research-job-ec6cacb728414e70ae6e427dc49e8067.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-context-2c6292b372794b0684bf0f36bce98ba8.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-context-64f6c24a3a324ba6bd1d3688e92fb92d.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-context-99440ebdf9bb4f4a83d1177854e6edaa.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-context-d19b7f4abab7476cbcae3ccfbdfb2bed.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-060bc96874784af0a0bbbb589d9eb22a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-0697735554014bc5ac541c68ae796631.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-0a8906ea908346408da1b869c8856027.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-1fb3be09e70a40ada54fd2183bed344b.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-212d8e261a7e489e8096a052f5b715a9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-55a958a350d54f2697b3885d277c10d1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-8b1ac22f43ae4b809f121ba3ded41762.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-8b20e638b0f84ed9a4785eb567a62506.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-8ce3159420fc4e42861830afb1191783.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-ad65607e827c4a6b96a60f0e485ddecd.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-b3d40bd3d7ff42139de32a18281ee47a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-c5af1ce98c0e4ea3975fbd899a465175.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-cc51f4139f80405b8092a003b710309a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-d8a79346909347f7b1bf49ad8221b695.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researcha6dfa956ff9c43a8b5a2cb6b12e6c088.slice/researcha6dfa956ff9c43a8b5a2cb6b12e6c088-slot1.slice/research-job-fa1d80742e1d45a6b8b08f2ae6384e21.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchb1788492321b40ebbc06b9f04e0ac1f3.slice/researchb1788492321b40ebbc06b9f04e0ac1f3-slot0.slice/research-context-b1788492321b40ebbc06b9f04e0ac1f3-0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchb1788492321b40ebbc06b9f04e0ac1f3.slice/researchb1788492321b40ebbc06b9f04e0ac1f3-slot0.slice/research-job-2ba73041186d4560b6ccd036111dd920.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchb1788492321b40ebbc06b9f04e0ac1f3.slice/researchb1788492321b40ebbc06b9f04e0ac1f3-slot1.slice/research-context-b1788492321b40ebbc06b9f04e0ac1f3-1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchb2ccbe26c48b4efc98eb95a591569233.slice/researchb2ccbe26c48b4efc98eb95a591569233-slot0.slice/research-context-b2ccbe26c48b4efc98eb95a591569233-0.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchb2ccbe26c48b4efc98eb95a591569233.slice/researchb2ccbe26c48b4efc98eb95a591569233-slot0.slice/research-job-2a712b994f8343438d9a33ab62a55b51.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchb2ccbe26c48b4efc98eb95a591569233.slice/researchb2ccbe26c48b4efc98eb95a591569233-slot1.slice/research-context-b2ccbe26c48b4efc98eb95a591569233-1.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-context-2913a35389654653b3124b823472c5ad.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-context-eebe8b3cb2b141bfae03855f642ffbcd.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-job-5ad4cdb354344ad5a0d2de4369d54fe8.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-job-65421066dd2f41bb8dcc5a4d5995c6d9.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-job-781e74f3b5374a96af0dfd99ecaa9e20.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-job-a02036da2c2a4c5d98c6100edffd5e5d.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot0.slice/research-job-c6227e8132dd4eab9c8a322c5f41089f.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-3e46af110b84476689bd31bf808e4960.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-67052ce5618d4cefa075c1c561b7c577.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-7301d29c36dc4f99b0d63ea2191863db.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-7715092e11ef4fd6a38e6fb934ef3cfc.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-af5be928636847b6a3c551e3ec3f75e2.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-c8726c193bb64c0381362b505bd685a7.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-context-d32695458a834e179f913e6179e8b835.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-04145497cfff498e9e9ad2e367260bb5.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-110fc04679624f75a7325b0db947d69e.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-13dd62b992c24625a86ff51d95164f40.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-21cae3fe1696439c9637af86db2b69bd.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-31e06b77e35b47ac833ed1f3d958737d.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-352e7d04b5f7402f96a6a46dc5262586.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-43fa592d4e02461d91a43bc2847428d4.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-44a4bfd151a741ec98b0fe9e6ba8f93c.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-4aec1d5067b845faa27bde692e450729.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-6c820b45fa194061839fae6c9adcc597.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-713db9a41eaa4092b23dd177746b8d32.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-760594a833d140e5bfc008c62b199859.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-775877cb0624404c9fe030a78b75574a.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-777bc3e52e2c42c08879715d4681619f.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-7fe1808a153c418196739b25f087aa1e.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-96a5f7684ace479d8a2cf59c5cee2517.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-97064762cbf24ffdbaf91916465d28e2.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-9b0a74e11f134ddd8af8ba2b8a8bd499.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-9ed4fd0851034514895b14a55fa9b8e8.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-a457d45de0ba43778cb244f8e58fabef.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-ae30f837500249059b62e4d93f22705f.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-bb09f92d4ce846eaacfbb80246a772d5.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-c4b1ecb5b22a4fd3af1ce8f7f7a83792.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-c5bcb6ba622a431ca2a4dbe8bf1d5f9c.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-e4a83b30775f4f0fa8e7de05ea64d550.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-e8f42c8588f043cd9328fdcfc5e31c16.service",
+      "empty": true
+    },
+    {
+      "cgroup": "/user.slice/user-1000.slice/user@1000.service/researchdf844f371d794318b8fee4acc84a5491.slice/researchdf844f371d794318b8fee4acc84a5491-slot1.slice/research-job-fa6fbaa835414fdbab932e48781f3116.service",
+      "empty": true
+    }
+  ],
+  "all_owned_cgroups_empty": true,
+  "frozen_hashes": {
+    "request.md": "cb36f7b7db030fffa75bdcf6a617e81d7be70c5cdfe784241f254a297895848f",
+    "config.toml": "6c2b008fa116064bb90c449f4fcffad9c50f07fb0060c3a48b340a393dfa99e7"
+  },
+  "git": {
+    "target": {
+      "branch": "main",
+      "head": "da8e421e64917f48419899e09ff24b858f18a712",
+      "status": ""
+    },
+    "feature": {
+      "branch": "cwi/20261113T063709_7f21ba4a",
+      "head": "2e3e7b3e95714e9aa08d84b1d11f7bea01707105",
+      "status": ""
+    },
+    "pipeline": {
+      "branch": "manager/final-retry-20261110",
+      "head": "5bc0fbb04ad4e104f252f0dbd61361f62f3085d5",
+      "status": ""
+    },
+    "controller": {
+      "branch": "project-manager/setup",
+      "head": "80063c7a7bbcc615146385b543ea6f921873ccaf",
+      "status": ""
+    }
+  }
+}

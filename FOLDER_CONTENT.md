@@ -8,7 +8,7 @@
 - [pyproject.toml](pyproject.toml) — Python packaging and research-pipeline command entry point.
 - [src](src) — Minimal Python research implementation.
 - [tests](tests) — Focused orchestration and actual isolation checks.
-- [development](development) — Implementation outcome and test evidence.
+- [development](development) — Implementation reports, test evidence and the portable development handoff.
 - [research_example](research_example) — Dedicated M5 scientific project; protected inputs include the archived failed investigation.
 - [.gitignore](.gitignore) — Private runtime and generated Python exclusions.
 - [.m1-local](.m1-local) — Ignored installation, automated-check logs and blocked demonstration evidence.

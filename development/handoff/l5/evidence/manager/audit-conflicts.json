@@ -1,0 +1,51 @@
+{
+  "observed_utc": "2026-11-13T08:41:33.742288+00:00",
+  "scope": "User-authorized behavior/complexity audit while L5 implementation continues",
+  "stable_product_refs": [
+    "3a23c695561f5c92ecd9c71c89da6d4c02114b4f",
+    "738bbe33a807f1e45e315828e8fac514338eff59"
+  ],
+  "findings": [
+    "C1 nonportable scientific links",
+    "C2 terminal notes serialize complete operational records",
+    "C3 ordinary authoritative-input links block evidence freezing"
+  ],
+  "retained_native_observations": [
+    {
+      "path": "coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-2i4gtxur/project/work/FINDINGS.md",
+      "bytes": 3042,
+      "lines": 21,
+      "document_links": 1,
+      "namespace_absolute_links": 2,
+      "embedded_stdout_records": 0
+    },
+    {
+      "path": "coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-2i4gtxur/project/work/NUMERICAL_CHECK.md",
+      "bytes": 1501,
+      "lines": 28,
+      "document_links": 0,
+      "namespace_absolute_links": 2,
+      "embedded_stdout_records": 0
+    },
+    {
+      "path": "coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-2i4gtxur/project/handoffs/primary.md",
+      "bytes": 3175,
+      "lines": 44,
+      "document_links": 3,
+      "namespace_absolute_links": 0,
+      "embedded_stdout_records": 0
+    },
+    {
+      "path": "coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-2i4gtxur/project/handoffs/decision-571c03908dfd4e0a82b913592fcf7637.md",
+      "bytes": 83011,
+      "lines": 1081,
+      "document_links": 5,
+      "namespace_absolute_links": 28,
+      "embedded_stdout_records": 5
+    }
+  ],
+  "isolated_reproduction": "coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/audit-input-link-reproduction.json",
+  "product_source_changes": false,
+  "current_pipeline_run": "20261113T063709_7f21ba4a",
+  "active_implementation_request_unchanged": true
+}

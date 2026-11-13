@@ -1,0 +1,126 @@
+{
+  "target": "/home/francesco/Desktop/gits/research_project/research_pipeline",
+  "target_branch": "main",
+  "base_commit": "6e025668492001c6bf8aa929c1f74fe75d0d8a40",
+  "run_id": "20261113T025921_734d7f95",
+  "run_dir": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95",
+  "branch": "cwi/20261113T025921_734d7f95",
+  "created_at": "2026-11-13T02:59:21.221815+00:00",
+  "worktree": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95/worktree",
+  "request": "# V0-L4: scientific opposition and terminal decisions\n\n## Objective and authority\nImplement V0-L4 of the human-owned `2026-11-12-v0-context-lifecycle-design.md`: an independent scientific opponent challenges presented results before the primary decides whether to COMPLETE or issue scientific STOP. Read the complete amendment, PROJECT.md, AGENTS.md and current STATUS.md. Preserve those human-owned requirements. The amendment supersedes older conflicting verification timing/round limits, completion authority, timers and context thresholds. V0-L1\u2013L3 are accepted and integrated. L3 feature `e1030013f69fcc558d3edd2066d90a4f8d9e8b27` integrated at `c544bf1eefb9dca9da0b96963aff6e7b351c829d`; its fresh final/combined each passed 232 tests with six disabled gates, native researcher/opponent continuation and cleanup confirmed. Its acceptance receipt is `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l3-quota-staleness-20261113T002524Z-1c26dbfa/acceptance.json`. Resolve ordinary engineering decisions autonomously.\n\n## Broad approach and scope\nBuild on the research-owned app-server, durable logical identity/job ownership, immutable document snapshots, 55% measured rollover, centralized 15% weekly reserve and independent secondary staleness. Use direct Python, ordinary Markdown and small runtime records. Replace superseded bounded verification/terminal paths rather than keep parallel lifecycles. The architect owns file boundaries and exact tool schemas.\n\nWhen the primary proposes COMPLETE or scientific STOP, freeze and present current research questions, results, assumptions, relevant evidence and reasons to the independent opponent. The opponent must perform proportionate independent scientific reasoning, reproduction or counterchecks of consequential claims. It challenges results at decision points and never approves mere plans. Keep the same logical opponent across successive proposals/revisions and fresh contexts, preserving review history, objections and dispositions. No fixed number of exchanges may force completion or stop legitimate further review. Keep ordinary researcher checks during research.\n\nFor COMPLETE, every current question needs an adequate answer or supported explanation/demonstration that it cannot be answered. Both primary and opponent must agree the scientific requirements are met; structural coverage is necessary but does not establish correctness. Negative/inconclusive findings qualify when adequately supported and agreed. An unresolved substantive flaw prevents COMPLETE; calling a central claim disputed, exhausting rounds or declaring further work unpromising cannot waive agreement. Only the primary requests finalization after agreement. Bind coverage, evidence versions, objections and agreement to the actual frozen inputs; material revisions invalidate pending agreement and require reassessment. Reconcile unfinished delegated work and stop computations before acknowledging completion.\n\nScientific STOP is the primary's last-resort decision after best autonomous recovery when further work requires human intervention. The opponent challenges both findings and the stopping rationale and may suggest more work. The primary may reject an unpromising suggestion and stop, preserving reasons and unresolved objections. Opponent agreement is not required for scientific STOP; delegates cannot issue it. Distinguish this from L3's runtime quota STOP, which bypasses opposition, and operational failure, which must never be attributed to a scientific decision.\n\nFinalize through scientific-project-root COMPLETE/STOP markers and matching acknowledgements plus runtime state. Identify scientific versus quota STOP. Latch admission blocking, save useful artifacts/handoffs, interrupt all owned agents, jobs and descendants and confirm actual cleanup. No successful acknowledgement until finalization and cleanup succeed. A failed checkpoint must not disable cleanup: preserve the explanation in STOP and terminal output wherever possible, report missing/invalid handoffs honestly, and retain uncertain ownership/capacity. Record reasons, review outcome, recovery attempts, unfinished work, artifacts, interruption state and continuation guidance in research status and handoffs. These scientific fixture markers must never touch the engineering controller repository root.\n\nPreserve immutable protected inputs, human Markdown edits, private scientific evidence, isolation/native authentication, cumulative accounting, original computation deadlines and aggregate caps. Defaults remain two simultaneous agents sharing 2048 MiB, no swap, 128 process/thread tasks and one concurrent job. Opponent scheduling must work under these caps. No fixed scientific investigation/session/demo allowance, primary staleness watchdog or silent relaxation of human grants.\n\n## Completion criteria and validation\n1. Consequential behavior tests demonstrate unresolved substantive objections preventing COMPLETE, supported revision achieving agreement, per-question negative/inconclusive coverage, primary-only terminal authority, and no completion via normal turn endings/delegates/exhausted rounds. Multiple actual revision cycles remain possible.\n2. The same logical opponent retains objections/phase across measured rollover and repeated proposals; changed questions/evidence invalidate stale agreement. Frozen evidence is independently accessible to the opponent and cannot be changed by it. No plan-approval stage appears.\n3. Scientific STOP hears the opponent but preserves primary authority and reasoning when it rejects further work. Quota STOP bypasses review and can interrupt pending review. Operational failures remain operational failures.\n4. Actual owned-process checks establish agent/job/descendant interruption, partial-output retention and truthful saving/cleanup failures, missing handoffs and acknowledgements. Existing L1\u2013L3 capabilities remain available or superseded state is explicitly rejected without migration.\n5. Provide a small representative production-path public/test investigation with actual native primary/opponent reasoning and meaningful independent challenge, ending honestly through the new decision/finalization path. Use focused deterministic tests for additional decision, race and failure cases; transparently labelled telemetry/clock fixtures may exercise rollover/quota/staleness, never fabricate science/consensus or bypass real quota admission. Do not deliberately exhaust quota or wait hours. Existing accepted paid demonstrations need not be repeated routinely.\n6. Independent pipeline code review and required final/combined checks pass. Use an opt-in discovery gate `RESEARCH_PIPELINE_V0_L4_NATIVE=1` with unique private receipts under inherited `RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR`; enabled missing prerequisites fail visibly. Keep accepted L1\u2013L3 native gates and historical M1\u2013M5 live gates disabled unless a demonstrated change requires them. Operational fixture/RPC/cleanup bounds report failed/interrupted tests and never scientific COMPLETE.\n\nThe pipeline owns implementation, tests, review and demonstrations; the manager assesses its reports without independent product review/test repetition. Reuse MCP dependencies under `<current-root>/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies/` with `PYTHONPATH=src:<that directory>`. Trusted host final/combined stages inherit the authorized user bus and native authentication. Restricted Writer bus failures do not authorize isolation bypass. Reviewed source can progress into those later verification stages with validation explicitly pending; this is not acceptance or permission to waive a failed gate.\n\n## Reporting, constraints and non-goals\nWrite the implementation outcomes, choices, actual commands/receipts, telemetry/fixture distinctions, cleanup, refs, limitations and L5 dependency in `development/requests/v0-l4-scientific-decisions.md`; update README and relevant indexes accurately. STATUS.md remains manager-owned and unchanged by this request. Preserve PROJECT.md, AGENTS.md and the human lifecycle amendment. Follow their proportionality rules: established libraries, straightforward files, small reversible designs, demonstrated abstractions and consequential tests. Remove obsolete complexity where justified.\n\nNo L5 reopening/resumption or L6 integrated/M5 harness work, private M5 investigation, new backend/controller/framework/database/migration, forced consensus or speculative feature. Preserve retained M5 branch `cwi/20261111T063907_2732fff6` at `1b70aea25f6c5f8496acdea12e9a27c6f3d4ecbd`, its worktree and archived evidence; do not resume/reset/approve/merge it. Preserve all protected `research_example/starting_evidence/` and historical receipts. No remote actions from pipeline roles and no component-branch merging. Human scientific acceptance remains mandatory for M5.\n",
+  "mode": "standard",
+  "config": {
+    "auto_merge": true,
+    "context_threshold": 0.6,
+    "diagnostic": false,
+    "executable": "codex",
+    "fallback": {},
+    "independent_tests": [],
+    "integration_retries": 2,
+    "preauthorize": [
+      "writer_network"
+    ],
+    "retries": 2,
+    "roles": {
+      "architect": {
+        "effort": "xhigh",
+        "model": "gpt-6.1-sol"
+      },
+      "reviewer": {
+        "effort": "high",
+        "model": "gpt-6.1-sol"
+      },
+      "writer": {
+        "effort": "high",
+        "model": "gpt-6.1-sol"
+      }
+    },
+    "test_workers": 1,
+    "tests": []
+  },
+  "phase": "final",
+  "status": "merged",
+  "milestone": 3,
+  "attempt": 0,
+  "integration_attempt": 2,
+  "integration": true,
+  "sessions": {},
+  "warnings": [
+    "architect: reliable context occupancy unavailable; threshold enforcement disabled.",
+    "writer: reliable context occupancy unavailable; threshold enforcement disabled.",
+    "reviewer: reliable context occupancy unavailable; threshold enforcement disabled."
+  ],
+  "blocking_reason": null,
+  "last_approved_commit": "2b9c61d08fcad1ea005afeaf3fc219da91e22e06",
+  "allow_dirty": false,
+  "dirty_mode": "include",
+  "include_untracked": false,
+  "request_id": "v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8",
+  "request_fingerprint": "df9ef9da15c0db2d19d7443a27c69eb8b95806d37d03387f4efd74918f3b504d",
+  "commands": [
+    [
+      "/home/francesco/miniconda3/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests"
+    ]
+  ],
+  "test_sequence": 6,
+  "baseline_test_path": "tests/baseline-001.txt",
+  "baseline": {
+    "results": [
+      {
+        "command": [
+          "/home/francesco/miniconda3/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests"
+        ],
+        "code": 0,
+        "elapsed": 6.317038298002444,
+        "output_path": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95/tests/baseline-001.txt.commands/0001.txt",
+        "fingerprint": "f848095d3a8da77451cc0261d350bae32ca0c10517a2fbde594f39505df180f5",
+        "unavailable": false,
+        "empty": false
+      }
+    ]
+  },
+  "turn": 21,
+  "current_diff_path": "milestones/003/integration-2/diffs/d83c41440f0d.diff",
+  "recovery_path": "milestones/003/integration-2/recovery-4af1812b.md",
+  "recovery_milestone": 3,
+  "final_test_path": "tests/final-005.txt",
+  "final": {
+    "results": [
+      {
+        "command": [
+          "/home/francesco/miniconda3/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests"
+        ],
+        "code": 0,
+        "elapsed": 428.1656954889986,
+        "output_path": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95/tests/final-005.txt.commands/0001.txt",
+        "fingerprint": "9988122d3fcfd96ac72adea3d1ae07adcfaffa1d8126bdaf03ef967b389411e1",
+        "unavailable": false,
+        "empty": false
+      }
+    ]
+  },
+  "verification": {
+    "status": "passed",
+    "detail": "Independent integrated tests passed."
+  },
+  "writer_task": "recovery",
+  "integration_budget_start": 2,
+  "pre-merge_test_path": "tests/pre-merge-006.txt",
+  "merge_intent": "3a23c695561f5c92ecd9c71c89da6d4c02114b4f",
+  "merged_commit": "3a23c695561f5c92ecd9c71c89da6d4c02114b4f"
+}

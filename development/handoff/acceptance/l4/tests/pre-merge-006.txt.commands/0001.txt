@@ -1,0 +1,372 @@
+.............ss...............................ss....................................................[11/13/26 07:25:58] INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502170 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502170 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code 0                          
+............................................................s...[11/13/26 07:25:59] INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502179 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502179 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502181 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+[11/13/26 07:26:00] INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502181 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502183 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502183 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502185 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502185 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502187 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502187 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502189 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502189 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+........................[11/13/26 07:26:01] INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502201 running>                                
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502201 running> exited                         
+                             with return code 0                                 
+.....s.....                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502203 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502203 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+...                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502205 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502205 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.........                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502207 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502207 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+..                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502209 running                                 
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=6 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=6     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502209 running                                 
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=6 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code -15                        
+.....                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502212 running                                 
+                             stdin=<_UnixWritePipeTransport                     
+                             fd=7 idle bufsize=0>                               
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=8 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixWritePipeTransport fd=7    unix_events.py:672
+                             idle bufsize=0> was closed by                      
+                             peer                                               
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502212 running                                 
+                             stdin=<_UnixWritePipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -9                         
+.......s................................................................[11/13/26 07:26:04] INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502218 running                                 
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=6 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=8 polling>>                                     
+                    INFO     execute program                 base_events.py:1712
+                             '/home/francesco/miniconda3/bin                    
+                             /python':                                          
+                             <_UnixSubprocessTransport                          
+                             pid=502221 running                                 
+                             stdout=<_UnixReadPipeTransport                     
+                             fd=7 polling>                                      
+                             stderr=<_UnixReadPipeTransport                     
+                             fd=10 polling>>                                    
+                    INFO     <_UnixReadPipeTransport fd=8     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=6     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=10    unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixReadPipeTransport fd=7     unix_events.py:533
+                             polling> was closed by peer                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502218 running                                 
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=6 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=8 closed>>                            
+                             exited with return code -15                        
+                    INFO     <_UnixSubprocessTransport    base_subprocess.py:211
+                             pid=502221 running                                 
+                             stdout=<_UnixReadPipeTranspo                       
+                             rt closed fd=7 closed>                             
+                             stderr=<_UnixReadPipeTranspo                       
+                             rt closed fd=10 closed>>                           
+                             exited with return code -15                        
+.......complete: all owned contexts/jobs confirmed stopped; partial artifacts retained
+V0-L4 output: /home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-a1yw2sfs
+......
+----------------------------------------------------------------------
+Ran 308 tests in 478.857s
+
+OK (skipped=7)

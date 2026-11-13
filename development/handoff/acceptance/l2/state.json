@@ -1,0 +1,125 @@
+{
+  "target": "/home/francesco/Desktop/gits/research_project/research_pipeline",
+  "target_branch": "main",
+  "base_commit": "056c4b36d2060c83f19fb41181942e049ccc0309",
+  "run_id": "20261112T214235_70d09e50",
+  "run_dir": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T214235_70d09e50",
+  "branch": "cwi/20261112T214235_70d09e50",
+  "created_at": "2026-11-12T21:42:35.454757+00:00",
+  "worktree": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T214235_70d09e50/worktree",
+  "request": "# V0-L2: measured context rollover with continuous scientific work\n\n## Objective\nImplement and demonstrate V0-L2 from the human-owned `2026-11-12-v0-context-lifecycle-design.md`: primary, delegated researchers and scientific opponent continue their logical work through fresh native contexts when their own measured usable-context occupancy reaches 55%. Read PROJECT.md, AGENTS.md, STATUS.md and the complete amendment; preserve the human-owned requirements verbatim. The amendment supersedes conflicting historical thresholds and timers. V0-L1 is accepted and integrated at `542ac0dbfa7a9fa13b99773f19e876054f035e54`; extend that foundation instead of repeating or rebuilding it.\n\n## Broad approach and scope\nUse the research-owned app-server driver, existing logical task ownership, context closure/successor attachment, immutable scientific documents and durable job services. Adapt the established controller's measured-context calculation where useful, documenting actual telemetry fields and usable-window basis; do not couple research to that controller's lifecycle engine or modify components unnecessarily. Keep this one cohesive L2 increment. The pipeline architect owns exact files and implementation details.\n\nObserve current context length and usable window independently for every active context. At observed occupancy >=55%, begin saving useful science and a concise usable handoff, then confirm closure and create a genuinely fresh native conversation for the same task. Distinguish measured occupancy, cumulative token spending and account quota. Record threshold observation and any overshoot honestly. Agents cannot silently relax the threshold. Do not substitute compaction, replay, session timers or cumulative token counts.\n\nPreserve logical identity, objective, workspace, parent relationship, research/review phase, cumulative usage, shared allocations and running computations. The opponent's logical identity, existing objections and phase must survive rollover; this does not commission L4's scientific decision protocol. Handoffs identify completed work, evidence/artifact locations, assumptions, unresolved issues and next action. Include stable job references, purpose, command/configuration, working directory, observed status, outputs/checkpoints and inspection/cancellation guidance. Successors reconcile actual owned jobs before launching replacements. A normal turn ending must not discard unfinished work or establish scientific COMPLETE.\n\nMissing/unreliable telemetry must be visible and recovered where feasible. An unusable handoff or failed successor must preserve useful work and report truthful operational failure/cleanup; do not continue indefinitely without measurement or manufacture scientific STOP. Preserve L1's controlled tool inventory, scoped document access, protected inputs, native authentication boundary, ownership checks, independent deadlines and admission/cleanup behavior. An individual rollover must allow unrelated agents and jobs to continue within the same aggregate grant.\n\n## Observable completion criteria\n1. Consequential tests show independent per-context telemetry and 55% triggering for primary, delegated research and opponent, distinguishing cumulative consumption from occupancy and preventing one context's activity from changing another's trigger. Cover actual telemetry shape and realistic missing/unreliable measurements without an unmeasured fallback lifetime.\n2. Fresh native contexts consume validated handoffs and continue the same logical tasks/artifacts/phase. Opponent objections survive. Actual native thread/context identities change while logical ownership and cumulative accounting remain. Include a short substantive scientific continuation on public/test inputs, not only threshold arithmetic or scripted assertions of scientific success.\n3. A real admitted computation spans automatic rollover with the same job ID, launch count, service ownership, original deadline, outputs and allocation. Its successor inspects/collects it without duplication while another logical agent continues useful work. Keep human-configured default caps: two simultaneous agents sharing 2048 MiB, zero swap, 128 process/thread tasks and one concurrent job. Test role cases sequentially where needed; do not enlarge grants. Researcher-selected explicit positive finite job timeouts, including hours, remain supported.\n4. Missing telemetry, unusable handoffs and consequential closure/successor failures produce truthful recovery/failure states and confirmed cleanup where possible. Preserve partial science and surviving-job records. No false scientific COMPLETE/STOP, reset spending, duplicated computations, unchecked process ownership or relaxed isolation.\n5. Normal independent pipeline code review plus required final/combined verification pass. Report precise commands, native receipts, refs, observations, deterministic telemetry fixtures, live scientific work, cleanup, limitations and next L3 dependency in a concise implementation report and current usage guidance. Transparent injected telemetry may exercise 55% without filling real contexts; label it distinctly from native telemetry observations and real scientific inference.\n\n## Validation environment\nProduction/native validation belongs to this pipeline, including trusted host final/combined stages when the Writer lacks its authorized user bus. The launch host has the existing systemd user bus, cgroup v2, native Codex authentication and Bubblewrap. Reuse MCP dependencies at `/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies/`; use `PYTHONPATH=src:<that directory>`, not reinstallation. Restricted-role missing prerequisites are truthful diagnostics, not permission to escape isolation or skip required host evidence.\n\nProvide/use an opt-in `RESEARCH_PIPELINE_V0_L2_NATIVE=1` discovery gate for this increment; enabled missing prerequisites must fail visibly. Trusted final/combined checks will inherit that gate and `RESEARCH_PIPELINE_V0_L2_OUTPUT_DIR` under this request's ignored directory. Reserve a fresh private output/receipt per invocation, retaining failures unchanged. Keep M1-M5 live gates and the accepted L1 paid/native gate disabled in routine checks. Rerun relevant L1 native evidence only if changed behavior requires it. Operational fixture/RPC/shutdown bounds may interrupt/fail a test; they never create scientific completion or impose an investigation work allowance. Resolve concrete host setup questions by reporting exact evidence/required supported invocation.\n\n## Constraints and non-goals\nApply PROJECT.md scientific rigor/provenance/isolation and AGENTS.md proportionality: existing Python libraries, straightforward ordinary files, small reversible designs, abstractions only for demonstrated requirements or actual duplication, realistic error handling and consequential tests. Remove superseded complexity where justified. No compatibility/state migration, legacy backend, timer-driven retirement, full conversation reconstruction, database/broker, generic workflow framework or speculative infrastructure. Preserve human edits, historical scientific artifacts and receipts. No private benchmark inputs or research, external publication/remote actions, component branch merges or model substitutions.\n\nRetain unmerged M5 branch `cwi/20261111T063907_2732fff6` at `1b70aea25f6c5f8496acdea12e9a27c6f3d4ecbd` and its worktree under `coding_pipeline/logs/20261111T063907_2732fff6/worktree/`. Do not resume, reset, merge or approve it. `research_example/starting_evidence/` is protected read-only input, and its archived failed science remains preliminary. L3 centralized 15% weekly reserve/2700-second staleness, L4 opposition/terminal decisions, L5 reopening/recovery and L6 integrated live validation/M5 harness reconciliation remain later increments. No repeated accepted M1-M4 paid demonstrations or claims of full lifecycle/M5 acceptance. Human scientific acceptance remains mandatory for M5.\n\nThe manager resolves ordinary engineering choices autonomously and assesses pipeline reports; implementation, tests, review and live validation remain pipeline-owned. Update current docs honestly without modifying PROJECT.md, AGENTS.md or the human lifecycle amendment. Local product integration is authorized through this configured pipeline; remote Git publication remains the manager's responsibility.\n",
+  "mode": "standard",
+  "config": {
+    "auto_merge": true,
+    "context_threshold": 0.6,
+    "diagnostic": false,
+    "executable": "codex",
+    "fallback": {},
+    "independent_tests": [],
+    "integration_retries": 2,
+    "preauthorize": [
+      "writer_network"
+    ],
+    "retries": 2,
+    "roles": {
+      "architect": {
+        "effort": "xhigh",
+        "model": "gpt-6.1-sol"
+      },
+      "reviewer": {
+        "effort": "high",
+        "model": "gpt-6.1-sol"
+      },
+      "writer": {
+        "effort": "high",
+        "model": "gpt-6.1-sol"
+      }
+    },
+    "test_workers": 1,
+    "tests": []
+  },
+  "phase": "final",
+  "status": "merged",
+  "milestone": 2,
+  "attempt": 0,
+  "integration_attempt": 2,
+  "integration": true,
+  "sessions": {},
+  "warnings": [
+    "architect: reliable context occupancy unavailable; threshold enforcement disabled.",
+    "writer: reliable context occupancy unavailable; threshold enforcement disabled.",
+    "reviewer: reliable context occupancy unavailable; threshold enforcement disabled."
+  ],
+  "blocking_reason": null,
+  "last_approved_commit": "b28c75d82565865840e12ffdb51ebfdabb88d762",
+  "allow_dirty": false,
+  "dirty_mode": "include",
+  "include_untracked": false,
+  "request_id": "v0-l2-measured-rollover-20261112T214208Z-d2c3e520",
+  "request_fingerprint": "03dc599efc1fee68b3cbbacbab8d218d9c9dbc796d4b098a3bf3a0268f9f010a",
+  "commands": [
+    [
+      "/home/francesco/miniconda3/bin/python",
+      "-m",
+      "unittest",
+      "discover",
+      "-s",
+      "tests"
+    ]
+  ],
+  "test_sequence": 6,
+  "baseline_test_path": "tests/baseline-001.txt",
+  "baseline": {
+    "results": [
+      {
+        "command": [
+          "/home/francesco/miniconda3/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests"
+        ],
+        "code": 0,
+        "elapsed": 3.3361627039994346,
+        "output_path": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T214235_70d09e50/tests/baseline-001.txt.commands/0001.txt",
+        "fingerprint": "d78783ed25767cf05fb0b8218e0ab93d5d7746f51ef2837056eacf0c0aeba1c5",
+        "unavailable": false,
+        "empty": false
+      }
+    ]
+  },
+  "turn": 16,
+  "current_diff_path": "milestones/002/integration-2/diffs/cfc459c102b4.diff",
+  "recovery_path": "milestones/002/integration-2/recovery-11a8521c.md",
+  "recovery_milestone": 2,
+  "final_test_path": "tests/final-005.txt",
+  "final": {
+    "results": [
+      {
+        "command": [
+          "/home/francesco/miniconda3/bin/python",
+          "-m",
+          "unittest",
+          "discover",
+          "-s",
+          "tests"
+        ],
+        "code": 0,
+        "elapsed": 662.0498055099961,
+        "output_path": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261112T214235_70d09e50/tests/final-005.txt.commands/0001.txt",
+        "fingerprint": "9d9fbc6ecaeadef6bd818707977c0c340a0f9a39cd8dc00c6c5a86bcbae68847",
+        "unavailable": false,
+        "empty": false
+      }
+    ]
+  },
+  "verification": {
+    "status": "passed",
+    "detail": "Independent integrated tests passed."
+  },
+  "writer_task": "recovery",
+  "pre-merge_test_path": "tests/pre-merge-006.txt",
+  "merge_intent": "f9119e31e816e7f83bb475ce01f58a5873f3b6fa",
+  "merged_commit": "f9119e31e816e7f83bb475ce01f58a5873f3b6fa"
+}

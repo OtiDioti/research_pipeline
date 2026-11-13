@@ -1,0 +1,32 @@
+{
+  "observed_utc": "2026-11-13T13:23:42.000448+00:00",
+  "reason": "Controller-requested manager retirement",
+  "run_id": "20261113T063709_7f21ba4a",
+  "tool_session": 81728,
+  "exit_code": 130,
+  "pipeline": {
+    "status": "interrupted",
+    "phase": "final",
+    "turn": 38,
+    "final_test_path": "tests/final-006.txt",
+    "integration_attempt": 3,
+    "blocking_reason": "Interrupted; partial milestone preserved.",
+    "last_approved_commit": "2e3e7b3e95714e9aa08d84b1d11f7bea01707105"
+  },
+  "native_receipt": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/native-host-ybjio3jv/receipt.json",
+  "native": {
+    "phase": "B",
+    "outcome": "failed",
+    "error": "KeyboardInterrupt: "
+  },
+  "phase_A": {
+    "state": "complete",
+    "scientific_status": "complete",
+    "cleanup_ok": true,
+    "finalization_ok": true
+  },
+  "cleanup_reconciliations": 33,
+  "all_confirmed": true,
+  "host_ownership_receipt": "retirement-003-ownership.json",
+  "next_action": "Reconcile same run, then ordinary resume to repeat interrupted final verification without duplicate repair."
+}

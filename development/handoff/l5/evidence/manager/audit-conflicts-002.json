@@ -1,0 +1,91 @@
+{
+  "observed_utc": "2026-11-13T09:02:21.604651+00:00",
+  "authority": "Human requested additional conflict audit while L5 runs",
+  "method": "Read-only trace of accepted-main and reviewed L5-step1 sources; no product execution, test, live inference, worktree edits or acceptance changes",
+  "observations": {
+    "accepted_main": {
+      "ref": "fde11bd861c687361e9d02ad840d8ec6f7ba8d8b",
+      "files": {
+        "src/research_pipeline/jobs.py": {
+          "sha256": "d0bd1157cd57ae68a84e53be0c552ea7d519b4bcebe7f0490f3419103db64e8e",
+          "matching_lines": [
+            {
+              "line": 187,
+              "text": "tool = {'version': 1, 'activation': record['job_id'], 'task': record['task_id'],"
+            },
+            {
+              "line": 193,
+              "text": "atomic(root / 'job.json', {**record, 'activation': record['job_id']})"
+            }
+          ]
+        },
+        "src/research_pipeline/tools.py": {
+          "sha256": "d7f8a53e3d6558dc6d4f4e7f0262fe69b16a952d3744e6c2ae59731505d62ace",
+          "matching_lines": [
+            {
+              "line": 296,
+              "text": "if current and record.get(\"activation\") != context[\"activation\"]:"
+            }
+          ]
+        },
+        "src/research_pipeline/collaboration.py": {
+          "sha256": "59f23dd676cf8014cea0869abb4c4e1e8e747922a143f0ebf19a8c2934779453",
+          "matching_lines": [
+            {
+              "line": 554,
+              "text": "raise jobs.JobError('Finish or cancel active computations before freezing assignment evidence')"
+            }
+          ]
+        }
+      }
+    },
+    "reviewed_l5_step1": {
+      "ref": "738bbe33a807f1e45e315828e8fac514338eff59",
+      "files": {
+        "src/research_pipeline/jobs.py": {
+          "sha256": "cd7f91c77b6563bcfa667d67c03d69d3cd3d9935021ba5ff03a8d72f2045770e",
+          "matching_lines": [
+            {
+              "line": 188,
+              "text": "tool = {'version': 1, 'activation': record['job_id'], 'task': record['task_id'],"
+            },
+            {
+              "line": 194,
+              "text": "atomic(root / 'job.json', {**record, 'activation': record['job_id']})"
+            }
+          ]
+        },
+        "src/research_pipeline/tools.py": {
+          "sha256": "d7f8a53e3d6558dc6d4f4e7f0262fe69b16a952d3744e6c2ae59731505d62ace",
+          "matching_lines": [
+            {
+              "line": 296,
+              "text": "if current and record.get(\"activation\") != context[\"activation\"]:"
+            }
+          ]
+        },
+        "src/research_pipeline/collaboration.py": {
+          "sha256": "6cf86617f75e5b1b86c17e00e1cab1d3d03233eaa62827a887c7498817d62294",
+          "matching_lines": [
+            {
+              "line": 844,
+              "text": "raise jobs.JobError('Finish or cancel active computations before freezing assignment evidence')"
+            }
+          ]
+        }
+      }
+    }
+  },
+  "findings": {
+    "C4": {
+      "status": "confirmed per-job validation policy; proportionality concern",
+      "trace": "Jobs.prepare sets tool activation to unique job_id; tools.registration rejects prior activation; tools.run calls registration with default current=True",
+      "limitation": "No live failure or cost measurement claimed; fresh job scratch/environment can justify some checks"
+    },
+    "C5": {
+      "status": "confirmed global assignment-admission restriction; concurrency concern",
+      "trace": "Coordinator.control(delegate/verify) rejects any ACTIVE job before checking free logical-agent capacity or freezing selected assignment inputs",
+      "limitation": "No deadlock asserted; previously admitted agents can continue; runtime scenario not executed"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "accepted_utc": "2026-11-13T06:35:10.115769+00:00",
+  "request_id": "v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8",
+  "run_id": "20261113T025921_734d7f95",
+  "pipeline_status": "merged",
+  "feature_commit": "2b9c61d08fcad1ea005afeaf3fc219da91e22e06",
+  "integration_commit": "3a23c695561f5c92ecd9c71c89da6d4c02114b4f",
+  "final": {
+    "path": "tests/final-005.txt",
+    "tests": 308,
+    "skipped": 7,
+    "exit_code": 0
+  },
+  "combined": {
+    "path": "tests/pre-merge-006.txt",
+    "tests": 308,
+    "skipped": 7,
+    "exit_code": 0
+  },
+  "native_receipts": [
+    {
+      "path": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-2i4gtxur/receipt.json",
+      "outcome": "passed",
+      "cleanup_ok": true,
+      "terminal": {
+        "state": "complete",
+        "marker": "COMPLETE",
+        "marker_sha256": "502398e323e4ff1ca773c74ed7fcc77050c726bc78293582c16c652ab501fa0e",
+        "ack_sha256": "502398e323e4ff1ca773c74ed7fcc77050c726bc78293582c16c652ab501fa0e",
+        "recorded_sha256": "502398e323e4ff1ca773c74ed7fcc77050c726bc78293582c16c652ab501fa0e",
+        "note": "handoffs/decision-571c03908dfd4e0a82b913592fcf7637.md"
+      },
+      "weekly_remaining_percent": 79,
+      "protected_inputs_unchanged": true
+    },
+    {
+      "path": "/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-a1yw2sfs/receipt.json",
+      "outcome": "passed",
+      "cleanup_ok": true,
+      "terminal": {
+        "state": "complete",
+        "marker": "COMPLETE",
+        "marker_sha256": "26f9330002dbf2e619e74a5ec538dd97fb0a495b68c4363fde8274925f14d256",
+        "ack_sha256": "26f9330002dbf2e619e74a5ec538dd97fb0a495b68c4363fde8274925f14d256",
+        "recorded_sha256": "26f9330002dbf2e619e74a5ec538dd97fb0a495b68c4363fde8274925f14d256",
+        "note": "handoffs/decision-a9555a0c01a04ded9fd818cc7b9700d7.md"
+      },
+      "weekly_remaining_percent": 78,
+      "protected_inputs_unchanged": true
+    }
+  ],
+  "assessment": "Pipeline-owned review, final and combined verification establish L4 acceptance. Historical failures remain failures. L5/L6 and human M5 scientific acceptance remain outstanding.",
+  "component_repairs": []
+}

@@ -1,0 +1,46 @@
+{
+  "observed_utc": "2026-11-13T11:06:55.134944+00:00",
+  "run_id": "20261113T063709_7f21ba4a",
+  "pipeline": {
+    "status": "running",
+    "phase": "writer",
+    "turn": 33,
+    "integration": true,
+    "integration_attempt": 1,
+    "writer_task": "integration_repair",
+    "final_test_path": "tests/final-002.txt",
+    "last_approved_commit": "8b038600eea54cf69cdb89db810a0eee42e19f70"
+  },
+  "verification": {
+    "tests": 411,
+    "failures": 1,
+    "errors": 1,
+    "skipped": 8,
+    "elapsed_seconds": 2425.397
+  },
+  "native": {
+    "receipt": "native-host/receipt.json",
+    "outcome": "failed",
+    "phase": "B",
+    "branch": "COMPLETE reopening",
+    "error": "AssertionError: Operational L5 fixture interrupted; no scientific outcome implied",
+    "operational_interruption": "2400s bound expired",
+    "phase_a_state": "complete",
+    "unchanged_resume_checked": true,
+    "cleanup_observations": 41,
+    "cleanup_groups_empty": 41,
+    "cleanup_kinds": {
+      "contexts": 9,
+      "jobs": 32
+    },
+    "cleanup_reconciliation_confirmed": true,
+    "engineering_markers_preserved": true
+  },
+  "process": {
+    "receipt": "native-host-0kt_nec6/receipt.json",
+    "result": "failed",
+    "error": "KeyError: 'continuation'",
+    "cleanup_confirmed": true
+  },
+  "acceptance": "L5 remains unmerged and unaccepted; no combined verification; same-run automatic repair active"
+}

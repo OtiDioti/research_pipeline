@@ -4,6 +4,12 @@ Updated 2026-11-13, 13:24 UTC. **Retired at the controller's request. V0-L1–L4
 
 ## Recovery checkpoint
 
+**New machine:** use [development/handoff/README.md](development/handoff/README.md)
+before following the local resume instructions below. It preserves the L5
+checkpoint and selected acceptance evidence, explains component setup, and restores
+run/worktree ownership without executing tests or research. Its copied receipts
+remain historical; native final/combined L5 acceptance is still pending.
+
 - **Objective:** V0-L5 owned resume, COMPLETE reopening, pause/crash recovery and scientific continuity. Request **`v0-l5-continuity-20261113T063510Z-a187c3d5`**, run **`20261113T063709_7f21ba4a`**.
 - **Actual state:** **interrupted / final, turn 38**, `final_test_path=tests/final-006.txt`, `integration=true`, `integration_attempt=3`, `integration_budget_start=2`; reason `Interrupted; partial milestone preserved.` No completed final-006 suite result, fresh process-gate result or combined result exists. The integration flag denotes the repair cycle, not merging. Internal milestone 5 is unrelated to scientific M5.
 - **Preserved source:** clean branch **`cwi/20261113T063709_7f21ba4a` at `2e3e7b3e95714e9aa08d84b1d11f7bea01707105`**, worktree `coding_pipeline/logs/20261113T063709_7f21ba4a/worktree/`. Main remains accepted L4/schema 7; reviewed L5 uses schema 10 without migration. Preserve all useful source; no reset, stash, manual merge or duplicate request.
@@ -47,6 +53,6 @@ Preserve inactive M5 branch **`cwi/20261111T063907_2732fff6` at `1b70aea25f6c5f8
 
 Benchmark root **`research_example/`** contains active science/status/indexes directly; runtime `.research_pipeline/`, receipts `.m5-acceptance/`. Protect all starting evidence, questions, research AGENTS.md and archived `starting_evidence/failed_m5_20261111/`. Preserve preliminary science and historical usage (430.693 demonstration / 421.244 product seconds). Workspace/evidence amendment is complete; do not restore superseded 3600/3480/3900-second allowances. Only after L1–L6 acceptance may current-source M5 proceed; **human scientific acceptance remains mandatory**.
 
-Components remain clean and unmerged: coding_pipeline **`manager/final-retry-20261110` at `5bc0fbb04ad4e104f252f0dbd61361f62f3085d5`**; controller **`project-manager/setup` at `80063c7a7bbcc615146385b543ea6f921873ccaf`**. No component repair or restart is required. Let the controller manage its lifecycle.
+Recorded component checkouts remain clean: coding_pipeline **`manager/final-retry-20261110` at `5bc0fbb04ad4e104f252f0dbd61361f62f3085d5`**; controller **`project-manager/setup` at `80063c7a7bbcc615146385b543ea6f921873ccaf`**; preparer **`1b13f917f94af5b20accc27bdf64c4f6b7403d41`**. Preserve these revisions for recovery. A later GitHub audit found the pipeline repairs already incorporated into its upstream main; that does not change the component revision used by this saved run. The controller setup branch remains separate. No component repair or upgrade is commissioned.
 
 No root COMPLETE/STOP or acknowledgement exists. This is ordinary retirement of an unfinished project. Publication receipts record completed pushes only and grant no future authority. Preserve PROJECT.md, protected inputs, human source changes and staged files; commit management records explicitly.
