@@ -1,8 +1,10 @@
 # Development status — research_pipeline
 
-Updated 2026-11-13, 11:31 UTC. **Retired at the controller's request. V0-L1–L4 are accepted and integrated. L5 source and its first final repair are reviewed, but L5 remains unmerged and unaccepted. No implementation or native research worker remains.** L6 and M5 are outstanding; human requirements are unchanged.
+Updated 2026-11-13, 11:37 UTC. **V0-L1–L4 are accepted and integrated. L5 source and its first final repair are reviewed; resuming interrupted final verification, with L5 still unmerged and unaccepted.** L6 and M5 remain outstanding; human requirements are unchanged.
 
 ## Recovery checkpoint
+
+**Current invocation:** startup reconciled actual host ownership at 11:36 UTC: L5/M5 locks unowned, no implementation/native research worker, all 60 recorded research cgroups empty. Target and components clean, L5 at unchanged `56adcb5`, frozen request/config hashes unchanged. Receipt: request-directory `restart-002-ownership.json`. Next action is ordinary `flow resume 20261113T063709_7f21ba4a`, without `--retry`, inheriting L5 native gate, fresh output reservation, dependency path and authorized host bus/native authentication. Preserve existing failed/interrupted receipts. No new request or component repair is commissioned. Non-force publication to existing origin is authorized for this invocation only.
 
 - **Objective:** V0-L5 owned resume, COMPLETE reopening, pause/crash recovery and scientific continuity. Request **`v0-l5-continuity-20261113T063510Z-a187c3d5`**, run **`20261113T063709_7f21ba4a`**.
 - **Actual pipeline state:** **interrupted / final, turn 34**, `final_test_path=tests/final-003.txt`, `integration=true`, `integration_attempt=1`; reason `Interrupted; partial milestone preserved.` The integration flag denotes the repair cycle, not a merge or combined pass. Internal milestone index 5 is unrelated to scientific M5.
@@ -11,7 +13,7 @@ Updated 2026-11-13, 11:31 UTC. **Retired at the controller's request. V0-L1–L4
 - **Shutdown:** native unittest controller received SIGINT while the pipeline supervisor was temporarily suspended to allow cleanup; after test exit, the supervisor received SIGINT and was continued. Tool session **46810 exited 130**, log `resume-002.log`. Native final-003 receipt reports **16/16 owned groups empty** with confirmed reconciliation. Host verification confirms original leader **679612** and test **1099023** absent, both L5/M5 locks unowned, no matching workers and **all 60 recorded research cgroups empty**. No suspended supervisor remains.
 - **Receipts:** request-directory `retirement-002-interrupt.json`, `retirement-002-ownership.json`, and `pipeline-{discover,status,report}-retirement-002.txt`. Earlier startup/retirement receipts remain intact. Components are clean and unchanged. No new implementation request followed shutdown.
 
-**Next manager:** reread current requirements and discover/status/report this same run; reconcile ownership before acting. Then use supported **`flow resume 20261113T063709_7f21ba4a`** to repeat interrupted final verification. No new request or unconditional `--retry` is needed. The saved `verification_status=regression` describes failed final-002; its defects already received reviewed repair `56adcb5`. Final-003 was interrupted for retirement, not a completed new regression result. Do not send the old failure back for duplicate repair merely because its pointer persists.
+**Recovery procedure:** reread current requirements and discover/status/report this same run; reconcile ownership before acting. Use supported **`flow resume 20261113T063709_7f21ba4a`** to repeat interrupted final verification. No new request or unconditional `--retry` is needed. The saved `verification_status=regression` describes failed final-002; its defects already received reviewed repair `56adcb5`. Final-003 was interrupted for retirement, not a completed new regression result. Do not send the old failure back for duplicate repair merely because its pointer persists.
 
 Resume with `/home/francesco/miniconda3/bin/python` and inherited authorized host bus/native file authentication:
 
@@ -52,4 +54,4 @@ Benchmark root is **`research_example/`**. Active science/status/indexes belong 
 
 Components, clean and unchanged: coding_pipeline **`manager/final-retry-20261110` at `5bc0fbb04ad4e104f252f0dbd61361f62f3085d5`**; controller **`project-manager/setup` at `80063c7a7bbcc615146385b543ea6f921873ccaf`**. No new component repair or restart is required; component branches remain unmerged and the controller owns its lifecycle.
 
-No root COMPLETE/STOP or acknowledgement exists. This is ordinary retirement of an unfinished project. Final management publication is recorded in request-directory `retirement-002-publication.json`; it conveys no authorization for later invocations.
+No root COMPLETE/STOP or acknowledgement exists. This is an active unfinished project. Previous retirement publication remains recorded in request-directory `retirement-002-publication.json`; it conveys no authorization for later invocations.
