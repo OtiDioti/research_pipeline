@@ -1,36 +1,29 @@
-# Research pipeline — V0-L4 implementation
+# Research pipeline — V0-L4
 
 A Linux/Python research runtime with ordinary scientific files, a research-owned
 Codex app-server driver, and computations that outlive individual model contexts.
 The human specification is [PROJECT.md](PROJECT.md); the authoritative amendment
 is [the V0 lifecycle design](2026-11-12-v0-context-lifecycle-design.md).
 
-**V0-L1–L3 are accepted and integrated.** L3 integrated at `c544bf1` after
-independent review and fresh final/combined verification. Each stage passed 232
-tests with six gates disabled. Both native researcher/opponent scenarios passed,
-with actual sufficient weekly admission, labelled warning/rollover/cutoff fixtures,
-and confirmed context/job cleanup. Earlier failed receipts remain preserved.
-See [STATUS.md](STATUS.md) for refs and receipts, and the
+**V0-L1–L4 are accepted and integrated.** L4 integrated at `3a23c69` after
+independent pipeline review and fresh final/combined verification. Each stage
+passed 308 tests with seven gates disabled. Both native primary/opponent
+investigations reached acknowledged scientific COMPLETE with confirmed owned
+cleanup and unchanged protected inputs. Actual weekly admission was sufficient;
+these gates injected no science, agreement, quota, clock or rollover measurements.
+Earlier failed/interrupted receipts retain their original meaning.
+See [STATUS.md](STATUS.md) for refs and exact receipts, and the
 [L1](development/requests/v0-l1-durable-runtime.md),
-[L2](development/requests/v0-l2-measured-rollover.md) and
-[L3](development/requests/v0-l3-quota-staleness.md) implementation reports.
+[L2](development/requests/v0-l2-measured-rollover.md),
+[L3](development/requests/v0-l3-quota-staleness.md) and
+[L4](development/requests/v0-l4-scientific-decisions.md) implementation reports.
+The L4 report's pending-verification passages describe its historical source-review
+checkpoint; current acceptance is recorded in STATUS.md.
 
-L4 implements scientific opposition and terminal finalization. Independent review
-approved Milestone 1. Milestone 2 adds an opt-in native investigation gate and retained
-receipts. Successful native demonstration and trusted final/combined validation
-remain pending. The first trusted final run hit its operational bound after a
-placeholder document link in fixture instructions blocked proposal freezing.
-After the link repair, the next trusted run reached acknowledged scientific
-COMPLETE and confirmed cleanup, then failed an observer that used an object-only
-JSON reader for array manifests. Its retained evidence also exposed ambiguous
-instructions for saving numerical reports as job drafts. The observer and
-instructions are repaired with ungated packet/provenance regressions; both failed
-native receipts remain intact. Fresh trusted final/combined runs are still
-required. The restricted Writer lacks the authorized user bus; see the
-[L4 implementation report](development/requests/v0-l4-scientific-decisions.md).
-L5 reopening/recovery and L6 integrated validation remain required before another private M5 attempt. Historical M1–M4
-receipts retain their original meaning. The retained M5 candidate remains inactive,
-unmerged and scientifically unaccepted; human scientific acceptance is mandatory.
+L5 reopening/recovery and L6 integrated validation remain required before another
+private M5 attempt. Historical M1–M4 receipts retain their original meaning. The
+retained M5 candidate remains inactive, unmerged and scientifically unaccepted;
+human scientific acceptance is mandatory.
 
 ## Setup and use
 
