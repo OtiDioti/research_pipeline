@@ -15,9 +15,12 @@ See [STATUS.md](STATUS.md) for refs and receipts, and the
 [L2](development/requests/v0-l2-measured-rollover.md) and
 [L3](development/requests/v0-l3-quota-staleness.md) implementation reports.
 
-L4 Milestone 1 implements scientific opposition and terminal finalization. Its native
-demonstration, independent pipeline review and trusted final/combined validation
-remain pending; see the [L4 implementation report](development/requests/v0-l4-scientific-decisions.md).
+L4 implements scientific opposition and terminal finalization. Independent review
+approved Milestone 1. Milestone 2 adds an opt-in native investigation gate and retained
+receipts; its review, native demonstration and trusted final/combined validation
+remain pending. The restricted Writer's enabled attempt failed at the missing
+authorized user bus before inference; see the
+[L4 implementation report](development/requests/v0-l4-scientific-decisions.md).
 L5 reopening/recovery and L6 integrated validation remain required before another private M5 attempt. Historical M1–M4
 receipts retain their original meaning. The retained M5 candidate remains inactive,
 unmerged and scientifically unaccepted; human scientific acceptance is mandatory.
@@ -53,7 +56,9 @@ A persistent investigation slice enforces the aggregate caps. Fixed per-agent
 slices divide memory/tasks equally (integer remainder is unallocated). Context
 services, MCP helpers, job supervisors and job descendants share those slices.
 Replacing a context grants no additional allocation. A logical task retains its
-slot while its context is absent; task retirement is not implemented.
+slot across rollover. Explicit task retirement releases it after confirmed
+cleanup and handoff validation; the same idle opponent reclaims a free slot on a
+later proposal.
 
 Fixed scientific investigation/session/demo lifetimes and the configured universal
 job maximum have been removed. `--wall-seconds`, `--primary-session-seconds`,
@@ -456,7 +461,7 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 When the declared MCP dependency is supplied externally, append its existing
 installation to `PYTHONPATH`; do not replace it to conceal an environment issue.
 The old timed M1–M4 live harnesses reject enabled use; their evidence parsers remain
-covered. Keep M1–M5 and accepted L1/L2 native gates disabled for routine checks.
+covered. Keep M1–M5 and all L1–L4 native gates disabled for routine checks.
 The accepted L2 gate uses the authorized host bus and native file credentials:
 
 ```sh
@@ -510,3 +515,47 @@ Files, symlinks (including ancestors) and unusable parents are rejected. The fix
 prints its actual output path immediately; its receipt records both requested and
 actual paths. Final and combined checks can inherit the same destination and still
 execute independently with distinct receipts.
+
+The L4 gate runs a fresh public trapezoidal-rule investigation through the
+production Coordinator, with unchanged default caps and actual weekly admission:
+
+```sh
+RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 \
+RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 \
+RESEARCH_PIPELINE_M5_LIVE=0 RESEARCH_PIPELINE_V0_L1_NATIVE=0 \
+RESEARCH_PIPELINE_V0_L2_NATIVE=0 RESEARCH_PIPELINE_V0_L3_NATIVE=0 \
+RESEARCH_PIPELINE_V0_L4_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR=/fresh/private/l4-validation \
+PYTHONPATH=src:/existing/mcp/dependencies python -m unittest discover -s tests -v
+```
+
+Trusted final/combined stages inherit the L4 gate, destination, authorized user
+bus and native authentication. Missing output or prerequisites fail visibly.
+Each invocation reserves separate private storage with the helper described above
+and writes `receipt.json` even after prerequisite or runtime failure.
+
+Native agents supply the derivation, scope assessment, numerical computations,
+opposition and responses, then invoke proposal/review/finalization controls
+themselves. The harness supplies questions and procedural evidence names only.
+Each role's numerical job produces `NUMERICAL_CHECK.md` in its own workspace;
+its retained job snapshot must match evidence frozen in the proposal/review.
+An observing wrapper records authenticated control calls unchanged and verifies
+the primary's complete paginated challenge reads. A legitimate revision may
+reactivate the same opponent without an exchange ceiling.
+
+The gate accepts scientific COMPLETE with current agreement or scientific STOP
+after an actual stopping challenge and the primary's reasons. Quota cutoff and
+operational failure fail/interrupt this demonstration. Matching project-root
+markers/acknowledgements, finalization, usable handoffs, frozen hashes, protected
+inputs and actual empty owned cgroups are checked. Engineering-root markers must
+retain their original presence and bytes. Receipts retain scientific submissions,
+countercheck artifacts, native inventory/measurement references, original job
+deadlines and service/cleanup observations, without full conversations.
+
+The 1200-second fixture and 120-second cleanup/close bounds are operational test
+bounds: expiry interrupts/fails the test and attempts owned cleanup. They never
+instruct agents to declare scientific COMPLETE or STOP. No telemetry, quota,
+clock or agreement fixture is injected by this gate. Further native revision or
+rollover evidence is claimed only when observed. Ungated prerequisite,
+interruption and receipt-retention tests use explicitly mocked engineering
+failures. L5 resume/reopening remains unimplemented.

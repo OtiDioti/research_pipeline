@@ -1,10 +1,19 @@
-# V0-L4 scientific decisions — Milestone 1 implementation
+# V0-L4 scientific decisions — implementation and native validation
 
-The supplied `milestones/001/plan.md` commissions the runtime path and focused
-engineering validation in this milestone. Native scientific demonstration,
-independent pipeline review, trusted final/combined verification and overall L4
-acceptance remain outstanding. L5 reopening/resumption and L6/M5 work are excluded.
-Human scientific acceptance remains mandatory for M5.
+Scientific opposition, repeated revisions and version-bound COMPLETE/scientific
+STOP finalization are implemented. **Independent pipeline review approved
+Milestone 1**, including its repairs; the review ran no tests. Milestone 2 adds
+the public native investigation gate, authenticated observations, retained receipts
+and ungated failure regressions in `tests/test_v0_l4_native.py`.
+
+**Native scientific validation remains pending for trusted final/combined stages.**
+The enabled Writer attempt failed before runtime creation/inference because the
+inherited authorized user bus is unavailable. Its failed receipt is retained;
+there is no native scientific finding, challenge, consensus or successful cleanup
+claim from that invocation. Milestone 2 review and overall L4 acceptance remain
+outstanding. L5 reopening/resumption and L6/M5 work are excluded. Human scientific
+acceptance remains mandatory for M5. Historical implementation and repair evidence
+below retains its original scope.
 
 ## Implemented behavior and decisions
 
@@ -182,7 +191,7 @@ Writer logs are private engineering diagnostics:
 `coding_pipeline/logs/20261113T025921_734d7f95/runtime/tmp/l4-focused.txt` and
 `l4-discovery.txt`. These are not native receipts or scientific acceptance.
 
-## Remaining gates and preservation
+## Milestone 1 handoff — historical
 
 Milestone 2 must deliver the representative production-path public/test
 investigation with real native primary/opponent reasoning and meaningful independent
@@ -193,8 +202,10 @@ must fail visibly. This milestone does not claim that gate or demonstration.
 Trusted native verification must use inherited authorized user bus/native file
 authentication. No restricted-bus isolation workaround was attempted.
 
-Independent pipeline review and required fresh final/combined checks remain
-pending. Accepted L1–L3 native gates and historical M1–M5 live gates stayed disabled.
+Independent pipeline review and required fresh final/combined checks were
+pending at that handoff. Milestone 1 review has since approved the implementation;
+see the current Milestone 2 verification status above and below.
+Accepted L1–L3 native gates and historical M1–M5 live gates stayed disabled.
 L5 must implement explicit stopped-state resume/reopening and recovery; an
 invalidated final attempt remains admission-blocked pending that continuation work.
 
@@ -516,3 +527,126 @@ Continuing independent review, native demonstration and trusted final/combined
 verification remain pending. L5 recovery/reopening remains a separate dependency.
 STATUS.md, PROJECT.md, AGENTS.md, the lifecycle amendment, protected scientific
 inputs and historical receipts were not modified.
+
+## Milestone 2 — native gate and verification handoff
+
+Followed `milestones/002/plan.md`. The artifact reader refused the plan page;
+the same complete plan was read from the local pipeline artifact directory.
+`milestones/002/decisions.md` and its supplied diff were empty. The baseline
+discovery receipt reports exit 0. The current
+`milestones/001/review.md` explicitly approves the complete Milestone 1 diff and
+repairs, with no remaining actionable finding; it executed no tests and leaves
+native/trusted verification pending.
+
+Changes are confined to the planned native test module, README, test/request
+indexes and this report. No production repair, schema/tool change, isolation
+exception or alternate lifecycle was necessary. The new gate reuses
+`reserve_validation_output()` and the existing Coordinator, project lock,
+default Config, quota admission and common cleanup path.
+
+The fixture asks two public questions about the signed trapezoidal error for
+`x^2` and the limits of generalization to other smooth functions. Native agents
+must supply all results, calculations, challenges, responses and terminal
+submissions. The fixture neither supplies a solution nor demands an objection,
+agreement or exchange count. Each role's numerical job must write its own
+`NUMERICAL_CHECK.md`; its job snapshot's hash must match evidence frozen in the
+current proposal/review. This procedural filename distinguishes actual retained
+numerical work from an inspection-only job without prescribing scientific findings.
+
+An observer wraps the authenticated `control()` handler without originating,
+changing or holding its requests. It retains identities, submission hashes,
+versions, genuine responses/errors and history-page metadata/hashes. Assertions
+bind proposals/reviews/final requests to their actual contexts and verify the
+primary read every page of each delivered challenge before its final request.
+The same logical opponent must serve all observed proposals. Frozen packet
+manifests and all evidence hashes are rechecked after terminal cleanup.
+
+The gate accepts only acknowledged `complete` with current scientific agreement,
+or `scientific_stopped` with a delivered stopping challenge and the primary's
+actual reasons/recovery account. Quota and operational outcomes fail/interrupt
+the demonstration. It requires usable final handoffs and decision/status
+artifacts, matching marker/acknowledgement/runtime hashes, unchanged protected
+inputs and engineering-root markers, confirmed cleanup for every recorded owner
+and fresh service properties/empty-cgroup observations. Receipts retain
+native inventory/measurement references, scientific submissions and artifacts,
+job commands/results/original deadlines and ownership uncertainty.
+
+The 1200-second fixture bound and 120-second cleanup/close bounds apply only to
+the engineering test. Expiry fails it, records interruption and attempts owned
+cleanup. An actual RPC timeout retains its own diagnostics instead of being
+misreported as fixture expiry. Nested finalizers attempt both common cleanup and
+close after runtime creation, including failures, and save a failed receipt when
+storage is available. No science, quota, clock, telemetry or consensus is injected
+by the enabled native gate. No new native rollover or revision is claimed unless
+observed. Ungated regressions explicitly mock missing prerequisites,
+interruption, cleanup failure and fixture expiry; these establish engineering
+failure behavior only. Existing tests establish private output/symlink handling.
+
+Writer verification used:
+
+```sh
+export PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies
+export RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0
+export RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0
+export RESEARCH_PIPELINE_M5_LIVE=0 RESEARCH_PIPELINE_V0_L1_NATIVE=0
+export RESEARCH_PIPELINE_V0_L2_NATIVE=0 RESEARCH_PIPELINE_V0_L3_NATIVE=0
+export RESEARCH_PIPELINE_V0_L4_NATIVE=0
+/home/francesco/miniconda3/bin/python -m unittest \
+  tests.test_v0_l4 tests.test_v0_l4_cleanup tests.test_v0_l4_native -q
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests
+```
+
+The initial focused run passed **73 tests, one skipped**, in **8.169 seconds**.
+After strengthening the numerical evidence check and adding the fixture-expiry
+regression, focused verification passed **74 tests, one skipped**, in **8.205
+seconds**, exit 0. Ordinary discovery passed **306 tests, eight skipped**, in
+**19.134 seconds**, exit 0. Logs under this run's `runtime/tmp/`:
+`l4-m2-focused.txt` and `l4-m2-discovery.txt`. Existing actual local
+agent/job/descendant interruption and retained partial-output tests passed;
+these are local process evidence, not new native cgroup proof.
+
+Final code inspection refined observation-only error handling, bound submission
+hashes to frozen proposal sources and clarified immutable links for unpublished
+job reports. The same commands and disabled-gate environment were rerun afterward:
+focused **74 tests, one skipped, 8.200 seconds** and discovery **306 tests, eight
+skipped, 18.768 seconds**, both exit 0. Final logs are
+`runtime/tmp/l4-m2-focused-final.txt` and `runtime/tmp/l4-m2-discovery-final.txt`
+under run `20261113T025921_734d7f95`; earlier logs and the failed native receipt
+remain intact.
+
+One enabled Writer invocation used the same Python/dependency path and disabled
+historical gates, overriding only:
+
+```sh
+RESEARCH_PIPELINE_V0_L4_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95/runtime/tmp/l4-writer-native \
+/home/francesco/miniconda3/bin/python -m unittest tests.test_v0_l4_native.NativeL4Tests -v
+```
+
+It ran **one test**, exit **1**, at phase `preflight`, with:
+`RuntimeUnavailable: systemd user bus unavailable: XDG_RUNTIME_DIR and
+DBUS_SESSION_BUS_ADDRESS must already be set in the authorized host environment`.
+The private failed receipt is
+`coding_pipeline/logs/20261113T025921_734d7f95/runtime/tmp/l4-writer-native/receipt.json`.
+It records requested/actual paths, the failure and preserved absent engineering
+markers. No runtime, agents or jobs were created, so there was no owned-process
+cleanup to assert. No bus replacement or isolation/authentication bypass was
+attempted, and the earlier receipt remains unchanged.
+
+**Outstanding verification:** independent Milestone 2 review and fresh trusted
+final/combined discovery, each inheriting `RESEARCH_PIPELINE_V0_L4_NATIVE=1`,
+`RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR`, the authorized host bus and native
+authentication. Keep M1–M5 live and L1–L3 native gates disabled. The shared
+requested output reserves distinct private actual directories on successive
+invocations; retain failures as well as both successful receipts.
+Actual native scientific findings, the independent challenge, primary response,
+observed revisions/rollovers, cleanup and receipt paths must be assessed and
+reported from those runs; none is asserted by the Writer's prerequisite failure.
+Reviewed source with this validation pending is not L4 acceptance.
+
+Implementation refs and trusted-stage receipts are assigned by the pipeline;
+this role performed no Git orchestration or session/permission/budget management.
+L5 stopped-state resumption/reopening remains a separate dependency.
+PROJECT.md, AGENTS.md, the human amendment, manager-owned STATUS.md,
+`research_example/starting_evidence/`, the inactive retained M5 candidate and
+historical receipts were preserved.

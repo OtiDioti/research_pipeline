@@ -14,4 +14,4 @@
 - [v0-l1-durable-runtime.md](v0-l1-durable-runtime.md) — L1 implementation decisions, tests, exact native host blocker and required verification invocation.
 - [v0-l2-measured-rollover.md](v0-l2-measured-rollover.md) — Accepted measured context continuity, historical native evidence and integration handoff.
 - [v0-l3-quota-staleness.md](v0-l3-quota-staleness.md) — Central weekly reserve, warning clocks, preserved combined failure, intake-bound repair and pending independent review/trusted final/combined validation.
-- [v0-l4-scientific-decisions.md](v0-l4-scientific-decisions.md) — Milestone 1 scientific opposition, version-bound terminal authority and cleanup, focused tests and outstanding native/review/final verification and L5 dependencies.
+- [v0-l4-scientific-decisions.md](v0-l4-scientific-decisions.md) — Reviewed Milestone 1 scientific decisions and Milestone 2 native gate/receipts, actual Writer validation, pending trusted native/review/final verification and L5 dependency.
