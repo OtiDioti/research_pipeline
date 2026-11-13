@@ -1,13 +1,13 @@
 # Folder contents
 
-- [__init__.py](__init__.py) — The M1 scientific research loop.
+- [__init__.py](__init__.py) — Research-owned scientific runtime with measured context continuity.
 - [__main__.py](__main__.py) — Python package entry point.
 - [app_server.py](app_server.py) — Small research-owned newline JSON-RPC driver; no controller-engine dependency.
 - [budget.py](budget.py) — Read-only observations of shared allocation and emitted model usage.
 - [checkpoint.py](checkpoint.py) — Superseded namespace CLI. Saving is provided by controlled write_draft/control.
-- [cli.py](cli.py) — V0-L1 foreground runtime and ordinary-file controls.
+- [cli.py](cli.py) — V0-L2 foreground runtime and ordinary-file controls.
 - [codex.py](codex.py) — Codex app-server configuration, production inventory evidence and scientific intake.
-- [collaboration.py](collaboration.py) — One research-owned runtime for single and multiple logical tasks.
+- [collaboration.py](collaboration.py) — Logical task continuity and shared job/context scientific publication with human-edit protection.
 - [documents.py](documents.py) — Immutable scoped snapshots of stopped writers' scientific drafts, readable before safe canonical publication.
 - [isolation.py](isolation.py) — Production Linux boundary: persistent capped slices and owned transient services.
 - [job_server.py](job_server.py) — Thin stdio MCP adapter. The research runtime owns jobs and event-driven waits.
@@ -16,3 +16,4 @@
 - [tools.py](tools.py) — Small file-based tool convention; execution is namespace-local, never a host CLI.
 - [verification.py](verification.py) — Freeze explicitly supplied stable scientific evidence for an independent check.
 - [workspace.py](workspace.py) — Ordinary project files; human inputs are never written by the controller.
+- [context_usage.py](context_usage.py) — Native per-context measurement normalization, fixed threshold and separate cumulative accounting.

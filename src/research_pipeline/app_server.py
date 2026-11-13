@@ -18,6 +18,9 @@ class Client:
         self.completed = {}
         self.telemetry = None
         self.thread_id = None
+        self.active_turn_id = None
+        self.turn_ready = asyncio.Event()
+        self.stderr = None
 
     async def send(self, message):
         data = (json.dumps(message, allow_nan=False) + '\n').encode()
@@ -76,18 +79,30 @@ class Client:
                     raise RuntimeUnavailable(f'Unexpected app-server request: {value.get("method")}')
                 elif isinstance(value.get('method'), str):
                     method, params = value['method'], value.get('params', {})
+                    if method == 'thread/compacted':
+                        raise RuntimeUnavailable('Unexpected native compaction; fresh-context rollover was not confirmed')
+                    if method == 'turn/started':
+                        if params.get('threadId') != self.thread_id:
+                            raise RuntimeUnavailable('Turn notification thread ownership mismatch')
+                        self.active_turn_id = params['turn']['id']
+                        self.turn_ready.set()
                     if method == 'turn/completed':
                         if params.get('threadId') != self.thread_id:
                             raise RuntimeUnavailable('Turn notification thread ownership mismatch')
                         turn = params['turn']
-                        self.completed[turn['id']] = turn
+                        if self.active_turn_id == turn['id']:
+                            self.active_turn_id = None
                         event = self.turns.pop(turn['id'], None)
                         if event and not event.done():
                             event.set_result(turn)
+                        elif event is None:
+                            self.completed[turn['id']] = turn
                     if method == 'thread/tokenUsage/updated':
                         if params.get('threadId') != self.thread_id:
                             raise RuntimeUnavailable('Telemetry thread ownership mismatch')
                         self.telemetry = params.get('tokenUsage')
+                        self.active_turn_id = params.get('turnId')
+                        self.turn_ready.set()
                     if self.on_event:
                         await self.on_event(value)
                 else:
@@ -111,17 +126,26 @@ class Client:
         return self.thread_id
 
     async def turn(self, text):
+        self.turn_ready.clear()
         result = await self.request('turn/start', {'threadId': self.thread_id,
                     'input': [{'type': 'text', 'text': text}]})
         turn_id = result['turn']['id']
+        self.turn_ready.set()
         if turn_id in self.completed:
+            self.active_turn_id = None
             return self.completed.pop(turn_id)
+        self.active_turn_id = turn_id
         if self.failure:
             raise self.failure
         future = asyncio.get_running_loop().create_future()
         self.turns[turn_id] = future
         # There is intentionally no scientific session timer.
-        return await future
+        try:
+            return await future
+        finally:
+            self.turns.pop(turn_id, None)
+            if self.active_turn_id == turn_id:
+                self.active_turn_id = None
 
     async def interrupt(self, turn_id):
         return await self.request('turn/interrupt', {'threadId': self.thread_id, 'turnId': turn_id})
@@ -132,6 +156,10 @@ class Client:
                 await self.request('thread/unsubscribe', {'threadId': self.thread_id}, timeout=5)
             except RuntimeUnavailable:
                 pass
+        self.failure = self.failure or RuntimeUnavailable('Context closed operationally; no scientific terminal decision')
+        for future in [*self.pending.values(), *self.turns.values()]:
+            if not future.done():
+                future.set_exception(self.failure)
         result = await self.service.close()
         for task in (self.reader, self.stderr):
             if task:

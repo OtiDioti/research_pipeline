@@ -23,6 +23,7 @@ def context_fixture(runtime, context_id='first', outcome=None, cleanup=True, tas
     record = {'context_id': context_id, 'task_id': task_id, 'state': 'attached', 'cleanup_ok': False}
     ctx = {'record': record, 'root': root, 'drafts': root/'drafts', 'private': ExitStack(),
            'baseline': workspace.science_fingerprints(runtime.project, task_id),
+           'lifecycle_event': asyncio.Event(),
            'server': type('Server', (), {'close': lambda self: None, 'wait_closed': AsyncMock()})()}
     runtime.contexts[context_id] = ctx
     runtime.state['contexts'][context_id] = record
@@ -60,7 +61,7 @@ class CLIOutcomeTests(unittest.TestCase):
         self.assertFalse(state['cleanup_ok'])
         self.assertEqual(state['state'], 'cleanup_unconfirmed')
         self.assertFalse(state['contexts']['first']['cleanup_ok'])
-        self.assertNotIn('context_error', state['tasks']['primary'])
+        self.assertIn('telemetry unavailable', state['tasks']['primary']['context_error'])
         self.assertTrue(state['admission_block'])
 
     def test_failed_and_interrupted_turns_retain_native_outcome_and_fail_cli(self):
@@ -75,11 +76,12 @@ class CLIOutcomeTests(unittest.TestCase):
                 self.assertIn(status, state['tasks']['primary']['context_error'])
                 self.assertIn('native outcome detail', state['tasks']['primary']['context_error'])
 
-    def test_completed_turn_requires_confirmed_cleanup_for_success(self):
+    def test_completed_turn_without_telemetry_is_operational_failure(self):
         code, state = self.run_cli({'id': 'turn', 'status': 'completed'}, cleanup=True)
-        self.assertEqual(code, 0)
+        self.assertEqual(code, 1)
         self.assertTrue(state['cleanup_ok'])
-        self.assertEqual(state['state'], 'idle')
+        self.assertEqual(state['state'], 'failed')
+        self.assertIn('telemetry unavailable', state['tasks']['primary']['context_error'])
 
 
 class PublicationProcessTests(unittest.IsolatedAsyncioTestCase):

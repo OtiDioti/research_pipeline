@@ -83,6 +83,7 @@ class NativeCatalogTests(unittest.TestCase):
         catalogs = codex.native_catalog_observations(session, "fresh")
         self.assertEqual([codex.validate_tool_catalog(c) for c in catalogs], [names])
         receipt = json.loads((session / "native-tools.json").read_text())
+        self.assertEqual(receipt["inference_starts"], 1)
         self.assertNotIn("Not tool evidence", json.dumps(receipt))
         self.assertEqual(len(receipt["observations"][0]["request_sha256"]), 64)
         with self.assertRaisesRegex(isolation.RuntimeUnavailable, "different session"):
@@ -108,6 +109,16 @@ class NativeCatalogTests(unittest.TestCase):
         self.assertEqual(len(catalogs), 2)
         with self.assertRaisesRegex(isolation.RuntimeUnavailable, "exec_command"):
             codex.validate_tool_catalog(catalogs[1])
+        # Equal tool declarations still represent distinct inference boundaries.
+        (bundle / "payloads/3.json").write_text(json.dumps(request))
+        event["payload"]["request_payload"]["path"] = "payloads/3.json"
+        with (bundle / "trace.jsonl").open("a") as stream:
+            stream.write((json.dumps(event) + "\n") * 2)  # duplicate native event
+        with codex.native_tool_trace(home, session):
+            pass
+        self.assertEqual(len(codex.native_catalog_observations(session, "fresh")), 2)
+        receipt = json.loads((session / "native-tools.json").read_text())
+        self.assertEqual(receipt["inference_starts"], 3)
         # Earlier receipts omitted top-level tools; they cannot certify completeness.
         receipt = json.loads((session / "native-tools.json").read_text())
         del receipt["observations"][0]["tools"]

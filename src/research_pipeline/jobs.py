@@ -109,6 +109,8 @@ class JobManager:
             if self.state['admission_block']:
                 raise JobError('Admissions blocked: ' + self.state['admission_block'])
             task = self.state['tasks'][task_id]
+            if task.get('operational_state', 'working') != 'working' or task.get('pending_job_inspections'):
+                raise JobError('Task lifecycle/owned-job reconciliation blocks new computations')
             if task.get('context_id') != context_id or not task.get('inventory_verified'):
                 raise JobError('Context attachment or production tool inventory unverified')
             if sum(r['state'] in ACTIVE for r in self.state['jobs'].values()) >= self.state['limits']['max_jobs']:
@@ -274,17 +276,10 @@ class JobManager:
         record['publication_pending'] = True
         if record.get('cleanup_ok') is True and self.on_stopped:
             self.on_stopped(record)
-        if not science_quiescent(self.state):
-            return
-        try:
-            record['publication_conflicts'], _ = workspace.publish_drafts(
-                self.project, Path(record['drafts']), record['science_baseline'], [], record['task_id'],
-                self.state['tasks'][record['task_id']].get('frozen_inputs', ()))
-        except (OSError, ValueError) as exc:
-            # Finalization failure is distinct from confirmed process cleanup.
-            record['publication_error'] = str(exc)
-        finally:
-            record['publication_pending'] = False
+        # The coordinator publishes job and context batches together, under the
+        # same logical-owner human-edit and successor ordering checks.
+        if self.on_quiescent:
+            self.on_quiescent()
 
     async def inspect(self, task_id, job_id=None):
         if job_id:

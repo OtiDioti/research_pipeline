@@ -12,3 +12,4 @@
 - [m4-job-controls.md](m4-job-controls.md) — Job-boundary implementation, reporting, available verification and remaining controller-host acceptance requirements.
 
 - [v0-l1-durable-runtime.md](v0-l1-durable-runtime.md) — L1 implementation decisions, tests, exact native host blocker and required verification invocation.
+- [v0-l2-measured-rollover.md](v0-l2-measured-rollover.md) — Measured context continuity implementation, test evidence and pending host verification.

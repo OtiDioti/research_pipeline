@@ -65,14 +65,17 @@ def create_server(adapter):
 
     @server.tool()
     async def control(action: str = 'check', path: str | None = None, parent: str = 'primary',
-                      offset: StrictInt = 0) -> dict:
-        """Fixed operations: check, tasks, delegate, verify, documents, read_document.
+                      offset: StrictInt = 0, sha256: str | None = None) -> dict:
+        """Fixed operations: check, tasks, delegate, verify, documents, read_document, incorporate_edit.
         documents lists scoped immutable snapshots, 32 per page. read_document uses
         path=document_id and offset=character offset; follow next_offset for more.
         Handoffs/reports remain readable before safe canonical publication.
-        Terminal decisions and automatic rollover are later lifecycle increments.
+        incorporate_edit uses path and the current human sha256 after you read and
+        incorporate it in that path's saved draft. A changed draft needs a new
+        acknowledgement. Human text is preserved before accepted publication.
+        Measured rollover is automatic; terminal decisions require V0-L4.
         """
-        return await adapter.call('control', action=action, path=path, parent=parent, offset=offset)
+        return await adapter.call('control', action=action, path=path, parent=parent, offset=offset, sha256=sha256)
 
     return server
 
