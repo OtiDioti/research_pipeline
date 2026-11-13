@@ -7,10 +7,13 @@ the public native investigation gate, authenticated observations, retained recei
 and ungated failure regressions in `tests/test_v0_l4_native.py`.
 
 **Native scientific validation remains pending for trusted final/combined stages.**
-The enabled Writer attempt failed before runtime creation/inference because the
-inherited authorized user bus is unavailable. Its failed receipt is retained;
-there is no native scientific finding, challenge, consensus or successful cleanup
-claim from that invocation. Milestone 2 review and overall L4 acceptance remain
+The first trusted final run failed after its 1200-second engineering bound:
+fixture instructions contained an invalid placeholder document link that blocked
+proposal freezing. Its native receipt confirms cleanup but records no opponent
+or scientific terminal outcome. The fixture is repaired; see the integration
+repair below. The enabled Writer attempt also failed before runtime creation
+because the inherited authorized user bus is unavailable. Failed receipts remain
+retained. Successful native final/combined checks and overall L4 acceptance remain
 outstanding. L5 reopening/resumption and L6/M5 work are excluded. Human scientific
 acceptance remains mandatory for M5. Historical implementation and repair evidence
 below retains its original scope.
@@ -650,3 +653,78 @@ L5 stopped-state resumption/reopening remains a separate dependency.
 PROJECT.md, AGENTS.md, the human amendment, manager-owned STATUS.md,
 `research_example/starting_evidence/`, the inactive retained M5 candidate and
 historical receipts were preserved.
+
+## Milestone 3 integration repair — native fixture evidence link
+
+Read the supplied baseline/final reports, the complete final command output and
+earlier milestone decisions. The artifact tool refused the command log and
+decision pages; their read-only filesystem copies were inspected. Baseline
+`tests/baseline-001.txt` reports exit 0. Trusted `tests/final-002.txt` ran 306 tests,
+seven skipped, and failed only the enabled L4 investigation after its 1200-second
+operational bound (1208.949 seconds including cleanup).
+
+The preserved native receipt at
+`coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host/receipt.json`
+shows repeated `Invalid immutable document ID` errors at proposal admission,
+no designated opponent and confirmed owned cleanup. The initial recoverable
+human-edit incorporation error was followed by the persistent link error.
+The fixture's own `AGENTS.md` included `[numerical report](document:ID)`;
+authoritative instructions are frozen with every proposal, so this literal
+placeholder was treated as a real evidence dependency. The agents could not
+repair that protected input, and no proposal reached independent opposition.
+This was an engineering fixture failure, not a scientific stopping decision.
+
+Replaced the malformed example with prose specifying the `document:` prefix
+followed by an actual 64-character document identifier. No production code,
+evidence validation, input freezing, isolation, quota policy or operational
+bound changed. The fixture still requires real agent-authored science,
+computations, independent challenge and authenticated terminal decisions.
+
+An ungated regression imports the exact native questions/instructions, freezes
+them through the Coordinator proposal control, checks their retained bytes and
+hashes, verifies opponent scheduling, then exercises review/finalization through
+a matching terminal acknowledgement. Scientific judgments, quota observations
+and contexts are labelled engineering doubles, using the existing decision
+fixture; this is not native scientific consensus. With the original instructions
+from the failed native project, this test reproduced
+`InputError: Invalid immutable document ID` before repair. With corrected
+instructions it passes. Existing per-test cleanup runs on both paths.
+
+Validation used the trusted Python and existing MCP dependencies:
+
+```sh
+export PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies
+export RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0
+export RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0
+export RESEARCH_PIPELINE_M5_LIVE=0 RESEARCH_PIPELINE_V0_L1_NATIVE=0
+export RESEARCH_PIPELINE_V0_L2_NATIVE=0 RESEARCH_PIPELINE_V0_L3_NATIVE=0
+export RESEARCH_PIPELINE_V0_L4_NATIVE=0
+/home/francesco/miniconda3/bin/python -m unittest \
+  tests.test_v0_l4 tests.test_v0_l4_cleanup tests.test_v0_l4_native -q
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests
+RESEARCH_PIPELINE_V0_L4_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95/runtime/tmp/l4-integration-writer-native \
+/home/francesco/miniconda3/bin/python -m unittest tests.test_v0_l4_native.NativeL4Tests -v
+```
+
+Focused verification: **75 tests, one skipped, 8.452 seconds, exit 0**.
+Discovery: **307 tests, eight skipped, 19.299 seconds, exit 0**.
+These include actual local process/descendant termination and partial-output
+retention tests, not new native cgroup evidence. Private logs under this run's
+`runtime/tmp/` are `l4-integration-before.txt`, `l4-integration-focused.txt`,
+`l4-integration-discovery.txt` and `l4-integration-native.txt`.
+
+The enabled Writer invocation ran one test and failed visibly at preflight,
+exit 1, in 0.005 seconds: inherited `XDG_RUNTIME_DIR` and
+`DBUS_SESSION_BUS_ADDRESS` are absent. The distinct failed receipt is
+`runtime/tmp/l4-integration-writer-native/receipt.json`. No runtime, agents or
+jobs were created; no native cleanup or scientific outcome is claimed. No
+isolation/authentication workaround was attempted. Both the earlier timeout
+receipt and this prerequisite receipt remain intact.
+
+Successful enabled final/combined checks remain pending for the trusted host.
+This repair is reviewable with that validation explicitly outstanding, not L4
+acceptance. L5 recovery/reopening remains a separate dependency. README and
+relevant indexes describe the failure, repair and remaining checks. No Git
+orchestration, session management, remote action, protected input modification,
+manager-owned STATUS.md change or human-requirement edit was performed.

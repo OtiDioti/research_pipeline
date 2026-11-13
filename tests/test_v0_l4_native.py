@@ -20,6 +20,7 @@ from unittest.mock import AsyncMock, patch
 from tests import use_checkout
 use_checkout()
 from tests.test_v0_l1_native import reserve_validation_output
+from tests.test_v0_l4 import DecisionFixture
 from research_pipeline import collaboration, decisions, isolation, jobs, workspace
 
 
@@ -68,8 +69,9 @@ your proposal/review and handoff. This procedural filename helps the engineering
 observer distinguish a numerical job from read-only inspection; all findings,
 parameters, code and assessments are yours to supply.
 Job-written Markdown can remain a private retained draft while your context is
-active. Discover/read its immutable snapshot with control(documents/read_document)
-and link [numerical report](document:ID), including its code/data dependencies
+active. Discover/read its immutable snapshot with control(documents/read_document).
+Link the report using a Markdown link whose target is the document: prefix followed
+by its actual 64-character document ID. Include its code/data dependencies
 explicitly in the proposal/review. Handoffs must also use that document link when
 the report is not yet canonical, or save the exact report with write_draft first.
 Use write_draft for other scientific Markdown, job_run/job_wait for actual
@@ -358,6 +360,27 @@ class NativeL4Tests(unittest.TestCase):
                 'mcp_tools_sha256': workspace.file_digest(root / 'mcp-tools.json')})
             self.assertTrue(receipt['native_evidence'][-1]['native_tools_sha256'])
             self.assertTrue(receipt['native_evidence'][-1]['mcp_tools_sha256'])
+
+
+class NativeInputTests(DecisionFixture):
+    """Exact live intake through production controls; scientific judgments are doubles."""
+
+    async def test_native_instructions_freeze_and_reach_the_opponent(self):
+        (self.project / 'AGENTS.md').write_text(INSTRUCTIONS)
+        (self.project / 'starting_evidence/RESEARCH_QUESTIONS.md').write_text(QUESTIONS)
+        proposal = await self.propose(dispositions=('answered', 'inconclusive'))
+        entries = {e['source']: e for e in proposal['packet']['evidence']}
+        for path, expected in (('AGENTS.md', INSTRUCTIONS),
+                               ('starting_evidence/RESEARCH_QUESTIONS.md', QUESTIONS)):
+            self.assertEqual((self.project / entries[path]['path']).read_text(), expected)
+            self.assertEqual(entries[path]['source_sha256'],
+                             hashlib.sha256(expected.encode()).hexdigest())
+        self.assertEqual(len(self.scheduled), 1)
+        self.assertEqual(self.scheduled[0], self.state['opposition']['opponent_id'])
+        await self.review(proposal)
+        await self.finalize(proposal)
+        self.assertTrue(await self.runtime.shutdown_task, self.state.get('terminal_error'))
+        self.assertTrue(collaboration.terminal_acknowledged(self.project, self.state))
 
 
 class NativeReceiptTests(unittest.TestCase):

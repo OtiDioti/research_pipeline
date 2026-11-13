@@ -17,9 +17,12 @@ See [STATUS.md](STATUS.md) for refs and receipts, and the
 
 L4 implements scientific opposition and terminal finalization. Independent review
 approved Milestone 1. Milestone 2 adds an opt-in native investigation gate and retained
-receipts; its review, native demonstration and trusted final/combined validation
-remain pending. The restricted Writer's enabled attempt failed at the missing
-authorized user bus before inference; see the
+receipts. Successful native demonstration and trusted final/combined validation
+remain pending. The first trusted final run hit its operational bound after a
+placeholder document link in fixture instructions blocked proposal freezing.
+The fixture is repaired and covered by an ungated proposal/finalization regression;
+the failed native receipt retains confirmed cleanup. The restricted Writer also
+lacks the authorized user bus; see the
 [L4 implementation report](development/requests/v0-l4-scientific-decisions.md).
 L5 reopening/recovery and L6 integrated validation remain required before another private M5 attempt. Historical M1–M4
 receipts retain their original meaning. The retained M5 candidate remains inactive,
@@ -558,4 +561,8 @@ instruct agents to declare scientific COMPLETE or STOP. No telemetry, quota,
 clock or agreement fixture is injected by this gate. Further native revision or
 rollover evidence is claimed only when observed. Ungated prerequisite,
 interruption and receipt-retention tests use explicitly mocked engineering
-failures. L5 resume/reopening remains unimplemented.
+failures. An ungated control-path regression freezes the exact native fixture
+instructions and questions and reaches acknowledged finalization with labelled
+scientific judgments. This catches malformed fixture evidence links before
+inference; it does not establish native scientific agreement.
+L5 resume/reopening remains unimplemented.
