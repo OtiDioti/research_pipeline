@@ -10,5 +10,7 @@ def budget_report(state, live=False):
             'model_telemetry': {k: r.get('telemetry') for k, r in state['contexts'].items()},
             'context_occupancy': {k: {name: r.get(name) for name in ('measurement', 'threshold_observation', 'maximum_occupancy_percent')} for k, r in state['contexts'].items()},
             'logical_usage': {k: task_usage(state, k) for k in state['tasks']},
-            'account_quota': 'unknown; weekly safeguard requires V0-L3',
+            'account_quota': state.get('quota', {}),
+            'secondary_staleness': {'interval_seconds': state.get('secondary_staleness_seconds'),
+                                    'pending': state.get('pending_staleness', {})},
             'model_spending': 'unknown; no monetary cap is claimed'}

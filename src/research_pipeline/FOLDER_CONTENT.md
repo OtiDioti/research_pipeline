@@ -5,7 +5,7 @@
 - [app_server.py](app_server.py) — Small research-owned newline JSON-RPC driver; no controller-engine dependency.
 - [budget.py](budget.py) — Read-only observations of shared allocation and emitted model usage.
 - [checkpoint.py](checkpoint.py) — Superseded namespace CLI. Saving is provided by controlled write_draft/control.
-- [cli.py](cli.py) — V0-L2 foreground runtime and ordinary-file controls.
+- [cli.py](cli.py) — V0-L3 foreground runtime, human inactivity interval and truthful cleanup outcomes.
 - [codex.py](codex.py) — Codex app-server configuration, production inventory evidence and scientific intake.
 - [collaboration.py](collaboration.py) — Logical task continuity and shared job/context scientific publication with human-edit protection.
 - [documents.py](documents.py) — Immutable scoped snapshots of stopped writers' scientific drafts, readable before safe canonical publication.
@@ -17,3 +17,5 @@
 - [verification.py](verification.py) — Freeze explicitly supplied stable scientific evidence for an independent check.
 - [workspace.py](workspace.py) — Ordinary project files; human inputs are never written by the controller.
 - [context_usage.py](context_usage.py) — Native per-context measurement normalization, fixed threshold and separate cumulative accounting.
+- [quota.py](quota.py) — Shared weekly bucket normalization, sparse-update ages, admission and fixed 15% reserve.
+- [staleness.py](staleness.py) — Independent explicit-time secondary context clocks and warning intervals.

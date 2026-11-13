@@ -17,7 +17,7 @@ import sys
 import time
 import uuid
 
-from . import isolation, workspace
+from . import isolation, quota, workspace
 
 
 class JobError(ValueError):
@@ -106,8 +106,9 @@ class JobManager:
     async def run(self, task_id, context_id, argv, cwd, runtime_seconds):
         runtime = duration(runtime_seconds)
         async with self.lock:
-            if self.state['admission_block']:
-                raise JobError('Admissions blocked: ' + self.state['admission_block'])
+            error = quota.admission_error(self.state)
+            if error:
+                raise JobError('Admissions blocked: ' + error)
             task = self.state['tasks'][task_id]
             if task.get('operational_state', 'working') != 'working' or task.get('pending_job_inspections'):
                 raise JobError('Task lifecycle/owned-job reconciliation blocks new computations')
@@ -156,7 +157,7 @@ class JobManager:
                 await isolation.command(*launch_args)
                 record['service'] = await isolation.capture_ownership(record['unit'], self.allocation.slots[task['slot']]['cgroup'])
                 self.changed(record)  # ownership is saved before permitting the command
-                if self.state['admission_block']:
+                if quota.admission_error(self.state):
                     cleanup = await isolation.stop_owned(record['service'])
                     record.update(state='cancelled' if cleanup['confirmed'] else 'cleanup_unconfirmed',
                                   cleanup_ok=cleanup['confirmed'], cleanup=cleanup,
@@ -308,9 +309,11 @@ class JobManager:
             record.update(state='stopping', reason='Cancellation requested; termination not yet confirmed')
             try:
                 self.changed(record)
-            except OSError as exc:
+            except (OSError, ValueError) as exc:
                 record['persistence_error'] = str(exc)
             cleanup = await isolation.stop_owned(record.get('service'))
+            # Preserve actual termination even if later snapshot/persistence fails.
+            record.update(cleanup=cleanup, cleanup_ok=cleanup['confirmed'])
             # Capture bounded partial output even when SIGKILL prevented finalization.
             result = read(Path(record['result_path'])) or {}
             for key in ('stdout', 'stderr', 'stdout_clipped', 'stderr_clipped', 'returncode',

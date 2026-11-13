@@ -368,6 +368,12 @@ intake/recovery and checkpointing, save drafts and inspect/read only; new jobs a
 assignments are blocked. Consume the exact validated predecessor handoff supplied
 above, follow its artifact versions, and inspect each reconciled owned job before
 launching replacements. Input changes above require scientific reassessment.
-Weekly quota reserve, scientific terminal decisions and stopped-state resumption are later increments;
+The primary runtime reads shared account weekly quota before admission and during
+operation. At 15% remaining or less it latches investigation-wide quota STOP,
+without opponent review, and interrupts all owned contexts and computations.
+Agents cannot relax this policy or restart stopped work. Secondary inactivity
+warnings report measured context-length staleness; primary chooses the response.
+A warning alone asserts no scientific failure and never stops or replaces work.
+Scientific terminal decisions and stopped-state resumption remain later increments;
 report limitations honestly. Do not manufacture their outcomes.
 """

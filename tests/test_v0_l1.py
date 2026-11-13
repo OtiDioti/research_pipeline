@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, patch
 
 from tests import use_checkout
 use_checkout()
+from tests.quota_fixture import sufficient
 from research_pipeline import cli, codex, collaboration, isolation, job_server, jobs, verification, workspace
 
 
@@ -30,6 +31,7 @@ class RuntimeTests(unittest.IsolatedAsyncioTestCase):
         (self.project / 'AGENTS.md').write_text('Use public data.')
         self.config = isolation.Config()
         self.runtime = collaboration.Coordinator.initialize(self.project, self.config)
+        sufficient(self.runtime)
         self.manager = self.runtime.jobs
         self.state = self.runtime.state
         self.runtime.allocation.slots = [{'unit': 'test-slot.slice', 'cgroup': '/test/slot'}] * 2
@@ -543,7 +545,7 @@ class ScientificFilesTests(unittest.TestCase):
 
     def test_unsupported_operational_versions_rejected_without_migration(self):
         (self.project/'.research_pipeline').mkdir()
-        for version in (None, 1, 2, 3, 4, 6):
+        for version in (None, 1, 2, 3, 4, 5, 7):
             jobs.atomic(self.project/'.research_pipeline/run.json', {'schema_version': version})
             with self.assertRaisesRegex(workspace.InputError, 'Unsupported operational state'):
                 collaboration.load_state(self.project)

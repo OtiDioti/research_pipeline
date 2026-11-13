@@ -127,8 +127,11 @@ class NativeL1Tests(unittest.TestCase):
                 await runtime.start()
                 receipt['evidence']['allocation'] = runtime.state['allocation']
 
+                async def reuse_or_attach(task_id):
+                    return runtime.state['tasks'][task_id].get('context_id') or await runtime.attach(task_id)
+
                 async def attach(task_id, successor=False):
-                    context_id = await (runtime.successor(task_id) if successor else runtime.attach(task_id))
+                    context_id = await (runtime.successor(task_id) if successor else reuse_or_attach(task_id))
                     ctx = runtime.contexts[context_id]
                     ctx['record']['state'] = 'turn_running'
                     runtime.save()

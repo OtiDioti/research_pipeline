@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, patch
 
 from tests import use_checkout
 use_checkout()
+from tests.quota_fixture import sufficient
 from research_pipeline import cli, collaboration, isolation, jobs, verification, workspace
 
 
@@ -46,6 +47,7 @@ class CLIOutcomeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             project = make_project(Path(temp))
             async def attach(runtime, task_id):
+                sufficient(runtime)
                 context_fixture(runtime, outcome=outcome, cleanup=cleanup)
                 return 'first'
             with patch.object(collaboration.Coordinator, 'start', AsyncMock()), \
@@ -89,6 +91,7 @@ class PublicationProcessTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as temp:
             project = make_project(Path(temp))
             runtime = collaboration.Coordinator.initialize(project, isolation.Config())
+            sufficient(runtime)
             context_fixture(runtime, context_id='successor')
             batch = project/'.research_pipeline/jobs/batch/drafts'
             (batch/'outputs').mkdir(parents=True)
@@ -111,6 +114,7 @@ class PublicationProcessTests(unittest.IsolatedAsyncioTestCase):
             root = Path(temp)
             project = make_project(root)
             runtime = collaboration.Coordinator.initialize(project, isolation.Config())
+            sufficient(runtime)
             (project/'work/swap').mkdir()
             (project/'work/swap/NOTE.md').write_text('# Original')
             outside = root/'outside'
@@ -308,6 +312,7 @@ class AssignmentTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as temp:
             project = make_project(Path(temp))
             runtime = collaboration.Coordinator.initialize(project, isolation.Config())
+            sufficient(runtime)
             ctx = context_fixture(runtime)
             (project/'work/data.csv').write_text('x,y\n1,2\n')
             text = '\n'.join('## '+field+'\n'+(
@@ -351,6 +356,7 @@ class AssignmentTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as temp:
             project = make_project(Path(temp))
             runtime = collaboration.Coordinator.initialize(project, isolation.Config())
+            sufficient(runtime)
             ctx = context_fixture(runtime)
             (ctx['drafts']/'work').mkdir()
             text = '\n'.join('## '+field+'\n'+('[Lost](missing.csv)' if field == 'Artifacts' else 'Public calculation.')

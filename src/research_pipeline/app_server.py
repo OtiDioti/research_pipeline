@@ -10,6 +10,7 @@ class Client:
         self.service = service
         self.on_event = on_event
         self.pending = {}
+        self.optional_steers = set()
         self.serial = 0
         self.reader = None
         self.diagnostics = bytearray()
@@ -36,6 +37,8 @@ class Client:
         serial = self.serial
         future = asyncio.get_running_loop().create_future()
         self.pending[serial] = future
+        if method == 'turn/steer':
+            self.optional_steers.add(serial)
         try:
             await self.send({'id': serial, 'method': method, 'params': params})
             return await asyncio.wait_for(future, timeout)
@@ -43,6 +46,13 @@ class Client:
             raise RuntimeUnavailable(f'Operational RPC timeout: {method}; outcome uncertain') from exc
         finally:
             self.pending.pop(serial, None)
+            if method == 'turn/steer':
+                if future.done() and not future.cancelled():
+                    self.optional_steers.discard(serial)
+                else:
+                    # Keep this exact optional request ID until its late reply
+                    # arrives or the transport closes. Unknown IDs still fail.
+                    future.cancel()
 
     async def start(self):
         self.reader = asyncio.create_task(self.read())
@@ -65,6 +75,12 @@ class Client:
                     raise RuntimeUnavailable('Malformed app-server message')
                 if 'id' in value and 'method' not in value:
                     future = self.pending.get(value['id'])
+                    if (value['id'] in self.optional_steers
+                            and (future is None or future.cancelled())):
+                        if 'error' not in value and 'result' not in value:
+                            raise RuntimeUnavailable('RPC response has neither result nor error')
+                        self.optional_steers.remove(value['id'])
+                        continue  # warning delivery remains unconfirmed
                     if future is None or future.done():
                         raise RuntimeUnavailable('Uncorrelated app-server response')
                     if 'error' in value:
@@ -150,6 +166,13 @@ class Client:
     async def interrupt(self, turn_id):
         return await self.request('turn/interrupt', {'threadId': self.thread_id, 'turnId': turn_id})
 
+    async def read_quota(self):
+        return await self.request('account/rateLimits/read', {})
+
+    async def steer(self, turn_id, text):
+        return await self.request('turn/steer', {'threadId': self.thread_id,
+            'expectedTurnId': turn_id, 'input': [{'type': 'text', 'text': text}]})
+
     async def close(self):
         if self.thread_id and not self.failure:
             try:
@@ -165,4 +188,5 @@ class Client:
             if task:
                 task.cancel()
         await asyncio.gather(*(t for t in (self.reader, self.stderr) if t), return_exceptions=True)
+        self.optional_steers.clear()
         return result
