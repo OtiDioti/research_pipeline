@@ -1,6 +1,6 @@
 # Known behavioral and design conflicts
 
-Updated 2026-11-13. This report follows the human's request to audit behavior and overengineering risks while the pipeline advances. These findings are confirmed in accepted L4 source (`3a23c69`) and remain in the reviewed first L5 increment (`738bbe3`); they are not attributed to the current unfinished pause/crash-recovery changes. No product source or historical scientific artifact was changed by this audit.
+Updated 2026-11-13. This report follows the human's request to audit behavior and overengineering risks while the pipeline advances. C1–C3 are confirmed behavioral conflicts in accepted L4 source (`3a23c69`) and remain in the reviewed first L5 increment (`738bbe3`). C4–C5 identify confirmed code policies with potential proportionality/concurrency conflicts; their practical impact has not been measured in a new runtime exercise. None is attributed to the current unfinished pause/crash-recovery changes. No product source or historical scientific artifact was changed by these audits.
 
 The existing L5 request remains active. These are material follow-up findings, with minimal correction directions rather than an instruction to build another subsystem. Pipeline reports still establish the scope of prior engineering acceptance; they did not test these portability and input-format cases.
 
@@ -53,8 +53,34 @@ This is also consistent with the historical L4 fixture failure where an illustra
 
 Source: `Coordinator.propose_decision()` in [collaboration.py](src/research_pipeline/collaboration.py), `freeze()` / `link_path()` / `scientific_path()` in [verification.py](src/research_pipeline/verification.py).
 
+## C4 — Reusable-tool qualification expires on every computation
+
+**Confirmed policy; material proportionality concern, not a newly reproduced runtime failure.** PROJECT.md §7.1 calls for simple tool registration and reuse, with sufficient intended-use validation rather than a complex qualification framework. The lifecycle amendment requires useful work to continue across disposable contexts and computations.
+
+`Jobs.prepare()` sets the tool context's `activation` to the unique computation `job_id`. `tools.registration()` rejects a successful validation whose activation differs, even when tool-file hashes and the researcher's assessment are unchanged. `tools.run()` invokes that check with `current=True`. Thus a tool validated in computation A must repeat its declared registration checks before the helper will run it in computation B. The boundary is each command job, not merely an investigation restart or context rollover.
+
+This can impose repeated qualification costs in an ordinary numerical parameter study. It does not prevent directly invoking a scientific script or validating and using a tool within one job. Each job also has fresh scratch space, so environment-sensitive checks may be justified. The concern is treating every new job ID as sufficient evidence that all checks must repeat, without distinguishing those cases. No live cost or failure is claimed by this audit.
+
+**Disposition:** log for a bounded pipeline design decision; do not remove validation in the active worktree. First establish which checks actually depend on a fresh job environment and whether unchanged validated tools can be reused safely with a smaller check. Avoid a general environment-certification service, cache framework or compatibility layer.
+
+Source: [job tool context](src/research_pipeline/jobs.py:186), [registration policy](src/research_pipeline/tools.py:289), and [tool invocation](src/research_pipeline/tools.py:356). The same policy is present in accepted main and reviewed L5 step 1 (`738bbe3`).
+
+## C5 — An unrelated computation blocks new scientific delegation
+
+**Confirmed admission restriction; material concurrency concern.** PROJECT.md §§3.2 and 6 allow the primary to decompose work as dependencies emerge; V0-L1/L2 require useful concurrent research and computations that survive context replacement, including long researcher-selected computation timeouts.
+
+Before either `control(delegate)` or `control(verify)` freezes selected assignment evidence, `Coordinator.control()` rejects the request if **any** recorded computation is active. It does this before checking available logical-agent capacity, without determining whether that computation can change the selected evidence. An hours-long simulation therefore prevents the primary from starting an unrelated analytical or literature subproblem through this interface, even with a free agent slot.
+
+This is a conservative consistency rule, not evidence that all concurrent research is broken: previously admitted researchers can continue, and delegation succeeds once computations settle. Freezing evidence while its producer is writing would be unsafe. The tension is the investigation-wide restriction rather than a demonstrated deadlock; this audit did not execute another concurrency test.
+
+**Disposition:** preserve the safety guard while recording the tradeoff. A future bounded correction should consider whether already immutable assignment evidence can be admitted while unrelated jobs continue. Do not simply delete the guard or commission a general artifact-locking/dependency scheduler to avoid it. Any substantial redesign needs a separate decision, outside the current L5 repair.
+
+Source: [assignment admission](src/research_pipeline/collaboration.py:546). The same restriction is present in reviewed L5 step 1 (`738bbe3`, lines 836–844).
+
 ## Audit evidence and boundaries
 
 Private engineering receipts are in `coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/`: `audit-conflicts.json` and `audit-input-link-reproduction.json`. The public native artifacts are retained under the L4 request's `native-host-2i4gtxur/project/`; they were read, not changed. The synthetic input fixture was removed after reproduction. No native inference, scientific job, extra implementation request or component repair was launched for this audit.
+
+The additional human-authorized audit is recorded in `audit-conflicts-002.json` in that same request directory, with exact source refs, hashes and matching code lines. C4–C5 use read-only source tracing, without product execution or new tests. The active L5 worktree and pipeline remain untouched. These findings do not replace pipeline review or change prior milestone acceptance.
 
 The original PROJECT.md M2 and the lifecycle amendment's L5 overlap intentionally; the amendment explicitly resolves older conflicting timers, thresholds and reopening rules. The pipeline's internal second L5 step is pause/crash recovery, not the original M2. This naming ambiguity is clarified in STATUS.md and is not an unresolved product-requirements conflict.
