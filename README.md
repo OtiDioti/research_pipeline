@@ -1,4 +1,4 @@
-# Research pipeline — V0-L3
+# Research pipeline — V0-L4 implementation
 
 A Linux/Python research runtime with ordinary scientific files, a research-owned
 Codex app-server driver, and computations that outlive individual model contexts.
@@ -15,8 +15,20 @@ See [STATUS.md](STATUS.md) for refs and receipts, and the
 [L2](development/requests/v0-l2-measured-rollover.md) and
 [L3](development/requests/v0-l3-quota-staleness.md) implementation reports.
 
-L4 scientific opposition/terminal decisions, L5 reopening/recovery and L6 integrated
-validation remain required before another private M5 attempt. Historical M1–M4
+L4 implements scientific opposition and terminal finalization. Independent review
+approved Milestone 1. Milestone 2 adds an opt-in native investigation gate and retained
+receipts. Successful native demonstration and trusted final/combined validation
+remain pending. The first trusted final run hit its operational bound after a
+placeholder document link in fixture instructions blocked proposal freezing.
+After the link repair, the next trusted run reached acknowledged scientific
+COMPLETE and confirmed cleanup, then failed an observer that used an object-only
+JSON reader for array manifests. Its retained evidence also exposed ambiguous
+instructions for saving numerical reports as job drafts. The observer and
+instructions are repaired with ungated packet/provenance regressions; both failed
+native receipts remain intact. Fresh trusted final/combined runs are still
+required. The restricted Writer lacks the authorized user bus; see the
+[L4 implementation report](development/requests/v0-l4-scientific-decisions.md).
+L5 reopening/recovery and L6 integrated validation remain required before another private M5 attempt. Historical M1–M4
 receipts retain their original meaning. The retained M5 candidate remains inactive,
 unmerged and scientifically unaccepted; human scientific acceptance is mandatory.
 
@@ -40,7 +52,7 @@ PYTHONPATH=src python -m research_pipeline pause /path/to/project
 
 `start --preserve-existing` explicitly adopts existing ordinary science while
 preserving human Markdown edits. Existing or orphaned runtime state is refused.
-Schema 6 is the only operational state supported; older state is rejected without migration.
+Schema 7 is the only operational state supported; older state is rejected without migration.
 `resume` explicitly reports that stopped-state recovery/reopening requires V0-L5.
 Do not delete old runtime state to bypass ownership reconciliation.
 
@@ -51,7 +63,9 @@ A persistent investigation slice enforces the aggregate caps. Fixed per-agent
 slices divide memory/tasks equally (integer remainder is unallocated). Context
 services, MCP helpers, job supervisors and job descendants share those slices.
 Replacing a context grants no additional allocation. A logical task retains its
-slot while its context is absent; task retirement is not implemented.
+slot across rollover. Explicit task retirement releases it after confirmed
+cleanup and handoff validation; the same idle opponent reclaims a free slot on a
+later proposal.
 
 Fixed scientific investigation/session/demo lifetimes and the configured universal
 job maximum have been removed. `--wall-seconds`, `--primary-session-seconds`,
@@ -141,7 +155,7 @@ science, records operational failure and cleans owned work. Timeout diagnostics
 identify the waiting phase, bound, context, native turn and elapsed turn time.
 These bounds never establish scientific completion or investigation work allowances.
 One handoff repair is permitted; successor failure is not retried
-indefinitely. Scientific COMPLETE/STOP remain later increments.
+indefinitely. These operational recovery bounds never limit scientific opposition exchanges.
 
 `pause` latches the admission block and interrupts all owned contexts and jobs,
 then publishes available drafts and reports actual cleanup. Current context drafts
@@ -155,7 +169,7 @@ from stopped state or promise controller-crash continuation.
 
 ## Shared weekly reserve and secondary inactivity
 
-Schema 6 requires fresh operational state; older runtimes are rejected without
+Schema 7 requires fresh operational state; schema 6 and older runtimes are rejected without
 migration. Historical science and receipts remain usable as evidence.
 `--preserve-existing` cannot bypass STOP/STOP_ACK or COMPLETE/COMPLETE_ACK.
 `resume` remains unsupported until L5.
@@ -188,7 +202,7 @@ requires a new successful read before reopening them. Secondary turns and attach
 wait through that bounded transport gap while existing contexts/jobs stay active;
 a failed primary control path instead triggers operational cleanup.
 
-`STOP` records quota origin, the immutable first cutoff, known artifacts,
+For quota enforcement, `STOP` records quota origin, the immutable first cutoff, known artifacts,
 unfinished jobs, actual cleanup and preservation limitations. `STOP_ACK` contains
 matching bytes only after confirmed cleanup and successful finalization.
 Human status edits remain intact; the separate operational handoff retains the
@@ -246,7 +260,7 @@ primary), Phase and Role, plus Completed, Artifacts, Assumptions, Unresolved, Ne
 action and Jobs sections. Quote multiline objectives with `> ` so embedded Markdown
 headings remain inside the Objective section. Delegates also provide Interrupted
 computation and Resume or reconsider. Opponents preserve Review history and
-Objections; this role has no L4 terminal authority. Structural validation establishes
+Objections; only the primary can request scientific finalization. Structural validation establishes
 usability, never scientific correctness.
 
 Every surviving job needs its ID, scientific purpose, outputs/checkpoints and
@@ -308,10 +322,115 @@ Assumptions and approximation regime, Sources and artifacts, and Reproduction
 instructions sections. Link all local code, data and dependencies explicitly. The
 runtime freezes those versions and gives the independent checker a separate task,
 context and writable workspace. Active jobs must finish or be cancelled before
-freezing evidence. This is an independent scientific check. The internal opponent role preserves
-review phase and objections through rollover; invocation and terminal decision
-protocols require V0-L4. Old response/closure protocols
+freezing evidence. This is an ordinary independent scientific check. The separate
+persistent opponent challenges terminal proposals as described below. Old response/closure protocols
 are explicitly rejected. Structural checks never certify scientific correctness.
+
+## Scientific opposition and terminal decisions
+
+The primary presents results with `control(action="propose_complete", path=...)`
+or `propose_stop`. Each proposal freezes the current questions, optional project
+instructions/feedback, presented assumptions/results and explicitly linked code,
+data and Markdown dependencies. Link immutable delegate evidence as
+`[result](document:ID)`; the packet copies the authorized exact bytes without
+granting access to unrelated sibling snapshots. Frozen inputs mount read-only in
+the opponent's independent context. No plan approval stage exists.
+
+Proposals require substantive sections Results, Assumptions, Evidence and
+reproduction, Reasons, Recovery attempts, Unfinished work, Continuation guidance,
+Responses to objections and Decision record. The last section contains one JSON
+object with `coverage`, a list of `id`, `question`, `disposition`, `explanation`,
+`evidence` objects. Evidence entries name explicitly frozen project-relative
+sources or `document:ID`. Dispositions are `answered`, `negative`, `inconclusive`,
+`unanswerable`, `unresolved`; COMPLETE disallows unresolved coverage and requires
+supporting evidence for each question. The opponent explicitly judges whether
+coverage exhausts the free-form frozen questions and is scientifically adequate.
+
+The same logical opponent persists across proposals, idle allocation release and
+55% measured rollover. It independently reasons, reproduces or counterchecks
+consequential claims, saves a review and usable handoff, then calls
+`control(action="submit_review", path=..., sha256=PROPOSAL_VERSION)`.
+The review records its exact version, per-question adequacy and reasons,
+exhaustiveness, stable objection IDs/classifications/dispositions/reasons and
+`agree_complete`, `needs_revision` or `stop_challenged`. Review and final Markdown
+contracts are supplied in native intake and documented in the implementation report.
+Only the opponent resolves or withdraws its objections. Previous objections and
+responses remain scientific Markdown and versioned history; no exchange count can
+authorize completion. `check/tasks` exposes bounded proposal/review summaries,
+packet references, versions and capacity blockers. Tasks are paged 16 at a time
+with `tasks_next_offset`. `control(action="history", offset=0)` lists four proposal
+references per page, newest first; follow `next_offset`. Retrieve complete submitted
+text with `control(action="read_history", path=PROPOSAL_ID, parent="review", offset=0)`,
+using `parent="proposal"` or `"final"` for the other submissions. Follow
+`next_offset` until null; pages contain at most 8192 characters and identify the
+whole text's SHA-256. Primary and opponent retain access to all previous
+submissions through these pages. Increasing review history never enlarges the
+transport's 1 MiB line limit or imposes a scientific round limit.
+
+Review submission freezes the review's explicitly linked local evidence and its
+handoff artifacts, with the same bounded copying and dependency checks as proposals.
+Sources resolve within the opponent's scope: its own context/job drafts, shared
+canonical files and supplied frozen evidence. Ordinary links cannot expose a
+sibling's unpublished retained draft. If a shared canonical file exists, its bytes
+are used even when another task retains a newer private draft. The primary can
+explicitly supply unpublished delegate evidence through its frozen proposal.
+Link all local Markdown dependencies explicitly. Review/source observations retain
+that scope through terminal cleanup. Identical publication preserves agreement; human
+corrections to published reviews or counterchecks require a new opponent assessment
+and version-bound review before COMPLETE.
+
+COMPLETE requires primary and opponent agreement on adequate coverage of every
+current question, including supported negative/inconclusive findings. Open
+substantive objections prevent COMPLETE. The primary requests
+`finalize_complete` with a version-bound final decision after agreement.
+For scientific STOP, the primary first hears `stop_challenged` and then may request
+`finalize_stop`, documenting best autonomous recovery, why human intervention is
+needed, its response to the challenge and reasons for rejecting unpromising further
+work. Opponent agreement is unnecessary for STOP. Delegates report blockers to the
+primary. Quota STOP bypasses opposition and preempts an uncommitted scientific request.
+
+`finish_task` explicitly delivers a delegate result/check and saved handoff.
+Primary `retire_task` takes a secondary task ID and interrupts unfinished work.
+Both return pending work, releasing capacity only after actual context/job cleanup
+and handoff validation. An idle opponent also releases its allocation and reuses
+its identity on the next proposal. Full capacity reports blockers; grants never
+expand to admit opposition. Final decisions explicitly dispose of every delegated
+task as integrated, superseded or no longer needed, with reasons.
+
+Every lifecycle RPC returns a pending request, never successful terminal
+acknowledgement. Terminal requests synchronously block admissions, stop all owned
+contexts/jobs/descendants and retain artifacts. The runtime rechecks reviewed inputs
+after publication, including successor drafts and deferred job revisions. Changed
+questions, feedback, evidence or unincorporated human edits invalidate agreement;
+identical canonical publication preserves it. A stale COMPLETE attempt requires
+reassessment and produces no COMPLETE acknowledgement or invented scientific STOP.
+
+Scientific-project-root COMPLETE/STOP and matching COMPLETE_ACK/STOP_ACK bytes,
+their hash in runtime state and successful finalization confirm an outcome.
+Scientific STOP records its explanation early; saving failures never disable
+cleanup. Missing handoffs, unresolved publication conflicts, uncertain cleanup and
+status/marker/state/acknowledgement failures prevent an unqualified success.
+Human edits survive. Decision handoffs/status retain reasons, objections, recovery
+attempts, unfinished work, evidence/artifacts and actual interruption outcomes.
+Retained predecessor and job drafts undergo the same incorporation checks as
+current drafts. `document:ID` evidence also requires incorporation of human
+corrections to its source. The snapshot stays immutable; a differing current
+incorporated revision is included alongside it in the opponent's frozen packet.
+For corrections to a confirmed-retired delegate's **published** evidence, the
+primary saves its incorporated account in its own Markdown draft and calls
+`control(action="incorporate_edit", path=DELEGATE_SOURCE_PATH, parent=PRIMARY_ACCOUNT_PATH, sha256=HUMAN_SOURCE_HASH)`.
+The acknowledgement binds the exact corrected source and primary account, preserving
+delegate attribution and snapshots without foreign writes or a replacement context.
+Ordinary path links use the corrected bytes; document links retain the original
+snapshot and also include the correction. Both include the primary account.
+Changing either version requires renewed incorporation and review; acknowledgements
+remain attached to the logical primary across context rollover.
+Publication conflicts retain their history and exact resolution
+versions; successful incorporation and publication settle earlier conflicts.
+Opponent capacity is checked under the shared admission lock before freezing.
+Later inspection/pause preserves a committed matching outcome.
+Resume/reopening remains explicitly unsupported until L5. Scientific COMPLETE
+does not establish human M5 acceptance or engineering-controller completion.
 
 Reference authorization/retrieval remains available through
 `reference add/remove/list/browse/search/read`. For example:
@@ -349,7 +468,7 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 When the declared MCP dependency is supplied externally, append its existing
 installation to `PYTHONPATH`; do not replace it to conceal an environment issue.
 The old timed M1–M4 live harnesses reject enabled use; their evidence parsers remain
-covered. Keep M1–M5 and accepted L1/L2 native gates disabled for routine checks.
+covered. Keep M1–M5 and all L1–L4 native gates disabled for routine checks.
 The accepted L2 gate uses the authorized host bus and native file credentials:
 
 ```sh
@@ -403,3 +522,57 @@ Files, symlinks (including ancestors) and unusable parents are rejected. The fix
 prints its actual output path immediately; its receipt records both requested and
 actual paths. Final and combined checks can inherit the same destination and still
 execute independently with distinct receipts.
+
+The L4 gate runs a fresh public trapezoidal-rule investigation through the
+production Coordinator, with unchanged default caps and actual weekly admission:
+
+```sh
+RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 \
+RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 \
+RESEARCH_PIPELINE_M5_LIVE=0 RESEARCH_PIPELINE_V0_L1_NATIVE=0 \
+RESEARCH_PIPELINE_V0_L2_NATIVE=0 RESEARCH_PIPELINE_V0_L3_NATIVE=0 \
+RESEARCH_PIPELINE_V0_L4_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR=/fresh/private/l4-validation \
+PYTHONPATH=src:/existing/mcp/dependencies python -m unittest discover -s tests -v
+```
+
+Trusted final/combined stages inherit the L4 gate, destination, authorized user
+bus and native authentication. Missing output or prerequisites fail visibly.
+Each invocation reserves separate private storage with the helper described above
+and writes `receipt.json` even after prerequisite or runtime failure.
+
+Native agents supply the derivation, scope assessment, numerical computations,
+opposition and responses, then invoke proposal/review/finalization controls
+themselves. The harness supplies questions and procedural evidence names only.
+Each role's numerical job saves `<task-workspace>/NUMERICAL_CHECK.md` under its
+private `/run/research-drafts/` mount, creating parent directories. Code/data
+stay in its `/project` workspace with explicit links from the report. Confirmed
+job cleanup captures the report as an immutable document; that exact job snapshot
+must match evidence frozen in the proposal/review. A report written directly
+under `/project` does not supply the required job snapshot.
+An observing wrapper records authenticated control calls unchanged and verifies
+the primary's complete paginated challenge reads. A legitimate revision may
+reactivate the same opponent without an exchange ceiling.
+
+The gate accepts scientific COMPLETE with current agreement or scientific STOP
+after an actual stopping challenge and the primary's reasons. Quota cutoff and
+operational failure fail/interrupt this demonstration. Matching project-root
+markers/acknowledgements, finalization, usable handoffs, frozen hashes, protected
+inputs and actual empty owned cgroups are checked. Engineering-root markers must
+retain their original presence and bytes. Receipts retain scientific submissions,
+countercheck artifacts, native inventory/measurement references, original job
+deadlines and service/cleanup observations, without full conversations.
+
+The 1200-second fixture and 120-second cleanup/close bounds are operational test
+bounds: expiry interrupts/fails the test and attempts owned cleanup. They never
+instruct agents to declare scientific COMPLETE or STOP. No telemetry, quota,
+clock or agreement fixture is injected by this gate. Further native revision or
+rollover evidence is claimed only when observed. Ungated prerequisite,
+interruption and receipt-retention tests use explicitly mocked engineering
+failures. An ungated control-path regression freezes the exact native fixture
+instructions and questions and reaches acknowledged finalization with labelled
+scientific judgments. It also runs the native packet observer on both frozen
+JSON-array manifests. An ungated provenance regression checks job-draft capture
+for both roles and rejects missing snapshots, failed/foreign jobs and mismatched
+report hashes. These checks do not establish native scientific agreement.
+L5 resume/reopening remains unimplemented.

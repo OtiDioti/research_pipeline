@@ -5,10 +5,11 @@
 - [app_server.py](app_server.py) — Small research-owned newline JSON-RPC driver; no controller-engine dependency.
 - [budget.py](budget.py) — Read-only observations of shared allocation and emitted model usage.
 - [checkpoint.py](checkpoint.py) — Superseded namespace CLI. Saving is provided by controlled write_draft/control.
-- [cli.py](cli.py) — V0-L3 foreground runtime, human inactivity interval and truthful cleanup outcomes.
+- [cli.py](cli.py) — V0-L4 foreground runtime, scientific/quota outcomes and truthful cleanup acknowledgements.
 - [codex.py](codex.py) — Codex app-server configuration, production inventory evidence and scientific intake.
 - [collaboration.py](collaboration.py) — Logical task continuity and shared job/context scientific publication with human-edit protection.
 - [documents.py](documents.py) — Immutable scoped snapshots of stopped writers' scientific drafts, readable before safe canonical publication.
+- [decisions.py](decisions.py) — Version-bound scientific proposal/review receipts, bounded history summaries, objection continuity and terminal eligibility.
 - [isolation.py](isolation.py) — Production Linux boundary: persistent capped slices and owned transient services.
 - [job_server.py](job_server.py) — Thin stdio MCP adapter. The research runtime owns jobs and event-driven waits.
 - [jobs.py](jobs.py) — Durable, logical-owner jobs. The research runtime owns admission and services.

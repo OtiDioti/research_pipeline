@@ -1,7 +1,7 @@
 """One research-owned runtime for single and multiple logical tasks.
 
 Contexts attach to stable allocation slots. Measured rollover replaces contexts
-while jobs and logical tasks survive. Scientific terminal decisions await L4.
+while jobs and logical tasks survive. Terminal review is bound to frozen evidence.
 """
 import asyncio
 from contextlib import ExitStack
@@ -14,19 +14,31 @@ import secrets
 import time
 import uuid
 
-from . import app_server, codex, context_usage, documents, isolation, jobs, quota, references, staleness, verification, workspace
+from . import app_server, codex, context_usage, decisions, documents, isolation, jobs, quota, references, staleness, verification, workspace
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
+
+
+def terminal_acknowledged(project, state):
+    marker = state.get('terminal_marker')
+    digest = state.get('terminal_sha256')
+    return (state.get('terminal_committed') is True and marker in ('COMPLETE', 'STOP')
+            and isinstance(digest, str)
+            and workspace.file_digest(project / marker) == digest
+            and workspace.file_digest(project / (marker + '_ACK')) == digest)
 
 
 def load_state(project):
     value = jobs.read(project / '.research_pipeline/run.json', max_bytes=64 * 1024 * 1024)
     if not value or value.get('schema_version') != SCHEMA_VERSION:
-        raise workspace.InputError('Unsupported operational state; V0-L3 requires a fresh schema-6 runtime. Historical science is preserved; no migration is supported.')
+        raise workspace.InputError('Unsupported operational state; V0-L4 requires a fresh schema-7 runtime. Historical science is preserved; no migration is supported.')
     if (not all(isinstance(value.get(key), dict) for key in
-                ('limits', 'tasks', 'contexts', 'jobs', 'quota', 'pending_staleness'))
+                ('limits', 'tasks', 'contexts', 'jobs', 'quota', 'pending_staleness', 'opposition'))
             or 'admission_block' not in value):
-        raise workspace.InputError('Corrupt schema-6 runtime state; retain it for owned-process reconciliation')
+        raise workspace.InputError('Corrupt schema-7 runtime state; retain it for owned-process reconciliation')
+    if value.get('terminal_committed') and not terminal_acknowledged(project, value):
+        value.update(finalization_ok=False, terminal_committed=False,
+                     terminal_error='Saved terminal intent has no matching marker/acknowledgement; finalization unconfirmed')
     return value
 
 
@@ -39,6 +51,8 @@ class Coordinator:
         self.clients = {}
         self.turns = {}
         self.lifecycle_lock = asyncio.Lock()
+        self.decision_lock = asyncio.Lock()
+        self.lifecycle_tasks = set()
         self.stack = ExitStack()
         self.monitor_task = None
         self.job_monitor = None
@@ -76,8 +90,9 @@ class Coordinator:
                  'scientific_status': 'preliminary', 'contexts': {}, 'tasks': {}, 'jobs': {}, 'documents': {},
                  'quota': {}, 'secondary_staleness_seconds': config.secondary_staleness_seconds,
                  'pending_staleness': {}, 'staleness_history': [],
+                 'opposition': {'opponent_id': None, 'current': None, 'history': []},
                  'boot_id': isolation.boot_identity(), 'limitations': [
-                     'L3 has no scientific terminal decisions or stopped-state resumption.',
+                     'Stopped-state resumption/reopening requires L5.',
                      'Model spending is not capped; telemetry is observed, never a refreshed allocation.',
                      'Outbound network is available without destination filtering; 64 MiB per-file limit is not aggregate disk quota.']}
         runtime = cls(project, config, state, intake)
@@ -192,6 +207,8 @@ class Coordinator:
                 raise jobs.JobError('Predecessor context has not been confirmed closed')
             if task.get('released'):
                 raise jobs.JobError('Logical allocation was released')
+            if task.get('retirement_requested'):
+                raise jobs.JobError('Task is retiring; context admission blocked')
             # Backend config/rule/skill discovery is excluded. No scientific directory
             # may install configuration for a successor backend.
             for _, dirs, files, _ in os.fwalk(self.project, follow_symlinks=False):
@@ -268,6 +285,8 @@ class Coordinator:
                 if task_id == 'primary':
                     await self.refresh_quota(context_id)
                 self.require_quota()
+                if task.get('retirement_requested'):
+                    raise jobs.JobError('Task retired during context admission')
                 owned_jobs = (await self.jobs.inspect(task_id))['jobs']
                 instructions = codex.prompt(self.intake, task, owned_jobs, self.successor_documents(task_id))
                 # Reconciliation can suspend; no await may separate this
@@ -414,6 +433,10 @@ class Coordinator:
 
     def draft(self, ctx, path, content):
         task_id = ctx['record']['task_id']
+        if self.state['admission_block'] or (
+                self.state['tasks'][task_id].get('retirement_requested')
+                and self.state['tasks'][task_id]['operational_state'] != 'checkpointing'):
+            raise jobs.JobError('Draft admission blocked by lifecycle')
         rel = Path(path)
         if (not isinstance(content, str) or len(content.encode()) > 256 * 1024
                 or not rel.parts or rel.suffix != '.md' or rel.name == 'FOLDER_CONTENT.md'
@@ -434,8 +457,23 @@ class Coordinator:
             ctx['record'].setdefault('document_reads', {})[path] = {'offset': offset, 'next_offset': result['next_offset']}
             self.save()
             return result
+        if action in ('history', 'read_history'):
+            if reader not in ('primary', self.state['opposition']['opponent_id']):
+                raise jobs.JobError('Decision history is scoped to primary and the designated opponent')
+            if action == 'history':
+                return self.opposition_summary(offset)
+            return self.read_history(path, parent, offset)
         if action in ('check', 'tasks'):
-            return {'admission_block': self.state['admission_block'], 'tasks': self.state['tasks'],
+            self.documents.check_offset(offset)
+            task_ids = list(self.state['tasks'])
+            page = task_ids[offset:offset + 16]
+            return {'admission_block': self.state['admission_block'],
+                    'tasks': {i: self.task_summary(self.state['tasks'][i]) for i in page},
+                    'tasks_total': len(task_ids), 'tasks_offset': offset,
+                    'tasks_next_offset': offset + len(page) if offset + len(page) < len(task_ids) else None,
+                    'opposition': self.opposition_summary(),
+                    'capacity_blockers': [t['task_id'] for t in self.state['tasks'].values()
+                                          if not t.get('released')],
                     'account_quota': self.state['quota'],
                     'secondary_staleness': self.state['pending_staleness'] if reader == 'primary' else {},
                     'jobs': await self.jobs.inspect(reader),
@@ -443,6 +481,12 @@ class Coordinator:
                     **self.documents.list(reader)}
         if action == 'incorporate_edit':
             task = self.state['tasks'][reader]
+            if (self.state['admission_block']
+                    or task['context_id'] != ctx['record']['context_id']
+                    or ctx['record']['state'] not in ('attached', 'turn_running')):
+                raise jobs.JobError('Task lifecycle or revoked attachment blocks incorporation')
+            if reader == 'primary' and isinstance(path, str) and not workspace.allowed_science(path):
+                return self.incorporate_retired_evidence(ctx, path, parent, sha256)
             if (not isinstance(path, str)
                     or not workspace.allowed_science(path, reader, task['frozen_inputs'])):
                 raise jobs.JobError('Incorporation requires a changed scientific path owned by this task')
@@ -461,8 +505,36 @@ class Coordinator:
             ctx['record'].setdefault('incorporated_edits', {})[path] = acknowledgement
             self.save()
             return {'path': path, **acknowledgement}
+        if action in ('finish_task', 'retire_task', 'propose_complete', 'propose_stop',
+                      'submit_review', 'finalize_complete', 'finalize_stop'):
+            async with self.decision_lock:
+                self.require_quota()
+                if (self.state['tasks'][reader]['operational_state'] != 'working'
+                        or self.state['tasks'][reader]['context_id'] != ctx['record']['context_id']
+                        or ctx['record']['state'] not in ('attached', 'turn_running')):
+                    raise jobs.JobError('Task lifecycle or revoked attachment blocks decision controls')
+                if action == 'submit_review':
+                    return self.submit_review(ctx, path, sha256)
+                if action == 'finish_task':
+                    if self.state['tasks'][reader]['role'] not in ('researcher', 'verifier'):
+                        raise jobs.JobError('Only delegated researchers/verifiers finish tasks')
+                    text = self.scoped_text(ctx, path)
+                    decisions.nonempty(text, 'delegated result')
+                    self.validate_context_handoff(ctx['record']['context_id'])
+                    self.state['tasks'][reader]['result_path'] = path
+                    return self.queue_retirement(reader, 'Finished delegated work; primary must integrate result')
+                if reader != 'primary':
+                    raise jobs.JobError('Only primary may propose or finalize scientific decisions or retire tasks')
+                if action == 'retire_task':
+                    if path not in self.state['tasks'] or path == 'primary':
+                        raise jobs.JobError('Retirement requires an existing secondary task ID')
+                    return self.queue_retirement(path, 'Primary retired unfinished work; inspect retained handoff', checkpoint=True)
+                if action.startswith('propose_'):
+                    return await self.propose_decision(ctx, path, 'COMPLETE' if action == 'propose_complete' else 'STOP')
+                return self.request_finalization(ctx, path, sha256,
+                                                 'COMPLETE' if action == 'finalize_complete' else 'STOP')
         if action not in ('delegate', 'verify'):
-            raise jobs.JobError('Unsupported legacy/terminal control; scientific opposition and terminal decisions require V0-L4')
+            raise jobs.JobError('Unsupported legacy/terminal control; use V0-L4 proposal/review/finalization actions')
         if ctx['record']['task_id'] != 'primary' or parent not in self.state['tasks']:
             raise jobs.JobError('Only primary may assign a scientific task with a known parent')
         if self.state['admission_block'] or self.state['tasks'][reader].get('operational_state') != 'working':
@@ -504,6 +576,468 @@ class Coordinator:
         self.turns[task_id] = asyncio.create_task(self.run_task(task_id))
         return {'task_id': task_id, 'workspace': task_root}
 
+    def scoped_text(self, ctx, path):
+        task_id = ctx['record']['task_id']
+        if (not isinstance(path, str) or Path(path).suffix != '.md'
+                or not workspace.allowed_science(path, task_id, self.state['tasks'][task_id]['frozen_inputs'])):
+            raise jobs.JobError('Submission requires scoped scientific Markdown')
+        return verification.read_bytes(workspace.safe_path(ctx['drafts'], path), None).decode('utf-8')
+
+    def current_proposal(self, version=None):
+        opposition = self.state['opposition']
+        proposal = next((p for p in opposition['history'] if p['id'] == opposition['current']), None)
+        if not proposal or proposal.get('invalidated') or version is not None and version != proposal['version']:
+            raise jobs.JobError('Missing, invalidated or stale scientific proposal')
+        return proposal
+
+    def opposition_summary(self, offset=0):
+        self.documents.check_offset(offset)
+        opposition = self.state['opposition']
+        history = list(reversed(opposition['history']))
+        page = history[offset:offset + decisions.HISTORY_PAGE_SIZE]
+        return {'opponent_id': opposition['opponent_id'], 'current': opposition['current'],
+                'current_proposal': decisions.summary(history[0]) if history else None,
+                'history': [decisions.summary(p) for p in page], 'history_total': len(history),
+                'offset': offset, 'next_offset': offset + len(page) if offset + len(page) < len(history) else None}
+
+    def read_history(self, identifier, part, offset):
+        self.documents.check_offset(offset)
+        proposal = next((p for p in self.state['opposition']['history'] if p['id'] == identifier), None)
+        if not proposal or part not in ('proposal', 'review', 'final'):
+            raise jobs.JobError('Use a known proposal ID and parent=proposal, review or final')
+        text = (proposal.get('final_request', {}).get('text') if part == 'final'
+                else proposal.get(part + '_text'))
+        if text is None:
+            raise jobs.JobError('Decision history part has not been submitted')
+        content = text[offset:offset + documents.PAGE_CHARACTERS]
+        end = offset + len(content)
+        return {'id': identifier, 'part': part, 'version': proposal['version'],
+                'sha256': hashlib.sha256(text.encode()).hexdigest(),
+                'content': content, 'offset': offset, 'characters_total': len(text),
+                'next_offset': end if end < len(text) else None}
+
+    @staticmethod
+    def task_summary(task):
+        keys = ('task_id', 'workspace', 'parent_task', 'role', 'slot', 'phase',
+                'operational_state', 'context_id', 'last_context_id', 'released',
+                'inventory_verified', 'result_path')
+        result = {k: task[k] for k in keys if k in task}
+        result['objective'] = task['objective'][:1024]
+        result['objective_truncated'] = len(task['objective']) > 1024
+        result['handoff'] = workspace.handoff_path(task['task_id'])
+        for key in ('context_error', 'retirement_error', 'retirement_requested'):
+            if task.get(key):
+                result[key] = task[key][:1024]
+        result['incorporated_evidence_total'] = len(task.get('incorporated_evidence', {}))
+        return result
+
+    def evidence_drafts(self, path, *, reader=None):
+        """Publication order: a context integrates its jobs; successors replace ancestors."""
+        candidates = {}
+        def include(identifier, drafts, task_id):
+            if reader is not None and task_id != reader:
+                return
+            task = self.state['tasks'][task_id]
+            if workspace.allowed_science(path, task_id, task['frozen_inputs']):
+                candidate = workspace.safe_path(Path(drafts), path)
+                if candidate.exists():
+                    candidates[identifier] = candidate
+        for ctx in self.contexts.values():
+            context_id = ctx['record']['context_id']
+            for job in self.state['jobs'].values():
+                if job.get('origin_context_id') == context_id and job.get('drafts'):
+                    include('job:' + job['job_id'], job['drafts'], job['task_id'])
+            include('context:' + context_id, ctx['drafts'], ctx['record']['task_id'])
+        for job in self.state['jobs'].values():
+            if job.get('origin_context_id') not in self.contexts and job.get('drafts'):
+                include('job:' + job['job_id'], job['drafts'], job['task_id'])
+        return candidates
+
+    def effective_bytes(self, path, *, check_edits=False, reader=None):
+        if reader is not None and not workspace.allowed_science(
+                path, reader, self.state['tasks'][reader]['frozen_inputs']):
+            # Shared paths and supplied frozen inputs expose canonical bytes,
+            # never another logical task's unpublished context/job drafts.
+            return verification.read_bytes(verification.scientific_path(self.project, path), None)
+        incorporation = (self.state['tasks']['primary'].get('incorporated_evidence', {}).get(path)
+                         if reader is None else None)
+        if incorporation:
+            # This changes evidence selection only. It never publishes into the
+            # retired owner's workspace or modifies its drafts/snapshots.
+            raw = verification.read_bytes(verification.scientific_path(self.project, path), None)
+            account = self.effective_bytes(incorporation['account_path'], check_edits=True)
+            if (hashlib.sha256(raw).hexdigest() != incorporation['human_sha256']
+                    or hashlib.sha256(account).hexdigest() != incorporation['account_sha256']):
+                raise jobs.JobError('Incorporate current human edit before review: ' + path
+                                    + ' (source or primary account changed)')
+            return raw
+        candidates = self.evidence_drafts(path, reader=reader)
+        if candidates:
+            identifier, source = next(reversed(candidates.items()))
+            if check_edits:
+                self.validate_draft_provenance(path, identifier, source)
+        else:
+            source = verification.scientific_path(self.project, path)
+        return verification.read_bytes(source, None)
+
+    def incorporate_retired_evidence(self, ctx, path, account_path, sha256):
+        """Primary-owned acknowledgement of corrected, published delegate evidence."""
+        primary = self.state['tasks']['primary']
+        document = None
+        for candidate in reversed(list(self.state['documents'].values())):
+            if candidate['path'] != path:
+                continue
+            owner = self.state['tasks'][candidate['task_id']]
+            record = self.state['contexts' if candidate['source_kind'] == 'context' else 'jobs'][candidate['source_id']]
+            if (owner['role'] in ('researcher', 'verifier') and owner.get('released')
+                    and owner.get('context_id') is None and record.get('cleanup_ok') is True
+                    and not record.get('publication_pending') and 'publication_conflicts' in record
+                    and not any(c['path'] == path for c in record['publication_conflicts'])
+                    and path not in record.get('publication_superseded', ())):
+                document = candidate
+                break
+        if document is None:
+            raise jobs.JobError('Incorporation requires science owned by this task, or published evidence of a confirmed-retired delegate')
+        self.documents.raw('primary', document['document_id'])
+        raw = verification.read_bytes(verification.scientific_path(self.project, path), None)
+        observed = hashlib.sha256(raw).hexdigest()
+        if sha256 != observed:
+            raise jobs.JobError('Human version changed; reread current canonical science before incorporation')
+        if observed == document['sha256'] and path not in primary.get('incorporated_evidence', {}):
+            raise jobs.JobError('No unresolved canonical change at this path')
+        # scoped_text requires an actual saved primary draft; foreign paths,
+        # protected inputs and canonical-only accounts cannot confer authority.
+        account = self.scoped_text(ctx, account_path)
+        decisions.nonempty(account, 'primary incorporation account')
+        self.effective_bytes(account_path, check_edits=True)
+        acknowledgement = {
+            'task_id': document['task_id'], 'document_id': document['document_id'],
+            'human_sha256': observed, 'account_path': account_path,
+            'account_sha256': hashlib.sha256(account.encode()).hexdigest(),
+            'context_id': ctx['record']['context_id']}
+        primary.setdefault('incorporated_evidence', {})[path] = acknowledgement
+        self.save()
+        return {'path': path, **acknowledgement}
+
+    def validate_draft_provenance(self, path, identifier, source):
+        """A retained draft cannot replace a human revision without incorporation."""
+        if source.suffix != '.md':
+            return
+        kind, source_id = identifier.split(':', 1)
+        if kind == 'context':
+            ctx = self.contexts[source_id]
+            record = ctx['record']
+            baseline = ctx.get('publication_baseline', ctx['baseline'])
+            policy = record
+        else:
+            record = self.state['jobs'][source_id]
+            ctx = self.contexts.get(record.get('origin_context_id'))
+            if ctx is None:
+                raise jobs.JobError('Retained job draft provenance unavailable: ' + path)
+            baseline = ctx.get('publication_baseline', ctx['baseline'])
+            policy = ctx['record']
+        observed = workspace.file_digest(verification.scientific_path(self.project, path))
+        digest = workspace.file_digest(source)
+        # Successful publication advances this writer's expected canonical version.
+        # Its old attachment baseline does not describe later human corrections.
+        published = (record.get('cleanup_ok') is True and not record.get('publication_pending')
+                     and 'publication_conflicts' in record
+                     and path not in record.get('publication_superseded', ())
+                     and not any(c['path'] == path for c in record['publication_conflicts'])
+                     and any(self.state['documents'][i]['path'] == path
+                             and self.state['documents'][i]['sha256'] == digest
+                             for i in record.get('document_ids', ())))
+        expected = digest if published else baseline.get(path)
+        if observed == expected and (published or path not in policy.get('science_changes', {})):
+            return
+        if policy.get('incorporated_edits', {}).get(path) != {
+                'human_sha256': observed, 'draft_sha256': digest}:
+            raise jobs.JobError('Incorporate current human edit before review: ' + path)
+
+    def decision_document(self, document_id):
+        """Keep the snapshot immutable without letting it conceal source corrections."""
+        raw = self.documents.raw('primary', document_id)
+        document = self.state['documents'][document_id]
+        path = document['path']
+        if (path not in self.state['tasks']['primary'].get('incorporated_evidence', {})
+                and not self.evidence_drafts(path)
+                and workspace.file_digest(verification.scientific_path(self.project, path)) != document['sha256']):
+            raise jobs.JobError('Incorporate current human edit before review: ' + path
+                                + ' (retained draft provenance unavailable)')
+        self.effective_bytes(path, check_edits=True)
+        return raw
+
+    def reviewed_observation(self, path, *, reader=None):
+        return {'effective': hashlib.sha256(self.effective_bytes(path, reader=reader)).hexdigest(),
+                'canonical': workspace.file_digest(verification.scientific_path(self.project, path)),
+                'incorporation': (self.state['tasks']['primary'].get('incorporated_evidence', {}).get(path)
+                                  if reader is None else None),
+                'drafts': {identifier: workspace.file_digest(candidate)
+                           for identifier, candidate in self.evidence_drafts(path, reader=reader).items()}}
+
+    def validate_reviewed_versions(self, proposal):
+        try:
+            intake = workspace.read_intake(self.project)
+            if intake.fingerprints != proposal['intake_fingerprints']:
+                raise jobs.JobError('Authoritative questions/instructions/evidence/feedback changed')
+            observations = [(None, p, v) for p, v in proposal['observations'].items()]
+            reviewer = self.state['opposition']['opponent_id']
+            observations += [(reviewer, p, v) for p, v in proposal.get('review_observations', {}).items()]
+            for reader, path, old in observations:
+                current = self.reviewed_observation(path, reader=reader)
+                # Identical publication is harmless even before its writer's
+                # bookkeeping settles. Otherwise recheck provenance so restoring
+                # a pre-publication version cannot conceal a later human edit.
+                if current['canonical'] != old['effective']:
+                    self.effective_bytes(path, check_edits=True, reader=reader)
+                if (current['effective'] != old['effective']
+                        or current['incorporation'] != old.get('incorporation')
+                        or current['canonical'] not in (old['canonical'], old['effective'])
+                        or any(current['drafts'].get(k) != digest for k, digest in old['drafts'].items())
+                        or any(digest != old['effective'] for k, digest in current['drafts'].items()
+                               if k not in old['drafts'])):
+                    raise jobs.JobError('Reviewed evidence changed: ' + path)
+            entries = list(proposal['packet']['evidence'])
+            entries += proposal.get('review_packet', {}).get('evidence', [])
+            for entry in entries:
+                if workspace.file_digest(workspace.safe_path(self.project, entry['path'])) != entry['sha256']:
+                    raise jobs.JobError('Frozen packet integrity failure')
+        except (OSError, ValueError) as exc:
+            proposal.update(invalidated=str(exc), phase='invalidated')
+            self.save()
+            raise jobs.JobError('Scientific reassessment required: ' + str(exc)) from exc
+
+    async def propose_decision(self, ctx, path, intent):
+        text = self.scoped_text(ctx, path)
+        value = decisions.proposal(text, intent)
+        opposition = self.state['opposition']
+        opponent_id = opposition['opponent_id']
+        opponent = self.state['tasks'].get(opponent_id)
+        runner = self.turns.get(opponent_id)
+        if opponent and (not opponent.get('released') or runner and not runner.done()):
+            raise jobs.JobError('Opponent still reviewing/retiring; inspect tasks before another proposal')
+        async with self.jobs.lock:
+            self.require_quota()
+            if (self.state['tasks']['primary']['context_id'] != ctx['record']['context_id']
+                    or self.state['tasks']['primary']['operational_state'] != 'working'
+                    or ctx['record']['state'] not in ('attached', 'turn_running')):
+                raise jobs.JobError('Task lifecycle or revoked attachment blocks proposal admission')
+            blockers = [t for t in self.state['tasks'].values() if not t.get('released')]
+            occupied = {t['slot'] for t in blockers}
+            slot = next((i for i in range(self.config.max_agents) if i not in occupied), None)
+            if slot is None:
+                raise jobs.JobError('No slot for independent opposition; finish/retire delegates: '
+                                    + ', '.join(t['task_id'] for t in blockers))
+            active = [r['job_id'] for r in self.state['jobs'].values() if r['state'] in jobs.ACTIVE]
+            if active:
+                raise jobs.JobError('Finish or cancel active computations before freezing evidence: ' + ', '.join(active))
+            intake = workspace.read_intake(self.project)
+            opponent_id = opponent_id or 'task-' + uuid.uuid4().hex
+            identifier = uuid.uuid4().hex
+            destination = workspace.task_directory(opponent_id) + '/inputs/' + identifier
+            extras = ['starting_evidence/RESEARCH_QUESTIONS.md']
+            extras += [p for p in ('AGENTS.md', 'HUMAN_FEEDBACK.md') if (self.project / p).exists()]
+            for target in verification.LINK.findall(text):
+                if target.startswith('document:'):
+                    document_id = target.removeprefix('document:')
+                    self.decision_document(document_id)
+                    document = self.state['documents'][document_id]
+                    if (document['path'] in self.state['tasks']['primary'].get('incorporated_evidence', {})
+                            or hashlib.sha256(self.effective_bytes(document['path'])).hexdigest() != document['sha256']):
+                        # Present the current incorporated revision alongside the
+                        # explicitly requested historical bytes, not in their place.
+                        extras.append(document['path'])
+                else:
+                    source = verification.link_path(self.project, path, target)
+                    if source is not None:
+                        extras.append(source)
+            # Freeze the primary's attributed account as well as the corrected
+            # source, even when a proposal links only the old immutable snapshot.
+            for source in list(extras):
+                incorporation = self.state['tasks']['primary'].get('incorporated_evidence', {}).get(source)
+                if incorporation:
+                    extras.append(incorporation['account_path'])
+            packet, _ = verification.freeze(self.project, path, ctx['drafts'], destination,
+                decisions.PROPOSAL_FIELDS, None, extra=extras,
+                resolve_document=self.decision_document,
+                document_origin=lambda i: self.state['documents'][i]['path'],
+                resolve_source=lambda source: self.effective_bytes(source, check_edits=True))
+            sources = {e['source'] for e in packet['evidence']}
+            for question in value['coverage']:
+                if not set(question['evidence']).issubset(sources):
+                    raise jobs.JobError('Coverage must reference explicitly frozen evidence sources')
+            observations = {}
+            for source in sources:
+                if source.startswith('document:'):
+                    source = self.state['documents'][source.removeprefix('document:')]['path']
+                observations[source] = self.reviewed_observation(source)
+            proposal = {'id': identifier, 'intent': intent, 'version': packet['version'], 'packet': packet,
+                        'coverage': value['coverage'], 'intake_fingerprints': intake.fingerprints,
+                        'observations': observations, 'previous': opposition['current'],
+                        'phase': 'review_pending', 'proposal_text': text}
+            if not opponent:
+                opponent = self.add_task(opponent_id,
+                    'Independently challenge terminal proposals, consequential results and stopping rationale. '
+                    'Perform proportionate independent reasoning/reproduction; never approve mere plans.',
+                    'primary', 'opponent', [workspace.task_directory(opponent_id) + '/inputs'])
+                opposition['opponent_id'] = opponent_id
+            else:
+                opponent['slot'] = slot
+                opponent.update(released=False, operational_state='working')
+                opponent.pop('retirement_requested', None)
+            opposition['current'] = identifier
+            opposition['history'].append(proposal)
+            self.save()
+        self.turns[opponent_id] = asyncio.create_task(self.run_task(opponent_id))
+        return {'status': 'review_pending', 'opponent_id': opponent_id, 'proposal': decisions.summary(proposal)}
+
+    def submit_review(self, ctx, path, version):
+        opposition = self.state['opposition']
+        if ctx['record']['task_id'] != opposition['opponent_id']:
+            raise jobs.JobError('Only the designated logical opponent may submit opposition')
+        if not isinstance(version, str):
+            raise jobs.JobError('Explicit proposal version sha256 is required')
+        proposal = self.current_proposal(version)
+        if proposal.get('review'):
+            raise jobs.JobError('Review already delivered; primary must present a new proposal')
+        self.validate_reviewed_versions(proposal)
+        text = self.scoped_text(ctx, path)
+        prior = {o['id'] for p in opposition['history'] if p.get('review')
+                 for o in p['review']['objections']}
+        review = decisions.review(text, proposal, prior)
+        artifacts = self.validate_context_handoff(ctx['record']['context_id'])
+        if any(r['state'] in jobs.ACTIVE for r in self.state['jobs'].values()):
+            raise jobs.JobError('Finish or cancel computations before submitting stable review evidence')
+        reader = ctx['record']['task_id']
+        def resolve_document(identifier):
+            self.documents.raw(reader, identifier)  # retain sibling-document isolation
+            return self.decision_document(identifier)
+        fields = decisions.REVIEW_FIELDS + (('Stopping rationale', 'Further work')
+                                           if proposal['intent'] == 'STOP' else ())
+        packet, _ = verification.freeze(self.project, path, ctx['drafts'],
+            workspace.task_directory(reader) + '/inputs/reviews/' + proposal['id'], fields, None,
+            extra=artifacts, resolve_document=resolve_document,
+            document_origin=lambda i: self.state['documents'][i]['path'],
+            resolve_source=lambda p: self.effective_bytes(p, check_edits=True, reader=reader))
+        sources = {self.state['documents'][e['source'].removeprefix('document:')]['path']
+                   if e['source'].startswith('document:') else e['source']
+                   for e in packet['evidence']}
+        proposal.update(review=review, review_text=text, review_path=path,
+                        review_sha256=hashlib.sha256(text.encode()).hexdigest(),
+                        review_packet=packet,
+                        review_observations={p: self.reviewed_observation(p, reader=reader) for p in sources},
+                        review_context_id=ctx['record']['context_id'], phase='review_delivered')
+        self.save()
+        return self.queue_retirement(opposition['opponent_id'], 'Review delivered; retain objections for next proposal')
+
+    def queue_retirement(self, task_id, reason, checkpoint=False):
+        task = self.state['tasks'][task_id]
+        if task.get('retirement_requested') or task.get('released'):
+            raise jobs.JobError('Task already retiring or released')
+        task.update(retirement_requested=reason, retirement_checkpoint=checkpoint, operational_state='retiring')
+        context_id = task.get('context_id')
+        if context_id in self.contexts:
+            self.contexts[context_id]['lifecycle_event'].set()
+        try:
+            self.save()
+        except (OSError, ValueError) as exc:
+            task['persistence_error'] = str(exc)
+        work = asyncio.create_task(self.retire_task(task_id))
+        self.lifecycle_tasks.add(work)
+        work.add_done_callback(self.lifecycle_tasks.discard)
+        return {'status': 'retirement_pending', 'task_id': task_id}
+
+    async def retire_task(self, task_id):
+        task = self.state['tasks'][task_id]
+        try:
+            runner = self.turns.get(task_id)
+            if runner and not runner.done():
+                try:
+                    await asyncio.wait_for(asyncio.shield(runner), 20)
+                except Exception as exc:
+                    task['retirement_turn_error'] = str(exc)
+            context_id = task.get('context_id')
+            if (task.get('retirement_checkpoint') and runner and runner.done()
+                    and context_id and not self.state['admission_block']):
+                try:
+                    owned = await self.reconciled_jobs(task_id)
+                    task['operational_state'] = 'checkpointing'
+                    await self.native_turn(context_id, self.checkpoint_prompt(task, owned,
+                        'Primary is retiring this unfinished task.'), responsive=False, timeout=90)
+                    self.validate_context_handoff(context_id)
+                except Exception as exc:
+                    task['retirement_checkpoint_error'] = str(exc)
+                finally:
+                    task['operational_state'] = 'retiring'
+            # Reconcile an admission that was already settling before retirement.
+            async with self.jobs.lock:
+                owned = [r for r in self.state['jobs'].values() if r['task_id'] == task_id]
+            errors = [task['retirement_checkpoint_error']] if task.get('retirement_checkpoint_error') else []
+            for record in owned:
+                if record['state'] in jobs.ACTIVE:
+                    try:
+                        await self.jobs.cancel(task_id, record['job_id'])
+                    except Exception as exc:
+                        errors.append(str(exc))
+            context_id = task.get('context_id')
+            if context_id:
+                client = self.clients.get(context_id)
+                if getattr(client, 'active_turn_id', None):
+                    try:
+                        await asyncio.wait_for(client.interrupt(client.active_turn_id), 5)
+                    except Exception as exc:
+                        self.state['contexts'][context_id]['interrupt_error'] = str(exc)
+                try:
+                    await self.close_context(context_id)
+                except Exception as exc:
+                    errors.append(str(exc))
+            records = [r for r in (*self.state['contexts'].values(), *self.state['jobs'].values())
+                       if r['task_id'] == task_id]
+            if not all(r.get('cleanup_ok') is True for r in records):
+                raise jobs.JobError('Task cleanup unconfirmed; allocation retained')
+            if errors:
+                raise jobs.JobError('Task preservation failed; allocation retained: ' + '; '.join(errors))
+            # A forced retirement without a usable handoff stays observable and
+            # cannot later support successful scientific finalization.
+            last = task.get('last_context_id')
+            if last:
+                self.validate_context_handoff(last, final=True)
+            else:
+                raise jobs.JobError('Missing context handoff; allocation retained')
+            task.update(released=True, operational_state='idle')
+        except Exception as exc:
+            task['retirement_error'] = str(exc)
+        try:
+            self.save()
+        except (OSError, ValueError) as exc:
+            task['persistence_error'] = str(exc)
+
+    def request_finalization(self, ctx, path, version, intent):
+        if not isinstance(version, str):
+            raise jobs.JobError('Explicit proposal version sha256 is required')
+        proposal = self.current_proposal(version)
+        if proposal['intent'] != intent or not proposal.get('review'):
+            raise jobs.JobError('A current delivered opponent challenge is required')
+        self.validate_reviewed_versions(proposal)
+        opponent = self.state['tasks'][self.state['opposition']['opponent_id']]
+        if not opponent.get('released'):
+            raise jobs.JobError('Opponent preservation/cleanup still pending or failed')
+        if intent == 'COMPLETE' and (proposal['review']['outcome'] != 'agree_complete'
+                                            or not decisions.eligible(proposal['review'])):
+            raise jobs.JobError('Substantive opposition prevents COMPLETE; revise evidence or propose STOP')
+        text = self.scoped_text(ctx, path)
+        value = decisions.final(text, proposal, self.state['tasks'], opponent['task_id'])
+        self.validate_context_handoff(ctx['record']['context_id'])
+        proposal.update(final_request={'path': path, 'sha256': hashlib.sha256(text.encode()).hexdigest(),
+                                       'text': text, 'record': value}, phase='finalization_pending')
+        self.state['requested_scientific_intent'] = intent
+        if intent == 'STOP':
+            self.state['stop_origin'] = 'scientific'
+        self.schedule_shutdown('Primary scientific ' + intent + ': ' + value.get('reason', 'see frozen decision'),
+                               'complete' if intent == 'COMPLETE' else 'scientific_stopped')
+        return {'status': 'finalization_pending', 'version': version,
+                'acknowledgement': 'No success until confirmed cleanup, preservation and version reassessment'}
+
     def observe_context(self, context_id, params, provenance='native', *, now=None):
         ctx = self.contexts[context_id]
         record = ctx['record']
@@ -536,6 +1070,8 @@ class Coordinator:
 
     def successor_documents(self, task_id):
         result = self.documents.list(task_id)
+        if task_id == 'primary' or task_id == self.state['opposition']['opponent_id']:
+            result['opposition'] = self.opposition_summary()
         if task_id == 'primary':
             result['secondary_staleness'] = self.state['pending_staleness']
         task = self.state['tasks'][task_id]
@@ -719,16 +1255,10 @@ class Coordinator:
             self.save()
         return artifacts
 
-    async def rollover(self, task_id, context_id):
-        task = self.state['tasks'][task_id]
-        record = self.contexts[context_id]['record']
-        if record.get('rollover_attempted'):
-            raise isolation.RuntimeUnavailable('Repeated rollover attempt refused')
-        record['rollover_attempted'] = True
-        task['operational_state'] = 'checkpointing'
-        owned = await self.reconciled_jobs(task_id)
-        checkpoint = (
-            'Context reached the measured 55% threshold. Save useful science and repair the concise handoff now. '
+    def checkpoint_prompt(self, task, owned, reason):
+        task_id = task['task_id']
+        return (
+            reason + ' Save useful science and repair the concise handoff now. '
             'No new computations or assignments. Use write_draft and document reads/job_status only. '
             f'Save the handoff with write_draft(path="{workspace.handoff_path(task_id)}", content=...). '
             'This is an authorized project-relative destination, not relative to your workspace. '
@@ -741,6 +1271,16 @@ class Coordinator:
             'metadata is retained by runtime, so refer to these exact job IDs: ' + json.dumps(owned)
             + '. Opponents also preserve nonempty ## Review history and ## Objections (including resolved objections). '
             'Link saved scientific artifacts, using document:ID for earlier immutable versions. End this checkpoint turn.')
+
+    async def rollover(self, task_id, context_id):
+        task = self.state['tasks'][task_id]
+        record = self.contexts[context_id]['record']
+        if record.get('rollover_attempted'):
+            raise isolation.RuntimeUnavailable('Repeated rollover attempt refused')
+        record['rollover_attempted'] = True
+        task['operational_state'] = 'checkpointing'
+        owned = await self.reconciled_jobs(task_id)
+        checkpoint = self.checkpoint_prompt(task, owned, 'Context reached the measured 55% threshold.')
         for attempt in range(2):
             await self.native_turn(context_id, checkpoint, responsive=False, timeout=90)
             try:
@@ -767,9 +1307,9 @@ class Coordinator:
         task = self.state['tasks'][task_id]
         try:
             context_id = task.get('context_id') or await self.attach_admitted(task_id)
-            while not self.state['admission_block']:
+            while not self.state['admission_block'] and not task.get('retirement_requested'):
                 await self.measured_intake(context_id)
-                while not self.state['admission_block']:
+                while not self.state['admission_block'] and not task.get('retirement_requested'):
                     record = self.contexts[context_id]['record']
                     if (task['operational_state'] == 'telemetry_recovery'
                             or record.get('measurement', {}).get('status') != 'measured'):
@@ -784,7 +1324,9 @@ class Coordinator:
                         'inspect existing jobs before replacements, save evidence and update the handoff. '
                         'A normal turn ending leaves this logical task active.')
         except Exception as exc:
-            if not self.state['admission_block'] or self.state['state'] not in ('stopping', 'paused', 'quota_stopped', 'quota_unavailable'):
+            if not task.get('retirement_requested') and (
+                    not self.state['admission_block'] or self.state['state'] not in
+                    ('stopping', 'paused', 'quota_stopped', 'quota_unavailable', 'complete', 'scientific_stopped')):
                 task.update(operational_state='failed', context_error=f'{type(exc).__name__}: {exc}')
                 if task_id == 'primary':
                     self.schedule_shutdown('Primary deterministic control path failed: ' + str(exc), 'failed')
@@ -799,7 +1341,7 @@ class Coordinator:
             if self.shutdown_task:
                 await asyncio.shield(self.shutdown_task)
             attached = task.get('context_id') or context_id
-            if attached and attached in self.contexts and not self.shutdown_task:
+            if attached and attached in self.contexts and not self.shutdown_task and not task.get('retirement_requested'):
                 try:
                     await self.close_context(attached)
                 except Exception as exc:
@@ -828,11 +1370,18 @@ class Coordinator:
             self.save()
         except (OSError, ValueError) as exc:
             record['persistence_error'] = str(exc)
-        ctx['server'].close()
-        await ctx['server'].wait_closed()
+        try:
+            ctx['server'].close()
+            await ctx['server'].wait_closed()
+        except Exception as exc:
+            record['rpc_close_error'] = str(exc)
         client = self.clients.pop(context_id, None)
         if client:
-            cleanup = await client.close()
+            try:
+                cleanup = await client.close()
+            except Exception as exc:
+                record['backend_close_error'] = str(exc)
+                cleanup = await isolation.stop_owned(record.get('service'))
         elif not record.get('launch_attempted', True):
             cleanup = {'confirmed': True, 'reason': 'No context launch attempted'}
         else:
@@ -874,6 +1423,29 @@ class Coordinator:
     def snapshot_job_documents(self, record):
         self.documents.capture(record, 'job', Path(record['drafts']),
                                self.state['tasks'][record['task_id']].get('frozen_inputs', ()))
+
+    def resolve_publication_conflicts(self, record, policy, paths):
+        """Retain conflict history, resolving only exact incorporated publications."""
+        ancestors = set()
+        context_id = policy.get('context_id')
+        while context_id in self.state['contexts']:
+            ancestors.add(context_id)
+            context_id = self.state['contexts'][context_id].get('predecessor')
+        for earlier in (*self.state['contexts'].values(), *self.state['jobs'].values()):
+            if earlier is record or earlier['task_id'] != record['task_id']:
+                continue
+            origin = earlier.get('context_id', earlier.get('publication_context_id', earlier.get('origin_context_id')))
+            if origin not in ancestors:
+                continue
+            for conflict in earlier.get('publication_conflicts', ()):
+                path = conflict['path']
+                acknowledgement = policy.get('incorporated_edits', {}).get(path)
+                if (path in paths and acknowledgement and not conflict.get('resolution')
+                        and workspace.file_digest(workspace.safe_path(self.project, path)) == acknowledgement['draft_sha256']):
+                    conflict['resolution'] = {
+                        'source_id': record.get('context_id', record.get('job_id')),
+                        'sha256': acknowledgement['draft_sha256'],
+                        'human_sha256': acknowledgement['human_sha256']}
 
     def finalize_publications(self):
         """No await: admissions cannot interleave with quiescent path-based writes."""
@@ -938,7 +1510,7 @@ class Coordinator:
                         superseded.setdefault(prior, set()).update(paths & prior_paths)
                 ancestor = earlier.get('predecessor')
         index_contexts = {}
-        for key, (record, drafts, original_baseline, policy, _) in batches.items():
+        for key, (record, drafts, original_baseline, policy, paths) in batches.items():
             try:
                 baseline = dict(original_baseline)
                 incorporated = []
@@ -960,6 +1532,9 @@ class Coordinator:
                 record['publication_conflicts'] = conflicts
                 record['preserved_human_edits'] = preserved
                 record['publication_superseded'] = sorted(superseded.get(key, ()))
+                published = (paths - {c['path'] for c in conflicts}
+                             - superseded.get(key, set()))
+                self.resolve_publication_conflicts(record, policy, published & set(incorporated))
                 if key[0] == 'job':
                     record['publication_context_id'] = policy.get('context_id')
                 ctx = self.contexts.get(policy.get('context_id'))
@@ -992,6 +1567,10 @@ class Coordinator:
 
     def schedule_shutdown(self, reason, outcome):
         # This runs in the RPC reader too: no lifecycle RPCs or awaits here.
+        if terminal_acknowledged(self.project, self.state):
+            return
+        if outcome in ('failed', 'quota_unavailable'):
+            self.state['operational_failure'] = {'reason': reason, 'outcome': outcome}
         self.state.update(admission_block=self.state['admission_block'] or reason, state='stopping')
         self.quota_ready.set()
         for ctx in self.contexts.values():
@@ -1000,6 +1579,8 @@ class Coordinator:
             self.shutdown_task = asyncio.create_task(self.block_and_cleanup(reason, outcome=outcome))
 
     def observe_quota(self, context_id, payload, *, full=False, provenance='native', now=None, epoch=None):
+        if self.state.get('terminal_committed'):
+            return None
         if context_id != self.quota_transport or context_id is None:
             return None  # secondary and retired-primary notifications have no authority
         record = self.state['quota']
@@ -1007,11 +1588,12 @@ class Coordinator:
         if full:
             record['transport_unavailable'] = False
         if record.get('cutoff'):
-            self.state.setdefault('stop_origin', 'quota')
+            self.state['stop_origin'] = 'quota'
             self.schedule_shutdown(
                 f"Weekly quota STOP: observed {record['cutoff']['remaining_percent']}% remaining <= 15%", 'quota_stopped')
-        elif (full or record.get('preflight_ok') and not record.get('transport_unavailable')) and not self.state['admission_block']:
-            error = quota.admission_error(self.state, now=now, epoch=epoch)
+        elif (full or record.get('preflight_ok') and not record.get('transport_unavailable')) and (
+                not self.state['admission_block'] or self.state.get('requested_scientific_intent')):
+            error = quota.admission_error({**self.state, 'admission_block': None}, now=now, epoch=epoch)
             if error:
                 record['admission_error'] = error
                 self.schedule_shutdown(error + '; no observed quota cutoff', 'quota_unavailable')
@@ -1145,20 +1727,76 @@ class Coordinator:
             self.state['stop_persistence_errors'] = failures
         return text, not failures
 
+    def save_scientific_terminal(self, confirmed, update_status=True):
+        """Keep intent and opposition readable even if checkpoint/publication fails."""
+        proposal = self.state['opposition']['history'][-1]
+        intent = proposal['intent']
+        note = f'handoffs/decision-{proposal["id"]}.md'
+        text = f'# Scientific {intent}\n\n' + proposal['final_request']['text'] + (
+            '\n\n## Frozen proposal\n\n' + proposal['proposal_text']
+            + '\n\n## Opponent challenge\n\n' + proposal['review_text']
+            + '\n\n## Actual runtime preservation and interruption\n\n```json\n'
+            + json.dumps({'origin': 'scientific', 'version': proposal['version'],
+                'actual_outcome': self.state['state'],
+                'cleanup_confirmed': confirmed, 'cleanup': self.state.get('cleanup'),
+                'tasks': self.state['tasks'], 'jobs': self.state['jobs'],
+                'contexts': self.state['contexts'],
+                'documents': self.state['documents'],
+                'errors': {k: self.state.get(k) for k in ('persistence_error', 'terminal_error')},
+                'continuation': 'Explicit resume/reopening requires L5; do not duplicate retained work.'},
+                indent=2) + '\n```\n')
+        self.state['terminal_note'] = note
+        failures = []
+        # STOP preserves its explanation before cleanup; COMPLETE is written only
+        # after all checks. Neither early record claims successful finalization.
+        for path in (note, intent):
+            try:
+                workspace.atomic_text(workspace.safe_path(self.project, path), text)
+            except (OSError, ValueError) as exc:
+                failures.append(f'{path}: {exc}')
+        if confirmed and update_status:
+            try:
+                current = workspace.file_digest(self.project / 'RESEARCH_STATUS.md')
+                published = {d['sha256'] for d in self.state['documents'].values()
+                             if d['task_id'] == 'primary' and d['path'] == 'RESEARCH_STATUS.md'}
+                if current != self.status_baseline and current not in published:
+                    raise workspace.InputError('Human RESEARCH_STATUS.md edit preserved; incorporation required')
+                status = workspace.read_input_unbounded(self.project / 'RESEARCH_STATUS.md')
+                status += f'\n\n## Scientific {intent}\n\nSee [decision and opposition]({note}). ' \
+                    'This record includes reasons, recovery attempts, unresolved work, artifacts, ' \
+                    'actual cleanup and continuation guidance. Scientific acceptance by the human remains separate.\n'
+                workspace.atomic_text(self.project / 'RESEARCH_STATUS.md', status)
+                self.status_baseline = hashlib.sha256(status.encode()).hexdigest()
+                self.index_baseline.update(workspace.refresh_indexes(self.project, expected=self.index_baseline))
+            except (OSError, ValueError) as exc:
+                failures.append(f'status/index: {exc}')
+        if failures:
+            self.state['terminal_persistence_errors'] = failures
+        return text, not failures
+
     async def block_and_cleanup(self, reason, outcome='paused'):
         # Latch before any cleanup/checkpoint operation; failed saves cannot bypass it.
         self.state['admission_block'] = self.state['admission_block'] or reason
         self.quota_ready.set()
         async with self.cleanup_lock:
-            if (self.state.get('stop_origin') == 'quota' and self.state.get('cleanup_ok')
+            if (terminal_acknowledged(self.project, self.state) and self.state.get('cleanup_ok')
                     and self.state.get('finalization_ok')):
-                return True  # inspection/pause cannot replace an acknowledged STOP
+                return True  # inspection/pause cannot replace an acknowledged outcome
             self.state['state'] = 'stopping'
             return await self._block_and_cleanup(reason, outcome)
 
     async def _block_and_cleanup(self, reason, outcome):
+        if outcome == 'paused' and self.state.get('requested_scientific_intent'):
+            outcome = 'failed'  # unacknowledged scientific finalization is not an ordinary pause
         if self.state.get('stop_origin') == 'quota':
             outcome = 'quota_stopped'
+        elif self.state.get('operational_failure'):
+            outcome = self.state['operational_failure']['outcome']
+        elif outcome == 'scientific_stopped':
+            try:
+                self.save_scientific_terminal(False)
+            except (OSError, ValueError) as exc:
+                self.state['persistence_error'] = str(exc)
         try:
             self.save()
         except (OSError, ValueError) as exc:
@@ -1216,6 +1854,8 @@ class Coordinator:
         confirmed = all(o['confirmed'] for o in outcomes.values()) and jobs.science_quiescent(self.state)
         if self.state.get('stop_origin') == 'quota':
             outcome = 'quota_stopped'
+        elif self.state.get('operational_failure'):
+            outcome = self.state['operational_failure']['outcome']
         self.state.update(state=outcome if confirmed else 'cleanup_unconfirmed', cleanup_ok=confirmed,
                           cleanup=outcomes, cleanup_outcome=outcome)
         try:
@@ -1227,17 +1867,64 @@ class Coordinator:
             text = None
             if outcome == 'quota_stopped':
                 text, saved = self.save_quota_stop(confirmed)
+            elif (outcome in ('failed', 'quota_unavailable')
+                  and self.state.get('requested_scientific_intent') == 'STOP'):
+                # Preserve the requested rationale while explicitly reporting the
+                # actual operational failure. This never authorizes STOP_ACK.
+                text, saved = self.save_scientific_terminal(confirmed, update_status=False)
+            elif outcome in ('complete', 'scientific_stopped'):
+                proposal = self.current_proposal()
+                try:
+                    self.validate_reviewed_versions(proposal)
+                    for task in self.state['tasks'].values():
+                        last = task.get('last_context_id')
+                        if not last:
+                            raise workspace.InputError('Missing final context handoff: ' + task['task_id'])
+                        self.validate_context_handoff(last, final=True)
+                    review_ctx = self.contexts[proposal['review_context_id']]
+                    if hashlib.sha256(self.scoped_text(review_ctx, proposal['review_path']).encode()).hexdigest() != proposal['review_sha256']:
+                        raise workspace.InputError('Opponent review changed after submission')
+                    primary_ctx = self.contexts[self.state['tasks']['primary']['last_context_id']]
+                    final = proposal['final_request']
+                    if hashlib.sha256(self.scoped_text(primary_ctx, final['path']).encode()).hexdigest() != final['sha256']:
+                        raise workspace.InputError('Primary final request changed')
+                    if any(any(not c.get('resolution') for c in r.get('publication_conflicts', ()))
+                           or r.get('retirement_error')
+                           for r in (*self.state['contexts'].values(), *self.state['jobs'].values(),
+                                     *self.state['tasks'].values())):
+                        raise workspace.InputError('Unresolved publication/retirement failure')
+                    if confirmed:
+                        text, saved = self.save_scientific_terminal(True)
+                    else:
+                        saved = False
+                except (OSError, ValueError) as exc:
+                    proposal['finalization_error'] = str(exc)
+                    self.state.update(state='reassessment_required' if proposal.get('invalidated') else 'failed',
+                                      terminal_error=str(exc))
+                    saved = False
+                    if outcome == 'scientific_stopped':
+                        self.save_scientific_terminal(confirmed, update_status=False)
             failures = any(r.get(k) for r in (*self.state['contexts'].values(), *self.state['jobs'].values())
                            for k in ('persistence_error', 'publication_error', 'document_snapshot_error',
                                      'job_handoff_error', 'preservation_error'))
             saved = saved and not failures and not self.state.get('persistence_error')
+            if not saved and outcome in ('complete', 'scientific_stopped') and self.state['state'] != 'reassessment_required':
+                self.state['state'] = 'failed' if confirmed else 'cleanup_unconfirmed'
             self.state['finalization_ok'] = saved
             self.save()
-            if outcome == 'quota_stopped' and confirmed and saved:
-                workspace.atomic_text(self.project / 'STOP_ACK', text)
+            if outcome in ('quota_stopped', 'scientific_stopped', 'complete') and confirmed and saved:
+                marker = 'COMPLETE' if outcome == 'complete' else 'STOP'
+                self.state.update(terminal_committed=True,
+                                  terminal_marker=marker, terminal_sha256=hashlib.sha256(text.encode()).hexdigest(),
+                                  scientific_status='complete' if outcome == 'complete' else self.state['scientific_status'])
+                self.save()
+                workspace.atomic_text(self.project / (marker + '_ACK'), text)
         except (OSError, ValueError) as exc:
             self.state['persistence_error'] = str(exc)
             self.state['finalization_ok'] = False
+            self.state['terminal_committed'] = False
+            if outcome in ('complete', 'scientific_stopped'):
+                self.state['state'] = 'failed' if confirmed else 'cleanup_unconfirmed'
             try:
                 self.save()
             except (OSError, ValueError):
@@ -1286,4 +1973,5 @@ class Coordinator:
         for task in self.turns.values():
             task.cancel()
         await asyncio.gather(*self.turns.values(), return_exceptions=True)
+        await asyncio.gather(*self.lifecycle_tasks, return_exceptions=True)
         self.stack.close()

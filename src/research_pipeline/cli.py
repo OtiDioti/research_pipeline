@@ -1,4 +1,4 @@
-"""V0-L3 foreground runtime and ordinary-file controls."""
+"""V0-L4 foreground runtime and ordinary-file controls."""
 import argparse
 import asyncio
 import json
@@ -71,11 +71,22 @@ async def run(project, config, preserve_existing=False):
                       'saving/cleanup may consume further quota')
             elif runtime.state.get('cleanup_outcome') == 'quota_unavailable':
                 print('weekly quota telemetry unavailable; research admission refused; no observed cutoff')
+            elif runtime.state.get('requested_scientific_intent'):
+                print(f"scientific {runtime.state['requested_scientific_intent']}: "
+                      f"outcome={runtime.state['state']}; cleanup confirmed={runtime.state['cleanup_ok']}; "
+                      f"finalization confirmed={collaboration.terminal_acknowledged(project, runtime.state)}; "
+                      f"details={runtime.state.get('terminal_error') or runtime.state.get('persistence_error') or runtime.state.get('terminal_note')}")
+                if (runtime.state['requested_scientific_intent'] == 'STOP'
+                        and not runtime.state.get('terminal_committed')):
+                    print(runtime.state['opposition']['history'][-1]['final_request']['text'])
             return 0 if (not failed_contexts and runtime.state['cleanup_ok']
                          and runtime.state.get('finalization_ok', True)
-                         and runtime.state.get('cleanup_outcome') != 'quota_unavailable') else 1
+                         and runtime.state['state'] not in
+                         ('failed', 'reassessment_required', 'cleanup_unconfirmed', 'quota_unavailable')) else 1
         except BaseException as exc:
             runtime.state['runtime_error'] = f'{type(exc).__name__}: {exc}'
+            if not collaboration.terminal_acknowledged(project, runtime.state):
+                runtime.schedule_shutdown('Runtime interrupted or failed: ' + str(exc), 'failed')
             if runtime.shutdown_task:
                 await runtime.shutdown_task
             else:
@@ -111,6 +122,9 @@ async def pause_async(project):
         try:
             with workspace.acquire_project_lock(project):
                 state = collaboration.load_state(project)
+                if state.get('terminal_committed') and state.get('cleanup_ok') and state.get('finalization_ok'):
+                    print(f"{state['state']}: committed terminal outcome preserved")
+                    return 0
                 state.update(admission_block=state.get('admission_block') or 'Human pause', state='stopping')
                 workspace.write_state(project, state)
                 outcomes = {}
@@ -123,13 +137,14 @@ async def pause_async(project):
                     record['cleanup'] = outcome
                     record['state'] = ('closed' if 'context_id' in record else 'cancelled') if outcome['confirmed'] else 'cleanup_unconfirmed'
                 confirmed = all(o['confirmed'] for o in outcomes.values())
-                stopped = 'quota_stopped' if state.get('stop_origin') == 'quota' else 'paused'
+                stopped = ('quota_stopped' if state.get('stop_origin') == 'quota' else
+                           'failed' if state.get('requested_scientific_intent') else 'paused')
                 state.update(state=stopped if confirmed else 'cleanup_unconfirmed', cleanup_ok=confirmed, cleanup=outcomes)
                 workspace.write_state(project, state)
                 if not confirmed:
                     raise workspace.InputError('Pause failed: ownership/cleanup unconfirmed; see retained per-process evidence')
                 print(f'{stopped}: confirmed owned-process cleanup; inspect artifacts for missing handoffs')
-                return 0 if state.get('finalization_ok', stopped != 'quota_stopped') else 1
+                return 0 if state.get('finalization_ok', stopped == 'paused') else 1
         except workspace.ProjectBusy:
             pass
         await asyncio.sleep(.1)
@@ -141,7 +156,7 @@ def pause(project):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description='Research-owned V0-L2 runtime')
+    parser = argparse.ArgumentParser(description='Research-owned V0-L4 runtime')
     sub = parser.add_subparsers(dest='command', required=True)
     launch = sub.add_parser('start')
     launch.add_argument('project', type=Path)

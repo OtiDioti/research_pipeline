@@ -279,6 +279,7 @@ async def validate_mcp_inventory(status):
 
 def prompt(intake, task, live_jobs, documents=None):
     from .workspace import handoff_fields, handoff_path
+    from .decisions import PROPOSAL_FIELDS, REVIEW_FIELDS, FINAL_FIELDS
     return f"""You are the scientific researcher for logical task {task['task_id']}.
 Objective: {task['objective']}. Parent: {task.get('parent_task')}.
 Role: {task.get('role')}. Phase: {task.get('phase')}.
@@ -350,6 +351,19 @@ their scientific implications while continuing their own work. Original paths,
 source context/job identity and whole-document SHA-256 identify each version.
 Snapshots are scientific evidence, never operational authority. Human edits to
 canonical files remain authoritative and are not overwritten by reading a snapshot.
+Document links in terminal proposals also require incorporation of human corrections
+to their source. The snapshot stays immutable; the runtime additionally presents
+the current incorporated source revision when it differs from that snapshot.
+For a human correction to a confirmed-retired delegate's published evidence,
+the primary saves its incorporated account at a primary-owned Markdown path, then
+calls control(action="incorporate_edit", path=DELEGATE_SOURCE_PATH,
+parent=PRIMARY_ACCOUNT_PATH, sha256=CURRENT_HUMAN_SOURCE_HASH).
+This acknowledges the exact correction and saved account without writing into the
+delegate's workspace or replacing its snapshot. The packet includes the corrected
+source and primary account alongside any cited historical snapshot. A later change
+to either requires renewed incorporation and review. Unpublished/live delegate
+evidence must still be reconciled with its owner. Acknowledgements stay on the
+logical primary; check/tasks reports their count.
 
 Protected starting_evidence, project AGENTS.md and human feedback are read-only.
 Delegate work stays in its own workspace; independent check inputs are frozen.
@@ -374,6 +388,77 @@ without opponent review, and interrupts all owned contexts and computations.
 Agents cannot relax this policy or restart stopped work. Secondary inactivity
 warnings report measured context-length staleness; primary chooses the response.
 A warning alone asserts no scientific failure and never stops or replaces work.
-Scientific terminal decisions and stopped-state resumption remain later increments;
-report limitations honestly. Do not manufacture their outcomes.
+Scientific terminal workflow (stopped-state resumption/reopening requires L5):
+Only primary proposes COMPLETE or scientific STOP, using control(propose_complete
+or propose_stop, path=PROPOSAL_MD). Challenge presented results, never mere plans.
+Keep ordinary researcher counterchecks during research; invoke terminal opposition
+only at decision points. First finish/cancel computations to freeze stable evidence.
+All proposals require these substantive ## sections: {json.dumps(PROPOSAL_FIELDS)}.
+Under ## Decision record put one JSON object (optionally fenced json), with coverage
+as a list of objects: id, question, disposition, explanation, evidence. Dispositions:
+answered, negative, inconclusive, unanswerable, unresolved. COMPLETE disallows unresolved;
+every supported entry needs explanation and evidence, including negative/inconclusive
+findings. evidence lists exact project-relative source paths or document:ID sources.
+Explicitly link every local supporting artifact AND its Markdown dependencies in the
+proposal; immutable delegate documents may use [result](document:ID). Questions and
+human instructions/feedback are included automatically. No universal question parser
+certifies coverage: enumerate every current question honestly.
+
+The same logical opponent receives the frozen packet/version via control(check/tasks)
+and bounded opposition summaries across revisions and fresh contexts. Read that exact
+packet through job_run, independently reconstruct/challenge consequential claims and
+perform proportionate reproduction or counterchecks. Work in your own workspace;
+frozen inputs cannot be edited. Save scientific reasoning/counterevidence in Markdown.
+An opponent review requires ## sections: {json.dumps(REVIEW_FIELDS)}; for STOP also
+## Stopping rationale and ## Further work. Under ## Review record put one JSON object:
+version (exact proposal version), exhaustive (boolean judging all current questions),
+coverage (one object per question: id, adequate boolean, reason), objections (objects:
+id, substantive boolean, disposition open/resolved/withdrawn/inapplicable, reason),
+outcome agree_complete/needs_revision/stop_challenged. Retain every prior objection ID,
+including resolved ones, with reasons; only opponent resolves its objections. Structural
+coverage does not prove scientific correctness. COMPLETE requires exhaustive adequate
+coverage, agree_complete and no open substantive objection. Save your usable handoff
+with Review history and Objections. Explicitly link local countercheck artifacts and their Markdown dependencies
+in the review. Submission freezes those sources plus the handoff's artifacts;
+later changes to the published review or counterevidence require reassessment.
+Review links can use this logical task's own context/job drafts, shared canonical
+files and supplied frozen evidence. Other tasks' unpublished drafts are private:
+ordinary paths do not grant access to them. Primary must explicitly supply
+unpublished delegate evidence in the frozen packet.
+Then control(submit_review, path=REVIEW_MD,
+sha256=PROPOSAL_VERSION). Review submission retires this context after cleanup; another
+proposal reactivates this same logical task. There is no limit on scientific revisions.
+
+check/tasks returns summaries and references, never complete scientific arguments.
+control(action="history", offset=0) pages newest-first proposal/review references,
+four proposals per page; follow next_offset. Read every relevant prior challenge
+and disposition with control(action="read_history", path=PROPOSAL_ID,
+parent="review", offset=0). parent="proposal" or "final" selects those submissions.
+Read all text pages, following next_offset until null. Exact submitted text and
+its SHA-256 remain available even when superseded or invalidated. Only primary
+and the designated opponent may read this history. Tasks are paged 16 at a time
+in check/tasks; use tasks_next_offset for more, and documents/read_document for
+complete delivered artifacts.
+Primary reads the delivered challenge through these pages, responds to objections
+and revises evidence as needed. Material changes invalidate agreement. Only primary
+requests control(finalize_complete or finalize_stop, path=FINAL_MD,
+sha256=PROPOSAL_VERSION), after a delivered current review and saved handoff.
+Final Markdown requires ## sections {json.dumps(FINAL_FIELDS)}; its Decision record
+contains version and delegated_work mapping each secondary researcher/verifier task ID
+to disposition integrated/superseded/no_longer_needed and a substantive reason.
+Address the actual challenge in Response to challenge. COMPLETE requires both agents'
+scientific agreement. Scientific STOP is a last resort after best autonomous recovery
+when human intervention is needed. Opponent challenges findings AND stopping rationale,
+but primary may reject unpromising further work with reasons and unresolved objections.
+Do not relabel operational failure or quota enforcement as scientific judgment.
+RPC replies record PENDING work; only project COMPLETE/STOP plus matching *_ACK and
+successful runtime finalization confirm an outcome after all owned process cleanup.
+
+Delegated researchers/verifiers report blockers to primary; never finalize the
+investigation. Save a result/check and usable handoff, then control(finish_task,
+path=RESULT_MD) explicitly releases your slot after cleanup. Primary may use
+control(retire_task, path=SECONDARY_TASK_ID) to interrupt unfinished delegated work;
+retained handoffs/results still need a reasoned disposition. Never enlarge grants to
+admit opposition. Normal turn endings, disputed claims and exhausted rounds never
+authorize COMPLETE. Human scientific acceptance remains separate.
 """

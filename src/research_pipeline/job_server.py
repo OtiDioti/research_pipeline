@@ -66,14 +66,29 @@ def create_server(adapter):
     @server.tool()
     async def control(action: str = 'check', path: str | None = None, parent: str = 'primary',
                       offset: StrictInt = 0, sha256: str | None = None) -> dict:
-        """Fixed operations: check, tasks, delegate, verify, documents, read_document, incorporate_edit.
+        """Fixed operations: check, tasks, history, read_history, delegate, verify,
+        documents, read_document, incorporate_edit,
+        finish_task, retire_task, propose_complete, propose_stop, submit_review,
+        finalize_complete, finalize_stop. Scientific proposals/finalization are primary-only;
+        submit_review is designated-opponent-only and uses sha256=proposal version.
+        finish_task saves a delegated result at path; retire_task uses a secondary task ID.
+        Proposal/review/final paths are scoped Markdown. Lifecycle replies are PENDING,
+        never terminal success. Finalization also uses sha256=proposal version.
         documents lists scoped immutable snapshots, 32 per page. read_document uses
         path=document_id and offset=character offset; follow next_offset for more.
         Handoffs/reports remain readable before safe canonical publication.
         incorporate_edit uses path and the current human sha256 after you read and
         incorporate it in that path's saved draft. A changed draft needs a new
         acknowledgement. Human text is preserved before accepted publication.
-        Measured rollover is automatic; terminal decisions require V0-L4.
+        For a confirmed-retired delegate's published evidence, only primary may
+        use path=corrected source, parent=primary saved account, sha256=human source
+        hash. This binds both versions without writing into the delegate workspace;
+        corrected source and account are frozen together for terminal opposition.
+        Measured rollover is automatic. check/tasks supplies bounded task/opposition
+        summaries, packet references and tasks_next_offset (16 tasks per page).
+        history pages references newest-first (4 proposals per page). read_history
+        uses path=proposal ID, parent=proposal/review/final, offset=character offset.
+        Follow next_offset until null for complete text. History is primary/opponent-only.
         """
         return await adapter.call('control', action=action, path=path, parent=parent, offset=offset, sha256=sha256)
 

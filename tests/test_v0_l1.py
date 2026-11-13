@@ -545,7 +545,7 @@ class ScientificFilesTests(unittest.TestCase):
 
     def test_unsupported_operational_versions_rejected_without_migration(self):
         (self.project/'.research_pipeline').mkdir()
-        for version in (None, 1, 2, 3, 4, 5, 7):
+        for version in (None, 1, 2, 3, 4, 5, 6, 8):
             jobs.atomic(self.project/'.research_pipeline/run.json', {'schema_version': version})
             with self.assertRaisesRegex(workspace.InputError, 'Unsupported operational state'):
                 collaboration.load_state(self.project)
