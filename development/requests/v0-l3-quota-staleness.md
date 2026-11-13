@@ -1,6 +1,6 @@
 # V0-L3 — centralized weekly reserve and secondary staleness
 
-Implementation is ready for independent pipeline review and trusted native verification. **L3 is not accepted by this Writer report.** The authorized host user bus is absent here; the enabled production gate failed before research admission. No real account reading, production inference or native service cleanup is claimed for this attempt. L1/L2 remain the accepted foundations, with L2 integration `f9119e31e816e7f83bb475ce01f58a5873f3b6fa`. No implementation/review/integration ref has been assigned by this implementation role; the pipeline owns those refs and subsequent final/combined results.
+The supplied recovery response confirms independent runtime review approval at `b36347451d1a5e8567fb505605e422bc6864a775`, including the final secondary-dispatch repair. Milestone-002 review found no actionable documentation defects; the recovery response authorizes progression to the existing trusted final/combined stages. Latest supplied verification reports **59 focused tests passed** and **227 routine tests, OK (seven gates skipped)**; independently executed Writer checks are recorded below. **L3 remains unaccepted pending the production demonstration, successful trusted final/combined verification and integration.** The authorized host user bus is absent in this restricted Writer; the earlier enabled production gate failed before research admission. No real account reading, production inference or native service cleanup is claimed for that attempt. L1/L2 remain the accepted foundations, with L2 integration `f9119e31e816e7f83bb475ce01f58a5873f3b6fa`. No L3 integration ref has been supplied; the pipeline owns integration and subsequent final/combined results.
 
 ## Telemetry contract and material choices
 
@@ -67,7 +67,7 @@ Exit 1; log `runtime/tmp/l3-native-writer-001.txt`, private receipt `runtime/tmp
 
 `tests/test_v0_l3_native.py` provides opt-in discovery with `RESEARCH_PIPELINE_V0_L3_NATIVE=1` and inherited `RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR`. It reserves unique private receipts before prerequisites; receipt regression tests preserve two independent failed invocations. Researcher/opponent scenarios run sequentially within unchanged two-agent/one-job defaults. Each requires an actual sufficient native preflight before injections, native public analytical work, one controlled public quadrature job and descendant, a real primary rollover with original job identity/deadline, labelled warning intake across that rollover, labelled quota cutoff and actual owned-service cleanup. Native readings, native lengths, injected occupancy/clock/quota and saved science are distinct receipt fields. It never manufactures agreement/scientific completion or admits a run with invented quota. Synchronization bounds fail engineering tests; they are not research lifetimes.
 
-Trusted **final and combined stages must inherit the enabled L3 gate**, existing authorized bus/native file credentials, dependencies, Bubblewrap and cgroup v2. Allocate a fresh private output destination per invocation and preserve all failures. Keep M1–M5 and accepted L1/L2 native gates disabled. This Writer did not manage sessions, refs, permissions, publication, or the retained M5 candidate. Independent review and required trusted final/combined receipts are pending pipeline work; this report cannot substitute for them.
+Trusted **final and combined stages must inherit the enabled L3 gate**, existing authorized bus/native file credentials, dependencies, Bubblewrap and cgroup v2. Allocate a fresh private output destination per invocation and preserve all failures. Keep M1–M5 and accepted L1/L2 native gates disabled. This Writer did not manage sessions, refs, permissions, publication, or the retained M5 candidate. Independent runtime review now has supplied approval; required trusted final/combined receipts remain pending pipeline work. This report cannot substitute for them. The Writer results and repair sections below retain their historical review status at the time of each attempt.
 
 ## Next dependency
 
@@ -115,3 +115,35 @@ Verification used the existing dependency PYTHONPATH and trusted Python command 
 - Read-only diff checks passed; PROJECT.md, engineering AGENTS.md, STATUS.md and the human lifecycle amendment remain unchanged.
 
 The inherited `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` were rechecked and remain absent. The original failed native receipt is unchanged; no production demonstration was repeated against the same prerequisite blocker. No new native quota reading, native cleanup or trusted final/combined pass is claimed. Re-review and successful enabled native/trusted final/combined checks remain required for L3 acceptance.
+
+## Milestone 002 — documentation alignment and validation handoff
+
+The supplied milestone plan records independent approval of the final scheduling repair; the pending re-review statements above describe earlier attempts. README now consistently specifies schema 6, fresh operational state and rejection of older state without migration. The opening summary and request index distinguish that supplied approval from the outstanding native demonstration and trusted final/combined checks. No source or test changes were required.
+
+Independently executed Writer verification on the reviewed runtime at local revision `b36347451d1a5e8567fb505605e422bc6864a775`, with only these documentation changes:
+
+- The full disabled-gate routine command documented above, reusing the existing dependencies and `/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v`: **227 tests in 10.196 seconds, OK (seven gates skipped)**, exit 0. Preserved log: `coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/l3-m002-routine-5sqpsuj5.txt`.
+- Read-only diff/whitespace review passed. All 16 relative Markdown links in the three changed documents resolve. Only README, this report and `development/requests/FOLDER_CONTENT.md` changed; STATUS.md, human-owned requirements, protected inputs and historical receipts remain unchanged.
+
+This Writer environment still has neither inherited `XDG_RUNTIME_DIR` nor `DBUS_SESSION_BUS_ADDRESS`. Per the milestone plan, the unchanged missing-bus native attempt was not repeated. Its original `runtime/tmp/l3-native-writer-001/receipt.json` remains preserved with `outcome=failed`, empty scenarios/commands and the exact prerequisite error quoted above. No bus address, authentication change or isolation fallback was introduced.
+
+**Trusted final and combined validation remain unexecuted by this role and pending.** Each stage must use the enabled-gate discovery command above with a fresh private output directory and the existing authorized host environment. There are no new real quota readings, native context/computation observations or production cleanup receipts to assess in this update; routine fixture successes cannot supply them. Actual final/combined commands, tested revisions, receipts, telemetry, saving/cleanup/finalization outcomes and any failures must be recorded after those stages execute. No L3 completion or integration is claimed. L4 remains the next implementation dependency after L3 acceptance.
+
+## Milestone 002 recovery — progression to trusted verification
+
+Read the preserved plan, recovery response, review findings, milestone diff and baseline before editing. The recovery response identifies milestone-001 runtime review approval at `b36347451d1a5e8567fb505605e422bc6864a775`; milestone-002 review found no actionable documentation defect. It resolves the sequencing block by authorizing review completion and progression to standard trusted final/automatic combined verification. Those later receipts are required for L3 acceptance, rather than a prerequisite for finishing this restricted Writer's documentation work. No runtime or test change was justified.
+
+The recovery response reports authorized launch-host readiness in `host-verification-recovery.json`: an existing responding user bus, native file authentication and cgroup v2. These are supplied readiness observations, not product results independently established here. It also reports that the controller inherits the enabled L3 gate and original private output destination. A read-only check confirms this Writer still lacks both bus variables and the L3 gate/output variables. The unchanged failed Writer native attempt was not repeated, and its receipt remains historical failure evidence.
+
+The existing trusted stages must run discovery with `RESEARCH_PIPELINE_V0_L3_NATIVE=1` and inherited `RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR`, preserving a distinct private receipt for each invocation through the existing output reservation. Keep M1–M5 live and L1/L2 native gates disabled. The required command, under that trusted inherited environment, is:
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v
+```
+
+No bus/authentication substitution or additional harness is needed. Actual sufficient weekly admission must precede all injected observations; missing or insufficient real quota must fail admission. After both stages execute, record their actual commands, revisions, distinct receipts, real bucket/window readings, labelled injections, owned cleanup and saving/finalization outcomes here. Host readiness and routine successes cannot replace those receipts.
+
+Recovery Writer verification reused the full disabled-gate command recorded above: **227 tests in 10.241 seconds, OK (seven opt-in gates skipped)**, exit 0. Preserved log: `coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/l3-m002-recovery-routine-4r56j3mx.txt`; adjacent `.txt.json` records the command, exit status and protected-file hashes before verification. This tests the preserved reviewed runtime with documentation-only recovery edits. Trusted native final/combined execution and integration remain pending; L4 follows L3 acceptance.
+
+Documentation diff/whitespace review passed; all 16 relative Markdown links resolve. Hash checks confirm PROJECT.md, AGENTS.md, STATUS.md and the human lifecycle amendment are unchanged. Only README, this report and the request index were edited; no historical receipt or protected scientific input was modified.

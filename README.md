@@ -15,7 +15,9 @@ and remaining gates, and the [L1](development/requests/v0-l1-durable-runtime.md)
 [L2](development/requests/v0-l2-measured-rollover.md) implementation reports.
 
 L3 implements centralized weekly reserve and secondary inactivity warnings.
-Its production demonstration and independent final/combined checks remain required;
+The supplied pipeline review approves the runtime and final scheduling repair.
+The recovery response authorizes progression to the existing trusted validation stages.
+Its production demonstration and trusted final/combined checks remain required;
 see the [L3 report](development/requests/v0-l3-quota-staleness.md) for actual results
 and the preserved Writer prerequisite failure. L3–L6 acceptance remains required
 before another private M5 attempt. Historical M1–M4 receipts
@@ -42,7 +44,7 @@ PYTHONPATH=src python -m research_pipeline pause /path/to/project
 
 `start --preserve-existing` explicitly adopts existing ordinary science while
 preserving human Markdown edits. Existing or orphaned runtime state is refused.
-Schema 5 is the only operational state supported; no migration is provided.
+Schema 6 is the only operational state supported; older state is rejected without migration.
 `resume` explicitly reports that stopped-state recovery/reopening requires V0-L5.
 Do not delete old runtime state to bypass ownership reconciliation.
 
@@ -382,8 +384,8 @@ preflight, owned native contexts and controlled numerical jobs. Labelled clock,
 an account. The gate checks primary replacement, warning intake, stable job
 identity/deadline and real context/job cleanup. Missing prerequisites fail visibly.
 The Writer cannot supply its absent authorized user bus; that failed receipt is
-not native production evidence. Independent review and successful trusted
-final/combined runs are still required for L3 acceptance.
+not native production evidence. Runtime review has supplied approval; successful
+trusted final/combined runs remain required for L3 acceptance and integration is pending.
 
 The first invocation creates the requested output directory with mode `0700`.
 If that directory already exists, each invocation reserves a fresh private sibling
