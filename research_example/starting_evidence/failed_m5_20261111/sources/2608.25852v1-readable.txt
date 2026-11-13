@@ -1,0 +1,162 @@
+Content selection saved. Describe the issue below:
+
+Strained germanium ( ε -Ge) quantum wells on metamorphic SiGe buffers have enabled advanced hole-based spin qubit devices. Alternatively, unstrained Ge with lattice-matched strained silicon-germanium ( ε -SiGe)
+barriers eliminates the need for metamorphic buffers altogether. The ground state character of both these platforms is predominantly heavy-hole (HH) with a largely anisotropic spin response. We propose and study an alternative heterostructure, lattice-matched to Ge, in which both the SiGe quantum well and barriers are tensile strained, with their composition contrast providing the band offset for confinement and the tensile strain stabilizing a light-hole (LH) ground state.
+We show large spin-orbit coupling (SOC), both linear and cubic, along with a significantly more isotropic spin response compared to strained HH qubits. We also study the decoherence properties of the proposed device, showing an appreciable gain in the quality factor compared to their HH counterparts. Finally, we propose a bilayer heterostructure that allows for electrical switching between HH and LH ground state character.
+
+Introduction— Hole spin qubits in strained germanium ( ε -Ge) are an established platform for quantum computing [ 17 , 40 , 14 , 10 , 18 , 13 , 15 , 26 , 16 , 7 , 32 , 2 , 29 , 27 ] , offering full electrical driving and the prospect of baseband control [ 39 , 25 , 41 , 3 , 23 ] . The compressive strain imparted by the metamorphic SiGe buffer separates the Light-Hole (LH) subbands from the Heavy-Hole (HH) manifold, stabilizing the computational subspace at the cost of a strongly anisotropic spin response between growth and planar directions. That same metamorphic substrate, however, introduces threading and misfit dislocations and strain fluctuations that render the g-tensor non-uniform [ 4 , 31 , 19 , 20 ] . This has motivated buried Ge wells with strained SiGe barriers (Ge/ ε -SiGe), lattice-matched to an underlying Ge substrate, which retain large SOC while reducing dot-to-dot variability [ 5 , 21 ] .
+
+Tensile-strained Ge wells offer a complementary route in which the LH becomes the ground state [ 34 , 35 , 33 , 9 , 1 , 11 ] . The leading candidate, ε -Ge/GeSn, exploits the larger lattice constant of a GeSn strain-relaxed buffer to raise the LH band, granting fast driving, large spin-orbit coupling (SOC), strong spin-photon coupling in the microwave regime, and a direct bandgap for optical photon interfaces [ 34 , 1 , 22 ] . The reliance on a defective metamorphic buffer, however, persists.
+
+In this work we show that a tensile-strained LH ground state can be engineered with strained SiGe layers alone, by setting the lattice constant of the entire stack to that of germanium and without integrating other group IV materials such as Sn. The stack, grown on a Ge wafer, alternates Si 1-x Ge x alloys of different chemical composition to host the quantum well (Fig. 1 (a)): The chemical contrast gives the band offset for confinement, while the strain profile stabilizes the lowest LH subband as the ground state. We find that the accumulated two-dimensional hole gas (2DHG) supports sizeable linear and cubic spin-orbit couplings and a dipole moment for microwave driving orders of magnitude larger than in conventional HH devices. The planar g-tensor is enhanced by about an order of magnitude, considerably reducing the anisotropy that characterizes HH-based devices ( g ∥ ∗ , HH ≈ 0.1 , g ⟂ ∗ , HH ≈ 15 ). Furthermore, the gain in dipole moment outweighs the reduced coherence, yielding an order-of-magnitude improvement in quality factor over typical ε -Ge qubits. Finally, to circumvent reduced coherence, combining a lower Ge well with a top tensile-strained SiGe well allows the ground state to be switched between HH and LH character by the vertical electric field alone. A complementary switchable HH–LH qubit, based on two Ge wells with SiGeSn barriers and gate-controlled shuttling, is proposed in concurrent work [ 12 ] . Taken together, these results position tensile-strained SiGe heterostructures as a practical strategy for the design of germanium hole spin qubits. Microscopic Model— We model the system via the methodology introduced in [ 36 ] , which first consists of a numerical diagonalization of the 6-band k ⋅ p Hamiltonian at zero magnetic field 𝐁 and in-plane momentum 𝐤 ∥ . We use the resulting eigenstates as the basis set to construct the Hamiltonian at finite 𝐁 = B ⁡ ( sin ⁡ θ ​ cos ⁡ ϕ ​ e x + sin ⁡ θ ​ sin ⁡ ϕ ​ e y + cos ⁡ θ ​ e z ) and finite 𝐤 ∥ . This yields the projected QW Hamiltonian
+
+ℋ = 𝐄 0 qw + V ∥ ​ ( x , y ) (1) + α 0 [ 𝐌 γ K ∥ 2 + cos ⁡ θ 2 ​ l B 2 𝐌 g + sin ⁡ θ 2 ​ l B 2 ( sin ⁡ θ 2 ​ l B 2 𝐍 γ r ϕ − 𝐍 ~ γ ) r ϕ ] + α 0 [ i 𝐌 1 K − + 𝐌 2 K − 2 + sin ⁡ θ 2 ​ l B 2 ( e − i ​ ϕ 𝐍 g + i 𝐍 1 + r ϕ K − + i 𝐍 1 − K − r ϕ ) + h . c . ] .
+
+The diagonal matrix 𝐄 0 qw collects the subband energies E H and E η of the
+quantum well at 𝐊 ∥ = 0 with the H and η labels representing the HH and LH/Split-Off (SO) bands respectively. Further details are specified in the Supplementary Material (SM) [ 30 ] . Moreover K = k + e ℏ ​ A , K ± = K x ± i ​ K y and l B = ℏ / ( e ​ B ) , where B = B ⋅ B . The prefactor α 0 = ℏ 2 / 2 ​ m 0 sets the overall energy scale, and all matrices 𝐌 , 𝐍 are overlap integrals of the
+growth-direction envelopes f j l , s , h with f l , f s and f h the Light-Hole, Split-Off, and Heavy-Hole envelopes of the j -th spinor. Here the information pertaining to strain, band-offset, and out-of-plane electric field, e ​ F z , is encoded in the envelopes and eigenenergies of the subbands, which is why these terms do not explicitly appear in Eq. 1 .
+
+The first bracket contains the terms diagonal in the orbital angular
+momentum channel. 𝐌 γ ​ K ∥ 2 is the isotropic
+in-plane kinetic energy. The
+term proportional to cos ⁡ θ ​ 𝐌 g / 2 ​ l B 2 is linear in the
+out-of-plane field component B ​ cos ⁡ θ and encodes the Zeeman response. The remaining contribution is generated by the
+in-plane component B ​ sin ⁡ θ through the gauge choice A = B ​ cos ⁡ θ 2 ​ ( − y ​ e x + x ​ e y ) − B ​ r ϕ ​ sin ⁡ θ ​ e z , with r ϕ = x ​ sin ⁡ ϕ − y ​ cos ⁡ ϕ .
+The second bracket collects the off-diagonal couplings, which mix the H
+and η blocks and are the source of the anisotropic and
+spin-dependent physics, comprising i ​ 𝐌 1 ​ K − and 𝐌 2 ​ K − 2 . The terms proportional to sin ⁡ θ / 2 ​ l B 2 mix the in-plane field
+with orbital motion: e − i ​ ϕ ​ 𝐍 g is the planar Zeeman term, while i ​ 𝐍 1 ± are the mixed field-momentum terms. Finally, V ∥ ​ ( x , y ) is the
+electrostatic in-plane confinement, set to a harmonic potential for the present work.
+Further details on the microscopic model are presented in the SM and follows closely previous works [ 36 ] .
+
+Tensile Strained SiGe wells— The most straightforward way to obtain a tensile strained SiGe well is to grow a strained-SiGe heterostructure lattice-matched to germanium. The heterostructure comprises Si 1 − x b ​ Ge x b / Si 1 − x w ​ Ge x w with x b the barrier’s Ge stoichiometry and x w that of the well. In the 2D limit (assuming no planar confinement) Fig. 1 b) shows the energy gap between the first Heavy-Hole and Light-Hole subbands ( Δ HH − LH ) varying x w and the thickness of the tensile strained well L z , hence negative values of the gap correspond to a LH ground state. We observe for values x w < 0.97 a Light-Hole ground state throughout the considered range of well thicknesses. A typical band alignment and well structure is presented in Fig. 1 a), showing a well confined ground state and up to two excited states below the Light-Hole continuum limit.
+
+2DHG Parameters— We now study the dependence of the subband parameters on the stoichiometry and composition of the heterostructure. In particular we first look at the band parabolicity γ = m 0 / m ∗ , with m ∗ the effective mass, and the Rashba spin-orbit coefficients α , β 2 , β 3 that quantify the magnitude of the linear and cubic spin-orbit coupling computed from the projection of the z-subband matrices of Eq. 1 on the lowest doublet [ 36 ]
+
+ℋ ~ = α 0 ​ γ ​ k ∥ 2 + [ i ⁡ ( α ​ k − − β 2 ​ k + 3 − β 3 ​ k − ​ k + ​ k − ) ​ σ − + h.c. ] . (2)
+
+In Fig. 2 a) we observe the dependence of the linear Rashba coefficient α on the Ge concentration in the well and the well thickness. We notice that the magnitude of this term follows the increase in Ge concentration in the well which boosts the value of the Luttinger parameter γ 3 (See the SM [ 30 ] ). At the same time the linear spin-orbit is increased by making the well wider. This can again be understood qualitatively by noting that another driver of linear spin-orbit coupling is the transition matrix element ⟨ f j l | ​ k z ​ | f j s ⟩ (See the SM [ 30 ] ).
+
+In Fig. 2 b-c) we plot the cubic Rashba terms β 2 , β 3 for the same parameter ranges. We observe a divergence for thinner wells when increasing the Ge concentration caused by the closing of the HH-LH gap. Importantly, in contrast with HH ground states, the β 3 parameter of LH states becomes proportional to the sum of the Luttinger parameters ( γ 2 + γ 3 ) and is thus larger than β 2 ∝ ( γ 2 − γ 3 ) [ 6 ] .
+Finally in Fig. 2 d) we can observe the behaviour of the extracted effective mass for the lowest subband showing a smooth increase when closing the HH-LH gap. Moreover when increasing the well thickness the absolute value of the effective mass decreases moving towards the bulk limit.
+Combining these results it becomes apparent that confining a hole spin in the proposed manner grants a significant increase in the linear and cubic β 3 SOC relevant for microwave driving with respect to typical planar HH ground states, consistent with results reported for LH states in GeSn [ 35 , 35 ] .
+
+A Light-Hole qubit— Following the previous discussions we now explore the characteristics of a qubit hosted in the lowest Light-Hole doublet of the heterostructure outlined previously. To perform this we reintroduce the planar confinement set aside above, V ∥ = α 0 ​ ( x 2 l x 4 + y 2 l y 4 ) , with l x and l y being the harmonic confinement lengths in the planar directions that we set equal for the remainder of this work l x = l y = L X 0 . As a first parameter we model the g-tensor which is obtained by diagonalizing Eq. 1 for B = 0 and using the obtained eigenstates to project the linear terms in magnetic field arising from the Zeeman or orbital contributions [ 36 ] . This is in line with the g-tensor formalism [ 37 ] .
+
+In Fig. 3 we fix the well composition at Si 0.05 ​ Ge 95 and present the behavior of the in-plane and out-of-plane g-factors g ⟂ , ∥ ∗ = | | g B ⟂ , ∥ | | | | B ⟂ , ∥ | | for a sweep of the relevant device parameters: well thickness ( L z ), isotropic planar confinement L X 0 and out-of-plane linear electric field F z . In bulk LH states the behaviour of in-plane and out-of-plane g-factors is inverted with respect to HH, g ⟂ ∗ is smaller than g ∥ ∗ [ 34 ] . We observe this inversion for L z > 22 nm along with an interesting non-monotonic trend of the g ⟂ ∗ component with respect to the well width. This behaviour is mainly due to the HH-LH gap reaching the minimum set by strain while the k z transition matrix element between LH and HH states keeps decreasing, further details are reported in the SM [ 30 ] .
+
+In Fig. 3 (b) we study the dependency of the planar g-factor g ∥ ∗ on the planar confinement L X 0 and SiGe well thickness L z . We note a flattening of the trends beyond L X 0 = 20 nm indicating the possibility of sweet spots. In Fig. 3 (c) we plot these quantities as a function of the out-of-plane electric field. We observe a renormalization for both g-tensor components. In particular, g ⟂ ∗ drops from ≈ 7 to less than 3 . This trend can be largely attributed to the strong intra-band mixing of the LH/SO manifold. In the QW Hamiltonian the intra-band coupling of the LH/SO manifold is denoted as T η . Increasing the electric field boosts this term which modifies the ground state composition. The crucial effect that manifests in LH ground states is the strong increase in T η which makes the ground state a mixed J z projection of J z = ± 1 / 2 component at high electric fields. Moreover as a further renormalization, the orbital magnetic field correction give a significant variation as a function of electric field, further details are presented in the SM [ 30 ] . This implies a rather strong tunability of the spin response with the imposed electric field. Finally in Fig. 3 d) we compare the derivative of the in-plane g-factor with respect to the vertical electric field as a function of well thickness for the proposed tensile strained heterostructure with Si 0.05 ​ Ge 95 well and a typical ε -Ge HH device with stack Si 0.20 ​ Ge 0.80 / Ge / Si 0.20 ​ Ge 0.80 and relaxed barriers. As a secondary y-axis we show the corresponding dephasing time computed, in first approximation, by attributing all charge noise in the device to fluctuations in the out-of-plane electric field. Under this assumption we can write the dephasing time as [ 38 ] T 2 ∗ = ℏ ​ [ μ B ​ log ​ ( r ) ​ A z ​ | ∂ g ∂ F z ​ B | ] − 1 with r = 1.68 × 10 9 being the ratio of upper and lower frequency cutoffs, A z = 10 kV/m the amplitude of the out-of-plane field fluctuations, chosen to yield T 2 ∗ ≈ 1 ​ μ ​ s for a planar magnetic field in the ε -Ge hole spin qubit.
+
+As the next step in our analysis we look to the dipole moment, defined as the position operator transition matrix element d eff = ⟨ ↑ | ​ x ​ | ↓ ⟩ with | ↑ ⟩ and | ↓ ⟩ being the Kramer pair states and is proportional to the Rabi frequency for weak electrical driving or spin-photon coupling. In Fig. 4 we plot the dipole moment for different Ge composition and thicknesses of the well. Importantly, we note a boost of three orders of magnitude with respect to the typical ε -Ge HH heterostructure. Furthermore we notice increasing the well thickness or decreasing the Si concentration in the well boost the dipole moment, due to increases interband couplings and reduced HH-LH gap.
+
+To compare different heterostructures, we define the quality factor measure Q = T 2 ∗ × Rabi ≡ T 2 ∗ ​ d eff ​ e ​ E A ​ C / ℏ , with E A ​ C being the same drive amplitude for both platforms. In Fig. 4 (b) we note at least an order of magnitude improvement of our proposed LH qubit with respect to the conventional ε -Ge hole qubit. We also see a large increase for wells around 18 nm and larger amount of Ge in the SiGe well, while a degradation is observed for more well separated HH-LH states. This can naturally be understood by noting that the dipole moment increase in those regions starts to be marginal compared to the decay of the coherence times.
+
+Switching of Ground State Composition in a Bilayer— Even though the quality factor study has shown advantages of the Light-Hole ground state, we design a further heterostructure where the strengths of both HH and LH ground states are utilized, exploiting the opportunities offered by lattice-matching tensile ε -SiGe barriers to a Ge substrate.
+Building on the demonstrated architecture of ε -Ge bilayer [ 28 ] and the concurrent switchable HH-LH proposal [ 12 ] , here we propose to stack a tensile ε -SiGe quantum well on top of a Ge channel [ 5 ] with a ε -SiGe barrier in-between. Specifically, the bottom 18 nm Ge well is cladded by tensile ε -Si 0.12 Ge 0.88 , with the thin top barrier also acting as intra-well spacer. The top 15 nm quantum well is tensile ε -Si 0.05 Ge 0.95 , with a top ε -Si 0.3 Ge 0.7 barrier separating the bilayer from the surface. As shown in Fig. 4 c-d), this bilayer stack allows switching the ground state composition between HH and LH by simply changing the applied voltage on the top plunger gate, modeled here via a linear out-of-plane electric field. Fig. 4 e) shows the computed linear SOC α as a function of the vertical electric field and displays a three orders of magnitude increase exactly where the ground state switches from HH to LH character. Similarly in Fig. 4 f) we extract the planar and out-of-plane g-factor and see the same discontinuous jump from typical HH behaviour with g ⟂ ∗ > g ∥ ∗ to the LH inverted setup. In practice, such a heterostructure allows us to exploit the fast operation capabilities of the LH layer while still being able to access the HH ground state.
+
+Discussion on Experimental Feasibility— Our theoretical estimates (see details in the SM [ 30 ] ) of the relaxation of epitaxially grown Ge/SiGe layers shows that our proposed single layer heterostructure sits just above the maximal thickness achievable before relaxation. We note that this limitation can be circumvented by growing a thinner lower barrier along with a larger Ge concentration such as Si 0.12 ​ Ge 0.88 . In the SM [ 30 ] we show that such a heterostructure sit well below the critical thickness and yields similar properties. Our proposed bilayer heterostructure is achievable within currently known fabrication constraints and sits below the critical thickness too.
+While we note that for a well with x w ≳ 0.96 fluctuations in the silicon concentration do not revert the character of the ground state to being HH-dominated, provided that wider wells are implemented, further experimental studies are required to evaluate the impact of the small silicon concentration in the well on the disorder properties of the confined channel. Finally, we stress that such a platform would be lattice matched and hence free from underlying misfit dislocations causing strain fluctuation and cross-hatch patterns in ε -Ge quantum wells for HH qubits [ 4 ] .
+
+Conclusion — We have shown the feasibility and characteristics of a Light-Hole (LH) ground state in a material stack fully based on Ge/SiGe. We estimate large SOC parameters both linear and cubic in momentum, yielding dipole moments three orders of magnitude larger than ε -Ge Heavy-Hole (HH) ground states. We also show that an isotropic g-tensor can be realized by tuning the design parameters.
+We show that the large gains in dipole moment outweigh the coherence loss and allow giving rise to one order of magnitude increase in quality factor. Finally, we have shown that an extended heterostructure allows for an electrically tunable HH and LH ground state.
+
+I Supplemental Material for Light-Hole Spin Qubits in Strained SiGe Lattice-Matched to Ge
+
+In this Supplemential material, we provide explicit expressions of the necessary elements of the theoretical model used in the main text. We also give additional details on the detailed physical mechanisms that lead to the results in the main text.
+
+Appendix A Model
+
+We closely follow the methodology in [ 36 ] to extract the quantum well and quantum dot properties. We report here a broad outline of the model but refer the reader to references above for a full description of the model. In particular, after diagonalizing the out-of-plane component ( z -direction) at B = 0 and K ∥ = 0 , projecting the full Hamiltonian on the resulting basis gives
+
+𝐇 k ​ p ​ ( 𝐊 ∥ ) = 𝐄 0 qw + α 0 ​ [ 𝐌 1 ​ K ∥ 2 + cos ⁡ θ 2 ​ l B 2 ​ 𝐌 𝐠 + sin ⁡ θ 2 ​ l B 2 ​ ( sin ⁡ θ 2 ​ l B 2 ​ 𝐍 γ ​ r ϕ − 𝐍 ~ γ ) ​ r ϕ ] (3) + α 0 [ i 𝐌 1 K − + 𝐌 2 K − 2 + sin ⁡ θ 2 ​ l B 2 ( e − i ​ ϕ 𝐍 𝐠 + i 𝐍 1 + r ϕ K − + i 𝐍 1 − K − r ϕ ) + h . c . ] + V ∥ ​ ( x , y ) ,
+
+where K = k + e / ℏ ​ A , K ± = K x ± i ​ K y , K ∥ 2 = K x 2 + K y 2 , { A , B } = A ​ B + B ​ A , r ϕ = x ​ sin ⁡ ϕ − y ​ cos ⁡ ϕ and l B = ℏ / ( e ​ B ) . The M and N matrices are subband matrices with dimension n H × 2 + n η × 2 with n H , n η the number of computed Heavy-Hole and Light-Hole/Split-Off subbands respectively, which in typical calculations total to 250 subbands. In particular these states forming the basis can be written as
+
+| H ​ l ; σ ⟩ = | 3 / 2 , 3 ​ σ / 2 ⟩ ​ | f l h ⟩ (4) | η ​ j ; σ ⟩ = | 3 / 2 , σ / 2 ⟩ ​ | f j l ⟩ + σ ​ | 1 / 2 , σ / 2 ⟩ ​ | f j s ⟩
+
+with l , j indices iterating over the respective subbands. This means that for example the E 0 qw matrix, diagonal by construction in this basis can be written as
+
+E 0 qw = [ E 0 H 0 0 0 0 E 0 η 0 0 0 0 E 0 η 0 0 0 0 E 0 H ] (5)
+
+while in general the other matrices can present non-diagonal elements representing the interband coupling which is particularly relevant for the dynamics of the confined holes at the top of the valence band. We refer the reader to [ 36 ] for a complete definition of all the matrices above. The Rashba coefficients can be extracted by projecting Eq. ( 3 ) onto the LH ground state doublet using a third order Schrieffer-Wolff-Transformation (SWT), and then collecting all the terms that are up to cubic order in k in the resulting effective Hamiltonian. This SWT procedure also provides a quadratic-in-k term which represents the in-plane momentum γ ​ k ∥ 2 , although the latter only requires second order perturbation to be described exactly [ 36 ] . By projecting on the lowest doublet, with k as the perturbation parameter kept up to third order, one obtains the effective Hamiltonian [ 36 ]
+
+ℋ = α 0 γ k ∥ 2 + [ i ( α k − − β 2 k + 3 − β 3 k − k + k − ) σ − + h . c . ] (6)
+
+Finally the g-tensor can be extracted by diagonalizing Eq. ( 3 ) at B = 0 with a parabolic confinement in x and y and harmonic basis states ( n x = n y = 16 ), and then projecting the full Hamiltonian on this magnetic field independent eigenbasis
+
+𝐇 ~ kp = 𝐄 0 QD + α 0 2 ​ l B 2 { cos θ 𝐋 2 ⟂ + cos 2 ⁡ θ 2 ​ l B 2 𝐋 4 ⟂ + sin 2 ⁡ θ 2 ​ l B 2 𝐋 4 ∥ + sin θ [ e − i ​ ϕ 𝐋 2 ∥ + sin ⁡ θ 2 ​ l B 2 e − 2 ​ i ​ ϕ 𝐋 ′ 4 ∥ + cos ⁡ θ 2 ​ l B 2 e − i ​ ϕ 𝐋 4 × + h . c . ] } , (7)
+
+where 𝐄 0 QD are the eigenvalues of the quantum dot (QD) at B = 0 from the previous step and the 𝐋 -matrices are
+
+𝐋 2 ⟂ = 𝐕 † [ 𝐌 g + 2 𝐌 γ L z + ( 2 𝐌 1 ρ − − 4 i 𝐌 2 ρ − k − + h . c . ) ] 𝐕 , (8) 𝐋 2 ∥ = 𝐕 † ​ [ 𝐍 g − i ​ 𝐍 γ ′ ​ ρ + − 𝐍 1 ​ { ρ + , k − } + 2 ​ 𝐍 1 † ​ ρ + ​ k + ] ​ 𝐕 , (9) 𝐋 4 ⟂ = 𝐕 † [ 4 𝐌 γ ρ − ρ + − 4 ( 𝐌 2 ρ − 2 + h . c . ) ] 𝐕 , (10) 𝐋 4 ∥ = 𝐕 † ​ [ 2 ​ 𝐍 γ ​ ρ − ​ ρ + ] ​ 𝐕 , (11) 𝐋 ′ 4 ∥ = 𝐕 † ​ [ − 𝐍 γ ​ ρ + 2 ] ​ 𝐕 , (12) 𝐋 4 × = 𝐕 † ​ [ 4 ​ i ​ ( 𝐍 1 ​ ρ − ​ ρ + + 𝐍 1 † ​ ρ + 2 ) ] ​ 𝐕 , (13)
+
+where L z = x ​ k y − y ​ k x and 𝐕 is the matrix of (column) eigenvectors of the QD at B = 0 . Ultimately the g-tensor components can be read out as the terms of the L matrices linear in magnetic field.
+
+Appendix B Subband Parameters
+
+In this section we further discuss the intuition behind the mechanisms that drive the behaviour of the subband parameters in the main text. In particular we focus on the linear term α and β 2 . For the former, under the assumption of an infinite well and a 6-band Luttigner-Kohn model for the valence band, an analytic expression can be derived [ 6 ]
+
+α = − 6 ​ 2 ​ α 0 ​ γ 3 ​ ℐ ​ { ⟨ f l | ​ k z ​ | f s ⟩ } (14)
+
+with α 0 = ℏ 2 2 ​ m 0 a constant, γ 3 the Luttinger parameter, k z the momentum operator in the growth direction. Even though this expression strictly holds only for an infinite well, we can plot the main constituents for the heterostructure discussed in the main text to provide a physical intuition of the observed trends.
+
+Fig. 5 reveals that the LH/SO overlap is strongly dependent on the thickness of the well and an increase in Ge concentration also boosts the Luttinger parameter γ 3 .
+For the cubic Rashba β 2 we can again follow the intuition provided by the approximate expressions for an infinite QW. In particular, keeping only the second order terms in the perturbative expansion, and neglecting the split-off band contributions (effectively setting the f s = 0 ) [ 6 ]
+
+β 2 = 3 ​ i ​ α 0 2 ​ ( γ 2 − γ 3 ) ​ γ 3 ​ ⟨ f 0 l | ​ [ k z , ∑ l | f l H ⟩ ​ ⟨ f l H | E 0 − E l ​ | f 0 l ⟩ ] (15)
+
+where E 0 denotes the energy of the lowest Light-Hole subband and f H is the label of the Heavy-Hole subbands.
+
+In Fig. 6 we observe the behavior of this expression and the resemblance with the trends observed in the main text. We note however that for both β 2 and β 3 the third order Schrieffer-Wolff terms are especially relevant and dominate the dynamics of β 3 with respect to the first and second order terms [ 36 ] .
+
+Appendix C g-Tensor components
+
+We can intuitively understand the non-monotonic behaviour of the out of plane g-factor of the main text by considering the HH-LH coupling in the approximate formula for the correction of the out of plane g-factor in the case of an infinite QW without planar confinement [ 6 ] :
+
+g ⟂ ∗ ∝ 2 ​ α 0 ​ ( ∑ l T l , j × ⁣ ∗ ​ T l , j × E j η − E l H ) (16)
+
+with T × the HH-LH coupling subband matrix [ 36 ] . In particular Fig. 7 shows a similar non-monotonic trend as observed in the main text.
+
+To understand the trend and strong tunability of the out-of-plane g-factor with respect to the electric field we decompose each term of the computed g-factor.
+
+From Fig 8 we see that the HH-LH coupling matrix elements in M 1 ​ ρ − are one of the dominant terms for the strong renormalization of the out-of-plane g-factor. Moreover in 9 we observe the increase in J z = ± 1 / 2 which mixes the B = 0 ground state composition. This change in the eigenstate composition changes the Zeeman contribution directly.
+
+At high field the ground state stops being an eigenstate of J z because the intraband LH/SO coupling is increased and the ground state, via linear spin orbit coupling, becomes a superposition of | η 1 ⟩ and | η 2 ⟩ .
+
+Appendix D Heterostructure with relaxed growth constraints
+
+We have highlighted in the main text that the proposed single layer structure sits beyond the critical thickness regime the grown heterostructure can start to relaxe. However, a Light-Hole ground state is still achieved by lowering the Si concentration of the bottom SiGe barrier layer. To quantify the allowed regime we estimate the critical thickness of the grown heterostructure before relaxation, we approximately estimate the critical thickness from the energy-balance criterion of
+People and Bean [ 24 ] and generalise it to a multilayer heterostructure. In the calculations we further assume dislocations to take place at the interface of the substrate with the first barrier layer. The self-energy is consequentally
+set by the total stack thickness L = ∑ i h i , while the stored strain
+energy sums over the individual layers
+
+∑ i f i 2 ​ h i = C ​ ln ⁡ ( L b ) , C = ( 1 − ν 1 + ν ) ​ b 2 16 ​ π ​ 2 ​ ⟨ a ⟩ . (17)
+
+Here f i = [ a sub − a ⁡ ( x i ) ] / a ⁡ ( x i ) is the misfit of layer i , b = a sub / 2 the slip distance, ⟨ a ⟩ the
+thickness-weighted mean lattice constant, and ν = 0.28 . The relaxed lattice
+constants follow a ⁡ ( x ) = 5.4307 + 0.1992 ​ x + 0.02733 ​ x 2 Å [ 8 ] and for a relaxed Ge substrate, b = 4.00 Å and C = 2.24 × 10 − 2 Å. The
+structure does not relax as long as the left-hand side of Eq. ( 17 ) remains below the right.
+
+The curve in Fig. 10 gives the maximum
+bottom-barrier thickness within the full
+Si 1-x Ge x /Si 0.05 Ge 0.95 /Si 0.30 Ge 0.70 stack, obtained by solving
+Eq. ( 17 ) using bisection with respect to thickness of the bottom layer keeping the remaining layers fixed. The top barrier thickness is set to 50 nm ensuring that the well is buried from the surface and defects at the oxide interface. The well thickness is kept at 25 nm, the maximum well thickness considered in the main text study. We have added three markers. The first (cross) shows the single layer heterostructure proposed in the main text, and the second (circle) for a design where the bottom spacer is only 30 nm thick and is Si 0.12 Ge 0.88 , sitting comfortably below the critical thickness. The third marker (square) corresponds to the bilayer proposed the main text and sits below; the bottom Ge layer does not contribute to relaxation since it is lattice matched, the two Si 0.12 Ge 0.88 barriers have a total thickness of 30 nm, and the tensile strained well is only 15 nm thick.
+
+In Fig. 11 we plot the properties of the new heterostructure with thinner bottom layer with higher Ge concentration along with the computed HH-LH gap. We see quantitatively similar results compared to the results in the main text; a large spin-orbit interaction and a resilient LH ground state. In particular, in Fig. 12 we compute the Rashba parameters and see a quantitative similar response compared to the results of the main text except for β 2 . However, we remark that β 2 is much smaller and less relevant. Interestingly, the effect of the well thickness is less relevant compared to the heterostructure shown in the main text as expected for a lower bottom barrier height.
+
+References
+
+Instructions for reporting errors
+
+We are continuing to improve HTML versions of papers, and your feedback helps enhance accessibility and mobile
+      support. To report errors in the HTML that will help us improve conversion and rendering, choose any of the
+      methods listed below:
+
+Tip: You can select the relevant text first, to include it in your report.
+
+Our team has already identified the following issues . We appreciate your time reviewing and reporting rendering errors we
+      may not have found yet. Your efforts will help us improve the HTML versions for all readers, because disability
+      should not be a barrier to accessing research. Thank you for your continued support in championing open access for
+      all.
+
+Have a free development cycle? Help support accessibility at arXiv! Our collaborators at LaTeXML maintain a list of packages that need conversion , and welcome developer contributions .

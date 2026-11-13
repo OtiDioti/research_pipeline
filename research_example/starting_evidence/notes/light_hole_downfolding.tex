@@ -1,0 +1,1334 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage[letterpaper,left=0.75in,right=0.70in,top=0.64in,bottom=0.65in,headheight=13pt,headsep=15pt]{geometry}
+\usepackage{titlesec,fancyhdr,booktabs,array}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,calc,positioning}
+\hypersetup{pdftitle={Six-band description of strained SiGe quantum wells},pdfsubject={Heterostructure geometry, six-band valence Hamiltonian, vertical confinement, and orbital and Zeeman magnetic response}}
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0pt}
+\setlength{\abovedisplayskip}{9pt plus 2pt minus 2pt}
+\setlength{\belowdisplayskip}{9pt plus 2pt minus 2pt}
+\setlength{\jot}{4pt}
+\renewcommand{\thesection}{\Roman{section}}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+\titleformat{\section}{\centering\normalfont\small\bfseries}{\thesection.}{1em}{\MakeUppercase}
+\titleformat{\subsection}{\centering\normalfont\small\bfseries}{\thesubsection.}{1em}{}
+\titlespacing*{\section}{0pt}{23pt}{17pt}
+\titlespacing*{\subsection}{0pt}{19pt}{12pt}
+\pagestyle{fancy}\fancyhf{}\fancyhead[R]{\thepage}\renewcommand{\headrulewidth}{0pt}
+\setcounter{tocdepth}{2}
+\makeatletter
+\renewcommand{\l@section}[2]{\addpenalty{\@secpenalty}\addvspace{6pt}\@dottedtocline{1}{0pt}{2.2em}{#1}{#2}}
+\renewcommand{\l@subsection}{\@dottedtocline{2}{2.2em}{2.2em}}
+\makeatother
+% These macros preserve physical notation without abbreviating coefficients.
+\newcommand{\ket}[1]{\lvert #1\rangle}
+\newcommand{\bra}[1]{\langle #1\rvert}
+\newcommand{\braket}[2]{\langle #1\vert #2\rangle}
+\newcommand{\mel}[3]{\langle #1\vert #2\vert #3\rangle}
+\newcommand{\hc}{\mathrm{h.c.}}
+\newcommand{\ep}{\epsilon}
+\newcommand{\qq}{q_{\mathrm k}}
+\newcommand{\HH}{\mathrm{HH}}
+\newcommand{\LH}{\mathrm{LH}}
+\newcommand{\SO}{\mathrm{SO}}
+\newcommand{\HLgap}{\Delta_{\mathrm{HL}}}
+\newcommand{\bb}{\hat b}
+\newcommand{\pix}{\hat\pi_x}
+\newcommand{\piy}{\hat\pi_y}
+\newcommand{\piz}{\hat\pi_z}
+\newcommand{\one}{\mathbf 1}
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+{\large\bfseries Six-band description of strained SiGe quantum wells}\par
+\vspace{11pt}
+Heterostructure, vertical confinement, and magnetic response
+\end{center}
+\vspace{20pt}
+\hypersetup{linkcolor=black}
+\tableofcontents
+\hypersetup{linkcolor=blue}
+\vspace{23pt}
+\clearpage
+
+\section{Physical structure and the origin of confinement}
+\label{sec:device}
+
+\subsection{A strained quantum well matched to germanium}
+
+A planar semiconductor quantum well confines holes along the growth direction while allowing them to move in the plane of the layers. We take $z\parallel[001]$ along the growth direction and $x\parallel[100]$, $y\parallel[010]$ in the plane. In the example of Fig.~1(a) of Valvo \emph{et al.}, the Ge-rich well occupies $0<z<L_z$, a lower SiGe barrier occupies $-L_{\mathrm b}<z<0$, and an upper SiGe barrier occupies $z>L_z$ over the region explicitly modeled. The relaxed Ge buffer lies below $z=-L_{\mathrm b}$. Here $L_{\mathrm b}$ is the lower-barrier thickness. Composition contrast creates the valence-band offsets, while an electric field changes the vertical hole distribution.
+
+The tensile strain in the SiGe layers can stabilize a light-hole ground state. To reproduce the \emph{single-well illustrative stack in the uploaded October 29 version} of Valvo \emph{et al.}~\cite{valvo}, the growth order is relaxed Ge buffer / $\mathrm{Si}_{0.20}\mathrm{Ge}_{0.80}$ lower barrier / $\mathrm{Si}_{0.05}\mathrm{Ge}_{0.95}$ well / $\mathrm{Si}_{0.30}\mathrm{Ge}_{0.70}$ upper barrier. The SiGe layers are coherently matched in-plane to Ge. Their smaller relaxed lattice constants imply tensile in-plane strain; the relaxed Ge buffer itself has zero mismatch strain. We assume coherent layers without strain relaxation. This is the single-well proposal, not the distinct bilayer device in the same paper.
+
+The distinction between vertical and lateral confinement is useful from the outset. The material interfaces create confinement in $z$ even when the device is translation invariant in $x$ and $y$. A laterally varying gate potential $V_\parallel(x,y)$ can subsequently define a quantum dot within this well. We first determine the vertical states with $V_\parallel=0$ and introduce the magnetic field after the zero-field Hamiltonian has been specified. This order separates the physical roles of the interfaces, strain, and electromagnetic field without discarding their eventual couplings.
+
+% Exact vector schematic for the six-band heterostructure document.
+% Preamble requirements: \usepackage{tikz,graphicx} and
+% \usetikzlibrary{arrows.meta}. No external images or data files are used.
+% The coordinates are illustrative; only interfaces, signs, and directions
+% are physical statements. The caption states the omitted physics explicitly.
+\begin{figure}[!htbp]
+\centering
+\begingroup
+\definecolor{DeviceGate}{RGB}{112,116,123}
+\definecolor{DeviceDielectric}{RGB}{242,242,238}
+\definecolor{DeviceBarrier}{RGB}{220,233,245}
+\definecolor{DeviceWell}{RGB}{250,227,198}
+\definecolor{DeviceBuffer}{RGB}{223,225,228}
+\definecolor{DevicePotential}{RGB}{31,83,133}
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[
+  x=1cm,y=1cm,
+  font=\small,
+  line cap=round,line join=round,
+  >={Latex[length=1.7mm,width=1.1mm]},
+  layer/.style={draw=black!75,line width=0.45pt},
+  axis/.style={->,draw=black,line width=0.55pt},
+  field/.style={->,draw=black,line width=0.8pt},
+  guide/.style={draw=black!50,densely dotted,line width=0.45pt},
+  reference/.style={draw=black!45,line width=0.4pt},
+  offset/.style={<->,draw=black,line width=0.6pt}
+]
+% Fixed bounds keep the two panels stable when the figure is resized.
+\path[use as bounding box] (-0.12,-0.15) rectangle (17.85,5.25);
+
+% Panel (a): rectangular, planar layers. The well interfaces are at the
+% labelled geometric heights, while no layer thickness is drawn to scale.
+\node[anchor=west,font=\small\bfseries] at (0.00,5.02)
+  {(a) Layer stack};
+\path[layer,fill=DeviceBuffer]     (0.75,0.45) rectangle (5.85,1.05);
+\path[layer,fill=DeviceBarrier]    (0.75,1.05) rectangle (5.85,1.90);
+\path[layer,fill=DeviceWell]       (0.75,1.90) rectangle (5.85,2.75);
+\path[layer,fill=DeviceBarrier]    (0.75,2.75) rectangle (5.85,3.60);
+\path[layer,fill=DeviceDielectric] (0.75,3.60) rectangle (5.85,4.10);
+\path[layer,fill=DeviceGate]       (0.75,4.10) rectangle (5.85,4.65);
+
+\node at (3.30,0.75) {Ge buffer (relaxed)};
+\node[align=center] at (3.30,1.475)
+  {Si$_{0.20}$Ge$_{0.80}$ barrier\\[-1pt]$-L_{\mathrm b}<z<0$};
+\node[align=center] at (3.30,2.325)
+  {Si$_{0.05}$Ge$_{0.95}$ well\\[-1pt]$0<z<L_z$};
+\node[align=center] at (3.30,3.175)
+  {Si$_{0.30}$Ge$_{0.70}$ barrier\\[-1pt]$z>L_z$};
+\node at (3.30,3.85) {Dielectric};
+\node[text=white] at (3.30,4.375) {Top metal gate};
+
+% Label the buffer/lower-barrier interface and both well interfaces.
+\draw[line width=0.5pt] (0.53,1.05)--(0.75,1.05);
+\draw[line width=0.5pt] (0.53,1.90)--(0.75,1.90);
+\draw[line width=0.5pt] (0.53,2.75)--(0.75,2.75);
+\node[anchor=east] at (0.46,1.05) {$-L_{\mathrm b}$};
+\node[anchor=east] at (0.46,1.90) {$0$};
+\node[anchor=east] at (0.46,2.75) {$L_z$};
+
+% Coordinate and field arrows specify directions, not relative magnitudes.
+\draw[axis] (0.18,0.16)--(0.18,1.20)
+  node[above,inner sep=2pt] {$z$};
+\draw[axis] (0.18,0.16)--(1.42,0.16)
+  node[right,inner sep=2pt] {$x$};
+\draw[field] (6.30,1.32)--(6.30,3.45)
+  node[above,inner sep=4pt] {$B_z$};
+% The arrow points upward: positive source field corresponds to F_z<0
+% when F_z denotes the slope of the positive-hole potential.
+\draw[field] (7.35,1.90)--(7.35,2.75);
+\node[above,inner sep=3pt] at (7.35,2.90) {$\mathbf E$};
+\node at (7.35,1.54) {$-F_z\hat{\mathbf z}$};
+\node at (7.35,1.12) {$F_z<0$};
+
+% Panel (b): hole potential with a common (negative) electric-field slope.
+% Only the lower SiGe barrier, well, and upper SiGe barrier are shown;
+% the relaxed Ge buffer is outside the plotted region.
+\node[anchor=west,font=\small\bfseries] at (9.02,5.02)
+  {(b) Scalar hole potential};
+\draw[axis] (9.20,1.00)--(9.20,4.57);
+\node[anchor=west] at (9.34,4.62) {$V_z(z)$};
+\draw[axis] (9.20,2.18)--(17.53,2.18)
+  node[right,inner sep=2pt] {$z$};
+
+% Dotted vertical lines locate the two well interfaces in the potential plot.
+\draw[guide] (11.65,0.91)--(11.65,4.40);
+\draw[guide] (14.50,0.91)--(14.50,4.40);
+\node[below,inner sep=3pt] at (11.65,1.04) {$0$};
+\node[below,inner sep=3pt] at (14.50,1.04) {$L_z$};
+
+% The same slope q F_z < 0 acts in the three displayed SiGe regions.
+% A Ge-buffer band edge is not represented in this potential panel.
+\draw[draw=DevicePotential,line width=1.1pt]
+  (9.66,3.80)--(11.65,3.45)--(11.65,2.18)
+  --(14.50,1.68)--(14.50,3.75)--(17.09,3.30);
+\node[above,inner sep=3pt] at (10.54,3.62)
+  {$V_{\mathrm{off}}^{-}+qF_z z$};
+\node[above,inner sep=3pt] at (15.80,3.51)
+  {$V_{\mathrm{off}}^{+}+qF_z z$};
+\node at (13.02,2.59) {slope $qF_z<0$};
+\node at (13.14,1.40) {$qF_z z$};
+
+% Arrows show the offsets relative to the adjacent well values.
+\draw[reference] (10.94,2.18)--(11.65,2.18);
+\draw[offset] (11.02,2.22)--(11.02,3.41);
+\node[anchor=east,inner sep=3pt] at (10.94,2.84)
+  {$V_{\mathrm{off}}^{-}$};
+\draw[reference] (14.50,1.68)--(15.09,1.68);
+\draw[offset] (15.00,1.72)--(15.00,3.71);
+\node[anchor=west,inner sep=3pt] at (15.09,2.61)
+  {$V_{\mathrm{off}}^{+}$};
+\end{tikzpicture}%
+}
+\endgroup
+\caption{Illustration of the single-well stack in Fig.~1(a) of
+Valvo \emph{et al.}, in the positive-hole convention ($q=e$); not to scale.
+(a) From bottom to top: relaxed Ge buffer, Si$_{0.20}$Ge$_{0.80}$ lower
+barrier, Si$_{0.05}$Ge$_{0.95}$ well, Si$_{0.30}$Ge$_{0.70}$ upper barrier,
+dielectric, and metal gate. Short ticks mark $z=-L_{\mathrm b},0,L_z$.
+The SiGe layers are coherently strained to the Ge buffer. The field arrow
+illustrates $\mathbf E=-F_z\hat{\mathbf z}$ with $F_z<0$, corresponding to
+a positive field in the electron-energy source convention.
+(b) The blue line represents a piecewise band-edge offset plus the same
+linear term $qF_z z$ throughout the displayed SiGe regions. The offsets
+$V_{\mathrm{off}}^{\pm}$ are measured at the adjacent well interfaces; the
+relaxed Ge buffer is omitted from panel (b). The precise offsets and field
+screening depend on the device; the drawing is not a Poisson solution.
+Strain and LH--SO mixing are included separately in the six-band matrix.}
+\label{fig:device-schematic}
+\end{figure}
+
+
+\subsection{Strain and positive hole energies}
+
+The valence states relevant near the zone center form heavy-hole, light-hole, and split-off sectors, abbreviated HH, LH, and SO. Their precise basis states will be introduced in Sec.~\ref{sec:sixband}. For the device picture, the essential point is that strain changes the HH and LH energies differently. In a coherently grown $[001]$ layer with biaxial in-plane strain and vanishing normal stress, the strain tensor obeys
+\begin{equation}
+\ep_ {xx}=\ep_ {yy},\qquad
+\ep_ {xy}=\ep_ {xz}=\ep_ {yz}=0,\qquad
+\ep_ {zz}=-2\frac{C_{12}}{C_{11}}\ep_ {xx},
+\label{eq:biaxial}
+\end{equation}
+where $C_{11}$ and $C_{12}$ are the elastic stiffness constants of the local material. For a relaxed alloy lattice constant $a_0(x)$ and a Ge template lattice constant $a_{\mathrm{Ge}}$, coherent matching fixes $\ep_ {xx}=a_{\mathrm{Ge}}/a_0(x)-1$. Thus tensile in-plane strain, $\ep_ {xx}>0$, is accompanied by compression along $z$. These relations and the material coefficients are evaluated separately in the $x=0.80$, $0.95$, and $0.70$ SiGe layers. The relaxed Ge buffer ($x=1$) has zero mismatch strain.
+
+We use positive hole energies: a higher electron valence-band edge corresponds to a lower hole energy. The kinetic energy of an uncoupled hole band is therefore positive, and the hole ground state is the state of lowest energy. In this convention, the hydrostatic and uniaxial parts of the strain shift are
+\begin{equation}
+P_\ep=-a_v(\ep_ {xx}+\ep_ {yy}+\ep_ {zz}),\qquad
+Q_\ep=-\frac{b_v}{2}(\ep_ {xx}+\ep_ {yy}-2\ep_ {zz}).
+\label{eq:strain-PQ}
+\end{equation}
+The diagonal HH and LH contributions are $P_\ep+Q_\ep$ and $P_\ep-Q_\ep$, respectively. For the usual negative $b_v$ of the Ge-rich materials and the tensile strain in Eq.~\eqref{eq:biaxial}, $Q_\ep>0$. Strain consequently raises the HH hole energy relative to the LH diagonal energy. It also couples LH and SO states, an effect retained explicitly below. These strain terms are the Bir--Pikus contribution to the valence-band Hamiltonian~\cite{birpikus,winkler,delvecchio2026}.
+
+The scalar band offsets are defined relative to the \emph{unstrained, spin-orbit-shifted} $\Gamma_8$ valence edge. The strain shifts in Eq.~\eqref{eq:strain-PQ} are then included in the Hamiltonian rather than included a second time in the offsets. This convention is useful because it distinguishes the chemical origin of the well from the strain-induced change of its band character. The corresponding conversion from an electron Hamiltonian referenced to the orbital valence edge is given in Appendix~\ref{app:source}.
+
+\section{From the valence states to the six-band Hamiltonian}
+\label{sec:sixband}
+
+\subsection{Bloch states, envelopes, and basis order}
+
+The lattice-scale structure of the valence states and their spatial confinement occur on different length scales. The envelope-function description retains a small set of zone-center Bloch states and allows their amplitudes to vary across the device. The six components of the envelope spinor are these spatial amplitudes. They are not six confinement levels: each component is a function of position, and the resulting differential equation can have many vertical and in-plane eigenstates. This is the multiband form of the effective-mass construction~\cite{luttingerkohn,winkler}.
+
+For the valence manifold, orbital angular momentum $l=1$ combines with spin $1/2$. Intrinsic spin-orbit coupling separates a $j=3/2$ quartet from a $j=1/2$ doublet. With quantization along $z$, the quartet contains HH states with $m_j=\pm3/2$ and LH states with $m_j=\pm1/2$; the $j=1/2$ doublet contains the SO states. We order the basis as
+\begin{equation}
+\mathcal B=\left\{
+\ket{\tfrac32,\tfrac32},\ket{\tfrac32,-\tfrac32},
+\ket{\tfrac32,\tfrac12},\ket{\tfrac32,-\tfrac12},
+\ket{\tfrac12,\tfrac12},\ket{\tfrac12,-\tfrac12}
+\right\}.
+\label{eq:basis}
+\end{equation}
+The associated envelope is a six-component column in the same order. The Bloch-state phases are fixed explicitly in Appendix~\ref{app:phases}; this is necessary because the signs of interband matrix elements depend on those phases. Observable energies are unchanged by a consistent rephasing of an entire row and column.
+
+Let $\Delta_{\SO}(z)>0$ be the bulk split-off gap. With the energy reference just specified, the SO hole states lie $\Delta_{\SO}$ above the unstrained $\Gamma_8$ states at zero momentum. The symbol refers to the material spin-orbit gap, not to a magnetic splitting of a confined doublet. All material parameters, including $\gamma_{1,2,3}$, $\kappa$, $\qq$, the deformation potentials, and $\Delta_{\SO}$, may vary with $z$.
+
+\subsection{Kinetic energy and strain in the \texorpdfstring{$P,Q,R,S$}{P,Q,R,S} form}
+
+The canonical momentum is $\bm p=-i\hbar\bm\nabla\equiv\hbar\bm k$. We first set the magnetic field to zero and write the symmetric kinetic and strain contributions as
+\begin{equation}
+H_{\mathrm{sym}}^{(6)}=
+\begin{pmatrix}
+P+Q&0&-S&R&S/\sqrt2&-\sqrt2R\\
+0&P+Q&R^\dagger&S^\dagger&\sqrt2R^\dagger&S^\dagger/\sqrt2\\
+-S^\dagger&R&P-Q&0&\sqrt2Q&-\sqrt{3/2}\,S\\
+R^\dagger&S&0&P-Q&-\sqrt{3/2}\,S^\dagger&-\sqrt2Q\\
+S^\dagger/\sqrt2&\sqrt2R&\sqrt2Q&-\sqrt{3/2}\,S&P+\Delta_{\SO}&0\\
+-\sqrt2R^\dagger&S/\sqrt2&-\sqrt{3/2}\,S^\dagger&-\sqrt2Q&0&P+\Delta_{\SO}
+\end{pmatrix}.
+\label{eq:Hsym}
+\end{equation}
+The quantities appearing here retain their full material dependence:
+\begin{align}
+P={}&\frac{\gamma_1(z)( \hat{p}_ x^2+ \hat{p}_ y^2)+ \hat{p}_ z\gamma_1(z) \hat{p}_ z}{2m_0}
+-a_v(\ep_ {xx}+\ep_ {yy}+\ep_ {zz}),\label{eq:P}\\
+Q={}&\frac{\gamma_2(z)( \hat{p}_ x^2+ \hat{p}_ y^2)-2 \hat{p}_ z\gamma_2(z) \hat{p}_ z}{2m_0}
+-\frac{b_v}{2}(\ep_ {xx}+\ep_ {yy}-2\ep_ {zz}),\label{eq:Q}\\
+R={}&\frac{\sqrt3}{2m_0}\left[-\gamma_2(z)( \hat{p}_ x^2- \hat{p}_ y^2)
++i\gamma_3(z)\{ \hat{p}_ x, \hat{p}_ y\}\right]
++\frac{\sqrt3}{2}b_v(\ep_ {xx}-\ep_ {yy})-id_v\ep_ {xy},\label{eq:R}\\
+S={}&\frac{\sqrt3}{2m_0}( \hat{p}_ x-i \hat{p}_ y)\{\gamma_3(z), \hat{p}_ z\}
+-d_v(\ep_ {xz}-i\ep_ {yz}).\label{eq:S}
+\end{align}
+Here $m_0$ is the free-electron mass, $\gamma_i$ are the Luttinger parameters, $a_v,b_v,d_v$ are deformation potentials, and $\{a,b\}=ab+ba$. A dagger denotes the full operator adjoint, so it reverses the order of factors as well as complex-conjugating their scalar coefficients. We use $P_0,Q_0,R_0,S_0$ for the momentum-dependent parts and $P_\ep,Q_\ep,R_\ep,S_\ep$ for their strain parts. These definitions connect the Luttinger--Kohn kinetic terms and the Bir--Pikus strain terms in a single matrix~\cite{luttingerkohn,birpikus,winkler}.
+
+The different roles of the four entries can be read directly from Eq.~\eqref{eq:Hsym}. The term $P$ is common to all six components. The term $Q$ separates the diagonal HH and LH energies and also couples LH to SO states with the same sign of $m_j$. The kinetic term $S_0$ contains one in-plane momentum and one vertical momentum, whereas $R_0$ is quadratic in the in-plane momenta. Thus reducing the in-plane momentum to zero removes $R_0$ and $S_0$, but it does not remove LH--SO mixing through $Q$. This observation will determine the structure of the vertical confinement problem.
+
+Equations~\eqref{eq:R}--\eqref{eq:S} display the general strain entries so that their meaning is unambiguous. For the biaxial structure in Eq.~\eqref{eq:biaxial}, $R_\ep=S_\ep=0$. The device model in the following sections uses this specialization, as does the SiGe proposal~\cite{valvo,delvecchio2026}. Nonzero shear would describe an additional strain configuration, and is not assumed in the present device.
+
+Before including interband mixing, the diagonal kinetic coefficients define the bare HH and LH masses
+\begin{equation}
+\begin{array}{c|cc}
+&\text{in plane}&\text{along }z\\[2pt]\hline
+\HH&m_0/(\gamma_1+\gamma_2)&m_0/(\gamma_1-2\gamma_2)\\[2pt]
+\LH&m_0/(\gamma_1-\gamma_2)&m_0/(\gamma_1+2\gamma_2)
+\end{array}.
+\label{eq:masses}
+\end{equation}
+The names heavy and light refer to the growth-direction masses in this basis. They do not assert that the LH has a smaller in-plane mass, and they do not replace the coupled six-band calculation. In particular, mixing with SO states changes the confinement spectrum and can change the effective mass of an actual subband.
+
+\subsection{Material variation and interface terms}
+
+In a homogeneous material, the parameters commute with momentum. At a heterointerface they do not commute with $ \hat{p}_ z$, because the momentum differentiates the material profile as well as the envelope. For example,
+\begin{equation}
+ \hat{p}_ z\gamma_1(z) \hat{p}_ z\psi
+=-\hbar^2\frac{d}{dz}\left(\gamma_1(z)\frac{d\psi}{dz}\right),
+\qquad
+\{\gamma_3, \hat{p}_ z\}=2\gamma_3 \hat{p}_ z-i\hbar\gamma_3',
+\label{eq:ordering}
+\end{equation}
+where a prime denotes $d/dz$. Replacing the first operator by $\gamma_1 \hat{p}_ z^2$, or replacing the anticommutator by $2\gamma_3 \hat{p}_ z$, would remove terms of the specified heterostructure model.
+
+The symmetric matrix in Eq.~\eqref{eq:Hsym} is only one part of the ordered six-band operator. The antisymmetric momentum terms of the model used by Del Vecchio \emph{et al.} produce interface contributions involving $\kappa'$ and $\qq'$~\cite{delvecchio2026}. Defining $ \hat{p}_ \pm= \hat{p}_ x\pm i \hat{p}_ y$, their explicit forms in Eq.~\eqref{eq:basis} are
+\begin{equation}
+H_{\kappa'}^{(6)}=\frac{\hbar\kappa'}{2m_0}
+\begin{pmatrix}
+0&0&-i\sqrt3 \hat{p}_ -&0&i\sqrt{3/2} \hat{p}_ -&0\\
+0&0&0&i\sqrt3 \hat{p}_ +&0&i\sqrt{3/2} \hat{p}_ +\\
+i\sqrt3 \hat{p}_ +&0&0&-2i \hat{p}_ -&0&i \hat{p}_ -/\sqrt2\\
+0&-i\sqrt3 \hat{p}_ -&2i \hat{p}_ +&0&i \hat{p}_ +/\sqrt2&0\\
+-i\sqrt{3/2} \hat{p}_ +&0&0&-i \hat{p}_ -/\sqrt2&0&-2i \hat{p}_ -\\
+0&-i\sqrt{3/2} \hat{p}_ -&-i \hat{p}_ +/\sqrt2&0&2i \hat{p}_ +&0
+\end{pmatrix},
+\label{eq:Hintk}
+\end{equation}
+\begin{equation}
+H_{q'}^{(6)}=\frac{\hbar\qq'}{8m_0}
+\left[
+\begin{pmatrix}
+0&6i \hat{p}_ +&-7i\sqrt3 \hat{p}_ -&0\\
+-6i \hat{p}_ -&0&0&7i\sqrt3 \hat{p}_ +\\
+7i\sqrt3 \hat{p}_ +&0&0&-20i \hat{p}_ -\\
+0&-7i\sqrt3 \hat{p}_ -&20i \hat{p}_ +&0
+\end{pmatrix}\oplus0_{2\times2}
+\right].
+\label{eq:Hintq}
+\end{equation}
+The dimensionless parameter $\qq$ is the cubic Zeeman parameter; it is distinct from the electric charge $q$ introduced below. Its interface term follows from the same momentum ordering as its magnetic contribution. It vanishes when $\qq$ is constant, but is retained whenever the material profile makes $\qq$ position dependent.
+
+The upper-left block of Eq.~\eqref{eq:Hintk} is $\hbar\kappa'( \hat{p}_ xJ_y- \hat{p}_ yJ_x)/m_0$, with $J_i$ the dimensionless spin-$3/2$ matrices in the HH/LH ordering. The additional SO entries are fixed by the six-band Bloch basis. In particular, the orbital angular momentum that generates this term has matrix elements between the $j=3/2$ and $j=1/2$ sectors. A direct sum of separate $j=3/2$ and $j=1/2$ total-angular-momentum matrices would therefore fail to reproduce Eq.~\eqref{eq:Hintk}. Appendix~\ref{app:source} makes this distinction explicit.
+
+For a smooth composition profile, the derivatives in Eqs.~\eqref{eq:Hintk}--\eqref{eq:Hintq} are ordinary functions. An abrupt interface is their distributional limit; for instance,
+\begin{equation}
+\kappa'(z)=\sum_j[\kappa(z_j^+)-\kappa(z_j^-)]\delta(z-z_j),
+\label{eq:steps}
+\end{equation}
+and the same expression applies to $\qq'$. This interface prescription is part of the specified continuum Hamiltonian. Additional microscopic interface interactions would require additional physical input and are not implicit in it.
+
+The complete zero-field material operator is now defined:
+\begin{equation}
+H_{\mathrm{LKBP}}^{(6)}(\bm p)
+=H_{\mathrm{sym}}^{(6)}(\bm p)
++H_{\kappa'}^{(6)}(\bm p)+H_{q'}^{(6)}(\bm p).
+\label{eq:HLKBP}
+\end{equation}
+The scalar device potential has not yet been included. Adding it to this material operator will turn the band description into the confinement problem of the heterostructure.
+
+\section{Vertical confinement and the light-hole ground state}
+\label{sec:vertical}
+
+\subsection{Finite barriers and an electric-field slope}
+
+The scalar potential specifies where the six-component envelope is confined. We take the hole charge to be $q=e>0$. To preserve the uniform linear electric-field term of the underlying model while using the single-well material sequence of Valvo \emph{et al.}, write
+\begin{equation}
+V_z(z)=V_{\mathrm{edge}}^{\mathrm h}(z)+qF_z z,
+\qquad
+V_{\mathrm{edge}}^{\mathrm h}(z)=
+\begin{cases}
+V_{\mathrm{Ge}},&z<-L_{\mathrm b},\\[2pt]
+V_{\mathrm{off}}^-,&-L_{\mathrm b}<z<0,\\[2pt]
+0,&0<z<L_z,\\[2pt]
+V_{\mathrm{off}}^+,&z>L_z.
+\end{cases}
+\label{eq:Vz}
+\end{equation}
+The lower barrier is Si$_{0.20}$Ge$_{0.80}$, the well is Si$_{0.05}$Ge$_{0.95}$, the upper barrier is Si$_{0.30}$Ge$_{0.70}$, and $V_{\mathrm{Ge}}$ denotes the relaxed-Ge band edge if the finite lower barrier and buffer are included explicitly. The offsets $V_{\mathrm{off}}^{\pm}$ are measured from the unstrained $\Gamma_8$ edge of the well, so strain is added separately through $P_\ep$ and $Q_\ep$. Their numerical values and $V_{\mathrm{Ge}}$ must be obtained from the chosen material band alignment; composition alone does not fix them.
+
+Here $F_z$ is the slope of the \emph{positive-hole} electrostatic energy divided by $q$: the physical field is $\bm E=-F_z\hat{\bm z}$. The electron-energy source uses $+eF_z^{\mathrm{source}}z$ and $\bm E=F_z^{\mathrm{source}}\hat{\bm z}$, hence
+\begin{equation}
+F_z=-F_z^{\mathrm{source}}.
+\label{eq:fieldswitch}
+\end{equation}
+In particular, a positive source field corresponds to $F_z<0$ in Eq.~\eqref{eq:Vz}; then the hole potential decreases towards the upper well interface. The common slope in Eq.~\eqref{eq:Vz} extends through the explicitly modeled barriers, unlike the screened-barrier simplification of a flat potential outside the well. A uniform field should be used on a finite vertical simulation domain, or replaced far from the well by a physically screened field: extending a nonzero linear slope to both spatial infinities does not produce the same bound-state problem as asymptotically flat barriers. Figure~\ref{fig:device-schematic} illustrates the local profile.
+
+At zero magnetic field, the full envelope Hamiltonian is
+\begin{equation}
+H^{(6)}(0)=H_{\mathrm{LKBP}}^{(6)}(\bm p)
++\bigl[V_z(z)+V_\parallel(x,y)\bigr]\one_6.
+\label{eq:Htotalzero}
+\end{equation}
+The scalar potential multiplies every component equally; the different effective confinement of HH, LH, and SO states follows from their material-dependent diagonal energies and their couplings. Thus a scalar barrier height alone does not determine whether a particular multiband state is confined.
+
+\subsection{Decoupled heavy holes and coupled light-hole--split-off envelopes}
+
+To determine the reference vertical subbands, set $V_\parallel=0$, $ \hat{p}_ x= \hat{p}_ y=0$, and retain the biaxial strain of Eq.~\eqref{eq:biaxial}. The entries $R$ and $S$ then vanish, as do both interface matrices because they are linear in the in-plane momentum. The remaining quantities are
+\begin{equation}
+P=\frac{ \hat{p}_ z\gamma_1 \hat{p}_ z}{2m_0}+P_\ep,
+\qquad
+Q=-\frac{ \hat{p}_ z\gamma_2 \hat{p}_ z}{m_0}+Q_\ep.
+\label{eq:PQvertical}
+\end{equation}
+The HH components form two identical scalar problems,
+\begin{equation}
+h_z^H\psi_\ell^H=\epsilon_\ell^H\psi_\ell^H,
+\qquad
+h_z^H=\frac{ \hat{p}_ z(\gamma_1-2\gamma_2) \hat{p}_ z}{2m_0}
++V_z+P_\ep+Q_\ep.
+\label{eq:HHvertical}
+\end{equation}
+Their twofold degeneracy is the zero-field Kramers degeneracy. The index $\ell$ labels vertical levels, in contrast to the six Bloch components of Eq.~\eqref{eq:basis}.
+
+The LH and SO components remain coupled through $Q$. In the positive-$m_j$ sector the off-diagonal entry is $+\sqrt2Q$; in the negative-$m_j$ sector it is $-\sqrt2Q$. The same pair of vertical envelopes can therefore describe the two partners if their relative sign is retained:
+\begin{align}
+\ket{\ell,+}&=\psi_\ell^L(z)\ket{\tfrac32,\tfrac12}
++\psi_\ell^{\SO}(z)\ket{\tfrac12,\tfrac12},\nonumber\\
+\ket{\ell,-}&=\psi_\ell^L(z)\ket{\tfrac32,-\tfrac12}
+-\psi_\ell^{\SO}(z)\ket{\tfrac12,-\tfrac12}.
+\label{eq:mixedpartners}
+\end{align}
+With the Bloch phases of Appendix~\ref{app:phases}, these states are related by time reversal up to an overall phase. The common envelope equation is
+\begin{equation}
+\left[
+\frac{1}{2m_0} \hat{p}_ z
+\begin{pmatrix}
+\gamma_1+2\gamma_2&-2\sqrt2\gamma_2\\
+-2\sqrt2\gamma_2&\gamma_1
+\end{pmatrix} \hat{p}_ z
++
+\begin{pmatrix}
+V_z+P_\ep-Q_\ep&\sqrt2Q_\ep\\
+\sqrt2Q_\ep&V_z+P_\ep+\Delta_{\SO}
+\end{pmatrix}
+\right]
+\begin{pmatrix}\psi_\ell^L\\\psi_\ell^{\SO}\end{pmatrix}
+=\epsilon_\ell^L
+\begin{pmatrix}\psi_\ell^L\\\psi_\ell^{\SO}\end{pmatrix}.
+\label{eq:LHvertical}
+\end{equation}
+Here $\epsilon_\ell^L$ labels a LH-dominated solution of the coupled problem. The same operator also yields SO-dominated solutions; the superscript does not mean that the SO component has been removed. Both the vertical kinetic energy and the strain mix the two components. A scalar LH equation with mass $m_0/(\gamma_1+2\gamma_2)$ is recovered only after an additional approximation that suppresses this mixing.
+
+Vertical envelopes can be chosen real for this zero-field problem, but their relative sign is fixed by Eq.~\eqref{eq:LHvertical}. In a finite-domain calculation with endpoints $z_{\min}$ and $z_{\max}$, their normalization is
+\begin{equation}
+\int_{z_{\min}}^{z_{\max}}dz\,|\psi_\ell^H|^2=1,
+\qquad
+\int_{z_{\min}}^{z_{\max}}dz\,
+\bigl(|\psi_\ell^L|^2+|\psi_\ell^{\SO}|^2\bigr)=1.
+\label{eq:normalization}
+\end{equation}
+In particular, the LH envelope is not separately normalized to one. Its integrated weight exceeds the SO weight for a LH-dominated state. A nearly pure LH approximation requires the latter weight to be small, whereas the six-band calculation remains meaningful without making that approximation.
+
+\subsection{Interface matching and spectral isolation}
+
+For the reference problem just derived, the kinetic energy is a divergence-form differential operator. Across a finite material step at $z=z_j$, with no additional contact interaction, integrating the equations through the interface gives continuity of
+\begin{equation}
+\psi_\ell^H,\qquad
+(\gamma_1-2\gamma_2)\partial_z\psi_\ell^H
+\label{eq:HHmatching}
+\end{equation}
+for the HH sector, and continuity of both columns
+\begin{equation}
+\begin{pmatrix}\psi_\ell^L\\\psi_\ell^{\SO}\end{pmatrix},
+\qquad
+\begin{pmatrix}
+(\gamma_1+2\gamma_2)\partial_z\psi_\ell^L
+-2\sqrt2\gamma_2\partial_z\psi_\ell^{\SO}\\
+-2\sqrt2\gamma_2\partial_z\psi_\ell^L
++\gamma_1\partial_z\psi_\ell^{\SO}
+\end{pmatrix}
+\label{eq:LHmatching}
+\end{equation}
+for the mixed sector. The second column contains the kinetic flux coefficients. Matching the two derivatives with their separate diagonal masses would miss the off-diagonal kinetic coupling. These conditions apply at every modeled material interface, including $z=-L_{\mathrm b}$, $0$, and $L_z$, for $ \hat{p}_ x= \hat{p}_ y=B=0$ and the stated ordered Hamiltonian. Once in-plane motion is restored, mixed derivatives and the explicit interface interactions must also be included in the matching or weak formulation of the full six-component problem. More general microscopic interface models can impose different matching conditions~\cite{foreman,rodina}.
+
+The choice of far-field electrostatics determines the boundary conditions. If the field is screened to zero sufficiently far from the well, each exterior region is asymptotically flat. The HH continuum then starts at $V_z+P_\ep+Q_\ep$, evaluated in the asymptotic material on each side (relaxed Ge below the finite lower barrier, and Si$_{0.30}$Ge$_{0.70}$ above the well). The corresponding lower LH--SO continuum threshold in either asymptotically constant material is
+\begin{equation}
+V_z+P_\ep+\frac{\Delta_{\SO}-Q_\ep}{2}
+-\frac12\sqrt{(\Delta_{\SO}+Q_\ep)^2+8Q_\ep^2}.
+\label{eq:mixedthreshold}
+\end{equation}
+This is obtained by diagonalizing the local mixed potential matrix at zero vertical momentum, assuming a positive vertical kinetic matrix. It is a continuum threshold only for a constant asymptotic potential; it must not be applied unchanged to the uniform-field model of Eq.~\eqref{eq:Vz} on the whole real line. For a uniform field on a finite numerical domain, the artificial boundaries must be placed sufficiently far away, and the well-localized energies checked for convergence as those boundaries are moved.
+
+For a usable LH ground doublet, the LH-like state must be localized primarily in the well and isolated from nearby HH-like and other mixed states. For well-localized subbands we write
+\begin{equation}
+\HLgap=\epsilon_1^H-\epsilon_1^L>0,
+\label{eq:DHL}
+\end{equation}
+where $\epsilon_1^H$ and $\epsilon_1^L$ denote the relevant lowest HH- and LH-dominated well subbands, respectively. If states in the Ge buffer or extended barrier states lie at similar energies, they must also be included rather than implicitly discarded. Such states can interact with a well subband after restoring in-plane momentum through $R$ and $S$~\cite{valvo,delvecchio2024}.
+
+\subsection{How strain competes with vertical kinetic energy}
+
+A homogeneous hard-wall limit makes the preceding competition explicit. Take constant material parameters and strain inside $0<z<L_z$, set $F_z=0$, and let both barrier heights tend to infinity. Each component then has a sine envelope $\sqrt{2/L_z}\sin(\ell\pi z/L_z)$ multiplied by a constant band amplitude. Evaluating the existing $P$ and $Q$ on this sine mode gives
+\begin{equation}
+P_\ell=\frac{\gamma_1\hbar^2\pi^2\ell^2}{2m_0L_z^2}+P_\ep,
+\qquad
+Q_\ell=-\frac{\gamma_2\hbar^2\pi^2\ell^2}{m_0L_z^2}+Q_\ep.
+\label{eq:hardwallPQ}
+\end{equation}
+The HH energy is $\epsilon_\ell^H=P_\ell+Q_\ell$. Diagonalizing the remaining two-by-two block yields the exact mixed energies
+\begin{equation}
+\epsilon_{\ell,\pm}
+=P_\ell+\frac{\Delta_{\SO}-Q_\ell}{2}
+\pm\frac12\sqrt{(\Delta_{\SO}+Q_\ell)^2+8Q_\ell^2}.
+\label{eq:hardwalleigen}
+\end{equation}
+Each energy is twofold degenerate. The lower branch is LH-dominated when $\Delta_{\SO}+Q_\ell>0$. In the large-gap limit it becomes
+\begin{equation}
+\epsilon_{\ell,-}
+=P_\ell-Q_\ell-\frac{2Q_\ell^2}{\Delta_{\SO}}
++O(\Delta_{\SO}^{-2}),
+\label{eq:largegap}
+\end{equation}
+showing both the four-band limit and the leading energy reduction from SO admixture. This expansion is only used here to interpret the exact result; no such expansion was used in Eqs.~\eqref{eq:Hsym} or \eqref{eq:LHvertical}.
+
+For the first sine mode, when the lower mixed branch is LH-dominated, the exact HH--LH separation is
+\begin{equation}
+\HLgap=\frac{3Q_1-\Delta_{\SO}
++\sqrt{(\Delta_{\SO}+Q_1)^2+8Q_1^2}}{2}.
+\label{eq:hardwallgap}
+\end{equation}
+For $\Delta_{\SO}>0$ this expression is positive precisely when $Q_1>0$. Thus, in this homogeneous hard-wall limit, tensile strain must overcome the larger LH vertical kinetic energy. With $b_v<0$, $\gamma_2>0$, and Eq.~\eqref{eq:biaxial}, the condition is
+\begin{equation}
+\ep_ {xx}>
+\frac{\gamma_2\hbar^2\pi^2}
+{(-b_v)m_0L_z^2\bigl(1+2C_{12}/C_{11}\bigr)}.
+\label{eq:strainthreshold}
+\end{equation}
+SO mixing changes the magnitude of the gap but not this particular crossing condition. In a finite well with material steps and an electric-field slope, the HH and mixed envelopes differ, and the crossing must instead be found from Eqs.~\eqref{eq:HHvertical}--\eqref{eq:LHvertical}. The simple limit therefore explains the design trend without replacing the finite-barrier calculation.
+
+\section{Magnetic field: orbital motion and Bloch-state response}
+\label{sec:magnetic}
+
+\subsection{Minimal coupling for a positively charged hole}
+
+The vertical eigenstates provide the zero-field starting point. A magnetic field changes both the motion of their envelopes and the energies and mixing of their Bloch components. The first effect is included by minimal coupling, and the second by the six-band Zeeman operator. We allow a uniform field $\bm B=B_x\hat{\bm x}+B_y\hat{\bm y}+B_z\hat{\bm z}$ without changing the growth-direction quantization axis or the Bloch-state basis of Eq.~\eqref{eq:basis}. The resulting operator includes both perpendicular and in-plane magnetic responses. We will subsequently recover the perpendicular-field Landau representation as a special case.
+
+For charge $q=e>0$, the mechanical momentum is
+\begin{equation}
+\bm\pi=\bm p-q\bm A_B,
+\qquad
+\bm\nabla\times\bm A_B=\bm B,
+\qquad
+[\pi_i,\pi_j]=iq\hbar\sum_k\varepsilon_{ijk}B_k.
+\label{eq:minimal}
+\end{equation}
+Here $\varepsilon_{ijk}$ is the antisymmetric Levi--Civita symbol, with $\varepsilon_{xyz}=1$. The sign in Eq.~\eqref{eq:minimal} is tied to the positive hole charge. It is kept consistent with the positive kinetic energy and the Zeeman convention below; replacing it by the electron substitution would change the magnetic model.
+
+A convenient gauge for an arbitrary uniform field, equivalent to the gauge used in the projected quantum-well construction of Valvo \emph{et al.}, is
+\begin{equation}
+\begin{aligned}
+\bm A_B&=\frac{B_z}{2}(-y,x,0)+(0,0,B_xy-B_yx),\\
+\pi_x&= \hat{p}_ x+\frac{qB_z}{2}y,\qquad
+\pi_y= \hat{p}_ y-\frac{qB_z}{2}x,\\
+\pi_z&= \hat{p}_ z-q(B_xy-B_yx).
+\end{aligned}
+\label{eq:gauge}
+\end{equation}
+It satisfies $\bm\nabla\times\bm A_B=\bm B$ and reduces to the previous perpendicular-field gauge when $B_x=B_y=0$. The in-plane kinetic combination is
+\begin{equation}
+\pi_x^2+\pi_y^2
+= \hat{p}_ x^2+ \hat{p}_ y^2-qB_z(x \hat{p}_ y-y \hat{p}_ x)
++\frac{q^2B_z^2}{4}(x^2+y^2).
+\label{eq:orbitalexpansion}
+\end{equation}
+In this gauge, the in-plane field enters the vertical kinetic terms through $\pi_z$. For either $j=1$ or $j=2$, the exact ordered expansion is
+\begin{equation}
+\begin{aligned}
+\pi_z\gamma_j(z)\pi_z
+={}& \hat{p}_ z\gamma_j(z) \hat{p}_ z
+-q(B_xy-B_yx)\{\gamma_j(z), \hat{p}_ z\}\\
+&+q^2\gamma_j(z)(B_xy-B_yx)^2.
+\end{aligned}
+\label{eq:tiltedkinetic}
+\end{equation}
+This contains both terms linear in the in-plane magnetic field and quadratic orbital terms. The replacement $\bm p\to\bm\pi$ must be made in every momentum-dependent entry of Eqs.~\eqref{eq:Hsym}--\eqref{eq:Hintq}, while keeping their operator ordering. In particular, $R$ retains the anticommutator $\{\pi_x,\pi_y\}$, and the interface matrices use $\pi_\pm=\pi_x\pm i\pi_y$.
+
+The expression for $S$ requires special attention. Since $[\pi_z,\pi_-]=-q\hbar(B_x-iB_y)$, the two mechanical-momentum factors do not commute for an in-plane field. The expression valid for an arbitrary uniform magnetic field is
+\begin{equation}
+S(\bm\pi)=\frac{\sqrt3}{2m_0}
+\bigl[\pi_-\gamma_3(z)\pi_z+\pi_z\gamma_3(z)\pi_-\bigr]
+-d_v(\ep_ {xz}-i\ep_ {yz}).
+\label{eq:Stilt}
+\end{equation}
+For $B_x=B_y=0$, one has $\pi_z= \hat{p}_ z$ and $[\pi_z,\pi_-]=0$, so Eq.~\eqref{eq:Stilt} reduces to
+\begin{equation}
+S(\bm\pi)\big|_{B_x=B_y=0}
+=\frac{\sqrt3}{2m_0}\pi_-\{\gamma_3, \hat{p}_ z\}
+-d_v(\ep_ {xz}-i\ep_ {yz}).
+\label{eq:SBz}
+\end{equation}
+The difference between these two orderings for a tilted field is derived in Appendix~\ref{app:tilted}. It is already included in Eq.~\eqref{eq:Stilt} and must not be added a second time.
+
+\subsection{The six-band Zeeman matrix}
+
+The magnetic response of the Bloch states contains both their orbital angular momentum and their spin. The response need not preserve $m_j$, and the separate orbital and spin operators also have matrix elements between LH and SO states. Let $g_0$ be the free-spin factor appearing in the underlying model and let $\mu_B=e\hbar/(2m_0)$. With the six-band operators $\hat L_i$ and $\hat S_i$ defined in Eq.~\eqref{eq:LS}, the exact Zeeman operator for a uniform field of arbitrary orientation is
+\begin{equation}
+H_Z^{(6)}(\bm B)
+=\mu_B\sum_{i=x,y,z}B_i\bigl[g_0\hat S_i-(3\kappa+1)\hat L_i\bigr]
+-2\mu_B\qq\sum_{i=x,y,z}B_i(J_i^3\oplus0_{2\times2}).
+\label{eq:HZvector}
+\end{equation}
+Here $J_i$ are the dimensionless spin-$3/2$ matrices in the HH/LH ordering of Eq.~\eqref{eq:basis}. In particular, $B_x$ and $B_y$ introduce off-diagonal couplings that cannot be obtained by replacing $B_z$ with $|\bm B|$ in a perpendicular-field matrix. For comparison, setting $B_x=B_y=0$ and grouping the basis into HH, LH, and SO pairs gives
+\begin{equation}
+H_Z^{(6)}(B_z\hat{\bm z})=-\mu_BB_z
+\begin{pmatrix}
+\left(3\kappa+1-\dfrac{g_0}{2}+\dfrac{27}{4}\qq\right)\sigma_z
+&0&0\\[6pt]
+0&\left(\kappa+\dfrac{2-g_0}{6}+\dfrac14\qq\right)\sigma_z
+&\sqrt2\left(\kappa+\dfrac{g_0+1}{3}\right)\one_2\\[6pt]
+0&\sqrt2\left(\kappa+\dfrac{g_0+1}{3}\right)\one_2
+&\left(2\kappa+\dfrac{g_0+4}{6}\right)\sigma_z
+\end{pmatrix},
+\label{eq:HZ}
+\end{equation}
+where $\sigma_z=\operatorname{diag}(1,-1)$ acts within each displayed pair. All coefficients are local functions of $z$ except the free-spin factor. The orbital and spin derivation of the matrix, including the source of its signs and numerical factors, is given in Appendix~\ref{app:source}.
+
+Setting $g_0=2$ recovers the usual four-band expression in the HH/LH block,
+\begin{equation}
+\left.H_Z^{(6)}(B_z\hat{\bm z})\right|_{\Gamma_8}
+=-2\mu_BB_z(\kappa J_z+\qq J_z^3),
+\qquad
+J_z=\operatorname{diag}\left(\tfrac32,-\tfrac32,\tfrac12,-\tfrac12\right).
+\label{eq:HZfour}
+\end{equation}
+The additional SO diagonal term is $-\mu_BB_z(2\kappa+1)\sigma_z$, and the two LH--SO matrix elements are
+\begin{equation}
+\bigl(H_Z^{(6)}(B_z\hat{\bm z})\bigr)_{35}=\bigl(H_Z^{(6)}(B_z\hat{\bm z})\bigr)_{46}
+=-\sqrt2\mu_BB_z(\kappa+1).
+\label{eq:HZmixing}
+\end{equation}
+Their equal sign follows from the fixed Bloch phases. Appending an independent spin-$1/2$ Zeeman block to Eq.~\eqref{eq:HZfour} would omit these couplings. The cubic parameter $\qq$ acts only in the $\Gamma_8$ block in this model; an additional cubic SO term is not part of the source Hamiltonian~\cite{delvecchio2026}.
+
+The importance of the off-diagonal terms can already be seen without solving the full magnetic problem. For the normalized vertical partners of Eq.~\eqref{eq:mixedpartners}, the direct Zeeman expectation is
+\begin{align}
+\bra{\ell,\pm}H_Z^{(6)}(B_z\hat{\bm z})\ket{\ell,\pm}
+=\mp\mu_BB_z\int dz\,\Bigg[&
+\left(\kappa+\frac{2-g_0}{6}+\frac{\qq}{4}\right)|\psi_\ell^L|^2
++\left(2\kappa+\frac{g_0+4}{6}\right)|\psi_\ell^{\SO}|^2\nonumber\\
+&+2\sqrt2\left(\kappa+\frac{g_0+1}{3}\right)
+\operatorname{Re}\bigl[(\psi_\ell^L)^*\psi_\ell^{\SO}\bigr]
+\Bigg].
+\label{eq:directZeeman}
+\end{align}
+The interference term depends on the relative sign of the two envelopes, not only on their separate weights. This expression isolates the direct Bloch Zeeman expectation for a perpendicular field. For $B_x$ or $B_y$ nonzero, Eq.~\eqref{eq:HZvector} also generates off-diagonal matrix elements between the two zero-field Kramers partners and between different Bloch sectors. The magnetic splitting of a confined state further includes the orbital terms and their mixing of subbands, so it must be obtained from the full Hamiltonian rather than the diagonal expectation above alone.
+
+\subsection{Complete magnetic Hamiltonian and in-plane orbital states}
+
+Combining the orbital and Bloch-state responses, the complete six-band Hamiltonian for an arbitrary uniform magnetic field is
+\begin{equation}
+\boxed{\displaystyle
+H^{(6)}(\bm B)=H_{\mathrm{sym}}^{(6)}(\bm\pi)
++H_{\kappa'}^{(6)}(\bm\pi)+H_{q'}^{(6)}(\bm\pi)
++H_Z^{(6)}(\bm B)
++\bigl[V_z(z)+V_\parallel(x,y)\bigr]\one_6.}
+\label{eq:Hfull}
+\end{equation}
+Here $\bm\pi=\bm p-q\bm A_B$ is evaluated using Eq.~\eqref{eq:gauge}, and the $S$ entry of $H_{\mathrm{sym}}^{(6)}$ must use the symmetric ordering of Eq.~\eqref{eq:Stilt}. The symmetric kinetic terms, the material-gradient terms, and the Zeeman terms are included exactly once. In particular, one must not add Eq.~\eqref{eq:HZvector} to an unreduced Cartesian Hamiltonian whose antisymmetric magnetic commutators are already present. Appendix~\ref{app:source} displays the identities connecting these representations.
+
+For a laterally confined dot, $V_\parallel$ specifies the in-plane electrostatic confinement, and Eq.~\eqref{eq:Hfull} acts on the full three-dimensional, six-component envelope. In the chosen gauge, an in-plane field enters $\pi_z$ and couples vertical and lateral orbital motion. The following oscillator formulas apply only to the special case $B_x=B_y=0$. For a translation-invariant well with $V_\parallel=0$, a perpendicular field organizes the in-plane motion into Landau oscillator states. Taking $qB_z>0$, define
+\begin{equation}
+\bb=\frac{\pi_+}{\sqrt{2q\hbar B_z}},\qquad
+\bb^\dagger=\frac{\pi_-}{\sqrt{2q\hbar B_z}},\qquad
+[\bb,\bb^\dagger]=1.
+\label{eq:ladder}
+\end{equation}
+These operators describe the orbital motion of the hole; they are unrelated to a photon mode. The diagonal combination is then
+\begin{equation}
+\pi_x^2+\pi_y^2=2q\hbar B_z
+\left(\bb^\dagger\bb+\frac12\right).
+\label{eq:Landau}
+\end{equation}
+The off-diagonal kinetic entries take the corresponding forms
+\begin{align}
+R_0&=\frac{\sqrt3q\hbar B_z}{2m_0}
+\left[(\gamma_3-\gamma_2)\bb^2
+-(\gamma_2+\gamma_3)(\bb^\dagger)^2\right],\label{eq:RLandau}\\
+S_0&=\frac{\sqrt3\sqrt{2q\hbar B_z}}{2m_0}
+\bb^\dagger\{\gamma_3, \hat{p}_ z\}.
+\label{eq:SLandau}
+\end{align}
+Thus $R_0$ connects oscillator indices differing by two, while $S_0$ and the interface terms connect indices differing by one. The anticommutator in Eq.~\eqref{eq:SLandau} retains the material derivative $\gamma_3'$. For $B_z<0$, the roles of $\pi_+$ and $\pi_-$ as lowering and raising operators are interchanged; at $B_z=0$ it is preferable to use the canonical momenta directly.
+
+A numerical representation can combine the vertical eigenstates of Sec.~\ref{sec:vertical} with lateral dot orbitals or, for a purely perpendicular field, Landau states. With an in-plane field, the $x,y,z$ degrees of freedom are coupled through the mechanical momenta, so the three-dimensional orbital basis must be sufficiently complete to capture this mixing. For finite barriers, the expansion must also contain enough extended barrier or buffer states, and convergence must be checked with the vertical simulation-domain size. This is an additional basis expansion, not a reduction in the number of Bloch bands. The full six-band differential operator in Eq.~\eqref{eq:Hfull} remains the starting model, with no projection or perturbative elimination assumed in its definition.
+
+
+
+
+
+
+
+
+
+
+
+
+
+% Requires the macros \ket, \mel, \SO, \qq, \hc,
+% \LH, and \ep from the six-band notes.
+% Insert after the six-band Hamiltonian and the vertical eigenvalue problem.
+
+\section{Schrieffer--Wolff reduction to the lowest light-hole doublet}
+\label{sec:swt6-inplane}
+
+We retain the biaxial strain configuration and allow an arbitrary uniform
+magnetic field $\bm B=B_x\hat{\bm x}+B_y\hat{\bm y}+B_z\hat{\bm z}$.
+The kinetic and interface operators contain the mechanical momenta
+$\bm\pi=\bm p-q\bm A_B$, while the Bloch-state response is described by
+$H_Z^{(6)}(\bm B)$. We define
+\begin{equation}
+ \hat\pi_\pm=\hat\pi_x\pm i\hat\pi_y,\qquad
+ B_\pm=B_x\pm iB_y,\qquad
+ \hat\pi_\parallel^2=\hat\pi_x^2+\hat\pi_y^2,\qquad
+ \hat\sigma_\pm=\frac{\sigma_x\pm i\sigma_y}{2},\qquad
+ \bar\gamma=\frac{\gamma_2+\gamma_3}{2},\quad
+ \zeta=\frac{\gamma_3-\gamma_2}{2}.
+ \label{eq:swt6-notation}
+\end{equation}
+The perpendicular orbital field is retained through the gauge-independent
+commutator $[\hat\pi_+,\hat\pi_-]=2q\hbar B_z$; no particular in-plane
+vector-potential gauge is needed. For the orbital coupling of the in-plane
+field, we take $A_{B,z}=B_xy-B_yx$ and define
+\begin{equation}
+ \hat C=B_x\hat y-B_y\hat x,\qquad
+ \hat\pi_z=\hat p_z-q\hat C,\qquad
+ [\hat\pi_+,\hat C]=\hbar B_+,\qquad
+ [\hat\pi_-,\hat C]=-\hbar B_-.
+ \label{eq:swt6-orb-notation}
+\end{equation}
+These identities specify the operator ordering needed below without fixing
+the gauge used to represent $\hat\pi_x$ and $\hat\pi_y$.
+
+At $\hat p_x=\hat p_y=\bm B=0$, the HH states are
+$\psi_\ell^H(z)\ket{\tfrac32,\pm\tfrac32}$, while the two
+partners of each mixed LH--SO eigenstate are
+\begin{equation}
+ \ket{\ell,\pm}=\psi_\ell^L(z)\ket{\tfrac32,\pm\tfrac12}
+ \pm\psi_\ell^{\SO}(z)\ket{\tfrac12,\pm\tfrac12}.
+ \label{eq:swt6-partners}
+\end{equation}
+The index $\ell$ enumerates the \emph{entire} LH--SO spectrum,
+including SO-dominated states, with energy $\ep_\ell^\eta$;
+$\ep_1^\eta=\ep_1^L$ denotes the isolated LH-dominated ground doublet.
+All vertical envelopes are taken real and obey the coupled normalization
+in Eq.~\eqref{eq:normalization}. We use the latter doublet as the
+retained subspace, and eliminate every HH subband and every other
+LH--SO eigenstate.
+
+Write the perturbation as the difference between the full six-band
+Hamiltonian and its $\hat p_x=\hat p_y=\bm B=0$ vertical part (the scalar
+$V_\parallel$ is retained in the resulting two-dimensional Hamiltonian).
+The $2\times2$ vertices from the retained doublet to an HH doublet
+and to another LH--SO doublet are
+\begin{align}
+ \hat V_\ell^H={}&
+ \begin{pmatrix}
+ -it_\ell\hat\pi_++\mu_Bg_\ell^HB_+&
+ \zeta_\ell\hat\pi_+^2-\bar\gamma_\ell\hat\pi_-^2\\
+ \zeta_\ell\hat\pi_-^2-\bar\gamma_\ell\hat\pi_+^2&
+ it_\ell\hat\pi_-+\mu_Bg_\ell^HB_-
+ \end{pmatrix}
+ +t_\ell^{\mathrm{orb}}
+ \begin{pmatrix}
+ \{\hat\pi_+,\hat C\}&0\\
+ 0&-\{\hat\pi_-,\hat C\}
+ \end{pmatrix},\label{eq:swt6-VH}\\
+ \hat V_\ell^\eta={}&
+ \begin{pmatrix}
+ a_\ell\hat\pi_\parallel^2-\mu_Bg_\ell^zB_z&
+ iw_\ell\hat\pi_-+\mu_Bg_\ell^\eta B_-\\
+ -iw_\ell\hat\pi_++\mu_Bg_\ell^\eta B_+&
+ a_\ell\hat\pi_\parallel^2+\mu_Bg_\ell^zB_z
+ \end{pmatrix}
+ +(ia_\ell^{(1)}\hat C+a_\ell^{(2)}\hat C^2)\one_2
+ +w_\ell^{\mathrm{orb}}
+ \begin{pmatrix}
+ 0&-\{\hat\pi_-,\hat C\}\\
+ \{\hat\pi_+,\hat C\}&0
+ \end{pmatrix}.
+ \label{eq:swt6-Veta}
+\end{align}
+The contractions already entering the in-plane kinetic and Zeeman
+vertices are
+\begin{align}
+ a_\ell={}&\frac{1}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\gamma_1-\gamma_2}{\psi_\ell^L}
+ +\mel{\psi_1^{\SO}}{\gamma_1}{\psi_\ell^{\SO}}
+ +\sqrt2\mel{\psi_1^L}{\gamma_2}{\psi_\ell^{\SO}}
+ +\sqrt2\mel{\psi_1^{\SO}}{\gamma_2}{\psi_\ell^L}
+ \Bigr],\label{eq:swt6-a}\\
+ \bar\gamma_\ell={}&\frac{\sqrt3}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\bar\gamma}{\psi_\ell^H}
+ +\sqrt2\mel{\psi_1^{\SO}}{\bar\gamma}{\psi_\ell^H}
+ \Bigr],\qquad
+ \zeta_\ell=\frac{\sqrt3}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\zeta}{\psi_\ell^H}
+ +\sqrt2\mel{\psi_1^{\SO}}{\zeta}{\psi_\ell^H}
+ \Bigr],\label{eq:swt6-R}\\
+ t_\ell={}&-\frac{i\sqrt3}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\{\gamma_3,\hat p_z\}-i\hbar\kappa'}{\psi_\ell^H}
+ -\frac1{\sqrt2}
+ \mel{\psi_1^{\SO}}{\{\gamma_3,\hat p_z\}-i\hbar\kappa'}{\psi_\ell^H}
+ -\frac{7i\hbar}{4}\mel{\psi_1^L}{\qq'}{\psi_\ell^H}
+ \Bigr],\label{eq:swt6-t}\\
+ w_\ell={}&-i\Bigg\{
+ \frac{3}{2\sqrt2m_0}\Bigl[
+ \mel{\psi_1^L}{\{\gamma_3,\hat p_z\}}{\psi_\ell^{\SO}}
+ -\mel{\psi_1^{\SO}}{\{\gamma_3,\hat p_z\}}{\psi_\ell^L}
+ \Bigr]\nonumber\\
+ &\hspace{1.3cm}-\frac{i\hbar}{m_0}\Bigl[
+ \mel{\psi_1^L}{\kappa'}{\psi_\ell^L}
+ -\mel{\psi_1^{\SO}}{\kappa'}{\psi_\ell^{\SO}}
+ +\frac{1}{2\sqrt2}\Bigl(
+ \mel{\psi_1^L}{\kappa'}{\psi_\ell^{\SO}}
+ +\mel{\psi_1^{\SO}}{\kappa'}{\psi_\ell^L}\Bigr)
+ +\frac52\mel{\psi_1^L}{\qq'}{\psi_\ell^L}
+ \Bigr]\Bigg\},\label{eq:swt6-w}\\
+ g_\ell^H={}&\frac{\sqrt3}{6}\Bigl[
+ \mel{\psi_1^L}{g_0-6\kappa-\tfrac{21}{2}\qq-2}{\psi_\ell^H}
+ +\sqrt2\mel{\psi_1^{\SO}}{g_0+3\kappa+1}{\psi_\ell^H}
+ \Bigr],\label{eq:swt6-gH}\\
+ g_\ell^\eta={}&
+ \frac13\mel{\psi_1^L}{g_0-6\kappa-15\qq-2}{\psi_\ell^L}
+ +\frac16\mel{\psi_1^{\SO}}{g_0+12\kappa+4}{\psi_\ell^{\SO}}
+ -\frac{1}{3\sqrt2}\Bigl[
+ \mel{\psi_1^L}{g_0+3\kappa+1}{\psi_\ell^{\SO}}
+ +\mel{\psi_1^{\SO}}{g_0+3\kappa+1}{\psi_\ell^L}
+ \Bigr].\label{eq:swt6-geta}
+\end{align}
+The perpendicular Zeeman contraction is
+\begin{align}
+ g_\ell^z={}&
+ \mel{\psi_1^L}{\kappa+\frac{2-g_0}{6}+\frac{\qq}{4}}{\psi_\ell^L}
+ +\mel{\psi_1^{\SO}}{2\kappa+\frac{g_0+4}{6}}{\psi_\ell^{\SO}}
+ +\sqrt2\Bigl[
+ \mel{\psi_1^L}{\kappa+\frac{g_0+1}{3}}{\psi_\ell^{\SO}}
+ +\mel{\psi_1^{\SO}}{\kappa+\frac{g_0+1}{3}}{\psi_\ell^L}
+ \Bigr].\label{eq:swt6-gz}
+\end{align}
+The additional contractions generated by $\hat\pi_z=\hat p_z-q\hat C$
+and by the symmetric ordering of the $S$ entry are
+\begin{align}
+ a_\ell^{(1)}={}&\frac{iq}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\{\gamma_1+2\gamma_2,\hat p_z\}}{\psi_\ell^L}
+ +\mel{\psi_1^{\SO}}{\{\gamma_1,\hat p_z\}}{\psi_\ell^{\SO}}
+ -2\sqrt2\Bigl(
+ \mel{\psi_1^L}{\{\gamma_2,\hat p_z\}}{\psi_\ell^{\SO}}
+ +\mel{\psi_1^{\SO}}{\{\gamma_2,\hat p_z\}}{\psi_\ell^L}
+ \Bigr)\Bigr],\label{eq:swt6-a1orb}\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ a_\ell^{(2)}={}&\frac{q^2}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\gamma_1+2\gamma_2}{\psi_\ell^L}
+ +\mel{\psi_1^{\SO}}{\gamma_1}{\psi_\ell^{\SO}}
+ -2\sqrt2\Bigl(
+ \mel{\psi_1^L}{\gamma_2}{\psi_\ell^{\SO}}
+ +\mel{\psi_1^{\SO}}{\gamma_2}{\psi_\ell^L}
+ \Bigr)\Bigr],\label{eq:swt6-a2orb}\\
+ t_\ell^{\mathrm{orb}}={}&\frac{q\sqrt3}{2m_0}\Bigl[
+ \mel{\psi_1^L}{\gamma_3}{\psi_\ell^H}
+ -\frac1{\sqrt2}\mel{\psi_1^{\SO}}{\gamma_3}{\psi_\ell^H}
+ \Bigr],\label{eq:swt6-torb}\\
+ w_\ell^{\mathrm{orb}}={}&\frac{3q}{2\sqrt2m_0}\Bigl[
+ \mel{\psi_1^L}{\gamma_3}{\psi_\ell^{\SO}}
+ -\mel{\psi_1^{\SO}}{\gamma_3}{\psi_\ell^L}
+ \Bigr].\label{eq:swt6-worb}
+\end{align}
+For real envelopes, all $a_\ell,t_\ell,w_\ell,\bar\gamma_\ell,
+\zeta_\ell,g_\ell^H,g_\ell^\eta,g_\ell^z,a_\ell^{(1)},
+a_\ell^{(2)},t_\ell^{\mathrm{orb}},w_\ell^{\mathrm{orb}}$ are real.
+In particular, $a_1^{(1)}=w_1^{\mathrm{orb}}=0$.
+The projected bare inverse mass is $1/m_\parallel^L=2a_1$.
+
+To second order in the full perturbation, retaining \emph{all} single
+virtual excursions, the Schrieffer--Wolff result is
+\begin{equation}
+ \begin{aligned}
+ \hat H_\LH^{(2)}={}&\ep_1^L+V_\parallel
+ +a_1\hat\pi_\parallel^2+a_1^{(2)}\hat C^2
+ -\mu_Bg_1^zB_z\sigma_z
+ +\bigl[(iw_1\hat\pi_-+\mu_Bg_1^\eta B_-)\hat\sigma_++\hc\bigr]
+ +\sum_{\ell\ge1}\frac{\hat V_\ell^H\hat V_\ell^{H\dagger}}
+ {\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{\hat V_\ell^\eta\hat V_\ell^{\eta\dagger}}
+ {\ep_1^L-\ep_\ell^\eta}.
+ \end{aligned}
+ \label{eq:swt6-sum}
+\end{equation}
+The products retain their displayed operator ordering. In particular,
+$\{\hat\pi_-^2,\hat\pi_+\}/2
+=\hat\pi_-^2\hat\pi_++2q\hbar B_z\hat\pi_-$, and
+$\{\hat\pi_+^2,\hat\pi_-^2\}
+=2\hat\pi_\parallel^4+6q^2\hbar^2B_z^2$.
+Expanding Eq.~\eqref{eq:swt6-sum} and measuring energies from
+$\ep_1^L$ gives
+\begin{align}
+\hat H_\LH^{(2)}={}&V_\parallel+\hat V_{\mathrm{orb}}
++\left(\frac{1}{2m_\parallel^L}+\lambda_2\right)\hat\pi_\parallel^2
++\frac{\lambda_1}{8}\{\hat\pi_+^2,\hat\pi_-^2\}
++\frac{\lambda_4}{4}
+\left[\{\hat\pi_+^2,\hat\pi_-^2\}-\hat\pi_+^4-\hat\pi_-^4\right]
+\nonumber\\
+&+\lambda_5(B_x^2+B_y^2)
++i\lambda_6(B_+\hat\pi_--B_-\hat\pi_+)
++\lambda_{10}B_z^2
++\left(\lambda_3+\lambda_{11}\hat\pi_\parallel^2\right)B_z\sigma_z
+\nonumber\\
+&+\Bigl[
+\alpha_{R1}\hat\pi_-
++\alpha_{R3}\hat\pi_+^3
+-\frac{\alpha_{R2}}{2}\{\hat\pi_-^2,\hat\pi_+\}
++\left(\mu_Bg_1^\eta+\alpha_{R4}+\lambda_7\hat\pi_\parallel^2\right)B_-
++\left(\lambda_8\hat\pi_+^2-\lambda_9\hat\pi_-^2\right)B_+
+\Bigr]\hat\sigma_++\hc.
+\label{eq:swt6-Heff}
+\end{align}
+All remaining in-plane orbital terms are collected in the two-dimensional
+operator
+\begin{align}
+\hat V_{\mathrm{orb}}={}&
+\lambda_{12}\hat C^2
++\lambda_{13}\{\hat\pi_\parallel^2,\hat C^2\}
++\lambda_{14}\hat C^4
++\lambda_{15}\bigl\{\{\hat\pi_+,\hat C\},\{\hat\pi_-,\hat C\}\bigr\}
+\nonumber\\
+&+\Bigl[
+\lambda_{16}\bigl(B_+\{\hat\pi_-,\hat C\}+B_-\{\hat\pi_+,\hat C\}\bigr)
++\lambda_{17}B_z\hat C^2
+\Bigr]\sigma_z
+\nonumber\\
+&+\Bigl[
+\alpha_{R5}\{\hat C^2,\hat\pi_-\}
++\alpha_{R6}B_-\hat C^2
++\alpha_{R7}B_z\{\hat\pi_-,\hat C\}
++\alpha_{R8}\{\hat C,\{\hat\pi_-,\hat C\}\}
+\Bigr]\hat\sigma_++\hc.
+\label{eq:swt6-Vorb}
+\end{align}
+All spectral sums have been absorbed into the coefficients below; in
+particular, the position-independent orbital contributions are included
+in $\lambda_{6,7,8,9}$ and $\alpha_{R4}$, rather than repeated in
+$\hat V_{\mathrm{orb}}$.
+
+The zero-field kinetic and spin--orbit coefficients are contractions
+over the \emph{mixed} six-band eigenstates:
+\begin{align}
+ \lambda_1={}&4\sum_{\ell\ge1}
+ \frac{(\bar\gamma_\ell-\zeta_\ell)^2}{\ep_1^L-\ep_\ell^H}
+ +4\sum_{\ell\ge2}\frac{a_\ell^2}{\ep_1^L-\ep_\ell^\eta},
+ &\lambda_2={}&\sum_{\ell\ge1}
+ \frac{t_\ell^2}{\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{w_\ell^2}{\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ \lambda_4={}&4\sum_{\ell\ge1}
+ \frac{\bar\gamma_\ell\zeta_\ell}{\ep_1^L-\ep_\ell^H},
+ &\alpha_{R1}={}&iw_1,\nonumber\\
+ \alpha_{R2}={}&-2i\Biggl[
+ \sum_{\ell\ge1}\frac{t_\ell\bar\gamma_\ell}{\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{a_\ell w_\ell}{\ep_1^L-\ep_\ell^\eta}\Biggr],
+ &\alpha_{R3}={}&-2i\sum_{\ell\ge1}
+ \frac{t_\ell\zeta_\ell}{\ep_1^L-\ep_\ell^H}.
+ \label{eq:swt6-zero-coeff}
+\end{align}
+The perpendicular-field coefficients, including the orbital contributions
+from noncommuting in-plane momenta, are
+\begin{align}
+ \lambda_3={}&-\mu_Bg_1^z
+ +q\hbar\Biggl[
+ \sum_{\ell\ge1}\frac{t_\ell^2}{\ep_1^L-\ep_\ell^H}
+ -\sum_{\ell\ge2}\frac{w_\ell^2}{\ep_1^L-\ep_\ell^\eta}\Biggr],\label{eq:swt6-lambda3}\\
+ \lambda_{10}={}&\mu_B^2\sum_{\ell\ge2}
+ \frac{(g_\ell^z)^2}{\ep_1^L-\ep_\ell^\eta}
+ -3q^2\hbar^2\sum_{\ell\ge2}
+ \frac{a_\ell^2}{\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ \lambda_{11}={}&4q\hbar\sum_{\ell\ge1}
+ \frac{\zeta_\ell^2-\bar\gamma_\ell^2}{\ep_1^L-\ep_\ell^H}
+ -2\mu_B\sum_{\ell\ge2}
+ \frac{a_\ell g_\ell^z}{\ep_1^L-\ep_\ell^\eta}.
+ \label{eq:swt6-perp-coeff}
+\end{align}
+The in-plane magnetic coefficients, including the coordinate-independent
+terms generated by orbital coupling, are
+\begin{align}
+ \lambda_5={}&\mu_B^2\Biggl[
+ \sum_{\ell\ge1}\frac{(g_\ell^H)^2}{\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{(g_\ell^\eta)^2}{\ep_1^L-\ep_\ell^\eta}\Biggr],\label{eq:swt6-lambda5}\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \lambda_6={}&\mu_B\Biggl[
+ \sum_{\ell\ge1}\frac{t_\ell g_\ell^H}{\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{w_\ell g_\ell^\eta}{\ep_1^L-\ep_\ell^\eta}\Biggr]
+ -\hbar\Biggl[
+ \sum_{\ell\ge1}\frac{t_\ell t_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{a_\ell a_\ell^{(1)}+w_\ell w_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^\eta}\Biggr],\label{eq:swt6-lambda6}\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \lambda_7={}&2\mu_B\sum_{\ell\ge2}
+ \frac{a_\ell g_\ell^\eta}{\ep_1^L-\ep_\ell^\eta}
+ -4\hbar\sum_{\ell\ge1}
+ \frac{\bar\gamma_\ell t_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^H}
+ -2\hbar\sum_{\ell\ge2}
+ \frac{a_\ell w_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%5
+ \lambda_8={}&2\sum_{\ell\ge1}
+ \frac{\zeta_\ell(\mu_Bg_\ell^H-2\hbar t_\ell^{\mathrm{orb}})}{\ep_1^L-\ep_\ell^H},\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \lambda_9={}&2\mu_B\sum_{\ell\ge1}
+ \frac{\bar\gamma_\ell g_\ell^H}{\ep_1^L-\ep_\ell^H}
+ -2\hbar\sum_{\ell\ge2}
+ \frac{a_\ell w_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ \alpha_{R4}={}&-\hbar\sum_{\ell\ge2}
+ \frac{a_\ell^{(1)}w_\ell}{\ep_1^L-\ep_\ell^\eta}.
+ \label{eq:swt6-magnetic-coeff}
+\end{align}
+The coefficients multiplying the explicit coordinate-dependent orbital
+operators in Eq.~\eqref{eq:swt6-Vorb} are
+\begin{align}
+ \lambda_{12}={}&a_1^{(2)}
+ +\sum_{\ell\ge2}\frac{(a_\ell^{(1)})^2}{\ep_1^L-\ep_\ell^\eta},\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \lambda_{13}={}&\sum_{\ell\ge2}
+ \frac{a_\ell a_\ell^{(2)}}{\ep_1^L-\ep_\ell^\eta},\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \lambda_{14}={}&\sum_{\ell\ge2}
+ \frac{(a_\ell^{(2)})^2}{\ep_1^L-\ep_\ell^\eta},\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ \lambda_{15}={}&\frac12\Biggl[
+ \sum_{\ell\ge1}\frac{(t_\ell^{\mathrm{orb}})^2}{\ep_1^L-\ep_\ell^H}
+ +\sum_{\ell\ge2}\frac{(w_\ell^{\mathrm{orb}})^2}{\ep_1^L-\ep_\ell^\eta}\Biggr],\\
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+ \lambda_{16}={}&\sum_{\ell\ge1}
+ \frac{\mu_Bg_\ell^H t_\ell^{\mathrm{orb}}+\hbar(t_\ell^{\mathrm{orb}})^2}
+ {\ep_1^L-\ep_\ell^H}
+ -\sum_{\ell\ge2}
+ \frac{\mu_Bg_\ell^\eta w_\ell^{\mathrm{orb}}+\hbar(w_\ell^{\mathrm{orb}})^2}
+ {\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ \lambda_{17}={}&4q\hbar\Biggl[
+ \sum_{\ell\ge1}\frac{(t_\ell^{\mathrm{orb}})^2}{\ep_1^L-\ep_\ell^H}
+ -\sum_{\ell\ge2}\frac{(w_\ell^{\mathrm{orb}})^2}{\ep_1^L-\ep_\ell^\eta}\Biggr]
+ -2\mu_B\sum_{\ell\ge2}
+ \frac{g_\ell^z a_\ell^{(2)}}{\ep_1^L-\ep_\ell^\eta}.
+ \label{eq:swt6-orb-lambda}
+\end{align}
+The remaining spin-dependent orbital coefficients are
+\begin{align}
+ \alpha_{R5}={}&i\sum_{\ell\ge2}
+ \frac{a_\ell^{(2)}w_\ell}{\ep_1^L-\ep_\ell^\eta},
+ &\alpha_{R6}={}&\sum_{\ell\ge2}
+ \frac{2\mu_B a_\ell^{(2)}g_\ell^\eta
+ +4\hbar a_\ell^{(2)}w_\ell^{\mathrm{orb}}}
+ {\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ \alpha_{R7}={}&2q\hbar\Biggl[
+ \sum_{\ell\ge2}\frac{a_\ell w_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^\eta}
+ -2\sum_{\ell\ge1}\frac{\bar\gamma_\ell t_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^H}\Biggr]
+ -2\mu_B\sum_{\ell\ge2}
+ \frac{g_\ell^z w_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^\eta},\nonumber\\
+ \alpha_{R8}={}&i\sum_{\ell\ge2}
+ \frac{a_\ell^{(1)}w_\ell^{\mathrm{orb}}}{\ep_1^L-\ep_\ell^\eta}.
+ \label{eq:swt6-orb-alpha}
+\end{align}
+The $\lambda_3$ term contains both the direct perpendicular Zeeman
+splitting and its second-order orbital correction; $\lambda_{10}$ and
+$\lambda_{11}$ describe, respectively, a quadratic perpendicular-field
+shift and a momentum-dependent perpendicular splitting. The coefficient
+$\lambda_5$ is the spin-independent quadratic in-plane magnetic shift;
+$\lambda_6$ multiplies a spin-independent field--momentum coupling;
+$\lambda_{7,8,9}$ are momentum-dependent in-plane spin-flip terms.
+The field-linear term proportional to $\alpha_{R4}$ is the
+position-independent orbital correction to the transverse spin-flip
+coupling. The anticommutators in $\hat V_{\mathrm{orb}}$ retain the
+contributions generated by the noncommutativity of $\hat\pi_\pm$
+with $\hat C$ and with each other.
+
+All $\lambda_j$ are real. The coefficients
+$\alpha_{R1},\alpha_{R2},\alpha_{R3},\alpha_{R5},\alpha_{R8}$ are
+purely imaginary, whereas $\alpha_{R4},\alpha_{R6},\alpha_{R7}$
+are real in the chosen Bloch phases. If the retained doublet is
+below the entire eliminated spectrum, $\lambda_1,\lambda_2,\lambda_5\le0$.
+The spectral sums include all HH states and both LH- and SO-dominated
+excited mixed states, including continuum contributions when present.
+Equation~\eqref{eq:swt6-Heff}, together with
+Eq.~\eqref{eq:swt6-Vorb}, is complete at \emph{second order in the
+inter-subband perturbation}; it is not a full expansion to fourth order
+in $\hat\pi_\parallel$, since multi-step virtual processes can also
+contribute at cubic and quartic momentum order. Nor is it separately
+truncated in powers of $\bm B$: the single-excursion products retain
+all field powers that follow from the six-band perturbation. The
+approximation requires the retained doublet to remain spectrally
+isolated and the perturbative matrix elements to be small compared
+with their corresponding vertical energy denominators.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Cavity coupling in the dipole gauge}
+\label{sec:cavity}
+
+We introduce a single cavity mode of frequency $\omega_R$,
+linearly polarized along $x$, after the reduction to the
+two-dimensional light-hole Hamiltonian $\hat H_{\LH}^{(2)}$.
+The vector-potential amplitude $A_0$ fixes the vacuum
+electric-field amplitude $E_0=\omega_R A_0$. In the
+long-wavelength approximation,
+\begin{equation}
+\hat{\bm A}_{\mathrm{cav}}
+=A_0\hat{\bm x}(\hat a+\hat a^\dagger),
+\qquad
+\hat E_{\mathrm{cav},x}
+=i\omega_R A_0(\hat a-\hat a^\dagger),
+\label{eq:cavity-field}
+\end{equation}
+where $\hat a$ and $\hat a^\dagger$ are the photon
+annihilation and creation operators.
+
+For the positive hole charge $q=e$, the Hamiltonian
+in the electric-dipole gauge is
+\begin{align}
+\hat H_{\mathrm{LM}}^{(2)}
+={}&\hat H_{\LH}^{(2)}(\bm p;B_x,B_y)
++\hbar\omega_R\hat a^\dagger\hat a+iq\omega_R A_0\hat x(\hat a^\dagger - \hat a)
++\frac{q^2\omega_R A_0^2}{\hbar}\hat x^2.
+\label{eq:LH-cavity-dipole}
+\end{align}
+The last term is the dipole self-energy, required
+for gauge equivalence with the corresponding
+minimal-coupling Hamiltonian. All momentum-dependent
+and spin-dependent terms are contained in the
+previously derived $\hat H_{\LH}^{(2)}$; no additional
+Peierls substitution is made.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\newpage
+\appendix
+\renewcommand{\thesection}{\Alph{section}}
+\titleformat{\section}{\centering\normalfont\small\bfseries}{APPENDIX \thesection:}{0.6em}{\MakeUppercase}
+
+\section{Bloch-state phases and angular-momentum matrices}
+\label{app:phases}
+
+The orbital kets $\ket{ \hat{p}_ x}$, $\ket{ \hat{p}_ y}$, and $\ket{ \hat{p}_ z}$ denote zone-center Bloch functions; they are distinct from the momentum operators $ \hat{p}_ x, \hat{p}_ y, \hat{p}_ z$. In the Cartesian spin-orbital basis
+\begin{equation}
+\mathcal B_X=\{
+\ket{ \hat{p}_ x,\uparrow},\ket{ \hat{p}_ y,\uparrow},\ket{ \hat{p}_ z,\uparrow},
+\ket{ \hat{p}_ x,\downarrow},\ket{ \hat{p}_ y,\downarrow},\ket{ \hat{p}_ z,\downarrow}\},
+\label{eq:cartbasis}
+\end{equation}
+the phases corresponding to Eq.~\eqref{eq:basis} are~\cite{delvecchio2026}
+\begin{align}
+\ket{\tfrac32,\tfrac32}
+&=-\frac{\ket{ \hat{p}_ x,\uparrow}+i\ket{ \hat{p}_ y,\uparrow}}{\sqrt2},
+&\ket{\tfrac32,-\tfrac32}
+&=\frac{\ket{ \hat{p}_ x,\downarrow}-i\ket{ \hat{p}_ y,\downarrow}}{\sqrt2},
+\nonumber\\[3pt]
+\ket{\tfrac32,\tfrac12}
+&=\frac{2\ket{ \hat{p}_ z,\uparrow}-\ket{ \hat{p}_ x,\downarrow}-i\ket{ \hat{p}_ y,\downarrow}}{\sqrt6},
+&\ket{\tfrac32,-\tfrac12}
+&=\frac{\ket{ \hat{p}_ x,\uparrow}-i\ket{ \hat{p}_ y,\uparrow}+2\ket{ \hat{p}_ z,\downarrow}}{\sqrt6},
+\nonumber\\[3pt]
+\ket{\tfrac12,\tfrac12}
+&=-\frac{\ket{ \hat{p}_ z,\uparrow}+\ket{ \hat{p}_ x,\downarrow}+i\ket{ \hat{p}_ y,\downarrow}}{\sqrt3},
+&\ket{\tfrac12,-\tfrac12}
+&=\frac{\ket{ \hat{p}_ z,\downarrow}-\ket{ \hat{p}_ x,\uparrow}+i\ket{ \hat{p}_ y,\uparrow}}{\sqrt3}.
+\label{eq:phases}
+\end{align}
+These six orthonormal states fix the unitary basis transformation completely. If $U_{a\mu}=\braket{a}{\mu}$, with $a$ running over Eq.~\eqref{eq:basis} and $\mu$ over Eq.~\eqref{eq:cartbasis}, then $H_{\mathcal B}=UH_{\mathcal B_X}U^\dagger$. Complex conjugation in the bra is essential when constructing $U$ from Eq.~\eqref{eq:phases}. Relative to the angular-momentum ordering in Ref.~\cite{delvecchio2026}, the row order is $(1,4,2,3,5,6)$, without a further change of phase.
+
+The dimensionless orbital angular-momentum matrices on $(\ket{ \hat{p}_ x},\ket{ \hat{p}_ y},\ket{ \hat{p}_ z})$ are
+\begin{equation}
+\lambda_x=\begin{pmatrix}0&0&0\\0&0&-i\\0&i&0\end{pmatrix},\qquad
+\lambda_y=\begin{pmatrix}0&0&i\\0&0&0\\-i&0&0\end{pmatrix},\qquad
+\lambda_z=\begin{pmatrix}0&-i&0\\i&0&0\\0&0&0\end{pmatrix}.
+\label{eq:lambda}
+\end{equation}
+The corresponding six-band orbital and spin operators are
+\begin{equation}
+\hat L_i=U(\one_2\otimes\lambda_i)U^\dagger,
+\qquad
+\hat S_i=U\left(\frac{\sigma_i}{2}\otimes\one_3\right)U^\dagger.
+\label{eq:LS}
+\end{equation}
+Here $\sigma_i$ are the Pauli matrices on the Cartesian spin states. The total angular momentum $\hat L_i+\hat S_i$ is block diagonal between $j=3/2$ and $j=1/2$; its upper-left block is $J_i$. The separate operators $\hat L_i$ and $\hat S_i$ are not block diagonal. This is why both the interface term and the Zeeman term can couple LH and SO states even though the total-angular-momentum generators do not.
+
+\section{Connection to the ordered six-band source}
+\label{app:source}
+
+\subsection{Hole energies and the scalar spin-orbit reference}
+
+The ordered Cartesian six-band model is specified in the Supplemental Material of Ref.~\cite{delvecchio2026}, Sec.~I, Eqs.~(6)--(21), and is used in the SiGe study of Ref.~\cite{valvo}. Its microscopic valence Hamiltonian is written in electron energies with mechanical wavevector $\bm K=\bm k+e\bm A_B/\hbar$. The positive-hole convention describes the missing electron in a time-reversed basis. Operationally, the corresponding hole operator is obtained by evaluating the ordered source at $\bm K=(\bm p-e\bm A_B)/\hbar$, reversing its energy sign, and applying the basis transformation above. A global energy constant is then chosen to set the well reference. The reversal of the electromagnetic charge convention must accompany the reversal of the energy convention.
+
+The scalar part of this conversion matters in a heterostructure. In the source, intrinsic spin-orbit coupling is $\Delta_{\SO}\sum_i\sigma_i\otimes\lambda_i/3$. The operator $\sum_i\sigma_i\otimes\lambda_i=2\bm L\cdot\bm S$ has eigenvalues $+1$ in the $j=3/2$ sector and $-2$ in the $j=1/2$ sector. Consequently its hole-energy form is
+\begin{equation}
+-U H_{\mathrm{so}}^{\mathrm{source}}U^\dagger
+=-\frac{\Delta_{\SO}(z)}{3}\one_6
++\Delta_{\SO}(z)\operatorname{diag}(0,0,0,0,1,1).
+\label{eq:SOreference}
+\end{equation}
+Writing the SO diagonal as $P+\Delta_{\SO}$ therefore incorporates the scalar term $-\Delta_{\SO}/3$ into the hole band-edge profile:
+\begin{equation}
+V_{\mathrm{hole}}(\bm r)
+=-V_{\mathrm{source}}(\bm r)-\frac{\Delta_{\SO}(z)}{3},
+\qquad\text{up to one global energy constant}.
+\label{eq:Vconversion}
+\end{equation}
+The source defines $V_{\mathrm{source}}(\bm r)=\mathcal E_{\Gamma_5^+}(z)+eF_z^{\mathrm{source}}z+V_{\parallel}^{\mathrm{source}}(x,y)$, where $\mathcal E_{\Gamma_5^+}$ is the orbital valence edge \emph{before} spin-orbit coupling. Therefore the positive-hole band-edge profile used in Eq.~\eqref{eq:Vz} is $V_{\mathrm{edge}}^{\mathrm h}(z)=-\mathcal E_{\Gamma_5^+}(z)-\Delta_{\SO}(z)/3$, up to a global constant chosen to set the well edge to zero. If offsets are already tabulated relative to the unstrained $\Gamma_8$ valence edge, this spin-orbit correction is already included and must not be applied again. In the same conversion, $+eF_z^{\mathrm{source}}z$ becomes $-eF_z^{\mathrm{source}}z=qF_z z$; Eq.~\eqref{eq:fieldswitch} gives $F_z=-F_z^{\mathrm{source}}$. Thus the source example $F_z^{\mathrm{source}}=+1~\mathrm{V}/\mu\mathrm m$ corresponds to $F_z=-1~\mathrm{V}/\mu\mathrm m$ in our hole convention. This sign conversion applies to the same physical field and is not an extra term in the six-band matrix.
+
+\subsection{Separating interface and magnetic contributions}
+
+The antisymmetric part of the source's momentum ordering explains why interface and Zeeman coefficients are linked. In the hole convention and the six-band basis, the orbital contribution can be written
+\begin{align}
+\frac{i}{2m_0}\sum_{\alpha\beta\gamma}
+\varepsilon_{\alpha\beta\gamma}
+\pi_\alpha(3\kappa+1)\pi_\beta\hat L_\gamma
+={}&\frac{3\hbar\kappa'}{2m_0}
+(\pi_x\hat L_y-\pi_y\hat L_x)
+-\mu_B(3\kappa+1)\sum_\gamma B_\gamma\hat L_\gamma.
+\label{eq:orbitalcommutator}
+\end{align}
+This identity uses $[\pi_z,\kappa]=-i\hbar\kappa'$ and Eq.~\eqref{eq:minimal}. Its first term yields Eq.~\eqref{eq:Hintk}; its second is the Bloch orbital Zeeman contribution. The free-spin part contains no material derivative and gives
+\begin{equation}
+-\frac{ig_0}{2m_0}\sum_{\alpha\beta\gamma}
+\varepsilon_{\alpha\beta\gamma}\pi_\alpha\pi_\beta\hat S_\gamma
+=g_0\mu_B\sum_\gamma B_\gamma\hat S_\gamma.
+\label{eq:spincommutator}
+\end{equation}
+The same separation applies to the cubic term:
+\begin{align}
+\frac{i}{m_0}\sum_{\alpha\beta\gamma}
+\varepsilon_{\alpha\beta\gamma}\pi_\alpha\qq\pi_\beta
+(J_\gamma^3\oplus0_{2\times2})
+={}&\frac{\hbar\qq'}{m_0}
+\bigl[(\pi_xJ_y^3-\pi_yJ_x^3)\oplus0_{2\times2}\bigr]
+-2\mu_B\qq\sum_\gamma B_\gamma
+(J_\gamma^3\oplus0_{2\times2}).
+\label{eq:cubiccommutator}
+\end{align}
+The interface matrix in Eq.~\eqref{eq:Hintq} is the explicit first term of Eq.~\eqref{eq:cubiccommutator}. Keeping a position-dependent $\qq$ in the Zeeman response while dropping this derivative would change the ordered source model.
+
+Combining the three magnetic contributions gives the general vector Zeeman operator in Eq.~\eqref{eq:HZvector}. For a perpendicular field, the relevant matrix elements in the HH, LH, and SO pair ordering are
+\begin{equation}
+\hat L_z=
+\begin{pmatrix}
+\sigma_z&0&0\\
+0&\sigma_z/3&\sqrt2\one_2/3\\
+0&\sqrt2\one_2/3&2\sigma_z/3
+\end{pmatrix},
+\qquad
+\hat S_z=
+\begin{pmatrix}
+\sigma_z/2&0&0\\
+0&\sigma_z/6&-\sqrt2\one_2/3\\
+0&-\sqrt2\one_2/3&-\sigma_z/6
+\end{pmatrix}.
+\label{eq:LSz}
+\end{equation}
+Substituting these matrices into Eq.~\eqref{eq:HZvector} produces every coefficient in Eq.~\eqref{eq:HZ}. In the $\Gamma_8$ block, $\hat L_i=2J_i/3$ and $\hat S_i=J_i/3$ after projection. In the LH--SO block, their equal and opposite off-diagonal entries produce the coefficient $-\sqrt2\mu_BB_z[\kappa+(g_0+1)/3]$. The derivation thus fixes the interband signs together with the familiar four-band limit.
+
+\section{Ordering correction for a tilted uniform field}
+\label{app:tilted}
+
+Equation~\eqref{eq:Stilt} is the symmetrically ordered $S$ entry for an arbitrary uniform magnetic field. Its difference from the simpler perpendicular-field expression is fixed by the mechanical-momentum commutator. Since the material parameter $\gamma_3(z)$ commutes with $\pi_-$, whereas
+\begin{equation}
+[\pi_z,\pi_-]=-q\hbar(B_x-iB_y),
+\label{eq:tiltcommutator}
+\end{equation}
+one finds
+\begin{equation}
+\begin{aligned}
+\frac{\sqrt3}{2m_0}\bigl[
+&\pi_-\gamma_3\pi_z+\pi_z\gamma_3\pi_-
+-\pi_-\{\gamma_3,\pi_z\}\bigr]
+=-\sqrt3\mu_B\gamma_3(B_x-iB_y).
+\end{aligned}
+\label{eq:Stiltdifference}
+\end{equation}
+This is an operator-ordering contribution determined by the existing $\gamma_3$ kinetic term, not a new phenomenological Zeeman interaction. It is already contained in Eq.~\eqref{eq:Stilt}; it must not be added once more to Eq.~\eqref{eq:Hfull}. The $\kappa'$ and $q_{\mathrm k}'$ interface matrices likewise retain their existing form with $ \hat{p}_ \pm\to\pi_\pm$; the complete Zeeman response is Eq.~\eqref{eq:HZvector}.
+
+\clearpage
+\begin{thebibliography}{9}
+\phantomsection
+\addcontentsline{toc}{section}{References}
+
+\bibitem{valvo}
+E. Valvo, D. Costa, P. Del Vecchio, S. Bosco, G. Scappucci, and M. Rimbach-Russ,
+``Light-Hole Spin Qubits in Strained SiGe Lattice-Matched to Ge,''
+October 29, 2026 manuscript supplied with these notes; an earlier version is
+\href{https://arxiv.org/abs/2608.25852v1}{arXiv:2608.25852v1} (2026).
+
+\bibitem{delvecchio2026}
+P. Del Vecchio, K. Rossi, G. Scappucci, and S. Bosco,
+``Tailoring Germanium Heterostructures for Quantum Devices with Machine Learning,''
+\href{https://arxiv.org/abs/2604.21732v2}{arXiv:2604.21732v2} (2026),
+Supplemental Material, Sec.~I, Eqs.~(6)--(21).
+
+\bibitem{luttingerkohn}
+J. M. Luttinger and W. Kohn,
+``Motion of Electrons and Holes in Perturbed Periodic Fields,''
+\href{https://doi.org/10.1103/PhysRev.97.869}{Phys. Rev. \textbf{97}, 869 (1955)}.
+
+\bibitem{birpikus}
+G. L. Bir and G. E. Pikus,
+\emph{Symmetry and Strain-Induced Effects in Semiconductors}
+(Wiley, New York, 1974).
+
+\bibitem{winkler}
+R. Winkler,
+\emph{Spin-Orbit Coupling Effects in Two-Dimensional Electron and Hole Systems},
+Springer Tracts in Modern Physics Vol.~191
+(Springer, Berlin, 2003),
+\href{https://doi.org/10.1007/b13586}{doi:10.1007/b13586}.
+
+\bibitem{foreman}
+B. A. Foreman,
+``Effective-mass Hamiltonian and boundary conditions for the valence bands of semiconductor microstructures,''
+\href{https://doi.org/10.1103/PhysRevB.48.4964}{Phys. Rev. B \textbf{48}, 4964(R) (1993)}.
+
+\bibitem{rodina}
+A. V. Rodina, A. Yu. Alekseev, Al. L. Efros, M. Rosen, and B. K. Meyer,
+``General boundary conditions for the envelope function in the multiband $k\cdot p$ model,''
+\href{https://doi.org/10.1103/PhysRevB.65.125302}{Phys. Rev. B \textbf{65}, 125302 (2002)}.
+
+\bibitem{delvecchio2024}
+P. Del Vecchio and O. Moutanabbir,
+``Light-hole spin confined in germanium,''
+\href{https://doi.org/10.1103/PhysRevB.110.045409}{Phys. Rev. B \textbf{110}, 045409 (2024)}.
+
+\end{thebibliography}
+\end{document}

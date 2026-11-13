@@ -1,0 +1,7 @@
+{
+    "child-pid": 146,
+    "ipc-namespace": 4026534802,
+    "mnt-namespace": 4026534800,
+    "pid-namespace": 4026534803,
+    "uts-namespace": 4026534801
+}
