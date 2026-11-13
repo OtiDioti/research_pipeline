@@ -4,6 +4,7 @@ Actual account reads, native context lengths and owned service observations are
 separate from labelled clock/threshold observations. Public fixture science only.
 """
 import asyncio
+from contextlib import ExitStack, contextmanager
 from copy import deepcopy
 import json
 import os
@@ -15,6 +16,28 @@ from tests import use_checkout
 use_checkout()
 from tests.test_v0_l1_native import reserve_validation_output
 from research_pipeline import collaboration, isolation, jobs, workspace
+
+
+@contextmanager
+def secondary_turn_barrier(runtime, task_id, ready):
+    """Hold fixture dispatch between measured turns; keep the native context owned."""
+    original = runtime.native_turn
+    parked, release = asyncio.Event(), asyncio.Event()
+
+    async def turn(context_id, *args, **kwargs):
+        record = runtime.state['contexts'][context_id]
+        if (record['task_id'] == task_id and ready()
+                and record.get('measurement', {}).get('status') == 'measured'):
+            parked.set()
+            await release.wait()
+        return await original(context_id, *args, **kwargs)
+
+    runtime.native_turn = turn
+    try:
+        yield parked
+    finally:
+        release.set()
+        runtime.native_turn = original
 
 
 @unittest.skipUnless(os.environ.get('RESEARCH_PIPELINE_V0_L3_NATIVE') == '1',
@@ -33,6 +56,7 @@ class NativeL3Tests(unittest.TestCase):
                             'No scientific terminal decision, L4/L5/full lifecycle or M5 acceptance.']}
 
         async def scenario(role):
+            barriers = ExitStack()
             entry = {'role': role, 'outcome': 'failed'}
             receipt['scenarios'].append(entry)
             project = output/role
@@ -95,10 +119,16 @@ class NativeL3Tests(unittest.TestCase):
                         'Save substantial reasoning in your workspace/BEFORE.md and a valid scoped handoff. '
                         'If opponent, preserve ## Review history and ## Objections. No computations or assignments.',
                         'primary', role)
+                    parked = barriers.enter_context(secondary_turn_barrier(
+                        runtime, secondary_id, lambda: note(secondary_id, 'BEFORE.md')))
                     for task_id in ('primary',secondary_id):
                         runtime.turns[task_id] = asyncio.create_task(runtime.run_task(task_id))
                     await until(lambda: note('primary','BEFORE.md'), 'primary public analytical work')
                     await until(lambda: note(secondary_id,'BEFORE.md'), 'independent secondary public work')
+                    await until(parked.is_set, 'secondary held between measured native turns')
+                    entry['secondary_dispatch_barrier'] = (
+                        'Engineering synchronization: secondary context remains owned; its next turn waits '
+                        'until primary successor intake. No context telemetry or job deadline is changed.')
                     await until(lambda: all(t['operational_state']=='working' for t in runtime.state['tasks'].values()),
                                 'measured native admission')
                     secondary_cid = secondary['context_id']
@@ -128,8 +158,8 @@ while True: time.sleep(.1)
                     self.assertTrue(entry['injected_clock_warnings'])
                     await runtime.deliver_staleness()
                     entry['delivery_before_rollover'] = deepcopy(runtime.state['pending_staleness'])
-                    # Emit a fresh labelled warning synchronously at successor intake,
-                    # so native secondary activity cannot obscure delivery evidence.
+                    # The secondary stays between measured turns across rollover.
+                    # Emit a second labelled warning at successor intake.
                     original_documents = runtime.successor_documents
                     def documents(task_id):
                         if task_id == 'primary' and runtime.state['tasks'][task_id].get('last_context_id'):
@@ -150,6 +180,7 @@ while True: time.sleep(.1)
                         'fresh primary attachment')
                     after = await until(lambda: note('primary','AFTER.md'), 'native continuation and warning intake')
                     self.assertIn(secondary_cid, entry['successor_intake_warnings'])
+                    barriers.close()
                     self.assertTrue(record['cleanup_ok'])
                     self.assertNotEqual(record['native_thread_id'],runtime.state['contexts'][successor]['native_thread_id'])
                     self.assertEqual(secondary['context_id'],secondary_cid)
@@ -181,6 +212,7 @@ while True: time.sleep(.1)
                 entry['error'] = f'{type(exc).__name__}: {exc}'
                 raise
             finally:
+                barriers.close()  # release dispatch on every failure before owned cleanup
                 try:
                     entry['cleanup_ok'] = await runtime.block_and_cleanup('Explicit engineering fixture cleanup')
                     entry['contexts'] = runtime.state['contexts']

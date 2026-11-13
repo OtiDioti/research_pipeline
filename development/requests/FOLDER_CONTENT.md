@@ -13,4 +13,4 @@
 
 - [v0-l1-durable-runtime.md](v0-l1-durable-runtime.md) — L1 implementation decisions, tests, exact native host blocker and required verification invocation.
 - [v0-l2-measured-rollover.md](v0-l2-measured-rollover.md) — Accepted measured context continuity, historical native evidence and integration handoff.
-- [v0-l3-quota-staleness.md](v0-l3-quota-staleness.md) — Central weekly reserve, warning clocks, approved review and recovery handoff to mandatory trusted native/final/combined validation.
+- [v0-l3-quota-staleness.md](v0-l3-quota-staleness.md) — Central weekly reserve, warning clocks, approved runtime review, integrated native-fixture repair and pending trusted final/combined validation.

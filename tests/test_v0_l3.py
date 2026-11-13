@@ -19,6 +19,7 @@ from tests.test_context_usage import params
 from tests.test_quota import payload
 from tests.test_review_repairs import context_fixture, make_project
 from tests.test_v0_l1 import owner
+from tests.test_v0_l3_native import secondary_turn_barrier
 from research_pipeline import app_server, cli, codex, collaboration, isolation, jobs, quota, staleness, workspace
 
 
@@ -409,6 +410,81 @@ class L3Tests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('changed', pending['superseded'])
         self.assertFalse(self.runtime.check_staleness(10800))
         self.assertEqual(len(self.runtime.check_staleness(10801)), 1)
+
+    async def test_native_demo_barrier_keeps_measured_secondary_warning_at_successor_intake(self):
+        self.primary()
+        secondary = self.secondary()
+        clock = deepcopy(secondary['record']['staleness'])
+
+        async def next_turn(context_id, text):
+            if context_id == 'secondary':
+                # The next native turn may temporarily lose measurement coverage
+                # and later change length, legitimately superseding the warning.
+                secondary['record']['measurement'] = {'status': 'missing'}
+                self.assertFalse(self.runtime.check_staleness(5400, 'injected-clock'))
+                self.runtime.observe_context('secondary',
+                    params(length=10001, thread='native-secondary'), now=5401)
+            return {'status': 'completed'}
+
+        dispatch = AsyncMock(side_effect=next_turn)
+        self.runtime.native_turn = dispatch
+        work = None
+        try:
+            with secondary_turn_barrier(self.runtime, secondary['record']['task_id'],
+                                        lambda: True) as parked:
+                work = asyncio.create_task(self.runtime.native_turn('secondary', 'Continue'))
+                await asyncio.wait_for(parked.wait(), 2)
+                dispatch.assert_not_awaited()
+                self.runtime.check_staleness(2700, 'injected-clock')
+                await self.runtime.close_context('first')
+                successor = context_fixture(self.runtime, 'next')
+                successor['record']['input_changes'] = []
+                self.runtime.check_staleness(5400, 'injected-successor-intake-clock')
+                intake = self.runtime.successor_documents('primary')
+                notice = intake['secondary_staleness']['secondary']
+                self.assertEqual(notice['scheduled_seconds'], 5400)
+                self.assertEqual(notice['task_id'], secondary['record']['task_id'])
+                self.assertEqual(secondary['record']['staleness']['changed_monotonic'],
+                                 clock['changed_monotonic'])
+                self.assertFalse(secondary['record']['cleanup_ok'])
+                self.assertFalse(work.done())
+                # Primary dispatch is unaffected by the secondary barrier.
+                await self.runtime.native_turn('next', 'Continue primary')
+                self.assertEqual(dispatch.await_count, 1)
+            await asyncio.wait_for(work, 2)
+            self.assertIs(self.runtime.native_turn, dispatch)
+            self.assertFalse(self.state['pending_staleness'])
+            self.assertEqual(notice['superseded'], 'Measured context length changed')
+        finally:
+            if work:
+                await asyncio.gather(work, return_exceptions=True)
+
+    async def test_native_demo_barrier_allows_missing_telemetry_recovery_and_releases_on_failure(self):
+        self.primary()
+        secondary = self.secondary()
+        dispatch = AsyncMock(return_value={'status': 'completed'})
+        self.runtime.native_turn = dispatch
+        secondary['record']['measurement'] = {'status': 'missing'}
+        with secondary_turn_barrier(self.runtime, secondary['record']['task_id'],
+                                    lambda: True) as parked:
+            await asyncio.wait_for(self.runtime.native_turn('secondary', 'Recover telemetry'), 2)
+            self.assertFalse(parked.is_set())
+        self.runtime.observe_context('secondary', params(length=10000, thread='native-secondary'))
+        work = None
+        try:
+            with self.assertRaisesRegex(RuntimeError, 'fixture failure'):
+                with secondary_turn_barrier(self.runtime, secondary['record']['task_id'],
+                                            lambda: True) as parked:
+                    work = asyncio.create_task(self.runtime.native_turn('secondary', 'Continue'))
+                    await asyncio.wait_for(parked.wait(), 2)
+                    self.assertEqual(dispatch.await_count, 1)
+                    raise RuntimeError('fixture failure')
+            await asyncio.wait_for(work, 2)
+            self.assertEqual(dispatch.await_count, 2)
+            self.assertIs(self.runtime.native_turn, dispatch)
+        finally:
+            if work:
+                await asyncio.gather(work, return_exceptions=True)
 
     async def test_late_warning_responses_leave_primary_secondary_and_job_active(self):
         from tests import test_app_server

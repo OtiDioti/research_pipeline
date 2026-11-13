@@ -17,7 +17,9 @@ and remaining gates, and the [L1](development/requests/v0-l1-durable-runtime.md)
 L3 implements centralized weekly reserve and secondary inactivity warnings.
 The supplied pipeline review approves the runtime and final scheduling repair.
 The recovery response authorizes progression to the existing trusted validation stages.
-Its production demonstration and trusted final/combined checks remain required;
+The first trusted final run exposed a warning-fixture synchronization failure;
+the repaired fixture holds secondary dispatch between measured turns during the
+rollover check. Successful production and trusted final/combined checks remain required;
 see the [L3 report](development/requests/v0-l3-quota-staleness.md) for actual results
 and the preserved Writer prerequisite failure. L3–L6 acceptance remains required
 before another private M5 attempt. Historical M1–M4 receipts
@@ -383,6 +385,10 @@ preflight, owned native contexts and controlled numerical jobs. Labelled clock,
 55% rollover and 15% cutoff observations exercise boundaries without exhausting
 an account. The gate checks primary replacement, warning intake, stable job
 identity/deadline and real context/job cleanup. Missing prerequisites fail visibly.
+For the warning check, the fixture holds the secondary between measured native
+turns through primary successor intake and continuation, then releases dispatch.
+The secondary context stays owned and the computation continues; the receipt
+labels this synchronization separately from clock injections and native telemetry.
 The Writer cannot supply its absent authorized user bus; that failed receipt is
 not native production evidence. Runtime review has supplied approval; successful
 trusted final/combined runs remain required for L3 acceptance and integration is pending.

@@ -20,5 +20,5 @@
 - [quota_fixture.py](quota_fixture.py) — Labelled sufficient account observations for local engineering doubles.
 - [test_quota.py](test_quota.py) — Weekly boundaries, multiple buckets, sparse notification ages, reset and missing data.
 - [test_staleness.py](test_staleness.py) — Controlled clocks, raw increasing/decreasing lengths, independent resets and repeated warnings.
-- [test_v0_l3.py](test_v0_l3.py) — Native dispatch admission races, human index preservation through invalid drafts, delayed warning replies, real local cleanup and quota/staleness outcomes.
-- [test_v0_l3_native.py](test_v0_l3_native.py) — Opt-in actual quota preflight, native primary replacement, injected warnings/cutoff and owned cleanup receipts.
+- [test_v0_l3.py](test_v0_l3.py) — Native dispatch admission races, human index preservation, delayed warning replies, synchronized warning intake/recovery and real local quota cleanup.
+- [test_v0_l3_native.py](test_v0_l3_native.py) — Opt-in actual quota preflight, native primary replacement, measured-turn synchronization for injected warnings, cutoff and owned cleanup receipts.
