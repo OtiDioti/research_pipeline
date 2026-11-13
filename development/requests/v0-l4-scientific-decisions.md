@@ -728,3 +728,92 @@ acceptance. L5 recovery/reopening remains a separate dependency. README and
 relevant indexes describe the failure, repair and remaining checks. No Git
 orchestration, session management, remote action, protected input modification,
 manager-owned STATUS.md change or human-requirement edit was performed.
+
+## Milestone 3 integration-2 repair — manifest observation and job reports
+
+Read the supplied plan, empty decisions/diff, baseline/final summary pages,
+complete `tests/final-003.txt.commands/0001.txt`, earlier milestone decisions,
+requirements and relevant implementation/tests before editing. The artifact
+reader refused the command log and earlier decision pages; their read-only
+filesystem copies were used. Final-003 ran **307 tests, seven skipped**, exit 1,
+in **1069.842 test seconds** (1070.125 command seconds). Its sole reported failure
+was the native observer comparing `None` with a frozen evidence manifest.
+
+The preserved host receipt is
+`coding_pipeline/logs/manager/v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8/native-host-70qv32u8/receipt.json`.
+It records three proposals, the same logical opponent, delivered reviews,
+acknowledged scientific COMPLETE and confirmed owned cleanup, but its overall
+test outcome remains **failed**. Frozen manifests are JSON arrays;
+`jobs.read` deliberately accepts only runtime JSON objects. The observer now
+uses `json.loads` directly. Runtime reading/validation is unchanged. The existing
+ungated exact-intake/finalization regression now calls the same packet observer
+for both proposal and review, preserving manifest equality, version and every
+evidence hash check. Before the reader fix it reproduced the reported assertion
+without native inference; afterward it passes.
+
+Read-only application of the corrected terminal assertions to retained host
+evidence passed manifest checks, then exposed an additional unsatisfied numerical
+provenance check. Both roles had written their reports directly under `/project`;
+the numerical jobs had no retained job-document IDs. Later context snapshots
+cannot establish the required job provenance. A separate retained-evidence
+inspection confirms all **six** packet manifests/version digests/evidence hashes
+pass, and the numerical-job assertion still rejects both roles. Neither the
+receipt nor the science was modified or relabelled as passing.
+
+Clarified the fixture instructions: the actual numerical job writes its report
+under `/run/research-drafts/<task-workspace>/NUMERICAL_CHECK.md`, creates parents,
+keeps code/data in its scoped `/project` workspace and links those dependencies
+explicitly. Existing cleanup captures this private job batch as immutable
+documents. The instructions still supply no scientific answer or judgment.
+The numerical observer is shared with an ungated regression using real
+`Documents.capture` and labelled report/job fixtures for primary and opponent.
+It rejects missing job snapshots, failed/foreign jobs and mismatched report
+hashes. Its first run exposed an invalid fixture task ID; the fixture now uses
+the production task-ID shape. These are engineering checks, not new numerical
+science or consensus. Production lifecycle, provenance requirements, isolation,
+quota admission and operational bounds are unchanged.
+
+Actual validation commands (the historical/native gates stay disabled except
+for the explicitly enabled L4 prerequisite probe):
+
+```sh
+export PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies
+export RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0
+export RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0
+export RESEARCH_PIPELINE_M5_LIVE=0 RESEARCH_PIPELINE_V0_L1_NATIVE=0
+export RESEARCH_PIPELINE_V0_L2_NATIVE=0 RESEARCH_PIPELINE_V0_L3_NATIVE=0
+export RESEARCH_PIPELINE_V0_L4_NATIVE=0
+/home/francesco/miniconda3/bin/python -m unittest \
+  tests.test_v0_l4 tests.test_v0_l4_cleanup tests.test_v0_l4_native -q
+/home/francesco/miniconda3/bin/python -m unittest discover -s tests
+RESEARCH_PIPELINE_V0_L4_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T025921_734d7f95/runtime/tmp/l4-integration2-writer-native \
+/home/francesco/miniconda3/bin/python -m unittest tests.test_v0_l4_native.NativeL4Tests -v
+```
+
+Final focused checks: **76 tests, one skipped, 8.349 seconds, exit 0**.
+Full discovery: **308 tests, eight skipped, 18.876 seconds, exit 0**.
+These include actual local process/descendant interruption and partial-output
+retention, not fresh native cgroup observations. Logs under this run's
+`runtime/tmp/`: `l4-integration2-before.txt` (expected manifest reproduction),
+`l4-integration2-focused-final.txt` (initial invalid task-ID fixture failure),
+`l4-integration2-focused-passed.txt`, `l4-integration2-discovery.txt`,
+`l4-integration2-retained-assertions.txt` (revealed missing numerical provenance)
+and `l4-integration2-retained-packets.txt` (read-only packet checks).
+
+The enabled Writer probe ran **one test**, failed visibly at preflight,
+**0.012 seconds, exit 1**, because inherited `XDG_RUNTIME_DIR` and
+`DBUS_SESSION_BUS_ADDRESS` are absent. Its distinct failed receipt is
+`runtime/tmp/l4-integration2-writer-native/receipt.json`, log
+`runtime/tmp/l4-integration2-native.txt`. No runtime, agent or job was created,
+so no fresh cleanup or native scientific outcome is claimed. The receipt
+confirms preserved engineering-root markers; no bus or authentication bypass
+was attempted.
+
+Fresh enabled trusted final/combined verification and independent review remain
+required. In particular, the clarified numerical-report instructions still need
+actual native validation. Retained evidence inspection cannot replace that gate
+or accept the failed run. L5 reopening/recovery remains a separate dependency.
+README and relevant indexes are updated. No Git orchestration or new refs,
+session/permission/budget management, remote actions, manager-owned STATUS.md
+edits, protected scientific-input edits or human-requirement edits were performed.

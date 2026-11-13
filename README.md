@@ -20,9 +20,13 @@ approved Milestone 1. Milestone 2 adds an opt-in native investigation gate and r
 receipts. Successful native demonstration and trusted final/combined validation
 remain pending. The first trusted final run hit its operational bound after a
 placeholder document link in fixture instructions blocked proposal freezing.
-The fixture is repaired and covered by an ungated proposal/finalization regression;
-the failed native receipt retains confirmed cleanup. The restricted Writer also
-lacks the authorized user bus; see the
+After the link repair, the next trusted run reached acknowledged scientific
+COMPLETE and confirmed cleanup, then failed an observer that used an object-only
+JSON reader for array manifests. Its retained evidence also exposed ambiguous
+instructions for saving numerical reports as job drafts. The observer and
+instructions are repaired with ungated packet/provenance regressions; both failed
+native receipts remain intact. Fresh trusted final/combined runs are still
+required. The restricted Writer lacks the authorized user bus; see the
 [L4 implementation report](development/requests/v0-l4-scientific-decisions.md).
 L5 reopening/recovery and L6 integrated validation remain required before another private M5 attempt. Historical M1–M4
 receipts retain their original meaning. The retained M5 candidate remains inactive,
@@ -540,8 +544,12 @@ and writes `receipt.json` even after prerequisite or runtime failure.
 Native agents supply the derivation, scope assessment, numerical computations,
 opposition and responses, then invoke proposal/review/finalization controls
 themselves. The harness supplies questions and procedural evidence names only.
-Each role's numerical job produces `NUMERICAL_CHECK.md` in its own workspace;
-its retained job snapshot must match evidence frozen in the proposal/review.
+Each role's numerical job saves `<task-workspace>/NUMERICAL_CHECK.md` under its
+private `/run/research-drafts/` mount, creating parent directories. Code/data
+stay in its `/project` workspace with explicit links from the report. Confirmed
+job cleanup captures the report as an immutable document; that exact job snapshot
+must match evidence frozen in the proposal/review. A report written directly
+under `/project` does not supply the required job snapshot.
 An observing wrapper records authenticated control calls unchanged and verifies
 the primary's complete paginated challenge reads. A legitimate revision may
 reactivate the same opponent without an exchange ceiling.
@@ -563,6 +571,8 @@ rollover evidence is claimed only when observed. Ungated prerequisite,
 interruption and receipt-retention tests use explicitly mocked engineering
 failures. An ungated control-path regression freezes the exact native fixture
 instructions and questions and reaches acknowledged finalization with labelled
-scientific judgments. This catches malformed fixture evidence links before
-inference; it does not establish native scientific agreement.
+scientific judgments. It also runs the native packet observer on both frozen
+JSON-array manifests. An ungated provenance regression checks job-draft capture
+for both roles and rejects missing snapshots, failed/foreign jobs and mismatched
+report hashes. These checks do not establish native scientific agreement.
 L5 resume/reopening remains unimplemented.

@@ -21,7 +21,7 @@ from tests import use_checkout
 use_checkout()
 from tests.test_v0_l1_native import reserve_validation_output
 from tests.test_v0_l4 import DecisionFixture
-from research_pipeline import collaboration, decisions, isolation, jobs, workspace
+from research_pipeline import collaboration, decisions, documents, isolation, jobs, workspace
 
 
 QUESTIONS = """# Public integration investigation
@@ -62,12 +62,19 @@ the current version. Retain every prior objection ID/disposition and review phas
 in your handoff. When linking frozen evidence, include its local Markdown
 dependencies explicitly, as required by packet freezing.
 
-Both roles: have your actual numerical job write NUMERICAL_CHECK.md in your own
-task workspace (work/ for primary), containing its numerical observations and
-reproduction instructions. Link that report and its code/data explicitly from
-your proposal/review and handoff. This procedural filename helps the engineering
-observer distinguish a numerical job from read-only inspection; all findings,
-parameters, code and assessments are yours to supply.
+Both roles: have your actual numerical job write its report in its PRIVATE JOB
+DRAFT BATCH at /run/research-drafts/<task-workspace>/NUMERICAL_CHECK.md,
+creating parent directories first. For the primary, that exact job-side path is
+/run/research-drafts/work/NUMERICAL_CHECK.md. The opponent substitutes its full
+project-relative task workspace from control(tasks). Do not write the report
+directly under /project: only the job draft batch yields the required immutable
+job snapshot after confirmed cleanup. Write executable code/data under your
+/project task workspace, and use explicit /project links to them in the report.
+The report contains the job's numerical observations and reproduction instructions.
+Link that report and its code/data explicitly from your proposal/review and handoff.
+This procedural filename helps the engineering observer distinguish a numerical
+job from read-only inspection; all findings, parameters, code and assessments
+are yours to supply.
 Job-written Markdown can remain a private retained draft while your context is
 active. Discover/read its immutable snapshot with control(documents/read_document).
 Link the report using a Markdown link whose target is the document: prefix followed
@@ -282,11 +289,7 @@ class NativeL4Tests(unittest.TestCase):
                 packet = proposal.get(key)
                 if not packet:
                     continue
-                self.assertEqual(jobs.read(project / packet['manifest']), packet['evidence'])
-                self.assertEqual(hashlib.sha256(json.dumps(packet['evidence'], sort_keys=True).encode()).hexdigest(),
-                                 packet['version'])
-                for entry in packet['evidence']:
-                    self.assertEqual(workspace.file_digest(project / entry['path']), entry['sha256'], entry)
+                self.assert_frozen_packet(project, packet)
             if proposal.get('review'):
                 self.assertEqual(proposal['review']['version'], version)
                 self.assertTrue(any(e['action'] == 'submit_review' and e['sha256'] == version
@@ -330,16 +333,8 @@ class NativeL4Tests(unittest.TestCase):
         # Actual owned numerical work from each role. Code, commands, deadlines,
         # stdout/stderr and source artifacts remain in the runtime/packet records.
         for task_id in ('primary', opponent):
-            report_path = state['tasks'][task_id]['workspace'] + '/NUMERICAL_CHECK.md'
             packet = current['packet' if task_id == 'primary' else 'review_packet']
-            computations = [r for r in state['jobs'].values() if r['task_id'] == task_id
-                            and r['state'] == 'completed' and r.get('returncode') == 0
-                            and any(state['documents'][i]['path'] == report_path
-                                    and any(e.get('original_path', e['source']) == report_path
-                                            and e['source_sha256'] == state['documents'][i]['sha256']
-                                            for e in packet['evidence'])
-                                    for i in r.get('document_ids', []))]
-            self.assertTrue(computations, f'No successful admitted computation for {task_id}')
+            self.assert_numerical_computation(state, task_id, packet)
             last = state['tasks'][task_id]['last_context_id']
             handoff = state['contexts'][last]['validated_handoff']
             self.assertTrue(handoff['artifacts'])
@@ -361,6 +356,25 @@ class NativeL4Tests(unittest.TestCase):
             self.assertTrue(receipt['native_evidence'][-1]['native_tools_sha256'])
             self.assertTrue(receipt['native_evidence'][-1]['mcp_tools_sha256'])
 
+    def assert_frozen_packet(self, project, packet):
+        # Evidence manifests are JSON arrays; jobs.read accepts runtime objects only.
+        self.assertEqual(json.loads((project / packet['manifest']).read_text()), packet['evidence'])
+        self.assertEqual(hashlib.sha256(json.dumps(packet['evidence'], sort_keys=True).encode()).hexdigest(),
+                         packet['version'])
+        for entry in packet['evidence']:
+            self.assertEqual(workspace.file_digest(project / entry['path']), entry['sha256'], entry)
+
+    def assert_numerical_computation(self, state, task_id, packet):
+        report_path = state['tasks'][task_id]['workspace'] + '/NUMERICAL_CHECK.md'
+        computations = [r for r in state['jobs'].values() if r['task_id'] == task_id
+                        and r['state'] == 'completed' and r.get('returncode') == 0
+                        and any(state['documents'][i]['path'] == report_path
+                                and any(e.get('original_path', e['source']) == report_path
+                                        and e['source_sha256'] == state['documents'][i]['sha256']
+                                        for e in packet['evidence'])
+                                for i in r.get('document_ids', []))]
+        self.assertTrue(computations, f'No successful admitted computation for {task_id}')
+
 
 class NativeInputTests(DecisionFixture):
     """Exact live intake through production controls; scientific judgments are doubles."""
@@ -381,10 +395,57 @@ class NativeInputTests(DecisionFixture):
         await self.finalize(proposal)
         self.assertTrue(await self.runtime.shutdown_task, self.state.get('terminal_error'))
         self.assertTrue(collaboration.terminal_acknowledged(self.project, self.state))
+        # Exercise the native observer on real frozen proposal/review packets,
+        # without paying for inference to detect a manifest-format mismatch.
+        observer = NativeL4Tests()
+        for key in ('packet', 'review_packet'):
+            observer.assert_frozen_packet(self.project, proposal[key])
 
 
 class NativeReceiptTests(unittest.TestCase):
     """Mocked engineering failure fixtures; no inference or scientific consensus."""
+
+    def test_numerical_evidence_requires_a_successful_jobs_exact_report_snapshot(self):
+        # Exercise the real job-document capture contract; the report is an
+        # engineering fixture, not numerical/scientific acceptance evidence.
+        observer = NativeL4Tests()
+        with tempfile.TemporaryDirectory() as temp:
+            project = Path(temp)
+            (project / '.research_pipeline').mkdir()
+            store = documents.Documents(project, {'documents': {}})
+            opponent_id = 'task-' + 'a' * 32
+            for task_id, workspace_path in (('primary', 'work'), (opponent_id, 'work/tasks/' + opponent_id)):
+                with self.subTest(task_id=task_id):
+                    drafts = project / 'drafts' / task_id
+                    report_path = workspace_path + '/NUMERICAL_CHECK.md'
+                    target = drafts / report_path
+                    target.parent.mkdir(parents=True)
+                    target.write_text('# Engineering capture fixture\nNo scientific judgment.\n')
+                    record = {'job_id': 'job-' + task_id, 'task_id': task_id,
+                              'cleanup_ok': True, 'state': 'completed', 'returncode': 0}
+                    store.capture(record, 'job', drafts)
+                    self.assertNotIn('document_snapshot_error', record)
+                    identifier, = record['document_ids']
+                    document = store.state['documents'][identifier]
+                    self.assertEqual(document['source_kind'], 'job')
+                    self.assertEqual(document['source_id'], record['job_id'])
+                    state = {'tasks': {task_id: {'workspace': workspace_path}},
+                             'jobs': {record['job_id']: record},
+                             'documents': store.state['documents']}
+                    for source in (report_path, 'document:' + identifier):
+                        packet = {'evidence': [{'source': source, 'original_path': report_path,
+                                                'source_sha256': document['sha256']}]}
+                        observer.assert_numerical_computation(state, task_id, packet)
+                        for invalid in ({'returncode': 1}, {'document_ids': []},
+                                        {'task_id': 'other'}, {'state': 'failed'}):
+                            with self.subTest(invalid=invalid), self.assertRaisesRegex(
+                                    AssertionError, 'No successful admitted computation'):
+                                observer.assert_numerical_computation(
+                                    {**state, 'jobs': {record['job_id']: {**record, **invalid}}},
+                                    task_id, packet)
+                        packet['evidence'][0]['source_sha256'] = '0' * 64
+                        with self.assertRaisesRegex(AssertionError, 'No successful admitted computation'):
+                            observer.assert_numerical_computation(state, task_id, packet)
 
     def invoke(self, destination):
         with patch.dict(os.environ, {'RESEARCH_PIPELINE_V0_L4_OUTPUT_DIR': str(destination)}):
