@@ -5,18 +5,18 @@ Codex app-server driver, and computations that outlive individual model contexts
 The human specification is [PROJECT.md](PROJECT.md); the authoritative amendment
 is [the V0 lifecycle design](2026-11-12-v0-context-lifecycle-design.md).
 
-**V0-L1 is accepted and integrated at `542ac0d`.** Pipeline final and combined
-verification each passed 126 tests with four historical paid gates disabled. Both
-production-native receipts confirmed context/job continuity, isolation, shared caps,
-timeout/cancellation/supervisor-loss handling and cleanup. See [STATUS.md](STATUS.md)
-for the actual run, receipts and remaining gates, and [the L1 report](development/requests/v0-l1-durable-runtime.md)
-for implementation decisions and invocation details.
-This increment adds measured 55% rollover and continuous logical tasks. L2
-native final/combined verification and independent review remain pending; see
-[the L2 report](development/requests/v0-l2-measured-rollover.md). It does not
-establish acceptance of the full V0 extension. Historical
-M1–M4 receipts remain evidence of their original implementation. M5 is unaccepted,
-unmerged and inactive; no private benchmark run is part of this increment.
+**V0-L1 and V0-L2 are accepted and integrated.** L2 integrated at `f9119e3`.
+Pipeline final and combined verification each passed 184 tests with five gates
+disabled. Fresh native receipts passed primary, delegated-researcher and opponent
+continuation, with job identity/deadline/allocation preserved and cleanup confirmed.
+Threshold crossings used labelled telemetry fixtures alongside actual native
+telemetry and scientific inference. See [STATUS.md](STATUS.md) for refs, receipts
+and remaining gates, and the [L1](development/requests/v0-l1-durable-runtime.md) and
+[L2](development/requests/v0-l2-measured-rollover.md) implementation reports.
+
+L3–L6 remain required before another private M5 attempt. Historical M1–M4 receipts
+retain their original meaning. M5 remains inactive, unmerged and scientifically
+unaccepted; human scientific acceptance is mandatory.
 
 ## Setup and use
 
