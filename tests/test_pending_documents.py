@@ -12,6 +12,7 @@ from unittest.mock import AsyncMock, patch
 
 from tests import use_checkout
 use_checkout()
+from tests.quota_fixture import PAYLOAD, sufficient
 from tests.test_review_repairs import context_fixture, make_project
 from tests.test_v0_l1 import owner
 from research_pipeline import cli, collaboration, documents, isolation, job_server, jobs
@@ -22,6 +23,7 @@ class PendingDocumentTests(unittest.IsolatedAsyncioTestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.project = make_project(Path(self.tmp.name))
         self.runtime = collaboration.Coordinator.initialize(self.project, isolation.Config())
+        sufficient(self.runtime)
         self.context = context_fixture(self.runtime)
         self.directory_fds = []
         self.addCleanup(self.tmp.cleanup)
@@ -62,6 +64,7 @@ class PendingDocumentTests(unittest.IsolatedAsyncioTestCase):
             root.mkdir(exist_ok=True)
             yield root
         backend = type('Client', (), {'start': AsyncMock(), 'new_thread': AsyncMock(return_value=thread_id),
+            'read_quota': AsyncMock(return_value=PAYLOAD),
             'request': AsyncMock(return_value={'data': [{'name': 'research_jobs', 'tools': {
                 tool.name: tool.model_dump(by_alias=True) for tool in await job_server.create_server(None).list_tools()}}]}),
             'close': AsyncMock(return_value={'confirmed': True, 'reason': 'protocol boundary double'})})()
@@ -184,7 +187,8 @@ class PendingDocumentTests(unittest.IsolatedAsyncioTestCase):
             later_id, _ = await self.successor_backend('later-native')
             successor = self.runtime.contexts[later_id]
             self.assertIn('work/NOTE.md', successor['record']['science_changes'])
-        self.assertTrue(await self.runtime.block_and_cleanup('Explicit engineering pause'))
+        self.assertEqual(await self.runtime.block_and_cleanup('Explicit engineering pause'), not invalid_context)
+        self.assertTrue(self.runtime.state['cleanup_ok'])
         record = successor['record'] if acknowledge and not invalid_context else job
         if invalid_context:
             self.assertIn('publication_error', successor['record'])
@@ -272,7 +276,8 @@ class PendingDocumentTests(unittest.IsolatedAsyncioTestCase):
                'science_baseline': {}}
         self.runtime.state['jobs'][job['job_id']] = job
         self.runtime.jobs.publish(job)
-        self.assertTrue(await self.runtime.block_and_cleanup('Explicit engineering pause'))
+        self.assertFalse(await self.runtime.block_and_cleanup('Explicit engineering pause'))
+        self.assertTrue(self.runtime.state['cleanup_ok'])
         self.assertIn('publication_error', job)
         self.assertEqual((self.project/'work/NOTE.md').read_text(), '# Useful predecessor science')
         self.assertEqual(self.context['record']['publication_conflicts'], [])
@@ -431,6 +436,7 @@ class CleanupRetryTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as temp:
             project = make_project(Path(temp))
             runtime = collaboration.Coordinator.initialize(project, isolation.Config())
+            sufficient(runtime)
             ctx = context_fixture(runtime, cleanup=False)
             ctx['record'].update(service=owner('context.service'), unit='context.service')
             released = []
@@ -468,6 +474,7 @@ class CleanupRetryTests(unittest.IsolatedAsyncioTestCase):
         with tempfile.TemporaryDirectory() as temp:
             project = make_project(Path(temp))
             runtime = collaboration.Coordinator.initialize(project, isolation.Config())
+            sufficient(runtime)
             ctx = context_fixture(runtime, cleanup=False)
             ctx['record'].update(service=owner('context.service'), unit='context.service')
             released = []

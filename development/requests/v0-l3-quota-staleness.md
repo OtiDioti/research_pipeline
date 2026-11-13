@@ -1,0 +1,214 @@
+# V0-L3 — centralized weekly reserve and secondary staleness
+
+The supplied recovery response confirms independent runtime review approval at `b36347451d1a5e8567fb505605e422bc6864a775`, including the final secondary-dispatch repair. Milestone-002 review found no actionable documentation defects; the recovery response authorizes progression to the existing trusted final/combined stages. The first trusted final run failed one native warning-fixture assertion; integration repair below synchronizes that fixture. Final-003 then passed, but combined pre-merge-004 failed on the primary successor's 90-second intake completion bound. The current repair focuses intake, allows 180 operational seconds for it and adds explicit timeout diagnostics; that repair requires independent review and fresh trusted final/combined verification. Current Writer routine verification: **232 tests, OK (seven gates skipped)**. **L3 remains unaccepted pending successful production demonstration, trusted final/combined verification and integration.** The authorized host user bus is absent in this restricted Writer; its earlier enabled production attempts failed before research admission. No real account reading, production inference or native service cleanup is claimed for those Writer attempts. The supplied failed host receipt contains partial native evidence, recorded below. L1/L2 remain the accepted foundations, with L2 integration `f9119e31e816e7f83bb475ce01f58a5873f3b6fa`. No L3 integration ref has been supplied; the pipeline owns integration and subsequent final/combined results.
+
+## Telemetry contract and material choices
+
+Read PROJECT.md, engineering AGENTS.md, manager STATUS.md, the complete human lifecycle amendment, the supplied milestone plan and baseline. The artifact reader refused inspection; the same supplied plan/decisions/baseline were read from the local run artifact directory. Baseline evidence was 184 tests, six skipped; it was not new L3 evidence. Human-owned requirements and STATUS.md are unchanged.
+
+Inspected `/home/francesco/Desktop/gits/codex_controller/codex_tui/policy.py` (`QuotaBook`, `WEEK_MINUTES`) and `controller.py` (`_poll`, `_read_quota`, `_admit`, `account/rateLimits/updated`). The controller uses **10080 minutes**, independent of the `primary`/`secondary` window label, minimum weekly remaining across quota IDs, full-read replacement, non-null sparse merging, a **30-second default poll**, reads before admission and immediate refusal on unavailable required quota. No controller imports, component changes or separate controller processes were introduced.
+
+Installed standalone backend: **codex-cli 0.167.2**. Protocol discovery:
+
+```sh
+codex --version
+codex app-server generate-json-schema --out ../runtime/tmp/l3-protocol
+```
+
+The generated stable schema includes `account/rateLimits/read`, `account/rateLimits/updated` and `turn/steer`. Relevant generated files are `v2/NullableGetAccountRateLimitsParams.json`, `GetAccountRateLimitsResponse.json`, `AccountRateLimitsUpdatedNotification.json` and `TurnSteerParams.json`. A read accepts `{}`; no reserve-fallback capability or account mutation is requested. The full response has `rateLimits` and optional `rateLimitsByLimitId`; each snapshot has nullable `limitId`, `primary` and `secondary`. A window supplies `usedPercent` (native int32), nullable `windowDurationMins` and Unix `resetsAt`. Notifications explicitly describe sparse rolling updates. Steering uses `threadId`, `expectedTurnId` and text `input`; active-turn mismatch is a normal delivery race.
+
+Research-owned `quota.py` adapts that policy, retaining bucket IDs, window position/duration, raw values, provenance and observation times. It compares unrounded finite values at used >=85 / remaining <=15, and takes the most restrictive weekly bucket. An observed cutoff wins even if another bucket is invalid. Full-read admission conservatively requires valid weekly telemetry in every returned bucket. Sparse omissions/nulls preserve known weekly data and never renew its age; new metadata-only or short-window notices do not invalidate established weekly observations. A changed window duration replaces its positional predecessor rather than mixing two identities. Full reads replace snapshots, but never remove the first cutoff latch. Explicit native denial of ordinary account usage also refuses admission; percentages/null metadata cannot override a known denial.
+
+The research runtime adds a **60-second per-weekly-observation freshness bound** (one missed 30-second poll). Reported reset expiry also requires a supported refresh; elapsed time never fabricates allowance. Reads use the existing 15-second operational RPC bound; failures refuse further work rather than retrying scientific inference. This is an operational telemetry bound, not a research lifetime. Native payload observations and labelled test injections remain distinguishable, including the immutable first cutoff.
+
+## Runtime and cleanup
+
+Schema **6** rejects older or incomplete operational state without migration. `start()` prepares the primary owned app-server, performs actual account preflight **before `thread/start`**, then lets the primary runner consume that existing attachment. Secondary context, task/assignment, computation reservation, command-release and inference-turn admissions use the same cached investigation guard. Only the current logical primary transport supplies policy reads/notifications; secondary and retired-primary account events are ignored. A separate polling task keeps slow quota RPCs out of inventory/pause monitoring. Primary replacement preserves quota/latch state, blocks admissions while its transport is absent, and requires fresh successor preflight. Secondary turns/attachments wait outside the lifecycle lock during that expected gap, preserving unrelated contexts/jobs; ordinary sparse successor notifications cannot mistake transport replacement for missing-quota failure. A real primary control-path failure wakes waiters and schedules operational cleanup rather than leaving them indefinitely unmonitored. No context receives a new allowance.
+
+At cutoff the RPC callback synchronously blocks admissions, records quota origin and signals runners, then schedules one common cleanup task. It does not await lifecycle RPCs in the reader. Existing early handoffs, immutable documents, saved drafts and job records provide best-effort preservation. **No post-cutoff saving inference or scientific opposition turn is started.** Active turns receive bounded operational interruption; failure proceeds to owned-service cleanup. Job cancellation runs concurrently with context cleanup and waits for settling admissions under the existing job lock, so optional saving cannot postpone computation interruption. The command-release gate prevents a reserved service from starting its command after cutoff.
+
+Confirmed process termination is recorded before optional snapshot/publication writes. Cleanup, quota origin and finalization success are separate. Persistence/snapshot/interruption failures cannot disable remaining cleanup; uncertain contexts/jobs retain their attachment/reservation and partial output. Publication retains the accepted confirmed-quiescence and human-edit rules. Failure to snapshot/publish/save status prevents an unqualified success acknowledgement without relabelling terminated processes as alive.
+
+`STOP` identifies quota origin, first observation, known artifacts, unfinished jobs, actual cleanup and limitations. A runtime-authored Markdown handoff is written under `handoffs/` after confirmed quiescence, or under private runtime state while cleanup is unconfirmed. Scientific status/index publication waits for confirmed cleanup. Existing scientific status is retained with an operational link when safe; human status edits remain intact and are reported as preserved. `STOP_ACK` matches STOP bytes only after confirmed cleanup and successful finalization. A failed acknowledgement write is saved as failure when state storage remains writable. A successful acknowledged STOP is not replaced by later pause/cleanup requests. Missing quota telemetry yields `quota_unavailable`, without a quota-origin STOP marker. CLI return/output distinguishes these states and awaits centralized shutdown before gathering runners. `resume` is still unsupported until L5; terminal markers reject fresh admission even with `--preserve-existing`.
+
+## Secondary clocks and delivery
+
+`Config.secondary_staleness_seconds` defaults to **2700**, with a positive integer human CLI option `--secondary-staleness-seconds`. The effective value is persisted and no model tool can relax it. Each attached secondary researcher/verifier/opponent has an independent explicit-monotonic clock. The first reliable sample establishes raw length without postponing attachment. Only a later raw measured `last.totalTokens` change, increasing or decreasing, resets it. Unchanged reports, cumulative spending, occupancy flooring, window/turn changes and warnings do not reset it. Missing measurements suppress staleness emission and remain a separate operational condition; they do not manufacture activity. Fresh successors get fresh clocks. The primary has no inactivity clock.
+
+Each newly crossed interval multiple emits once with agent/context, scheduled interval, actual elapsed staleness and provenance. Delayed observation can record several crossed intervals with the same actual emission time. Pending observations live in small ordinary runtime records keyed by secondary context, with history retained. Primary `control(check/tasks)`, continuation turns and successor intake expose them independently of document pagination. Active primary turns can receive noninterrupting steering outside the reader; completion/replacement races leave notices pending. RPC delivery is not scientific acknowledgement. Activity/context replacement supersedes old pending notices. Warning functions do not cancel, replace, restart or stop work, change deadlines or score scientific progress.
+
+## Verification and receipts
+
+All commands use the existing dependencies, without installation:
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+RESEARCH_PIPELINE_M1_LIVE=0 RESEARCH_PIPELINE_M2_LIVE=0 \
+RESEARCH_PIPELINE_M3_LIVE=0 RESEARCH_PIPELINE_M4_LIVE=0 \
+RESEARCH_PIPELINE_M5_LIVE=0 RESEARCH_PIPELINE_V0_L1_NATIVE=0 \
+RESEARCH_PIPELINE_V0_L2_NATIVE=0 RESEARCH_PIPELINE_V0_L3_NATIVE=0 \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v
+```
+
+Logs are under `coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/` (sibling of this worktree). Initial failing development runs `l3-routine-1.txt`, `l3-routine-2.txt` and `l3-focused-1.txt`/`-2.txt` remain there. Repairs added explicit account-read responses to accepted successor doubles, corrected cleanup/persistence separation, synchronized actual descendant-termination observation and updated old assertions that conflated saved artifacts with successful process cleanup. Earlier passing routine snapshots `l3-routine-3.txt` and `l3-routine-4.txt` each ran **214 tests, seven skipped**. Focused `l3-focused-3.txt` ran **38 tests, all passed**. An intermediate `l3-writer-final.txt` ran 218 tests with one fixture failure: the test assumed state JSON rejected nonfinite values. The corrected fixture explicitly injects a serialization failure and verifies cleanup independently. `l3-writer-final-2.txt` passed 220 tests, seven skipped; `l3-writer-final-3.txt` passed 221 tests, seven skipped, after adding transport-gap waiting. Final Writer verification is recorded below.
+
+Coverage includes >/=/<15%, fractional boundaries, either weekly position, short windows, multiple quota IDs and incomplete buckets; missing/invalid/nonfinite data; sparse omission ages, explicit account denial, reset refresh, immutable cutoff despite positive recovery; absent-preflight refusal; primary-only policy authority; transport replacement; queued assignment and reserved-job command-release races; active checkpoint interruption and closure; real local process/descendant termination retaining partial output even when runtime writes fail; uncertain cleanup retaining ownership; snapshot/STOP/ACK failures and protected human status; independent clocks, increasing/decreasing raw lengths, repeated exact interval multiples and missing samples; warning delivery races and successor intake; jobs/deadlines unaffected by warnings; full foreground CLI waiting and failure exit status. Existing accepted L1/L2 logical continuity, job/resource/isolation, immutable reads and human-edit publication checks remain in routine discovery.
+
+**Enabled native attempt (failed prerequisite, preserved):**
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+RESEARCH_PIPELINE_V0_L3_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/l3-native-writer-001 \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest tests.test_v0_l3_native.NativeL3Tests -v
+```
+
+Exit 1; log `runtime/tmp/l3-native-writer-001.txt`, private receipt `runtime/tmp/l3-native-writer-001/receipt.json`. Actual error: `systemd user bus unavailable: XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS must already be set in the authorized host environment`. Both inherited variables were absent. Receipt: `outcome=failed`, no scenarios/commands. No production service or inference was launched, so no native cleanup or real remaining percentage was observed. No bus/auth/isolation workaround was attempted. Local owned process checks are engineering evidence, explicitly not production cgroup evidence.
+
+`tests/test_v0_l3_native.py` provides opt-in discovery with `RESEARCH_PIPELINE_V0_L3_NATIVE=1` and inherited `RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR`. It reserves unique private receipts before prerequisites; receipt regression tests preserve two independent failed invocations. Researcher/opponent scenarios run sequentially within unchanged two-agent/one-job defaults. Each requires an actual sufficient native preflight before injections, native public analytical work, one controlled public quadrature job and descendant, a real primary rollover with original job identity/deadline, labelled warning intake across that rollover, labelled quota cutoff and actual owned-service cleanup. Native readings, native lengths, injected occupancy/clock/quota and saved science are distinct receipt fields. It never manufactures agreement/scientific completion or admits a run with invented quota. Synchronization bounds fail engineering tests; they are not research lifetimes.
+
+Trusted **final and combined stages must inherit the enabled L3 gate**, existing authorized bus/native file credentials, dependencies, Bubblewrap and cgroup v2. Allocate a fresh private output destination per invocation and preserve all failures. Keep M1–M5 and accepted L1/L2 native gates disabled. This Writer did not manage sessions, refs, permissions, publication, or the retained M5 candidate. Independent runtime review now has supplied approval; required trusted final/combined receipts remain pending pipeline work. This report cannot substitute for them. The Writer results and repair sections below retain their historical review status at the time of each attempt.
+
+## Next dependency
+
+L4 implements scientific opposition and COMPLETE/scientific STOP authority, using this separate quota-origin cleanup path. L5 owns explicit stopped-state resumption/reopening/recovery; L6 owns integrated lifecycle validation and M5 harness reconciliation. No full lifecycle or M5 acceptance is claimed. Protected scientific inputs, archived preliminary science, historical receipts and retained M5 branch/worktree remain unchanged.
+
+## Final Writer result
+
+Final current-source routine discovery, using the disabled-gate command above: **221 tests in 9.912 seconds, OK (seven opt-in gates skipped)**; log `runtime/tmp/l3-writer-final-4.txt`. This includes the new primary transport-gap/early-notification regression and retained L1/L2 engineering checks. `git diff --check` passed. A read-only diff confirmed no changes to PROJECT.md, engineering AGENTS.md, STATUS.md or the human lifecycle amendment. The native prerequisite failure receipt remains unchanged. No independent review or trusted native final/combined pass is asserted; those gates remain necessary for milestone acceptance.
+
+## Review repair — attempt 1
+
+Addressed all three supplied findings without changing the protected requirements or manager STATUS.md:
+
+- **P1, native dispatch admission:** `attach()` now prepares reconciled job metadata and the prompt before rechecking quota immediately before `thread/start`. The scheduled native-turn coroutine checks quota again before invoking `client.turn()`, so a ready quota notification can block it before `turn/start`. The driver writes each RPC before its first transport I/O suspension. Synchronized regressions latch cutoff while job inspection is suspended and queue a cutoff callback ahead of the scheduled inference coroutine; neither native operation is admitted, and owned cleanup completes.
+- **P2, edited indexes after failed publication:** the coordinator retains the last known generated index hashes rather than accepting current disk contents as the baseline during STOP. `refresh_indexes()` returns hashes of the indexes it actually wrote; ordinary publication and quota finalization update only those known versions. Index preservation therefore remains independent of draft publication success, without adopting unrelated edits or misclassifying normal regeneration. A regression combines a human-edited `work/FOLDER_CONTENT.md`, an invalid primary draft destination and quota cutoff. The exact human text survives in the existing preserved-version format with a navigation link; cleanup is confirmed and saving failure still prevents STOP_ACK.
+- **P2, late optional warning replies:** the client tracks the exact IDs of optional `turn/steer` requests, including canceled/timed-out requests until their reply arrives or the transport closes. A late success or error for one such expired request is discarded once without failing the RPC reader or claiming delivery. The warning remains pending. Unrelated IDs, duplicate replies and malformed responses retain ordinary protocol failure handling. A real local JSON-RPC fixture releases late success/error replies only after the warning timeout; subsequent correlated requests work, the primary turn and secondary stay active, the job/deadline remain unchanged, and no shutdown is scheduled. A separate negative check verifies that an unrelated response ID still fails the reader. These are local engineering fixtures, not native production/cgroup evidence.
+
+The four new consequential regressions reproduced the original findings before the fixes: `runtime/tmp/l3-review-1-reproduced.txt` records three failures and two errors (the delayed-reply test has two subcases). An intermediate focused run exposed a test assertion that omitted the existing preserved-version Markdown provenance prefix; that assertion was corrected to check the complete saved format, including the exact human text. The intermediate log is retained as `runtime/tmp/l3-review-1-focused.txt`.
+
+Repair verification used the existing dependency PYTHONPATH and `/home/francesco/miniconda3/bin/python -W error::ResourceWarning`:
+
+```sh
+# Focused protocol, lifecycle/publication and repair checks:
+-m unittest tests.test_v0_l3 tests.test_app_server tests.test_pending_documents tests.test_review_repairs -v
+# Routine discovery, with all M1–M5 and L1/L2/L3 native gates disabled:
+-m unittest discover -s tests -v
+```
+
+Focused verification: **68 tests in 4.446 seconds, OK**, log `runtime/tmp/l3-review-1-focused-2.txt`. Routine verification: **226 tests in 10.176 seconds, OK (seven opt-in gates skipped)**, log `runtime/tmp/l3-review-1-routine.txt`. Paths are under the same run directory identified above; the routine command uses exactly the disabled-gate environment documented earlier. Read-only diff checks passed and confirmed PROJECT.md, engineering AGENTS.md, STATUS.md and the human amendment remain unchanged. README and the test directory index describe the repaired behavior.
+
+The inherited `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` remain absent. No native gate was repeated against that unchanged prerequisite blocker; the original failed private receipt remains preserved. No new account quota reading, native science, production cleanup, successful independent re-review or trusted final/combined result is claimed. The supplied review has been repaired; pipeline re-review and the enabled native/trusted final/combined gates remain necessary for L3 acceptance.
+
+## Review repair — attempt 2
+
+Fixed the remaining P1 scheduling regression. The scheduled `dispatch_turn()` coroutine now calls `wait_quota_ready()` instead of directly rejecting an expected primary transport gap. This existing helper waits for replacement when needed and performs the cached quota check immediately before returning to native dispatch. A latched quota STOP still rejects inference; normal primary rollover leaves unrelated secondary work active.
+
+The new synchronized regression runs the actual secondary `run_task()` loop with explicit backend/service/job doubles. It queues primary closure ahead of the scheduled secondary dispatch, after the outer admission wait has already succeeded. It then holds successor quota preflight open and verifies that the secondary has not dispatched, failed, closed or canceled its job. After successful successor preflight, intake completes and the same secondary context continues ordinary work; the job record, ownership, launch count and original deadline remain unchanged, with zero cancellation calls before explicit fixture cleanup. No global clock advancement or scientific lifetime was added.
+
+Before the fix, this test reproduced the reported `JobError: Primary quota transport replacement in progress; research admission refused`, secondary failure and cleared attachment. That failed run is preserved as `runtime/tmp/l3-review-2-reproduced.txt` under the existing run directory.
+
+Verification used the existing dependency PYTHONPATH and trusted Python command documented above:
+
+- `-W error::ResourceWarning -m unittest tests.test_v0_l3 tests.test_v0_l2 -v`: **59 tests in 4.867 seconds, OK**, log `runtime/tmp/l3-review-2-focused.txt`.
+- The documented full routine command, with all M1–M5 and L1/L2/L3 native gates disabled: **227 tests in 10.222 seconds, OK (seven gates skipped)**, log `runtime/tmp/l3-review-2-routine.txt`. This retains the previous cutoff-at-dispatch, index-preservation and late-warning-response regressions.
+- Read-only diff checks passed; PROJECT.md, engineering AGENTS.md, STATUS.md and the human lifecycle amendment remain unchanged.
+
+The inherited `XDG_RUNTIME_DIR` and `DBUS_SESSION_BUS_ADDRESS` were rechecked and remain absent. The original failed native receipt is unchanged; no production demonstration was repeated against the same prerequisite blocker. No new native quota reading, native cleanup or trusted final/combined pass is claimed. Re-review and successful enabled native/trusted final/combined checks remain required for L3 acceptance.
+
+## Milestone 002 — documentation alignment and validation handoff
+
+The supplied milestone plan records independent approval of the final scheduling repair; the pending re-review statements above describe earlier attempts. README now consistently specifies schema 6, fresh operational state and rejection of older state without migration. The opening summary and request index distinguish that supplied approval from the outstanding native demonstration and trusted final/combined checks. No source or test changes were required.
+
+Independently executed Writer verification on the reviewed runtime at local revision `b36347451d1a5e8567fb505605e422bc6864a775`, with only these documentation changes:
+
+- The full disabled-gate routine command documented above, reusing the existing dependencies and `/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v`: **227 tests in 10.196 seconds, OK (seven gates skipped)**, exit 0. Preserved log: `coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/l3-m002-routine-5sqpsuj5.txt`.
+- Read-only diff/whitespace review passed. All 16 relative Markdown links in the three changed documents resolve. Only README, this report and `development/requests/FOLDER_CONTENT.md` changed; STATUS.md, human-owned requirements, protected inputs and historical receipts remain unchanged.
+
+This Writer environment still has neither inherited `XDG_RUNTIME_DIR` nor `DBUS_SESSION_BUS_ADDRESS`. Per the milestone plan, the unchanged missing-bus native attempt was not repeated. Its original `runtime/tmp/l3-native-writer-001/receipt.json` remains preserved with `outcome=failed`, empty scenarios/commands and the exact prerequisite error quoted above. No bus address, authentication change or isolation fallback was introduced.
+
+**Trusted final and combined validation remain unexecuted by this role and pending.** Each stage must use the enabled-gate discovery command above with a fresh private output directory and the existing authorized host environment. There are no new real quota readings, native context/computation observations or production cleanup receipts to assess in this update; routine fixture successes cannot supply them. Actual final/combined commands, tested revisions, receipts, telemetry, saving/cleanup/finalization outcomes and any failures must be recorded after those stages execute. No L3 completion or integration is claimed. L4 remains the next implementation dependency after L3 acceptance.
+
+## Milestone 002 recovery — progression to trusted verification
+
+Read the preserved plan, recovery response, review findings, milestone diff and baseline before editing. The recovery response identifies milestone-001 runtime review approval at `b36347451d1a5e8567fb505605e422bc6864a775`; milestone-002 review found no actionable documentation defect. It resolves the sequencing block by authorizing review completion and progression to standard trusted final/automatic combined verification. Those later receipts are required for L3 acceptance, rather than a prerequisite for finishing this restricted Writer's documentation work. No runtime or test change was justified.
+
+The recovery response reports authorized launch-host readiness in `host-verification-recovery.json`: an existing responding user bus, native file authentication and cgroup v2. These are supplied readiness observations, not product results independently established here. It also reports that the controller inherits the enabled L3 gate and original private output destination. A read-only check confirms this Writer still lacks both bus variables and the L3 gate/output variables. The unchanged failed Writer native attempt was not repeated, and its receipt remains historical failure evidence.
+
+The existing trusted stages must run discovery with `RESEARCH_PIPELINE_V0_L3_NATIVE=1` and inherited `RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR`, preserving a distinct private receipt for each invocation through the existing output reservation. Keep M1–M5 live and L1/L2 native gates disabled. The required command, under that trusted inherited environment, is:
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest discover -s tests -v
+```
+
+No bus/authentication substitution or additional harness is needed. Actual sufficient weekly admission must precede all injected observations; missing or insufficient real quota must fail admission. After both stages execute, record their actual commands, revisions, distinct receipts, real bucket/window readings, labelled injections, owned cleanup and saving/finalization outcomes here. Host readiness and routine successes cannot replace those receipts.
+
+Recovery Writer verification reused the full disabled-gate command recorded above: **227 tests in 10.241 seconds, OK (seven opt-in gates skipped)**, exit 0. Preserved log: `coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/l3-m002-recovery-routine-4r56j3mx.txt`; adjacent `.txt.json` records the command, exit status and protected-file hashes before verification. This tests the preserved reviewed runtime with documentation-only recovery edits. Trusted native final/combined execution and integration remain pending; L4 follows L3 acceptance.
+
+Documentation diff/whitespace review passed; all 16 relative Markdown links resolve. Hash checks confirm PROJECT.md, AGENTS.md, STATUS.md and the human lifecycle amendment are unchanged. Only README, this report and the request index were edited; no historical receipt or protected scientific input was modified.
+
+## Milestone 003 integration repair — warning-fixture synchronization
+
+Read the supplied integration plan, empty diff, baseline, earlier decisions and full `tests/final-002.txt.commands/0001.txt`. The artifact reader returned the summary but refused its sibling command log; the full log and relevant refused earlier decisions were read from the supplied local artifact directory. Final discovery ran **227 tests in 523.549 seconds, one failure, six gates skipped**. The sole failure was the opponent scenario's empty `successor_intake_warnings` at primary successor intake.
+
+Inspected the preserved failed host receipt at `coding_pipeline/logs/manager/v0-l3-quota-staleness-20261113T002524Z-1c26dbfa/native-host/receipt.json` and its opponent runtime record. Both actual preflights reported the `codex` bucket's **primary 10080-minute window, usedPercent 15 / remaining 85%, resetsAt 1795005441**, with ordinary usage allowed. These are supplied host observations, not new Writer readings. The researcher scenario passed its injected warning/55% rollover/15%-remaining cutoff and recorded confirmed cleanup. The opponent's first warning was subsequently superseded by a real measured length change; its synchronous successor hook produced no new warning while the secondary continued native turns. The overall host receipt remains **failed**. Both scenarios recorded confirmed final owned cleanup, but the opponent failed before cutoff and therefore supplies no opponent-scenario quota STOP evidence.
+
+The fixture had assumed that a concurrently active secondary would have reliable measured telemetry at the exact instant of successor prompt construction. Runtime warning emission correctly requires that telemetry, and real activity correctly supersedes earlier warnings. Preserve those policies. The test-only `secondary_turn_barrier` holds the next secondary dispatch once useful `BEFORE.md` exists and its latest turn has reliable measured context length. The existing synchronization bound waits for this condition. The native context remains attached and owned; the already running computation and its original deadline continue. The fixture holds dispatch through primary rollover, successor intake and native continuation, then releases it. The receipt explicitly labels this engineering synchronization. No native context measurement is injected or frozen in the runtime, no clock is reset, and no scientific lifetime is introduced. The original labelled clock/occupancy/quota injections and actual sufficient quota preflight remain unchanged. Failure unwinds the barrier before common owned cleanup.
+
+Two local regressions exercise the same barrier with explicit backend doubles: reliable warning intake across actual coordinator primary closure/successor document construction, unaffected primary dispatch, native activity superseding the notice after release, passage of missing-telemetry recovery, and release/restoration on fixture failure. These are engineering checks, not native production evidence. Production source files are unchanged. README and affected directory indexes describe the synchronization and pending trusted reruns. STATUS.md, PROJECT.md, engineering AGENTS.md, the human amendment, protected inputs and historical receipts were not edited.
+
+Verification reused the established dependency path and Python, without installation. Logs below are under `coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/`:
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+RESEARCH_PIPELINE_V0_L3_NATIVE=0 \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning \
+-m unittest tests.test_v0_l3 tests.test_staleness tests.test_v0_l3_native -v
+```
+
+**33 tests in 1.452 seconds, OK (one native gate skipped)**, exit 0; `l3-integration-1-focused.txt`. Full discovery used the disabled-gate environment already documented above with `-W error::ResourceWarning -m unittest discover -s tests -v`: **229 tests in 10.261 seconds, OK (seven gates skipped)**, exit 0; `l3-integration-1-routine.txt`.
+
+The changed production fixture was also invoked explicitly:
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+RESEARCH_PIPELINE_V0_L3_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR=/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261113T002546_9500464b/runtime/tmp/l3-integration-1-native \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning \
+-m unittest tests.test_v0_l3_native.NativeL3Tests -v
+```
+
+**One test, prerequisite error, exit 1**; `l3-integration-1-native.txt` and private `l3-integration-1-native/receipt.json`. Both inherited bus variables remain absent. The preserved receipt says `RuntimeUnavailable: systemd user bus unavailable: XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS must already be set in the authorized host environment`, with empty scenarios/commands. No research admission, account read or owned service launch occurred, so there is no new native cleanup claim. No bus/authentication workaround was used.
+
+The repair is ready for independent review and the existing trusted final/combined stages with the enabled L3 gate and a fresh private output directory for each invocation. A successful repaired native demonstration remains unverified here because of the stated host prerequisite; routine passes do not replace it. No new implementation/integration ref is assigned by this Writer. L4 scientific opposition and terminal decisions remain the next dependency after L3 acceptance.
+
+Read-only diff/whitespace checks passed. All 38 relative Markdown links in the four edited documents resolve (native `document:` examples are not filesystem links). Exactly the two test files and four documentation/index files changed; production source, protected requirements and manager STATUS.md have no tracked changes.
+
+## Milestone 003 integration repair — primary intake completion bound
+
+Read the complete `tests/pre-merge-004.txt.commands/0001.txt` through artifact byte pages, its summary, the supplied recovery response, empty integration diff and baseline/final summaries. Combined discovery failed **one of 229 tests in 503.804 seconds, six gates skipped**. The earlier final-003 summary passed (500.608 seconds); its passing native receipt `native-host-m67knjxv/receipt.json` cannot waive the combined failure.
+
+Inspected the preserved combined receipt `coding_pipeline/logs/manager/v0-l3-quota-staleness-20261113T002524Z-1c26dbfa/native-host-y2w78_3b/receipt.json`, its opponent runtime, native tool evidence and retained draft. Both real preflights reported the `codex` bucket's **primary 10080-minute window, usedPercent 16 / remaining 84%, resetsAt 1795005441**, ordinary usage allowed. Both successor-intake warning records were nonempty: the previous synchronization repair worked. The researcher passed cutoff/finalization; the opponent failed before its injected cutoff. Both scenarios recorded confirmed context and computation cleanup, including cancelled jobs. This is supplied host evidence, not a new Writer account reading or production cleanup demonstration.
+
+The opponent primary successor `1306e846140c4444a047da02b0608ef9` had **seven native inference starts, six measured reports, three completed immutable document reads and an inspection of the still-running original job**. Its native trace's first inference was at epoch `1794536340.946`; its retained handoff was written at `1794536409.551`; its closing job handoff was recorded at `1794536430.682`. The successor had no completed-turn outcome. The saved handoff still listed saving `work/AFTER.md` and ending intake as the next action. The caller was `measured_intake()`, whose nonresponsive turn completion used `asyncio.wait_for(..., 90)`. Expiry propagated a bare `TimeoutError`, producing the empty primary failure message. This identifies the operational completion boundary; the retained data does not establish the duration or cause of any individual provider delay. Quota was still available at 84%; this was neither a quota cutoff nor a lost warning.
+
+The repair keeps intake focused on supplied handoff/input reconciliation and owned-job inspection, defers scientific next actions to ordinary work, and avoids rewriting preserved science solely to acknowledge intake. Intake/recovery now allows **180 operational seconds** for its multi-inference sequence; checkpoint remains 90 seconds and interruption completion remains 15 seconds. Normal scientific turns remain untimed. Completion, readiness-before-interruption and interruption-completion expiry now save the exact waiting phase, bound, total turn elapsed time and active native turn ID in `operational_timeout`, and raise a contextual operational error. The existing failure/owned-cleanup path still runs. This allows more provider latency but cannot guarantee that every native intake finishes; exceeding the new bound must still fail honestly.
+
+The native fixture allows **360 seconds** for successor intake followed by the ordinary `AFTER.md` artifact. This composes two sequential operations instead of racing the intake's own 180-second bound. Its warning, immutable continuation, job identity/deadline, quota admission/cutoff and confirmed cleanup assertions remain. Receipts now also retain task state/errors; context timeout diagnostics are retained automatically. No model/configuration, account setting, quota policy, staleness interval or scientific lifetime changed.
+
+Three regressions use a real local JSON-RPC subprocess with explicit fixture completion and scaled operational waits, without changing the event-loop clock, quota ages or computation deadlines. They establish that a measured intake can finish beyond the former bound, a stalled intake still fails with useful diagnostics and reaps the subprocess while preserving partial Markdown, and quota cutoff interrupts intake promptly without awaiting its completion bound. Service/cgroup ownership remains an explicit double in these tests; they are not native isolation evidence. Before the repair, the first two tests reproduced the premature completion timeout and empty error; the cutoff test already passed. Preserved reproduction: `runtime/tmp/l3-integration-2-reproduced.txt` (**three tests, one error and one failure**).
+
+Verification used `/home/francesco/miniconda3/bin/python`, retained MCP dependencies and no installation:
+
+```sh
+PYTHONPATH=src:/home/francesco/Desktop/gits/research_project/research_pipeline/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies \
+/home/francesco/miniconda3/bin/python -W error::ResourceWarning -m unittest \
+tests.test_v0_l3 tests.test_v0_l2 tests.test_app_server tests.test_staleness tests.test_v0_l3_native -v
+```
+
+**79 tests in 6.009 seconds, OK (one absent native opt-in skipped)**; log `runtime/tmp/l3-integration-2-focused.txt`. Full discovery used the same PYTHONPATH/Python with `-W error::ResourceWarning -m unittest discover -s tests -v` and explicit `RESEARCH_PIPELINE_M1_LIVE=0`, `M2_LIVE=0`, `M3_LIVE=0`, `M4_LIVE=0`, `M5_LIVE=0`, `V0_L1_NATIVE=0`, `V0_L2_NATIVE=0`, `V0_L3_NATIVE=0` (each with the `RESEARCH_PIPELINE_` prefix): **232 tests in 10.586 seconds, OK (seven gates skipped)**; log `runtime/tmp/l3-integration-2-routine.txt`. These paths are under run `coding_pipeline/logs/20261113T002546_9500464b/`.
+
+This Writer still lacks inherited `XDG_RUNTIME_DIR`, `DBUS_SESSION_BUS_ADDRESS` and the L3 native gate/output variables. Per the recovery instruction, no unchanged missing-bus native attempt was repeated and no bus/authentication fallback was introduced. All failed receipts remain unchanged. **The repaired native path, independent review and fresh enabled trusted final/combined checks remain pending.** Routine passes do not establish L3 acceptance. No integration ref is assigned here; L4 opposition/terminal decisions remain the next dependency after L3 acceptance.
+
+README and affected indexes describe this repair. Read-only whitespace/diff checks confirm that PROJECT.md, engineering AGENTS.md, STATUS.md and the complete human amendment are unchanged; protected science and historical receipts were not edited.

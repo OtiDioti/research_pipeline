@@ -1,4 +1,4 @@
-# Research pipeline — V0-L2
+# Research pipeline — V0-L3
 
 A Linux/Python research runtime with ordinary scientific files, a research-owned
 Codex app-server driver, and computations that outlive individual model contexts.
@@ -14,7 +14,18 @@ telemetry and scientific inference. See [STATUS.md](STATUS.md) for refs, receipt
 and remaining gates, and the [L1](development/requests/v0-l1-durable-runtime.md) and
 [L2](development/requests/v0-l2-measured-rollover.md) implementation reports.
 
-L3–L6 remain required before another private M5 attempt. Historical M1–M4 receipts
+L3 implements centralized weekly reserve and secondary inactivity warnings.
+The supplied pipeline review approves the earlier runtime and scheduling repairs.
+The recovery response authorizes progression to the existing trusted validation stages.
+The first trusted final run exposed a warning-fixture synchronization failure;
+the repaired fixture holds secondary dispatch between measured turns during the
+rollover check. Final-003 passed, but combined verification hit the primary
+successor's 90-second intake completion bound. The current repair focuses intake,
+allows 180 seconds for it, and records explicit timeout diagnostics.
+Independent review and fresh successful trusted final/combined checks remain required;
+see the [L3 report](development/requests/v0-l3-quota-staleness.md) for actual results
+and the preserved Writer prerequisite failure. L3–L6 acceptance remains required
+before another private M5 attempt. Historical M1–M4 receipts
 retain their original meaning. M5 remains inactive, unmerged and scientifically
 unaccepted; human scientific acceptance is mandatory.
 
@@ -38,7 +49,7 @@ PYTHONPATH=src python -m research_pipeline pause /path/to/project
 
 `start --preserve-existing` explicitly adopts existing ordinary science while
 preserving human Markdown edits. Existing or orphaned runtime state is refused.
-Schema 5 is the only operational state supported; no migration is provided.
+Schema 6 is the only operational state supported; older state is rejected without migration.
 `resume` explicitly reports that stopped-state recovery/reopening requires V0-L5.
 Do not delete old runtime state to bypass ownership reconciliation.
 
@@ -115,7 +126,7 @@ latest measurement, maximum observed occupancy, provenance and native cumulative
 counters. The fixed runtime threshold is unavailable to model tools. Observation
 can lag and checkpointing consumes tokens: this is a measured trigger, not a hard
 no-overshoot promise. Cumulative token spending and account quota are separate.
-`inspect` reports each explicitly; spending/quota caps remain unavailable until L3.
+`inspect` reports each explicitly; no monetary spending cap is claimed.
 
 Before substantial execution, a restricted intake turn must acquire reliable
 telemetry. Missing/invalid observations block new computations and assignments;
@@ -130,12 +141,16 @@ bounded recovery succeeds; ordinary turns cannot bypass it. These
 request counts check measurement freshness; occupancy still comes solely from the
 native length/window fields. Completed turns also require per-inference reports.
 An unchanged valid sample
-during a long job wait has no wall-clock expiry. Intake/recovery and checkpoint
-turns have 90-second operational bounds; interruption completion has a 15-second
-bound. Failure preserves partial science, records operational failure and cleans
-owned work. These bounds never establish scientific completion or investigation
-work allowances. One handoff repair is permitted; successor failure is not retried
-indefinitely. Scientific COMPLETE/STOP and weekly reserve remain later increments.
+during a long job wait has no wall-clock expiry. Focused intake/recovery has a
+180-second operational completion bound, allowing immutable document reads and
+owned-job reconciliation across several native inferences. Scientific next actions
+follow in ordinary work turns. Checkpoint turns retain a 90-second operational
+bound; interruption completion has a 15-second bound. Failure preserves partial
+science, records operational failure and cleans owned work. Timeout diagnostics
+identify the waiting phase, bound, context, native turn and elapsed turn time.
+These bounds never establish scientific completion or investigation work allowances.
+One handoff repair is permitted; successor failure is not retried
+indefinitely. Scientific COMPLETE/STOP remain later increments.
 
 `pause` latches the admission block and interrupts all owned contexts and jobs,
 then publishes available drafts and reports actual cleanup. Current context drafts
@@ -146,6 +161,70 @@ its attachment and releases its private resources; the admission block stays lat
 An unsuccessful acknowledgement retains the request and failure evidence.
 The runtime can clean recorded services after a foreground exit; it does not resume research
 from stopped state or promise controller-crash continuation.
+
+## Shared weekly reserve and secondary inactivity
+
+Schema 6 requires fresh operational state; older runtimes are rejected without
+migration. Historical science and receipts remain usable as evidence.
+`--preserve-existing` cannot bypass STOP/STOP_ACK or COMPLETE/COMPLETE_ACK.
+`resume` remains unsupported until L5.
+
+Only the logical primary's owned app-server transport reads account quota.
+Before the first research thread, at primary replacement, before primary turns,
+and every 30 seconds during operation, it calls `account/rateLimits/read`.
+Only that transport's `account/rateLimits/updated` notifications affect policy.
+Secondaries use the cached shared allowance; they receive no fresh quota grants.
+
+The weekly window is identified by `windowDurationMins == 10080` in either native
+window position. The lowest remaining percentage across returned weekly buckets
+governs. At observed remaining **15% or less**, the runtime synchronously latches
+investigation-wide quota STOP and blocks new contexts, assignments, inference turns
+and computations, including commands whose services are still being admitted.
+It interrupts all owned contexts and computations through common cleanup, without
+starting a checkpoint inference or invoking/awaiting scientific opponent review.
+Existing drafts, job records and partial output provide best-effort handoffs.
+Later positive quota or a reset timestamp cannot undo STOP.
+
+Full reads replace bucket snapshots. Sparse updates preserve omitted weekly
+observations and their original ages; unrelated metadata does not renew them.
+All returned buckets must supply reliable weekly telemetry for full-read admission.
+Missing/invalid required data or failed reads refuse research as an operational
+quota-telemetry failure, distinct from an observed cutoff. Weekly values expire
+after 60 seconds without a relevant measurement (one missed poll) or when their
+reported reset passes; only a fresh supported read can establish allowance.
+Replacement blocks admissions while the primary transport is unavailable and
+requires a new successful read before reopening them. Secondary turns and attachments
+wait through that bounded transport gap while existing contexts/jobs stay active;
+a failed primary control path instead triggers operational cleanup.
+
+`STOP` records quota origin, the immutable first cutoff, known artifacts,
+unfinished jobs, actual cleanup and preservation limitations. `STOP_ACK` contains
+matching bytes only after confirmed cleanup and successful finalization.
+Human status edits remain intact; the separate operational handoff retains the
+stopping explanation. Human index additions are preserved even when invalid
+scientific drafts prevent publication. Uncertain cleanup retains ownership reservations. Saving
+failure never disables process cleanup and prevents a success acknowledgement.
+Observed quota and any saving/cleanup overshoot remain explicit; exactly 15%
+remaining after shutdown is not promised.
+
+Every attached secondary researcher, verifier or opponent starts an independent
+monotonic inactivity clock. Only a change in raw measured `last.totalTokens`, in
+either direction, resets it. The first sample establishes a baseline without
+postponing attachment time. Unchanged samples, cumulative usage, rounded occupancy,
+turn changes and warning emission do not reset it. Missing context telemetry follows
+the separate operational recovery policy. A fresh successor starts a fresh clock.
+
+Warnings occur at 2700, 5400, 8100… uninterrupted seconds by default. The human can
+set a positive integer `--secondary-staleness-seconds` on launch; model tools cannot
+relax it. Warnings identify the logical agent, context and actual elapsed staleness.
+Pending observations appear in primary `control(check/tasks)` and fresh intake,
+and use noninterrupting `turn/steer` for active primary turns when possible.
+Delivery races and timeouts leave notices pending. Late replies to expired
+optional steering requests are discarded without failing the active context;
+unrelated response IDs remain protocol errors. Accepted steering is not scientific
+acknowledgement. Measured activity or context replacement supersedes old notices.
+The primary chooses the response. Warnings alone never stop or replace agents/jobs,
+alter deadlines or assert scientific failure. Primary inactivity has no watchdog.
 
 ## Scientific files, references and independent checks
 
@@ -264,8 +343,9 @@ quiescent. Current input is re-read for fresh contexts. Human input never author
 broader grants. Scientific commands cannot access native credentials, control
 sockets, admission storage, systemd's bus or protected/frozen write routes.
 Networking remains available without destination filtering; the 64 MiB file limit
-is not an aggregate disk quota. Native context measurements trigger rollover; no
-spending cap or weekly quota reserve is claimed.
+is not an aggregate disk quota. Native context measurements trigger rollover;
+the weekly reserve protects shared account allowance, independently of cumulative
+token accounting. No monetary spending cap is claimed.
 
 ## Verification
 
@@ -278,8 +358,8 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 When the declared MCP dependency is supplied externally, append its existing
 installation to `PYTHONPATH`; do not replace it to conceal an environment issue.
 The old timed M1–M4 live harnesses reject enabled use; their evidence parsers remain
-covered. Keep M1–M5 and the accepted L1 native gate disabled for routine checks.
-The L2 native gate must inherit the authorized host bus and native file credentials:
+covered. Keep M1–M5 and accepted L1/L2 native gates disabled for routine checks.
+The accepted L2 gate uses the authorized host bus and native file credentials:
 
 ```sh
 RESEARCH_PIPELINE_V0_L2_NATIVE=1 \
@@ -295,9 +375,34 @@ native measurements and spending remain separate. It checks preserved identities
 original 7200-second job deadline, actual service coexistence, successor inspection,
 output collection, model-written science and explicit pause/cleanup. It does not
 prescribe scientific conclusions or certify science from structural assertions.
-Enabled missing prerequisites fail visibly with retained receipts. This Writer's
-missing authorized bus prevents native evidence; trusted final/combined must supply
-it before L2 acceptance. See the L2 report for exact invocation and failure receipt.
+Enabled missing prerequisites fail visibly with retained receipts. Accepted L2
+production evidence is historical; see its report for exact receipts and refs.
+
+The L3 production gate must be inherited by trusted final/combined stages:
+
+```sh
+RESEARCH_PIPELINE_V0_L3_NATIVE=1 \
+RESEARCH_PIPELINE_V0_L3_OUTPUT_DIR=/fresh/private/l3-validation \
+PYTHONPATH=src:/existing/mcp/dependencies python -W error::ResourceWarning -m unittest discover -s tests -v
+```
+
+Reserve a fresh private output destination per invocation, retaining failed receipts.
+Sequential researcher/opponent public fixtures require actual sufficient weekly
+preflight, owned native contexts and controlled numerical jobs. Labelled clock,
+55% rollover and 15% cutoff observations exercise boundaries without exhausting
+an account. The gate checks primary replacement, warning intake, stable job
+identity/deadline and real context/job cleanup. Missing prerequisites fail visibly.
+For the warning check, the fixture holds the secondary between measured native
+turns through primary successor intake and continuation, then releases dispatch.
+The secondary context stays owned and the computation continues; the receipt
+labels this synchronization separately from clock injections and native telemetry.
+The continuation fixture allows 360 seconds for the bounded intake followed by
+the ordinary scientific artifact; expiry fails the test. This fixture bound
+does not limit ordinary scientific turns. Receipts retain task errors and
+context timeout diagnostics as well as cleanup observations.
+The Writer cannot supply its absent authorized user bus; that failed receipt is
+not native production evidence. The intake repair awaits independent review; successful
+trusted final/combined runs remain required for L3 acceptance and integration is pending.
 
 The first invocation creates the requested output directory with mode `0700`.
 If that directory already exists, each invocation reserves a fresh private sibling

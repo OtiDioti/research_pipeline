@@ -17,6 +17,7 @@ class ProtocolTests(unittest.IsolatedAsyncioTestCase):
         script = r'''
 import json, sys
 behavior = sys.argv[1]
+delayed_steer = None
 for line in sys.stdin:
     request = json.loads(line)
     if 'id' not in request: continue
@@ -25,6 +26,31 @@ for line in sys.stdin:
         result = {'userAgent': 'protocol-double'}
     elif method == 'thread/start':
         result = {'thread': {'id': 'native-thread-double'}}
+    elif method == 'account/rateLimits/read':
+        result = {'rateLimits': {'limitId': 'protocol-double', 'secondary': {'windowDurationMins': 10080, 'usedPercent': 20}}}
+    elif method == 'turn/steer':
+        if behavior == 'delayed-steer':
+            delayed_steer = request['id']
+            continue
+        if request['params']['expectedTurnId'] != 'turn-double':
+            print(json.dumps({'id':request['id'],'error':{'code':-1,'message':'active turn mismatch'}}),flush=True)
+            continue
+        result = {'turnId': 'turn-double'}
+    elif method == 'fixture/release-steer':
+        response = {'id': delayed_steer}
+        if request['params'].get('error'):
+            response['error'] = {'code': -1, 'message': 'late active turn mismatch'}
+        else:
+            response['result'] = {'turnId': 'turn-double'}
+        print(json.dumps(response), flush=True)
+        delayed_steer = None
+        result = {}
+    elif method == 'fixture/unknown-response':
+        print(json.dumps({'id': 0, 'result': {}}), flush=True)
+        result = {}
+    elif method == 'fixture/complete-turn':
+        print(json.dumps({'method':'turn/completed','params':{'threadId':'native-thread-double','turn':{'id':'turn-double','status':'completed'}}}),flush=True)
+        result = {}
     elif method == 'turn/start':
         if behavior == 'eof': sys.exit(0)
         if behavior == 'malformed':
@@ -36,7 +62,7 @@ for line in sys.stdin:
         if behavior == 'rpc-error':
             print(json.dumps({'id': request['id'], 'error': {'code': -1, 'message': 'unsupported'}}), flush=True); continue
         print(json.dumps({'method': 'thread/tokenUsage/updated', 'params': {'threadId': 'native-thread-double', 'turnId': 'turn-double', 'tokenUsage': {'last': {'totalTokens': 123}, 'total': {'totalTokens': 999}, 'modelContextWindow': 10000}}}), flush=True)
-        if behavior == 'waiting':
+        if behavior in ('waiting', 'delayed-steer'):
             print(json.dumps({'id':request['id'],'result':{'turn':{'id':'turn-double'}}}),flush=True)
             continue
         # Exercise completion arriving before the turn/start response.
@@ -91,6 +117,20 @@ for line in sys.stdin:
             await asyncio.wait_for(pending, 2)
         self.assertFalse(client.turns)
 
+    async def test_weekly_account_read_and_noninterrupting_expected_turn_steer(self):
+        client = await self.fixture('waiting')
+        result = await client.read_quota()
+        self.assertEqual(result['rateLimits']['secondary']['windowDurationMins'], 10080)
+        pending = asyncio.create_task(client.turn('Wait for a warning'))
+        await asyncio.wait_for(client.turn_ready.wait(), 2)
+        self.assertEqual(await client.steer('turn-double', 'Secondary stale for 2700 seconds'), {'turnId':'turn-double'})
+        self.assertFalse(pending.done())
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable, 'active turn mismatch'):
+            await client.steer('replaced-turn', 'Pending warning')
+        self.assertFalse(pending.done())
+        await client.interrupt('turn-double')
+        self.assertEqual((await pending)['status'], 'interrupted')
+
     async def test_eof_rpc_errors_malformed_messages_and_requests_fail_observably(self):
         for behavior in ('eof', 'rpc-error', 'malformed', 'unexpected', 'compacted'):
             with self.subTest(behavior=behavior):
@@ -98,6 +138,16 @@ for line in sys.stdin:
                 with self.assertRaises(isolation.RuntimeUnavailable):
                     await asyncio.wait_for(client.turn('Fixture'), 2)
                 await client.close()
+
+    async def test_optional_timeout_does_not_allow_unrelated_response_ids(self):
+        client = await self.fixture('delayed-steer')
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable,'Operational RPC timeout'):
+            await client.request('turn/steer',{'threadId':client.thread_id,
+                'expectedTurnId':'turn-double','input':[{'type':'text','text':'Warning only'}]},timeout=.01)
+        await client.request('fixture/release-steer',{})
+        self.assertIsNone(client.failure)
+        with self.assertRaisesRegex(isolation.RuntimeUnavailable,'Uncorrelated app-server response'):
+            await client.request('fixture/unknown-response',{})
 
     async def test_failed_and_interrupted_completion_notifications_retain_the_native_outcome(self):
         for status in ('failed', 'interrupted'):

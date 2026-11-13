@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, patch
 
 from tests import use_checkout
 use_checkout()
+from tests.quota_fixture import sufficient
 from tests.test_context_usage import params
 from tests.test_review_repairs import context_fixture, make_project
 from research_pipeline import codex, collaboration, context_usage, isolation, jobs, workspace
@@ -38,6 +39,7 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.runtime=collaboration.Coordinator.initialize(make_project(Path(self.tmp.name)),isolation.Config())
+        sufficient(self.runtime)
         self.launched=[]
         self.progress=asyncio.Event()
         self.recovered=asyncio.Event()
@@ -520,7 +522,9 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
         unsafe=second['drafts']/'starting_evidence/forbidden.md'
         unsafe.parent.mkdir()
         unsafe.write_text('invalid scoped destination')
-        self.assertTrue(await self.runtime.block_and_cleanup('Engineering pause'))
+        self.assertFalse(await self.runtime.block_and_cleanup('Engineering pause'))
+        self.assertTrue(self.runtime.state['cleanup_ok'])
+        self.assertFalse(self.runtime.state['finalization_ok'])
         self.assertEqual((self.runtime.project/'work/NOTE.md').read_text(),'# Useful predecessor science')
         self.assertIn('publication_error',second['record'])
         self.assertEqual(first['record']['publication_conflicts'],[])
@@ -620,6 +624,7 @@ class InferenceGapTests(unittest.IsolatedAsyncioTestCase):
         self.tmp=tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         self.runtime=collaboration.Coordinator.initialize(make_project(Path(self.tmp.name)),isolation.Config())
+        sufficient(self.runtime)
         self.ctx=context_fixture(self.runtime)
         self.ctx['auth']=self.runtime.project/'.research_pipeline/trace-home'
         self.ctx['auth'].mkdir()

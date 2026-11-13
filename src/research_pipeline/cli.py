@@ -1,4 +1,4 @@
-"""V0-L2 foreground runtime and ordinary-file controls."""
+"""V0-L3 foreground runtime and ordinary-file controls."""
 import argparse
 import asyncio
 import json
@@ -41,7 +41,7 @@ async def run(project, config, preserve_existing=False):
             while True:
                 if runtime.state['admission_block']:
                     break
-                for observer in (runtime.monitor_task, runtime.job_monitor):
+                for observer in (runtime.monitor_task, runtime.job_monitor, runtime.quota_monitor_task):
                     if observer and observer.done() and not observer.cancelled() and observer.exception():
                         raise observer.exception()
                 pending = [t for t in runtime.turns.values() if not t.done()]
@@ -50,6 +50,8 @@ async def run(project, config, preserve_existing=False):
                     break
                 await asyncio.sleep(.1)
             # Observe errors from task wrappers; no unhandled background exceptions.
+            if runtime.shutdown_task:
+                await runtime.shutdown_task
             await asyncio.gather(*runtime.turns.values())
             runtime.state['cleanup_ok'] = jobs.science_quiescent(runtime.state)
             failed_contexts = any(t.get('context_error') for t in runtime.state['tasks'].values())
@@ -62,10 +64,22 @@ async def run(project, config, preserve_existing=False):
             if not runtime.state['cleanup_ok']:
                 runtime.state.update(state='cleanup_unconfirmed', reason='Owned context/job cleanup is unconfirmed.')
             runtime.save()
-            return 0 if not failed_contexts and runtime.state['cleanup_ok'] else 1
+            if runtime.state.get('stop_origin') == 'quota':
+                print(f"quota STOP: {runtime.state['admission_block']}; "
+                      f"cleanup confirmed={runtime.state['cleanup_ok']}; "
+                      f"finalization confirmed={runtime.state.get('finalization_ok', False)}; "
+                      'saving/cleanup may consume further quota')
+            elif runtime.state.get('cleanup_outcome') == 'quota_unavailable':
+                print('weekly quota telemetry unavailable; research admission refused; no observed cutoff')
+            return 0 if (not failed_contexts and runtime.state['cleanup_ok']
+                         and runtime.state.get('finalization_ok', True)
+                         and runtime.state.get('cleanup_outcome') != 'quota_unavailable') else 1
         except BaseException as exc:
             runtime.state['runtime_error'] = f'{type(exc).__name__}: {exc}'
-            await runtime.block_and_cleanup('Runtime interrupted or failed')
+            if runtime.shutdown_task:
+                await runtime.shutdown_task
+            else:
+                await runtime.block_and_cleanup('Runtime interrupted or failed')
             if isinstance(exc, asyncio.CancelledError):
                 raise
             if isinstance(exc, KeyboardInterrupt):
@@ -91,8 +105,8 @@ async def pause_async(project):
     while time.monotonic() < until:
         state = collaboration.load_state(project)
         if state.get('admission_block') and state.get('cleanup_ok') is True:
-            print('paused: all owned contexts/jobs confirmed stopped; partial artifacts retained')
-            return 0
+            print(f"{state['state']}: all owned contexts/jobs confirmed stopped; partial artifacts retained")
+            return 0 if state.get('finalization_ok', True) else 1
         # An idle/crashed foreground must not be replaced before ownership cleanup.
         try:
             with workspace.acquire_project_lock(project):
@@ -109,12 +123,13 @@ async def pause_async(project):
                     record['cleanup'] = outcome
                     record['state'] = ('closed' if 'context_id' in record else 'cancelled') if outcome['confirmed'] else 'cleanup_unconfirmed'
                 confirmed = all(o['confirmed'] for o in outcomes.values())
-                state.update(state='paused' if confirmed else 'cleanup_unconfirmed', cleanup_ok=confirmed, cleanup=outcomes)
+                stopped = 'quota_stopped' if state.get('stop_origin') == 'quota' else 'paused'
+                state.update(state=stopped if confirmed else 'cleanup_unconfirmed', cleanup_ok=confirmed, cleanup=outcomes)
                 workspace.write_state(project, state)
                 if not confirmed:
                     raise workspace.InputError('Pause failed: ownership/cleanup unconfirmed; see retained per-process evidence')
-                print('paused: confirmed owned-process cleanup; inspect artifacts for missing handoffs')
-                return 0
+                print(f'{stopped}: confirmed owned-process cleanup; inspect artifacts for missing handoffs')
+                return 0 if state.get('finalization_ok', stopped != 'quota_stopped') else 1
         except workspace.ProjectBusy:
             pass
         await asyncio.sleep(.1)
@@ -133,6 +148,7 @@ def main(argv=None):
     launch.add_argument('--codex', default='codex')
     launch.add_argument('--model')
     launch.add_argument('--preserve-existing', action='store_true')
+    launch.add_argument('--secondary-staleness-seconds', type=positive_int, default=2700)
     for name, default in [('memory-mib', 2048), ('max-tasks', 128), ('max-agents', 2), ('max-jobs', 1)]:
         launch.add_argument('--' + name, type=positive_int, default=default)
     show = sub.add_parser('inspect')
@@ -198,7 +214,8 @@ def main(argv=None):
                     workspace.atomic_text(target, text)
             return 0
         config = isolation.Config(codex=args.codex, model=args.model, memory_mib=args.memory_mib,
-                    max_tasks=args.max_tasks, max_agents=args.max_agents, max_jobs=args.max_jobs)
+                    max_tasks=args.max_tasks, max_agents=args.max_agents, max_jobs=args.max_jobs,
+                    secondary_staleness_seconds=args.secondary_staleness_seconds)
         return start(args.project, config, args.preserve_existing)
     except (OSError, ValueError, isolation.RuntimeUnavailable) as exc:
         print(f'error: {exc}', file=sys.stderr)

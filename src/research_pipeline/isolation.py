@@ -29,6 +29,7 @@ class Config:
     max_tasks: int = 128
     max_agents: int = 2
     max_jobs: int = 1
+    secondary_staleness_seconds: int = 2700
     task_id: str = 'primary'
     task_workspaces: tuple = ()
     frozen_inputs: tuple = ()
@@ -38,7 +39,7 @@ class Config:
     drafts: Path | None = None
 
     def limits(self):
-        for key in ('memory_mib', 'max_tasks', 'max_agents', 'max_jobs'):
+        for key in ('memory_mib', 'max_tasks', 'max_agents', 'max_jobs', 'secondary_staleness_seconds'):
             if type(getattr(self, key)) is not int or getattr(self, key) <= 0:
                 raise ValueError(f'{key} must be a positive integer')
         if self.max_tasks < self.max_agents or self.memory_mib < self.max_agents:

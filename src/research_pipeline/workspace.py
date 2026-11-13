@@ -191,7 +191,7 @@ def validate_fresh(project, preserve_existing=False):
     paths = (".research_pipeline/run.json", ".research_pipeline/session",
              ".research_pipeline/sessions", ".research_pipeline/owners",
              ".research_pipeline/checkpoints", ".research_pipeline/contexts", ".research_pipeline/jobs",
-             ".research_pipeline/documents")
+             ".research_pipeline/documents", "STOP", "STOP_ACK", "COMPLETE", "COMPLETE_ACK")
     if not preserve_existing:
         paths = (*MANAGED, "RESEARCH_STATUS.md", "FOLDER_CONTENT.md", *paths)
     for name in paths:
@@ -269,6 +269,8 @@ DESCRIPTIONS = {
     "HUMAN_FEEDBACK.md": "Distinct human scientific feedback (read-only to agents).",
     ".research_pipeline": "Private controller status and bounded backend diagnostics.",
     "RESEARCH_STATUS.md": "Operational state and links to current scientific progress.",
+    "STOP": "Runtime quota STOP explanation; latched until supported explicit resumption.",
+    "STOP_ACK": "Matching quota STOP explanation after confirmed cleanup and finalization.",
     "PLAN.md": "Revisable scientific questions, assumptions and methods.",
     "LITERATURE.md": "Citations, relevance and source access quality.",
     "REUSE.md": "Prior source identities, verification qualifications and applicability to this investigation.",
@@ -284,6 +286,7 @@ DESCRIPTIONS = {
 
 def refresh_indexes(project, include_science=True, expected=None, task_id=None):
     edited_indexes = {}
+    generated = {}
     if expected is not None and include_science:
         for rel, digest in science_fingerprints(project, task_id).items():
             if (Path(rel).name == "FOLDER_CONTENT.md"
@@ -340,7 +343,10 @@ def refresh_indexes(project, include_science=True, expected=None, task_id=None):
         if rel in edited_indexes:
             saved = edited_indexes[rel]
             rows += ["", f"- [Preserved edited index]({os.path.relpath(saved, directory)})"]
-        atomic_text(index, "\n".join(rows) + "\n")
+        text = "\n".join(rows) + "\n"
+        atomic_text(index, text)
+        generated[rel] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return generated
 
 
 def check_deadline(deadline):

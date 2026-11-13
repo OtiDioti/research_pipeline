@@ -14,17 +14,19 @@ import secrets
 import time
 import uuid
 
-from . import app_server, codex, context_usage, documents, isolation, jobs, references, verification, workspace
+from . import app_server, codex, context_usage, documents, isolation, jobs, quota, references, staleness, verification, workspace
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 
 def load_state(project):
     value = jobs.read(project / '.research_pipeline/run.json', max_bytes=64 * 1024 * 1024)
     if not value or value.get('schema_version') != SCHEMA_VERSION:
-        raise workspace.InputError('Unsupported operational state; V0-L2 requires a fresh schema-5 runtime. Historical science is preserved; no migration is supported.')
-    if not all(isinstance(value.get(key), dict) for key in ('limits', 'tasks', 'contexts', 'jobs')) or 'admission_block' not in value:
-        raise workspace.InputError('Corrupt schema-5 runtime state; retain it for owned-process reconciliation')
+        raise workspace.InputError('Unsupported operational state; V0-L3 requires a fresh schema-6 runtime. Historical science is preserved; no migration is supported.')
+    if (not all(isinstance(value.get(key), dict) for key in
+                ('limits', 'tasks', 'contexts', 'jobs', 'quota', 'pending_staleness'))
+            or 'admission_block' not in value):
+        raise workspace.InputError('Corrupt schema-6 runtime state; retain it for owned-process reconciliation')
     return value
 
 
@@ -40,6 +42,16 @@ class Coordinator:
         self.stack = ExitStack()
         self.monitor_task = None
         self.job_monitor = None
+        self.quota_monitor_task = None
+        self.shutdown_task = None
+        self.cleanup_lock = asyncio.Lock()
+        self.warning_delivery_task = None
+        self.quota_transport = None
+        self.quota_ready = asyncio.Event()
+        baseline = workspace.science_fingerprints(project)
+        self.status_baseline = baseline.get('RESEARCH_STATUS.md')
+        self.index_baseline = {path: digest for path, digest in baseline.items()
+                               if Path(path).name == 'FOLDER_CONTENT.md'}
         self.rpc_tasks = set()
         self.documents = documents.Documents(project, state)
         self.jobs.on_quiescent = self.finalize_publications
@@ -62,16 +74,44 @@ class Coordinator:
         state = {'schema_version': SCHEMA_VERSION, 'run_id': uuid.uuid4().hex,
                  'limits': config.limits(), 'admission_block': None, 'state': 'starting',
                  'scientific_status': 'preliminary', 'contexts': {}, 'tasks': {}, 'jobs': {}, 'documents': {},
+                 'quota': {}, 'secondary_staleness_seconds': config.secondary_staleness_seconds,
+                 'pending_staleness': {}, 'staleness_history': [],
                  'boot_id': isolation.boot_identity(), 'limitations': [
-                     'L2 has no weekly reserve, scientific terminal decisions or stopped-state resumption.',
+                     'L3 has no scientific terminal decisions or stopped-state resumption.',
                      'Model spending is not capped; telemetry is observed, never a refreshed allocation.',
                      'Outbound network is available without destination filtering; 64 MiB per-file limit is not aggregate disk quota.']}
         runtime = cls(project, config, state, intake)
-        runtime.add_task('primary', intake.questions, None, role='primary')
+        runtime.add_task('primary', intake.questions, None, role='primary', initial=True)
         runtime.save()
         return runtime
 
-    def add_task(self, task_id, objective, parent, role='researcher', frozen_inputs=()):
+    def require_quota(self):
+        error = quota.admission_error(self.state)
+        if error:
+            raise jobs.JobError(error)
+
+    async def wait_quota_ready(self):
+        if self.state['quota'].get('transport_unavailable') and not self.state['admission_block']:
+            await self.quota_ready.wait()
+        self.require_quota()
+
+    async def attach_admitted(self, task_id):
+        while True:
+            if task_id != 'primary':
+                await self.wait_quota_ready()
+            try:
+                return await self.attach(task_id)
+            except jobs.JobError:
+                # A primary close may win the lifecycle lock after our cached
+                # check. Wait outside that lock; do not retire unrelated work.
+                if (task_id == 'primary' or self.state['admission_block']
+                        or not self.state['quota'].get('transport_unavailable')):
+                    raise
+
+    def add_task(self, task_id, objective, parent, role='researcher', frozen_inputs=(), *, initial=False):
+        # Only the nonexecuting initial primary allocation precedes preflight.
+        if not initial:
+            self.require_quota()
         if role not in ('primary', 'researcher', 'verifier', 'opponent'):
             raise jobs.JobError('Unknown scientific role')
         if self.state['admission_block']:
@@ -98,6 +138,8 @@ class Coordinator:
         self.save()
         self.job_monitor = asyncio.create_task(self.jobs.monitor())
         self.monitor_task = asyncio.create_task(self.monitor())
+        await self.attach('primary')
+        self.quota_monitor_task = asyncio.create_task(self.monitor_quota())
         self.state['state'] = 'running'
         self.save()
 
@@ -141,6 +183,8 @@ class Coordinator:
 
     async def attach(self, task_id):
         async with self.lifecycle_lock:
+            if task_id != 'primary':
+                self.require_quota()
             if self.state['admission_block']:
                 raise jobs.JobError('Context admissions blocked: ' + self.state['admission_block'])
             task = self.state['tasks'][task_id]
@@ -217,14 +261,27 @@ class Coordinator:
                 self.save()
                 client = app_server.Client(service, lambda value: self.context_event(context_id, value))
                 self.clients[context_id] = client
+                if task_id == 'primary':
+                    self.quota_transport = context_id
+                    self.state['quota']['transport_unavailable'] = True
                 await client.start()
+                if task_id == 'primary':
+                    await self.refresh_quota(context_id)
+                self.require_quota()
+                owned_jobs = (await self.jobs.inspect(task_id))['jobs']
+                instructions = codex.prompt(self.intake, task, owned_jobs, self.successor_documents(task_id))
+                # Reconciliation can suspend; no await may separate this
+                # admission check from dispatching the native thread RPC.
+                self.require_quota()
                 record['native_thread_id'] = await client.new_thread(f'/project/{task["workspace"]}', self.config.model,
-                            codex.prompt(self.intake, task, (await self.jobs.inspect(task_id))['jobs'],
-                                         self.successor_documents(task_id)))
+                                                                     instructions)
                 mcp = await client.request('mcpServerStatus/list', {'threadId': record['native_thread_id'], 'serverName': 'research_jobs'})
                 ctx['mcp_tools'] = await codex.validate_mcp_inventory(mcp)
                 jobs.atomic(root / 'mcp-tools.json', mcp)
                 record['state'] = 'attached'
+                if task_id != 'primary':
+                    record['staleness'] = staleness.attach(time.monotonic())
+                self.require_quota()
                 self.save()
                 return context_id
             except BaseException as exc:
@@ -233,6 +290,10 @@ class Coordinator:
                 raise
 
     async def context_event(self, context_id, value):
+        if value['method'] == 'account/rateLimits/updated':
+            if context_id == self.quota_transport:
+                self.observe_quota(context_id, value.get('params', {}), full=False)
+            return
         if value['method'] == 'thread/tokenUsage/updated':
             # Capture the inference boundary at receipt time, before applying this
             # sample. This is file inspection only; the RPC reader must not wait
@@ -375,6 +436,8 @@ class Coordinator:
             return result
         if action in ('check', 'tasks'):
             return {'admission_block': self.state['admission_block'], 'tasks': self.state['tasks'],
+                    'account_quota': self.state['quota'],
+                    'secondary_staleness': self.state['pending_staleness'] if reader == 'primary' else {},
                     'jobs': await self.jobs.inspect(reader),
                     'science_changes': ctx['record'].get('science_changes', {}),
                     **self.documents.list(reader)}
@@ -410,6 +473,7 @@ class Coordinator:
         task_root = workspace.task_directory(task_id)
         # freeze and job admission cannot race. Changing outputs are not stable evidence.
         async with self.jobs.lock:
+            self.require_quota()
             task = self.state['tasks'][reader]
             if (self.state['admission_block'] or task.get('operational_state') != 'working'
                     or ('context_id' in ctx['record'] and task['context_id'] != ctx['record']['context_id'])):
@@ -440,11 +504,14 @@ class Coordinator:
         self.turns[task_id] = asyncio.create_task(self.run_task(task_id))
         return {'task_id': task_id, 'workspace': task_root}
 
-    def observe_context(self, context_id, params, provenance='native'):
+    def observe_context(self, context_id, params, provenance='native', *, now=None):
         ctx = self.contexts[context_id]
         record = ctx['record']
         previous = record.get('native_measurement', {})
         sample = context_usage.observe(record, params, provenance)
+        if 'staleness' in record:
+            if staleness.measure(record['staleness'], sample, time.monotonic() if now is None else now):
+                self.supersede_staleness(context_id, 'Measured context length changed')
         if (provenance == 'native' and sample['status'] == 'measured'
                 and (sample['raw'] != previous.get('raw') or sample['turn_id'] != previous.get('turn_id'))):
             record['native_measurement_count'] = record.get('native_measurement_count', 0) + 1
@@ -469,6 +536,8 @@ class Coordinator:
 
     def successor_documents(self, task_id):
         result = self.documents.list(task_id)
+        if task_id == 'primary':
+            result['secondary_staleness'] = self.state['pending_staleness']
         task = self.state['tasks'][task_id]
         predecessor = task.get('last_context_id')
         result['input_changes'] = self.contexts[task['context_id']]['record']['input_changes']
@@ -486,6 +555,11 @@ class Coordinator:
 
     async def native_turn(self, context_id, text, responsive=True, timeout=None):
         ctx, client = self.contexts[context_id], self.clients[context_id]
+        if context_id == self.quota_transport:
+            await self.refresh_quota(context_id)
+        await self.wait_quota_ready()
+        if ctx['record']['task_id'] == 'primary':
+            text += '\nSecondary inactivity observations (primary chooses response): ' + json.dumps(self.state['pending_staleness'])
         record = ctx['record']
         before = record.get('native_observation_count', 0)
         if record.get('native_inventory_verified'):
@@ -494,18 +568,27 @@ class Coordinator:
         measurements_before = record.get('native_measurement_count', 0)
         record['state'] = 'turn_running'
         self.save()
-        work = asyncio.create_task(client.turn(text))
+        async def dispatch_turn():
+            # Primary replacement or a quota notification can win scheduling.
+            # Wait through replacement, then check quota immediately before RPC.
+            await self.wait_quota_ready()
+            return await client.turn(text)
+        work = asyncio.create_task(dispatch_turn())
         signal = asyncio.create_task(ctx['lifecycle_event'].wait()) if responsive else None
+        started = time.monotonic()
+        wait_phase, wait_bound = 'turn completion', timeout
         try:
             if signal:
                 done, _ = await asyncio.wait((work, signal), return_when=asyncio.FIRST_COMPLETED, timeout=timeout)
                 if not done:
-                    raise isolation.RuntimeUnavailable('Operational telemetry intake bound exceeded')
+                    raise asyncio.TimeoutError
                 if signal in done and not work.done():
                     # Never run lifecycle RPCs from the reader callback.
+                    wait_phase, wait_bound = 'turn readiness before interruption', 15
                     await asyncio.wait_for(client.turn_ready.wait(), 15)
                     if not work.done() and client.active_turn_id:
                         await client.interrupt(client.active_turn_id)
+                    wait_phase = 'interruption completion'
                     result = await asyncio.wait_for(asyncio.shield(work), 15)
                 else:
                     result = await work
@@ -543,6 +626,15 @@ class Coordinator:
                 ctx['lifecycle_event'].set()
                 self.save()
             return result
+        except asyncio.TimeoutError as exc:
+            record['operational_timeout'] = {
+                'phase': wait_phase, 'bound_seconds': wait_bound,
+                'elapsed_seconds': time.monotonic() - started,
+                'turn_id': getattr(client, 'active_turn_id', None)}
+            self.save()
+            raise isolation.RuntimeUnavailable(
+                f'Operational {wait_phase} bound exceeded ({wait_bound} seconds); '
+                f'context {context_id}; no scientific terminal decision') from exc
         finally:
             if signal:
                 signal.cancel()
@@ -556,9 +648,11 @@ class Coordinator:
         task['operational_state'] = 'telemetry_recovery'
         await self.native_turn(context_id,
             'Measurement intake/recovery only. Read the supplied validated handoff and current inputs. '
-            'Call job_status for each reconciled owned job before any replacement. Save useful existing '
-            'science and a scoped handoff using write_draft. No new jobs or assignments. End the turn.',
-            responsive=False, timeout=90)
+            'Call job_status for each reconciled owned job before any replacement. Preserve work at risk '
+            'using write_draft, but do not rewrite already saved science or handoffs just to acknowledge intake. '
+            'Defer scientific next actions to the ordinary work turn after intake. '
+            'No new jobs or assignments. End this focused intake turn promptly.',
+            responsive=False, timeout=180)
         record = self.contexts[context_id]['record']
         if record.get('measurement', {}).get('status') != 'measured':
             raise isolation.RuntimeUnavailable('Reliable context telemetry unavailable after bounded intake/recovery')
@@ -672,7 +766,7 @@ class Coordinator:
         context_id = None
         task = self.state['tasks'][task_id]
         try:
-            context_id = await self.attach(task_id)
+            context_id = task.get('context_id') or await self.attach_admitted(task_id)
             while not self.state['admission_block']:
                 await self.measured_intake(context_id)
                 while not self.state['admission_block']:
@@ -690,8 +784,10 @@ class Coordinator:
                         'inspect existing jobs before replacements, save evidence and update the handoff. '
                         'A normal turn ending leaves this logical task active.')
         except Exception as exc:
-            if not self.state['admission_block'] or self.state['state'] not in ('stopping', 'paused'):
+            if not self.state['admission_block'] or self.state['state'] not in ('stopping', 'paused', 'quota_stopped', 'quota_unavailable'):
                 task.update(operational_state='failed', context_error=f'{type(exc).__name__}: {exc}')
+                if task_id == 'primary':
+                    self.schedule_shutdown('Primary deterministic control path failed: ' + str(exc), 'failed')
                 for job_id, record in list(self.state['jobs'].items()):
                     if record['task_id'] == task_id and record['state'] in jobs.ACTIVE:
                         try:
@@ -700,8 +796,10 @@ class Coordinator:
                             task['job_cleanup_error'] = str(cleanup_exc)
         finally:
             # Attach may fail after creating a partial successor; it owns its cleanup.
+            if self.shutdown_task:
+                await asyncio.shield(self.shutdown_task)
             attached = task.get('context_id') or context_id
-            if attached and attached in self.contexts:
+            if attached and attached in self.contexts and not self.shutdown_task:
                 try:
                     await self.close_context(attached)
                 except Exception as exc:
@@ -718,12 +816,17 @@ class Coordinator:
         if record.get('cleanup_ok') is True:
             return record['cleanup']
         task = self.state['tasks'][record['task_id']]
+        if context_id == self.quota_transport:
+            self.quota_transport = None
+            self.state['quota']['transport_unavailable'] = True
+            self.quota_ready.clear()
+        self.supersede_staleness(context_id, 'Context closed/replaced')
         # Revoke admissions before closing the connection; surviving jobs are untouched.
         record['state'] = 'closing'
         task['inventory_verified'] = False
         try:
             self.save()
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             record['persistence_error'] = str(exc)
         ctx['server'].close()
         await ctx['server'].wait_closed()
@@ -756,12 +859,15 @@ class Coordinator:
                 record['job_handoff_error'] = str(exc)
             finally:
                 ctx['private'].close()
-            self.finalize_publications()
+            try:
+                self.finalize_publications()
+            except (OSError, ValueError) as exc:
+                record['persistence_error'] = str(exc)
         else:
             self.state['admission_block'] = self.state['admission_block'] or 'Context cleanup unconfirmed'
         try:
             self.save()
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             record['persistence_error'] = str(exc)
         return cleanup
 
@@ -868,7 +974,8 @@ class Coordinator:
         # updates as purported human edits.
         for task_id, ctx in index_contexts.items():
             try:
-                workspace.refresh_indexes(self.project, expected=ctx['baseline'], task_id=task_id)
+                self.index_baseline.update(workspace.refresh_indexes(
+                    self.project, expected=self.index_baseline, task_id=task_id))
             except (OSError, ValueError) as exc:
                 ctx['record']['publication_error'] = str(exc)
         if changed:
@@ -881,21 +988,210 @@ class Coordinator:
         task['reconciled_jobs'] = await self.reconciled_jobs(task_id)
         task['pending_job_inspections'] = [r['job_id'] for r in task['reconciled_jobs'] if r['state'] in jobs.ACTIVE]
         task['operational_state'] = 'telemetry_recovery'
-        return await self.attach(task_id)
+        return await self.attach_admitted(task_id)
 
-    async def block_and_cleanup(self, reason):
-        # Latch before any cleanup/checkpoint operation; failed saves cannot bypass it.
+    def schedule_shutdown(self, reason, outcome):
+        # This runs in the RPC reader too: no lifecycle RPCs or awaits here.
         self.state.update(admission_block=self.state['admission_block'] or reason, state='stopping')
+        self.quota_ready.set()
+        for ctx in self.contexts.values():
+            ctx['lifecycle_event'].set()
+        if self.shutdown_task is None:
+            self.shutdown_task = asyncio.create_task(self.block_and_cleanup(reason, outcome=outcome))
+
+    def observe_quota(self, context_id, payload, *, full=False, provenance='native', now=None, epoch=None):
+        if context_id != self.quota_transport or context_id is None:
+            return None  # secondary and retired-primary notifications have no authority
+        record = self.state['quota']
+        sample = quota.observe(record, payload, full=full, provenance=provenance, now=now, epoch=epoch)
+        if full:
+            record['transport_unavailable'] = False
+        if record.get('cutoff'):
+            self.state.setdefault('stop_origin', 'quota')
+            self.schedule_shutdown(
+                f"Weekly quota STOP: observed {record['cutoff']['remaining_percent']}% remaining <= 15%", 'quota_stopped')
+        elif (full or record.get('preflight_ok') and not record.get('transport_unavailable')) and not self.state['admission_block']:
+            error = quota.admission_error(self.state, now=now, epoch=epoch)
+            if error:
+                record['admission_error'] = error
+                self.schedule_shutdown(error + '; no observed quota cutoff', 'quota_unavailable')
+        if full and not quota.admission_error(self.state, now=now, epoch=epoch):
+            self.quota_ready.set()
         try:
             self.save()
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
+            self.state['persistence_error'] = str(exc)
+        return sample
+
+    async def refresh_quota(self, context_id):
+        if context_id != self.quota_transport:
+            raise isolation.RuntimeUnavailable('Primary quota transport unavailable')
+        try:
+            payload = await self.clients[context_id].read_quota()
+        except Exception as exc:
+            if context_id == self.quota_transport:
+                self.state['quota'].update(read_error=str(exc), status='unavailable')
+                self.schedule_shutdown('Weekly quota read failed; no observed quota cutoff', 'quota_unavailable')
+            raise
+        self.observe_quota(context_id, payload, full=True)
+        self.require_quota()
+
+    async def monitor_quota(self):
+        while not self.state['admission_block']:
+            await asyncio.sleep(quota.POLL_SECONDS)
+            context_id = self.quota_transport
+            # Expected primary replacement is bounded by existing attach/RPC bounds.
+            if context_id and context_id in self.clients:
+                try:
+                    await self.refresh_quota(context_id)
+                except Exception:
+                    if self.state['admission_block']:
+                        return
+                    raise
+
+    def supersede_staleness(self, context_id, reason):
+        notice = self.state['pending_staleness'].pop(context_id, None)
+        if notice:
+            notice.update(superseded=reason, superseded_epoch=time.time())
+
+    def check_staleness(self, now=None, provenance='monotonic-clock'):
+        now = time.monotonic() if now is None else now
+        emitted = []
+        for context_id, ctx in self.contexts.items():
+            record = ctx['record']
+            clock = record.get('staleness')
+            if (not clock or record.get('cleanup_ok') or record['state'] not in ('attached', 'turn_running')
+                    or record.get('measurement', {}).get('status') != 'measured'):
+                continue
+            for observation in staleness.due(clock, self.state['secondary_staleness_seconds'], now):
+                notice = {**observation, 'task_id': record['task_id'], 'context_id': context_id,
+                          'provenance': provenance, 'emitted_epoch': time.time(),
+                          'message': 'Measured secondary context length unchanged; primary chooses the response. '
+                                     'A long computation may legitimately cause this warning; no scientific failure is asserted.'}
+                self.state['staleness_history'].append(notice)
+                self.state['pending_staleness'][context_id] = notice
+                emitted.append(notice)
+        if emitted:
+            self.save()
+        return emitted
+
+    async def deliver_staleness(self):
+        context_id = self.state['tasks']['primary'].get('context_id')
+        client = self.clients.get(context_id)
+        turn_id = getattr(client, 'active_turn_id', None)
+        if (not turn_id or quota.admission_error(self.state)
+                or self.state['tasks']['primary']['operational_state'] != 'working'):
+            return
+        notices = [n for n in self.state['pending_staleness'].values() if not n.get('delivered')]
+        if not notices:
+            return
+        try:
+            await client.steer(turn_id, 'Secondary inactivity observations; choose an appropriate response: '
+                               + json.dumps(notices))
+            for notice in notices:
+                notice['delivered'] = {'context_id': context_id, 'turn_id': turn_id,
+                                       'epoch': time.time(), 'basis': 'native turn/steer RPC accepted; no scientific acknowledgement claimed'}
+        except Exception as exc:
+            # Completion/replacement races leave observations pending.
+            for notice in notices:
+                notice['delivery_error'] = str(exc)
+        self.save()
+
+    def save_quota_stop(self, confirmed):
+        """Operational record only. Never manufacture scientific handoffs/findings."""
+        text = '# Runtime quota STOP\n\n' + json.dumps({
+            'origin': 'quota', 'first_cutoff': self.state['quota']['cutoff'],
+            'cleanup_confirmed': confirmed, 'cleanup': self.state.get('cleanup'),
+            'contexts': self.state['contexts'], 'jobs': self.state['jobs'],
+            'limitations': 'No post-cutoff inference or opponent review. Existing drafts, partial outputs and '
+                'immutable documents are retained where observed; handoff usability is not assumed. '
+                'Saving/cleanup may consume additional quota; exactly 15% remaining is not guaranteed. '
+                'Explicit launch and quota preflight are necessary; STOP resumption is unsupported until L5.'
+        }, indent=2) + '\n'
+        note = (f'handoffs/quota-stop-{self.state["run_id"]}.md' if confirmed
+                else '.research_pipeline/quota-stop.md')
+        self.state['stop_note'] = note
+        failures = []
+        for path in (note, 'STOP'):
+            try:
+                workspace.atomic_text(workspace.safe_path(self.project, path), text)
+            except (OSError, ValueError) as exc:
+                failures.append(f'{path}: {exc}')
+        if confirmed:
+            try:
+                current = workspace.science_fingerprints(self.project).get('RESEARCH_STATUS.md')
+                published_status = {d['sha256'] for d in self.state['documents'].values()
+                                    if d['task_id'] == 'primary' and d['path'] == 'RESEARCH_STATUS.md'}
+                if current == self.status_baseline or current in published_status:
+                    status_path = self.project / 'RESEARCH_STATUS.md'
+                    status = workspace.read_input_unbounded(status_path)
+                    status += (f'\n\n## Runtime quota STOP\n\nObserved '
+                        f'{self.state["quota"]["cutoff"]["remaining_percent"]}% weekly remaining. '
+                        f'Owned cleanup confirmed={confirmed}. No opponent review or scientific decision. '
+                        f'See [operational handoff]({note}) for observations, retained artifacts, saving '
+                        'limitations and unfinished jobs. Saving/cleanup may consume more quota. '
+                        'Resumption remains unsupported until L5.\n')
+                    workspace.atomic_text(status_path, status)
+                    self.status_baseline = hashlib.sha256(status.encode()).hexdigest()
+                else:
+                    self.state['stop_status_preserved_human_edit'] = True
+                self.index_baseline.update(workspace.refresh_indexes(
+                    self.project, expected=self.index_baseline))
+            except (OSError, ValueError) as exc:
+                failures.append(f'status/index: {exc}')
+        else:
+            self.state['stop_status_deferred_cleanup'] = True
+        if failures:
+            self.state['stop_persistence_errors'] = failures
+        return text, not failures
+
+    async def block_and_cleanup(self, reason, outcome='paused'):
+        # Latch before any cleanup/checkpoint operation; failed saves cannot bypass it.
+        self.state['admission_block'] = self.state['admission_block'] or reason
+        self.quota_ready.set()
+        async with self.cleanup_lock:
+            if (self.state.get('stop_origin') == 'quota' and self.state.get('cleanup_ok')
+                    and self.state.get('finalization_ok')):
+                return True  # inspection/pause cannot replace an acknowledged STOP
+            self.state['state'] = 'stopping'
+            return await self._block_and_cleanup(reason, outcome)
+
+    async def _block_and_cleanup(self, reason, outcome):
+        if self.state.get('stop_origin') == 'quota':
+            outcome = 'quota_stopped'
+        try:
+            self.save()
+        except (OSError, ValueError) as exc:
             self.state['persistence_error'] = str(exc)
         outcomes = {}
+        async def stop_jobs():
+            # Wait for settling admissions before enumerating. Their release gate
+            # already sees the synchronous block, so no command can escape.
+            async with self.jobs.lock:
+                identifiers = list(self.state['jobs'])
+            for job_id in identifiers:
+                record = self.state['jobs'][job_id]
+                if record['state'] in jobs.ACTIVE:
+                    try:
+                        cancelled = await self.jobs.cancel(record['task_id'], job_id)
+                        outcomes[job_id] = cancelled.get('cleanup', {'confirmed': False})
+                    except Exception as exc:
+                        outcomes[job_id] = record.get('cleanup', {'confirmed': False, 'reason': str(exc)})
+                        record['preservation_error'] = str(exc)
+        job_cleanup = asyncio.create_task(stop_jobs())
         for context_id in list(self.clients):
             try:
+                client = self.clients.get(context_id)
+                if getattr(client, 'active_turn_id', None):
+                    try:
+                        await asyncio.wait_for(client.interrupt(client.active_turn_id), 5)
+                    except Exception as exc:
+                        self.state['contexts'][context_id]['interrupt_error'] = str(exc)
                 outcomes[context_id] = await self.close_context(context_id)
             except Exception as exc:
-                outcomes[context_id] = {'confirmed': False, 'reason': str(exc)}
+                record = self.state['contexts'][context_id]
+                outcomes[context_id] = record.get('cleanup', {'confirmed': False, 'reason': str(exc)})
+                record['preservation_error'] = str(exc)
         for record in self.state['contexts'].values():
             if not record.get('cleanup_ok') and record['context_id'] not in outcomes:
                 context_id = record['context_id']
@@ -905,7 +1201,10 @@ class Coordinator:
                     except Exception as exc:
                         outcomes[context_id] = {'confirmed': False, 'reason': str(exc)}
                 else:
-                    cleanup = await isolation.stop_owned(record.get('service'))
+                    try:
+                        cleanup = await isolation.stop_owned(record.get('service'))
+                    except Exception as exc:
+                        cleanup = {'confirmed': False, 'reason': str(exc)}
                     outcomes[context_id] = cleanup
                     record.update(cleanup=cleanup, cleanup_ok=cleanup['confirmed'],
                                   state='closed' if cleanup['confirmed'] else 'cleanup_unconfirmed')
@@ -913,28 +1212,47 @@ class Coordinator:
                         task = self.state['tasks'][record['task_id']]
                         if task['context_id'] == context_id:
                             task.update(last_context_id=context_id, context_id=None)
-        for job_id, record in self.state['jobs'].items():
-            if record['state'] in jobs.ACTIVE:
-                try:
-                    cancelled = await self.jobs.cancel(record['task_id'], job_id)
-                    outcomes[job_id] = cancelled.get('cleanup', {'confirmed': False})
-                except Exception as exc:
-                    outcomes[job_id] = {'confirmed': False, 'reason': str(exc)}
+        await job_cleanup
         confirmed = all(o['confirmed'] for o in outcomes.values()) and jobs.science_quiescent(self.state)
-        self.state.update(state='paused' if confirmed else 'cleanup_unconfirmed', cleanup_ok=confirmed, cleanup=outcomes)
+        if self.state.get('stop_origin') == 'quota':
+            outcome = 'quota_stopped'
+        self.state.update(state=outcome if confirmed else 'cleanup_unconfirmed', cleanup_ok=confirmed,
+                          cleanup=outcomes, cleanup_outcome=outcome)
         try:
             self.finalize_publications()
-            self.save()
-        except OSError as exc:
+        except (OSError, ValueError) as exc:
             self.state['persistence_error'] = str(exc)
+        try:
+            saved = True
+            text = None
+            if outcome == 'quota_stopped':
+                text, saved = self.save_quota_stop(confirmed)
+            failures = any(r.get(k) for r in (*self.state['contexts'].values(), *self.state['jobs'].values())
+                           for k in ('persistence_error', 'publication_error', 'document_snapshot_error',
+                                     'job_handoff_error', 'preservation_error'))
+            saved = saved and not failures and not self.state.get('persistence_error')
+            self.state['finalization_ok'] = saved
+            self.save()
+            if outcome == 'quota_stopped' and confirmed and saved:
+                workspace.atomic_text(self.project / 'STOP_ACK', text)
+        except (OSError, ValueError) as exc:
+            self.state['persistence_error'] = str(exc)
+            self.state['finalization_ok'] = False
+            try:
+                self.save()
+            except (OSError, ValueError):
+                pass  # in-memory failure and terminal diagnostics remain truthful
             return False
-        return confirmed
+        return confirmed and saved
 
     async def monitor(self):
         while True:
+            if self.state['admission_block']:
+                return
             pause = jobs.read(self.project / '.research_pipeline/pause.json')
             if pause and pause.get('run_id') == self.state['run_id']:
-                await self.block_and_cleanup('Human pause requested')
+                self.schedule_shutdown('Human pause requested', 'paused')
+                await self.shutdown_task
                 return
             for context_id, client in list(self.clients.items()):
                 record = self.contexts[context_id]['record']
@@ -947,15 +1265,24 @@ class Coordinator:
                         self.validate_inventory(context_id)
                     except Exception as exc:
                         record['inventory_error'] = str(exc)
-                        await self.block_and_cleanup('Production tool inventory validation failed')
+                        self.schedule_shutdown('Production tool inventory validation failed', 'failed')
+                        await self.shutdown_task
                         return
+            self.check_staleness()
+            if self.warning_delivery_task is None or self.warning_delivery_task.done():
+                if self.warning_delivery_task:
+                    self.warning_delivery_task.result()
+                self.warning_delivery_task = asyncio.create_task(self.deliver_staleness())
             await asyncio.sleep(.1)
 
     async def close(self):
-        for task in (self.monitor_task, self.job_monitor):
+        if self.shutdown_task:
+            await self.shutdown_task
+        observers = (self.monitor_task, self.job_monitor, self.quota_monitor_task, self.warning_delivery_task)
+        for task in observers:
             if task:
                 task.cancel()
-        await asyncio.gather(*(t for t in (self.monitor_task, self.job_monitor) if t), return_exceptions=True)
+        await asyncio.gather(*(t for t in observers if t), return_exceptions=True)
         for task in self.turns.values():
             task.cancel()
         await asyncio.gather(*self.turns.values(), return_exceptions=True)
