@@ -27,7 +27,7 @@ organise freely.
 <project>/
 ├── AGENTS.md               human: optional instructions for the agents
 ├── FEEDBACK.md             human: comments and corrections, any time
-├── starting_evidence/      human: read-only for agents and jobs
+├── starting_evidence/      human: read-only for agents
 │   ├── RESEARCH_QUESTIONS.md   the authoritative questions
 │   └── tools/                  the human's tools
 ├── STATUS.md               primary: current state, findings, next steps
@@ -48,11 +48,18 @@ Rules:
 - **Ownership.** Each agent writes in its own `agents/<id>/` and may add to the
   shared `sources/` and `tools/`. Only the primary writes `STATUS.md` and
   `REPORT.md`. Only the Reviewer writes `reviews/`. Files the human owns are never
-  written by agents. Write scopes are enforced by each CLI's sandbox as far as it
-  allows, and otherwise by convention plus the layout check.
-- **Protected inputs.** `starting_evidence/` is made read-only on disk. At every
-  commit, the controller checks it against git; if anything changed, the controller
-  restores it and reports the change to the primary and in the TUI.
+  written by agents.
+- **Confinement.** Each agent session runs inside one `bwrap` boundary. The whole
+  filesystem is read-only except the agent's own folder, `sources/`, `tools/`, its
+  role's files (`STATUS.md` and `REPORT.md` for the primary, `reviews/` for the
+  Reviewer) and the CLI's own state folder. The network is on, and `/tmp` is
+  private to the session. The CLIs' own sandboxes are switched off. One mechanism
+  serves every CLI.
+- **Protected inputs.** Agents cannot write `starting_evidence/`: it is read-only
+  inside their confinement. The human may change it at any time. Jobs are not
+  confined, so at every commit the controller compares it with git and reports
+  any change to the primary and in the TUI. A job's accidental write is therefore
+  visible, not silently accepted.
 - **Markdown.** Agent-written notes and reports are Markdown with LaTeX mathematics.
   Code, data, figures and papers keep their own formats.
 - **Indexes.** Every agent-managed folder has a `FOLDER_CONTENT.md` describing its
@@ -68,9 +75,8 @@ Rules:
 
 **Layout check.** Whenever an agent hands off, submits a RESULT or proposes
 COMPLETE/STOP, the controller checks its work against these rules: no unexpected
-top-level entries, indexes present and covering their folders, notes in Markdown,
-and nothing written outside the agent's scope that the controller can attribute. It
-sends any violations back to the agent to fix.
+top-level entries, indexes present and covering their folders, and notes in
+Markdown. It sends any violations back to the agent to fix.
 
 ## 3. Agents
 
@@ -87,9 +93,10 @@ There are three roles, all running the same way:
 
 Every agent:
 
-- works in its own CLI's native sandbox with its native shell and file tools, network
-  on, and controller tools added through MCP (§6). Each CLI's built-in subagent
-  feature is disabled, so all spawning goes through the controller;
+- works inside its confinement (§2) with its CLI's native shell and file tools, and
+  controller tools added through MCP (§6). Each CLI's built-in subagent and
+  background-task features are disabled, so spawning and long computations go
+  through the controller;
 - keeps a stable logical identity and folder across any number of sessions;
 - hands off at 55% context (§5);
 - ends by submitting `RESULT.md` to its parent. Submitting ends its session and
@@ -169,8 +176,9 @@ A deterministic Python program; it makes no scientific decisions.
 **Sessions.** One persistent session per running agent, with messages delivered
 live during a turn: through Codex's app-server and Claude Code's stream-json input
 in V0. Adding a CLI means writing one driver that can start a session with a
-prompt, sandbox and MCP configuration, deliver a message during a turn, interrupt,
-and report text, tool activity and context use. It also needs one quota probe.
+prompt and MCP configuration, deliver a message during a turn, interrupt, and
+report text, tool activity and context use. It also needs one quota probe.
+Confinement is shared by all CLIs.
 
 **Notices.** Handoff requests, results from subagents, finished jobs and the human's
 messages are delivered to the agent concerned during its turn. When an agent is idle
@@ -191,9 +199,9 @@ pauses.
 **Jobs.** Agents run long computations through the controller, so the computations
 survive handoffs and quota pauses. Every job needs an explicit timeout, of any
 length. A job is owned by its logical agent; the owner is notified when it ends.
-Output goes to `agents/<id>/jobs/<job-id>/`. Jobs have no extra containment beyond
-read-only `starting_evidence/`. A job is killed at its timeout, on cancel, on a
-human pause, and on COMPLETE/STOP.
+Output goes to `agents/<id>/jobs/<job-id>/`. Jobs run unconfined, as plain
+processes. A job is killed at its timeout, on cancel, on a human pause, and on
+COMPLETE/STOP.
 
 **Pause, shutdown and crash.**
 
@@ -280,7 +288,8 @@ The scientific guidance comes from these expectations:
 
 ## 10. Not in V0
 
-- Containment beyond the CLI sandboxes and read-only inputs.
+- Containment beyond one `bwrap` per agent session; network
+  filtering.
 - Per-agent resource caps.
 - Peer-to-peer agent messaging.
 - Messaging subagents directly from the TUI.
@@ -318,9 +327,17 @@ lead to physics-specific code in the platform.
 - **Documents.** This PROJECT.md, a README.md for usage, and a short STATUS.md a
   human can read in a minute. Git holds the history; the repository keeps no
   evidence archives or receipt collections.
-- **Verify first.**
-  - Claude Code's stream-json input really delivers a message during a turn.
-    Fallback: interrupt and continue the session with the message.
-  - The MCP tool server, which each CLI starts outside its sandbox, can reach the
-    controller.
-  - How each sandbox can be limited to an agent's write scope.
+- **Verified on 2026-11-14** with Codex 0.167 and Claude Code 2.1.325, on Ubuntu
+  with unprivileged user namespaces restricted:
+  - **Live delivery.** A message sent while an agent was running a 30-second command
+    was taken into the same turn by both CLIs: Codex `turn/steer`, and a Claude
+    stream-json user message. It is delivered at the agent's next model step.
+  - **Context use** is reported during a turn by both CLIs.
+  - **MCP.** The tool server, started by the CLI as a child process, reaches the
+    controller through a Linux abstract Unix socket, inside the confinement too.
+    Codex needs `default_tools_approval_mode = "approve"` on that server.
+  - **Confinement.** Claude Code's own sandbox fails on this host: its seccomp
+    helper needs a nested user namespace. Codex's own sandbox works, but cannot make
+    single files writable. One `bwrap` around either CLI, with its own sandbox off,
+    confined shell and file-tool writes exactly as §2 requires. Because `/tmp` is
+    private to each session, projects must not live under `/tmp`.
