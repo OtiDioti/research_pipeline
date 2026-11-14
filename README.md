@@ -7,6 +7,20 @@ ordinary project folder. When it judges the work done it proposes **COMPLETE**,
 which an independent **Reviewer** must agree with, or **STOP**. You judge the
 science. The specification is [PROJECT.md](PROJECT.md).
 
+```mermaid
+flowchart LR
+    You([You]) -->|questions, evidence, messages, Pause| C{{"Controller<br/>(deterministic)"}}
+    C -->|transcript and status| You
+    C <-->|tools, notices, handoffs| A
+    subgraph A ["Agents: one confined CLI session each"]
+        P[Primary researcher] -->|spawns, accepts or rejects| S[Subagents]
+        P -->|proposes COMPLETE or STOP| R[Reviewer]
+    end
+    C -->|runs| J[Jobs]
+    A -->|notes, code, data| F[("Project folder<br/>(git)")]
+    C -->|commits| F
+```
+
 Agents run on agent CLIs (Codex and Claude Code today), each in a persistent
 session inside its own `bwrap` confinement. A deterministic controller makes every
 operational decision:
