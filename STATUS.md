@@ -1,13 +1,25 @@
 # Status
 
-**2026-11-14.** V0 restart. The new [PROJECT.md](PROJECT.md) is approved, and the old
-specifications, code, tests and development evidence have been removed from `main`.
+**2026-11-14.** The V0 core is implemented and verified. See [README.md](README.md) for usage and
+[PROJECT.md](PROJECT.md) for the specification.
 
-- Previous state: tag `pre-v0-restart` (accepted L1–L4 at `3a23c69`). The unmerged
-  L5 work is on the remote branch `cwi/20261113T063709_7f21ba4a`. Reuse parts only
-  where they fit the new design.
-- Kept: `research_example/` (benchmark inputs and the archived 2026-11-11 attempt).
-- Transport and confinement assumptions verified live with Codex and Claude Code
-  (PROJECT.md §12). Decision: one `bwrap` per agent session for every CLI.
+- **Implemented:**
+  - the controller (agent tree, live notices, handoffs, tools, Reviewer exchange, quota holds, pause/resume, crash restart, reopening);
+  - Codex and Claude Code drivers on one shared transport;
+  - single-`bwrap` confinement;
+  - the MCP tool server;
+  - jobs;
+  - the layout check and git commits;
+  - the terminal app and the command line.
+- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 58 tests, with no model usage.
+- **Live verification** (`tests/live_smoke.py`), public investigations, each reaching COMPLETE with the Reviewer's agreement:
+  1. Codex primary, Claude subagent and Claude Reviewer. Shown: cross-CLI spawn, a rejected then accepted result, jobs, a subagent handoff.
+  2. Claude primary, Codex subagents and Codex Reviewer. Shown: a primary handoff; a quota hold on Codex only, with automatic resume; a human pause with edits announced on resume; nested subagents; a Reviewer helper.
+  3. Codex primary, Claude subagents and Reviewer. Shown: a STOP proposal, a human pause in the middle of a review, the Reviewer challenging the STOP, the primary continuing and then reaching COMPLETE in round 2.
+- **Independent code review:** found 12 defects (a pause that could hang, an acceptance that could revert, stray files blocking work, failed turns stalling agents, and others). All are fixed and covered by regression tests.
+- **From run 3:** a CLI held by its quota used to make `reject` fail, and the primary then proposed STOP. Rejections now always stand and simply wait for the CLI, and parents are told that quota pauses are temporary.
+  Run 4 repeated that scenario: the primary was told the pause was temporary, its rejection went through, and the run reached COMPLETE.
+- **Previous implementation:** tag `pre-v0-restart`. The unmerged L5 work is on the remote branch `cwi/20261113T063709_7f21ba4a`.
 
-**Next:** design and hand-build the core (PROJECT.md §12, "Order").
+**Next:** run the light-hole benchmark (PROJECT.md §11) on a copy of `research_example/`, judge the science, and
+let project_manager deliver further increments.
