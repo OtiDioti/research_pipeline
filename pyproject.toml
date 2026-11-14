@@ -4,13 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-pipeline"
-version = "0.1.0"
-description = "A bounded, artifact-centered Codex research investigation"
+version = "0.0.0"
+description = "Autonomous research investigations led by a primary agent, with subagents and a final reviewer"
 requires-python = ">=3.11"
-dependencies = ["mcp>=1.26,<2"]
-
-[project.scripts]
-research-pipeline = "research_pipeline.cli:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
+dependencies = []

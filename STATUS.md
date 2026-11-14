@@ -1,58 +1,12 @@
-# Development status — research_pipeline
+# Status
 
-Updated 2026-11-13, 13:24 UTC. **Retired at the controller's request. V0-L1–L4 are accepted and integrated. L5 and its latest repairs are independently reviewed but remain unmerged and unaccepted. No implementation/native research worker remains.** L6 and M5 are outstanding; human requirements are unchanged.
+**2026-11-14.** V0 restart. The new [PROJECT.md](PROJECT.md) is approved, and the old
+specifications, code, tests and development evidence have been removed from `main`.
 
-## Recovery checkpoint
+- Previous state: tag `pre-v0-restart` (accepted L1–L4 at `3a23c69`). The unmerged
+  L5 work is on the remote branch `cwi/20261113T063709_7f21ba4a`. Reuse parts only
+  where they fit the new design.
+- Kept: `research_example/` (benchmark inputs and the archived 2026-11-11 attempt).
 
-**New machine:** use [development/handoff/README.md](development/handoff/README.md)
-before following the local resume instructions below. It preserves the L5
-checkpoint and selected acceptance evidence, explains component setup, and restores
-run/worktree ownership without executing tests or research. Its copied receipts
-remain historical; native final/combined L5 acceptance is still pending.
-
-- **Objective:** V0-L5 owned resume, COMPLETE reopening, pause/crash recovery and scientific continuity. Request **`v0-l5-continuity-20261113T063510Z-a187c3d5`**, run **`20261113T063709_7f21ba4a`**.
-- **Actual state:** **interrupted / final, turn 38**, `final_test_path=tests/final-006.txt`, `integration=true`, `integration_attempt=3`, `integration_budget_start=2`; reason `Interrupted; partial milestone preserved.` No completed final-006 suite result, fresh process-gate result or combined result exists. The integration flag denotes the repair cycle, not merging. Internal milestone 5 is unrelated to scientific M5.
-- **Preserved source:** clean branch **`cwi/20261113T063709_7f21ba4a` at `2e3e7b3e95714e9aa08d84b1d11f7bea01707105`**, worktree `coding_pipeline/logs/20261113T063709_7f21ba4a/worktree/`. Main remains accepted L4/schema 7; reviewed L5 uses schema 10 without migration. Preserve all useful source; no reset, stash, manual merge or duplicate request.
-- **Frozen request directory:** **`coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/`**, with unchanged `request.md`, `config.toml`, `receipt.json`, `submission.json`. Standard mode, `auto_merge=true`; Architect `gpt-6.1-sol/xhigh`, Writer/Reviewer `gpt-6.1-sol/high`; existing `writer_network` preauthorization retained. Frozen hashes match. Latest retry input `retry-003-input.md`, submission `restart-003-submission.json`; no new request followed shutdown.
-- **Shutdown:** native unittest controller received SIGINT while the pipeline supervisor was temporarily suspended for graceful cleanup. After test exit, the original supervisor received SIGINT and SIGCONT. Tool session **81728 exited 130**, log **`resume-004.log`**. Original supervisor **1234749** and test **1237467** are no longer matching workers. Host reconciliation **13:23 UTC** confirms both L5/M5 locks unowned, no implementation/research workers, and **all 158 recorded research cgroups empty**. No suspended supervisor remains; the outer manager controller owns its lifecycle.
-- **Receipts:** **`retirement-003.json`**, **`retirement-003-interrupt.json`**, **`retirement-003-ownership.json`**, saved `pipeline-{discover,status,report}-retirement-003.txt`. Native **`native-host-ybjio3jv/receipt.json`** records KeyboardInterrupt in Phase B, preserved partial science and **33/33 confirmed cleanup reconciliations**. Earlier receipts remain intact. Components are clean and unchanged.
-
-**Next manager:** reread current requirements, discover/status/report this same run, and reconcile actual ownership before acting. Then use supported **`flow resume 20261113T063709_7f21ba4a`** to repeat interrupted final verification. **No new request or unconditional `--retry` is needed.** The saved regression result describes completed final-005, whose publication defect already received reviewed repair `2e3e7b3`. Final-006 was interrupted for retirement; do not send the old failure back for duplicate repair merely because its pointer persists. Never duplicate a surviving executor.
-
-Trusted execution uses `/home/francesco/miniconda3/bin/python`, inherited authorized host bus/native file authentication, and:
-
-```sh
-export PYTHONPATH="src:$manager_root/coding_pipeline/logs/20261111T063907_2732fff6/runtime/tmp/test-dependencies"
-export RESEARCH_PIPELINE_V0_L5_NATIVE=1
-export RESEARCH_PIPELINE_V0_L5_OUTPUT_DIR="$manager_root/coding_pipeline/logs/manager/v0-l5-continuity-20261113T063510Z-a187c3d5/native-host"
-```
-
-Both L5 native and process gates must execute in fresh final and combined stages with distinct outputs. Keep historical M1–M5 live and accepted L1–L4 native gates disabled unless changed behavior warrants repetition. Restricted Writer bus failures authorize no workaround. Trust pipeline reports; do not independently repeat completed product testing/review or waive failed gates. Avoid advancing main during combined verification unless retirement requires checkpointing.
-
-## L5 evidence and material decisions
-
-- **Reviewed publication repair `2e3e7b3`:** the Writer reproduced final-005's failure: an earlier overlapping draft could overwrite a later job revision from the same context. Later revisions now supersede those earlier drafts, preserving immutable evidence and actual human-edit checks. Two new regressions passed, including preservation of a real human correction; affected suite 204 tests (two skipped), discovery 418 (ten skipped), passing. Independent review approved. Reports `milestones/005/integration-3/{writer,review,test-evidence}.md`; receipt `restart-003-reviewed-publication-repair.json`.
-- **Interrupted final-006:** native Phase A reached acknowledged COMPLETE with cleanup/finalization confirmed; unchanged resume reported existing completion. Phase B actually reopened for corrective feedback and a human scientific-note edit with unchanged questions. Before retirement it had five total opposition exchanges, 26 jobs and seven contexts. Preserve `native-host-ybjio3jv/project/`, receipt and `tests/final-006.txt.commands/0001.txt`. No completed gate pass is claimed.
-- **Failed final-005:** 416 tests, one failure, eight skipped; 1559.063 seconds. `native-host-2xom5geo/receipt.json` records Phase A CLI exit 1: `Scientific reassessment required: Incorporate current human edit before review: work/NUMERICAL_CHECK.md`, before any Phase B operator edits. All 27 cleanup groups confirmed. Process gate passed separately: `native-host-1xidnfy2/receipt.json`. Summary `restart-002-final005-outcome.json`. This failure received the reviewed publication repair above.
-- **Reviewed accounting-gate repair `9ac334c`:** preserve historical observed counters/uncertainty, require resumed usage to increase and label incomplete totals as lower bounds; production behavior unchanged. Independent review approved; discovery 416 tests, ten skipped, passing. Reports `milestones/005/integration-2/`. It fixes final-004's unsupported completeness assumption. **Final-004** had 415 tests, one failure, eight skipped, 1594.537 seconds; both native scientific phases completed with cleanup, process gate passed. Receipts `native-host-iawjnnsh/receipt.json`, `native-host-j7s2jtgm/receipt.json`; summary `restart-002-final004-outcome.json`.
-- Earlier final-002 handoff-link/recovery failures received reviewed repair **`56adcb5`**; `restart-001-final002-outcome.json` and original projects retain evidence. Final-003 was interrupted for prior retirement; its 16-group cleanup and process identities remain in `retirement-002-*` receipts. No historical failure/interruption is relabelled acceptance. Existing temporary-directory/asyncio diagnostics remain disclosed.
-
-The human asked whether work repeatedly stalls around the primary. Observed bottleneck: repeated lengthy public native primary/opponent review/revision/finalization cycles after coding/review, plus distinct engineering failures above. Current evidence shows active progress rather than a proven frozen process. Record actual elapsed/review overhead during L6; no speculative performance redesign is commissioned. Operational fixture expiry/cancellation means failed/interrupted engineering validation, never scientific COMPLETE/STOP.
-
-## Accepted baseline and remaining scope
-
-L4 request `v0-l4-scientific-decisions-20261113T025828Z-9c0cb8e8`, run `20261113T025921_734d7f95`; feature **`2b9c61d08fcad1ea005afeaf3fc219da91e22e06`**, integration **`3a23c695561f5c92ecd9c71c89da6d4c02114b4f`**. Final-005/pre-merge-006 each passed 308 tests, seven disabled gates. Both native investigations reached acknowledged COMPLETE with confirmed cleanup and protected inputs unchanged; no injected science/agreement/quota/clock/rollover. Exact acceptance and native receipts: that request's `acceptance.json`, `native-host-2i4gtxur/receipt.json`, `native-host-a1yw2sfs/receipt.json`. Earlier accepted refs: L1 `542ac0dbfa7a9fa13b99773f19e876054f035e54`, L2 `f9119e31e816e7f83bb475ce01f58a5873f3b6fa`, L3 `c544bf1eefb9dca9da0b96963aff6e7b351c829d`. Historical M1–M4 paid demonstrations need not be repeated merely to reconstruct history.
-
-After L5 integration, resolve confirmed **C1–C3** in human-requested [KNOWN_CONFLICTS.md](KNOWN_CONFLICTS.md): portable ordinary scientific links, concise terminal handoffs, and authoritative-input navigation decoupled from declared scientific dependencies. Draft **`next-portability-request-draft.md`** remains unsubmitted. C4 per-computation tool qualification and C5 broad delegation blocking remain confirmed policies with unmeasured practical impact; no speculative redesign. Then deliver **L6 integrated public lifecycle validation/M5 harness reconciliation**; `next-l6-request-draft.md` is also unsubmitted. Audit evidence stays in the request directory.
-
-The human [lifecycle amendment](2026-11-12-v0-context-lifecycle-design.md) governs: observed **55%** rollover for every role, centralized weekly STOP at **15% remaining or less**, secondary warnings at multiples of **2700 seconds** without automatic replacement, agreement for COMPLETE and primary authority after challenge for scientific STOP. No fixed scientific investigation/session/demo allowance or legacy migration. Preserve original job identities/deadlines, cumulative usage, isolation, human edits and truthful cleanup. Defaults: two agents sharing 2048 MiB, zero swap, 128 tasks, one concurrent job.
-
-## M5 and components
-
-Preserve inactive M5 branch **`cwi/20261111T063907_2732fff6` at `1b70aea25f6c5f8496acdea12e9a27c6f3d4ecbd`**, worktree `coding_pipeline/logs/20261111T063907_2732fff6/worktree/`; run remains blocked / Reviewer, turn 21, lock unowned. Do not resume/reset/approve/merge it merely to unblock development.
-
-Benchmark root **`research_example/`** contains active science/status/indexes directly; runtime `.research_pipeline/`, receipts `.m5-acceptance/`. Protect all starting evidence, questions, research AGENTS.md and archived `starting_evidence/failed_m5_20261111/`. Preserve preliminary science and historical usage (430.693 demonstration / 421.244 product seconds). Workspace/evidence amendment is complete; do not restore superseded 3600/3480/3900-second allowances. Only after L1–L6 acceptance may current-source M5 proceed; **human scientific acceptance remains mandatory**.
-
-Recorded component checkouts remain clean: coding_pipeline **`manager/final-retry-20261110` at `5bc0fbb04ad4e104f252f0dbd61361f62f3085d5`**; controller **`project-manager/setup` at `80063c7a7bbcc615146385b543ea6f921873ccaf`**; preparer **`1b13f917f94af5b20accc27bdf64c4f6b7403d41`**. Preserve these revisions for recovery. A later GitHub audit found the pipeline repairs already incorporated into its upstream main; that does not change the component revision used by this saved run. The controller setup branch remains separate. No component repair or upgrade is commissioned.
-
-No root COMPLETE/STOP or acknowledgement exists. This is ordinary retirement of an unfinished project. Publication receipts record completed pushes only and grant no future authority. Preserve PROJECT.md, protected inputs, human source changes and staged files; commit management records explicitly.
+**Next:** verify the three transport assumptions in PROJECT.md §12, then design and
+hand-build the core.

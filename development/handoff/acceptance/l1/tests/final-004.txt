@@ -1,4 +1,0 @@
-$ ["/home/francesco/miniconda3/bin/python", "-m", "unittest", "discover", "-s", "tests"]
-Exit code: 0; elapsed: 137.877s; empty: False; unavailable: False
-Sibling log: final-004.txt.commands/0001.txt (relative to this report directory)
-

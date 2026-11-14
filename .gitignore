@@ -1,4 +1,3 @@
-
 # Project manager local runtime
 /coding_pipeline/
 /COMPLETE
@@ -6,7 +5,5 @@
 /STOP
 /STOP.ack
 
-# Local implementation checks and bounded research demonstration
-/.m1-local/
 __pycache__/
 *.egg-info/

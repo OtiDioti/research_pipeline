@@ -1,9 +1,0 @@
-{
-  "observed_utc": "2026-11-13T12:12:34.611888+00:00",
-  "run_id": "20261113T063709_7f21ba4a",
-  "reviewed_head": "9ac334c3d2fd536f2e56662dd59bcaad5dd763f6",
-  "phase": "final",
-  "final_test_path": "tests/final-005.txt",
-  "accepted": false,
-  "reports": "milestones/005/integration-2/"
-}
