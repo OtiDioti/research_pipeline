@@ -22,5 +22,14 @@
   Run 4 repeated that scenario: the primary was told the pause was temporary, its rejection went through, and the run reached COMPLETE.
 - **Previous implementation:** tag `pre-v0-restart`. The unmerged L5 work is on the remote branch `cwi/20261113T063709_7f21ba4a`.
 
-**Next:** run the light-hole benchmark (PROJECT.md §11) on a copy of `research_example/`, judge the science, and
-let project_manager deliver further increments.
+**Next:** implement what PROJECT.md (approved 2026-11-16) specifies beyond the code:
+- jobs in their own confinement (`starting_evidence/` read-only, `.research/` hidden for agents and jobs);
+- messages between parents and subagents;
+- idle and stalled agents;
+- the primary's session closed during review;
+- jobs surviving a shutdown;
+- AGENTS.md for every agent, with the CLIs' own discovery switched off;
+- explicit model and effort for every agent.
+
+Then run the light-hole benchmark (PROJECT.md §11) on a copy of `research_example/`, judge the science, and let
+project_manager deliver further increments.

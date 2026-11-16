@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-14. Replaces the previous PROJECT.md and the 2026-11-12
+**Status:** approved 2026-11-16. Replaces the previous PROJECT.md and the 2026-11-12
 lifecycle amendment, which are kept under the git tag `pre-v0-restart`.
 
 ## 1. Purpose
@@ -25,22 +25,22 @@ organise freely.
 
 ```text
 <project>/
-├── AGENTS.md               human: optional instructions for the agents
+├── AGENTS.md               human: optional instructions, given to every agent
 ├── FEEDBACK.md             human: comments and corrections, any time
-├── starting_evidence/      human: read-only for agents
+├── starting_evidence/      human: read-only for agents and their jobs
 │   ├── RESEARCH_QUESTIONS.md   the authoritative questions
 │   └── tools/                  the human's tools
 ├── STATUS.md               primary: current state, findings, next steps
 ├── REPORT.md               primary: the synthesis submitted with COMPLETE
 ├── sources/                shared: papers, notes on them, LITERATURE.md
-├── tools/<name>/           shared: agent-made tools, each with a README.md
+├── tools/<name>/           shared: agent-made tools and environments, each with a README.md
 ├── agents/<id>/            one folder per logical agent (primary, reviewer, ...)
 │   ├── TASK.md             written by the parent at spawn
 │   ├── HANDOFF.md          the agent's latest handoff
 │   ├── RESULT.md           the agent's submitted result
 │   └── ...                 notes, code, data, as the agent sees fit
 ├── reviews/                Reviewer: one file per review round
-└── .research/              controller: state and logs; agents do not edit it
+└── .research/              controller: state and logs; hidden from agents and jobs
 ```
 
 Rules:
@@ -48,18 +48,20 @@ Rules:
 - **Ownership.** Each agent writes in its own `agents/<id>/` and may add to the
   shared `sources/` and `tools/`. Only the primary writes `STATUS.md` and
   `REPORT.md`. Only the Reviewer writes `reviews/`. Files the human owns are never
-  written by agents.
+  written by agents or their jobs.
 - **Confinement.** Each agent session runs inside one `bwrap` boundary. The whole
-  filesystem is read-only except the agent's own folder, `sources/`, `tools/`, its
-  role's files (`STATUS.md` and `REPORT.md` for the primary, `reviews/` for the
-  Reviewer) and the CLI's own state folder. The network is on, and `/tmp` is
-  private to the session. The CLIs' own sandboxes are switched off. One mechanism
-  serves every CLI.
-- **Protected inputs.** Agents cannot write `starting_evidence/`: it is read-only
-  inside their confinement. The human may change it at any time. Jobs are not
-  confined, so at every commit the controller compares it with git and reports
-  any change to the primary and in the TUI. A job's accidental write is therefore
-  visible, not silently accepted.
+  filesystem is readable except `.research/`, which is hidden. Everything is
+  read-only except the agent's own folder, `sources/`, `tools/`, its role's files
+  (`STATUS.md` and `REPORT.md` for the primary, `reviews/` for the Reviewer) and the
+  CLI's own state folder. The network is on, and `/tmp` is private to the session.
+  The CLIs' own sandboxes are switched off. One mechanism serves every CLI.
+- **Job confinement.** Each job runs inside its own `bwrap` boundary, with its own
+  process namespace: `starting_evidence/` is read-only, `.research/` is hidden, and
+  the rest of the filesystem is as the controller sees it.
+- **Protected inputs.** Only the human writes `starting_evidence/`, at any time; it
+  is read-only for agents and their jobs. A job's attempt to write there fails, and
+  its owner sees the error in the job-ended notice. The human's tools therefore take
+  an output path and never write next to themselves.
 - **Markdown.** Agent-written notes and reports are Markdown with LaTeX mathematics.
   Code, data, figures and papers keep their own formats.
 - **Indexes.** Every agent-managed folder has a `FOLDER_CONTENT.md` describing its
@@ -67,11 +69,14 @@ Rules:
   index describes it), `.research/`, and folders git ignores (virtual environments,
   caches).
 - **Tools.** A tool is a folder with code and a `README.md` stating its purpose,
-  usage, dependencies and how it was checked. There is no registry.
+  usage, dependencies and how it was checked. Software that agents install from the
+  internet goes into such documented environments under `tools/`, which agents
+  prefer to software installed elsewhere on the machine. There is no registry.
 - **Large files.** Files over 50 MB stay on disk but are not committed; the commit
   message lists them.
-- **Other projects.** The human may give read-only reference paths at launch.
-  Agents can read and search them, treating their contents as unverified evidence.
+- **Other projects.** The human may give read-only reference paths at launch. The
+  primary is told about them and decides which subagents need them. Agents treat
+  their contents as unverified evidence.
 
 **Layout check.** Whenever an agent hands off, submits a RESULT or proposes
 COMPLETE/STOP, the controller checks its work against these rules: no unexpected
@@ -83,13 +88,13 @@ Markdown. It sends any violations back to the agent to fix.
 There are three roles, all running the same way:
 
 - **Primary:** responsible for the whole investigation. It is started with
-  `RESEARCH_QUESTIONS.md`, `AGENTS.md`, `FEEDBACK.md`, an inventory of starting
-  evidence and tools, and the reference paths.
+  `RESEARCH_QUESTIONS.md`, `FEEDBACK.md`, an inventory of starting evidence and
+  tools, and the reference paths.
 - **Subagent:** spawned by any agent, at any depth, with a `TASK.md` written by its
   parent: objective, how it relates to the parent's question, relevant evidence and
   tools, and the expected result.
 - **Reviewer:** judges the primary's COMPLETE or STOP (§4). The human chooses its
-  CLI and model at launch. It is one logical agent across all review rounds.
+  CLI, model and effort at launch. It is one logical agent across all review rounds.
 
 Every agent:
 
@@ -97,17 +102,29 @@ Every agent:
   controller tools added through MCP (§6). Each CLI's built-in subagent and
   background-task features are disabled, so spawning and long computations go
   through the controller;
+- receives its instructions from the controller only (see **Instructions**);
 - keeps a stable logical identity and folder across any number of sessions;
 - hands off at 55% context (§5);
 - ends by submitting `RESULT.md` to its parent. Submitting ends its session and
   frees its slot. The controller refuses a RESULT while the agent's own subagents
   or jobs are still running, and lists them.
 
-**Spawning.** An agent chooses its subagent's task, evidence, tools and CLI/model/
-effort, within the backends the human allowed at launch. The human sets a cap on
-concurrently running agents. A spawn over the cap is refused with a message such as
-"4/4 agents running"; the agent decides what to do. Agents know nothing else about
-scheduling.
+**Instructions.** Every session receives, as its CLI's system or developer
+instructions, the role prompt (§8) and the project's `AGENTS.md`; both stay in force
+for the whole session. An edit to `AGENTS.md` reaches each agent at its next
+session, and the primary is told at once. In the sessions the controller starts, the
+CLIs discover nothing by themselves: no instruction files (the project's or the
+human's personal `AGENTS.md` or `CLAUDE.md`), skills, plugins, apps or MCP servers
+from the human's own configuration. The human's own use of the CLIs is unaffected.
+At every session start the driver checks the CLI's own report of what it loaded; a
+session that loaded anything personal is stopped, and the human is told why.
+
+**Spawning.** An agent chooses its subagent's task, evidence, tools, CLI, model and
+effort, within the backends the human allowed at launch. Model and effort are always
+explicit: a spawn without them is refused, and so is a launch whose `--primary` or
+`--reviewer` lacks them. The human sets a cap on concurrently running agents. A
+spawn over the cap is refused with a message such as "4/4 agents running"; the agent
+decides what to do. Agents know nothing else about scheduling.
 
 **Results.** When a subagent submits, the controller notifies its parent at once. The
 parent may **accept** the result, or **reject** it with feedback. A rejection restarts
@@ -115,12 +132,36 @@ the same logical agent in a fresh session, with its handoff and the feedback,
 subject to the cap like any spawn. The parent may **cancel** a running subagent at
 any time.
 
+**Messages.** A parent and each of its direct subagents can message each other at
+any time. A message is delivered during the recipient's turn, or starts its next turn
+if it is waiting or idle; a recipient without a session (paused, or between
+sessions) receives it when its next session starts. Messages are not stored in
+files: what matters belongs in the recipient's notes or `HANDOFF.md`. A subagent
+that has submitted its result receives no messages; its parent answers with accept,
+reject or cancel. Agents that are not parent and subagent, such as the primary and
+the Reviewer, do not message each other.
+
+**Waiting, idle and stalled agents.** An agent that ends its turn is *waiting* while
+it has a running or paused subagent or a running job, or, for the primary, a
+proposal under review; the next notice wakes it. Otherwise it is *idle*: the
+controller tells it once to continue or finish, naming any subagent result that
+awaits its decision. If it ends its turn idle again without having used a tool, it
+is *stalled*:
+
+- a stalled subagent keeps its session, and its parent is told, with the
+  subagent's last message; the parent may message it or cancel it;
+- a stalled primary keeps its session, and the human is alerted with its last
+  message; the human's reply continues that session;
+- for a stalled Reviewer, the proposal under review is withdrawn and the
+  Reviewer's session closes; the primary is woken, told why, and may continue,
+  propose again or stop.
+
 ## 4. Finishing: COMPLETE and STOP
 
 **COMPLETE.** The primary proposes COMPLETE when every current research question
 has an adequate answer, or an adequate demonstration that it cannot be answered.
 Negative and inconclusive findings count. The primary first settles its subagents
-and jobs, then submits `REPORT.md`.
+and jobs and updates `HANDOFF.md`, then submits `REPORT.md`.
 
 The Reviewer then examines the results. It can read the whole project, run jobs,
 and spawn helpers to reproduce or check claims independently. It writes
@@ -138,6 +179,15 @@ were addressed.
 justified. The Reviewer challenges the stopping reason and the results so far,
 and may suggest further work. The decision is the primary's: it confirms STOP or
 resumes research.
+
+**During review.** The controller refuses a proposal (COMPLETE or STOP) unless the
+primary updated `HANDOFF.md` during its current session, and tells it that a brief
+handoff suffices. Once the proposal is made, the primary's session closes; the
+primary restarts from its handoff when the verdict arrives. A message from the
+human during the review wakes the primary in talk-only mode: it is told that its
+proposal is under review, its `spawn` and `run_job` calls are refused, and
+`STATUS.md` and `REPORT.md` are read-only for it until the verdict. If the Reviewer
+stalls, the proposal is withdrawn (§3).
 
 **Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs,
 makes a final commit, and `STATUS.md` records the outcome. Machine COMPLETE is not
@@ -180,15 +230,16 @@ A deterministic Python program; it makes no scientific decisions.
 
 **Sessions.** One persistent session per running agent, with messages delivered
 live during a turn: through Codex's app-server and Claude Code's stream-json input
-in V0. Adding a CLI means writing one driver that can start a session with a
-prompt and MCP configuration, deliver a message during a turn, interrupt, and
-report text, tool activity and context use (from the CLI's own reports, §5). It
-also needs one quota probe.
-Confinement is shared by all CLIs.
+in V0. Adding a CLI means writing one driver that can start a session with
+instructions, a prompt and MCP configuration and with the CLI's own discovery
+switched off (§3), deliver a message during a turn, interrupt, and report text,
+tool activity, context use (from the CLI's own reports, §5) and what the CLI loaded
+at start. It also needs one quota probe. Confinement is shared by all CLIs.
 
-**Notices.** Handoff requests, results from subagents, finished jobs and the human's
-messages are delivered to the agent concerned during its turn. When an agent is idle
-(waiting for subagents or jobs), a notice starts its next turn.
+**Notices.** Handoff requests, results from subagents, messages between parents and
+subagents, finished jobs and the human's messages are delivered to the agent
+concerned during its turn. When an agent is waiting or idle (§3), a notice starts
+its next turn.
 
 **Quota.** For each CLI in use, the controller reads the usage windows (the probes
 come from project_manager):
@@ -203,21 +254,26 @@ Spawns on a paused CLI are refused with the reason. Jobs keep running through qu
 pauses.
 
 **Jobs.** Agents run long computations through the controller, so the computations
-survive handoffs and quota pauses. Every job needs an explicit timeout, of any
-length. A job is owned by its logical agent; the owner is notified when it ends.
-Output goes to `agents/<id>/jobs/<job-id>/`. Jobs run unconfined, as plain
-processes. A job is killed at its timeout, on cancel, on a human pause, and on
-COMPLETE/STOP.
+survive handoffs, quota pauses, a shutdown and a crash of the controller. Every job
+needs an explicit timeout, of any length. A job is owned by its logical agent; the
+owner is notified when it ends, with the end of its output and error output. Output
+goes to `agents/<id>/jobs/<job-id>/`. Jobs run in their own confinement (§2). A job
+is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP.
 
 **Pause, shutdown and crash.**
 
-- **Human pause:** every agent hands off gracefully, then all jobs are killed.
-- **Resume:** fresh sessions start from the handoffs. Changes the human made while
-  paused are found with `git diff` against the controller's last commit and reported
-  to the agents whose folders changed, and to the primary.
-- **Crash:** `resume` restarts agents from their latest handoffs, reattaches jobs
-  that are still running, and reads finished jobs' exit status from their folders.
-  Work since the last handoff may be lost; nothing is replayed.
+- **Human pause (Ctrl+P):** every agent hands off gracefully, then all jobs are
+  killed.
+- **Shutdown (Ctrl+Q):** every agent hands off gracefully, then the controller
+  exits; jobs keep running.
+- **Resume** (after a pause, or the next `run` after a shutdown): fresh sessions
+  start from the handoffs, and jobs still running are reattached. Changes since the
+  controller's last commit are found with `git diff` and reported to the agents
+  whose folders changed, and to the primary, as made by the human or by running
+  jobs.
+- **Crash:** the next `run` restarts agents from their latest handoffs, reattaches
+  jobs that are still running, and reads finished jobs' exit status from their
+  folders. Work since the last handoff may be lost; nothing is replayed.
 
 **Human edits.** The human may edit their own files (`RESEARCH_QUESTIONS.md`,
 `AGENTS.md`, `FEEDBACK.md`, starting evidence) at any time; the controller tells the
@@ -231,10 +287,11 @@ naming the agent and event in the commit message. Agents do not commit.
 - the agent tree with each agent's status, CLI and context use;
 - quota status;
 - a chat box that messages the primary;
+- highlighted alerts, such as a stalled primary;
 - Pause/Resume and Shutdown keys.
 
 Launch options:
-- `--primary` and `--reviewer` (backend:model:effort);
+- `--primary` and `--reviewer` (backend:model:effort, all three required);
 - `--backends` (choices allowed for subagents);
 - `--max-agents`;
 - `--reference PATH` (repeatable);
@@ -244,8 +301,9 @@ Launch options:
 
 | Tool | Who | Effect |
 | --- | --- | --- |
-| `spawn(task, backend, model, effort)` | any | Start a subagent from a TASK.md; returns its id, or the refusal reason |
+| `spawn(task, backend, model, effort)` | any | Start a subagent from a TASK.md (all four arguments required); returns its id, or the refusal reason |
 | `agents()` | any | Status of the caller's subagents |
+| `message(agent, text)` | parent, subagent | Message one of the caller's direct subagents, or its parent (§3) |
 | `accept(id)`, `reject(id, feedback)`, `cancel(id)` | parent | Decide on or stop a subagent |
 | `submit_result(path)` | subagent | Deliver RESULT.md to the parent; ends the session |
 | `run_job(command, cwd, timeout)` | any | Start a computation; returns a job id |
@@ -253,7 +311,8 @@ Launch options:
 | `complete(report)`, `stop(reason)` | primary | Propose finishing (§4) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
 
-Every tool reply also carries any pending notices.
+Every tool reply also carries any pending notices. While its proposal is under
+review, the primary's `spawn` and `run_job` are refused (§4).
 
 ## 8. What agents are told
 
@@ -272,7 +331,8 @@ The scientific guidance comes from these expectations:
   check limiting cases. For numerics, check convergence, stability and sensitivity,
   and compare with analytics where possible.
 - Make computations reproducible: code, inputs, parameters, versions, seeds and a
-  command to rerun.
+  command to rerun. Install software into documented environments under `tools/`
+  rather than relying on what happens to be installed on the machine.
 - Label findings preliminary, checked, disputed or superseded. Keep failed
   approaches and negative results worth knowing.
 - Judge novelty against the literature: new to the project is not the same as new
@@ -281,9 +341,12 @@ The scientific guidance comes from these expectations:
 ## 9. V0 acceptance
 
 1. **Automated tests** cover the controller's decisions against a fake CLI driver:
-   spawn and cap refusal, accept/reject/cancel, handoff triggering and repetition,
-   quota pause and resume per CLI, the COMPLETE/STOP exchanges, the layout check,
-   protected-input restore, and human-edit detection. The tests are proportionate:
+   spawn and cap refusal, explicit model and effort, accept/reject/cancel, messages
+   between parent and subagent, handoff triggering and repetition, waiting, idle and
+   stalled agents, quota pause and resume per CLI, the COMPLETE/STOP exchanges with
+   the primary closed during review, the layout check, and human-edit detection.
+   Real processes test the confinement of sessions and jobs (protected inputs,
+   hidden `.research/`) and jobs surviving a shutdown. The tests are proportionate:
    user-visible behaviour and consequential failures, not internals.
 2. **Public smoke run.** A small public investigation through the real CLIs shows
    spawning, a rejected and then accepted RESULT, a job surviving a handoff, a quota
@@ -294,10 +357,9 @@ The scientific guidance comes from these expectations:
 
 ## 10. Not in V0
 
-- Containment beyond one `bwrap` per agent session; network
-  filtering.
+- Containment beyond one `bwrap` per agent session and per job; network filtering.
 - Per-agent resource caps.
-- Peer-to-peer agent messaging.
+- Messaging between agents other than a parent and its subagents.
 - Messaging subagents directly from the TUI.
 - Vector search or embeddings.
 - A tool registry or qualification framework.
@@ -309,9 +371,10 @@ The scientific guidance comes from these expectations:
 
 ## 11. Benchmark
 
-Investigate light-hole spin qubits in Ge-rich quantum wells, coupled to resonators,
-extending the work of Valvo and collaborators, with both substantive analytical
-derivation and meaningful numerical study. The questions, papers and notes are in
+Determine how much each physical mechanism contributes to the linear spin-orbit
+interaction computed for light-hole spin-qubit devices in the paper by Valvo and
+collaborators, with both substantive analytical derivation and meaningful numerical
+study. The authoritative question, the paper and the notes are in
 `research_example/starting_evidence/`. The failed 2026-11-11 attempt is kept there as
 preliminary prior evidence. The benchmark tests general research ability; it must not
 lead to physics-specific code in the platform.
@@ -351,3 +414,11 @@ lead to physics-specific code in the platform.
     single files writable. One `bwrap` around either CLI, with its own sandbox off,
     confined shell and file-tool writes exactly as §2 requires. Because `/tmp` is
     private to each session, projects must not live under `/tmp`.
+  - **Discovery** (checked 2026-11-16, without model calls). Claude Code started
+    with the driver's flags loads no skills, plugins, personal MCP servers or
+    `CLAUDE.md`. Codex loads the personal `AGENTS.md` from its home folder and every
+    `AGENTS.md` from the project root down to the session's folder;
+    `project_doc_max_bytes=0` stops only the project ones. MCP servers from the
+    personal `config.toml` stay loaded whatever the per-session settings say. Codex
+    reports the instruction files it loaded in its `thread/start` reply
+    (`instructionSources`) and its MCP servers on request (`mcpServerStatus/list`).
