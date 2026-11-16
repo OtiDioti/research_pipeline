@@ -144,6 +144,11 @@ that has submitted its result receives no messages; its parent answers with acce
 reject or cancel. Agents that are not parent and subagent, such as the primary and
 the Reviewer, do not message each other.
 
+**Working while subagents and jobs run.** Starting a subagent or a job does not
+stop its parent: the parent keeps doing whatever does not depend on it, and news
+about it reaches the parent as it happens, even during a turn. The parent ends its
+turn only when nothing useful remains until a subagent or job reports.
+
 **Waiting, idle and stalled agents.** An agent that ends its turn is *waiting* while
 it has a running or paused subagent or a running job, or, for the primary, a
 proposal under review; the next notice wakes it. Otherwise it is *idle*: the

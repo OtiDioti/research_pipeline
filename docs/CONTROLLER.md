@@ -58,6 +58,8 @@ subagents with the fewest sessions first.
 
 - **Waiting:** the agent has a running or paused subagent, a running job, or (for
   the primary) a proposal under review. It is left alone; the next notice wakes it.
+  Agents are told to keep working on whatever does not depend on their subagents
+  and jobs, and to end their turn only when nothing useful remains.
 - **Idle:** it ended its turn without waiting for anything. It is nudged once:
   "continue your work, or finish". The nudge names any submitted results that
   await its decision.

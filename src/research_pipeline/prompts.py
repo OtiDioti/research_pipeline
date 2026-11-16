@@ -137,8 +137,9 @@ def human_changed(paths: list[str]) -> str:
 
 def quota_paused(agent_id: str, backend: str) -> str:
     return (f'[controller] Subagent {agent_id} is paused because the usage quota of {backend} is low. This is '
-            'temporary and operational, not a scientific blocker: it resumes automatically. Continue other work, '
-            'or end your turn to wait; do not stop the investigation for this.')
+            'temporary and operational, not a scientific blocker: it resumes automatically. Continue any work '
+            'that does not depend on it, and end your turn only if nothing remains; do not stop the '
+            'investigation for this.')
 
 
 def stray_entries(names: list[str]) -> str:

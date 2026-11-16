@@ -695,7 +695,8 @@ class Controller:
             return (f'Created subagent {child.id}, but its session could not start; the controller retries it or '
                     'asks the human.')
         return (f'Started subagent {child.id} ({child.spec}); its folder is agents/{child.id}/. '
-                'You will be told when it submits its result.')
+                'You will be told when it submits its result; meanwhile, continue any work that does not '
+                'depend on it.')
 
     def _continued(self, caller: Agent) -> None:
         """New work by the primary after a STOP challenge means it chose to continue: the STOP lapses."""
@@ -778,7 +779,8 @@ class Controller:
             why = ('its CLI is paused by the usage quota' if child.pause_reason == 'quota'
                    else 'every agent slot is taken')
             return (f'Rejected the result of {agent}. It will continue with your feedback automatically as soon as '
-                    f'it can run ({why}; this is temporary). Continue other work meanwhile.')
+                    f'it can run ({why}; this is temporary). Meanwhile, continue any work that does not depend on '
+                    'it.')
         await self._start_session(child)
         return f'Rejected the result of {agent}; it continues with your feedback.'
 
@@ -821,7 +823,7 @@ class Controller:
             raise ToolError(f'the job could not start: {error}') from None
         self.state.jobs[job.id] = job
         return (f'Started {job.id} (timeout {timeout:g} s); output in agents/{caller.id}/jobs/{job.id}/. '
-                'You will be told when it ends.')
+                'You will be told when it ends; meanwhile, continue any work that does not depend on it.')
 
     def _job(self, caller: Agent, job_id: str) -> Job:
         job = self.state.jobs.get(job_id)

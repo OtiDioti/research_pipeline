@@ -31,6 +31,9 @@ across any number of sessions.
   `task` (a non-empty Markdown file) is copied to `agents/<id>/TASK.md`. The id
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.
+- Spawning does not stop the parent: it keeps doing whatever does not depend on the
+  subagent, and news reaches it even during its turn. It ends its turn only when
+  nothing useful remains until a subagent or job reports.
 - `submit_result` requires a non-empty RESULT.md, no running subagents or jobs of
   its own, and a passing layout check. The subagent is then `submitted`. Its
   session ends with its turn (after 120 s at most), and its parent is told at once.

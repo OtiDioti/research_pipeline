@@ -119,8 +119,10 @@ what changed meanwhile (by you, or by jobs that kept running).
 - **Agents and subagents.** An agent spawns a subagent by writing a brief and
   calling `spawn` with the subagent's CLI, model and effort. It is told when the
   subagent submits `RESULT.md`, and then accepts the result, or rejects it with
-  feedback (the subagent continues). A parent and its subagents can message each
-  other at any time. Subagents can spawn their own.
+  feedback (the subagent continues). Meanwhile the parent keeps doing whatever does
+  not depend on the subagent, and ends its turn only when nothing useful remains.
+  A parent and its subagents can message each other at any time. Subagents can
+  spawn their own.
 - **Instructions.** Every agent's instructions come from the controller alone:
   its role prompt and your `AGENTS.md`. The CLIs load nothing of your own setup
   (personal instruction files, skills, plugins, MCP servers); your own use of the
