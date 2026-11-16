@@ -1,6 +1,7 @@
 # Confinement
 
-`confine.py`. Every agent session and every job runs inside one bubblewrap
+`agent_sessions` (`confine.py`), the package shared with coding_pipeline and
+project_manager. Every agent session and every job runs inside one bubblewrap
 (`bwrap`) boundary. The CLIs' own sandboxes are switched off; this one mechanism
 serves every CLI.
 
@@ -23,8 +24,9 @@ The CLI state folders are those of Codex (`$CODEX_HOME` or `~/.codex`) and Claud
 Code (`$CLAUDE_CONFIG_DIR`, or `~/.claude`, `~/.claude.json` and `~/.cache/claude`).
 
 **Masked files.** Files of the human's own CLI setup appear as empty, read-only
-files: the Codex `config.toml`, `AGENTS.md` and `AGENTS.override.md`. The empty
-file shown in their place is `~/.cache/research-pipeline/empty`, emptied at
+files, and folders as empty folders: the Codex `config.toml`, `AGENTS.md`,
+`AGENTS.override.md` and `rules/`. The empty file shown in their place is
+`~/.cache/agent-sessions/empty`, emptied at
 every use.
 
 ## Jobs

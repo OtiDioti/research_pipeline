@@ -4,7 +4,7 @@ It owns the agent tree and makes every operational decision; it never makes a
 scientific one. In outline:
 
 - **Sessions.** Each running agent has one persistent CLI session (a driver from
-  :mod:`research_pipeline.drivers`) inside its confinement. Messages reach agents
+  the shared package :mod:`agent_sessions`) inside its confinement. Messages reach agents
   live, during their turn; queued messages are delivered when a session starts.
 - **Tools.** Agents act through the MCP tools of :mod:`research_pipeline.mcp_server`,
   which arrive here through :mod:`research_pipeline.channel` and are handled by
@@ -40,10 +40,11 @@ import sys
 import time
 from typing import Callable
 
+from agent_sessions import CAPABILITIES, DRIVERS, Launch, McpServer, Session, SessionError, SetupError, quota
+
 from research_pipeline import jobs as joblib
-from research_pipeline import prompts, quota
+from research_pipeline import prompts
 from research_pipeline.channel import serve
-from research_pipeline.drivers import DRIVERS, Launch, McpServer, Session, SessionError, SetupError
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ENDED, FINISHED, LIVE, Agent, Job, Options, Spec, State
 
@@ -61,6 +62,8 @@ REMINDER_STEP = 0.25
 CLOSE_GRACE = 120
 #: Times an agent is asked again for HANDOFF.md before its successor starts from the existing one.
 HANDOFF_ASKS = 3
+#: Name under which every agent's CLI attaches the controller's MCP tool server.
+MCP_SERVER = 'research'
 #: Tools each role may call (mirrors research_pipeline.mcp_server.ROLE_TOOLS).
 _COMMON = {'spawn', 'agents', 'message', 'accept', 'reject', 'cancel', 'run_job', 'job_status', 'job_cancel'}
 ROLE_TOOLS = {'primary': _COMMON | {'complete', 'stop'}, 'subagent': _COMMON | {'submit_result'},
@@ -103,6 +106,7 @@ class Controller:
         self._human_checked = 0.0
         self._quota_due = 0.0
         self._strays: set[str] = set()              # unexpected top-level entries already reported
+        self._unmeasured: set[str] = set()          # agents whose current session was reported as unmeasured
 
     # Running ------------------------------------------------------------------------------
 
@@ -269,9 +273,10 @@ class Controller:
         launch = Launch(
             agent=agent.id, cwd=folder, instructions=prompts.instructions(agent, self.project, self.state.options),
             message=prompts.opening(agent, self.project, self.state.options, notices),
-            model=agent.model, effort=agent.effort,
-            mcp=McpServer([sys.executable, '-m', 'research_pipeline.mcp_server'],
-                          {'RP_CHANNEL': self.channel, 'RP_AGENT': agent.id, 'RP_TOKEN': token, 'RP_ROLE': agent.role}),
+            model=agent.model, effort=agent.effort, tools=CAPABILITIES,
+            mcp={MCP_SERVER: McpServer([sys.executable, '-m', 'research_pipeline.mcp_server'],
+                                       {'RP_CHANNEL': self.channel, 'RP_AGENT': agent.id, 'RP_TOKEN': token,
+                                        'RP_ROLE': agent.role})},
             writable=self._scope(agent), hidden=(self.project.research,),
             log=self.project.logs / f'{agent.id}-{agent.sessions}.jsonl')
         session = self.drivers[agent.backend](launch, self._on_event)
@@ -279,6 +284,7 @@ class Controller:
         agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
         # A new session's context use is unknown until its CLI reports it.
         agent.handoff_prompts, agent.nudged, agent.tokens, agent.window = 0, False, None, None
+        self._unmeasured.discard(agent.id)
         self.sessions[agent.id], self.tokens[agent.id] = session, token
         try:
             await session.start()
@@ -370,7 +376,8 @@ class Controller:
             self.show('agent', agent_id, data['text'])
         elif kind == 'tool':
             agent.activity, agent.nudged = data['text'][:200], False
-            self.show('tool', agent_id, data['text'])
+            if data.get('server') != MCP_SERVER:  # the controller's own tools are shown when it handles them
+                self.show('tool', agent_id, data['text'])
         elif kind == 'context':
             await self._context(agent, data.get('tokens'), data.get('window'))
         elif kind == 'turn_ended' and data.get('failed') and not agent.closing:
@@ -420,6 +427,11 @@ class Controller:
     async def _turn_ended(self, agent: Agent, text: str) -> None:
         """An agent ended its turn (``text`` is its final message)."""
         agent.failures = 0
+        if agent.fill is None and agent.id not in self._unmeasured:
+            # Without readings no handoff can be triggered: the agent continues, and the human is told once.
+            self._unmeasured.add(agent.id)
+            self.show('alert', agent.id, f'{agent.id}: its CLI has not reported context use after a full turn, '
+                                         'so its handoffs cannot be triggered in this session.')
         if agent.closing:  # it submitted a result, a verdict or a proposal: its session ends with this turn
             agent.closing = False
             await self._close(agent.id)

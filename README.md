@@ -37,6 +37,7 @@ operational decision:
 - [uv](https://docs.astral.sh/uv/).
 - At least one agent CLI, installed and logged in: [Codex](https://github.com/openai/codex) (`codex`)
   and/or [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`).
+- SSH access to the private repository `OtiDioti/agent_sessions`, which `uv sync` installs as a dependency.
 
 ## Install
 
@@ -129,7 +130,8 @@ what changed meanwhile (by you, or by jobs that kept running).
   update `HANDOFF.md` and end the turn; a fresh session continues from it. The
   request repeats every further 25 points of context. Agents are never killed for
   overshooting. Context use comes only from each CLI's own reports; until a
-  session's CLI has reported it, it shows as unknown and triggers nothing.
+  session's CLI has reported it, it shows as unknown and triggers nothing; if it is
+  still unknown after the session's first turn, you get an ALERT.
 - **Idle and stalled agents.** An agent that ends its turn with nothing running or
   pending is reminded once. If it ends its turn idle again, it has stalled: a
   subagent's parent is told (and may message it or cancel it), you are alerted for
@@ -166,13 +168,8 @@ uv run python -m tests.live_smoke                     # live run through the rea
 ```
 
 The code is in `src/research_pipeline/`; [FOLDER_CONTENT.md](src/research_pipeline/FOLDER_CONTENT.md)
-describes each module. Everything specific to one agent CLI lives in its driver in
-`drivers/`. To support another CLI, write one session driver there and register it
-in `drivers/__init__.py`. The driver provides:
-- `command`: the CLI's command line, with its own discovery switched off;
-- `begin`: its handshake, reporting what the CLI loaded to the shared setup check;
-- `deliver`: message delivery during a turn;
-- `receive`: turning its output into the controller's events, including context use from its own reports;
-- where needed, `state_paths`, `masked_paths` and `read_usage`, its quota probe.
-
-Everything else (confinement, tools, handoffs, jobs, quota policy) is shared.
+describes each module. Everything specific to one agent CLI (the drivers, the
+confinement, the quota probes) lives in the shared package `agent_sessions`; a new
+CLI is one driver there, and research_pipeline needs no change. To work on both at
+once, point `[tool.uv.sources]` in `pyproject.toml` at a local checkout
+(`agent-sessions = { path = "../agent_sessions", editable = true }`).

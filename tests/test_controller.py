@@ -8,7 +8,8 @@ import asyncio
 import unittest
 
 from research_pipeline.controller import Controller
-from research_pipeline.drivers import SetupError
+from agent_sessions import SetupError
+
 from research_pipeline.project import ProjectError
 from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project
 
@@ -292,6 +293,17 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertNotIn('Your context is', sent(harness, 'primary'))
             await harness.emit('primary', 'context', tokens=560_000, window=None)  # window known in this session
             self.assertIn('Your context is 56% full', sent(harness, 'primary'))
+
+    async def test_unmeasured_context_alerts_the_human_once_per_session(self):
+        async with running(self.root) as harness:
+            child = await self.spawn(harness)
+            await harness.emit(child, 'context', tokens=1_000, window=100_000)
+            await harness.emit(child, 'turn_ended', text='')  # measured: nothing to report
+            await harness.emit('primary', 'turn_ended', text='')
+            await harness.emit('primary', 'turn_ended', text='')
+            alerts = [(agent, text) for kind, agent, text in harness.lines if kind == 'alert' and 'context use' in text]
+            self.assertEqual(alerts, [('primary', alerts[0][1])])
+            self.assertEqual(harness.state.agents['primary'].status, 'running')  # it continues
 
     async def test_handoff_asks_again_until_updated(self):
         async with running(self.root) as harness:

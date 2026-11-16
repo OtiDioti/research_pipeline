@@ -18,6 +18,8 @@ over from an earlier session, or asked of the agent.
   change between calls.
 - Until both are reported, the fill is unknown: the terminal app shows `–`, and
   nothing is triggered. Every new session starts unknown.
+- If a session's fill is still unknown after its first turn, the human gets an
+  ALERT, once per session: that session cannot be handed off. It continues.
 
 ## Handoff
 

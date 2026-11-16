@@ -12,9 +12,9 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | Context handoffs | `controller.py`, drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
 | Review and finishing | `controller.py` | COMPLETE, STOP, the Reviewer exchange, reopening | [FINISHING.md](FINISHING.md) |
 | Jobs | `jobs.py` | Long computations outside the agents' sessions | [JOBS.md](JOBS.md) |
-| Quota | `quota.py`, drivers | Pausing a CLI's agents before its usage runs out | [QUOTA.md](QUOTA.md) |
-| Confinement | `confine.py` | The bwrap boundary of every session and job | [CONFINEMENT.md](CONFINEMENT.md) |
-| CLI drivers | `drivers/` | One persistent session per agent; everything CLI-specific | [DRIVERS.md](DRIVERS.md) |
+| Quota | `controller.py`, `agent_sessions` | Pausing a CLI's agents before its usage runs out | [QUOTA.md](QUOTA.md) |
+| Confinement | `agent_sessions` (`confine.py`) | The bwrap boundary of every session and job | [CONFINEMENT.md](CONFINEMENT.md) |
+| CLI drivers | `agent_sessions` (shared package) | One persistent session per agent; everything CLI-specific | [DRIVERS.md](DRIVERS.md) |
 | Agent tools | `mcp_server.py`, `channel.py` | The MCP tools agents call, and how calls reach the controller | [TOOLS.md](TOOLS.md) |
 | Project folder | `project.py`, `state.py` | Layout, layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
 | Operating it | `cli.py`, `view.py` | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |
@@ -36,7 +36,7 @@ Every significant event is committed to the project's git repository.
 | Symptom | First look at |
 |---|---|
 | An agent is idle and nothing happens | [CONTROLLER.md](CONTROLLER.md), "Waiting, idle and stalled agents" |
-| An ALERT in the terminal app | [CONTROLLER.md](CONTROLLER.md) (stalled primary), [DRIVERS.md](DRIVERS.md) (personal setup loaded) |
+| An ALERT in the terminal app | [CONTROLLER.md](CONTROLLER.md) (stalled primary), [DRIVERS.md](DRIVERS.md) (personal setup loaded), [CONTEXT.md](CONTEXT.md) (context use unknown) |
 | An agent paused with reason `failure` | [CONTROLLER.md](CONTROLLER.md), "Failures"; its session log ([OPERATIONS.md](OPERATIONS.md)) |
 | An agent paused with reason `quota` or `slots` | [QUOTA.md](QUOTA.md); `--max-agents` in [OPERATIONS.md](OPERATIONS.md) |
 | Handoffs too early, too late, or not at all | [CONTEXT.md](CONTEXT.md) |

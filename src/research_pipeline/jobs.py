@@ -21,7 +21,8 @@ import subprocess
 import time
 from typing import Iterable
 
-from research_pipeline import confine
+from agent_sessions import confine
+
 from research_pipeline.state import Job
 
 #: Exit status of ``timeout`` when it stopped the command (124) or had to kill it (137).

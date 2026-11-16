@@ -2,7 +2,7 @@
 
 The controller pauses a CLI's agents before its usage windows run out, and resumes
 them afterwards. Each driver reads its own CLI's windows without a model call
-([DRIVERS.md](DRIVERS.md)); `quota.py` holds the shared rules.
+([DRIVERS.md](DRIVERS.md)); the controller applies the limits.
 
 ## Reading
 

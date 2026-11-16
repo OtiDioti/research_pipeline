@@ -13,7 +13,8 @@ import signal
 import sys
 
 from research_pipeline.controller import Controller
-from research_pipeline.drivers import DRIVERS
+from agent_sessions import DRIVERS
+
 from research_pipeline.project import Project, ProjectError
 from research_pipeline.state import LIVE, Options, Spec, State
 

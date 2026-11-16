@@ -13,10 +13,11 @@ from pathlib import Path
 import shutil
 import tempfile
 
+from agent_sessions import SessionError
+from agent_sessions.quota import Window
+
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller
-from research_pipeline.drivers import SessionError
-from research_pipeline.quota import Window
 from research_pipeline.state import Options
 
 #: Temporary projects live here: projects may not live under /tmp (see Project.prepare).

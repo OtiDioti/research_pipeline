@@ -225,7 +225,8 @@ open issues, running jobs and subagents, and the next concrete step. The science
 itself lives in the agent's notes, not in the handoff.
 
 While context use is unknown (not yet reported, or the CLI stops reporting it), the
-TUI shows it as unknown and the agent continues.
+TUI shows it as unknown and the agent continues. If it is still unknown after a
+session's first turn, the human is alerted once: that session cannot be handed off.
 
 ## 6. Controller
 
@@ -237,8 +238,10 @@ in V0. Adding a CLI means writing one driver that can start a session with
 instructions, a prompt and MCP configuration and with the CLI's own discovery
 switched off (§3), deliver a message during a turn, interrupt, and report text,
 tool activity, context use (from the CLI's own reports, §5) and what the CLI loaded
-at start, and that can read the CLI's usage quota. Everything specific to a CLI
-lives in its driver; confinement and every decision are shared by all CLIs.
+at start, and that can read the CLI's usage quota. The drivers and the confinement
+come from `agent_sessions`, a private package shared with coding_pipeline and
+project_manager and installed as a dependency; everything specific to a CLI lives
+there, and every decision is the controller's.
 
 **Notices.** Handoff requests, results from subagents, messages between parents and
 subagents, finished jobs and the human's messages are delivered to the agent
@@ -388,8 +391,8 @@ lead to physics-specific code in the platform.
 - **Order.** The core (controller, CLI drivers, MCP tools, jobs, handoffs, layout
   check, TUI) is built by hand, with Claude. After that, project_manager delivers
   increments.
-- **Reuse.** CLI driver and quota code is copied and adapted from coding_pipeline
-  and project_manager, not imported.
+- **Reuse.** CLI drivers, confinement and quota probes come from `agent_sessions`,
+  shared with coding_pipeline and project_manager.
 - **Justification.** Every component must trace to a behaviour in this document.
   Prefer existing libraries, plain files and small reversible designs; handle
   realistic failures, not every conceivable one. Removing code is as welcome as

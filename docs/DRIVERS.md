@@ -1,46 +1,59 @@
 # CLI drivers
 
-`drivers/`. One persistent session per running agent. Each driver is the only
-code that knows its CLI; everything else is generic.
+One persistent session per running agent, from the private package
+`agent_sessions`, shared with coding_pipeline and project_manager. It is the only
+code that knows the CLIs. research_pipeline only describes each session in
+CLI-neutral terms (a `Launch`) and reacts to its events.
 
-## The shared base (`drivers/base.py`)
+## What research_pipeline asks for
 
-- Starts the CLI inside its confinement, and speaks JSON lines on its stdin and stdout.
-- Logs every line to `.research/logs/<agent>-<session>.jsonl`. Prefixes: `>` sent,
-  `<` received, `E` error output, `!` a message it couldn't handle.
+Every agent session gets:
+- **Session instructions:** the role prompt and the human's AGENTS.md.
+- **Model and effort:** the agent's own, always explicit.
+- **All native capabilities:** shell commands, files and the web.
+- **One MCP server**, `research`, the controller's tools ([TOOLS.md](TOOLS.md)).
+- **Confinement:** its role's write scope, with `.research/` hidden ([CONFINEMENT.md](CONFINEMENT.md)).
+- **A log** of every JSON line, in `.research/logs/<agent>-<session>.jsonl`. Prefixes: `>` sent, `<` received,
+  `E` error output, `!` a message it couldn't handle.
+
+The agent's own calls to the `research` tools are shown when the controller handles them, not twice.
+
+## The shared base
+
+- Starts the CLI inside its confinement and speaks JSON lines on its stdin and stdout.
 - Matches replies to requests (timeout: 120 s); a request still waiting when the CLI ends fails at once.
 - **Setup check:** refuses a session whose CLI reports having loaded any instruction
-  file, skill, or MCP server other than the controller's `research` server.
+  file, skill, or MCP server it wasn't given.
 - Turns everything into five events for the controller: `text`, `tool`, `context`, `turn_ended`, `exited`.
 - Closing: the CLI gets SIGTERM, then SIGKILL after 10 s; its confinement ends with it.
 - An unexpected exit reports the last 20 lines of the CLI's error output.
 
-## Codex (`drivers/codex.py`)
+## Codex
 
 - **Process:** `codex app-server`, speaking JSON-RPC.
 - **Discovery off:**
-  - native subagents, apps, plugins, host skills and user-input requests are disabled;
-  - `project_doc_max_bytes=0` stops project AGENTS.md files;
-  - the personal `config.toml` and `AGENTS.md` are masked ([CONFINEMENT.md](CONFINEMENT.md)).
+  - project AGENTS.md files (`project_doc_max_bytes=0`);
+  - native subagents, apps, plugins, skills, hooks and similar ambient features;
+  - the personal `config.toml`, `AGENTS.md`, `AGENTS.override.md` and command `rules/`, which are masked. The credential store chosen in `config.toml` is kept, so logins still work.
 - **Start:**
   1. `initialize`;
-  2. `thread/start` (ephemeral, `danger-full-access` inside our confinement, no
-     approvals, the session instructions as developer instructions);
+  2. `thread/start`: ephemeral, `danger-full-access` inside our confinement, no
+     approvals, the session instructions as developer instructions;
   3. the setup check, on `instructionSources` and `mcpServerStatus/list`;
   4. `turn/start` with the opening message.
 - **Messages:** `turn/steer` during a turn, otherwise a new `turn/start`.
-- **Context:** `thread/tokenUsage/updated`.
+- **Context:** `thread/tokenUsage/updated`, after every model call.
 - **Requests from Codex** (approvals) are refused.
 - **Quota:** `account/rateLimits/read` on a short-lived app-server.
 
-## Claude Code (`drivers/claude.py`)
+## Claude Code
 
 - **Process:** `claude -p` with stream-json in and out, no session persistence,
   and permissions bypassed inside our confinement.
 - **Discovery off:**
-  - no setting sources, hooks off, sandbox off;
-  - only the controller's MCP server;
-  - built-in tools limited (no skills, no Task or Agent);
+  - no setting sources, hooks off, sandbox off, no slash commands;
+  - only the given MCP servers;
+  - built-in tools limited to the capabilities, with no skills, Task or Agent;
   - no CLAUDE.md, auto-memory, background tasks or auto-updates.
 - **Start:** `get_context_usage` (the window and starting fill; the instruction
   files and skills loaded) and `mcp_status` (its MCP servers); then the setup
@@ -54,16 +67,12 @@ code that knows its CLI; everything else is generic.
 
 | Symptom | Likely cause |
 |---|---|
-| "loaded the human's own setup (…)" | A personal file or server reached the session; remove it from that CLI's configuration, or fix the driver's switches; then Ctrl+R |
+| "loaded the human's own setup (…)" | A personal file or server reached the session; remove it from that CLI's configuration, or fix the driver's switches in `agent_sessions`; then Ctrl+R |
 | "Codex refused …" / "Claude Code refused …" | The CLI rejected a request; the reason follows (e.g. an unknown model) |
 | "… exited with status …" | The CLI ended by itself; the last error lines follow |
-| Context stays `–` | The CLI hasn't reported both tokens and window yet |
+| Context stays `–`, then an ALERT | The CLI hasn't reported both tokens and window; that session can't be handed off |
 
 ## Adding a CLI
 
-Write one `Session` subclass and register it in `drivers/__init__.py`. It provides:
-- `command`: the command line, with the CLI's own discovery switched off;
-- `begin`: the handshake, then `check_setup` with what the CLI reports having loaded;
-- `deliver`: messages during a turn, or as a new turn;
-- `receive`: turning the CLI's output into the five events;
-- optionally `environment`, `state_paths`, `masked_paths` and `read_usage` (the quota probe).
+A new CLI is one driver in `agent_sessions` (see its README). research_pipeline
+needs no change beyond allowing the new backend name in `--backends`.

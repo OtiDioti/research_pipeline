@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.14' and sys_platform == 'win32'",
@@ -7,6 +7,11 @@ resolution-markers = [
     "python_full_version < '3.14' and sys_platform == 'win32'",
     "python_full_version < '3.14' and sys_platform != 'win32'",
 ]
+
+[[package]]
+name = "agent-sessions"
+version = "0.1.0"
+source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.0#6592f47fbbeea9412075722d88e45c9d01e8fccc" }
 
 [[package]]
 name = "annotated-types"
@@ -591,12 +596,14 @@ name = "research-pipeline"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "agent-sessions" },
     { name = "mcp" },
     { name = "prompt-toolkit" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "agent-sessions", git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.0" },
     { name = "mcp", specifier = ">=1.26,<2" },
     { name = "prompt-toolkit", specifier = "==3.0.52" },
 ]

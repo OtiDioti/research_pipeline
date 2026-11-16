@@ -21,10 +21,10 @@ from pathlib import Path
 import shutil
 import time
 
+from agent_sessions import DRIVERS, quota
+
 from research_pipeline import controller as controller_module
-from research_pipeline import quota
 from research_pipeline.controller import Controller
-from research_pipeline.drivers import DRIVERS
 from research_pipeline.state import Options
 
 ROOT = Path.home() / '.cache' / 'research-pipeline-smoke'
