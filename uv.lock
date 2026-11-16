@@ -11,7 +11,7 @@ resolution-markers = [
 [[package]]
 name = "agent-sessions"
 version = "0.2.0"
-source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?branch=shared-machinery#f1c27543aaa13f6ed3fe678c204d9d3cf89f53a9" }
+source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?branch=shared-machinery#c095a420d2d57cf15caa9b280a2bc80e3a13d4cc" }
 
 [package.optional-dependencies]
 console = [

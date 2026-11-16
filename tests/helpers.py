@@ -14,7 +14,7 @@ import shutil
 import tempfile
 
 from agent_sessions.quota import Window
-from agent_sessions.testing import FAKE_DRIVERS, FakeClaude, FakeSession  # noqa: F401 (used by the tests)
+from agent_sessions.testing import FAKE_DRIVERS, FakeSession  # noqa: F401 (used by the tests)
 
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller
