@@ -8,9 +8,9 @@ messages between a parent and its subagents, as the instructions announce.
 """
 from __future__ import annotations
 
-from importlib.resources import files
 from pathlib import Path
-from string import Template
+
+from agent_sessions.protocol import Prompts
 
 from research_pipeline.project import Project
 from research_pipeline.state import Agent, Options
@@ -22,21 +22,19 @@ _FINISH = {'primary': 'propose complete (or stop) when the questions are answere
            'reviewer': 'write your review and call verdict'}
 # Longer human files are shortened in instructions and opening messages (the agent can read them in full).
 _EXCERPT = 20_000
-
-
-def _template(name: str) -> str:
-    return files('research_pipeline').joinpath('prompts', name).read_text(encoding='utf-8')
+#: The role prompt files; every placeholder must be filled.
+PROMPTS = Prompts('research_pipeline')
 
 
 def instructions(agent: Agent, project: Project, options: Options) -> str:
     """The session instructions of ``agent``: its role prompt, then the human's AGENTS.md (PROJECT.md §3)."""
     extra = {'primary': ', and in STATUS.md, REPORT.md and the root FOLDER_CONTENT.md',
              'reviewer': ', and in reviews/'}.get(agent.role, '')
-    text = Template(_template('common.md') + _template(f'{agent.role}.md')).safe_substitute(
-        id=agent.id, title=TITLES[agent.role], project=project.root, folder=project.agent_dir(agent.id),
-        extra=extra, backends=', '.join(options.backends), parent=agent.parent or '')
+    text = PROMPTS.fill('common', agent.role, id=agent.id, title=TITLES[agent.role], project=project.root,
+                        folder=project.agent_dir(agent.id), extra=extra, backends=', '.join(options.backends),
+                        parent=agent.parent or '')
     human = _section('Instructions from the human', project.root / 'AGENTS.md', level='#')
-    return f'{text}\n{human}\n' if human else text
+    return f'{text}\n\n{human}\n' if human else text + '\n'
 
 
 def _section(title: str, path: Path, level: str = '##') -> str | None:

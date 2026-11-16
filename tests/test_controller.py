@@ -23,8 +23,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.root = temp_project()
-        FakeSession.instances.clear()
-        FakeSession.start_error = None
+        FakeSession.reset()
 
     def tearDown(self):
         FakeSession.start_error = None
@@ -138,6 +137,8 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn('invalid arguments', await harness.call('primary', 'spawn', task='brief.md'))
             self.assertIn('model and an effort are required', await harness.call(
                 'primary', 'spawn', task='brief.md', backend='codex', model='', effort='high'))
+            self.assertIn('does not accept effort', await harness.call(  # refused before any session starts
+                'primary', 'spawn', task='brief.md', backend='claude', model='opus', effort='enormous'))
             child = await self.spawn(harness, name='Convergence Check', backend='claude', model='opus', effort='max')
             self.assertEqual(child, 'convergence-check')
             agent = harness.state.agents[child]

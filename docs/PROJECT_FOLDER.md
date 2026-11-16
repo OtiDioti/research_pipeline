@@ -54,7 +54,10 @@ or by anything else, is reported to the primary within about 10 s, and at every 
 ## Git
 
 The controller commits under the identity `research-pipeline`; agents cannot write
-`.git` (jobs can). Every commit message names the agent and the event:
+`.git` (jobs can). It runs git through the safe runner of `agent_sessions.git`: hooks,
+fsmonitor, the pager, external diff tools and signing are off, so nothing a job puts
+into `.git` runs outside the confinement, while your own global git configuration
+(ignore file, default branch, LFS) still applies. Every commit message names the agent and the event:
 
 | Event | Message |
 |---|---|

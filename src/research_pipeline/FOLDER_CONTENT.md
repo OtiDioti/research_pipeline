@@ -11,4 +11,4 @@
 - [jobs.py](jobs.py) — Long computations that outlive agent sessions.
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.
 - [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role.
-- [view.py](view.py) — The terminal app (adapted from project_manager).
+- [view.py](view.py) — The terminal app (built on agent_sessions' shared one).

@@ -2,7 +2,9 @@
 
 The controller pauses a CLI's agents before its usage windows run out, and resumes
 them afterwards. Each driver reads its own CLI's windows without a model call
-([DRIVERS.md](DRIVERS.md)); the controller applies the limits.
+([DRIVERS.md](DRIVERS.md)); the usage guard all agent controllers share
+(`agent_sessions.quota.Guard`) turns the readings into holds, and the controller
+decides what a hold pauses.
 
 ## Reading
 
@@ -14,9 +16,9 @@ them afterwards. Each driver reads its own CLI's windows without a model call
 
 | Reading | Hold | Ends |
 |---|---|---|
-| A short window at `--short-limit` (15%) left or less | `short` | Automatically, at the first reading above the limit (after the reset) |
+| A short window at `--short-limit` (15%) left or less | `short` | Automatically, at the first reading above the limit taken at or after the reported reset |
 | A weekly window at `--weekly-limit` (15%) left or less | `weekly` | Only when the human resumes: Ctrl+R, a resume after a pause, or the next `run` |
-| Unreadable twice in a row | `unreadable` | As for weekly |
+| Unreadable twice in a row (one failure is taken for a glitch) | `unreadable` | As for weekly |
 
 A limit of 0 disables that check. A CLI without a usage probe is never held.
 

@@ -90,7 +90,8 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 | `--max-agents` | agents working at the same time (4); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
 | `--short-limit`, `--weekly-limit` | % left of a CLI's short or weekly usage window that pauses its agents (15) |
-| `--context-threshold` | context fill that triggers a handoff (0.55); keep it well above a fresh session's own start-up context |
+| `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
+| `--no-durable-state` | write the controller's state without forcing it to disk (for slow network filesystems) |
 | `--no-tui` | print the transcript instead of the terminal app |
 
 Running the same command again resumes a paused, shut down or interrupted
@@ -176,7 +177,10 @@ uv run python -m tests.live_smoke                     # live run through the rea
 
 The code is in `src/research_pipeline/`; [FOLDER_CONTENT.md](src/research_pipeline/FOLDER_CONTENT.md)
 describes each module. Everything specific to one agent CLI (the drivers, the
-confinement, the quota probes) lives in the shared package `agent_sessions`; a new
-CLI is one driver there, and research_pipeline needs no change. To work on both at
+confinement, the quota probes) lives in the shared package `agent_sessions`, together
+with the machinery research_pipeline shares with coding_pipeline and project_manager:
+the handoff rules, the usage guard, durable records, the safe git runner, strict prompt
+files and the terminal app. A new CLI is one driver there, and research_pipeline needs
+no change. To work on both at
 once, point `[tool.uv.sources]` in `pyproject.toml` at a local checkout
 (`agent-sessions = { path = "../agent_sessions", editable = true }`).

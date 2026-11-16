@@ -18,7 +18,7 @@ from tests.helpers import FAKE_DRIVERS, launch_options, remove, temp_project
 
 def arguments(**values):
     defaults = dict(primary=None, reviewer=None, backends=None, max_agents=None, reference=None, short_limit=None,
-                    weekly_limit=None, context_threshold=None)
+                    weekly_limit=None, context_threshold=None, durable=None)
     return argparse.Namespace(**(defaults | values))
 
 
@@ -31,8 +31,13 @@ class CliTest(unittest.TestCase):
         merged = cli.options_from(arguments(max_agents=3, context_threshold=0.5), stored)
         self.assertEqual((merged.primary, merged.backends, merged.max_agents, merged.threshold),
                          ('codex:gpt-test:high', ['codex'], 3, 0.5))
-        with self.assertRaises(ValueError):
-            cli.options_from(arguments(context_threshold=2), None)
+        for threshold in (2, 0.9):  # at most 0.8: room is needed to write the handoff note
+            with self.subTest(threshold=threshold), self.assertRaises(ValueError):
+                cli.options_from(arguments(context_threshold=threshold), None)
+        self.assertTrue(merged.durable)
+        self.assertFalse(cli.options_from(arguments(durable=False), stored).durable)
+        with self.assertRaisesRegex(ValueError, 'does not accept effort'):
+            cli.options_from(arguments(primary='claude:opus:enormous'), None)
         with self.assertRaises(ValueError) as raised:
             cli.options_from(arguments(primary='claude:opus'), None)  # model and effort are always explicit
         self.assertIn('--primary', str(raised.exception))
@@ -144,7 +149,7 @@ class AppLifecycleTest(unittest.IsolatedAsyncioTestCase):
                 session.emit('turn_ended', text='')
                 self.assertEqual(await asyncio.wait_for(running, 10), 0)
                 self.assertEqual(controller.state.status, 'paused')
-                self.assertTrue(any('Shutting down cleanly' in entry[3] for entry in app.entries))
+                self.assertTrue(any('Shutting down cleanly' in entry.text for entry in app.entries))
         finally:
             controller_module.WATCH_INTERVAL = saved
             remove(root)
