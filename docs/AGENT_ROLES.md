@@ -27,7 +27,9 @@ across any number of sessions.
 
 ## Subagents
 
-- `spawn(task, backend, model, effort, name)` needs all four arguments. The brief
+- `spawn(task, backend, model, effort, name)` needs all four arguments. The role
+  prompt limits model and effort to `claude-opus-5-5` (claude) or `gpt-6.1-sol`
+  (codex), at `high` or `xhigh`, unless the project's `AGENTS.md` says otherwise. The brief
   `task` (a non-empty Markdown file) is copied to `agents/<id>/TASK.md`. The id
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.

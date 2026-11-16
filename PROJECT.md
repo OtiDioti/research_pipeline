@@ -125,7 +125,9 @@ session that loaded anything personal is stopped, and the human is told why.
 **Spawning.** An agent chooses its subagent's task, evidence, tools, CLI, model and
 effort, within the backends the human allowed at launch. Model and effort are always
 explicit: a spawn without them is refused, and so is a launch whose `--primary` or
-`--reviewer` lacks them. The human sets a cap on concurrently running agents. A
+`--reviewer` lacks them. The role prompt limits the choice to Opus 5.5
+(`claude-opus-5-5`) or GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high` or `xhigh`,
+unless the human's `AGENTS.md` says otherwise. The human sets a cap on concurrently running agents. A
 spawn over the cap is refused with a message such as "4/4 agents running"; the agent
 decides what to do. Agents know nothing else about scheduling.
 

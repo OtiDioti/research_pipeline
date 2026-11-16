@@ -13,7 +13,7 @@ from pathlib import Path
 from string import Template
 
 from research_pipeline.project import Project
-from research_pipeline.state import Agent, Options, Spec
+from research_pipeline.state import Agent, Options
 
 TITLES = {'primary': 'primary researcher', 'subagent': 'research subagent', 'reviewer': 'independent Reviewer'}
 # What "finishing" means for each role, for the nudge.
@@ -32,10 +32,9 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
     """The session instructions of ``agent``: its role prompt, then the human's AGENTS.md (PROJECT.md §3)."""
     extra = {'primary': ', and in STATUS.md, REPORT.md and the root FOLDER_CONTENT.md',
              'reviewer': ', and in reviews/'}.get(agent.role, '')
-    choices = dict.fromkeys(map(str, (agent.spec, Spec.parse(options.primary), Spec.parse(options.reviewer))))
     text = Template(_template('common.md') + _template(f'{agent.role}.md')).safe_substitute(
         id=agent.id, title=TITLES[agent.role], project=project.root, folder=project.agent_dir(agent.id),
-        extra=extra, backends=', '.join(options.backends), choices=', '.join(choices), parent=agent.parent or '')
+        extra=extra, backends=', '.join(options.backends), parent=agent.parent or '')
     human = _section('Instructions from the human', project.root / 'AGENTS.md', level='#')
     return f'{text}\n{human}\n' if human else text
 
