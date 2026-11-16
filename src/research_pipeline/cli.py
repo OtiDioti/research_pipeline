@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 from datetime import datetime
+import fcntl
 from pathlib import Path
 import signal
 import sys
@@ -90,12 +91,27 @@ async def headless(controller: Controller) -> int:
         return 130
 
 
+def controller_running(project: Project) -> bool:
+    """Whether a controller is running ``project``: it holds the project's lock for as long as it runs."""
+    try:
+        with open(project.lock_file) as lock:
+            fcntl.flock(lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
+    except FileNotFoundError:
+        return False
+    except BlockingIOError:
+        return True
+    return False
+
+
 def show_status(project: Project) -> int:
+    """Print the stored state; live agents have sessions only while a controller is running."""
     if not project.state_file.exists():
         print(f'No investigation in {project.root}.')
         return 1
     state = State.load(project.state_file)
+    running = controller_running(project)
     print(f'Investigation: {state.status}' + (f' — {state.outcome}' if state.outcome else ''))
+    print('Controller: ' + ('running' if running else 'not running'))
     if state.proposal:
         print(f'Proposal: {state.proposal["kind"].upper()} round {state.proposal["round"]}'
               + (' (reviewed)' if state.proposal.get('reviewed') else ''))
@@ -105,7 +121,7 @@ def show_status(project: Project) -> int:
     for agent in state.agents.values():
         reason = f' ({agent.pause_reason})' if agent.status == 'paused' and agent.pause_reason else ''
         print(f'  {agent.id:24} {agent.role:9} {str(agent.spec):28} {agent.status}{reason}'
-              + (' [no live session: controller not running]' if agent.status in LIVE else ''))
+              + (' [no live session: controller not running]' if agent.status in LIVE and not running else ''))
     running = state.running_jobs()
     if running:
         print('\nRunning jobs:')

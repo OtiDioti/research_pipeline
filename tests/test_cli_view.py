@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import contextlib
+import fcntl
 import io
 import unittest
 
@@ -50,6 +51,27 @@ class CliTest(unittest.TestCase):
                 self.assertEqual(cli.main(['status', str(root)]), 0)
             self.assertIn('Investigation: paused', output.getvalue())
             self.assertIn('paused (human)', output.getvalue())
+        finally:
+            remove(root)
+
+    def test_status_tells_whether_a_controller_is_running(self):
+        root = temp_project()
+        try:
+            state = State(status='running')
+            state.agents['primary'] = Agent('primary', 'primary', None, 'codex', 'gpt-test', 'high', status='running')
+            state.save(root / '.research' / 'state.json')
+            stopped = io.StringIO()
+            with contextlib.redirect_stdout(stopped):
+                cli.main(['status', str(root)])
+            self.assertIn('Controller: not running', stopped.getvalue())
+            self.assertIn('[no live session: controller not running]', stopped.getvalue())
+            with open(root / '.research' / 'lock', 'w') as lock:  # held like a running controller holds it
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                live = io.StringIO()
+                with contextlib.redirect_stdout(live):
+                    cli.main(['status', str(root)])
+            self.assertIn('Controller: running', live.getvalue())
+            self.assertNotIn('no live session', live.getvalue())
         finally:
             remove(root)
 

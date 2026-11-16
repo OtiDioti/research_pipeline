@@ -14,7 +14,7 @@ dependencies = ["agent-sessions", "mcp>=1.26,<2", "prompt_toolkit==3.0.52"]
 research-pipeline = "research_pipeline.cli:main"
 
 [tool.uv.sources]
-agent-sessions = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git", tag = "v0.1.0" }
+agent-sessions = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git", tag = "v0.1.1" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

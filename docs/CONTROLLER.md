@@ -99,7 +99,8 @@ A successful turn resets the failure count. Agents fail independently: the other
 ## Each `run`
 
 - Takes `.research/lock`; a second controller on the same project is refused.
-- **First run:** prepares the layout, commits "controller: project prepared", and starts the primary.
+- **First run:** prepares the layout (a new repository starts with the commit "controller: project
+  prepared"), commits "controller: investigation started", and starts the primary.
 - **After a pause or shutdown:** changes since the last commit are committed and
   announced to the primary and to the owners of changed agent folders, "by the
   human or by running jobs".

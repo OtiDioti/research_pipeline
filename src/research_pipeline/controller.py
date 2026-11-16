@@ -220,7 +220,7 @@ class Controller:
             agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
         changed = self.project.uncommitted()
         if not state.agents['primary'].sessions:  # the first run
-            self._commit('controller: project prepared')
+            self._commit('controller: investigation started')
         elif state.status in FINISHED:
             outcome = state.status.upper()
             self._commit('human: changes before reopening')

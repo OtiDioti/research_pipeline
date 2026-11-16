@@ -11,8 +11,8 @@ options are listed in [README.md](../README.md).
   be at least 2 (the primary and the Reviewer).
 - Options given on a later run replace the stored ones.
 - `research-pipeline status PROJECT` prints the state without starting anything:
-  the investigation, the proposal, quota holds, each agent with its pause reason,
-  and running jobs.
+  the investigation, whether a controller is running it, the proposal, quota
+  holds, each agent with its pause reason, and running jobs.
 - `--no-tui` prints the transcript instead of the terminal app. Ctrl+C once shuts
   down cleanly; twice forces an exit.
 

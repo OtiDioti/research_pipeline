@@ -70,7 +70,9 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn('session 1 of primary', opening)
             for name in ('STATUS.md', 'REPORT.md', 'FOLDER_CONTENT.md', 'sources', 'tools', 'agents', 'reviews'):
                 self.assertTrue((self.root / name).exists(), name)
-            self.assertIn('project prepared', harness.controller.project.git('log', '--oneline'))
+            log = harness.controller.project.git('log', '--oneline')
+            self.assertIn('project prepared', log)
+            self.assertIn('investigation started', log)
             self.assertEqual(harness.state.agents['reviewer'].status, 'resting')
             launch = harness.session('primary').launch
             self.assertIn(self.root / 'STATUS.md', launch.writable)

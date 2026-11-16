@@ -58,7 +58,7 @@ The controller commits under the identity `research-pipeline`; agents cannot wri
 
 | Event | Message |
 |---|---|
-| First run | `controller: project prepared` |
+| First run | `controller: project prepared` (a new repository only), then `controller: investigation started` |
 | Handoff | `<agent>: handoff (context, pause, shutdown or quota)` |
 | Result, decision | `<agent>: result submitted`, `<parent>: accepted the result of <agent>`, `<parent>: cancelled <agent>` |
 | Proposal, verdict | `primary: proposes COMPLETE/STOP (round n)`, `reviewer: verdict on … (agree/disagree)` |
