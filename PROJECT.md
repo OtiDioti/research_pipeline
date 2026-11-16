@@ -77,10 +77,14 @@ Rules:
   primary is told about them and decides which subagents need them. Agents treat
   their contents as unverified evidence.
 
-**Layout check.** Whenever an agent hands off, submits a RESULT or proposes
-COMPLETE/STOP, the controller checks its work against these rules: no unexpected
-top-level entries, indexes present and covering their folders, and notes in
-Markdown. It sends any violations back to the agent to fix.
+**Layout check.** Whenever an agent hands off, submits a RESULT, proposes
+COMPLETE/STOP or delivers a verdict, the controller checks the folders it may
+write (its own, `sources/` and `tools/`, plus the root for the primary and
+`reviews/` for the Reviewer): indexes present and covering their folders, and
+notes in Markdown. A RESULT, proposal or verdict is refused until the problems
+are fixed; at a handoff, they are passed to the next session to fix. Unexpected
+top-level entries can only come from jobs or the human: they are reported to the
+primary and never block anyone.
 
 ## 3. Agents
 
@@ -194,8 +198,8 @@ scientific acceptance; that is the human's judgment.
 
 **Reopening.** After COMPLETE or STOP, the human may resume the investigation, for
 example after changing the questions, evidence or feedback. The primary restarts
-from its handoff, the reviews, and a summary of what the human changed since the
-end. It must not discard unaffected work.
+from its handoff and the reviews, with a list of the files changed since the end.
+It must not discard unaffected work.
 
 ## 5. Context handoffs
 
@@ -392,8 +396,9 @@ lead to physics-specific code in the platform.
   adding it.
 - **Acceptance.** Agent-facing behaviour is accepted on live runs, not on test
   counts.
-- **Documents.** This PROJECT.md, a README.md for usage, and a short STATUS.md a
-  human can read in a minute. Git holds the history; the repository keeps no
+- **Documents.** This PROJECT.md, a README.md for usage, a short STATUS.md a human
+  can read in a minute, and `docs/`: one concise reference per component, covering
+  its behaviour under each condition. Git holds the history; the repository keeps no
   evidence archives or receipt collections.
 - **Verified on 2026-11-14** with Codex 0.167 and Claude Code 2.1.325, on Ubuntu
   with unprivileged user namespaces restricted:

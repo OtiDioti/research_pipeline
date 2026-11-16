@@ -848,6 +848,8 @@ class Controller:
 
     async def _propose(self, caller: Agent, kind: str, detail: str) -> str:
         """Submit a COMPLETE or STOP proposal to the Reviewer; the primary's session closes until the verdict."""
+        if self._under_review():
+            raise ToolError(f'your previous proposal (round {self.state.proposal["round"]}) is still with the Reviewer')
         self._settled(caller)
         self._layout_ok(caller)
         handoff = self.project.agent_dir(caller.id) / 'HANDOFF.md'

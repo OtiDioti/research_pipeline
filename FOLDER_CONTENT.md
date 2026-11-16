@@ -6,6 +6,7 @@
 - [STATUS.md](STATUS.md) — Current development state and next step.
 - [pyproject.toml](pyproject.toml) — Python packaging (uv).
 - [uv.lock](uv.lock) — Locked dependency versions.
+- [docs](docs) — Reference documentation of every part and its behaviour under each condition.
 - [src](src) — The research_pipeline package.
 - [tests](tests) — Tests, and the live smoke run.
 - [research_example](research_example) — The benchmark investigation's inputs.

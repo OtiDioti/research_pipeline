@@ -484,6 +484,8 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             harness.write('agents/primary/brief.md', '# Task\n')
             self.assertIn('may only talk', await harness.call('primary', 'spawn', task='brief.md', backend='codex',
                                                               model='m', effort='low'))
+            self.assertIn('still with the Reviewer', await harness.call('primary', 'complete'))
+            self.assertEqual(harness.state.rounds, 1)
             await harness.emit('primary', 'turn_ended', text='Fairly confident.')  # waiting: no nudge
             self.assertNotIn('You ended your turn', sent(harness, 'primary'))
             self.ready_review(harness)

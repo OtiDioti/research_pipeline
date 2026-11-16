@@ -5,7 +5,8 @@ evidence and tools; a **primary researcher** agent leads the investigation, spaw
 **subagents** for subproblems, runs computations and writes what it learns into an
 ordinary project folder. When it judges the work done it proposes **COMPLETE**,
 which an independent **Reviewer** must agree with, or **STOP**. You judge the
-science. The specification is [PROJECT.md](PROJECT.md).
+science. The specification is [PROJECT.md](PROJECT.md); [docs/](docs/OVERVIEW.md) describes each
+part and what it does under each condition.
 
 ```mermaid
 flowchart LR
