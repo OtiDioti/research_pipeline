@@ -10,8 +10,8 @@ resolution-markers = [
 
 [[package]]
 name = "agent-sessions"
-version = "0.1.1"
-source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.1#0d77dc2781ef93da95c82cb821a9b6e0d8aa0804" }
+version = "0.1.2"
+source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.2#c6ff863d905e36415d280fa43af4d29e10cc6c8f" }
 
 [[package]]
 name = "annotated-types"
@@ -603,7 +603,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-sessions", git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.1" },
+    { name = "agent-sessions", git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.2" },
     { name = "mcp", specifier = ">=1.26,<2" },
     { name = "prompt-toolkit", specifier = "==3.0.52" },
 ]

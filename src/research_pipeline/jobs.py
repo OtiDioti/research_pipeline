@@ -1,6 +1,6 @@
 """Long computations run by the controller for agents (PROJECT.md §6, "Jobs").
 
-A job runs in its own confinement (:func:`research_pipeline.confine.job`): the
+A job runs in its own confinement (:func:`agent_sessions.confine.job`): the
 filesystem as the controller sees it, except that the protected paths are
 read-only and the hidden ones invisible. It is its own process session, outside
 every agent's session, so it survives the agent's handoffs, quota pauses and a

@@ -69,6 +69,11 @@ shared `sources/` and `tools/`. Only the primary writes `STATUS.md` and
 alone: agents and their jobs can only read it, so your tools there should write
 their output to a path they are given, never next to themselves.
 
+Agents and jobs can reach remote machines, such as a computing cluster, over SSH
+with your keys. Describe the machine and its rules in a file in
+`starting_evidence/`, point to it from `AGENTS.md`, and never write passwords
+there. See [SSH and remote machines](docs/CONFINEMENT.md#ssh-and-remote-machines).
+
 To run the benchmark, copy `research_example/` somewhere outside this repository
 first, so that the investigation's git history stays separate from the code's.
 

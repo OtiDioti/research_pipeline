@@ -29,6 +29,12 @@ files, and folders as empty folders: the Codex `config.toml`, `AGENTS.md`,
 `~/.cache/agent-sessions/empty`, emptied at
 every use.
 
+**Root-owned SSH configuration.** Inside the boundary, files owned by root appear
+owned by "nobody", and ssh refuses such files among its configuration. The files of
+`/etc/ssh/ssh_config.d` are therefore shown as copies owned by you, with the same
+content, kept in `~/.cache/agent-sessions/owned/` and refreshed at every start.
+Jobs get the same copies.
+
 ## Jobs
 
 - Everything is as the controller sees it, including devices (e.g. GPUs) and the shared `/tmp`.
@@ -48,3 +54,24 @@ every use.
   (the home folder, CLI logins), and the network is on.
 - **Jobs can write elsewhere.** A job can write anywhere in the project other than
   `starting_evidence/`, including other agents' folders and `.git`.
+
+## SSH and remote machines
+
+Agents and jobs can use ssh, scp, rsync and git over SSH as you do: your keys,
+your ssh-agent and `~/.ssh/config` are visible, and the network is on. What to
+know before letting them use a machine such as a computing cluster:
+
+- **Host keys.** `~/.ssh` is read-only, so a machine's host key must already be in
+  `~/.ssh/known_hosts`: connect to it once yourself first.
+- **No prompts.** Only logins that need no typing work: keys, through your
+  ssh-agent or an unencrypted key. Passwords, key passphrases and one-time codes
+  cannot be answered.
+- **No secrets in the project.** Describe the machine (host, user name, rules) in
+  a file in `starting_evidence/` and point to it from `AGENTS.md`, but never write
+  passwords there: agents' context goes to the CLI's provider, and the project is
+  committed to git.
+- **Long computations.** Submit them to the machine's own scheduler (e.g. `sbatch`)
+  and check on them with short commands; transfers and waits longer than a minute
+  go through `run_job`.
+- **No confinement there.** On the remote machine agents act with your account
+  and its permissions; your rules file is guidance only.
