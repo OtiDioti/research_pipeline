@@ -1,7 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16. Replaces the previous PROJECT.md and the 2026-11-12
-lifecycle amendment, which are kept under the git tag `pre-v0-restart`.
+**Status:** approved 2026-11-16.
 
 ## 1. Purpose
 
@@ -234,7 +233,8 @@ in V0. Adding a CLI means writing one driver that can start a session with
 instructions, a prompt and MCP configuration and with the CLI's own discovery
 switched off (§3), deliver a message during a turn, interrupt, and report text,
 tool activity, context use (from the CLI's own reports, §5) and what the CLI loaded
-at start. It also needs one quota probe. Confinement is shared by all CLIs.
+at start, and that can read the CLI's usage quota. Everything specific to a CLI
+lives in its driver; confinement and every decision are shared by all CLIs.
 
 **Notices.** Handoff requests, results from subagents, messages between parents and
 subagents, finished jobs and the human's messages are delivered to the agent
@@ -385,8 +385,7 @@ lead to physics-specific code in the platform.
   check, TUI) is built by hand, with Claude. After that, project_manager delivers
   increments.
 - **Reuse.** CLI driver and quota code is copied and adapted from coding_pipeline
-  and project_manager, not imported. Pieces of the pre-restart code are reused only
-  where they fit this design.
+  and project_manager, not imported.
 - **Justification.** Every component must trace to a behaviour in this document.
   Prefer existing libraries, plain files and small reversible designs; handle
   realistic failures, not every conceivable one. Removing code is as welcome as
@@ -416,9 +415,13 @@ lead to physics-specific code in the platform.
     private to each session, projects must not live under `/tmp`.
   - **Discovery** (checked 2026-11-16, without model calls). Claude Code started
     with the driver's flags loads no skills, plugins, personal MCP servers or
-    `CLAUDE.md`. Codex loads the personal `AGENTS.md` from its home folder and every
-    `AGENTS.md` from the project root down to the session's folder;
-    `project_doc_max_bytes=0` stops only the project ones. MCP servers from the
-    personal `config.toml` stay loaded whatever the per-session settings say. Codex
-    reports the instruction files it loaded in its `thread/start` reply
+    `CLAUDE.md`; before any model call it reports its instruction files and skills
+    (`get_context_usage`) and its MCP servers (`mcp_status`). Codex loads the
+    personal `AGENTS.md` from its home folder and every `AGENTS.md` from the project
+    root down to the session's folder; `project_doc_max_bytes=0` stops only the
+    project ones, and MCP servers from the personal `config.toml` stay loaded
+    whatever the per-session settings say. Inside the confinement, an empty
+    read-only regular file in place of the personal `config.toml` and `AGENTS.md`
+    removes both (Codex refuses a device such as `/dev/null` as its configuration).
+    Codex reports the instruction files it loaded in its `thread/start` reply
     (`instructionSources`) and its MCP servers on request (`mcpServerStatus/list`).

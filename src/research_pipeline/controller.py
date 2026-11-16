@@ -12,12 +12,17 @@ scientific one. In outline:
 - **Handoffs.** At the context threshold an agent is asked to update HANDOFF.md and
   end its turn; its session is then replaced by a fresh one. The request is
   repeated every further 25 points of context; an agent is never killed for it.
-- **Finishing.** The primary proposes COMPLETE or STOP; the Reviewer examines the
-  proposal; COMPLETE needs its agreement, STOP is the primary's decision after the
-  Reviewer's challenge.
-- **Quota, pause, crash.** Per-CLI usage limits pause that CLI's agents (or all,
-  if it is the primary's). A human pause hands every agent off and stops jobs.
-  After a crash, agents restart from their handoffs and running jobs are reattached.
+- **Idle and stalled agents.** An agent that ends its turn with nothing running or
+  pending for it is nudged once; if it ends its turn idle again without using a
+  tool, it has stalled: its parent is told, or the human alerted for the primary,
+  or the proposal under review is withdrawn for the Reviewer.
+- **Finishing.** The primary proposes COMPLETE or STOP, and its session closes; the
+  Reviewer examines the proposal; COMPLETE needs its agreement, STOP is the
+  primary's decision after the Reviewer's challenge. The verdict wakes the primary.
+- **Quota, pause, shutdown, crash.** Per-CLI usage limits pause that CLI's agents
+  (or all, if it is the primary's). A human pause hands every agent off and stops
+  jobs; a shutdown hands every agent off and leaves jobs running. After a shutdown
+  or a crash, agents restart from their handoffs and running jobs are reattached.
 
 All state changes happen on one asyncio loop, serialised by one lock: driver
 events, tool calls and the background loops never interleave halfway.
@@ -38,7 +43,7 @@ from typing import Callable
 from research_pipeline import jobs as joblib
 from research_pipeline import prompts, quota
 from research_pipeline.channel import serve
-from research_pipeline.drivers import DRIVERS, Launch, McpServer, Session, SessionError
+from research_pipeline.drivers import DRIVERS, Launch, McpServer, Session, SessionError, SetupError
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ENDED, FINISHED, LIVE, Agent, Job, Options, Spec, State
 
@@ -57,11 +62,12 @@ CLOSE_GRACE = 120
 #: Times an agent is asked again for HANDOFF.md before its successor starts from the existing one.
 HANDOFF_ASKS = 3
 #: Tools each role may call (mirrors research_pipeline.mcp_server.ROLE_TOOLS).
-_COMMON = {'spawn', 'agents', 'accept', 'reject', 'cancel', 'run_job', 'job_status', 'job_cancel'}
+_COMMON = {'spawn', 'agents', 'message', 'accept', 'reject', 'cancel', 'run_job', 'job_status', 'job_cancel'}
 ROLE_TOOLS = {'primary': _COMMON | {'complete', 'stop'}, 'subagent': _COMMON | {'submit_result'},
               'reviewer': _COMMON | {'verdict'}}
 
-#: Transcript callback: ``show(kind, agent_id, text)`` with kind 'agent', 'tool', 'notice', 'human' or 'controller'.
+#: Transcript callback: ``show(kind, agent_id, text)`` with kind 'agent', 'tool', 'notice', 'human', 'controller'
+#: or 'alert' (something the human must act on).
 Show = Callable[[str, str, str], None]
 
 
@@ -73,15 +79,16 @@ class Controller:
     """Runs one investigation in one project folder until it ends or the human shuts it down."""
 
     def __init__(self, root: Path, options: Options | None = None, *, drivers=DRIVERS,
-                 read_quota: Callable[[str], list[quota.Window]] = quota.read, show: Show | None = None):
-        """``options`` override the stored launch options (None: keep them, or use defaults on a first run).
+                 read_quota: Callable[[str], list[quota.Window]] | None = None, show: Show | None = None):
+        """``options`` override the stored launch options (None: keep them; a first run needs them).
 
-        ``drivers`` and ``read_quota`` can be replaced in tests.
+        ``drivers`` and ``read_quota`` (backend name -> usage windows; by default read
+        by that backend's driver) can be replaced in tests.
         """
         self.project = Project(root)
         self.launch_options = options
         self.drivers = drivers
-        self.read_quota = read_quota
+        self.read_quota = read_quota or (lambda backend: quota.read(self.drivers[backend]))
         self.show: Show = show or (lambda kind, agent, text: None)
         self.state: State = State()
         self.sessions: dict[str, Session] = {}
@@ -142,7 +149,7 @@ class Controller:
         asyncio.ensure_future(self._locked(self._toggle()))
 
     def shutdown(self) -> None:
-        """Pause cleanly, then stop the controller (from the terminal app)."""
+        """Hand every agent off cleanly, then stop the controller; jobs keep running (from the terminal app)."""
         self.request = 'shutdown'
         asyncio.ensure_future(self._locked(self._shutdown()))
 
@@ -179,14 +186,20 @@ class Controller:
         else:
             state = State(options=self.launch_options or Options())
         options = state.options
-        primary, reviewer = Spec.parse(options.primary), Spec.parse(options.reviewer)
+        try:
+            primary, reviewer = Spec.parse(options.primary, '--primary'), Spec.parse(options.reviewer, '--reviewer')
+        except ValueError as error:
+            raise ProjectError(str(error)) from None
+        if not options.backends:
+            raise ProjectError('--backends must name at least one CLI for subagents')
         unknown = {primary.backend, reviewer.backend, *options.backends} - set(self.drivers)
         if unknown:
             raise ProjectError(f'Unknown backend(s): {", ".join(sorted(unknown))}; known: {", ".join(self.drivers)}')
         if options.max_agents < 2:
             raise ProjectError('--max-agents must be at least 2: the primary and the Reviewer.')
         for agent_id, spec in (('primary', primary), ('reviewer', reviewer)):
-            agent = state.agents.setdefault(agent_id, Agent(agent_id, agent_id, None, spec.backend,
+            agent = state.agents.setdefault(agent_id, Agent(agent_id, agent_id, None, spec.backend, spec.model,
+                                                            spec.effort,
                                                             status='paused' if agent_id == 'primary' else 'resting',
                                                             pause_reason='start'))
             agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
@@ -202,7 +215,9 @@ class Controller:
             agent.closing = False
             agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
         changed = self.project.uncommitted()
-        if state.status in FINISHED:
+        if not state.agents['primary'].sessions:  # the first run
+            self._commit('controller: project prepared')
+        elif state.status in FINISHED:
             outcome = state.status.upper()
             self._commit('human: changes before reopening')
             state.status, state.proposal = 'running', None
@@ -211,8 +226,8 @@ class Controller:
             primary.notices.append(prompts.reopened(outcome, changed))
             self.show('controller', 'primary', f'Reopened after {outcome}.')
         elif clean and changed:
-            self._commit('human: edits while paused')
-            self._announce_edits(changed)
+            self._commit('controller: changes made while paused or shut down (by the human or by running jobs)')
+            self._announce_changes(changed)
         elif changed:
             self._commit('controller: work recovered after a restart')
         state.status = 'running'
@@ -232,7 +247,9 @@ class Controller:
         root = self.project.root
         scope = [self.project.agent_dir(agent.id), root / 'sources', root / 'tools']
         if agent.role == 'primary':
-            scope += [root / 'STATUS.md', root / 'REPORT.md', root / INDEX]
+            scope.append(root / INDEX)
+            if not self._under_review():  # talk-only during a review (PROJECT.md §4)
+                scope += [root / 'STATUS.md', root / 'REPORT.md']
         elif agent.role == 'reviewer':
             scope.append(self.project.reviews)
         return tuple(scope)
@@ -246,6 +263,7 @@ class Controller:
             first = '- [TASK.md](TASK.md) — The task from my parent.\n' if (folder / 'TASK.md').exists() else ''
             (folder / INDEX).write_text(EMPTY_INDEX + first, encoding='utf-8')
         agent.sessions += 1
+        agent.started = time.time()
         notices, agent.notices = agent.notices, []
         token = secrets.token_hex(16)
         launch = Launch(
@@ -254,7 +272,8 @@ class Controller:
             model=agent.model, effort=agent.effort,
             mcp=McpServer([sys.executable, '-m', 'research_pipeline.mcp_server'],
                           {'RP_CHANNEL': self.channel, 'RP_AGENT': agent.id, 'RP_TOKEN': token, 'RP_ROLE': agent.role}),
-            writable=self._scope(agent), log=self.project.logs / f'{agent.id}-{agent.sessions}.jsonl')
+            writable=self._scope(agent), hidden=(self.project.research,),
+            log=self.project.logs / f'{agent.id}-{agent.sessions}.jsonl')
         session = self.drivers[agent.backend](launch, self._on_event)
         agent.status, agent.pause_reason, agent.retry_at, agent.closing = 'running', None, None, False
         agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
@@ -268,7 +287,9 @@ class Controller:
             self.tokens.pop(agent.id, None)
             agent.notices = notices + agent.notices
             await session.close()
-            await self._failed(agent, f'its session could not start: {error}')
+            # Personal setup would load again on every retry: only the human can fix it.
+            await self._failed(agent, f'{agent.id}: its session could not start: {error}.',
+                               retry=not isinstance(error, SetupError))
             return
         self.show('controller', agent.id, f'Session {agent.sessions} started ({agent.spec}).')
         self._save()
@@ -280,16 +301,20 @@ class Controller:
         if session:
             await session.close()
 
-    async def _failed(self, agent: Agent, reason: str) -> None:
-        """An agent's session ended unexpectedly: pause it and schedule a restart from its handoff."""
-        pausing = agent.handoff_reason in ('pause', 'quota')
-        agent.status = 'paused'
-        agent.pause_reason = 'human' if pausing and agent.handoff_reason == 'pause' else (
-            'quota' if pausing else 'failure')
+    async def _failed(self, agent: Agent, reason: str, retry: bool = True) -> None:
+        """An agent's session ended unexpectedly: pause it and schedule a restart from its handoff.
+
+        Without ``retry`` (or once the automatic retries are used up) it waits for the human's Ctrl+R.
+        """
+        reason_paused = {'pause': 'human', 'shutdown': 'human', 'quota': 'quota'}.get(agent.handoff_reason)
+        agent.status, agent.pause_reason = 'paused', reason_paused or 'failure'
         agent.handoff_reason = agent.handoff_since = None
         if agent.pause_reason == 'failure':
             agent.failures += 1
-            if agent.failures <= len(RETRY_DELAYS):
+            if not retry:
+                agent.retry_at = None
+                self.show('controller', agent.id, f'{reason} Fix this, then press Ctrl+R to retry.')
+            elif agent.failures <= len(RETRY_DELAYS):
                 delay = RETRY_DELAYS[agent.failures - 1]
                 agent.retry_at = time.time() + delay
                 self.show('controller', agent.id, f'{reason} Restarting from its handoff in {delay} s.')
@@ -308,7 +333,7 @@ class Controller:
         for agent in sorted(state.agents.values(), key=lambda a: (order[a.role], a.sessions)):
             if agent.status != 'paused' or (reasons and agent.pause_reason not in reasons):
                 continue
-            pending = state.proposal and not state.proposal.get('reviewed')
+            pending = self._under_review()
             if agent.role == 'reviewer' and not pending:
                 agent.status = 'resting'
                 continue
@@ -322,8 +347,7 @@ class Controller:
                 agent.notices.append(prompts.review_request(state.proposal['kind'], state.proposal['round'],
                                                             state.proposal['detail']))
             if pending and agent.role == 'primary':
-                agent.notices.append(f'[controller] Your proposal (round {state.proposal["round"]}) is still with '
-                                     'the Reviewer; its verdict will be delivered to you.')
+                agent.notices.append(prompts.talk_only(state.proposal['round']))
             resumed_from_quota = agent.pause_reason == 'quota'
             await self._start_session(agent)
             parent = state.agents.get(agent.parent or '')
@@ -354,7 +378,7 @@ class Controller:
             await self._close(agent_id)
             await self._failed(agent, f'{agent_id}: its turn failed.')
         elif kind == 'turn_ended':
-            await self._turn_ended(agent)
+            await self._turn_ended(agent, data.get('text') or '')
             self._save()
         elif kind == 'exited':
             self.sessions.pop(agent_id, None)
@@ -393,9 +417,10 @@ class Controller:
                 agent.reminder_at = threshold + REMINDER_STEP * int((fill - threshold) / REMINDER_STEP)
                 await self._send(agent, prompts.handoff_reminder(f'{fill:.0%}'))
 
-    async def _turn_ended(self, agent: Agent) -> None:
+    async def _turn_ended(self, agent: Agent, text: str) -> None:
+        """An agent ended its turn (``text`` is its final message)."""
         agent.failures = 0
-        if agent.closing:  # it submitted a result or a verdict: its session ends with this turn
+        if agent.closing:  # it submitted a result, a verdict or a proposal: its session ends with this turn
             agent.closing = False
             await self._close(agent.id)
             return
@@ -403,16 +428,39 @@ class Controller:
             await self._check_handoff(agent)
         elif agent.notices:
             await self._flush(agent)
-        elif self.state.status == 'running' and not agent.nudged and self._idle(agent):
-            agent.nudged = True
-            await self._send(agent, prompts.nudge(agent.role))
+        elif self.state.status == 'running' and self._idle(agent):
+            if agent.nudged:  # told it was idle, and it ended its turn idle again without using a tool
+                await self._stalled(agent, text)
+            else:
+                agent.nudged = True
+                await self._send(agent, prompts.nudge(agent.role, self._awaiting(agent)))
 
     def _idle(self, agent: Agent) -> bool:
-        """True if nothing is running or pending for ``agent`` (so ending its turn needs a nudge)."""
+        """True unless the agent is waiting: for a running or paused subagent, a running job or a review."""
         busy_children = [c for c in self.state.children(agent.id) if c.status in LIVE or c.status == 'paused']
-        proposal = self.state.proposal
-        waiting = agent.role == 'primary' and proposal and not proposal.get('reviewed')
+        waiting = agent.role == 'primary' and self._under_review()
         return not busy_children and not self.state.running_jobs(agent.id) and not waiting
+
+    def _awaiting(self, agent: Agent) -> list[str]:
+        """The agent's subagents whose submitted results await its decision."""
+        return [child.id for child in self.state.children(agent.id) if child.status == 'submitted']
+
+    async def _stalled(self, agent: Agent, text: str) -> None:
+        """An idle agent stopped working (PROJECT.md §3, "Waiting, idle and stalled agents")."""
+        last = text.strip() or '(no final message)'
+        if agent.role == 'subagent':  # it keeps its session; its parent decides
+            self.show('controller', agent.id, 'Stalled: its parent is told.')
+            await self._notify(self.state.agents[agent.parent], prompts.stalled(agent.id, last))
+        elif agent.role == 'primary':  # it keeps its session; the human's reply continues it
+            self.show('alert', 'primary', f'The primary has stopped and is waiting for you. Its last message:\n{last}')
+        else:  # the Reviewer: without a verdict, the proposal under review is withdrawn
+            proposal, self.state.proposal = self.state.proposal, None
+            agent.status = 'resting'
+            await self._close(agent.id)
+            if proposal and not proposal.get('reviewed'):
+                self._commit(f'reviewer: stalled in round {proposal["round"]}; proposal withdrawn')
+                self.show('controller', 'reviewer', f'Stalled without a verdict: round {proposal["round"]} is withdrawn.')
+                await self._review_ended(prompts.review_withdrawn(proposal['kind'], proposal['round']))
 
     # Messages ---------------------------------------------------------------------------------
 
@@ -444,18 +492,41 @@ class Controller:
             pending, agent.notices = agent.notices, []
             await self._send(agent, '\n\n'.join(pending))
 
+    async def _wake(self, agent: Agent, notice: str) -> None:
+        """Deliver ``notice``; an agent resting without a session (the primary in review, the Reviewer) restarts."""
+        if agent.status == 'resting':
+            agent.notices.append(notice)
+            agent.status, agent.pause_reason = 'paused', 'wake'
+            await self._resume_agents({'wake'})
+        else:
+            await self._notify(agent, notice)
+
+    async def _review_ended(self, notice: str) -> None:
+        """Bring the primary back after a review with ``notice`` (a verdict, or the withdrawn proposal).
+
+        A primary the human woke during the review has a talk-only session; it is
+        replaced, so that the fresh session has its full write scope again.
+        """
+        primary = self.state.agents['primary']
+        if primary.status in LIVE:
+            await self._close(primary.id)
+            primary.status, primary.closing = 'resting', False
+        await self._wake(primary, notice)
+
     async def _say(self, text: str) -> None:
+        """The human's message reaches the primary, waking it if it rests during a review (talk-only)."""
         self.show('human', 'primary', text)
-        await self._notify(self.state.agents['primary'], prompts.human_message(text))
+        await self._wake(self.state.agents['primary'], prompts.human_message(text))
         self._save()
 
-    def _announce_edits(self, paths: list[str]) -> None:
-        """Tell the primary, and the owners of edited agent folders, what the human changed."""
+    def _announce_changes(self, paths: list[str]) -> None:
+        """Tell the primary, and the owners of changed agent folders, what changed while paused or shut down."""
         notice = prompts.resumed(paths)
         owners = {path.split('/')[1] for path in paths if path.startswith('agents/') and path.count('/') >= 2}
         for agent_id in {'primary', *owners} & set(self.state.agents):
             self.state.agents[agent_id].notices.append(notice)
-        self.show('controller', 'primary', 'The human edited while paused:\n' + '\n'.join(paths[:20]))
+        self.show('controller', 'primary', 'Changed while paused (by the human or by running jobs):\n'
+                  + '\n'.join(paths[:20]))
 
     # Handoffs ---------------------------------------------------------------------------------
 
@@ -532,7 +603,7 @@ class Controller:
         """Resolve a path an agent gave: absolute, or relative to the first of ``bases`` where it exists.
 
         ``bases`` default to the agent's folder. The result must be an existing file (or folder,
-        if ``folder``) inside the project.
+        if ``folder``) inside the project, and outside ``.research/``, which agents cannot see.
         """
         if not str(path).strip():
             raise ToolError('a path is required')
@@ -541,7 +612,8 @@ class Controller:
                                                           bases or (self.project.agent_dir(caller.id),)]
         for candidate in candidates:
             resolved = candidate.resolve()
-            if self.project.inside(resolved) and (resolved.is_dir() if folder else resolved.is_file()):
+            visible = self.project.inside(resolved) and not resolved.is_relative_to(self.project.research)
+            if visible and (resolved.is_dir() if folder else resolved.is_file()):
                 return resolved
         raise ToolError(f'{path} is not an existing {"folder" if folder else "file"} in the project')
 
@@ -566,6 +638,16 @@ class Controller:
         if problems:
             raise ToolError(_layout_notice(problems))
 
+    def _under_review(self) -> bool:
+        """True while a COMPLETE or STOP proposal awaits the Reviewer's verdict."""
+        return bool(self.state.proposal and not self.state.proposal.get('reviewed'))
+
+    def _talk_only(self, caller: Agent) -> None:
+        """Refuse new work by the primary while its proposal is under review (PROJECT.md §4)."""
+        if caller.role == 'primary' and self._under_review():
+            raise ToolError(f'your proposal (round {self.state.proposal["round"]}) is with the Reviewer: until its '
+                            'verdict you may only talk, so spawn and run_job are refused')
+
     def _admit(self, backend: str) -> None:
         """Refuse a new session while ``backend`` is held or every slot is taken."""
         if self.state.status != 'running':
@@ -578,27 +660,28 @@ class Controller:
         if live >= cap:
             raise ToolError(f'{live}/{cap} agents are already working; no more subagents can be started now')
 
-    async def _tool_spawn(self, caller: Agent, task: str, backend: str = '', model: str = '', effort: str = '',
+    async def _tool_spawn(self, caller: Agent, task: str, backend: str, model: str, effort: str,
                           name: str = '') -> str:
+        self._talk_only(caller)
         allowed = self.state.options.backends
-        backend = backend or (caller.backend if caller.backend in allowed else allowed[0])
         if backend not in allowed:
-            raise ToolError(f'backend {backend} is not allowed; allowed: {", ".join(allowed)}')
+            raise ToolError(f'backend {backend!r} is not allowed; allowed: {", ".join(allowed)}')
+        if not model.strip() or not effort.strip():
+            raise ToolError(f'a model and an effort are required, e.g. {caller.spec}')
         brief = self._path(caller, task, self.project.agent_dir(caller.id), self.project.root)
         if not brief.read_text(encoding='utf-8', errors='replace').strip():
             raise ToolError(f'{task} must be a non-empty Markdown file: the subagent\'s brief')
         self._admit(backend)
         self._continued(caller)
-        if backend == caller.backend and not model:
-            model, effort = caller.model or '', effort or caller.effort or ''
-        child = Agent(self._new_id(name), 'subagent', caller.id, backend, model or None, effort or None)
+        child = Agent(self._new_id(name), 'subagent', caller.id, backend, model.strip(), effort.strip())
         folder = self.project.agent_dir(child.id)
         folder.mkdir(parents=True)
         (folder / 'TASK.md').write_text(brief.read_text(encoding='utf-8', errors='replace'), encoding='utf-8')
         self.state.agents[child.id] = child
         await self._start_session(child)
         if child.status != 'running':
-            return f'Created subagent {child.id}, but its session failed to start; the controller will retry.'
+            return (f'Created subagent {child.id}, but its session could not start; the controller retries it or '
+                    'asks the human.')
         return (f'Started subagent {child.id} ({child.spec}); its folder is agents/{child.id}/. '
                 'You will be told when it submits its result.')
 
@@ -632,6 +715,26 @@ class Controller:
             fill = f', context {child.fill:.0%}' if child.fill is not None else ''
             lines.append(f'- {child.id} ({child.spec}): {status}{fill}. {child.activity}'.rstrip())
         return '\n'.join(lines) or 'You have no subagents.'
+
+    async def _tool_message(self, caller: Agent, agent: str, text: str) -> str:
+        """Deliver a message to the caller's parent or one of its subagents (PROJECT.md §3, "Messages")."""
+        target = self.state.agents.get(agent)
+        if target is None or not (target.parent == caller.id or caller.parent == target.id):
+            contacts = [c.id for c in self.state.children(caller.id)] + ([caller.parent] if caller.parent else [])
+            raise ToolError(f'{agent} is neither your parent nor one of your subagents; you can message: '
+                            + (', '.join(contacts) or 'nobody'))
+        if not text.strip():
+            raise ToolError('the message is empty')
+        if target.status in ENDED:
+            raise ToolError(f'{agent} has ended ({target.status})')
+        if target.status == 'submitted':
+            raise ToolError(f'{agent} has submitted its result: accept it, reject it with feedback, or cancel it')
+        notice = prompts.agent_message(caller.id, text)
+        await self._notify(target, notice)
+        self.show('notice', agent, f'from {caller.id}: {text.strip()}')
+        if notice in target.notices:  # no running session to take it now
+            return f'{agent} has no running session; it receives your message when its next session starts.'
+        return f'Message delivered to {agent}.'
 
     async def _tool_accept(self, caller: Agent, agent: str) -> str:
         child = self._child(caller, agent)
@@ -686,6 +789,7 @@ class Controller:
             member.status, member.closing = 'cancelled', False
 
     async def _tool_run_job(self, caller: Agent, command: str, timeout_seconds: float, cwd: str = '') -> str:
+        self._talk_only(caller)
         if self.state.status != 'running':
             raise ToolError(f'the investigation is {self.state.status}; jobs cannot start now')
         try:
@@ -699,7 +803,8 @@ class Controller:
         self.state.job_counter += 1
         job = Job(f'job-{self.state.job_counter}', caller.id, command, str(folder), timeout, time.time())
         try:
-            self.processes[job.id] = joblib.start(self.project.root, job)
+            self.processes[job.id] = joblib.start(self.project.root, job, read_only=[self.project.evidence],
+                                                  hidden=[self.project.research])
         except OSError as error:
             raise ToolError(f'the job could not start: {error}') from None
         self.state.jobs[job.id] = job
@@ -741,27 +846,28 @@ class Controller:
         await self._notify(parent, prompts.result_submitted(caller.id, self.project.relative(path)))
         return f'Your result was submitted to {caller.parent}. End your turn now; this session then closes.'
 
-    def _propose(self, caller: Agent, kind: str, detail: str) -> dict:
-        """Common checks and bookkeeping of a COMPLETE or STOP proposal."""
-        proposal = self.state.proposal
-        if proposal and not proposal.get('reviewed'):
-            raise ToolError(f'your previous proposal (round {proposal["round"]}) is still with the Reviewer')
+    async def _propose(self, caller: Agent, kind: str, detail: str) -> str:
+        """Submit a COMPLETE or STOP proposal to the Reviewer; the primary's session closes until the verdict."""
         self._settled(caller)
         self._layout_ok(caller)
+        handoff = self.project.agent_dir(caller.id) / 'HANDOFF.md'
+        if not handoff.is_file() or handoff.stat().st_mtime < caller.started - 1:
+            raise ToolError('first update HANDOFF.md in your folder (a brief handoff suffices): your session closes '
+                            'while the Reviewer works, and you restart from it')
         self.state.rounds += 1
         self.state.proposal = {'kind': kind, 'round': self.state.rounds, 'detail': detail,
                                'challenged': False, 'reviewed': False}
         self._commit(f'primary: proposes {kind.upper()} (round {self.state.rounds})')
-        return self.state.proposal
+        caller.status, caller.closing, caller.handoff_since = 'resting', True, time.time()
+        await self._start_review()
+        return (f'Your {kind.upper()} proposal is with the Reviewer (round {self.state.rounds}). End your turn now: '
+                'your session closes, and you restart from HANDOFF.md when the verdict arrives.')
 
     async def _tool_complete(self, caller: Agent, report: str = 'REPORT.md') -> str:
         path = self._path(caller, report, self.project.root, self.project.agent_dir(caller.id))
         if not path.read_text(encoding='utf-8', errors='replace').strip():
             raise ToolError(f'{report} must be a non-empty report')
-        proposal = self._propose(caller, 'complete', self.project.relative(path))
-        await self._start_review()
-        return (f'Your COMPLETE proposal is with the Reviewer (round {proposal["round"]}). '
-                'End your turn; its verdict will be delivered to you.')
+        return await self._propose(caller, 'complete', self.project.relative(path))
 
     async def _tool_stop(self, caller: Agent, reason: str, final: bool = False) -> str:
         if not reason.strip():
@@ -773,21 +879,14 @@ class Controller:
             self._settled(caller)
             await self._finish('stopped', reason.strip())
             return 'The investigation is stopped.'
-        proposal = self._propose(caller, 'stop', reason.strip())
-        await self._start_review()
-        return (f'Your STOP proposal is with the Reviewer (round {proposal["round"]}). '
-                'End your turn; its challenge will be delivered to you.')
+        return await self._propose(caller, 'stop', reason.strip())
 
     async def _start_review(self) -> None:
         """Hand the current proposal to the Reviewer (now, or once its CLI may run)."""
-        proposal, reviewer = self.state.proposal, self.state.agents['reviewer']
-        reviewer.notices.append(prompts.review_request(proposal['kind'], proposal['round'], proposal['detail']))
+        proposal = self.state.proposal
         self.show('controller', 'reviewer', f'Review round {proposal["round"]}: {proposal["kind"].upper()}.')
-        if reviewer.status in LIVE:
-            await self._flush(reviewer)
-        else:
-            reviewer.status, reviewer.pause_reason = 'paused', 'review'
-            await self._resume_agents({'review'})
+        await self._wake(self.state.agents['reviewer'],
+                         prompts.review_request(proposal['kind'], proposal['round'], proposal['detail']))
 
     async def _tool_verdict(self, caller: Agent, review: str, agree: bool) -> str:
         proposal = self.state.proposal
@@ -807,13 +906,12 @@ class Controller:
         if proposal['kind'] == 'complete' and agree:
             await self._finish('complete', f'the Reviewer agreed ({proposal["review"]})')
             return 'Verdict recorded: the investigation is COMPLETE.'
-        primary = self.state.agents['primary']
         if proposal['kind'] == 'complete':
             self.state.proposal = None
         else:
             proposal['challenged'] = True
-        await self._notify(primary, prompts.verdict_delivered(proposal['kind'], proposal['round'],
-                                                              proposal['review'], agree))
+        await self._review_ended(prompts.verdict_delivered(proposal['kind'], proposal['round'], proposal['review'],
+                                                           agree))
         return 'Verdict delivered to the primary. End your turn now; you will be called for the next round.'
 
     # Finishing ----------------------------------------------------------------------------------
@@ -853,47 +951,51 @@ class Controller:
         elif self.state.status in ('pausing', 'paused'):
             await self._resume()
 
-    async def _pause(self) -> None:
-        """The human's pause: every working agent hands off; then jobs stop and the state is committed."""
+    async def _pause(self, reason: str = 'pause') -> None:
+        """The human's pause (or shutdown): every working agent hands off, then :meth:`_pause_progress` completes it."""
         self.state.status = 'pausing'
-        self.show('controller', 'primary', 'Pausing: every working agent hands off first.')
+        self.show('controller', 'primary', ('Shutting down' if reason == 'shutdown' else 'Pausing')
+                  + ': every working agent hands off first.')
         for agent in self._live():
-            await self._request_handoff(agent, 'pause')
+            await self._request_handoff(agent, reason)
         for agent in self.state.agents.values():
-            if agent.status == 'paused' and agent.pause_reason in ('slots', 'review', 'quota', 'failure'):
+            if agent.status == 'paused' and agent.pause_reason in ('slots', 'wake', 'quota', 'failure'):
                 agent.pause_reason = 'human' if agent.pause_reason == 'failure' else agent.pause_reason
         await self._pause_progress()
 
     async def _pause_progress(self) -> None:
-        """Complete a pause once no agent is working any more."""
+        """Complete a pause once no agent is working any more: a pause stops the jobs, a shutdown keeps them."""
         state = self.state
         if state.status != 'pausing' or self._live():
             return
         for agent_id in [a for a in self.sessions if state.agents[a].closing]:
             state.agents[agent_id].closing = False
             await self._close(agent_id)
-        for job in state.running_jobs():
-            await self._stop_job(job)
-            state.agents[job.owner].notices.append(
-                f'[controller] {job.id} was stopped by the human\'s pause; run it again if it is still needed.')
+        shutdown = self.request == 'shutdown'
+        if not shutdown:  # jobs survive a shutdown: the next run reattaches them
+            for job in state.running_jobs():
+                await self._stop_job(job)
+                state.agents[job.owner].notices.append(
+                    f'[controller] {job.id} was stopped by the human\'s pause; run it again if it is still needed.')
         state.status = 'paused'
-        self._commit('controller: paused by the human')
-        self.show('controller', 'primary', 'Paused. Agent files may now be edited; press Resume to continue.')
+        self._commit('controller: shut down by the human' if shutdown else 'controller: paused by the human')
+        if not shutdown:
+            self.show('controller', 'primary', 'Paused. Agent files may now be edited; press Resume to continue.')
         self._save()
-        if self.request == 'shutdown':
+        if shutdown:
             self.done.set()
 
     async def _resume(self) -> None:
-        """The human's resume: report their edits, re-read quota and restart paused agents."""
+        """The human's resume: report what changed meanwhile, re-read quota and restart paused agents."""
         state = self.state
         self.request = None  # resuming cancels a shutdown still waiting for handoffs
         if state.status == 'paused':
             changed = self.project.uncommitted()
             if changed:
-                self._commit('human: edits while paused')
-                self._announce_edits(changed)
+                self._commit('controller: changes made while paused (by the human or by running jobs)')
+                self._announce_changes(changed)
         for agent in self._live():  # a pause cancelled while agents were still handing off
-            if agent.handoff_reason == 'pause':
+            if agent.handoff_reason in ('pause', 'shutdown'):
                 agent.handoff_reason = 'context'
         state.status = 'running'
         state.holds = {backend: hold for backend, hold in state.holds.items() if hold['kind'] == 'short'}
@@ -922,8 +1024,9 @@ class Controller:
         await self._resume_agents({'slots'})
 
     async def _shutdown(self) -> None:
+        """Hand every working agent off, then end the controller; jobs keep running."""
         if self.state.status == 'running':
-            await self._pause()
+            await self._pause('shutdown')
         elif self.state.status != 'pausing':
             self.done.set()
 

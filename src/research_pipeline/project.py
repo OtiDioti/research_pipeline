@@ -59,10 +59,11 @@ class Project:
 
     def __init__(self, root: Path):
         self.root = Path(root).resolve()
-        self.questions = self.root / 'starting_evidence' / 'RESEARCH_QUESTIONS.md'
+        self.evidence = self.root / 'starting_evidence'    # the human's: read-only for agents and their jobs
+        self.questions = self.evidence / 'RESEARCH_QUESTIONS.md'
         self.agents = self.root / 'agents'
         self.reviews = self.root / 'reviews'
-        self.research = self.root / '.research'
+        self.research = self.root / '.research'           # the controller's: hidden from agents and their jobs
         self.logs = self.research / 'logs'
         self.state_file = self.research / 'state.json'
         self.lock_file = self.research / 'lock'
@@ -83,7 +84,11 @@ class Project:
     # Layout ---------------------------------------------------------------------------
 
     def prepare(self) -> None:
-        """Create the top-level layout and the git repository; keep everything already there."""
+        """Create the top-level layout and the git repository; keep everything already there.
+
+        Only a new repository is committed here: in an existing one, changes made while
+        the controller was off stay uncommitted, so that the controller can report them.
+        """
         if str(self.root).startswith('/tmp/'):
             raise ProjectError('Projects cannot live under /tmp: each agent session has its own private /tmp.')
         if not self.questions.is_file():
@@ -102,9 +107,9 @@ class Project:
             ignore.write_text(GITIGNORE, encoding='utf-8')
         elif '.research/' not in ignore.read_text(encoding='utf-8').split():
             ignore.write_text(ignore.read_text(encoding='utf-8').rstrip('\n') + '\n.research/\n', encoding='utf-8')
-        if not (self.root / '.git').exists():
-            self.git('init', '-q')
-        self.commit('controller: project prepared')
+        if not (self.root / '.git').exists():  # a new repository starts with the prepared layout; later changes
+            self.git('init', '-q')             # stay uncommitted for the controller to report and commit
+            self.commit('controller: project prepared')
 
     def write_agents_index(self, agents: list[Agent]) -> None:
         """Maintain agents/FOLDER_CONTENT.md: one line per agent, from its task's first line."""

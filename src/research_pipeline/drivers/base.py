@@ -6,16 +6,22 @@ it messages with :meth:`Session.send` — delivered live during a turn, or start
 a new turn when the agent is idle — and closes it at a handoff or at the end.
 
 The base class owns everything that does not depend on the CLI: confinement, the
-process, reading and logging JSON lines, and reporting events. A CLI driver
-implements four hooks: :meth:`~Session.command`, :meth:`~Session.begin`,
-:meth:`~Session.deliver` and :meth:`~Session.receive`. Adding a CLI means writing
-one such subclass and registering it in :data:`research_pipeline.drivers.DRIVERS`.
+process, reading and logging JSON lines, matching replies to requests, the check
+that a session loaded nothing of the human's own setup, and reporting events. A
+CLI driver is one subclass, the only place where knowledge of its CLI lives. It
+implements four hooks — :meth:`~Session.command`, :meth:`~Session.begin`,
+:meth:`~Session.deliver` and :meth:`~Session.receive` — and, where its CLI needs
+them, :meth:`~Session.environment`, :meth:`~Session.state_paths`,
+:meth:`~Session.masked_paths` and :meth:`~Session.read_usage`. Adding a CLI means
+writing one such subclass and registering it in
+:data:`research_pipeline.drivers.DRIVERS`.
 
 Events reach the controller as ``on_event(session, kind, data)`` with these kinds:
 
 - ``text``: the agent wrote something (``data['text']``);
 - ``tool``: the agent used a tool (``data['text']`` summarises it);
-- ``context``: context use changed (``data['tokens']``, ``data['window']``, either may be None);
+- ``context``: context use changed (``data['tokens']``, ``data['window']``, either may be None), always
+  as the CLI itself reports it, never estimated;
 - ``turn_ended``: the agent ended its turn (``data['text']`` is its final message; ``data['failed']``
   is true if the turn failed, e.g. on an API error);
 - ``exited``: the CLI process ended without being closed (``data['reason']``).
@@ -28,12 +34,17 @@ from dataclasses import dataclass
 import json
 import os
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Hashable, Iterable
 
 from research_pipeline import confine
+from research_pipeline.quota import Window
 
 #: Longest JSON line accepted from a CLI, in bytes.
 LINE_LIMIT = 64 * 1024 * 1024
+#: Seconds to wait for the CLI's reply to a request (starting a session includes starting MCP servers).
+REPLY_TIMEOUT = 120
+#: Name under which every CLI attaches the controller's MCP tool server.
+MCP_SERVER = 'research'
 
 
 @dataclass(frozen=True)
@@ -48,12 +59,13 @@ class Launch:
     """Everything a session needs to start."""
     agent: str                 # logical agent id, for messages
     cwd: Path                  # the agent's folder
-    instructions: str          # system/developer instructions: the role prompt
+    instructions: str          # system/developer instructions: the role prompt and the human's AGENTS.md
     message: str               # the opening user message
-    model: str | None          # None: the CLI's default
-    effort: str | None         # None: the CLI's default
+    model: str                 # the CLI's model, always explicit
+    effort: str                # its reasoning effort, always explicit
     mcp: McpServer
     writable: tuple[Path, ...]  # the agent's write scope (the CLI's own state paths are added)
+    hidden: tuple[Path, ...]   # folders the session must not see (the controller's own state)
     log: Path                  # file receiving every JSON line, both directions
 
 
@@ -61,10 +73,14 @@ class SessionError(RuntimeError):
     """The CLI refused a request or ended unexpectedly."""
 
 
+class SetupError(SessionError):
+    """The CLI loaded part of the human's own setup, which project sessions must not use (PROJECT.md §3)."""
+
+
 class Session:
     """One persistent agent session of one CLI, inside its confinement."""
 
-    #: Backend name, as used in BACKEND[:MODEL[:EFFORT]].
+    #: Backend name, as used in BACKEND:MODEL:EFFORT.
     backend = ''
 
     def __init__(self, launch: Launch, on_event: Callable[[Session, str, dict], None]):
@@ -75,12 +91,13 @@ class Session:
         self.process: asyncio.subprocess.Process | None = None
         self._tasks: list[asyncio.Task] = []
         self._stderr: deque[str] = deque(maxlen=20)
+        self._replies: dict[Hashable, asyncio.Future] = {}
         self._log = None
 
     # CLI-specific hooks -----------------------------------------------------------------
 
     def command(self) -> list[str]:
-        """The CLI's command line (before confinement)."""
+        """The CLI's command line (before confinement), with its own discovery switched off."""
         raise NotImplementedError
 
     def environment(self) -> dict[str, str]:
@@ -91,8 +108,12 @@ class Session:
         """Folders and files the CLI itself must write (login, settings, caches)."""
         return []
 
+    def masked_paths(self) -> list[Path]:
+        """Files of the human's own CLI setup that the confinement shows as empty files."""
+        return []
+
     async def begin(self) -> None:
-        """Run the CLI's handshake and send the opening message."""
+        """Run the CLI's handshake, call :meth:`check_setup` with what it loaded, and send the opening message."""
         raise NotImplementedError
 
     async def deliver(self, text: str) -> None:
@@ -100,18 +121,21 @@ class Session:
         raise NotImplementedError
 
     def receive(self, message: dict) -> None:
-        """Handle one JSON message from the CLI, emitting events."""
+        """Handle one JSON message from the CLI: emit events, or pass a reply to :meth:`reply`."""
         raise NotImplementedError
 
-    def ended(self) -> None:
-        """The CLI process has ended: release anything still waiting for it (optional hook)."""
+    @classmethod
+    def read_usage(cls) -> list[Window]:
+        """The CLI's usage windows, read without any model call; a CLI without a probe is not guarded."""
+        return []
 
     # Shared transport -------------------------------------------------------------------
 
     async def start(self) -> None:
-        """Start the confined CLI process and send the opening message."""
-        argv = confine.command(self.command(), writable=[*self.launch.writable, *self.state_paths()],
-                               cwd=self.launch.cwd)
+        """Start the confined CLI process and run :meth:`begin`."""
+        argv = confine.session(self.command(), cwd=self.launch.cwd,
+                               writable=[*self.launch.writable, *self.state_paths()],
+                               hidden=self.launch.hidden, masked=self.masked_paths())
         self.launch.log.parent.mkdir(parents=True, exist_ok=True)
         self._log = open(self.launch.log, 'a', encoding='utf-8')
         self.process = await asyncio.create_subprocess_exec(
@@ -150,6 +174,40 @@ class Session:
         self.process.stdin.write(line.encode() + b'\n')
         await self.process.stdin.drain()
 
+    async def exchange(self, key: Hashable, message: dict, timeout: float = REPLY_TIMEOUT) -> dict:
+        """Send ``message`` and return the reply the driver passes to :meth:`reply` under ``key``.
+
+        Raise SessionError if the CLI ends first, and asyncio.TimeoutError after ``timeout`` seconds.
+        """
+        future = asyncio.get_running_loop().create_future()
+        self._replies[key] = future
+        try:
+            await self.write(message)
+            return await asyncio.wait_for(future, timeout)
+        finally:
+            self._replies.pop(key, None)
+
+    def reply(self, key: Hashable, message: dict) -> None:
+        """Hand a reply from the CLI to the :meth:`exchange` waiting for ``key`` (if any still waits)."""
+        future = self._replies.get(key)
+        if future and not future.done():
+            future.set_result(message)
+
+    def check_setup(self, *, instructions: Iterable[str] = (), skills: Iterable[str] = (),
+                    mcp_servers: Iterable[str] = ()) -> None:
+        """Refuse a session whose CLI reports having loaded anything of the human's own setup.
+
+        Drivers call this from :meth:`begin` with what their CLI says it loaded:
+        instruction files, skills and MCP servers. The controller provides all of a
+        session's instructions and its only MCP server (:data:`MCP_SERVER`), so
+        anything else is personal setup (PROJECT.md §3).
+        """
+        personal = ([f'instruction file {path}' for path in instructions] + [f'skill {name}' for name in skills]
+                    + [f'MCP server {name}' for name in mcp_servers if name != MCP_SERVER])
+        if personal:
+            raise SetupError(f'{self.backend} loaded the human\'s own setup ({"; ".join(personal)}); remove it '
+                             'from that CLI\'s configuration, or report a driver that fails to switch it off')
+
     def emit(self, kind: str, **data) -> None:
         self.on_event(self, kind, data)
 
@@ -174,10 +232,16 @@ class Session:
                     self._record('!', f'cannot handle message: {error!r}')
         code = await self.process.wait()
         self.busy = False
-        self.ended()
+        self._abandon_replies()
         if not self.closing:
             detail = ' | '.join(self._stderr) or 'no error output'
             self.emit('exited', reason=f'{self.backend} exited with status {code}: {detail[-600:]}')
+
+    def _abandon_replies(self) -> None:
+        """Fail every exchange still waiting: the CLI is gone and will never reply."""
+        for future in self._replies.values():
+            if not future.done():
+                future.set_exception(SessionError(f'{self.backend} ended before replying'))
 
     async def _drain(self) -> None:
         """Keep the CLI's error output, so it never blocks and the last lines explain failures."""

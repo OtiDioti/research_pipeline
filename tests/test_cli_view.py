@@ -12,7 +12,7 @@ from research_pipeline import cli
 from research_pipeline.controller import Controller
 from research_pipeline.state import Agent, Options, State
 from research_pipeline.view import TerminalApp, describe
-from tests.helpers import FAKE_DRIVERS, remove, temp_project
+from tests.helpers import FAKE_DRIVERS, launch_options, remove, temp_project
 
 
 def arguments(**values):
@@ -24,16 +24,17 @@ def arguments(**values):
 class CliTest(unittest.TestCase):
 
     def test_options_merge_with_stored_ones(self):
-        fresh = cli.options_from(arguments(primary='claude:opus', reviewer='codex'), None)
+        fresh = cli.options_from(arguments(primary='claude:opus:high', reviewer='codex:gpt-test:high'), None)
         self.assertEqual(fresh.backends, ['claude', 'codex'])
-        stored = Options(primary='codex', backends=['codex'], max_agents=6)
+        stored = Options(primary='codex:gpt-test:high', backends=['codex'], max_agents=6)
         merged = cli.options_from(arguments(max_agents=3, context_threshold=0.5), stored)
         self.assertEqual((merged.primary, merged.backends, merged.max_agents, merged.threshold),
-                         ('codex', ['codex'], 3, 0.5))
+                         ('codex:gpt-test:high', ['codex'], 3, 0.5))
         with self.assertRaises(ValueError):
             cli.options_from(arguments(context_threshold=2), None)
-        with self.assertRaises(ValueError):
-            cli.options_from(arguments(primary=':x'), None)
+        with self.assertRaises(ValueError) as raised:
+            cli.options_from(arguments(primary='claude:opus'), None)  # model and effort are always explicit
+        self.assertIn('--primary', str(raised.exception))
 
     def test_status_command(self):
         root = temp_project()
@@ -42,7 +43,8 @@ class CliTest(unittest.TestCase):
             with contextlib.redirect_stdout(output):
                 self.assertEqual(cli.main(['status', str(root)]), 1)
             state = State(status='paused')
-            state.agents['primary'] = Agent('primary', 'primary', None, 'codex', status='paused', pause_reason='human')
+            state.agents['primary'] = Agent('primary', 'primary', None, 'codex', 'gpt-test', 'high', status='paused',
+                                            pause_reason='human')
             state.save(root / '.research' / 'state.json')
             with contextlib.redirect_stdout(output):
                 self.assertEqual(cli.main(['status', str(root)]), 0)
@@ -66,19 +68,22 @@ class CliTest(unittest.TestCase):
 class ViewTest(unittest.TestCase):
 
     def test_render_status_and_agent_selection(self):
-        controller = Controller(temp_project(), Options(), drivers=FAKE_DRIVERS)
+        controller = Controller(temp_project(), launch_options(), drivers=FAKE_DRIVERS)
         try:
-            controller.state = State(options=Options())
-            controller.state.agents['primary'] = Agent('primary', 'primary', None, 'codex', status='paused',
-                                                       pause_reason='quota', activity='Deriving.')
-            controller.state.agents['helper'] = Agent('helper', 'subagent', 'primary', 'claude', 'haiku',
+            controller.state = State(options=launch_options())
+            controller.state.agents['primary'] = Agent('primary', 'primary', None, 'codex', 'gpt-test', 'high',
+                                                       status='paused', pause_reason='quota', activity='Deriving.')
+            controller.state.agents['helper'] = Agent('helper', 'subagent', 'primary', 'claude', 'haiku', 'low',
                                                       status='submitted')
+            app_alert = ('alert', 'primary', 'The primary has stopped and is waiting for you.')
             with create_pipe_input() as pipe:
                 app = TerminalApp(controller, input=pipe, output=DummyOutput())
                 app.add('agent', 'primary', 'The integral is 1/3.')
                 app.add('controller', 'helper', 'Session 1 started.')
+                app.add(*app_alert)
                 app.render()
                 self.assertIn('The integral is 1/3.', app.log.text)
+                self.assertIn('primary ALERT', app.log.text)
                 self.assertIn('paused (quota)', app.agents.text)
                 self.assertIn('RUNNING', app.status())
                 app.cycle()  # first agent alone: helper
@@ -89,7 +94,7 @@ class ViewTest(unittest.TestCase):
                 self.assertIn('The integral', app.log.text)
             lines = describe(controller)
             self.assertTrue(lines[0].startswith('primary'))
-            self.assertIn('claude:haiku', lines[1])
+            self.assertIn('claude:haiku:low', lines[1])
         finally:
             remove(controller.project.root)
 
@@ -102,7 +107,7 @@ class AppLifecycleTest(unittest.IsolatedAsyncioTestCase):
         saved = controller_module.WATCH_INTERVAL
         controller_module.WATCH_INTERVAL = 0.02
         try:
-            controller = Controller(root, Options(), drivers=FAKE_DRIVERS, read_quota=lambda backend: [])
+            controller = Controller(root, launch_options(), drivers=FAKE_DRIVERS, read_quota=lambda backend: [])
             with create_pipe_input() as pipe:
                 app = TerminalApp(controller, input=pipe, output=DummyOutput())
                 running = asyncio.ensure_future(app.run())
@@ -111,7 +116,7 @@ class AppLifecycleTest(unittest.IsolatedAsyncioTestCase):
                     if 'primary' in controller.sessions:
                         break
                 session = controller.sessions['primary']
-                app.shutdown()  # Ctrl+Q: pause cleanly, then exit
+                app.shutdown()  # Ctrl+Q: agents hand off, then the app exits
                 await asyncio.sleep(0.1)
                 (root / 'agents' / 'primary' / 'HANDOFF.md').write_text('# Handoff\n')
                 session.emit('turn_ended', text='')

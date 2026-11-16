@@ -7,8 +7,10 @@ refusals, statuses and commits.
 import asyncio
 import unittest
 
-from research_pipeline.state import Options
-from tests.helpers import FakeSession, remove, running, temp_project
+from research_pipeline.controller import Controller
+from research_pipeline.drivers import SetupError
+from research_pipeline.project import ProjectError
+from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project
 
 
 def sent(harness, agent_id: str) -> str:
@@ -21,20 +23,42 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.root = temp_project()
         FakeSession.instances.clear()
+        FakeSession.start_error = None
 
     def tearDown(self):
+        FakeSession.start_error = None
         remove(self.root)
 
-    async def spawn(self, harness, parent='primary', name='helper', backend='codex'):
+    async def spawn(self, harness, parent='primary', name='helper', backend='codex', model='gpt-test', effort='high'):
         harness.write(f'agents/{parent}/brief-{name}.md', f'# Check {name}\n\nDo it.\n')
-        reply = await harness.call(parent, 'spawn', task=f'brief-{name}.md', name=name, backend=backend)
+        reply = await harness.call(parent, 'spawn', task=f'brief-{name}.md', name=name, backend=backend, model=model,
+                                   effort=effort)
         self.assertIn('Started subagent', reply)
         return reply.split()[2]
 
     def prepare_result(self, harness, agent_id):
         harness.write(f'agents/{agent_id}/RESULT.md', '# Result\n\nFound it.\n')
         harness.handoff(agent_id)
-        harness.index(f'agents/{agent_id}', 'TASK.md', 'RESULT.md', 'HANDOFF.md', f'brief-x.md')
+        harness.index(f'agents/{agent_id}', 'TASK.md', 'RESULT.md', 'HANDOFF.md', 'brief-x.md')
+
+    def ready_report(self, harness):
+        harness.write('REPORT.md', '# Report\n\nThe integral is 1/3.\n')
+        harness.handoff('primary')
+        harness.index('agents/primary', 'HANDOFF.md')
+
+    def ready_review(self, harness, name='1.md'):
+        harness.write(f'reviews/{name}', '# Review\n\n1. Fine.\n')
+        harness.index('reviews', *sorted(p.name for p in (self.root / 'reviews').glob('*.md')
+                                         if p.name != 'FOLDER_CONTENT.md'))
+        harness.handoff('reviewer')
+        harness.index('agents/reviewer', 'HANDOFF.md')
+
+    async def propose_complete(self, harness):
+        """The primary proposes COMPLETE and ends its turn, so its session closes."""
+        self.ready_report(harness)
+        reply = await harness.call('primary', 'complete')
+        await harness.emit('primary', 'turn_ended', text='Proposed.')
+        return reply
 
     # Starting ---------------------------------------------------------------------------
 
@@ -50,7 +74,25 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             launch = harness.session('primary').launch
             self.assertIn(self.root / 'STATUS.md', launch.writable)
             self.assertNotIn(self.root / 'starting_evidence', launch.writable)
+            self.assertEqual(launch.hidden, (self.root / '.research',))
+            self.assertEqual((launch.model, launch.effort), ('gpt-test', 'high'))
             self.assertIn('primary researcher', launch.instructions)
+
+    async def test_launch_needs_explicit_cli_choices(self):
+        controller = Controller(self.root, launch_options(primary='codex'), drivers=FAKE_DRIVERS,
+                                read_quota=lambda backend: [])
+        with self.assertRaises(ProjectError) as raised:
+            await controller.run()
+        self.assertIn('--primary must be BACKEND:MODEL:EFFORT', str(raised.exception))
+
+    async def test_agents_md_reaches_every_session_as_instructions(self):
+        (self.root / 'AGENTS.md').write_text('Use SI units throughout.\n')
+        async with running(self.root) as harness:
+            primary = harness.session('primary').launch
+            self.assertIn('Use SI units throughout.', primary.instructions)
+            self.assertNotIn('Use SI units', primary.message)
+            child = await self.spawn(harness)
+            self.assertIn('Use SI units throughout.', harness.session(child).launch.instructions)
 
     async def test_stale_token_and_role_tools_are_refused(self):
         async with running(self.root) as harness:
@@ -60,27 +102,48 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             child = await self.spawn(harness)
             self.assertIn('not available', await harness.call(child, 'complete'))
 
-    # Spawning and results -------------------------------------------------------------------
+    async def test_session_that_loads_personal_setup_waits_for_the_human(self):
+        async with running(self.root) as harness:
+            FakeSession.start_error = SetupError('codex loaded the human\'s own setup (skill personal-notes)')
+            harness.write('agents/primary/brief.md', '# Task\n')
+            reply = await harness.call('primary', 'spawn', task='brief.md', name='helper', backend='codex',
+                                       model='gpt-test', effort='high')
+            self.assertIn('could not start', reply)
+            agent = harness.state.agents['helper']
+            self.assertEqual((agent.status, agent.pause_reason, agent.retry_at), ('paused', 'failure', None))
+            self.assertTrue(any('personal-notes' in text and 'Ctrl+R' in text for _, _, text in harness.lines))
+            self.assertTrue(harness.controller.releasable)
+            FakeSession.start_error = None  # the human removed it
+            harness.controller.release()
+            await harness.settle(10)
+            self.assertEqual(agent.status, 'running')
+
+    # Spawning, results and messages -------------------------------------------------------------
 
     async def test_spawn_beyond_cap_is_refused_with_count(self):
-        async with running(self.root, Options(max_agents=2, backends=['codex'])) as harness:
+        async with running(self.root, launch_options(max_agents=2, backends=['codex'])) as harness:
             await self.spawn(harness, name='first')
             harness.write('agents/primary/brief.md', '# Task\n')
-            reply = await harness.call('primary', 'spawn', task='brief.md')
+            reply = await harness.call('primary', 'spawn', task='brief.md', backend='codex', model='m', effort='low')
             self.assertIn('2/2 agents are already working', reply)
-            self.assertIn('not allowed', await harness.call('primary', 'spawn', task='brief.md', backend='claude'))
+            self.assertIn('not allowed', await harness.call('primary', 'spawn', task='brief.md', backend='claude',
+                                                            model='m', effort='low'))
 
-    async def test_subagent_starts_with_its_task_and_inherits_cli(self):
-        options = Options(primary='codex:model-x:high', backends=['codex', 'claude'])
-        async with running(self.root, options) as harness:
-            child = await self.spawn(harness, name='Convergence Check')
+    async def test_spawn_needs_backend_model_and_effort(self):
+        async with running(self.root) as harness:
+            harness.write('agents/primary/brief.md', '# Task\n')
+            self.assertIn('invalid arguments', await harness.call('primary', 'spawn', task='brief.md'))
+            self.assertIn('model and an effort are required', await harness.call(
+                'primary', 'spawn', task='brief.md', backend='codex', model='', effort='high'))
+            child = await self.spawn(harness, name='Convergence Check', backend='claude', model='opus', effort='max')
             self.assertEqual(child, 'convergence-check')
             agent = harness.state.agents[child]
-            self.assertEqual((agent.model, agent.effort, agent.parent), ('model-x', 'high', 'primary'))
-            self.assertIn('# Check Convergence Check', harness.session(child).launch.message)
+            self.assertEqual((agent.backend, agent.model, agent.effort, agent.parent),
+                             ('claude', 'opus', 'max', 'primary'))
+            launch = harness.session(child).launch
+            self.assertEqual((launch.model, launch.effort), ('opus', 'max'))
+            self.assertIn('# Check Convergence Check', launch.message)
             self.assertTrue((self.root / 'agents' / child / 'TASK.md').is_file())
-            other = await self.spawn(harness, name='lit', backend='claude')
-            self.assertIsNone(harness.state.agents[other].model)
 
     async def test_result_requires_settled_children_and_layout(self):
         async with running(self.root) as harness:
@@ -96,9 +159,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_result_is_reviewed_by_parent_reject_then_accept(self):
         async with running(self.root) as harness:
             child = await self.spawn(harness)
-            harness.write(f'agents/{child}/RESULT.md', '# Result\n')
-            harness.handoff(child)
-            harness.index(f'agents/{child}', 'TASK.md', 'RESULT.md', 'HANDOFF.md')
+            self.prepare_result(harness, child)
             reply = await harness.call(child, 'submit_result')
             self.assertIn('submitted', reply)
             self.assertIn(f'Subagent {child} submitted its result', sent(harness, 'primary'))
@@ -123,6 +184,73 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.call('primary', 'cancel', agent=child)
             self.assertEqual({harness.state.agents[a].status for a in (child, grandchild)}, {'cancelled'})
             self.assertTrue(all(session.closed for session in sessions))
+
+    async def test_messages_between_parent_and_subagents(self):
+        async with running(self.root) as harness:
+            child = await self.spawn(harness)
+            other = await self.spawn(harness, name='other')
+            grandchild = await self.spawn(harness, parent=child, name='deeper')
+            self.assertIn('delivered', await harness.call('primary', 'message', agent=child, text='Use the 2024 data.'))
+            self.assertIn('[from primary] Use the 2024 data.', sent(harness, child))
+            self.assertIn('delivered', await harness.call(child, 'message', agent='primary', text='Which norm?'))
+            self.assertIn(f'[from {child}] Which norm?', sent(harness, 'primary'))
+            self.assertIn('delivered', await harness.call(grandchild, 'message', agent=child, text='Done soon.'))
+            self.assertIn('neither your parent', await harness.call(child, 'message', agent=other, text='Hi.'))
+            self.assertIn('neither your parent', await harness.call('primary', 'message', agent=grandchild,
+                                                                    text='Hi.'))
+            self.prepare_result(harness, other)
+            await harness.call(other, 'submit_result')
+            self.assertIn('has submitted its result', await harness.call('primary', 'message', agent=other,
+                                                                         text='Wait.'))
+
+    # Waiting, idle and stalled agents -------------------------------------------------------------
+
+    async def test_waiting_parent_is_left_alone_and_a_stalled_subagent_is_reported_to_it(self):
+        async with running(self.root) as harness:
+            child = await self.spawn(harness)
+            await harness.emit('primary', 'turn_ended', text='Waiting for the helper.')
+            self.assertNotIn('You ended your turn', sent(harness, 'primary'))  # waiting, not idle
+            await harness.emit(child, 'turn_ended', text='Thinking.')
+            self.assertEqual(sent(harness, child).count('You ended your turn'), 1)
+            await harness.emit(child, 'turn_ended', text='I am not sure which method to use.')
+            self.assertIn(f'Subagent {child} has stopped working', sent(harness, 'primary'))
+            self.assertIn('I am not sure which method to use.', sent(harness, 'primary'))
+            self.assertEqual(harness.state.agents[child].status, 'running')  # it keeps its session
+            await harness.call('primary', 'message', agent=child, text='Use method B.')
+            self.assertIn('[from primary] Use method B.', sent(harness, child))
+
+    async def test_nudge_names_results_awaiting_a_decision(self):
+        async with running(self.root) as harness:
+            child = await self.spawn(harness)
+            self.prepare_result(harness, child)
+            await harness.call(child, 'submit_result')
+            await harness.emit(child, 'turn_ended', text='')
+            await harness.emit('primary', 'turn_ended', text='')
+            self.assertIn(f'results await your decision: {child}', sent(harness, 'primary'))
+
+    async def test_stalled_primary_alerts_the_human_and_keeps_its_session(self):
+        async with running(self.root) as harness:
+            session = harness.session('primary')
+            await harness.emit('primary', 'turn_ended', text='')
+            await harness.emit('primary', 'turn_ended', text='Should I use the six-band model?')
+            self.assertEqual(sent(harness, 'primary').count('You ended your turn'), 1)
+            alerts = [text for kind, _, text in harness.lines if kind == 'alert']
+            self.assertTrue(alerts and 'six-band' in alerts[-1])
+            harness.controller.say('Yes, six bands.')
+            await harness.settle()
+            self.assertIs(harness.session('primary'), session)
+            self.assertIn('[human] Yes, six bands.', sent(harness, 'primary'))
+
+    async def test_stalled_reviewer_withdraws_the_proposal_and_wakes_the_primary(self):
+        async with running(self.root) as harness:
+            await self.propose_complete(harness)
+            await harness.emit('reviewer', 'turn_ended', text='')
+            await harness.emit('reviewer', 'turn_ended', text='Nothing to add.')
+            self.assertIsNone(harness.state.proposal)
+            self.assertEqual(harness.state.agents['reviewer'].status, 'resting')
+            self.assertNotIn('reviewer', harness.controller.sessions)
+            self.assertIn('stopped without a verdict', harness.session('primary').launch.message)
+            self.assertEqual(harness.state.agents['primary'].sessions, 2)
 
     # Handoffs -------------------------------------------------------------------------------
 
@@ -176,12 +304,6 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.emit('primary', 'turn_ended', text='')
             self.assertIsNot(harness.session('primary'), first)
 
-    async def test_nudge_once_when_nothing_is_pending(self):
-        async with running(self.root) as harness:
-            await harness.emit('primary', 'turn_ended', text='')
-            await harness.emit('primary', 'turn_ended', text='')
-            self.assertEqual(sent(harness, 'primary').count('You ended your turn'), 1)
-
     # Jobs -------------------------------------------------------------------------------------
 
     async def test_job_runs_survives_handoff_and_notifies_owner(self):
@@ -214,6 +336,20 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(harness.state.jobs[slow].status, 'timeout')
             self.assertIn('positive', await harness.call('primary', 'run_job', command='true', timeout_seconds=0))
 
+    async def test_jobs_cannot_write_the_evidence_or_use_the_controller_folder(self):
+        async with running(self.root) as harness:
+            reply = await harness.call('primary', 'run_job', command='echo x > ../../starting_evidence/new.txt',
+                                       timeout_seconds=30)
+            job = reply.split()[1]
+            for _ in range(100):
+                await asyncio.sleep(0.05)
+                if harness.state.jobs[job].status != 'running':
+                    break
+            self.assertEqual(harness.state.jobs[job].status, 'failed')
+            self.assertFalse((self.root / 'starting_evidence' / 'new.txt').exists())
+            self.assertIn('not an existing folder', await harness.call(
+                'primary', 'run_job', command='ls', timeout_seconds=5, cwd='.research'))
+
     # Usage quota --------------------------------------------------------------------------------
 
     async def test_short_window_pauses_only_that_cli_then_resumes(self):
@@ -230,7 +366,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(harness.state.agents[claude].status, 'paused')
             harness.write('agents/primary/b.md', '# Task\n')
             self.assertIn('paused by the usage quota', await harness.call('primary', 'spawn', task='b.md',
-                                                                          backend='claude'))
+                                                                          backend='claude', model='m', effort='low'))
             harness.quota.remaining['claude'] = (60.0, 80.0)
             await harness.controller._check_quota()
             await harness.settle()
@@ -239,9 +375,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_reject_while_the_cli_is_held_waits_and_parent_is_told(self):
         async with running(self.root) as harness:
             claude = await self.spawn(harness, name='lit', backend='claude')
-            harness.write(f'agents/{claude}/RESULT.md', '# Result\n')
-            harness.handoff(claude)
-            harness.index(f'agents/{claude}', 'TASK.md', 'RESULT.md', 'HANDOFF.md')
+            self.prepare_result(harness, claude)
             await harness.call(claude, 'submit_result')
             await harness.emit(claude, 'turn_ended', text='')
             harness.quota.remaining['claude'] = (10.0, 80.0)
@@ -312,71 +446,109 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     # COMPLETE and STOP ------------------------------------------------------------------------------
 
-    def ready_report(self, harness):
-        harness.write('REPORT.md', '# Report\n\nThe integral is 1/3.\n')
-        harness.handoff('primary')
-        harness.index('agents/primary', 'HANDOFF.md')
-
-    def ready_review(self, harness, name='1.md'):
-        harness.write(f'reviews/{name}', '# Review\n\n1. Fine.\n')
-        harness.index('reviews', *sorted(p.name for p in (self.root / 'reviews').glob('*.md')
-                                         if p.name != 'FOLDER_CONTENT.md'))
-        harness.handoff('reviewer')
-        harness.index('agents/reviewer', 'HANDOFF.md')
-
     async def test_complete_needs_reviewer_agreement(self):
         async with running(self.root) as harness:
-            self.ready_report(harness)
-            reply = await harness.call('primary', 'complete')
+            reply = await self.propose_complete(harness)
             self.assertIn('with the Reviewer (round 1)', reply)
+            self.assertEqual(harness.state.agents['primary'].status, 'resting')
+            self.assertNotIn('primary', harness.controller.sessions)  # closed while the Reviewer works
             self.assertIn('Review round 1', harness.session('reviewer').launch.message)
-            self.assertIn('still with the Reviewer', await harness.call('primary', 'complete'))
             self.ready_review(harness)
             reply = await harness.call('reviewer', 'verdict', review='reviews/1.md', agree=True)
             self.assertIn('COMPLETE', reply)
             self.assertEqual(harness.state.status, 'complete')
+            self.assertEqual(harness.state.agents['primary'].status, 'finished')
             self.assertIn('COMPLETE on', (self.root / 'STATUS.md').read_text())
             self.assertIn('investigation COMPLETE', harness.controller.project.git('log', '--oneline'))
             self.assertEqual(harness.controller.sessions, {})
             await asyncio.wait_for(harness.task, 2)
 
-    async def test_disagreement_then_stop_challenge_then_final_stop(self):
+    async def test_proposal_needs_a_handoff_from_the_current_session(self):
         async with running(self.root) as harness:
-            self.ready_report(harness)
-            await harness.call('primary', 'complete')
+            harness.write('REPORT.md', '# Report\n')
+            self.assertIn('first update HANDOFF.md', await harness.call('primary', 'complete'))
+            self.assertIsNone(harness.state.proposal)
+
+    async def test_review_wakes_the_primary_talk_only_for_the_human(self):
+        async with running(self.root) as harness:
+            await self.propose_complete(harness)
+            harness.controller.say('How confident are you?')
+            await harness.settle()
+            session = harness.session('primary')
+            self.assertIn('[human] How confident are you?', session.launch.message)
+            self.assertIn('woken to answer the human', session.launch.message)
+            self.assertNotIn(self.root / 'STATUS.md', session.launch.writable)
+            self.assertNotIn(self.root / 'REPORT.md', session.launch.writable)
+            self.assertIn('may only talk', await harness.call('primary', 'run_job', command='true',
+                                                              timeout_seconds=5))
+            harness.write('agents/primary/brief.md', '# Task\n')
+            self.assertIn('may only talk', await harness.call('primary', 'spawn', task='brief.md', backend='codex',
+                                                              model='m', effort='low'))
+            await harness.emit('primary', 'turn_ended', text='Fairly confident.')  # waiting: no nudge
+            self.assertNotIn('You ended your turn', sent(harness, 'primary'))
             self.ready_review(harness)
             await harness.call('reviewer', 'verdict', review='1.md', agree=False)
-            self.assertIn('disagrees with COMPLETE', sent(harness, 'primary'))
+            fresh = harness.session('primary')
+            self.assertIsNot(fresh, session)  # the talk-only session is replaced
+            self.assertIn(self.root / 'STATUS.md', fresh.launch.writable)
+            self.assertIn('disagrees with COMPLETE', fresh.launch.message)
+
+    async def test_disagreement_then_stop_challenge_then_final_stop(self):
+        async with running(self.root) as harness:
+            await self.propose_complete(harness)
+            self.ready_review(harness)
+            await harness.call('reviewer', 'verdict', review='1.md', agree=False)
+            self.assertIn('disagrees with COMPLETE', harness.session('primary').launch.message)
             self.assertIsNone(harness.state.proposal)
             await harness.emit('reviewer', 'turn_ended', text='')
             self.assertEqual(harness.state.agents['reviewer'].status, 'resting')
             self.assertIn('challenge a STOP first', await harness.call('primary', 'stop', reason='x', final=True))
+            harness.handoff('primary')
             await harness.call('primary', 'stop', reason='The supplement is inaccessible.')
             self.assertIn('inaccessible', harness.session('reviewer').launch.message)
             self.assertEqual(harness.state.agents['reviewer'].sessions, 2)
             self.ready_review(harness, '2.md')
             await harness.call('reviewer', 'verdict', review='2.md', agree=False)
-            self.assertIn('challenges your STOP', sent(harness, 'primary'))
+            self.assertIn('challenges your STOP', harness.session('primary').launch.message)
             self.assertIn('stopped', await harness.call('primary', 'stop', reason='Confirmed.', final=True))
             self.assertEqual(harness.state.status, 'stopped')
 
     async def test_reopen_after_complete(self):
         async with running(self.root) as harness:
-            self.ready_report(harness)
-            await harness.call('primary', 'complete')
+            await self.propose_complete(harness)
             self.ready_review(harness)
             await harness.call('reviewer', 'verdict', review='1.md', agree=True)
         (self.root / 'starting_evidence' / 'RESEARCH_QUESTIONS.md').write_text('A new question?\n')
         async with running(self.root) as harness:
             opening = harness.session('primary').launch.message
             self.assertIn('reopened after it ended (COMPLETE)', opening)
-            self.assertIn('RESEARCH_QUESTIONS.md', opening)
+            self.assertIn('Changes since then:\n- starting_evidence/RESEARCH_QUESTIONS.md', opening)
             self.assertIn('A new question?', opening)
             self.assertEqual(harness.state.status, 'running')
 
-    # Pause, resume and restart ---------------------------------------------------------------------
+    async def test_challenged_stop_lapses_when_the_primary_continues(self):
+        async with running(self.root) as harness:
+            harness.handoff('primary')
+            harness.index('agents/primary', 'HANDOFF.md')
+            await harness.call('primary', 'stop', reason='Blocked.')
+            self.ready_review(harness)
+            await harness.call('reviewer', 'verdict', review='1.md', agree=False)
+            await harness.call('primary', 'run_job', command='true', timeout_seconds=5)
+            self.assertIsNone(harness.state.proposal)
+            self.assertIn('challenge a STOP first', await harness.call('primary', 'stop', reason='x', final=True))
 
-    async def test_pause_hands_off_stops_jobs_then_resume_reports_edits(self):
+    async def test_stray_top_level_entry_is_reported_not_blocking(self):
+        async with running(self.root) as harness:
+            harness.write('results.csv', '1,2\n')
+            harness.write('.obsidian/app.json', '{}')
+            self.assertIn('with the Reviewer', await self.propose_complete(harness))
+            pending = '\n'.join(harness.state.agents['primary'].notices)  # for its next session
+            self.assertIn('results.csv', pending)
+            self.assertNotIn('.obsidian', pending)
+
+    # Pause, shutdown and restart ---------------------------------------------------------------------
+
+    async def test_pause_hands_off_stops_jobs_then_resume_reports_changes(self):
         async with running(self.root) as harness:
             child = await self.spawn(harness)
             job = (await harness.call(child, 'run_job', command='sleep 30', timeout_seconds=60)).split()[1]
@@ -396,6 +568,25 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             for agent in ('primary', child):
                 self.assertIn(f'agents/{child}/NOTES.md', harness.session(agent).launch.message)
             self.assertIn('stopped by the human\'s pause', harness.session(child).launch.message)
+
+    async def test_shutdown_keeps_jobs_running_and_the_next_run_reattaches_them(self):
+        async with running(self.root) as harness:
+            job = (await harness.call('primary', 'run_job', command='sleep 30', timeout_seconds=60)).split()[1]
+            harness.controller.shutdown()
+            await harness.settle()
+            self.assertIn('shutting the controller down', sent(harness, 'primary'))
+            harness.handoff('primary')
+            await harness.emit('primary', 'turn_ended', text='')
+            await asyncio.wait_for(harness.task, 2)
+            self.assertEqual((harness.state.status, harness.state.jobs[job].status), ('paused', 'running'))
+        (self.root / 'agents' / 'primary' / 'NOTES.md').write_text('# Edited while the controller was off\n')
+        async with running(self.root) as harness:
+            await harness.settle(10)
+            self.assertEqual(harness.state.jobs[job].status, 'running')  # reattached
+            opening = harness.session('primary').launch.message
+            self.assertIn('agents/primary/NOTES.md', opening)
+            self.assertIn('by the human or by running jobs', opening)
+            self.assertIn('cancelled', await harness.call('primary', 'job_cancel', job=job))
 
     async def test_human_file_change_reaches_primary_live(self):
         async with running(self.root) as harness:
@@ -423,18 +614,14 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.settle()
             harness.handoff('primary')
             await harness.emit('primary', 'turn_ended', text='')
-            harness.write(f'agents/{child}/RESULT.md', '# Result\n')
-            harness.handoff(child)
-            harness.index(f'agents/{child}', 'TASK.md', 'RESULT.md', 'HANDOFF.md')
+            self.prepare_result(harness, child)
             self.assertIn('submitted', await harness.call(child, 'submit_result'))
             self.assertEqual(harness.state.status, 'paused')
 
     async def test_accept_during_the_closing_turn_sticks_and_closed_sessions_lose_their_tools(self):
         async with running(self.root) as harness:
             child = await self.spawn(harness)
-            harness.write(f'agents/{child}/RESULT.md', '# Result\n')
-            harness.handoff(child)
-            harness.index(f'agents/{child}', 'TASK.md', 'RESULT.md', 'HANDOFF.md')
+            self.prepare_result(harness, child)
             await harness.call(child, 'submit_result')
             self.assertIn('session is closing', await harness.call(child, 'run_job', command='true',
                                                                    timeout_seconds=5))
@@ -446,9 +633,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_reject_while_closing_replaces_the_old_session(self):
         async with running(self.root) as harness:
             child = await self.spawn(harness)
-            harness.write(f'agents/{child}/RESULT.md', '# Result\n')
-            harness.handoff(child)
-            harness.index(f'agents/{child}', 'TASK.md', 'RESULT.md', 'HANDOFF.md')
+            self.prepare_result(harness, child)
             await harness.call(child, 'submit_result')
             old = harness.session(child)
             await harness.call('primary', 'reject', agent=child, feedback='More.')
@@ -463,27 +648,6 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             agent.retry_at = 0
             await harness.settle(10)
             self.assertEqual((agent.status, agent.sessions), ('running', 2))
-
-    async def test_challenged_stop_lapses_when_the_primary_continues(self):
-        async with running(self.root) as harness:
-            harness.handoff('primary')
-            harness.index('agents/primary', 'HANDOFF.md')
-            await harness.call('primary', 'stop', reason='Blocked.')
-            self.ready_review(harness)
-            await harness.call('reviewer', 'verdict', review='1.md', agree=False)
-            await harness.call('primary', 'run_job', command='true', timeout_seconds=5)
-            self.assertIsNone(harness.state.proposal)
-            self.assertIn('challenge a STOP first', await harness.call('primary', 'stop', reason='x', final=True))
-
-    async def test_stray_top_level_entry_is_reported_not_blocking(self):
-        async with running(self.root) as harness:
-            harness.write('results.csv', '1,2\n')
-            harness.write('.obsidian/app.json', '{}')
-            self.ready_report(harness)
-            reply = await harness.call('primary', 'complete')
-            self.assertIn('with the Reviewer', reply)
-            self.assertIn('results.csv', reply)  # pending notices ride along with the tool's reply
-            self.assertNotIn('.obsidian', reply)
 
     async def test_failed_session_is_retried_later(self):
         async with running(self.root) as harness:

@@ -1,8 +1,10 @@
-"""Everything the controller says to agents: role instructions, opening messages and notices.
+"""Everything the controller says to agents: session instructions, opening messages and notices.
 
-Role instructions come from the Markdown files in ``prompts/`` (one shared part,
-one part per role). Notices are short and always start with ``[controller]`` (or
-``[human]`` for the human's messages), as the instructions announce.
+Session instructions are the role prompt, from the Markdown files in ``prompts/``
+(one shared part, one part per role), followed by the human's ``AGENTS.md``. They
+stay in force for the whole session. Notices are short and start with
+``[controller]``, ``[human]`` for the human's messages, or ``[from <id>]`` for
+messages between a parent and its subagents, as the instructions announce.
 """
 from __future__ import annotations
 
@@ -11,14 +13,14 @@ from pathlib import Path
 from string import Template
 
 from research_pipeline.project import Project
-from research_pipeline.state import Agent, Options
+from research_pipeline.state import Agent, Options, Spec
 
 TITLES = {'primary': 'primary researcher', 'subagent': 'research subagent', 'reviewer': 'independent Reviewer'}
 # What "finishing" means for each role, for the nudge.
 _FINISH = {'primary': 'propose complete (or stop) when the questions are answered',
            'subagent': 'write RESULT.md and call submit_result',
            'reviewer': 'write your review and call verdict'}
-# Opening sections: longer human files are shortened (the agent can read them in full).
+# Longer human files are shortened in instructions and opening messages (the agent can read them in full).
 _EXCERPT = 20_000
 
 
@@ -27,17 +29,19 @@ def _template(name: str) -> str:
 
 
 def instructions(agent: Agent, project: Project, options: Options) -> str:
-    """The role prompt given to every session of ``agent`` as system/developer instructions."""
+    """The session instructions of ``agent``: its role prompt, then the human's AGENTS.md (PROJECT.md §3)."""
     extra = {'primary': ', and in STATUS.md, REPORT.md and the root FOLDER_CONTENT.md',
              'reviewer': ', and in reviews/'}.get(agent.role, '')
-    text = _template('common.md') + _template(f'{agent.role}.md')
-    return Template(text).safe_substitute(
+    choices = dict.fromkeys(map(str, (agent.spec, Spec.parse(options.primary), Spec.parse(options.reviewer))))
+    text = Template(_template('common.md') + _template(f'{agent.role}.md')).safe_substitute(
         id=agent.id, title=TITLES[agent.role], project=project.root, folder=project.agent_dir(agent.id),
-        extra=extra, backends=', '.join(options.backends), parent=agent.parent or '')
+        extra=extra, backends=', '.join(options.backends), choices=', '.join(choices), parent=agent.parent or '')
+    human = _section('Instructions from the human', project.root / 'AGENTS.md', level='#')
+    return f'{text}\n{human}\n' if human else text
 
 
-def _section(title: str, path: Path) -> str | None:
-    """A file's content as an opening section, or None if it is missing or empty."""
+def _section(title: str, path: Path, level: str = '##') -> str | None:
+    """A file's content as a titled section, or None if it is missing or empty."""
     try:
         text = path.read_text(encoding='utf-8', errors='replace').strip()
     except OSError:
@@ -46,7 +50,7 @@ def _section(title: str, path: Path) -> str | None:
         return None
     if len(text) > _EXCERPT:
         text = text[:_EXCERPT] + f'\n\n[… shortened; read {path} for the rest]'
-    return f'## {title} ({path.name})\n\n{text}'
+    return f'{level} {title} ({path.name})\n\n{text}'
 
 
 def opening(agent: Agent, project: Project, options: Options, notices: list[str]) -> str:
@@ -54,10 +58,8 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
     folder = project.agent_dir(agent.id)
     parts = [f'[controller] This is session {agent.sessions} of {agent.id}.']
     if agent.role == 'primary':
-        parts += filter(None, [
-            _section('Research questions', project.questions),
-            _section('Instructions from the human', project.root / 'AGENTS.md'),
-            _section('Feedback from the human', project.root / 'FEEDBACK.md')])
+        parts += filter(None, [_section('Research questions', project.questions),
+                               _section('Feedback from the human', project.root / 'FEEDBACK.md')])
         parts.append('## Starting evidence\n\n' + project.inventory())
         if options.references:
             parts.append('## Read-only reference projects (unverified evidence)\n\n'
@@ -80,6 +82,7 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
 def handoff_request(reason: str, detail: str = '') -> str:
     why = {'context': f'Your context is {detail} full.',
            'pause': 'The human paused the investigation.',
+           'shutdown': 'The human is shutting the controller down.',
            'quota': f'The usage quota of {detail} is nearly exhausted, so its agents pause.'}.get(reason, detail)
     return (f'[controller] {why} Finish your current step, update HANDOFF.md in your folder and end your turn; '
             'a fresh session will continue from it.')
@@ -94,9 +97,24 @@ HANDOFF_MISSING = ('[controller] HANDOFF.md has not been updated since the hando
                    'Update it now, then end your turn.')
 
 
-def nudge(role: str) -> str:
+def nudge(role: str, awaiting: list[str]) -> str:
+    """For an agent that ended its turn with nothing running or pending for it."""
+    if awaiting:
+        return (f'[controller] You ended your turn, but results await your decision: {", ".join(awaiting)}. '
+                'Accept each, reject it with feedback, or cancel it; then continue your work.')
     return ('[controller] You ended your turn, but none of your subagents or jobs is running and nothing is '
             f'pending for you. Continue your work, or {_FINISH[role]}.')
+
+
+def stalled(child: str, last: str) -> str:
+    """For the parent of a subagent that ended its turn idle again after its nudge."""
+    return (f'[controller] Subagent {child} has stopped working: it ended its turn twice with nothing running or '
+            f'pending, without using a tool. Its last message:\n{last}\n'
+            f'Message it with what it needs (message), or cancel it.')
+
+
+def agent_message(sender: str, text: str) -> str:
+    return f'[from {sender}] {text.strip()}'
 
 
 def result_submitted(child: str, path: str) -> str:
@@ -110,8 +128,11 @@ def job_ended(description: str) -> str:
 
 def human_changed(paths: list[str]) -> str:
     listing = '\n'.join(f'- {path}' for path in paths[:50])
+    agents_md = ('\nThe new AGENTS.md reaches every agent\'s instructions at its next session; tell running '
+                 'subagents what they need now.' if 'AGENTS.md' in paths else '')
     return (f'[controller] The human changed these files:\n{listing}\n'
-            'Read them, assess what they change for the investigation, adapt the plan and keep unaffected work.')
+            f'Read them, assess what they change for the investigation, adapt the plan and keep unaffected work.'
+            f'{agents_md}')
 
 
 def quota_paused(agent_id: str, backend: str) -> str:
@@ -138,6 +159,13 @@ def review_request(kind: str, round_: int, detail: str) -> str:
             f'to reviews/ and call verdict(review, agree).')
 
 
+def talk_only(round_: int) -> str:
+    """For a primary woken by the human while its proposal is with the Reviewer."""
+    return (f'[controller] Your proposal (round {round_}) is with the Reviewer. You were woken to answer the human: '
+            'until the verdict, spawn and run_job are refused and STATUS.md and REPORT.md are read-only. The '
+            'verdict will be delivered to you.')
+
+
 def verdict_delivered(kind: str, round_: int, review: str, agree: bool) -> str:
     if kind == 'complete':
         return (f'[controller] The Reviewer disagrees with COMPLETE (round {round_}). Read {review}, address its '
@@ -147,6 +175,12 @@ def verdict_delivered(kind: str, round_: int, review: str, agree: bool) -> str:
             'stop(reason, final=True), or continue the research.')
 
 
+def review_withdrawn(kind: str, round_: int) -> str:
+    """For the primary when the Reviewer stalled without a verdict."""
+    return (f'[controller] The Reviewer stopped without a verdict on your {kind.upper()} proposal (round {round_}), '
+            'so the proposal is withdrawn. Continue the research, propose again, or stop.')
+
+
 def reopened(outcome: str, paths: list[str]) -> str:
     changes = ('\n'.join(f'- {path}' for path in paths[:50]) or '- nothing') + '\n'
     return (f'[controller] The investigation was reopened after it ended ({outcome}). Changes since then:\n'
@@ -154,6 +188,7 @@ def reopened(outcome: str, paths: list[str]) -> str:
 
 
 def resumed(paths: list[str]) -> str:
-    return ('[controller] The human edited these files while the investigation was paused:\n'
-            + '\n'.join(f'- {path}' for path in paths[:50])
-            + '\nTreat the edits as authoritative input: read them and assess their implications.')
+    """For agents whose files changed while the investigation was paused or the controller was off."""
+    return ('[controller] These files changed while the investigation was paused or the controller was off, by '
+            'the human or by running jobs:\n' + '\n'.join(f'- {path}' for path in paths[:50])
+            + '\nRead them: the human\'s edits are authoritative input; your jobs\' files are their output.')

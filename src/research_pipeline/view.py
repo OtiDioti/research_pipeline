@@ -23,7 +23,7 @@ from research_pipeline.controller import Controller
 from research_pipeline.state import ENDED, LIVE
 
 #: Transcript label of each kind of entry.
-LABELS = {'agent': '', 'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER'}
+LABELS = {'agent': '', 'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER', 'alert': 'ALERT'}
 #: Characters of transcript kept; the oldest entries are dropped first.
 LIMIT = 400_000
 
@@ -76,7 +76,7 @@ class TerminalApp:
             Frame(HSplit([Label(self.status), VSplit([self.pause, self.close, Window()])]), title='Status'),
             Frame(self.chat, title='Message to the primary researcher'),
             Label('Enter send · Alt+Enter newline · F2 next agent · F3 all agents · Ctrl+P pause/resume · '
-                  'Ctrl+R resume held agents · Ctrl+Q/F10 shutdown · Ctrl+C force exit'),
+                  'Ctrl+R resume held agents · Ctrl+Q/F10 exit (jobs keep running) · Ctrl+C force exit'),
         ])
         keys = KeyBindings()
         keys.add('enter', filter=has_focus(self.chat))(lambda event: self.send())
@@ -142,7 +142,7 @@ class TerminalApp:
                 if self.view and agent != self.view:
                     continue
                 block = f'[{stamp}] {agent} {LABELS[kind]}'.rstrip() + f'\n{text}'
-                if kind in ('controller', 'notice', 'human'):
+                if kind in ('controller', 'notice', 'human', 'alert'):
                     highlighted.update(range(line, line + block.count('\n') + 1))
                 blocks.append(block)
                 line += block.count('\n') + 2
@@ -181,7 +181,7 @@ class TerminalApp:
         if self.finished is not None:
             self.app.exit(result=self.finished)
         else:
-            self.add('controller', '', 'Shutting down cleanly: working agents hand off first.')
+            self.add('controller', '', 'Shutting down cleanly: working agents hand off first; jobs keep running.')
             self.control.shutdown()
 
     def cycle(self) -> None:

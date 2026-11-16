@@ -26,12 +26,13 @@ def _call(tool: str, **args) -> str:
         return f'Error: the research controller is unreachable ({error}). Try again shortly.'
 
 
-def spawn(task: str, backend: str = '', model: str = '', effort: str = '', name: str = '') -> str:
+def spawn(task: str, backend: str, model: str, effort: str, name: str = '') -> str:
     """Start a subagent on a task, to solve a subproblem separately or in parallel.
 
     task: path of a Markdown brief you wrote (objective, how it serves your question, relevant
-    evidence and tools, expected result). backend/model/effort: the subagent's CLI (default: yours).
-    name: short id such as 'convergence-check'. You are told when it submits its result.
+    evidence and tools, expected result). backend, model, effort: the subagent's CLI, model and
+    reasoning effort, all required. name: short id such as 'convergence-check'. You are told
+    when it submits its result.
     """
     return _call('spawn', task=task, backend=backend, model=model, effort=effort, name=name)
 
@@ -39,6 +40,15 @@ def spawn(task: str, backend: str = '', model: str = '', effort: str = '', name:
 def agents() -> str:
     """List your subagents with their status and context use."""
     return _call('agents')
+
+
+def message(agent: str, text: str) -> str:
+    """Message your parent or one of your own subagents; it receives the text during its turn.
+
+    Messages are not stored: the recipient notes what matters. A subagent that has submitted
+    its result receives none; accept, reject or cancel it instead.
+    """
+    return _call('message', agent=agent, text=text)
 
 
 def accept(agent: str) -> str:
@@ -101,7 +111,7 @@ def verdict(review: str, agree: bool) -> str:
     return _call('verdict', review=review, agree=agree)
 
 
-_COMMON = [spawn, agents, accept, reject, cancel, run_job, job_status, job_cancel]
+_COMMON = [spawn, agents, message, accept, reject, cancel, run_job, job_status, job_cancel]
 #: Tools offered to each role.
 ROLE_TOOLS = {'primary': _COMMON + [complete, stop],
               'subagent': _COMMON + [submit_result],

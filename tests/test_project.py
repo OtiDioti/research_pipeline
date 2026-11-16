@@ -14,7 +14,7 @@ class ProjectTest(unittest.TestCase):
         self.root = temp_project()
         self.project = Project(self.root)
         self.project.prepare()
-        self.agent = Agent('helper', 'subagent', 'primary', 'codex')
+        self.agent = Agent('helper', 'subagent', 'primary', 'codex', 'gpt-test', 'high')
         (self.root / 'agents' / 'helper').mkdir()
 
     def tearDown(self):
@@ -29,7 +29,7 @@ class ProjectTest(unittest.TestCase):
     def test_prepare_creates_layout_and_refuses_bad_locations(self):
         for name in ('STATUS.md', 'REPORT.md', 'FEEDBACK.md', 'FOLDER_CONTENT.md', '.gitignore', '.git'):
             self.assertTrue((self.root / name).exists(), name)
-        self.assertEqual(self.project.check_layout(Agent('primary', 'primary', None, 'codex')), [])
+        self.assertEqual(self.project.check_layout(Agent('primary', 'primary', None, 'codex', 'gpt-test', 'high')), [])
         with self.assertRaises(ProjectError):
             Project('/tmp/somewhere').prepare()
         empty = temp_project()
@@ -101,10 +101,11 @@ class StateTest(unittest.TestCase):
             self.assertFalse([name for name in os.listdir(root) if name.startswith('.state-')])
         finally:
             remove(root)
-        self.assertEqual(Spec.parse('codex::high'), Spec('codex', None, 'high'))
-        self.assertEqual(str(Spec.parse('claude:opus')), 'claude:opus')
-        with self.assertRaises(ValueError):
-            Spec.parse(':model')
+        self.assertEqual(Spec.parse('claude:opus:high'), Spec('claude', 'opus', 'high'))
+        self.assertEqual(str(Spec.parse(' codex : gpt-test : low ')), 'codex:gpt-test:low')
+        for incomplete in ('codex', 'claude:opus', 'codex::high', ':model:high', 'a:b:c:d'):
+            with self.assertRaises(ValueError):
+                Spec.parse(incomplete)
 
 
 if __name__ == '__main__':

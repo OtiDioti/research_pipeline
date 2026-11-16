@@ -23,8 +23,10 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest='command', required=True)
     run = commands.add_parser('run', help='start, resume or reopen an investigation')
     run.add_argument('project', type=Path, help='project folder (with starting_evidence/RESEARCH_QUESTIONS.md)')
-    run.add_argument('--primary', help='CLI of the primary researcher: BACKEND[:MODEL[:EFFORT]] (default codex)')
-    run.add_argument('--reviewer', help='CLI of the final Reviewer: BACKEND[:MODEL[:EFFORT]] (default codex)')
+    run.add_argument('--primary', help='CLI, model and effort of the primary researcher: BACKEND:MODEL:EFFORT '
+                                       '(required on the first run)')
+    run.add_argument('--reviewer', help='CLI, model and effort of the final Reviewer: BACKEND:MODEL:EFFORT '
+                                        '(required on the first run)')
     run.add_argument('--backends', help='comma-separated CLIs agents may choose for subagents '
                                         f'(default: those of the primary and Reviewer; known: {", ".join(DRIVERS)})')
     run.add_argument('--max-agents', type=int, help='agents working at the same time (default 4)')
@@ -45,11 +47,11 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
     for name in ('primary', 'reviewer'):
         value = getattr(args, name)
         if value:
-            Spec.parse(value)
+            Spec.parse(value, f'--{name}')
             setattr(options, name, value)
     if args.backends:
         options.backends = [name.strip() for name in args.backends.split(',') if name.strip()]
-    elif stored is None:
+    elif stored is None and options.primary and options.reviewer:
         options.backends = sorted({Spec.parse(options.primary).backend, Spec.parse(options.reviewer).backend})
     for name, attribute in (('max_agents', 'max_agents'), ('short_limit', 'short_limit'),
                             ('weekly_limit', 'weekly_limit'), ('context_threshold', 'threshold')):
@@ -65,7 +67,7 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
 async def headless(controller: Controller) -> int:
     """Run without the terminal app: print the transcript; Ctrl+C shuts down cleanly, twice forces."""
     def show(kind: str, agent: str, text: str) -> None:
-        marker = {'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER'}.get(kind, '')
+        marker = {'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER', 'alert': 'ALERT'}.get(kind, '')
         print(f'[{datetime.now():%H:%M:%S}] {agent} {marker}'.rstrip() + f'\n{text.rstrip()}\n', flush=True)
 
     controller.show = show

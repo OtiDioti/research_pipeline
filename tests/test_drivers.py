@@ -1,11 +1,14 @@
-"""CLI drivers: the shared transport with a real confined process, and each CLI's command and events."""
+"""CLI drivers: the shared transport with a real confined process, and each CLI's command, handshake and events."""
 import asyncio
 import json
+import os
+from pathlib import Path
 import shutil
 import sys
 import unittest
+from unittest import mock
 
-from research_pipeline.drivers import ClaudeSession, CodexSession, Launch, McpServer, Session
+from research_pipeline.drivers import ClaudeSession, CodexSession, Launch, McpServer, Session, SessionError, SetupError
 from tests.helpers import remove, temp_project
 
 # A stand-in CLI: answers each message with a text, a context reading and a turn end; 'exit' ends it.
@@ -49,7 +52,20 @@ class EchoSession(Session):
 def launch(root, message='hello'):
     return Launch(agent='a', cwd=root, instructions='Be rigorous.', message=message, model='m', effort='high',
                   mcp=McpServer(['python3', '-m', 'research_pipeline.mcp_server'], {'RP_AGENT': 'a'}),
-                  writable=(root,), log=root / 'log.jsonl')
+                  writable=(root,), hidden=(root / '.research',), log=root / 'log.jsonl')
+
+
+def scripted(session, answer):
+    """Replace ``session.write`` by a stand-in CLI: ``answer(message)`` returns its reply (or None) at once."""
+    written = []
+
+    async def write(message):
+        written.append(message)
+        reply = answer(message)
+        if reply is not None:
+            session.receive(reply)
+    session.write = write
+    return written
 
 
 @unittest.skipUnless(shutil.which('bwrap'), 'bubblewrap is not installed')
@@ -84,6 +100,30 @@ class TransportTest(unittest.IsolatedAsyncioTestCase):
             remove(root)
 
 
+class BaseTest(unittest.IsolatedAsyncioTestCase):
+
+    async def asyncSetUp(self):
+        self.root = temp_project()
+        self.session = EchoSession(launch(self.root), lambda *event: None)
+
+    async def asyncTearDown(self):
+        remove(self.root)
+
+    async def test_setup_check_accepts_only_the_controllers_own_server(self):
+        self.session.check_setup(mcp_servers=['research'])
+        for loaded in ({'instructions': ['/home/x/AGENTS.md']}, {'skills': ['notes']}, {'mcp_servers': ['github']}):
+            with self.assertRaises(SetupError):
+                self.session.check_setup(**loaded)
+
+    async def test_waiting_exchanges_fail_when_the_cli_ends(self):
+        self.session.write = lambda message: asyncio.sleep(0)
+        waiting = asyncio.ensure_future(self.session.exchange('k', {}))
+        await asyncio.sleep(0)
+        self.session._abandon_replies()  # what the reader does once the CLI has ended
+        with self.assertRaises(SessionError):
+            await waiting
+
+
 class CodexTest(unittest.TestCase):
 
     def setUp(self):
@@ -94,15 +134,40 @@ class CodexTest(unittest.TestCase):
     def tearDown(self):
         remove(self.root)
 
-    def test_command_attaches_controller_tools_and_disables_native_agents(self):
+    def test_command_attaches_controller_tools_and_switches_discovery_off(self):
         command = self.session.command()
         self.assertEqual(command[-1], 'app-server')
         server = next(value for value in command if value.startswith('mcp_servers.research='))
         self.assertIn('default_tools_approval_mode="approve"', server)
         self.assertIn('RP_AGENT="a"', server)
-        self.assertIn('features.multi_agent=false', command)
-        self.assertIn('model="m"', command)
-        self.assertIn('model_reasoning_effort="high"', command)
+        for setting in ('features.multi_agent=false', 'project_doc_max_bytes=0', 'model="m"',
+                        'model_reasoning_effort="high"'):
+            self.assertIn(setting, command)
+        with mock.patch.dict(os.environ, {'CODEX_HOME': '/home/x/.codex'}):
+            self.assertEqual(self.session.masked_paths(), [Path('/home/x/.codex/config.toml'),
+                                                           Path('/home/x/.codex/AGENTS.md'),
+                                                           Path('/home/x/.codex/AGENTS.override.md')])
+
+    def answer(self, instructions=(), servers=('research',)):
+        """A stand-in app-server: replies to each request of the session's handshake."""
+        results = {'initialize': {}, 'thread/start': {'thread': {'id': 'th'}, 'instructionSources': list(instructions)},
+                   'mcpServerStatus/list': {'data': [{'name': name} for name in servers], 'nextCursor': None},
+                   'turn/start': {'turn': {'id': 't1'}}}
+        return lambda message: {'id': message['id'], 'result': results[message['method']]} if 'id' in message else None
+
+    def test_begin_checks_what_codex_loaded_before_the_opening_message(self):
+        written = scripted(self.session, self.answer())
+        asyncio.run(self.session.begin())
+        self.assertEqual([m.get('method') for m in written],
+                         ['initialize', 'initialized', 'thread/start', 'mcpServerStatus/list', 'turn/start'])
+        self.assertEqual(written[2]['params']['developerInstructions'], 'Be rigorous.')
+        self.assertEqual(written[-1]['params']['input'][0]['text'], 'hello')
+        for personal in ({'instructions': ['/home/x/.codex/AGENTS.md']}, {'servers': ['research', 'github']}):
+            session = CodexSession(launch(self.root), lambda *event: None)
+            written = scripted(session, self.answer(**personal))
+            with self.assertRaises(SetupError):
+                asyncio.run(session.begin())
+            self.assertNotIn('turn/start', [m.get('method') for m in written])
 
     def test_events(self):
         session = self.session
@@ -121,34 +186,19 @@ class CodexTest(unittest.TestCase):
         self.assertEqual(self.events[3][1], {'text': 'Done.', 'failed': False})
         self.assertFalse(session.busy)
 
-    def test_failed_turn_and_ended_process(self):
-        session = self.session
-        session.turn = 't2'
-        session.receive({'method': 'turn/completed', 'params': {'turn': {'id': 't2', 'status': 'failed',
-                                                                         'error': {'message': 'overloaded'}}}})
+    def test_failed_turn(self):
+        self.session.turn = 't2'
+        self.session.receive({'method': 'turn/completed', 'params': {'turn': {'id': 't2', 'status': 'failed',
+                                                                              'error': {'message': 'overloaded'}}}})
         self.assertEqual(self.events[-1], ('turn_ended', {'text': '', 'failed': True}))
-
-        async def scenario():
-            future = asyncio.get_running_loop().create_future()
-            session._pending[7] = future
-            session.ended()  # the app-server died: waiting requests fail at once
-            with self.assertRaises(Exception):
-                await future
-        asyncio.run(scenario())
 
     def test_replies_resolve_requests(self):
         async def scenario():
             session = self.session
-            sent = []
-
-            async def write(message):
-                sent.append(message)
-                session.receive({'id': message['id'], 'result': {'ok': True}})
-            session.write = write
+            scripted(session, lambda message: {'id': message['id'], 'result': {'ok': True}})
             self.assertEqual(await session.request('thread/start', {}), {'ok': True})
-            session.write = lambda message: asyncio.sleep(0, session.receive({'id': message['id'],
-                                                                              'error': {'message': 'no'}}))
-            with self.assertRaises(Exception):
+            scripted(session, lambda message: {'id': message['id'], 'error': {'message': 'no'}})
+            with self.assertRaises(SessionError):
                 await session.request('turn/steer', {})
         asyncio.run(scenario())
 
@@ -168,6 +218,9 @@ class ClaudeTest(unittest.TestCase):
         for flag in ('--input-format', 'stream-json', '--append-system-prompt', 'Be rigorous.', 'bypassPermissions',
                      'Task,Agent', '--strict-mcp-config'):
             self.assertIn(flag, command)
+        self.assertEqual(command[command.index('--model') + 1], 'm')
+        self.assertEqual(command[command.index('--effort') + 1], 'high')
+        self.assertEqual(command[command.index('--setting-sources') + 1], '')
         settings = json.loads(command[command.index('--settings') + 1])
         self.assertEqual(settings['sandbox'], {'enabled': False})
         servers = json.loads(command[command.index('--mcp-config') + 1])
@@ -176,30 +229,34 @@ class ClaudeTest(unittest.TestCase):
         self.assertFalse([key for key in environment if key.startswith('CLAUDECODE')])
         self.assertEqual(environment['CLAUDE_CODE_DISABLE_BACKGROUND_TASKS'], '1')
 
-    def test_begin_asks_for_context_usage_before_the_first_message(self):
-        written = []
+    def answer(self, memory=(), skills=(), servers=('research',)):
+        """A stand-in Claude Code: answers the two control requests of the session's start."""
+        responses = {'get_context_usage': {'maxTokens': 1000000, 'totalTokens': 12053,
+                                           'memoryFiles': [{'path': path} for path in memory],
+                                           'skills': {'skillFrontmatter': [{'name': 'dataviz', 'source': 'built-in'},
+                                                                           *({'name': name, 'source': 'user'}
+                                                                             for name in skills)]}},
+                     'mcp_status': {'mcpServers': [{'name': name} for name in servers]}}
 
-        async def write(message):
-            written.append(message)
+        def answer(message):
+            if message['type'] == 'control_request':
+                return {'type': 'control_response', 'response': {
+                    'subtype': 'success', 'request_id': message['request_id'],
+                    'response': responses[message['request']['subtype']]}}
+        return answer
 
-        self.session.write = write
+    def test_begin_reports_context_and_checks_setup_before_the_first_message(self):
+        written = scripted(self.session, self.answer())
         asyncio.run(self.session.begin())
-        self.assertEqual(written[0]['type'], 'control_request')
-        self.assertEqual(written[0]['request']['subtype'], 'get_context_usage')
-        self.assertEqual(written[1]['type'], 'user')
-
-    def test_window_from_context_usage_before_any_model_call(self):
-        session = self.session
-        session.receive({'type': 'control_response', 'response': {'subtype': 'error', 'request_id': 'context-usage',
-                                                                  'error': 'unsupported'}})
-        self.assertEqual(self.events, [])  # no answer: context use stays unknown
-        session.receive({'type': 'control_response', 'response': {'subtype': 'success', 'request_id': 'context-usage',
-                                                                  'response': {'totalTokens': 12053,
-                                                                               'maxTokens': 1000000}}})
-        session.receive({'type': 'assistant', 'parent_tool_use_id': None, 'message': {
-            'usage': {'input_tokens': 20000, 'output_tokens': 10}, 'content': []}})
-        self.assertEqual([data for _, data in self.events], [{'tokens': 12053, 'window': 1000000},
-                                                              {'tokens': 20010, 'window': 1000000}])
+        self.assertEqual([m['type'] for m in written], ['control_request', 'control_request', 'user'])
+        self.assertEqual(self.events, [('context', {'tokens': 12053, 'window': 1000000})])
+        for personal in ({'memory': ['/project/CLAUDE.md']}, {'skills': ['my-notes']},
+                         {'servers': ['research', 'github']}):
+            session = ClaudeSession(launch(self.root), lambda *event: None)
+            written = scripted(session, self.answer(**personal))
+            with self.assertRaises(SetupError):
+                asyncio.run(session.begin())
+            self.assertNotIn('user', [m['type'] for m in written])
 
     def test_events(self):
         session = self.session

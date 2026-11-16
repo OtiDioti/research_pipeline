@@ -25,9 +25,9 @@ FINISHED = frozenset({'complete', 'stopped'})
 @dataclass
 class Options:
     """Launch options, kept so that a later ``run`` resumes with the same settings."""
-    primary: str = 'codex'                  # BACKEND[:MODEL[:EFFORT]] of the primary researcher
-    reviewer: str = 'codex'                 # BACKEND[:MODEL[:EFFORT]] of the final Reviewer
-    backends: list[str] = field(default_factory=lambda: ['codex'])  # CLIs agents may choose for subagents
+    primary: str = ''                       # BACKEND:MODEL:EFFORT of the primary researcher
+    reviewer: str = ''                      # BACKEND:MODEL:EFFORT of the final Reviewer
+    backends: list[str] = field(default_factory=list)  # CLIs agents may choose for subagents
     max_agents: int = 4                     # agents with a live session at the same time
     references: list[str] = field(default_factory=list)  # read-only folders of other projects
     short_limit: float = 15                 # % left of a short usage window that pauses a CLI's agents
@@ -42,21 +42,21 @@ class Options:
 
 @dataclass(frozen=True)
 class Spec:
-    """A CLI choice: backend name, optional model and optional reasoning effort."""
+    """A CLI choice: backend name, model and reasoning effort, all three always explicit."""
     backend: str
-    model: str | None = None
-    effort: str | None = None
+    model: str
+    effort: str
 
     @classmethod
-    def parse(cls, text: str) -> Spec:
-        """Parse ``BACKEND[:MODEL[:EFFORT]]``; empty parts mean the CLI's own default."""
-        parts = (text.strip().split(':') + ['', ''])[:3]
-        if not parts[0]:
-            raise ValueError(f'invalid CLI choice {text!r}: expected BACKEND[:MODEL[:EFFORT]]')
-        return cls(parts[0], parts[1] or None, parts[2] or None)
+    def parse(cls, text: str, what: str = 'a CLI choice') -> Spec:
+        """Parse ``BACKEND:MODEL:EFFORT``; raise ValueError naming ``what`` if a part is missing."""
+        parts = [part.strip() for part in (text or '').split(':')]
+        if len(parts) != 3 or not all(parts):
+            raise ValueError(f'{what} must be BACKEND:MODEL:EFFORT with all three given, not {text!r}')
+        return cls(*parts)
 
     def __str__(self) -> str:
-        return ':'.join(part for part in (self.backend, self.model, self.effort) if part)
+        return f'{self.backend}:{self.model}:{self.effort}'
 
 
 @dataclass
@@ -66,12 +66,14 @@ class Agent:
     role: str                         # 'primary', 'subagent' or 'reviewer'
     parent: str | None                # who spawned it (a subagent's parent); None otherwise
     backend: str
-    model: str | None = None
-    effort: str | None = None
+    model: str
+    effort: str
     # running | handing_off | paused | submitted | resting | accepted | cancelled | finished
+    # ('resting': no session, waiting to be woken — the Reviewer between rounds, the primary during a review)
     status: str = 'paused'
-    pause_reason: str | None = None   # why it is paused: 'start', 'human', 'quota', 'failure', 'restart'
+    pause_reason: str | None = None   # start, human, quota, slots, failure, retry, restart, reopen or wake
     sessions: int = 0                 # sessions started so far
+    started: float | None = None      # when its current (or last) session started
     notices: list[str] = field(default_factory=list)  # controller messages not delivered yet
     handoff_reason: str | None = None   # while handing off: 'context', 'pause' or 'quota'
     handoff_since: float | None = None  # when the handoff was requested
@@ -82,7 +84,7 @@ class Agent:
     rejections: int = 0                  # results its parent rejected
     failures: int = 0                    # consecutive unexpected session exits
     retry_at: float | None = None        # when to restart it after a failure
-    nudged: bool = False                 # told once that nothing is running for it
+    nudged: bool = False                 # told it is idle; ending its turn idle again then means it stalled
     closing: bool = False                # its session closes when the current turn ends (after a result or verdict)
     activity: str = ''                   # last thing it did, for the terminal app
 

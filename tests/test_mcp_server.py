@@ -52,9 +52,10 @@ class McpServerTest(unittest.IsolatedAsyncioTestCase):
     async def test_role_tools_and_forwarding(self):
         await self.start('subagent')
         names = {tool['name'] for tool in (await self.request('tools/list'))['tools']}
-        self.assertIn('submit_result', names)
-        self.assertIn('run_job', names)
+        self.assertTrue({'submit_result', 'run_job', 'message'} <= names)
         self.assertNotIn('complete', names)
+        spawn = next(tool for tool in (await self.request('tools/list'))['tools'] if tool['name'] == 'spawn')
+        self.assertEqual(set(spawn['inputSchema']['required']), {'task', 'backend', 'model', 'effort'})
         result = await self.request('tools/call', {'name': 'run_job',
                                                    'arguments': {'command': 'make', 'timeout_seconds': 60}})
         self.assertEqual(result['content'][0]['text'], 'handled run_job')

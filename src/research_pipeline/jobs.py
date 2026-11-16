@@ -1,10 +1,13 @@
 """Long computations run by the controller for agents (PROJECT.md §6, "Jobs").
 
-A job runs as a plain process tree in its own session, outside every agent's
-confinement, so it survives the agent's handoffs and quota pauses. Its timeout is
-enforced by coreutils ``timeout`` inside the job itself, so it holds even while
-the controller is down. A small wrapper writes the exit status to a file, so a
-restarted controller can tell how a job ended.
+A job runs in its own confinement (:func:`research_pipeline.confine.job`): the
+filesystem as the controller sees it, except that the protected paths are
+read-only and the hidden ones invisible. It is its own process session, outside
+every agent's session, so it survives the agent's handoffs, quota pauses and a
+shutdown of the controller. Its timeout is enforced by coreutils ``timeout``
+inside the job itself, so it holds even while the controller is down. A small
+wrapper writes the exit status to a file, so a restarted controller can tell how
+a job ended.
 
 Each job keeps its files in ``agents/<owner>/jobs/<job-id>/``: ``command.txt``,
 ``stdout.log``, ``stderr.log`` and ``exit_code``.
@@ -16,7 +19,9 @@ import os
 import signal
 import subprocess
 import time
+from typing import Iterable
 
+from research_pipeline import confine
 from research_pipeline.state import Job
 
 #: Exit status of ``timeout`` when it stopped the command (124) or had to kill it (137).
@@ -29,15 +34,20 @@ def folder(project_root: Path, job: Job) -> Path:
     return Path(project_root) / 'agents' / job.owner / 'jobs' / job.id
 
 
-def start(project_root: Path, job: Job) -> subprocess.Popen:
-    """Launch ``job``; record its process identity on it and return the process."""
+def start(project_root: Path, job: Job, *, read_only: Iterable[Path] = (), hidden: Iterable[Path] = ()
+          ) -> subprocess.Popen:
+    """Launch ``job`` in its confinement; record its process identity on it and return the process.
+
+    The recorded process is the confinement's own (bwrap), the leader of the job's
+    process session: it lives exactly as long as the job and exits with its status.
+    """
     where = folder(project_root, job)
     where.mkdir(parents=True, exist_ok=True)
     (where / 'command.txt').write_text(f'# cwd: {job.cwd}\n# timeout: {job.timeout:g} s\n{job.command}\n')
+    argv = confine.job(['bash', '-c', _WRAPPER, 'research-job', f'{job.timeout:g}', job.command,
+                        str(where / 'exit_code')], cwd=Path(job.cwd), read_only=read_only, hidden=hidden)
     with open(where / 'stdout.log', 'wb') as stdout, open(where / 'stderr.log', 'wb') as stderr:
-        process = subprocess.Popen(['bash', '-c', _WRAPPER, 'research-job', f'{job.timeout:g}', job.command,
-                                    str(where / 'exit_code')],
-                                   cwd=job.cwd, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
+        process = subprocess.Popen(argv, cwd=job.cwd, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
                                    start_new_session=True)
     job.pid, job.ticks = process.pid, _ticks(process.pid)
     return process

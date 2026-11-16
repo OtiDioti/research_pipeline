@@ -2,7 +2,7 @@
 
 Not part of the unit tests: it uses real model sessions and costs usage. Run it with
 
-    uv run python -m tests.live_smoke [--primary codex::low] [--reviewer claude:haiku] [--keep]
+    uv run python -m tests.live_smoke [--primary codex:gpt-6.1-sol:low] [--reviewer claude:haiku:low]
 
 It shows spawning across CLIs, a rejected then accepted result, a job, handoffs
 forced by a lowered context threshold, a quota pause (a short window of one CLI is
@@ -24,6 +24,7 @@ import time
 from research_pipeline import controller as controller_module
 from research_pipeline import quota
 from research_pipeline.controller import Controller
+from research_pipeline.drivers import DRIVERS
 from research_pipeline.state import Options
 
 ROOT = Path.home() / '.cache' / 'research-pipeline-smoke'
@@ -38,8 +39,8 @@ This is a short engineering smoke test of the research platform; keep the scienc
 Follow this procedure:
 
 1. Derive the exact value yourself.
-2. Delegate the numerical confirmation to one subagent with spawn, on backend {sub} (model {sub_model}),
-   asking it to run its computation with run_job.
+2. Delegate the numerical confirmation to one subagent with spawn, on backend {sub}, model {sub_model} and
+   effort {sub_effort}, asking it to run its computation with run_job.
 3. Reject the subagent's first result once, asking it to state the absolute error against your exact value;
    accept its second result if it is sound.
 4. Write REPORT.md and propose complete.
@@ -53,7 +54,7 @@ class SimulatedQuota:
         self.backend, self.start, self.end = backend, time.time() + after, time.time() + after + seconds
 
     def __call__(self, backend: str) -> list[quota.Window]:
-        windows = quota.read(backend)
+        windows = quota.read(DRIVERS[backend])
         if backend == self.backend and self.start <= time.time() < self.end:
             print(f'[smoke] reporting {backend} short window as exhausted until {self.end - time.time():.0f} s',
                   flush=True)
@@ -83,10 +84,11 @@ async def human_pause(controller: Controller, at: float) -> None:
 
 async def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('--primary', default='codex::low')
-    parser.add_argument('--reviewer', default='claude:haiku')
+    parser.add_argument('--primary', default='codex:gpt-6.1-sol:low', help='BACKEND:MODEL:EFFORT')
+    parser.add_argument('--reviewer', default='claude:haiku:low', help='BACKEND:MODEL:EFFORT')
     parser.add_argument('--sub', default='claude', help='backend the subagent must use')
     parser.add_argument('--sub-model', default='haiku')
+    parser.add_argument('--sub-effort', default='low')
     parser.add_argument('--threshold', type=float, default=0.06)
     parser.add_argument('--quota-after', type=float, default=240, help='seconds before the simulated quota hold')
     parser.add_argument('--pause-at', type=float, help='seconds before a human pause and resume (default: none)')
@@ -96,11 +98,11 @@ async def main() -> None:
     root = ROOT / datetime.now().strftime('%Y%m%d-%H%M%S')
     (root / 'starting_evidence').mkdir(parents=True)
     (root / 'starting_evidence' / 'RESEARCH_QUESTIONS.md').write_text(QUESTION)
-    (root / 'AGENTS.md').write_text(PROCEDURE.format(sub=args.sub, sub_model=args.sub_model))
+    (root / 'AGENTS.md').write_text(PROCEDURE.format(sub=args.sub, sub_model=args.sub_model, sub_effort=args.sub_effort))
     print(f'[smoke] project: {root}', flush=True)
 
     def show(kind: str, agent: str, text: str) -> None:
-        marker = {'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER'}.get(kind, '')
+        marker = {'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER', 'alert': 'ALERT'}.get(kind, '')
         text = text if len(text) < 1500 else text[:1500] + ' […]'
         print(f'[{datetime.now():%H:%M:%S}] {agent} {marker}'.rstrip() + f'\n{text.rstrip()}\n', flush=True)
 

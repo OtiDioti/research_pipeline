@@ -23,6 +23,12 @@ from research_pipeline.state import Options
 TEST_ROOT = Path.home() / '.cache' / 'research-pipeline-tests'
 
 
+def launch_options(**changes) -> Options:
+    """Launch options for tests: explicit CLI choices for the primary and Reviewer, both fake CLIs allowed."""
+    return Options(**({'primary': 'codex:gpt-test:high', 'reviewer': 'codex:gpt-test:high',
+                       'backends': ['codex', 'claude']} | changes))
+
+
 def temp_project(question: str = 'What is the integral of x^2 on [0, 1]?') -> Path:
     """A fresh project folder with a research question; remove it with :func:`remove`."""
     TEST_ROOT.mkdir(parents=True, exist_ok=True)
@@ -41,6 +47,8 @@ class FakeSession:
 
     backend = 'codex'
     instances: list['FakeSession'] = []
+    #: Set by a test to make every following start fail with this error (as a real driver's start can).
+    start_error: Exception | None = None
 
     def __init__(self, launch, on_event):
         self.launch, self.on_event = launch, on_event
@@ -48,7 +56,8 @@ class FakeSession:
         FakeSession.instances.append(self)
 
     async def start(self):
-        pass
+        if FakeSession.start_error:
+            raise FakeSession.start_error
 
     async def send(self, text: str):
         if self.closed:
@@ -93,7 +102,7 @@ class Harness:
         self.root = root
         self.quota = QuotaReader()
         self.lines: list[tuple[str, str, str]] = []
-        self.controller = Controller(root, options or Options(backends=['codex', 'claude']), drivers=FAKE_DRIVERS,
+        self.controller = Controller(root, options or launch_options(), drivers=FAKE_DRIVERS,
                                      read_quota=self.quota, show=lambda *entry: self.lines.append(entry))
         self.task: asyncio.Task | None = None
 
