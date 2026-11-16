@@ -77,8 +77,8 @@ class Agent:
     handoff_since: float | None = None  # when the handoff was requested
     handoff_prompts: int = 0             # times it was asked again after ending a turn without handing off
     reminder_at: float | None = None     # context fill at the last handoff request (None: next at the threshold)
-    tokens: int | None = None            # tokens in its current session's context
-    window: int | None = None            # that session's context window
+    tokens: int | None = None            # tokens in its current session's context, as its CLI reports them
+    window: int | None = None            # that session's context window, as its CLI reports it
     rejections: int = 0                  # results its parent rejected
     failures: int = 0                    # consecutive unexpected session exits
     retry_at: float | None = None        # when to restart it after a failure
@@ -127,7 +127,6 @@ class State:
     rounds: int = 0                  # review rounds so far
     holds: dict[str, dict] = field(default_factory=dict)  # backend -> {'kind', 'until', 'detail'}
     human: dict[str, str] = field(default_factory=dict)   # human-owned file -> fingerprint, as last seen
-    windows: dict[str, int] = field(default_factory=dict)  # context window learned per backend:model
     job_counter: int = 0
     outcome: str | None = None       # how the investigation last ended
 

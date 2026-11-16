@@ -150,7 +150,12 @@ end. It must not discard unaffected work.
 
 ## 5. Context handoffs
 
-Each agent session's context use is measured from the CLI's own reports. **At 55%**
+Each agent session's context use (tokens and context window) is monitored
+continuously through its CLI's own built-in, deterministic reports: Codex's
+token-usage notification after every model call; Claude Code's usage of every
+model call, and its context-usage report at session start for the window. Context
+use is never estimated, carried over from an earlier session, or asked of the
+agent. Until the CLI has reported it, it is unknown and triggers nothing. **At 55%**
 the controller tells the agent, during its turn, to finish its current step, update
 `HANDOFF.md` and end its turn. The controller then closes the session and starts a
 fresh one with `TASK.md`, `HANDOFF.md` and any news since. Running jobs and
@@ -166,8 +171,8 @@ A handoff is short: what was done, where the artifacts are, essential assumption
 open issues, running jobs and subagents, and the next concrete step. The science
 itself lives in the agent's notes, not in the handoff.
 
-If a CLI stops reporting context use, the TUI shows it as unknown and the agent
-continues.
+While context use is unknown (not yet reported, or the CLI stops reporting it), the
+TUI shows it as unknown and the agent continues.
 
 ## 6. Controller
 
@@ -177,7 +182,8 @@ A deterministic Python program; it makes no scientific decisions.
 live during a turn: through Codex's app-server and Claude Code's stream-json input
 in V0. Adding a CLI means writing one driver that can start a session with a
 prompt and MCP configuration, deliver a message during a turn, interrupt, and
-report text, tool activity and context use. It also needs one quota probe.
+report text, tool activity and context use (from the CLI's own reports, §5). It
+also needs one quota probe.
 Confinement is shared by all CLIs.
 
 **Notices.** Handoff requests, results from subagents, finished jobs and the human's
@@ -332,7 +338,11 @@ lead to physics-specific code in the platform.
   - **Live delivery.** A message sent while an agent was running a 30-second command
     was taken into the same turn by both CLIs: Codex `turn/steer`, and a Claude
     stream-json user message. It is delivered at the agent's next model step.
-  - **Context use** is reported during a turn by both CLIs.
+  - **Context use** is reported during a turn by both CLIs. Codex sends tokens and
+    window together after every model call. Claude Code sends tokens with every
+    model call and the window only at a turn's end, but its `get_context_usage`
+    control request reports the window at session start, without a model call
+    (checked 2026-11-16).
   - **MCP.** The tool server, started by the CLI as a child process, reaches the
     controller through a Linux abstract Unix socket, inside the confinement too.
     Codex needs `default_tools_approval_mode = "approve"` on that server.

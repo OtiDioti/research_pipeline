@@ -11,7 +11,8 @@
   - jobs;
   - the layout check and git commits;
   - the terminal app and the command line.
-- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 58 tests, with no model usage.
+- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 61 tests, with no model usage.
+- **2026-11-16:** context use comes only from each CLI's own reports (Claude Code's window from `get_context_usage` at session start). The assumed 200k window and windows carried over between sessions are removed. Not yet confirmed on a live run.
 - **Live verification** (`tests/live_smoke.py`), public investigations, each reaching COMPLETE with the Reviewer's agreement:
   1. Codex primary, Claude subagent and Claude Reviewer. Shown: cross-CLI spawn, a rejected then accepted result, jobs, a subagent handoff.
   2. Claude primary, Codex subagents and Codex Reviewer. Shown: a primary handoff; a quota hold on Codex only, with automatic resume; a human pause with edits announced on resume; nested subagents; a Reviewer helper.

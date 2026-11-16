@@ -2,9 +2,11 @@
 
 The role prompt is appended to Claude Code's system prompt. Every message is a
 stream-json user message: written during a turn, Claude Code takes it into that
-turn at its next step; written while idle, it starts a new turn. Context use comes
-from the usage of each top-level model call; the context window from each turn's
-result. Claude Code's own sandbox is off (the session runs inside our
+turn at its next step; written while idle, it starts a new turn. Context use is
+only what Claude Code reports: its ``get_context_usage`` control request, sent
+before the first turn, gives the context window (and the starting fill); the
+usage of each top-level model call then gives the tokens during every turn, and
+each turn's result repeats the window. Claude Code's own sandbox is off (the session runs inside our
 confinement), permissions are bypassed for the same reason, and its subagent and
 background-task features are disabled so that work goes through the controller.
 """
@@ -20,6 +22,8 @@ from research_pipeline.drivers.base import Session
 TOOLS = 'Bash,Read,Edit,Write,Glob,Grep,NotebookEdit,WebSearch,WebFetch,TodoWrite'
 # Usage fields that together are a call's prompt plus its output.
 _CONTEXT_FIELDS = ('input_tokens', 'cache_creation_input_tokens', 'cache_read_input_tokens', 'output_tokens')
+# Request id of the context-usage control request sent when the session begins.
+_CONTEXT_REQUEST = 'context-usage'
 # Quiet, self-contained sessions: no background tasks, memory, CLAUDE.md discovery or self-updates.
 _QUIET = {'CLAUDE_CODE_DISABLE_BACKGROUND_TASKS': '1', 'CLAUDE_CODE_DISABLE_AUTO_MEMORY': '1',
           'CLAUDE_CODE_DISABLE_CLAUDE_MDS': '1', 'CLAUDE_CODE_DISABLE_FILE_CHECKPOINTING': '1',
@@ -68,6 +72,9 @@ class ClaudeSession(Session):
         return [Path(configured)] if configured else [home / '.claude', home / '.claude.json', home / '.cache' / 'claude']
 
     async def begin(self) -> None:
+        # Claude Code answers this without a model call, so the window is known before the first turn.
+        await self.write({'type': 'control_request', 'request_id': _CONTEXT_REQUEST,
+                          'request': {'subtype': 'get_context_usage', 'detail': 'summary'}})
         await self.deliver(self.launch.message)
 
     async def deliver(self, text: str) -> None:
@@ -78,6 +85,15 @@ class ClaudeSession(Session):
         kind = message.get('type')
         if kind == 'system' and message.get('subtype') == 'init':
             self.model_name = message.get('model')
+        elif kind == 'control_response':
+            reply = message.get('response') or {}
+            usage = reply.get('response') or {}
+            if (reply.get('request_id') == _CONTEXT_REQUEST and reply.get('subtype') == 'success'
+                    and isinstance(usage.get('maxTokens'), int)):
+                self.window = usage['maxTokens']
+                if self.tokens is None and isinstance(usage.get('totalTokens'), int):
+                    self.tokens = usage['totalTokens']  # a model call reported meanwhile is more recent
+                self.emit('context', tokens=self.tokens, window=self.window)
         elif kind == 'assistant' and message.get('parent_tool_use_id') is None:
             body = message.get('message') or {}
             usage = body.get('usage')

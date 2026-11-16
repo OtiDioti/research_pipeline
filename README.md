@@ -114,7 +114,8 @@ only while paused: on resume, the agents concerned are told what you changed.
 - **Handoffs.** At the context threshold an agent is asked, during its turn, to
   update `HANDOFF.md` and end the turn; a fresh session continues from it. The
   request repeats every further 25 points of context. Agents are never killed for
-  overshooting.
+  overshooting. Context use comes only from each CLI's own reports; until a
+  session's CLI has reported it, it shows as unknown and triggers nothing.
 - **Jobs.** `run_job(command, timeout_seconds)` runs a computation outside the
   agent's session, with its output in `agents/<id>/jobs/`. The owner is told when
   it ends.

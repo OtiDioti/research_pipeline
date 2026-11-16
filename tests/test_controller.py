@@ -152,7 +152,18 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIsNot(successor, first)
             self.assertIn('session 2 of primary', successor.launch.message)
             self.assertIn('Next: continue.', successor.launch.message)
-            self.assertEqual(harness.state.windows['codex'], 100_000)
+            self.assertIsNone(harness.state.agents['primary'].fill)  # unknown until the new session's CLI reports
+
+    async def test_context_use_is_only_what_the_cli_reports(self):
+        async with running(self.root) as harness:
+            primary = harness.state.agents['primary']
+            await harness.emit('primary', 'context', tokens=150_000, window=None)
+            self.assertIsNone(primary.fill)  # no window reported yet: unknown, never assumed
+            await harness.emit('primary', 'context', tokens=150_000, window=1_000_000)
+            self.assertEqual(primary.status, 'running')
+            self.assertNotIn('Your context is', sent(harness, 'primary'))
+            await harness.emit('primary', 'context', tokens=560_000, window=None)  # window known in this session
+            self.assertIn('Your context is 56% full', sent(harness, 'primary'))
 
     async def test_handoff_asks_again_until_updated(self):
         async with running(self.root) as harness:

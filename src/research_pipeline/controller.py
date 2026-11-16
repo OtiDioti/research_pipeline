@@ -50,8 +50,6 @@ WATCH_INTERVAL = 2
 HUMAN_INTERVAL = 10
 #: Delays before restarting an agent whose session failed; after these, the human must resume it.
 RETRY_DELAYS = (30, 120, 600)
-#: Context window assumed until a CLI reports it (conservative: hands off early rather than late).
-DEFAULT_WINDOW = 200_000
 #: Further context fill, in points, before a handoff request is repeated.
 REMINDER_STEP = 0.25
 #: Seconds a session may continue its turn after submitting, before it is closed anyway.
@@ -260,8 +258,8 @@ class Controller:
         session = self.drivers[agent.backend](launch, self._on_event)
         agent.status, agent.pause_reason, agent.retry_at, agent.closing = 'running', None, None, False
         agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
-        agent.handoff_prompts, agent.nudged, agent.tokens = 0, False, None
-        agent.window = self.state.windows.get(str(agent.spec))
+        # A new session's context use is unknown until its CLI reports it.
+        agent.handoff_prompts, agent.nudged, agent.tokens, agent.window = 0, False, None, None
         self.sessions[agent.id], self.tokens[agent.id] = session, token
         try:
             await session.start()
@@ -370,11 +368,13 @@ class Controller:
         await self._after_change()
 
     async def _context(self, agent: Agent, tokens: int | None, window: int | None) -> None:
-        """New context reading: trigger the handoff at the threshold and repeat it every further 25 points."""
+        """New context reading: trigger the handoff at the threshold and repeat it every further 25 points.
+
+        Context use is only what the session's CLI reports. Until it has reported both tokens and
+        window, the fill is unknown and triggers nothing; it is never estimated.
+        """
         if window:
-            agent.window = self.state.windows[str(agent.spec)] = window
-        elif agent.window is None:
-            agent.window = DEFAULT_WINDOW
+            agent.window = window
         if tokens is not None:
             agent.tokens = tokens
         fill, threshold = agent.fill, self.state.options.threshold

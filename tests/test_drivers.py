@@ -176,6 +176,31 @@ class ClaudeTest(unittest.TestCase):
         self.assertFalse([key for key in environment if key.startswith('CLAUDECODE')])
         self.assertEqual(environment['CLAUDE_CODE_DISABLE_BACKGROUND_TASKS'], '1')
 
+    def test_begin_asks_for_context_usage_before_the_first_message(self):
+        written = []
+
+        async def write(message):
+            written.append(message)
+
+        self.session.write = write
+        asyncio.run(self.session.begin())
+        self.assertEqual(written[0]['type'], 'control_request')
+        self.assertEqual(written[0]['request']['subtype'], 'get_context_usage')
+        self.assertEqual(written[1]['type'], 'user')
+
+    def test_window_from_context_usage_before_any_model_call(self):
+        session = self.session
+        session.receive({'type': 'control_response', 'response': {'subtype': 'error', 'request_id': 'context-usage',
+                                                                  'error': 'unsupported'}})
+        self.assertEqual(self.events, [])  # no answer: context use stays unknown
+        session.receive({'type': 'control_response', 'response': {'subtype': 'success', 'request_id': 'context-usage',
+                                                                  'response': {'totalTokens': 12053,
+                                                                               'maxTokens': 1000000}}})
+        session.receive({'type': 'assistant', 'parent_tool_use_id': None, 'message': {
+            'usage': {'input_tokens': 20000, 'output_tokens': 10}, 'content': []}})
+        self.assertEqual([data for _, data in self.events], [{'tokens': 12053, 'window': 1000000},
+                                                              {'tokens': 20010, 'window': 1000000}])
+
     def test_events(self):
         session = self.session
         session.receive({'type': 'system', 'subtype': 'init', 'model': 'claude-x'})
