@@ -187,6 +187,9 @@ uv run python -m unittest discover -s tests -t .     # unit and integration test
 uv run python -m tests.live_smoke                     # live run through the real CLIs (uses quota)
 ```
 
+The web app's live checks (the page driven in Chrome against real sessions) are in
+agent_toolkit's `web-ui/live/` (`node live/research.cjs`, `node live/alongside.cjs`).
+
 The code is in `src/research_pipeline/`; [FOLDER_CONTENT.md](src/research_pipeline/FOLDER_CONTENT.md)
 describes each module. Everything specific to one agent CLI (the drivers, the
 confinement, the quota probes) lives in the shared package `agent_toolkit`, together

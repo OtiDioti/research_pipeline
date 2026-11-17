@@ -327,7 +327,9 @@ a setup page for every launch option; every agent that ever worked as a live gra
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
-threshold, usage limits and agent cap changed while the investigation runs.
+threshold, usage limits and agent cap changed while the investigation runs, as well
+as the primary's and the Reviewer's CLI choices (from their next session) and the
+CLIs for subagents (from the next spawn).
 
 Launch options:
 - `--primary` and `--reviewer` (backend:model:effort, all three required);

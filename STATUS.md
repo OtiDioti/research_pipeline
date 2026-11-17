@@ -23,7 +23,7 @@ for usage.
   - jobs that survive handoffs, quota pauses, shutdowns and crashes;
   - the layout check and git commits;
   - the terminal app and the command line.
-- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 76 tests, with no model usage; the shared drivers, confinement and machinery are tested in
+- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 77 tests, with no model usage; the shared drivers, confinement and machinery are tested in
   agent_toolkit.
 - **Checked against the installed CLIs without model calls** (Codex 0.167, Claude Code 2.1.325): both start inside
   the confinement with the human's own setup masked, report what they loaded, and pass the setup check. Claude
