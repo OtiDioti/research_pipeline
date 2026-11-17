@@ -59,10 +59,12 @@ class ResearchDashboard(Dashboard):
     def fields(self) -> list[Field]:
         backends = list(self.drivers)
         return [
-            Field('primary', 'Primary researcher', 'spec', 'Leads the investigation.', options=backends),
-            Field('reviewer', 'Reviewer', 'spec', 'Reviews a proposal to finish.', options=backends),
+            Field('primary', 'Primary researcher', 'spec', 'Leads the investigation. Changed while it runs: from '
+                  'its next session.', options=backends, live=True),
+            Field('reviewer', 'Reviewer', 'spec', 'Reviews a proposal to finish. Changed while it runs: from its next '
+                  'session.', options=backends, live=True),
             Field('backends', 'CLIs for subagents', 'multiselect', 'The CLIs agents may choose for their subagents.',
-                  options=backends),
+                  options=backends, live=True),
             Field('max_agents', 'Agents at once', 'integer', 'Agents with a live session at the same time.', min=1,
                   max=16, step=1, live=True),
             Field('threshold', 'Handoff threshold', 'number', 'Context fill at which an agent hands off.',

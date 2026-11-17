@@ -31,7 +31,9 @@ like the command line does and shows what is wrong next to each setting.
 
 While the investigation runs, the settings button changes the handoff threshold
 (live sessions follow at their next context reading), the usage limits and the
-number of agents at once; the rest needs a new `run`.
+number of agents at once, at once; and the primary's or the Reviewer's CLI, model
+and effort, from that agent's next session, and the CLIs for subagents, from the
+next spawn. The reference folders and durable state need a new `run`.
 
 ## The graph
 

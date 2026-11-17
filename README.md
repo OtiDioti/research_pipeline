@@ -123,7 +123,7 @@ investigation), then the agent tree as a live graph: every agent that ever worke
 coloured by status, with its context use, its messages (coloured by sender) and
 tool calls, its documents, jobs and the websites it used. Single agents can be
 messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
-threshold, usage limits and number of agents can be changed while it runs. See
+threshold, usage limits, number of agents and the CLI choices can be changed while it runs. See
 [docs/WEB.md](docs/WEB.md).
 
 You may edit your own files (`RESEARCH_QUESTIONS.md`, `AGENTS.md`, `FEEDBACK.md`,

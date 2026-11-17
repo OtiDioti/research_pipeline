@@ -219,12 +219,18 @@ class Controller:
             return reply
 
     async def configure(self, values: dict) -> None:
-        """Change settings while the investigation runs: 'threshold', 'short_limit', 'weekly_limit', 'max_agents'.
+        """Change settings while the investigation runs.
 
-        Raise ValueError for an invalid value (nothing is changed then).
+        'threshold', 'short_limit', 'weekly_limit' and 'max_agents' apply at once;
+        'primary' and 'reviewer' (BACKEND:MODEL:EFFORT) from that agent's next
+        session, and 'backends' (the CLIs for subagents) from the next spawn. Raise
+        ValueError for an invalid value (nothing is changed then).
         """
         if self.lock is None:
             raise ValueError('the investigation is still starting')
+        specs = {role: Spec.parse(values[role], role, self.drivers) for role in ('primary', 'reviewer') if role in values}
+        if 'backends' in values and (not values['backends'] or set(values['backends']) - set(self.drivers)):
+            raise ValueError(f'backends must be some of {", ".join(self.drivers)}')
         threshold = check_threshold(values['threshold'], 'the handoff threshold') if 'threshold' in values else None
         for name in ('short_limit', 'weekly_limit'):
             if name in values and not 0 <= float(values[name]) <= 100:
@@ -243,6 +249,13 @@ class Controller:
                     setattr(self.guard, name, float(values[name]))
             if 'max_agents' in values:
                 options.max_agents = int(values['max_agents'])
+            for role, spec in specs.items():  # its live session, if any, keeps its CLI until it hands off
+                setattr(options, role, str(spec))
+                if role in self.state.agents:
+                    agent = self.state.agents[role]
+                    agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
+            if 'backends' in values:
+                options.backends = list(values['backends'])
             self.show('controller', 'primary', 'Settings changed: ' + ', '.join(f'{k} = {v}' for k, v in values.items()))
             await self._resume_agents({'slots'})
             self._save()

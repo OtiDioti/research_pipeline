@@ -102,6 +102,21 @@ class HumanActionsTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((options.threshold, options.max_agents), (0.7, 2))
 
 
+    async def test_a_new_cli_choice_applies_from_the_agents_next_session(self):
+        async with running(self.root) as harness:
+            await harness.controller.configure({'primary': 'claude:sonnet:high', 'backends': ['claude']})
+            self.assertEqual(harness.session('primary').launch.model, launch_options().primary.split(':')[1])
+            self.assertEqual((harness.state.options.primary, harness.state.options.backends),
+                             ('claude:sonnet:high', ['claude']))
+            await harness.controller.act('handoff', 'primary')
+            harness.handoff('primary')
+            await harness.emit('primary', 'turn_ended', text='Saved.')
+            self.assertEqual((harness.session('primary').backend, harness.session('primary').launch.model,
+                              harness.session('primary').launch.effort), ('claude', 'sonnet', 'high'))
+            with self.assertRaises(ValueError):
+                await harness.controller.configure({'reviewer': 'claude:sonnet:huge'})  # an effort claude refuses
+
+
 class DashboardTest(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
@@ -121,7 +136,7 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
         await dashboard.start(values | {'max_agents': 3})
         self.assertEqual(dashboard.controller.launch_options.max_agents, 3)
         self.assertEqual({field['name'] for field in dashboard.live()['fields']},
-                         {'max_agents', 'threshold', 'short_limit', 'weekly_limit'})
+                         {'primary', 'reviewer', 'backends', 'max_agents', 'threshold', 'short_limit', 'weekly_limit'})
 
     async def test_the_graph_shows_agents_their_documents_websites_jobs_and_actions(self):
         async with running(self.root) as harness:
