@@ -1,6 +1,6 @@
 """The terminal app: transcript, agent tree, status, a chat box to the primary and the human's controls.
 
-Built on the terminal app all controllers share (:mod:`agent_sessions.console`).
+Built on the terminal app all controllers share (:mod:`agent_toolkit.console`).
 The transcript shows what agents write, the tools they use, the controller's
 notices and your messages; F2 cycles through single agents, F3 shows them all again.
 """
@@ -10,7 +10,7 @@ from prompt_toolkit.layout import Dimension
 from prompt_toolkit.document import Document
 from prompt_toolkit.widgets import Frame, TextArea
 
-from agent_sessions.console import Entry, TerminalApp as SharedApp
+from agent_toolkit.console import Entry, TerminalApp as SharedApp
 
 from research_pipeline.controller import Controller
 from research_pipeline.state import ENDED, LIVE

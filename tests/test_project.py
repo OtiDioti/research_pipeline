@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from agent_sessions import Spec
+from agent_toolkit import Spec
 
 from research_pipeline import project as project_module
 from research_pipeline.project import Project, ProjectError

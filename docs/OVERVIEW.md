@@ -12,9 +12,9 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | Context handoffs | `controller.py`, drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
 | Review and finishing | `controller.py` | COMPLETE, STOP, the Reviewer exchange, reopening | [FINISHING.md](FINISHING.md) |
 | Jobs | `jobs.py` | Long computations outside the agents' sessions | [JOBS.md](JOBS.md) |
-| Quota | `controller.py`, `agent_sessions` | Pausing a CLI's agents before its usage runs out | [QUOTA.md](QUOTA.md) |
-| Confinement | `agent_sessions` (`confine.py`) | The bwrap boundary of every session and job | [CONFINEMENT.md](CONFINEMENT.md) |
-| CLI drivers | `agent_sessions` (shared package) | One persistent session per agent; everything CLI-specific | [DRIVERS.md](DRIVERS.md) |
+| Quota | `controller.py`, `agent_toolkit` | Pausing a CLI's agents before its usage runs out | [QUOTA.md](QUOTA.md) |
+| Confinement | `agent_toolkit` (`confine.py`) | The bwrap boundary of every session and job | [CONFINEMENT.md](CONFINEMENT.md) |
+| CLI drivers | `agent_toolkit` (shared package) | One persistent session per agent; everything CLI-specific | [DRIVERS.md](DRIVERS.md) |
 | Agent tools | `mcp_server.py`, `channel.py` | The MCP tools agents call, and how calls reach the controller | [TOOLS.md](TOOLS.md) |
 | Project folder | `project.py`, `state.py` | Layout, layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
 | Operating it | `cli.py`, `view.py` | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |

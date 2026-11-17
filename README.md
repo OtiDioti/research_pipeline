@@ -37,7 +37,7 @@ operational decision:
 - [uv](https://docs.astral.sh/uv/).
 - At least one agent CLI, installed and logged in: [Codex](https://github.com/openai/codex) (`codex`)
   and/or [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`).
-- SSH access to the private repository `OtiDioti/agent_sessions`, which `uv sync` installs as a dependency.
+- SSH access to the private repository `OtiDioti/agent_toolkit`, which `uv sync` installs as a dependency.
 
 ## Install
 
@@ -177,10 +177,10 @@ uv run python -m tests.live_smoke                     # live run through the rea
 
 The code is in `src/research_pipeline/`; [FOLDER_CONTENT.md](src/research_pipeline/FOLDER_CONTENT.md)
 describes each module. Everything specific to one agent CLI (the drivers, the
-confinement, the quota probes) lives in the shared package `agent_sessions`, together
+confinement, the quota probes) lives in the shared package `agent_toolkit`, together
 with the machinery research_pipeline shares with coding_pipeline and project_manager:
 the handoff rules, the usage guard, durable records, the safe git runner, strict prompt
 files and the terminal app. A new CLI is one driver there, and research_pipeline needs
 no change. To work on both at
 once, point `[tool.uv.sources]` in `pyproject.toml` at a local checkout
-(`agent-sessions = { path = "../agent_sessions", editable = true }`).
+(`agent-toolkit = { path = "../agent_toolkit", editable = true }`).

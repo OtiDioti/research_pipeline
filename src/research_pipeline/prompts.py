@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from agent_sessions.protocol import Prompts
+from agent_toolkit.protocol import Prompts
 
 from research_pipeline.project import Project
 from research_pipeline.state import Agent, Options

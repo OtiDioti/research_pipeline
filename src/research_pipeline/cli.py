@@ -12,9 +12,9 @@ from pathlib import Path
 import signal
 import sys
 
-from agent_sessions import DRIVERS, Spec
-from agent_sessions.handoff import check_threshold
-from agent_sessions.records import locked
+from agent_toolkit import DRIVERS, Spec
+from agent_toolkit.handoff import check_threshold
+from agent_toolkit.records import locked
 
 from research_pipeline.controller import Controller
 from research_pipeline.project import Project, ProjectError

@@ -12,7 +12,7 @@ makes every operational decision. It never makes a scientific one.
   forced to disk (`--no-durable-state` skips that, for slow network filesystems).
 - Every file the controller writes in the project (indexes, TASK.md,
   PARENT_FEEDBACK.md, job files) is written atomically, never through a symlink and
-  never outside the project (`agent_sessions.records`), since agents and jobs can
+  never outside the project (`agent_toolkit.records`), since agents and jobs can
   write the same folders.
 - Background loops:
 

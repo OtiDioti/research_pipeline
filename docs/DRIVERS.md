@@ -1,7 +1,7 @@
 # CLI drivers
 
 One persistent session per running agent, from the private package
-`agent_sessions`, shared with coding_pipeline and project_manager. It is the only
+`agent_toolkit`, shared with coding_pipeline and project_manager. It is the only
 code that knows the CLIs. research_pipeline only describes each session in
 CLI-neutral terms (a `Launch`) and reacts to its events.
 
@@ -67,12 +67,12 @@ The agent's own calls to the `research` tools are shown when the controller hand
 
 | Symptom | Likely cause |
 |---|---|
-| "loaded the human's own setup (…)" | A personal file or server reached the session; remove it from that CLI's configuration, or fix the driver's switches in `agent_sessions`; then Ctrl+R |
+| "loaded the human's own setup (…)" | A personal file or server reached the session; remove it from that CLI's configuration, or fix the driver's switches in `agent_toolkit`; then Ctrl+R |
 | "Codex refused …" / "Claude Code refused …" | The CLI rejected a request; the reason follows (e.g. an unknown model) |
 | "… exited with status …" | The CLI ended by itself; the last error lines follow |
 | Context stays `–`, then an ALERT | The CLI hasn't reported both tokens and window; that session can't be handed off |
 
 ## Adding a CLI
 
-A new CLI is one driver in `agent_sessions` (see its README). research_pipeline
+A new CLI is one driver in `agent_toolkit` (see its README). research_pipeline
 needs no change beyond allowing the new backend name in `--backends`.

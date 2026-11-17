@@ -1,6 +1,6 @@
 """Long computations run by the controller for agents (PROJECT.md §6, "Jobs").
 
-A job runs in its own confinement (:func:`agent_sessions.confine.job`): the
+A job runs in its own confinement (:func:`agent_toolkit.confine.job`): the
 filesystem as the controller sees it, except that the protected paths are
 read-only and the hidden ones invisible. It is its own process session, outside
 every agent's session, so it survives the agent's handoffs, quota pauses and a
@@ -21,8 +21,8 @@ import subprocess
 import time
 from typing import Iterable
 
-from agent_sessions import confine
-from agent_sessions.records import atomic_write, create
+from agent_toolkit import confine
+from agent_toolkit.records import atomic_write, create
 
 from research_pipeline.state import Job
 

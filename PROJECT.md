@@ -246,7 +246,7 @@ instructions, a prompt and MCP configuration and with the CLI's own discovery
 switched off (§3), deliver a message during a turn, interrupt, and report text,
 tool activity, context use (from the CLI's own reports, §5) and what the CLI loaded
 at start, and that can read the CLI's usage quota. The drivers and the confinement
-come from `agent_sessions`, a private package shared with coding_pipeline and
+come from `agent_toolkit`, a private package shared with coding_pipeline and
 project_manager and installed as a dependency; everything specific to a CLI lives
 there, and every decision is the controller's.
 
@@ -398,7 +398,7 @@ lead to physics-specific code in the platform.
 - **Order.** The core (controller, CLI drivers, MCP tools, jobs, handoffs, layout
   check, TUI) is built by hand, with Claude. After that, project_manager delivers
   increments.
-- **Reuse.** CLI drivers, confinement and quota probes come from `agent_sessions`,
+- **Reuse.** CLI drivers, confinement and quota probes come from `agent_toolkit`,
   shared with coding_pipeline and project_manager.
 - **Justification.** Every component must trace to a behaviour in this document.
   Prefer existing libraries, plain files and small reversible designs; handle

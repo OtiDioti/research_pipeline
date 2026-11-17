@@ -4,7 +4,7 @@ It owns the agent tree and makes every operational decision; it never makes a
 scientific one. In outline:
 
 - **Sessions.** Each running agent has one persistent CLI session (a driver from
-  the shared package :mod:`agent_sessions`) inside its confinement. Messages reach agents
+  the shared package :mod:`agent_toolkit`) inside its confinement. Messages reach agents
   live, during their turn; queued messages are delivered when a session starts.
 - **Tools.** Agents act through the MCP tools of :mod:`research_pipeline.mcp_server`,
   which arrive here through :mod:`research_pipeline.channel` and are handled by
@@ -12,7 +12,7 @@ scientific one. In outline:
 - **Handoffs.** At the context threshold an agent is asked to update HANDOFF.md and
   end its turn; its session is then replaced by a fresh one. The request is
   repeated every further 25 points of context; an agent is never killed for it.
-  The rules are those every agent controller shares (:mod:`agent_sessions.handoff`).
+  The rules are those every agent controller shares (:mod:`agent_toolkit.handoff`).
 - **Idle and stalled agents.** An agent that ends its turn with nothing running or
   pending for it is nudged once; if it ends its turn idle again without using a
   tool, it has stalled: its parent is told, or the human alerted for the primary,
@@ -22,7 +22,7 @@ scientific one. In outline:
   primary's decision after the Reviewer's challenge. The verdict wakes the primary.
 - **Quota, pause, shutdown, crash.** Per-CLI usage limits pause that CLI's agents
   (or all, if it is the primary's); the holds come from the shared usage guard
-  (:class:`agent_sessions.quota.Guard`). A human pause hands every agent off and stops
+  (:class:`agent_toolkit.quota.Guard`). A human pause hands every agent off and stops
   jobs; a shutdown hands every agent off and leaves jobs running. After a shutdown
   or a crash, agents restart from their handoffs and running jobs are reattached.
 
@@ -42,10 +42,10 @@ import sys
 import time
 from typing import Callable
 
-from agent_sessions import CAPABILITIES, DRIVERS, Launch, McpServer, Session, SessionError, SetupError, Spec, quota
-from agent_sessions.handoff import HandoffWatch
-from agent_sessions.quota import Guard
-from agent_sessions.records import Busy, atomic_write, exclusive
+from agent_toolkit import CAPABILITIES, DRIVERS, Launch, McpServer, Session, SessionError, SetupError, Spec, quota
+from agent_toolkit.handoff import HandoffWatch
+from agent_toolkit.quota import Guard
+from agent_toolkit.records import Busy, atomic_write, exclusive
 
 from research_pipeline import jobs as joblib
 from research_pipeline import prompts

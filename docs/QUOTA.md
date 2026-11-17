@@ -3,7 +3,7 @@
 The controller pauses a CLI's agents before its usage windows run out, and resumes
 them afterwards. Each driver reads its own CLI's windows without a model call
 ([DRIVERS.md](DRIVERS.md)); the usage guard all agent controllers share
-(`agent_sessions.quota.Guard`) turns the readings into holds, and the controller
+(`agent_toolkit.quota.Guard`) turns the readings into holds, and the controller
 decides what a hold pauses.
 
 ## Reading

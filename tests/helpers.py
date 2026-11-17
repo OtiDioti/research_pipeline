@@ -1,6 +1,6 @@
 """Shared test helpers: temporary projects, fake CLI drivers and a controller harness.
 
-The fake drivers (from :mod:`agent_sessions.testing`) replace a CLI session without any process, so controller tests
+The fake drivers (from :mod:`agent_toolkit.testing`) replace a CLI session without any process, so controller tests
 exercise every decision (spawning, handoffs, quota, reviews, pauses) quickly and
 deterministically. Tests act as the agents: they call tools exactly as the MCP
 server would and emit the events a real CLI would.
@@ -13,8 +13,8 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from agent_sessions.quota import Window
-from agent_sessions.testing import FAKE_DRIVERS, FakeSession  # noqa: F401 (used by the tests)
+from agent_toolkit.quota import Window
+from agent_toolkit.testing import FAKE_DRIVERS, FakeSession  # noqa: F401 (used by the tests)
 
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller

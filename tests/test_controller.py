@@ -8,7 +8,7 @@ import asyncio
 import unittest
 
 from research_pipeline.controller import Controller
-from agent_sessions import SetupError
+from agent_toolkit import SetupError
 
 from research_pipeline.project import ProjectError
 from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project

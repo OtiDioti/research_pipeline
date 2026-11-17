@@ -6,10 +6,10 @@ the human changes their own files, and checks agents' work against the layout
 rules before accepting a handoff, a result or a proposal.
 
 The controller runs git outside any confinement, on a repository agents and
-their jobs write, through the shared safe runner (:mod:`agent_sessions.git`):
+their jobs write, through the shared safe runner (:mod:`agent_toolkit.git`):
 hooks, fsmonitor and other programs git could start are off, while the human's
 own git configuration (global ignore file, default branch, LFS) still applies.
-Its own files go through :mod:`agent_sessions.records`: written atomically, never
+Its own files go through :mod:`agent_toolkit.records`: written atomically, never
 through a symlink, and only inside the project.
 """
 from __future__ import annotations
@@ -17,8 +17,8 @@ from __future__ import annotations
 from pathlib import Path
 import os
 
-from agent_sessions import git as runner
-from agent_sessions.records import atomic_write
+from agent_toolkit import git as runner
+from agent_toolkit.records import atomic_write
 
 from research_pipeline.state import Agent
 

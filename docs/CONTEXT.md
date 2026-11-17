@@ -31,7 +31,7 @@ over from an earlier session, or asked of the agent.
 | The turn ends with HANDOFF.md written since the request | Layout check (problems go to the next session as a notice, without blocking); commit; the session closes; a fresh one starts |
 | The turn ends without a write | Asked again, up to 3 times; then the next session starts from the existing HANDOFF.md |
 
-- These rules are the ones every agent controller shares (`agent_sessions.handoff`,
+- These rules are the ones every agent controller shares (`agent_toolkit.handoff`,
   also used by coding_pipeline and project_manager); research keeps its own
   HANDOFF.md, which agents edit with their file tools, and has no limit on the
   number of handoffs.

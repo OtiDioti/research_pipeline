@@ -12,8 +12,8 @@ from dataclasses import asdict, dataclass, field, fields
 import json
 from pathlib import Path
 
-from agent_sessions import Spec
-from agent_sessions.records import atomic_write
+from agent_toolkit import Spec
+from agent_toolkit.records import atomic_write
 
 #: Agent statuses with a live CLI session; each occupies one concurrency slot.
 LIVE = frozenset({'running', 'handing_off'})
