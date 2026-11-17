@@ -532,6 +532,8 @@ class Controller:
                 self.show('tool', agent_id, data['text'])
         elif kind == 'context':
             await self._context(agent, data.get('tokens'), data.get('window'))
+        elif kind == 'turn_ended' and data.get('pending'):
+            pass  # a message reached the CLI too late for this turn: it runs next; act once the session settles
         elif kind == 'turn_ended' and data.get('failed') and not agent.closing:
             # A failed turn (e.g. an API outage) restarts the agent from its handoff after a delay.
             await self._close(agent_id)
