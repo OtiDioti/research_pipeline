@@ -1,7 +1,8 @@
 """Persistent state of one investigation: its agents, jobs and the controller's decisions.
 
 Everything lives in one JSON file, ``.research/state.json``, rewritten atomically
-and durably after every change. It holds only what the project files cannot:
+after every change and forced to disk unless the ``durable`` option is off
+(``--no-durable-state``). It holds only what the project files cannot:
 which agents exist and what they are doing, which jobs run, what the Reviewer is
 examining and which CLIs are held by their usage quota. The science itself stays
 in the project's ordinary files.
@@ -33,7 +34,7 @@ class Options:
     references: list[str] = field(default_factory=list)  # read-only folders of other projects
     short_limit: float = 15                 # % left of a short usage window that pauses a CLI's agents
     weekly_limit: float = 15                # % left of a weekly window that pauses them until the human resumes
-    threshold: float = 0.55                 # context fill at which an agent is asked to hand off
+    threshold: float = 0.55                 # context fill at which an agent is asked to hand off (> 0, <= 0.8)
     durable: bool = True                    # force every state write to disk (off: faster on network filesystems)
 
     @classmethod
@@ -106,9 +107,12 @@ class State:
     status: str = 'running'          # running | pausing | paused | complete | stopped
     agents: dict[str, Agent] = field(default_factory=dict)
     jobs: dict[str, Job] = field(default_factory=dict)
-    proposal: dict | None = None     # {'kind': 'complete'|'stop', 'round': n, 'detail': str, 'challenged': bool}
+    # {'kind': 'complete'|'stop', 'round': n, 'detail': str, 'challenged': bool, 'reviewed': bool} and,
+    # once reviewed, 'review': the review's path
+    proposal: dict | None = None
     rounds: int = 0                  # review rounds so far
-    holds: dict[str, dict] = field(default_factory=dict)  # backend -> {'kind', 'until', 'detail'}
+    # backend -> {'kind', 'until', 'detail'}, kept by agent_toolkit.quota.Guard ('until': reported reset or None)
+    holds: dict[str, dict] = field(default_factory=dict)
     human: dict[str, str] = field(default_factory=dict)   # human-owned file -> fingerprint, as last seen
     job_counter: int = 0
     outcome: str | None = None       # how the investigation last ended

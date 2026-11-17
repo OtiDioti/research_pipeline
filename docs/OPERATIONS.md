@@ -57,6 +57,8 @@ Resume and does the same.
 |---|---|---|
 | "Another controller is already running this project." | `.research/lock` is held | Stop the other controller |
 | "--primary must be BACKEND:MODEL:EFFORT …" | A missing CLI choice on the first run | Give all three parts |
+| "--primary: … does not accept effort …" | An effort that CLI rejects | Choose one of those listed |
+| "--context-threshold must be > 0 and <= 0.8 …" | A threshold that leaves no room to write the handoff | Choose one in that range (default 0.55) |
 | "Projects cannot live under /tmp" | Each session has a private `/tmp` | Move the project |
 | "bubblewrap (bwrap) is required" | bwrap is not installed | Install it |
 | An agent paused (`failure`), restarting in 30 s / 2 min / 10 min | Its CLI crashed or a turn failed | See its session log; after the third retry, press Ctrl+R |

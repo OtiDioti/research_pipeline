@@ -7,8 +7,9 @@ rules before accepting a handoff, a result or a proposal.
 
 The controller runs git outside any confinement, on a repository agents and
 their jobs write, through the shared safe runner (:mod:`agent_toolkit.git`):
-hooks, fsmonitor and other programs git could start are off, while the human's
-own git configuration (global ignore file, default branch, LFS) still applies.
+hooks, fsmonitor and other programs git could start are off and the controller's
+``GIT_*`` variables are ignored, while the human's own git configuration (global
+ignore file, default branch, LFS) still applies.
 Its own files go through :mod:`agent_toolkit.records`: written atomically, never
 through a symlink, and only inside the project.
 """
@@ -257,8 +258,10 @@ class Project:
         text = exclude.read_text(encoding='utf-8') if exclude.exists() else ''
         kept = text.split(_EXCLUDE_MARK)[0].rstrip('\n')
         block = '\n'.join([_EXCLUDE_MARK, *('/' + path for path in large)]) if large else ''
-        exclude.parent.mkdir(parents=True, exist_ok=True)
-        exclude.write_text('\n'.join(filter(None, [kept, block])) + '\n', encoding='utf-8')
+        try:  # jobs can write .git: like every controller file, never through a symlink nor outside the project
+            self.write(exclude, '\n'.join(filter(None, [kept, block])) + '\n')
+        except ValueError as error:
+            raise ProjectError(f'could not update the exclude file: {error}') from None
         if large:  # files that grew past the limit after an earlier commit
             self.git('rm', '-q', '--cached', '--ignore-unmatch', '--', *large, check=False)
         return large

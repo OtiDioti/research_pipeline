@@ -9,7 +9,7 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 |---|---|---|---|
 | Controller | `controller.py` | Runs one investigation and makes every operational decision | [CONTROLLER.md](CONTROLLER.md) |
 | Agents | `prompts.py`, `prompts/` | Primary, subagents and Reviewer: their tasks, tools and lifecycle | [AGENT_ROLES.md](AGENT_ROLES.md) |
-| Context handoffs | `controller.py`, drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
+| Context handoffs | `controller.py`, `agent_toolkit` (`handoff.py`), drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
 | Review and finishing | `controller.py` | COMPLETE, STOP, the Reviewer exchange, reopening | [FINISHING.md](FINISHING.md) |
 | Jobs | `jobs.py` | Long computations outside the agents' sessions | [JOBS.md](JOBS.md) |
 | Quota | `controller.py`, `agent_toolkit` | Pausing a CLI's agents before its usage runs out | [QUOTA.md](QUOTA.md) |
@@ -17,7 +17,7 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | CLI drivers | `agent_toolkit` (shared package) | One persistent session per agent; everything CLI-specific | [DRIVERS.md](DRIVERS.md) |
 | Agent tools | `mcp_server.py`, `channel.py` | The MCP tools agents call, and how calls reach the controller | [TOOLS.md](TOOLS.md) |
 | Project folder | `project.py`, `state.py` | Layout, layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
-| Operating it | `cli.py`, `view.py` | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |
+| Operating it | `cli.py`, `view.py` (on `agent_toolkit`'s terminal app) | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |
 
 ## One investigation
 

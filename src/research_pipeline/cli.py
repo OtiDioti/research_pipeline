@@ -36,7 +36,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument('--reference', action='append', type=Path,
                      help='read-only folder of another project agents may consult (repeatable)')
     run.add_argument('--short-limit', type=float, help='%% left of a short usage window that pauses a CLI (default 15)')
-    run.add_argument('--weekly-limit', type=float, help='%% left of a weekly window that stops a CLI (default 15)')
+    run.add_argument('--weekly-limit', type=float, help='%% left of a weekly window that pauses a CLI until you resume it (default 15)')
     run.add_argument('--context-threshold', type=float,
                      help='context fill that triggers a handoff (default 0.55, at most 0.8)')
     run.add_argument('--no-durable-state', dest='durable', action='store_false', default=None,
@@ -48,7 +48,11 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
-    """Merge explicit command-line options into the stored (or default) ones."""
+    """Merge explicit command-line options into the stored (or default) ones.
+
+    Raise ValueError for an invalid CLI choice (BACKEND:MODEL:EFFORT, with an effort the CLI accepts) or a
+    context threshold outside (0, 0.8].
+    """
     options = Options(**vars(stored)) if stored else Options()
     for name in ('primary', 'reviewer'):
         value = getattr(args, name)

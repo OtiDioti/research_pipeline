@@ -37,7 +37,8 @@ operational decision:
 - [uv](https://docs.astral.sh/uv/).
 - At least one agent CLI, installed and logged in: [Codex](https://github.com/openai/codex) (`codex`)
   and/or [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`).
-- SSH access to the private repository `OtiDioti/agent_toolkit`, which `uv sync` installs as a dependency.
+- SSH access to the private repository `OtiDioti/agent_toolkit`, which `uv sync` installs as a dependency, at the
+  release tag pinned in `pyproject.toml`.
 
 ## Install
 
@@ -109,7 +110,7 @@ example when the primary has stopped and waits for your answer.
 |---|---|
 | Chat box, Enter | Message to the primary researcher, delivered during its turn (during a review it wakes the primary to answer you) |
 | Ctrl+P | Pause: every agent hands off, then jobs stop. Edit any file, then Ctrl+P again to resume |
-| Ctrl+R | Resume agents held by a weekly or unreadable quota, or whose session could not start (jobs keep running) |
+| Ctrl+R | Resume agents held by a weekly or unreadable quota, or failed agents no longer retried automatically (jobs keep running) |
 | Ctrl+Q / F10 | Exit cleanly: every agent hands off, jobs keep running; the next `run` resumes and reattaches them |
 | F2 / F3 | Show one agent's transcript / all agents |
 | Ctrl+C | Exit at once; jobs keep running, and the next `run` restarts agents from their handoffs |
@@ -158,8 +159,8 @@ what changed meanwhile (by you, or by jobs that kept running).
 - **Quota.**
   - A CLI's short window at 15% or less left: its agents hand off and pause until
     the reset.
-  - A weekly window at 15% or less left, or quota that can't be read: its agents
-    pause until you resume them (Ctrl+R, or Resume when nothing is working).
+  - A weekly window at 15% or less left, or quota that can't be read twice in a row: its
+    agents pause until you resume them (Ctrl+R, or Resume when nothing is working).
   - If the primary's CLI is affected, everyone pauses. Jobs keep running through
     quota pauses.
 - **Failures.** If a session crashes or a turn fails (for example, an API outage), the

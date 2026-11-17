@@ -412,6 +412,7 @@ class Controller:
     async def _context(self, agent: Agent, tokens: int | None, window: int | None) -> None:
         """New context reading: trigger the handoff at the threshold and repeat it every further 25 points.
 
+        A context handoff is called off if the CLI compacts below the threshold (the agent is not told).
         Context use is only what the session's CLI reports. Until it has reported both tokens and
         window, the fill is unknown and triggers nothing; it is never estimated.
         """
@@ -564,7 +565,11 @@ class Controller:
         await self._send(agent, prompts.handoff_request(reason, detail))
 
     async def _check_handoff(self, agent: Agent) -> None:
-        """At a turn's end during a handoff: replace or pause the session once HANDOFF.md is updated."""
+        """At a turn's end during a handoff: replace or pause the session once HANDOFF.md is written.
+
+        A turn that ended without writing it is asked again, up to three times; then the session is
+        replaced or paused anyway, and its successor starts from the existing HANDOFF.md.
+        """
         watch = self.watches.get(agent.id)
         saved = watch is not None and watch.saved()
         if not saved and watch is not None and watch.ask_again():
@@ -1166,13 +1171,27 @@ class Controller:
             self.show('controller', 'primary', 'Unexpected top-level entries: ' + ', '.join(sorted(strays)))
         if primary.notices and primary.status == 'running':
             asyncio.ensure_future(self._locked(self._flush_running(primary)))  # after the current step
-        self.project.write_agents_index(list(self.state.agents.values()))
-        for owner in {job.owner for job in self.state.jobs.values()}:
-            joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
+        self._write_indexes()
         try:
             self.project.commit(message)
         except ProjectError as error:
             self.show('controller', 'primary', f'Commit failed: {error}')
+
+    def _write_indexes(self) -> None:
+        """Rewrite the agents' index and every agent's jobs index.
+
+        A refused write (such as a symlink an agent or its job left where an index
+        belongs, which the controller never writes through) is shown and skipped: it
+        must not stop the commit, nor the handoff or result that asked for it.
+        """
+        writes = [lambda: self.project.write_agents_index(list(self.state.agents.values()))]
+        writes += [lambda owner=owner: joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
+                   for owner in sorted({job.owner for job in self.state.jobs.values()})]
+        for write in writes:
+            try:
+                write()
+            except (ValueError, OSError) as error:
+                self.show('controller', 'primary', f'An index was not written: {error}')
 
 
 def _layout_notice(problems: list[str]) -> str:

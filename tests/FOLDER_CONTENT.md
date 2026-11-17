@@ -1,6 +1,6 @@
 # Folder contents
 
-- [helpers.py](helpers.py) — Temporary projects, a fake CLI driver and a controller harness.
+- [helpers.py](helpers.py) — Temporary projects, fake CLI drivers (from agent_toolkit's testing module) and a controller harness.
 - [test_controller.py](test_controller.py) — The controller's decisions, played through fake sessions.
 - [test_project.py](test_project.py) — Layout, layout check, git commits, the human's files, state.
 - [test_jobs.py](test_jobs.py) — Real job processes: exit status, timeout, cancellation, reattachment.

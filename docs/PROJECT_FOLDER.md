@@ -12,7 +12,8 @@ On `run`, the controller:
   - `sources/`, `tools/`, `agents/`, `reviews/` and `.research/logs/`;
   - STATUS.md, REPORT.md, FEEDBACK.md and the root FOLDER_CONTENT.md;
   - the folder indexes;
-  - a `.gitignore` covering `.research/`, virtual environments and caches;
+  - a `.gitignore` covering `.research/`, virtual environments and caches (or `.research/`
+    added to an existing one);
 - creates the git repository on the first run, and commits the prepared layout.
 
 ## Ownership
@@ -24,6 +25,10 @@ On `run`, the controller:
 | The primary | Also STATUS.md, REPORT.md and the root FOLDER_CONTENT.md |
 | The Reviewer | Also `reviews/` |
 | The controller | `.research/` (hidden from agents and jobs), `agents/FOLDER_CONTENT.md`, each `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md and PARENT_FEEDBACK.md, and the outcome line of STATUS.md |
+
+These controller files, the starter files and a job's files are written atomically
+(a job's logs are created fresh), never through a symlink and never outside the
+project: agents and jobs can write the same folders ([CONTROLLER.md](CONTROLLER.md)).
 
 ## Layout check
 
@@ -55,7 +60,8 @@ or by anything else, is reported to the primary within about 10 s, and at every 
 
 The controller commits under the identity `research-pipeline`; agents cannot write
 `.git` (jobs can). It runs git through the safe runner of `agent_toolkit.git`: hooks,
-fsmonitor, the pager, external diff tools and signing are off, so nothing a job puts
+fsmonitor, the pager, external diff tools, signing and automatic stashes are off and
+the controller's own `GIT_*` environment variables are ignored, so nothing a job puts
 into `.git` runs outside the confinement, while your own global git configuration
 (ignore file, default branch, LFS) still applies. Every commit message names the agent and the event:
 

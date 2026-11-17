@@ -61,6 +61,17 @@ class ProjectTest(unittest.TestCase):
             self.project.write_agents_index([self.agent])
         self.assertEqual(outside.read_text(), 'keep\n')
 
+    def test_a_commit_never_writes_the_exclude_file_through_a_symlink(self):
+        outside = self.root.parent / f'{self.root.name}-exclude.txt'
+        outside.write_text('keep\n')
+        self.addCleanup(outside.unlink)
+        exclude = self.root / '.git' / 'info' / 'exclude'
+        exclude.unlink(missing_ok=True)
+        exclude.symlink_to(outside)  # jobs can write .git
+        with self.assertRaises(ProjectError):  # reported by the controller as a failed commit
+            self.project.commit('test: symlinked exclude file')
+        self.assertEqual(outside.read_text(), 'keep\n')
+
     def test_prepare_creates_layout_and_refuses_bad_locations(self):
         for name in ('STATUS.md', 'REPORT.md', 'FEEDBACK.md', 'FOLDER_CONTENT.md', '.gitignore', '.git'):
             self.assertTrue((self.root / name).exists(), name)

@@ -16,11 +16,13 @@ decides what a hold pauses.
 
 | Reading | Hold | Ends |
 |---|---|---|
-| A short window at `--short-limit` (15%) left or less | `short` | Automatically, at the first reading above the limit taken at or after the reported reset |
+| A short window at `--short-limit` (15%) left or less | `short` | Automatically, at the first reading above the limit taken at or after the reported reset (any such reading, if the CLI reported no reset) |
 | A weekly window at `--weekly-limit` (15%) left or less | `weekly` | Only when the human resumes: Ctrl+R, a resume after a pause, or the next `run` |
 | Unreadable twice in a row (one failure is taken for a glitch) | `unreadable` | As for weekly |
 
-A limit of 0 disables that check. A CLI without a usage probe is never held.
+A limit of 0 disables that check. A CLI without a usage probe is never held. Holds
+are kept in `.research/state.json` (kind, reported reset or none, detail), and
+`research-pipeline status` lists them.
 
 ## While a CLI is held
 
