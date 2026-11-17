@@ -117,6 +117,30 @@ class HumanActionsTest(unittest.IsolatedAsyncioTestCase):
                 await harness.controller.configure({'reviewer': 'claude:sonnet:huge'})  # an effort claude refuses
 
 
+class SettlingTest(unittest.IsolatedAsyncioTestCase):
+    """A message that reached the CLI too late for a turn runs in a further one: the controller waits for it."""
+
+    def setUp(self):
+        self.root = temp_project()
+        FakeSession.reset()
+
+    def tearDown(self):
+        remove(self.root)
+
+    async def test_a_handoff_request_that_arrived_too_late_is_waited_for_not_asked_again(self):
+        async with running(self.root) as harness:
+            await harness.emit('primary', 'context', tokens=60_000, window=100_000)
+            self.assertEqual(harness.state.agents['primary'].status, 'handing_off')
+            asked = len(harness.session('primary').sent)
+            # The turn ends with the request still unread by the CLI: a further turn runs it.
+            await harness.emit('primary', 'turn_ended', text='Answered.', pending=1)
+            self.assertEqual(len(harness.session('primary').sent), asked)  # not asked again, nothing closed
+            harness.handoff('primary')
+            await harness.emit('primary', 'turn_ended', text='Saved.')
+            primary = harness.state.agents['primary']
+            self.assertEqual((primary.status, primary.sessions), ('running', 2))
+
+
 class DashboardTest(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):

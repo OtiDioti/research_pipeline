@@ -60,6 +60,7 @@ subagents with the fewest sessions first.
 | `context` | Handoff logic ([CONTEXT.md](CONTEXT.md)) |
 | `turn_ended` | Checked in order. A closing session (after a result, verdict or proposal) is closed. During a handoff, the handoff is checked. Queued notices are delivered. Otherwise the idle check runs. |
 | `turn_ended`, failed | Session closed; see "Failures" |
+| `turn_ended` with messages still pending | A message (a notice, a handoff request) reached the CLI too late for that turn; the CLI runs it in a further turn, and the controller acts only on that turn's end |
 | `exited` (not asked to) | See "Failures" |
 
 ## Waiting, idle and stalled agents
