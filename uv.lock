@@ -9,9 +9,9 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "agent-sessions"
+name = "agent-toolkit"
 version = "0.2.0"
-source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?branch=shared-machinery#c095a420d2d57cf15caa9b280a2bc80e3a13d4cc" }
+source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.2.0#18bd4f99f4b6f968d74d3d5e124d9cf2cb831946" }
 
 [package.optional-dependencies]
 console = [
@@ -601,13 +601,13 @@ name = "research-pipeline"
 version = "0.2.0"
 source = { editable = "." }
 dependencies = [
-    { name = "agent-sessions", extra = ["console"] },
+    { name = "agent-toolkit", extra = ["console"] },
     { name = "mcp" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-sessions", extras = ["console"], git = "ssh://git@github.com/OtiDioti/agent_sessions.git?branch=shared-machinery" },
+    { name = "agent-toolkit", extras = ["console"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.2.0" },
     { name = "mcp", specifier = ">=1.26,<2" },
 ]
 
