@@ -4,12 +4,22 @@ A project is an ordinary folder kept in git (PROJECT.md §2). The controller
 creates the top-level layout, commits on every significant event, notices when
 the human changes their own files, and checks agents' work against the layout
 rules before accepting a handoff, a result or a proposal.
+
+The controller runs git outside any confinement, on a repository agents and
+their jobs write, through the shared safe runner (:mod:`agent_toolkit.git`):
+hooks, fsmonitor and other programs git could start are off and the controller's
+``GIT_*`` variables are ignored, while the human's own git configuration (global
+ignore file, default branch, LFS) still applies.
+Its own files go through :mod:`agent_toolkit.records`: written atomically, never
+through a symlink, and only inside the project.
 """
 from __future__ import annotations
 
 from pathlib import Path
 import os
-import subprocess
+
+from agent_toolkit import git as runner
+from agent_toolkit.records import atomic_write
 
 from research_pipeline.state import Agent
 
@@ -45,8 +55,7 @@ ROOT_INDEX = """# Folder contents
 """
 EMPTY_INDEX = '# Folder contents\n\n'
 # Commits are made by the controller under this identity; the agent and event go in the message.
-_IDENTITY = {'GIT_AUTHOR_NAME': 'research-pipeline', 'GIT_AUTHOR_EMAIL': 'research-pipeline@localhost',
-             'GIT_COMMITTER_NAME': 'research-pipeline', 'GIT_COMMITTER_EMAIL': 'research-pipeline@localhost'}
+IDENTITY = ('research-pipeline', 'research-pipeline@localhost')
 _EXCLUDE_MARK = '# research-pipeline: large files'
 
 
@@ -98,18 +107,22 @@ class Project:
         for name, text in (('STATUS.md', '# Status\n\nThe investigation has not started yet.\n'),
                            ('REPORT.md', ''), ('FEEDBACK.md', ''), (INDEX, ROOT_INDEX)):
             if not (self.root / name).exists():
-                (self.root / name).write_text(text, encoding='utf-8')
+                self.write(self.root / name, text)
         for folder in (self.root / 'sources', self.root / 'tools', self.reviews):
             if not (folder / INDEX).exists():
-                (folder / INDEX).write_text(EMPTY_INDEX, encoding='utf-8')
+                self.write(folder / INDEX, EMPTY_INDEX)
         ignore = self.root / '.gitignore'
         if not ignore.exists():
-            ignore.write_text(GITIGNORE, encoding='utf-8')
+            self.write(ignore, GITIGNORE)
         elif '.research/' not in ignore.read_text(encoding='utf-8').split():
-            ignore.write_text(ignore.read_text(encoding='utf-8').rstrip('\n') + '\n.research/\n', encoding='utf-8')
+            self.write(ignore, ignore.read_text(encoding='utf-8').rstrip('\n') + '\n.research/\n')
         if not (self.root / '.git').exists():  # a new repository starts with the prepared layout; later changes
             self.git('init', '-q')             # stay uncommitted for the controller to report and commit
             self.commit('controller: project prepared')
+
+    def write(self, path: Path, text: str) -> None:
+        """Replace a file of the project atomically; never through a symlink, never outside the project."""
+        atomic_write(path, text, root=self.root)
 
     def write_agents_index(self, agents: list[Agent]) -> None:
         """Maintain agents/FOLDER_CONTENT.md: one line per agent, from its task's first line."""
@@ -121,7 +134,7 @@ class Project:
                 summary = next((line.strip('# ').strip() for line in task.read_text(encoding='utf-8').splitlines()
                                 if line.strip()), '') or summary
             lines.append(f'- [{agent.id}]({agent.id}) — {agent.role}, {agent.status}. {summary}'.rstrip())
-        (self.agents / INDEX).write_text('\n'.join(lines) + '\n', encoding='utf-8')
+        self.write(self.agents / INDEX, '\n'.join(lines) + '\n')
 
     def inventory(self, folder: str = 'starting_evidence', limit: int = 200) -> str:
         """List the files of ``folder`` with their sizes, for an agent's opening message."""
@@ -202,12 +215,15 @@ class Project:
     # Git ------------------------------------------------------------------------------
 
     def git(self, *args: str, check: bool = True, input: str | None = None) -> str:
-        """Run git in the project; return its output. Raise ProjectError if it fails and ``check``."""
-        done = subprocess.run(['git', '-C', str(self.root), *args], capture_output=True, text=True, input=input,
-                              env=os.environ | _IDENTITY | {'GIT_TERMINAL_PROMPT': '0'})
-        if check and done.returncode:
-            raise ProjectError(f'git {args[0]} failed: {done.stderr.strip()[:300]}')
-        return done.stdout
+        """Run git safely in the project (see the module documentation); return its output.
+
+        Raise ProjectError if it fails and ``check``.
+        """
+        try:
+            return runner.output(self.root, *args, check=check, isolated=False, identity=IDENTITY,
+                                 input=None if input is None else input.encode())
+        except runner.GitError as error:
+            raise ProjectError(f'git {args[0]} failed: {str(error).removeprefix("GIT_ERROR: ")[:300]}') from None
 
     def uncommitted(self, *paths: str) -> list[str]:
         """Paths with changes since the last commit (optionally only under ``paths``)."""
@@ -242,8 +258,10 @@ class Project:
         text = exclude.read_text(encoding='utf-8') if exclude.exists() else ''
         kept = text.split(_EXCLUDE_MARK)[0].rstrip('\n')
         block = '\n'.join([_EXCLUDE_MARK, *('/' + path for path in large)]) if large else ''
-        exclude.parent.mkdir(parents=True, exist_ok=True)
-        exclude.write_text('\n'.join(filter(None, [kept, block])) + '\n', encoding='utf-8')
+        try:  # jobs can write .git: like every controller file, never through a symlink nor outside the project
+            self.write(exclude, '\n'.join(filter(None, [kept, block])) + '\n')
+        except ValueError as error:
+            raise ProjectError(f'could not update the exclude file: {error}') from None
         if large:  # files that grew past the limit after an earlier commit
             self.git('rm', '-q', '--cached', '--ignore-unmatch', '--', *large, check=False)
         return large

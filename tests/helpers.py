@@ -1,6 +1,6 @@
-"""Shared test helpers: temporary projects, a fake CLI driver and a controller harness.
+"""Shared test helpers: temporary projects, fake CLI drivers and a controller harness.
 
-The fake driver replaces a CLI session without any process, so controller tests
+The fake drivers (from :mod:`agent_toolkit.testing`) replace a CLI session without any process, so controller tests
 exercise every decision (spawning, handoffs, quota, reviews, pauses) quickly and
 deterministically. Tests act as the agents: they call tools exactly as the MCP
 server would and emit the events a real CLI would.
@@ -13,8 +13,8 @@ from pathlib import Path
 import shutil
 import tempfile
 
-from agent_sessions import SessionError
-from agent_sessions.quota import Window
+from agent_toolkit.quota import Window
+from agent_toolkit.testing import FAKE_DRIVERS, FakeSession  # noqa: F401 (used by the tests)
 
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller
@@ -41,45 +41,6 @@ def temp_project(question: str = 'What is the integral of x^2 on [0, 1]?') -> Pa
 
 def remove(root: Path) -> None:
     shutil.rmtree(root, ignore_errors=True)
-
-
-class FakeSession:
-    """A CLI session without a process: records what it is sent; tests emit its events."""
-
-    backend = 'codex'
-    instances: list['FakeSession'] = []
-    #: Set by a test to make every following start fail with this error (as a real driver's start can).
-    start_error: Exception | None = None
-
-    def __init__(self, launch, on_event):
-        self.launch, self.on_event = launch, on_event
-        self.busy, self.closed, self.sent = True, False, [launch.message]
-        FakeSession.instances.append(self)
-
-    async def start(self):
-        if FakeSession.start_error:
-            raise FakeSession.start_error
-
-    async def send(self, text: str):
-        if self.closed:
-            raise SessionError('the session has ended')
-        self.sent.append(text)
-        self.busy = True
-
-    async def close(self):
-        self.closed = True
-
-    def emit(self, kind: str, **data):
-        if kind == 'turn_ended':
-            self.busy = False
-        self.on_event(self, kind, data)
-
-
-class FakeClaude(FakeSession):
-    backend = 'claude'
-
-
-FAKE_DRIVERS = {'codex': FakeSession, 'claude': FakeClaude}
 
 
 class QuotaReader:

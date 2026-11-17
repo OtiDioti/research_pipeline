@@ -41,6 +41,7 @@ Every reply also carries the caller's pending notices.
 | "Refused: N/N agents are already working …" | The cap `--max-agents` is reached |
 | "Refused: … temporarily paused by the usage quota …" | That CLI is held ([QUOTA.md](QUOTA.md)) |
 | "Refused: backend … is not allowed" / "a model and an effort are required" | `spawn` without an allowed backend, a model and an effort |
+| "Refused: the subagent: … does not accept effort …" | `spawn` with an effort the backend's CLI rejects ([AGENT_ROLES.md](AGENT_ROLES.md)) |
 | "Refused: first settle your subagents … and jobs …" | Before `submit_result`, a proposal or a verdict, running work must end |
 | "Refused: Fix these layout problems first …" | The layout check failed ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)) |
 | "Refused: first update HANDOFF.md …" | A proposal needs a handoff written in the current session |

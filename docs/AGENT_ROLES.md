@@ -29,7 +29,9 @@ across any number of sessions.
 
 - `spawn(task, backend, model, effort, name)` needs all four arguments. The role
   prompt limits model and effort to `claude-opus-5-5` (claude) or `gpt-6.1-sol`
-  (codex), at `high` or `xhigh`, unless the project's `AGENTS.md` says otherwise. The brief
+  (codex), at `high` or `xhigh`, unless the project's `AGENTS.md` says otherwise. An effort
+  Claude Code does not accept (it accepts `low`, `medium`, `high`, `xhigh` and `max`) is
+  refused before any session starts; Codex checks the effort itself when the session starts. The brief
   `task` (a non-empty Markdown file) is copied to `agents/<id>/TASK.md`. The id
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.

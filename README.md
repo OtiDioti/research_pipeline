@@ -37,7 +37,8 @@ operational decision:
 - [uv](https://docs.astral.sh/uv/).
 - At least one agent CLI, installed and logged in: [Codex](https://github.com/openai/codex) (`codex`)
   and/or [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`).
-- SSH access to the private repository `OtiDioti/agent_sessions`, which `uv sync` installs as a dependency.
+- SSH access to the private repository `OtiDioti/agent_toolkit`, which `uv sync` installs as a dependency, at the
+  release tag pinned in `pyproject.toml`.
 
 ## Install
 
@@ -90,7 +91,8 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 | `--max-agents` | agents working at the same time (4); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
 | `--short-limit`, `--weekly-limit` | % left of a CLI's short or weekly usage window that pauses its agents (15) |
-| `--context-threshold` | context fill that triggers a handoff (0.55); keep it well above a fresh session's own start-up context |
+| `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
+| `--no-durable-state` | write the controller's state without forcing it to disk (for slow network filesystems) |
 | `--no-tui` | print the transcript instead of the terminal app |
 
 Running the same command again resumes a paused, shut down or interrupted
@@ -108,7 +110,7 @@ example when the primary has stopped and waits for your answer.
 |---|---|
 | Chat box, Enter | Message to the primary researcher, delivered during its turn (during a review it wakes the primary to answer you) |
 | Ctrl+P | Pause: every agent hands off, then jobs stop. Edit any file, then Ctrl+P again to resume |
-| Ctrl+R | Resume agents held by a weekly or unreadable quota, or whose session could not start (jobs keep running) |
+| Ctrl+R | Resume agents held by a weekly or unreadable quota, or failed agents no longer retried automatically (jobs keep running) |
 | Ctrl+Q / F10 | Exit cleanly: every agent hands off, jobs keep running; the next `run` resumes and reattaches them |
 | F2 / F3 | Show one agent's transcript / all agents |
 | Ctrl+C | Exit at once; jobs keep running, and the next `run` restarts agents from their handoffs |
@@ -157,8 +159,8 @@ what changed meanwhile (by you, or by jobs that kept running).
 - **Quota.**
   - A CLI's short window at 15% or less left: its agents hand off and pause until
     the reset.
-  - A weekly window at 15% or less left, or quota that can't be read: its agents
-    pause until you resume them (Ctrl+R, or Resume when nothing is working).
+  - A weekly window at 15% or less left, or quota that can't be read twice in a row: its
+    agents pause until you resume them (Ctrl+R, or Resume when nothing is working).
   - If the primary's CLI is affected, everyone pauses. Jobs keep running through
     quota pauses.
 - **Failures.** If a session crashes or a turn fails (for example, an API outage), the
@@ -176,7 +178,10 @@ uv run python -m tests.live_smoke                     # live run through the rea
 
 The code is in `src/research_pipeline/`; [FOLDER_CONTENT.md](src/research_pipeline/FOLDER_CONTENT.md)
 describes each module. Everything specific to one agent CLI (the drivers, the
-confinement, the quota probes) lives in the shared package `agent_sessions`; a new
-CLI is one driver there, and research_pipeline needs no change. To work on both at
+confinement, the quota probes) lives in the shared package `agent_toolkit`, together
+with the machinery research_pipeline shares with coding_pipeline and project_manager:
+the handoff rules, the usage guard, durable records, the safe git runner, strict prompt
+files and the terminal app. A new CLI is one driver there, and research_pipeline needs
+no change. To work on both at
 once, point `[tool.uv.sources]` in `pyproject.toml` at a local checkout
-(`agent-sessions = { path = "../agent_sessions", editable = true }`).
+(`agent-toolkit = { path = "../agent_toolkit", editable = true }`).

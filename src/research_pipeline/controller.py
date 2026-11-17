@@ -4,7 +4,7 @@ It owns the agent tree and makes every operational decision; it never makes a
 scientific one. In outline:
 
 - **Sessions.** Each running agent has one persistent CLI session (a driver from
-  the shared package :mod:`agent_sessions`) inside its confinement. Messages reach agents
+  the shared package :mod:`agent_toolkit`) inside its confinement. Messages reach agents
   live, during their turn; queued messages are delivered when a session starts.
 - **Tools.** Agents act through the MCP tools of :mod:`research_pipeline.mcp_server`,
   which arrive here through :mod:`research_pipeline.channel` and are handled by
@@ -12,6 +12,7 @@ scientific one. In outline:
 - **Handoffs.** At the context threshold an agent is asked to update HANDOFF.md and
   end its turn; its session is then replaced by a fresh one. The request is
   repeated every further 25 points of context; an agent is never killed for it.
+  The rules are those every agent controller shares (:mod:`agent_toolkit.handoff`).
 - **Idle and stalled agents.** An agent that ends its turn with nothing running or
   pending for it is nudged once; if it ends its turn idle again without using a
   tool, it has stalled: its parent is told, or the human alerted for the primary,
@@ -20,7 +21,8 @@ scientific one. In outline:
   Reviewer examines the proposal; COMPLETE needs its agreement, STOP is the
   primary's decision after the Reviewer's challenge. The verdict wakes the primary.
 - **Quota, pause, shutdown, crash.** Per-CLI usage limits pause that CLI's agents
-  (or all, if it is the primary's). A human pause hands every agent off and stops
+  (or all, if it is the primary's); the holds come from the shared usage guard
+  (:class:`agent_toolkit.quota.Guard`). A human pause hands every agent off and stops
   jobs; a shutdown hands every agent off and leaves jobs running. After a shutdown
   or a crash, agents restart from their handoffs and running jobs are reattached.
 
@@ -30,8 +32,8 @@ events, tool calls and the background loops never interleave halfway.
 from __future__ import annotations
 
 import asyncio
+from contextlib import ExitStack
 from datetime import datetime
-import fcntl
 from pathlib import Path
 import re
 import secrets
@@ -40,13 +42,16 @@ import sys
 import time
 from typing import Callable
 
-from agent_sessions import CAPABILITIES, DRIVERS, Launch, McpServer, Session, SessionError, SetupError, quota
+from agent_toolkit import CAPABILITIES, DRIVERS, Launch, McpServer, Session, SessionError, SetupError, Spec, quota
+from agent_toolkit.handoff import HandoffWatch
+from agent_toolkit.quota import Guard
+from agent_toolkit.records import Busy, atomic_write, exclusive
 
 from research_pipeline import jobs as joblib
 from research_pipeline import prompts
 from research_pipeline.channel import serve
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
-from research_pipeline.state import ENDED, FINISHED, LIVE, Agent, Job, Options, Spec, State
+from research_pipeline.state import ENDED, FINISHED, LIVE, Agent, Job, Options, State
 
 #: Seconds between usage-quota reads.
 QUOTA_INTERVAL = 120
@@ -56,12 +61,8 @@ WATCH_INTERVAL = 2
 HUMAN_INTERVAL = 10
 #: Delays before restarting an agent whose session failed; after these, the human must resume it.
 RETRY_DELAYS = (30, 120, 600)
-#: Further context fill, in points, before a handoff request is repeated.
-REMINDER_STEP = 0.25
 #: Seconds a session may continue its turn after submitting, before it is closed anyway.
 CLOSE_GRACE = 120
-#: Times an agent is asked again for HANDOFF.md before its successor starts from the existing one.
-HANDOFF_ASKS = 3
 #: Name under which every agent's CLI attaches the controller's MCP tool server.
 MCP_SERVER = 'research'
 #: Tools each role may call (mirrors research_pipeline.mcp_server.ROLE_TOOLS).
@@ -91,14 +92,14 @@ class Controller:
         self.project = Project(root)
         self.launch_options = options
         self.drivers = drivers
-        self.read_quota = read_quota or (lambda backend: quota.read(self.drivers[backend]))
+        # The limits and the holds come from the state once it is loaded (see _load).
+        self.guard = Guard(0, 0, read_quota or (lambda backend: quota.read(self.drivers[backend])))
         self.show: Show = show or (lambda kind, agent, text: None)
         self.state: State = State()
         self.sessions: dict[str, Session] = {}
+        self.watches: dict[str, HandoffWatch] = {}  # agent id -> the handoff rules of its current session
         self.tokens: dict[str, str] = {}             # agent id -> token of its current session
         self.processes: dict[str, subprocess.Popen] = {}  # job id -> process started by this controller
-        self.windows: list[quota.Window] = []        # latest usage readings, for the terminal app
-        self.quota_errors: dict[str, int] = {}       # backend -> consecutive failed reads
         self.channel = f'research-pipeline-{secrets.token_hex(8)}'
         self.request: str | None = None              # 'shutdown' once the human asked to exit
         self.lock: asyncio.Lock | None = None
@@ -106,7 +107,6 @@ class Controller:
         self._human_checked = 0.0
         self._quota_due = 0.0
         self._strays: set[str] = set()              # unexpected top-level entries already reported
-        self._unmeasured: set[str] = set()          # agents whose current session was reported as unmeasured
 
     # Running ------------------------------------------------------------------------------
 
@@ -114,11 +114,11 @@ class Controller:
         """Run until the investigation ends or the human shuts down; return an exit status."""
         self.lock, self.done = asyncio.Lock(), asyncio.Event()
         self.project.research.mkdir(parents=True, exist_ok=True)
-        with open(self.project.lock_file, 'w') as lock:
-            try:
-                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except BlockingIOError:
-                raise ProjectError('Another controller is already running this project.') from None
+        with ExitStack() as stack:
+            try:  # held for as long as this controller runs (see research_pipeline.cli.controller_running)
+                stack.enter_context(exclusive(self.project.lock_file, 'Another controller is already running this project.'))
+            except Busy as busy:
+                raise ProjectError(str(busy)) from None
             self.project.prepare()
             self.state = self._load()
             server = await serve(self.channel, self._tool_request)
@@ -136,6 +136,11 @@ class Controller:
                 server.close()
                 self._save()
         return 0
+
+    @property
+    def windows(self) -> list[quota.Window]:
+        """The latest usage readings, for the terminal app."""
+        return self.guard.windows
 
     @property
     def label(self) -> str:
@@ -190,13 +195,14 @@ class Controller:
         else:
             state = State(options=self.launch_options or Options())
         options = state.options
+        unknown = set(options.backends) - set(self.drivers)
         try:
-            primary, reviewer = Spec.parse(options.primary, '--primary'), Spec.parse(options.reviewer, '--reviewer')
+            primary = Spec.parse(options.primary, '--primary', self.drivers)
+            reviewer = Spec.parse(options.reviewer, '--reviewer', self.drivers)
         except ValueError as error:
             raise ProjectError(str(error)) from None
         if not options.backends:
             raise ProjectError('--backends must name at least one CLI for subagents')
-        unknown = {primary.backend, reviewer.backend, *options.backends} - set(self.drivers)
         if unknown:
             raise ProjectError(f'Unknown backend(s): {", ".join(sorted(unknown))}; known: {", ".join(self.drivers)}')
         if options.max_agents < 2:
@@ -207,6 +213,8 @@ class Controller:
                                                             status='paused' if agent_id == 'primary' else 'resting',
                                                             pause_reason='start'))
             agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
+        self.guard.short_limit, self.guard.weekly_limit = options.short_limit, options.weekly_limit
+        self.guard.holds = state.holds  # the guard keeps its holds in the stored state
         return state
 
     async def _begin(self) -> None:
@@ -217,7 +225,7 @@ class Controller:
             if agent.status in LIVE:
                 agent.status, agent.pause_reason = 'paused', 'restart'
             agent.closing = False
-            agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
+            agent.handoff_reason = agent.closing_since = None
         changed = self.project.uncommitted()
         if not state.agents['primary'].sessions:  # the first run
             self._commit('controller: investigation started')
@@ -265,7 +273,7 @@ class Controller:
         folder.mkdir(parents=True, exist_ok=True)
         if not (folder / INDEX).exists():
             first = '- [TASK.md](TASK.md) — The task from my parent.\n' if (folder / 'TASK.md').exists() else ''
-            (folder / INDEX).write_text(EMPTY_INDEX + first, encoding='utf-8')
+            atomic_write(folder / INDEX, EMPTY_INDEX + first, root=self.project.root)
         agent.sessions += 1
         agent.started = time.time()
         notices, agent.notices = agent.notices, []
@@ -281,10 +289,12 @@ class Controller:
             log=self.project.logs / f'{agent.id}-{agent.sessions}.jsonl')
         session = self.drivers[agent.backend](launch, self._on_event)
         agent.status, agent.pause_reason, agent.retry_at, agent.closing = 'running', None, None, False
-        agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
+        agent.handoff_reason = agent.closing_since = None
         # A new session's context use is unknown until its CLI reports it.
-        agent.handoff_prompts, agent.nudged, agent.tokens, agent.window = 0, False, None, None
-        self._unmeasured.discard(agent.id)
+        agent.nudged, agent.tokens, agent.window = False, None, None
+        # Its handoff rules: a context handoff is called off if the CLI compacts below the threshold.
+        self.watches[agent.id] = HandoffWatch(self.state.options.threshold, folder / 'HANDOFF.md',
+                                              cancel_on_recovery=True)
         self.sessions[agent.id], self.tokens[agent.id] = session, token
         try:
             await session.start()
@@ -303,6 +313,7 @@ class Controller:
     async def _close(self, agent_id: str) -> None:
         """Close an agent's session, if it has one."""
         self.tokens.pop(agent_id, None)
+        self.watches.pop(agent_id, None)
         session = self.sessions.pop(agent_id, None)
         if session:
             await session.close()
@@ -314,7 +325,7 @@ class Controller:
         """
         reason_paused = {'pause': 'human', 'shutdown': 'human', 'quota': 'quota'}.get(agent.handoff_reason)
         agent.status, agent.pause_reason = 'paused', reason_paused or 'failure'
-        agent.handoff_reason = agent.handoff_since = None
+        agent.handoff_reason = None
         if agent.pause_reason == 'failure':
             agent.failures += 1
             if not retry:
@@ -401,35 +412,30 @@ class Controller:
     async def _context(self, agent: Agent, tokens: int | None, window: int | None) -> None:
         """New context reading: trigger the handoff at the threshold and repeat it every further 25 points.
 
+        A context handoff is called off if the CLI compacts below the threshold (the agent is not told).
         Context use is only what the session's CLI reports. Until it has reported both tokens and
         window, the fill is unknown and triggers nothing; it is never estimated.
         """
-        if window:
-            agent.window = window
-        if tokens is not None:
-            agent.tokens = tokens
-        fill, threshold = agent.fill, self.state.options.threshold
-        if fill is None or agent.closing:
+        watch = self.watches.get(agent.id)
+        if watch is None:
             return
-        if agent.status == 'running' and fill >= threshold:
-            await self._request_handoff(agent, 'context', f'{fill:.0%}')
-        elif agent.status == 'handing_off' and fill < threshold:
-            agent.reminder_at = None
-            if agent.handoff_reason == 'context':  # compacted below the threshold: the cycle restarts there
-                agent.status, agent.handoff_reason, agent.handoff_since = 'running', None, None
-        elif agent.status == 'handing_off':
-            # Reminders fall on the grid threshold + 25, + 50, ... points (55%: 80%, 105%, ...).
-            level = threshold if agent.reminder_at is None else agent.reminder_at
-            if fill >= level + REMINDER_STEP:
-                agent.reminder_at = threshold + REMINDER_STEP * int((fill - threshold) / REMINDER_STEP)
-                await self._send(agent, prompts.handoff_reminder(f'{fill:.0%}'))
+        action = watch.reading(tokens, window)
+        agent.tokens, agent.window = watch.tokens, watch.window
+        if agent.closing:
+            return
+        if action == 'request' and agent.status == 'running':
+            await self._request_handoff(agent, 'context', f'{watch.fill:.0%}')
+        elif action == 'recovered' and agent.status == 'handing_off':
+            agent.status, agent.handoff_reason = 'running', None  # compacted below the threshold: the cycle restarts
+        elif action == 'remind' and agent.status == 'handing_off':
+            await self._send(agent, prompts.handoff_reminder(f'{watch.fill:.0%}'))
 
     async def _turn_ended(self, agent: Agent, text: str) -> None:
         """An agent ended its turn (``text`` is its final message)."""
         agent.failures = 0
-        if agent.fill is None and agent.id not in self._unmeasured:
+        watch = self.watches.get(agent.id)
+        if watch is not None and watch.unmeasured():
             # Without readings no handoff can be triggered: the agent continues, and the human is told once.
-            self._unmeasured.add(agent.id)
             self.show('alert', agent.id, f'{agent.id}: its CLI has not reported context use after a full turn, '
                                          'so its handoffs cannot be triggered in this session.')
         if agent.closing:  # it submitted a result, a verdict or a proposal: its session ends with this turn
@@ -544,26 +550,32 @@ class Controller:
 
     async def _request_handoff(self, agent: Agent, reason: str, detail: str = '') -> None:
         """Ask a working agent to update HANDOFF.md and end its turn."""
+        watch = self.watches.get(agent.id)
         if agent.status == 'handing_off':
-            agent.handoff_reason = reason if reason != 'context' else agent.handoff_reason
+            if reason != 'context':  # a pause or a quota hold decides what follows the handoff
+                agent.handoff_reason = reason
+                if watch is not None:
+                    watch.request(reason)
             return
-        if agent.status != 'running' or agent.closing:
+        if agent.status != 'running' or agent.closing or watch is None:
             return
-        agent.status, agent.handoff_reason, agent.handoff_since = 'handing_off', reason, time.time()
-        agent.handoff_prompts = 0
-        agent.reminder_at = self.state.options.threshold if reason == 'context' else None
+        watch.request(reason)
+        agent.status, agent.handoff_reason = 'handing_off', reason
         self.show('controller', agent.id, f'Handoff requested ({reason}).')
         await self._send(agent, prompts.handoff_request(reason, detail))
 
     async def _check_handoff(self, agent: Agent) -> None:
-        """At a turn's end during a handoff: replace or pause the session once HANDOFF.md is updated."""
-        handoff = self.project.agent_dir(agent.id) / 'HANDOFF.md'
-        updated = handoff.exists() and handoff.stat().st_mtime >= agent.handoff_since - 1
-        if not updated and agent.handoff_prompts < HANDOFF_ASKS:
-            agent.handoff_prompts += 1
+        """At a turn's end during a handoff: replace or pause the session once HANDOFF.md is written.
+
+        A turn that ended without writing it is asked again, up to three times; then the session is
+        replaced or paused anyway, and its successor starts from the existing HANDOFF.md.
+        """
+        watch = self.watches.get(agent.id)
+        saved = watch is not None and watch.saved()
+        if not saved and watch is not None and watch.ask_again():
             await self._send(agent, prompts.HANDOFF_MISSING)
             return
-        if not updated:  # it stopped working without updating it: its successor starts from the last one
+        if not saved:  # it stopped working without updating it: its successor starts from the last one
             self.show('controller', agent.id, 'HANDOFF.md was not updated; continuing from the existing one.')
         problems = self.project.check_layout(agent)
         if problems:
@@ -571,7 +583,7 @@ class Controller:
         reason = agent.handoff_reason
         self._commit(f'{agent.id}: handoff ({reason})')
         await self._close(agent.id)
-        agent.handoff_reason = agent.handoff_since = agent.reminder_at = None
+        agent.handoff_reason = None
         if reason == 'context' and self.state.status == 'running' and not self._blocked(agent.backend):
             await self._start_session(agent)
         else:
@@ -680,6 +692,10 @@ class Controller:
             raise ToolError(f'backend {backend!r} is not allowed; allowed: {", ".join(allowed)}')
         if not model.strip() or not effort.strip():
             raise ToolError(f'a model and an effort are required, e.g. {caller.spec}')
+        try:  # the backend's driver must accept the effort (a typo would only fail the session's start)
+            Spec(backend, model.strip(), effort.strip()).validate('the subagent', self.drivers)
+        except ValueError as error:
+            raise ToolError(str(error)) from None
         brief = self._path(caller, task, self.project.agent_dir(caller.id), self.project.root)
         if not brief.read_text(encoding='utf-8', errors='replace').strip():
             raise ToolError(f'{task} must be a non-empty Markdown file: the subagent\'s brief')
@@ -688,7 +704,7 @@ class Controller:
         child = Agent(self._new_id(name), 'subagent', caller.id, backend, model.strip(), effort.strip())
         folder = self.project.agent_dir(child.id)
         folder.mkdir(parents=True)
-        (folder / 'TASK.md').write_text(brief.read_text(encoding='utf-8', errors='replace'), encoding='utf-8')
+        atomic_write(folder / 'TASK.md', brief.read_text(encoding='utf-8', errors='replace'), root=self.project.root)
         self.state.agents[child.id] = child
         await self._start_session(child)
         if child.status != 'running':
@@ -709,7 +725,7 @@ class Controller:
         index = self.project.agent_dir(agent.id) / INDEX
         text = index.read_text(encoding='utf-8') if index.exists() else EMPTY_INDEX
         if name not in text:
-            index.write_text(f'{text.rstrip()}\n- [{name}]({name}) — {description}\n', encoding='utf-8')
+            atomic_write(index, f'{text.rstrip()}\n- [{name}]({name}) — {description}\n', root=self.project.root)
 
     def _new_id(self, name: str) -> str:
         base = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')[:40] or 'agent'
@@ -768,7 +784,7 @@ class Controller:
         child.rejections += 1
         record = self.project.agent_dir(child.id) / 'PARENT_FEEDBACK.md'
         previous = record.read_text(encoding='utf-8') if record.exists() else '# Feedback from my parent\n'
-        record.write_text(f'{previous}\n## Rejection {child.rejections}\n\n{feedback.strip()}\n', encoding='utf-8')
+        atomic_write(record, f'{previous}\n## Rejection {child.rejections}\n\n{feedback.strip()}\n', root=self.project.root)
         self._index_entry(child, 'PARENT_FEEDBACK.md', 'Feedback from my parent on rejected results.')
         child.notices.append(f'[controller] {caller.id} rejected your result (rejection {child.rejections}); '
                              'its feedback is above. Continue the task and submit again.')
@@ -855,7 +871,7 @@ class Controller:
         self._settled(caller)
         self._layout_ok(caller)
         self._commit(f'{caller.id}: result submitted')
-        caller.status, caller.closing, caller.handoff_since = 'submitted', True, time.time()
+        caller.status, caller.closing, caller.closing_since = 'submitted', True, time.time()
         parent = self.state.agents[caller.parent]
         await self._notify(parent, prompts.result_submitted(caller.id, self.project.relative(path)))
         return f'Your result was submitted to {caller.parent}. End your turn now; this session then closes.'
@@ -866,15 +882,15 @@ class Controller:
             raise ToolError(f'your previous proposal (round {self.state.proposal["round"]}) is still with the Reviewer')
         self._settled(caller)
         self._layout_ok(caller)
-        handoff = self.project.agent_dir(caller.id) / 'HANDOFF.md'
-        if not handoff.is_file() or handoff.stat().st_mtime < caller.started - 1:
+        watch = self.watches.get(caller.id)
+        if watch is None or not watch.saved_this_session():
             raise ToolError('first update HANDOFF.md in your folder (a brief handoff suffices): your session closes '
                             'while the Reviewer works, and you restart from it')
         self.state.rounds += 1
         self.state.proposal = {'kind': kind, 'round': self.state.rounds, 'detail': detail,
                                'challenged': False, 'reviewed': False}
         self._commit(f'primary: proposes {kind.upper()} (round {self.state.rounds})')
-        caller.status, caller.closing, caller.handoff_since = 'resting', True, time.time()
+        caller.status, caller.closing, caller.closing_since = 'resting', True, time.time()
         await self._start_review()
         return (f'Your {kind.upper()} proposal is with the Reviewer (round {self.state.rounds}). End your turn now: '
                 'your session closes, and you restart from HANDOFF.md when the verdict arrives.')
@@ -918,7 +934,7 @@ class Controller:
         self._commit(f'reviewer: verdict on {proposal["kind"].upper()} round {proposal["round"]} '
                      f'({"agree" if agree else "disagree"})')
         self.show('controller', 'reviewer', f'Verdict: {"agree" if agree else "disagree"} ({proposal["review"]}).')
-        caller.status, caller.closing, caller.handoff_since = 'resting', True, time.time()
+        caller.status, caller.closing, caller.closing_since = 'resting', True, time.time()
         if proposal['kind'] == 'complete' and agree:
             await self._finish('complete', f'the Reviewer agreed ({proposal["review"]})')
             return 'Verdict recorded: the investigation is COMPLETE.'
@@ -950,8 +966,8 @@ class Controller:
             await self._stop_job(job)
         status_file = self.project.root / 'STATUS.md'
         text = status_file.read_text(encoding='utf-8') if status_file.exists() else '# Status\n'
-        status_file.write_text(f'{text.rstrip()}\n\n## Outcome (recorded by the controller)\n\n'
-                               f'{state.outcome}\n', encoding='utf-8')
+        atomic_write(status_file, f'{text.rstrip()}\n\n## Outcome (recorded by the controller)\n\n{state.outcome}\n',
+                     root=self.project.root)
         self._commit(f'controller: investigation {outcome.upper()}')
         self.show('controller', 'primary', f'The investigation is {outcome.upper()}: {detail}')
         self._save()
@@ -1013,8 +1029,10 @@ class Controller:
         for agent in self._live():  # a pause cancelled while agents were still handing off
             if agent.handoff_reason in ('pause', 'shutdown'):
                 agent.handoff_reason = 'context'
+                if agent.id in self.watches:
+                    self.watches[agent.id].reason = 'context'
         state.status = 'running'
-        state.holds = {backend: hold for backend, hold in state.holds.items() if hold['kind'] == 'short'}
+        self.guard.release()  # the human's resume lifts weekly and unreadable holds: the quota is read again
         self.show('controller', 'primary', 'Resumed.')
         await self._check_quota()
         await self._resume_agents()
@@ -1025,7 +1043,7 @@ class Controller:
         state = self.state
         if state.status != 'running':
             return
-        state.holds = {backend: hold for backend, hold in state.holds.items() if hold['kind'] == 'short'}
+        self.guard.release()
         for agent in state.agents.values():
             if agent.status == 'paused' and agent.pause_reason == 'failure' and agent.retry_at is None:
                 agent.failures, agent.pause_reason = 0, 'retry'
@@ -1067,13 +1085,7 @@ class Controller:
     async def _read_quota(self) -> dict[str, list | Exception]:
         """Read every CLI in use, outside the lock (probes take seconds)."""
         self._quota_due = time.time() + QUOTA_INTERVAL
-        readings = {}
-        for backend in sorted(self._backends_in_use()):
-            try:
-                readings[backend] = await asyncio.to_thread(self.read_quota, backend)
-            except OSError as error:
-                readings[backend] = error
-        return readings
+        return await asyncio.to_thread(self.guard.read, self._backends_in_use())
 
     async def _check_quota(self) -> None:
         """Read and apply the quota now (called with the lock held)."""
@@ -1081,37 +1093,12 @@ class Controller:
 
     async def _apply_quota(self, readings: dict[str, list | Exception]) -> None:
         """Hold or release CLIs according to their usage windows (PROJECT.md §6, "Quota")."""
-        state, options, now = self.state, self.state.options, time.time()
-        windows = []
-        for backend, reading in readings.items():
-            hold = None
-            if isinstance(reading, Exception):
-                self.quota_errors[backend] = self.quota_errors.get(backend, 0) + 1
-                if self.quota_errors[backend] < 2:
-                    continue  # one failed read may be transient: try again next time
-                hold = {'kind': 'unreadable', 'until': None, 'detail': str(reading)}
-            else:
-                self.quota_errors[backend] = 0
-                windows += reading
-                short, weekly = quota.check(reading, options.short_limit, options.weekly_limit)
-                if weekly:
-                    hold = {'kind': 'weekly', 'until': None, 'detail': ', '.join(map(str, weekly))}
-                elif short:
-                    until = max(w.resets_at or now + 900 for w in short)
-                    hold = {'kind': 'short', 'until': until, 'detail': ', '.join(map(str, short))}
-            current = state.holds.get(backend)
-            if current and current['kind'] != 'short' and (not hold or hold['kind'] == 'short'):
-                continue  # weekly and unreadable holds are lifted only by the human (release or resume)
-            if hold and (not current or current['kind'] != hold['kind']):
-                state.holds[backend] = hold
+        for change, backend, hold in self.guard.apply(readings):
+            if change == 'held':
                 self.show('controller', 'primary', f'Usage quota: {backend} held ({hold["kind"]}: {hold["detail"]}).')
                 await self._hold(backend)
-            elif hold:
-                current.update(until=hold['until'], detail=hold['detail'])
-            elif current and current['kind'] == 'short':
-                del state.holds[backend]
+            else:
                 self.show('controller', 'primary', f'Usage quota: {backend} available again.')
-        self.windows = windows
         await self._resume_agents({'quota', 'slots'})
         self._save()
 
@@ -1145,7 +1132,7 @@ class Controller:
                 agent.retry_at = None
                 agent.pause_reason = 'retry'
                 await self._resume_agents({'retry'})
-            if agent.closing and agent.handoff_since and now > agent.handoff_since + CLOSE_GRACE:
+            if agent.closing and agent.closing_since and now > agent.closing_since + CLOSE_GRACE:
                 agent.closing = False
                 await self._close(agent.id)
         if now >= self._human_checked + HUMAN_INTERVAL:
@@ -1166,7 +1153,7 @@ class Controller:
     # Persistence ------------------------------------------------------------------------------------
 
     def _save(self) -> None:
-        self.state.save(self.project.state_file)
+        self.state.save(self.project.state_file, durable=self.state.options.durable)
 
     def _commit(self, message: str) -> None:
         """Commit the project; changes to the human's files are reported first (PROJECT.md §2)."""
@@ -1184,13 +1171,27 @@ class Controller:
             self.show('controller', 'primary', 'Unexpected top-level entries: ' + ', '.join(sorted(strays)))
         if primary.notices and primary.status == 'running':
             asyncio.ensure_future(self._locked(self._flush_running(primary)))  # after the current step
-        self.project.write_agents_index(list(self.state.agents.values()))
-        for owner in {job.owner for job in self.state.jobs.values()}:
-            joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
+        self._write_indexes()
         try:
             self.project.commit(message)
         except ProjectError as error:
             self.show('controller', 'primary', f'Commit failed: {error}')
+
+    def _write_indexes(self) -> None:
+        """Rewrite the agents' index and every agent's jobs index.
+
+        A refused write (such as a symlink an agent or its job left where an index
+        belongs, which the controller never writes through) is shown and skipped: it
+        must not stop the commit, nor the handoff or result that asked for it.
+        """
+        writes = [lambda: self.project.write_agents_index(list(self.state.agents.values()))]
+        writes += [lambda owner=owner: joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
+                   for owner in sorted({job.owner for job in self.state.jobs.values()})]
+        for write in writes:
+            try:
+                write()
+            except (ValueError, OSError) as error:
+                self.show('controller', 'primary', f'An index was not written: {error}')
 
 
 def _layout_notice(problems: list[str]) -> str:

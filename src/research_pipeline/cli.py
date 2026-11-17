@@ -8,16 +8,17 @@ from __future__ import annotations
 import argparse
 import asyncio
 from datetime import datetime
-import fcntl
 from pathlib import Path
 import signal
 import sys
 
-from research_pipeline.controller import Controller
-from agent_sessions import DRIVERS
+from agent_toolkit import DRIVERS, Spec
+from agent_toolkit.handoff import check_threshold
+from agent_toolkit.records import locked
 
+from research_pipeline.controller import Controller
 from research_pipeline.project import Project, ProjectError
-from research_pipeline.state import LIVE, Options, Spec, State
+from research_pipeline.state import LIVE, Options, State
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -35,8 +36,11 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument('--reference', action='append', type=Path,
                      help='read-only folder of another project agents may consult (repeatable)')
     run.add_argument('--short-limit', type=float, help='%% left of a short usage window that pauses a CLI (default 15)')
-    run.add_argument('--weekly-limit', type=float, help='%% left of a weekly window that stops a CLI (default 15)')
-    run.add_argument('--context-threshold', type=float, help='context fill that triggers a handoff (default 0.55)')
+    run.add_argument('--weekly-limit', type=float, help='%% left of a weekly window that pauses a CLI until you resume it (default 15)')
+    run.add_argument('--context-threshold', type=float,
+                     help='context fill that triggers a handoff (default 0.55, at most 0.8)')
+    run.add_argument('--no-durable-state', dest='durable', action='store_false', default=None,
+                     help='write the state without forcing it to disk (faster on network filesystems)')
     run.add_argument('--no-tui', action='store_true', help='print the transcript instead of the terminal app')
     status = commands.add_parser('status', help='show the state of an investigation')
     status.add_argument('project', type=Path)
@@ -44,7 +48,11 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
-    """Merge explicit command-line options into the stored (or default) ones."""
+    """Merge explicit command-line options into the stored (or default) ones.
+
+    Raise ValueError for an invalid CLI choice (BACKEND:MODEL:EFFORT, with an effort the CLI accepts) or a
+    context threshold outside (0, 0.8].
+    """
     options = Options(**vars(stored)) if stored else Options()
     for name in ('primary', 'reviewer'):
         value = getattr(args, name)
@@ -61,8 +69,9 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
             setattr(options, attribute, getattr(args, name))
     if args.reference:
         options.references = [str(path.resolve()) for path in args.reference]
-    if not 0 < options.threshold <= 1:
-        raise ValueError('--context-threshold must be between 0 and 1')
+    if args.durable is not None:
+        options.durable = args.durable
+    check_threshold(options.threshold, '--context-threshold')
     return options
 
 
@@ -93,14 +102,7 @@ async def headless(controller: Controller) -> int:
 
 def controller_running(project: Project) -> bool:
     """Whether a controller is running ``project``: it holds the project's lock for as long as it runs."""
-    try:
-        with open(project.lock_file) as lock:
-            fcntl.flock(lock, fcntl.LOCK_SH | fcntl.LOCK_NB)
-    except FileNotFoundError:
-        return False
-    except BlockingIOError:
-        return True
-    return False
+    return locked(project.lock_file)
 
 
 def show_status(project: Project) -> int:

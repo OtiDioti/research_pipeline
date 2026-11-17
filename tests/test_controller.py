@@ -8,7 +8,7 @@ import asyncio
 import unittest
 
 from research_pipeline.controller import Controller
-from agent_sessions import SetupError
+from agent_toolkit import SetupError
 
 from research_pipeline.project import ProjectError
 from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project
@@ -23,8 +23,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.root = temp_project()
-        FakeSession.instances.clear()
-        FakeSession.start_error = None
+        FakeSession.reset()
 
     def tearDown(self):
         FakeSession.start_error = None
@@ -138,6 +137,8 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn('invalid arguments', await harness.call('primary', 'spawn', task='brief.md'))
             self.assertIn('model and an effort are required', await harness.call(
                 'primary', 'spawn', task='brief.md', backend='codex', model='', effort='high'))
+            self.assertIn('does not accept effort', await harness.call(  # refused before any session starts
+                'primary', 'spawn', task='brief.md', backend='claude', model='opus', effort='enormous'))
             child = await self.spawn(harness, name='Convergence Check', backend='claude', model='opus', effort='max')
             self.assertEqual(child, 'convergence-check')
             agent = harness.state.agents[child]
@@ -337,6 +338,23 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn('finished', await harness.call('primary', 'job_status', job=job))
             self.assertIn('not one of your jobs', await harness.call(
                 await self.spawn(harness), 'job_status', job=job))
+
+    async def test_a_symlink_in_place_of_an_index_is_refused_without_stopping_the_handoff(self):
+        outside = self.root.parent / f'{self.root.name}-outside.md'
+        outside.write_text('untouched\n')
+        self.addCleanup(outside.unlink, missing_ok=True)
+        async with running(self.root) as harness:
+            await harness.call('primary', 'run_job', command='true', timeout_seconds=30)
+            index = self.root / 'agents' / 'primary' / 'jobs' / 'FOLDER_CONTENT.md'
+            index.unlink(missing_ok=True)
+            index.symlink_to(outside)  # what the agent, or its job, can do in its own folder
+            await harness.emit('primary', 'context', tokens=60_000, window=100_000)
+            harness.handoff('primary')
+            await harness.emit('primary', 'turn_ended', text='')
+            await harness.settle(10)
+            self.assertEqual(harness.state.agents['primary'].sessions, 2)  # the handoff went through
+            self.assertEqual(outside.read_text(), 'untouched\n')
+            self.assertTrue(any('not written' in text and 'symlink' in text for unused, unused, text in harness.lines))
 
     async def test_job_timeout_and_cancel(self):
         async with running(self.root) as harness:

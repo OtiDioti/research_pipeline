@@ -9,9 +9,14 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "agent-sessions"
-version = "0.1.2"
-source = { git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.2#c6ff863d905e36415d280fa43af4d29e10cc6c8f" }
+name = "agent-toolkit"
+version = "0.2.0"
+source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.2.0#18bd4f99f4b6f968d74d3d5e124d9cf2cb831946" }
+
+[package.optional-dependencies]
+console = [
+    { name = "prompt-toolkit" },
+]
 
 [[package]]
 name = "annotated-types"
@@ -593,19 +598,17 @@ wheels = [
 
 [[package]]
 name = "research-pipeline"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
-    { name = "agent-sessions" },
+    { name = "agent-toolkit", extra = ["console"] },
     { name = "mcp" },
-    { name = "prompt-toolkit" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "agent-sessions", git = "ssh://git@github.com/OtiDioti/agent_sessions.git?tag=v0.1.2" },
+    { name = "agent-toolkit", extras = ["console"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.2.0" },
     { name = "mcp", specifier = ">=1.26,<2" },
-    { name = "prompt-toolkit", specifier = "==3.0.52" },
 ]
 
 [[package]]

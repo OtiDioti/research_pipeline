@@ -8,7 +8,13 @@ makes every operational decision. It never makes a scientific one.
 
 - One asyncio loop. One lock serialises driver events, tool calls and background
   checks, so no two changes interleave halfway.
-- State lives in `.research/state.json`, rewritten atomically after every change.
+- State lives in `.research/state.json`, rewritten atomically after every change and
+  forced to disk (`--no-durable-state` skips that, for slow network filesystems).
+- The files the controller writes in the project (the starter files and
+  `.gitignore`, indexes, TASK.md, PARENT_FEEDBACK.md, the outcome in STATUS.md, a
+  job's `command.txt`) are replaced atomically, and a job's logs are created fresh;
+  none is written through a symlink or outside the project (`agent_toolkit.records`),
+  since agents and jobs can write the same folders.
 - Background loops:
 
 | Loop | Interval | Does |
@@ -100,7 +106,8 @@ A successful turn resets the failure count. Agents fail independently: the other
 
 ## Each `run`
 
-- Takes `.research/lock`; a second controller on the same project is refused.
+- Takes `.research/lock` (a `flock`, released when the controller ends, even by a crash); a second
+  controller on the same project is refused.
 - **First run:** prepares the layout (a new repository starts with the commit "controller: project
   prepared"), commits "controller: investigation started", and starts the primary.
 - **After a pause or shutdown:** changes since the last commit are committed and

@@ -1,10 +1,15 @@
 """The project folder: layout creation and checks, git commits, the human's files."""
 import os
+from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
+
+from agent_toolkit import Spec
 
 from research_pipeline import project as project_module
 from research_pipeline.project import Project, ProjectError
-from research_pipeline.state import Agent, Options, Spec, State
+from research_pipeline.state import Agent, Options, State
 from tests.helpers import remove, temp_project
 
 
@@ -25,6 +30,47 @@ class ProjectTest(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text)
         return path
+
+    def test_commits_never_run_hooks_but_keep_the_humans_global_ignore_file(self):
+        marker = self.root.parent / f'{self.root.name}-hook-ran'
+        self.addCleanup(marker.unlink, missing_ok=True)
+        hook = self.root / '.git' / 'hooks' / 'post-commit'  # as a job could plant it
+        hook.write_text(f'#!/bin/sh\ntouch {marker}\n')
+        hook.chmod(0o755)
+        with tempfile.TemporaryDirectory() as home:
+            (Path(home) / 'ignore').write_text('*.swp\n')
+            (Path(home) / '.gitconfig').write_text(f'[core]\n\texcludesFile = {home}/ignore\n')
+            with patch.dict(os.environ, HOME=home):
+                self.write('agents/helper/notes.md')
+                self.write('agents/helper/notes.md.swp')
+                self.project.commit('helper: notes')
+        self.assertFalse(marker.exists())
+        committed = self.project.git('ls-files').split()
+        self.assertIn('agents/helper/notes.md', committed)
+        self.assertNotIn('agents/helper/notes.md.swp', committed)
+        self.assertEqual(self.project.git('log', '-1', '--format=%an').strip(), 'research-pipeline')
+
+    def test_controller_writes_never_follow_a_symlink(self):
+        outside = self.root.parent / f'{self.root.name}-outside.txt'
+        outside.write_text('keep\n')
+        self.addCleanup(outside.unlink)
+        index = self.root / 'agents' / 'FOLDER_CONTENT.md'
+        index.unlink(missing_ok=True)
+        index.symlink_to(outside)
+        with self.assertRaises(ValueError):
+            self.project.write_agents_index([self.agent])
+        self.assertEqual(outside.read_text(), 'keep\n')
+
+    def test_a_commit_never_writes_the_exclude_file_through_a_symlink(self):
+        outside = self.root.parent / f'{self.root.name}-exclude.txt'
+        outside.write_text('keep\n')
+        self.addCleanup(outside.unlink)
+        exclude = self.root / '.git' / 'info' / 'exclude'
+        exclude.unlink(missing_ok=True)
+        exclude.symlink_to(outside)  # jobs can write .git
+        with self.assertRaises(ProjectError):  # reported by the controller as a failed commit
+            self.project.commit('test: symlinked exclude file')
+        self.assertEqual(outside.read_text(), 'keep\n')
 
     def test_prepare_creates_layout_and_refuses_bad_locations(self):
         for name in ('STATUS.md', 'REPORT.md', 'FEEDBACK.md', 'FOLDER_CONTENT.md', '.gitignore', '.git'):

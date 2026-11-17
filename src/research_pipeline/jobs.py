@@ -1,6 +1,6 @@
 """Long computations run by the controller for agents (PROJECT.md §6, "Jobs").
 
-A job runs in its own confinement (:func:`agent_sessions.confine.job`): the
+A job runs in its own confinement (:func:`agent_toolkit.confine.job`): the
 filesystem as the controller sees it, except that the protected paths are
 read-only and the hidden ones invisible. It is its own process session, outside
 every agent's session, so it survives the agent's handoffs, quota pauses and a
@@ -21,7 +21,8 @@ import subprocess
 import time
 from typing import Iterable
 
-from agent_sessions import confine
+from agent_toolkit import confine
+from agent_toolkit.records import atomic_write, create
 
 from research_pipeline.state import Job
 
@@ -43,11 +44,13 @@ def start(project_root: Path, job: Job, *, read_only: Iterable[Path] = (), hidde
     process session: it lives exactly as long as the job and exits with its status.
     """
     where = folder(project_root, job)
-    where.mkdir(parents=True, exist_ok=True)
-    (where / 'command.txt').write_text(f'# cwd: {job.cwd}\n# timeout: {job.timeout:g} s\n{job.command}\n')
+    # The job's folder is in its owner's folder, which the owner can write: the controller's own files there
+    # are never written through a symlink, nor outside the project.
+    atomic_write(where / 'command.txt', f'# cwd: {job.cwd}\n# timeout: {job.timeout:g} s\n{job.command}\n',
+                 root=project_root)
     argv = confine.job(['bash', '-c', _WRAPPER, 'research-job', f'{job.timeout:g}', job.command,
                         str(where / 'exit_code')], cwd=Path(job.cwd), read_only=read_only, hidden=hidden)
-    with open(where / 'stdout.log', 'wb') as stdout, open(where / 'stderr.log', 'wb') as stderr:
+    with create(where / 'stdout.log', root=project_root) as stdout, create(where / 'stderr.log', root=project_root) as stderr:
         process = subprocess.Popen(argv, cwd=job.cwd, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr,
                                    start_new_session=True)
     job.pid, job.ticks = process.pid, _ticks(process.pid)
@@ -106,7 +109,7 @@ def write_index(project_root: Path, owner: str, jobs: list[Job]) -> None:
         if job.owner == owner:
             first = job.command.strip().splitlines()[0][:100] if job.command.strip() else ''
             lines.append(f'- [{job.id}]({job.id}) — {job.status}: `{first}`')
-    (folder / 'FOLDER_CONTENT.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    atomic_write(folder / 'FOLDER_CONTENT.md', '\n'.join(lines) + '\n', root=project_root)
 
 
 def describe(project_root: Path, job: Job, lines: int = 30) -> str:

@@ -51,9 +51,10 @@ Rules:
 - **Confinement.** Each agent session runs inside one `bwrap` boundary. The whole
   filesystem is readable except `.research/`, which is hidden. Everything is
   read-only except the agent's own folder, `sources/`, `tools/`, its role's files
-  (`STATUS.md` and `REPORT.md` for the primary, `reviews/` for the Reviewer) and the
-  CLI's own state folder. The network is on, and `/tmp` is private to the session.
-  The CLIs' own sandboxes are switched off. One mechanism serves every CLI.
+  (`STATUS.md`, `REPORT.md` and the root `FOLDER_CONTENT.md` for the primary,
+  `reviews/` for the Reviewer) and the CLI's own state folder. The network is on,
+  and `/tmp` is private to the session. The CLIs' own sandboxes are switched off.
+  One mechanism serves every CLI.
 - **Job confinement.** Each job runs inside its own `bwrap` boundary, with its own
   process namespace: `starting_evidence/` is read-only, `.research/` is hidden, and
   the rest of the filesystem is as the controller sees it.
@@ -125,10 +126,11 @@ session that loaded anything personal is stopped, and the human is told why.
 **Spawning.** An agent chooses its subagent's task, evidence, tools, CLI, model and
 effort, within the backends the human allowed at launch. Model and effort are always
 explicit: a spawn without them is refused, and so is a launch whose `--primary` or
-`--reviewer` lacks them. The role prompt limits the choice to Opus 5.5
+`--reviewer` lacks them; an effort the CLI is known not to accept is refused before
+any session starts. The role prompt limits the choice to Opus 5.5
 (`claude-opus-5-5`) or GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high` or `xhigh`,
 unless the human's `AGENTS.md` says otherwise. The human sets a cap on concurrently running agents. A
-spawn over the cap is refused with a message such as "4/4 agents running"; the agent
+spawn over the cap is refused with a message such as "4/4 agents are already working"; the agent
 decides what to do. Agents know nothing else about scheduling.
 
 **Results.** When a subagent submits, the controller notifies its parent at once. The
@@ -216,16 +218,20 @@ token-usage notification after every model call; Claude Code's usage of every
 model call, and its context-usage report at session start for the window. Context
 use is never estimated, carried over from an earlier session, or asked of the
 agent. Until the CLI has reported it, it is unknown and triggers nothing. **At 55%**
-the controller tells the agent, during its turn, to finish its current step, update
-`HANDOFF.md` and end its turn. The controller then closes the session and starts a
-fresh one with `TASK.md`, `HANDOFF.md` and any news since. Running jobs and
-subagents are unaffected, and the agent's identity, folder, children and jobs carry
-over.
+(the default threshold, `--context-threshold`, above 0 and at most 0.8, leaving room
+to write the handoff) the controller tells the agent, during its turn, to finish its
+current step, update `HANDOFF.md` and end its turn. The controller then closes the
+session and starts a fresh one with `TASK.md`, `HANDOFF.md` and any news since.
+Running jobs and subagents are unaffected, and the agent's identity, folder, children
+and jobs carry over.
 
 If the agent keeps working instead, the request is repeated each time context use
 rises another 25 points (80%, 105%, ...). If the CLI compacts the context and use
-falls below 55%, the cycle restarts at 55%. The controller never kills an agent for
-overshooting.
+falls below 55%, the cycle restarts at 55%. If the agent ends its turn without having
+written `HANDOFF.md` since the request, it is asked again, up to three times; then the
+fresh session starts from the existing handoff. The controller never kills an agent for
+overshooting. These rules come from `agent_toolkit`, shared with coding_pipeline and
+project_manager.
 
 A handoff is short: what was done, where the artifacts are, essential assumptions,
 open issues, running jobs and subagents, and the next concrete step. The science
@@ -246,22 +252,25 @@ instructions, a prompt and MCP configuration and with the CLI's own discovery
 switched off (§3), deliver a message during a turn, interrupt, and report text,
 tool activity, context use (from the CLI's own reports, §5) and what the CLI loaded
 at start, and that can read the CLI's usage quota. The drivers and the confinement
-come from `agent_sessions`, a private package shared with coding_pipeline and
+come from `agent_toolkit`, a private package shared with coding_pipeline and
 project_manager and installed as a dependency; everything specific to a CLI lives
-there, and every decision is the controller's.
+there, together with the machinery the controllers share (handoff rules, usage holds,
+durable records, a safe git runner, strict prompt files and the terminal app), and
+every decision is the controller's.
 
 **Notices.** Handoff requests, results from subagents, messages between parents and
 subagents, finished jobs and the human's messages are delivered to the agent
 concerned during its turn. When an agent is waiting or idle (§3), a notice starts
 its next turn.
 
-**Quota.** For each CLI in use, the controller reads the usage windows (the probes
-come from project_manager):
+**Quota.** For each CLI in use, the controller reads the usage windows (each driver
+probes its own CLI; the shared usage guard of `agent_toolkit` turns the readings into
+holds, kept in `.research/state.json`):
 
 - **Short window** (e.g. 5 hours) at 15% remaining or less: that CLI's agents hand
   off and pause, and resume automatically after the reset.
-- **Weekly window** at 15% remaining or less, or quota unreadable: that CLI's agents
-  hand off and pause until the human resumes them.
+- **Weekly window** at 15% remaining or less, or quota unreadable twice in a row:
+  that CLI's agents hand off and pause until the human resumes them.
 - If the primary's CLI is affected, every agent pauses.
 
 Spawns on a paused CLI are refused with the reason. Jobs keep running through quota
@@ -282,7 +291,7 @@ is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP.
   exits; jobs keep running.
 - **Resume** (after a pause, or the next `run` after a shutdown): fresh sessions
   start from the handoffs, and jobs still running are reattached. Changes since the
-  controller's last commit are found with `git diff` and reported to the agents
+  controller's last commit are found with `git status` and reported to the agents
   whose folders changed, and to the primary, as made by the human or by running
   jobs.
 - **Crash:** the next `run` restarts agents from their latest handoffs, reattaches
@@ -294,9 +303,18 @@ is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP.
 primary. Agent-written files are edited only while paused.
 
 **Git.** The controller commits at every handoff, RESULT, review, pause and ending,
-naming the agent and event in the commit message. Agents do not commit.
+naming the agent and event in the commit message. Agents do not commit. Jobs can
+write `.git`, so the controller runs git with hooks, fsmonitor, the pager, signing and
+automatic stashes off and its own `GIT_*` variables ignored; the human's global git
+configuration still applies.
 
-**Interface.** A terminal app in the style of project_manager:
+**State.** The controller keeps its state in `.research/state.json`, written
+atomically after every change and forced to disk (`--no-durable-state` skips the
+latter). Its own files in the project's folders (indexes, starter files, briefs,
+feedback, job files) are replaced atomically (job logs grow in place), never through a
+symlink and never outside the project, since agents and jobs write the same folders.
+
+**Interface.** A terminal app, built on the shared one in `agent_toolkit`:
 - a transcript of the selected agent;
 - the agent tree with each agent's status, CLI and context use;
 - quota status;
@@ -309,20 +327,22 @@ Launch options:
 - `--backends` (choices allowed for subagents);
 - `--max-agents`;
 - `--reference PATH` (repeatable);
-- `--short-limit` and `--weekly-limit`.
+- `--short-limit` and `--weekly-limit`;
+- `--context-threshold` (0.55 by default, at most 0.8);
+- `--no-durable-state`, `--no-tui`.
 
 ## 7. Controller tools available to agents (MCP)
 
 | Tool | Who | Effect |
 | --- | --- | --- |
-| `spawn(task, backend, model, effort)` | any | Start a subagent from a TASK.md (all four arguments required); returns its id, or the refusal reason |
+| `spawn(task, backend, model, effort, name)` | any | Start a subagent from a TASK.md (the first four arguments required); returns its id, or the refusal reason |
 | `agents()` | any | Status of the caller's subagents |
 | `message(agent, text)` | parent, subagent | Message one of the caller's direct subagents, or its parent (§3) |
-| `accept(id)`, `reject(id, feedback)`, `cancel(id)` | parent | Decide on or stop a subagent |
-| `submit_result(path)` | subagent | Deliver RESULT.md to the parent; ends the session |
-| `run_job(command, cwd, timeout)` | any | Start a computation; returns a job id |
-| `job_status(id)`, `job_cancel(id)` | owner | Inspect (status, output tail) or stop a job |
-| `complete(report)`, `stop(reason)` | primary | Propose finishing (§4) |
+| `accept(agent)`, `reject(agent, feedback)`, `cancel(agent)` | parent | Decide on or stop a subagent |
+| `submit_result(result)` | subagent | Deliver RESULT.md to the parent; ends the session |
+| `run_job(command, timeout_seconds, cwd)` | any | Start a computation; returns a job id |
+| `job_status(job)`, `job_cancel(job)` | owner | Inspect (status, output tail) or stop a job |
+| `complete(report)`, `stop(reason, final)` | primary | Propose finishing (§4) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
 
 Every tool reply also carries any pending notices. While its proposal is under
@@ -398,8 +418,9 @@ lead to physics-specific code in the platform.
 - **Order.** The core (controller, CLI drivers, MCP tools, jobs, handoffs, layout
   check, TUI) is built by hand, with Claude. After that, project_manager delivers
   increments.
-- **Reuse.** CLI drivers, confinement and quota probes come from `agent_sessions`,
-  shared with coding_pipeline and project_manager.
+- **Reuse.** CLI drivers, confinement and quota probes come from `agent_toolkit`,
+  shared with coding_pipeline and project_manager, as do the handoff rules, usage
+  holds, durable records, git runner, prompt files and terminal app.
 - **Justification.** Every component must trace to a behaviour in this document.
   Prefer existing libraries, plain files and small reversible designs; handle
   realistic failures, not every conceivable one. Removing code is as welcome as

@@ -21,7 +21,7 @@ from pathlib import Path
 import shutil
 import time
 
-from agent_sessions import DRIVERS, quota
+from agent_toolkit import DRIVERS, quota
 
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller

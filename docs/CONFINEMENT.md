@@ -1,6 +1,6 @@
 # Confinement
 
-`agent_sessions` (`confine.py`), the package shared with coding_pipeline and
+`agent_toolkit` (`confine.py`), the package shared with coding_pipeline and
 project_manager. Every agent session and every job runs inside one bubblewrap
 (`bwrap`) boundary. The CLIs' own sandboxes are switched off; this one mechanism
 serves every CLI.
@@ -26,13 +26,13 @@ Code (`$CLAUDE_CONFIG_DIR`, or `~/.claude`, `~/.claude.json` and `~/.cache/claud
 **Masked files.** Files of the human's own CLI setup appear as empty, read-only
 files, and folders as empty folders: the Codex `config.toml`, `AGENTS.md`,
 `AGENTS.override.md` and `rules/`. The empty file shown in their place is
-`~/.cache/agent-sessions/empty`, emptied at
+`~/.cache/agent-toolkit/empty`, emptied at
 every use.
 
 **Root-owned SSH configuration.** Inside the boundary, files owned by root appear
 owned by "nobody", and ssh refuses such files among its configuration. The files of
 `/etc/ssh/ssh_config.d` are therefore shown as copies owned by you, with the same
-content, kept in `~/.cache/agent-sessions/owned/` and refreshed at every start.
+content, kept in `~/.cache/agent-toolkit/owned/` and refreshed at every start.
 Jobs get the same copies.
 
 ## Jobs

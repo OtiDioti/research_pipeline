@@ -25,12 +25,16 @@ over from an earlier session, or asked of the agent.
 
 | Condition | Action |
 |---|---|
-| Fill reaches the threshold (0.55, `--context-threshold`) | A handoff request during its turn: finish the current step, update HANDOFF.md, end the turn |
+| Fill reaches the threshold (0.55, `--context-threshold`, above 0 and at most 0.8) | A handoff request during its turn: finish the current step, update HANDOFF.md, end the turn |
 | Fill rises another 25 points (80%, 105%, …) | A reminder |
-| The CLI compacts its context and the fill falls below the threshold | The handoff is cancelled, and the cycle restarts at the threshold. The agent is not told. |
-| The turn ends with HANDOFF.md updated since the request | Layout check (problems go to the next session as a notice, without blocking); commit; the session closes; a fresh one starts |
-| The turn ends without an update | Asked again, up to 3 times (`HANDOFF_ASKS`); then the next session starts from the existing HANDOFF.md |
+| The CLI compacts its context and the fill falls below the threshold | A context handoff is cancelled, and the cycle restarts at the threshold. The agent is not told. A handoff for a pause, shutdown or quota hold stands. |
+| The turn ends with HANDOFF.md written since the request (any write counts, even of the same text) | Layout check (problems go to the next session as a notice, without blocking); commit; the session closes; a fresh one starts |
+| The turn ends without a write | Asked again, up to 3 times; then the next session starts from the existing HANDOFF.md |
 
+- These rules are the ones every agent controller shares (`agent_toolkit.handoff`,
+  also used by coding_pipeline and project_manager); research keeps its own
+  HANDOFF.md, which agents edit with their file tools, and has no limit on the
+  number of handoffs.
 - An agent is never killed for overshooting.
 - The same handoff happens for a human pause, a shutdown and a quota hold; the
   agent then pauses instead of restarting.

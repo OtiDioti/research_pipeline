@@ -26,6 +26,21 @@ class JobsTest(unittest.TestCase):
             time.sleep(0.05)
         self.fail(f'{job.command} did not end')
 
+    def test_job_files_are_never_written_through_a_symlink(self):
+        outside = self.root.parent / f'{self.root.name}-outside.txt'
+        outside.write_text('keep\n')
+        self.addCleanup(outside.unlink)
+        folder = self.root / 'agents' / 'a' / 'jobs'
+        folder.mkdir()
+        (folder / 'FOLDER_CONTENT.md').symlink_to(outside)  # the owner can write its own folder
+        with self.assertRaises(ValueError):
+            jobs.write_index(self.root, 'a', [self.job('true')])
+        (folder / 'job-1').mkdir()
+        (folder / 'job-1' / 'stdout.log').symlink_to(outside)
+        with self.assertRaises(ValueError):
+            jobs.start(self.root, self.job('echo overwritten'))
+        self.assertEqual(outside.read_text(), 'keep\n')
+
     def test_finished_and_failed(self):
         job = self.job('echo hello; echo oops >&2')
         self.wait(job, jobs.start(self.root, job))

@@ -10,7 +10,7 @@ Reference documentation: what each part does, and what it does under each condit
 - [JOBS.md](JOBS.md) — Jobs: starting, files, statuses, what stops them.
 - [QUOTA.md](QUOTA.md) — Usage quota: readings, holds, behaviour while held.
 - [CONFINEMENT.md](CONFINEMENT.md) — The bwrap boundary of sessions and jobs, and its consequences.
-- [DRIVERS.md](DRIVERS.md) — The CLI sessions from the shared package agent_sessions: what research_pipeline asks for, discovery switches, setup check.
+- [DRIVERS.md](DRIVERS.md) — The CLI sessions from the shared package agent_toolkit: what research_pipeline asks for, discovery switches, setup check.
 - [TOOLS.md](TOOLS.md) — The agents' MCP tools, the channel, and every refusal.
 - [PROJECT_FOLDER.md](PROJECT_FOLDER.md) — Layout, ownership, layout check, the human's files, git commits.
 - [OPERATIONS.md](OPERATIONS.md) — Launching, controls, editing files, logs and troubleshooting.

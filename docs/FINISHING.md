@@ -8,7 +8,7 @@ primary's decision, after the Reviewer's challenge).
 `complete(report)` and `stop(reason)` are refused unless:
 - the primary's subagents and jobs are settled;
 - its layout check passes;
-- HANDOFF.md was updated during its current session (a brief one suffices);
+- HANDOFF.md was written during its current session (a brief one suffices);
 - no earlier proposal is still with the Reviewer.
 
 `complete` also needs a non-empty report, REPORT.md by default.
