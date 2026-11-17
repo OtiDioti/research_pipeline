@@ -11,7 +11,7 @@ resolution-markers = [
 [[package]]
 name = "agent-toolkit"
 version = "0.2.0"
-source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?branch=web-app#c08a99e3423ebb2402a5e56326e083a935931d55" }
+source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?branch=web-app#6d2d5505f83957e9bf8a7365d7d250a9a0370671" }
 
 [package.optional-dependencies]
 console = [
