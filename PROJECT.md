@@ -322,6 +322,13 @@ symlink and never outside the project, since agents and jobs write the same fold
 - highlighted alerts, such as a stalled primary;
 - Pause/Resume and Shutdown keys.
 
+Optionally, with `--web`, the shared web app of `agent_toolkit` as well (docs/WEB.md):
+a setup page for every launch option; every agent that ever worked as a live graph
+(status, context use, CLI) with its messages by sender, tool calls, documents,
+jobs and the websites it used; messages to any agent (its parent copied); pausing,
+resuming, forcing a handoff of and cancelling single agents; and the handoff
+threshold, usage limits and agent cap changed while the investigation runs.
+
 Launch options:
 - `--primary` and `--reviewer` (backend:model:effort, all three required);
 - `--backends` (choices allowed for subagents);

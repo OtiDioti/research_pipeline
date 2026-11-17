@@ -36,6 +36,9 @@ over from an earlier session, or asked of the agent.
   HANDOFF.md, which agents edit with their file tools, and has no limit on the
   number of handoffs.
 - An agent is never killed for overshooting.
+- The human can force a handoff of one agent from the web app (reason `refresh`): it
+  continues in a fresh session like a context handoff, but compaction never calls it
+  off. Pausing one agent (reason `hold`) ends with that agent paused.
 - The same handoff happens for a human pause, a shutdown and a quota hold; the
   agent then pauses instead of restarting.
 - The next session gets TASK.md (the primary: the questions), HANDOFF.md and the queued notices.

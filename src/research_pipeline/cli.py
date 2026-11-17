@@ -1,7 +1,9 @@
 """Command line: ``research-pipeline run PROJECT`` and ``research-pipeline status PROJECT``.
 
 ``run`` starts a new investigation, resumes a paused or interrupted one, or reopens
-a finished one. Options given on a later ``run`` replace the stored ones.
+a finished one. Options given on a later ``run`` replace the stored ones. With
+``--web`` the investigation is also shown in the browser (:mod:`research_pipeline.web`),
+whose setup page first offers every option, prefilled from these.
 """
 from __future__ import annotations
 
@@ -42,6 +44,13 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument('--no-durable-state', dest='durable', action='store_false', default=None,
                      help='write the state without forcing it to disk (faster on network filesystems)')
     run.add_argument('--no-tui', action='store_true', help='print the transcript instead of the terminal app')
+    run.add_argument('--web', action='store_true',
+                     help='also show the investigation in your browser; its setup page comes first')
+    run.add_argument('--start', action='store_true', help='with --web: skip the setup page and start at once')
+    run.add_argument('--web-port', type=int, metavar='PORT',
+                     help='with --web: the port to use (default: 8780, or the next free one)')
+    run.add_argument('--web-no-open', action='store_true',
+                     help='with --web: print the page\'s address instead of opening the browser')
     status = commands.add_parser('status', help='show the state of an investigation')
     status.add_argument('project', type=Path)
     return parser
@@ -77,9 +86,12 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
 
 async def headless(controller: Controller) -> int:
     """Run without the terminal app: print the transcript; Ctrl+C shuts down cleanly, twice forces."""
+    forward = controller.show  # e.g. the web app's notifications
+
     def show(kind: str, agent: str, text: str) -> None:
         marker = {'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER', 'alert': 'ALERT'}.get(kind, '')
         print(f'[{datetime.now():%H:%M:%S}] {agent} {marker}'.rstrip() + f'\n{text.rstrip()}\n', flush=True)
+        forward(kind, agent, text)
 
     controller.show = show
     task = asyncio.ensure_future(controller.run())
@@ -98,6 +110,34 @@ async def headless(controller: Controller) -> int:
         return await task
     except asyncio.CancelledError:
         return 130
+
+
+async def run(controller: Controller, no_tui: bool) -> int:
+    """Run the controller in the terminal app, or without it (printing the transcript)."""
+    if no_tui:
+        return await headless(controller)
+    from research_pipeline.view import TerminalApp
+    return await TerminalApp(controller).run()
+
+
+async def with_web(project: Project, options: Options, args: argparse.Namespace) -> int:
+    """Run with the web app: its setup page first (unless ``--start``), then the investigation."""
+    from agent_toolkit.web import WebApp
+    from research_pipeline.web import ResearchDashboard
+
+    dashboard = ResearchDashboard(project.root, options)
+    web = WebApp(dashboard, port=args.web_port, open_browser=not args.web_no_open)
+    print(f'Web app: {await web.serve()}', flush=True)
+    try:
+        if not args.start:
+            print('Choose the settings on the page and press Start (Ctrl+C quits).', flush=True)
+        await web.setup(start=args.start)
+        web.tap(dashboard.controller)
+        status = await run(dashboard.controller, args.no_tui)
+        web.end()
+        return status
+    finally:
+        await web.close()
 
 
 def controller_running(project: Project) -> bool:
@@ -140,12 +180,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         stored = State.load(project.state_file).options if project.state_file.exists() else None
         options = options_from(args, stored)
-        controller = Controller(project.root, options)
-        if args.no_tui:
-            return asyncio.run(headless(controller))
-        from research_pipeline.view import TerminalApp
-        return asyncio.run(TerminalApp(controller).run())
-    except (ProjectError, ValueError) as error:
+        if args.web:
+            return asyncio.run(with_web(project, options, args))
+        return asyncio.run(run(Controller(project.root, options), args.no_tui))
+    except KeyboardInterrupt:
+        return 130
+    except (ProjectError, ValueError, OSError) as error:
         print(f'research-pipeline: {error}', file=sys.stderr)
         return 2
 

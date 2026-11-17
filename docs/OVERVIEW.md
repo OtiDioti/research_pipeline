@@ -18,6 +18,7 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | Agent tools | `mcp_server.py`, `channel.py` | The MCP tools agents call, and how calls reach the controller | [TOOLS.md](TOOLS.md) |
 | Project folder | `project.py`, `state.py` | Layout, layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
 | Operating it | `cli.py`, `view.py` (on `agent_toolkit`'s terminal app) | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |
+| The web app | `web.py` (on `agent_toolkit`'s web app) | Setup page, the agent graph, activity, single-agent controls, live settings | [WEB.md](WEB.md) |
 
 ## One investigation
 

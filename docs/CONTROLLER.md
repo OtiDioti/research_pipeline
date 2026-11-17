@@ -38,6 +38,8 @@ Pause reasons:
 - `start`: the primary before its first session.
 - `restart`: it was running when the controller ended.
 - `human`: a pause or shutdown.
+- `held`: the human paused this agent alone (from the web app); only its own Resume restarts it.
+- `resume`: the human resumed it; it starts as soon as it can run.
 - `quota`: its CLI is held.
 - `slots`: the cap was reached.
 - `failure`: its session failed.
@@ -93,13 +95,18 @@ A successful turn resets the failure count. Agents fail independently: the other
 - Delivered during the recipient's turn; an idle agent's next turn starts with them.
 - An agent without a session keeps them in the state; its next opening message includes them.
 - Every tool reply also carries the caller's pending notices.
-- Prefixes: `[controller]`, `[human]` (chat messages), and `[from <id>]` (messages between a parent and its subagents).
+- Prefixes: `[controller]`, `[human]` (the human's messages), `[human → <id>]` (the copy a parent receives of a
+  message to its subagent) and `[from <id>]` (messages between a parent and its subagents).
+- Every message an agent receives, with its sender, and everything it says and does are appended to
+  `.research/activity/<id>.jsonl` (for the web app).
 
 ## The human
 
 | Event | Action |
 |---|---|
 | Chat message | Goes to the primary; during a review it wakes the primary in talk-only mode |
+| Message to another agent (web app) | Delivered during its turn, or at its next session; its parent receives a copy |
+| Pause, resume, force handoff or cancel of one agent (web app) | [WEB.md](WEB.md) |
 | `AGENTS.md`, `FEEDBACK.md` or `starting_evidence/` changed | The primary is told within about 10 s; a new `AGENTS.md` reaches each agent at its next session |
 | Agent-written files edited while running | Not detected; included in the next commit (edit them only while paused) |
 | Pause, shutdown, forced exit, release | [OPERATIONS.md](OPERATIONS.md) |

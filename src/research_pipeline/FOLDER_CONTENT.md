@@ -12,3 +12,4 @@
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.
 - [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role.
 - [view.py](view.py) — The terminal app (built on agent_toolkit's shared one).
+- [web.py](web.py) — The web app's view of the investigation: setup page, agent graph, activity, single-agent controls.

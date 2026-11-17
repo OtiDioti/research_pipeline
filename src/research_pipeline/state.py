@@ -116,6 +116,7 @@ class State:
     human: dict[str, str] = field(default_factory=dict)   # human-owned file -> fingerprint, as last seen
     job_counter: int = 0
     outcome: str | None = None       # how the investigation last ended
+    verdict: str | None = None       # the Reviewer's last verdict: 'agree' or 'disagree'
 
     def save(self, path: Path, durable: bool = True) -> None:
         """Write the state atomically, and (``durable``) force it to disk: a crash never leaves a half-written file."""

@@ -15,6 +15,8 @@ options are listed in [README.md](../README.md).
   holds, each agent with its pause reason, and running jobs.
 - `--no-tui` prints the transcript instead of the terminal app. Ctrl+C once shuts
   down cleanly; twice forces an exit.
+- `--web` also serves the investigation in your browser, setup page first
+  ([WEB.md](WEB.md)).
 
 ## The terminal app
 
