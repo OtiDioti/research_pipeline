@@ -80,7 +80,9 @@ def handoff_request(reason: str, detail: str = '') -> str:
     why = {'context': f'Your context is {detail} full.',
            'pause': 'The human paused the investigation.',
            'shutdown': 'The human is shutting the controller down.',
-           'quota': f'The usage quota of {detail} is nearly exhausted, so its agents pause.'}.get(reason, detail)
+           'quota': f'The usage quota of {detail} is nearly exhausted, so its agents pause.',
+           'hold': 'The human paused you; your subagents and jobs keep working, and their news waits for you.',
+           'refresh': 'The human asked you to continue in a fresh session.'}.get(reason, detail)
     return (f'[controller] {why} Finish your current step, update HANDOFF.md in your folder and end your turn; '
             'a fresh session will continue from it.')
 
@@ -147,6 +149,24 @@ def stray_entries(names: list[str]) -> str:
 
 def human_message(text: str) -> str:
     return f'[human] {text.strip()}'
+
+
+def human_to_child(child: str, text: str) -> str:
+    return f'[human → {child}] The human wrote to your subagent {child}: {text.strip()}'
+
+
+def human_paused(child: str) -> str:
+    return (f'[controller] The human paused your subagent {child}: it waits until the human resumes it. Its messages '
+            'to you and its result wait as well.')
+
+
+def human_resumed(child: str) -> str:
+    return f'[controller] The human resumed your subagent {child}; it continues from its handoff.'
+
+
+def human_cancelled(child: str) -> str:
+    return (f'[human] The human cancelled your subagent {child}, with its subagents and jobs. Continue without its '
+            'result, or start another subagent if the work is still needed.')
 
 
 def review_request(kind: str, round_: int, detail: str) -> str:

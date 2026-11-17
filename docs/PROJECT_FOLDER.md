@@ -9,7 +9,8 @@ significant event. The layout itself is in [PROJECT.md](../PROJECT.md) §2.
 On `run`, the controller:
 - refuses a project under `/tmp`, or one without `starting_evidence/RESEARCH_QUESTIONS.md`;
 - creates whatever is missing, keeping everything already there:
-  - `sources/`, `tools/`, `agents/`, `reviews/` and `.research/logs/`;
+  - `sources/`, `tools/`, `agents/`, `reviews/` and `.research/logs/` (`.research/activity/`, every agent's
+    messages and tool calls for the web app, appears with the first session);
   - STATUS.md, REPORT.md, FEEDBACK.md and the root FOLDER_CONTENT.md;
   - the folder indexes;
   - a `.gitignore` covering `.research/`, virtual environments and caches (or `.research/`

@@ -94,6 +94,7 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 | `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
 | `--no-durable-state` | write the controller's state without forcing it to disk (for slow network filesystems) |
 | `--no-tui` | print the transcript instead of the terminal app |
+| `--web` | also show the investigation in your browser, setup page first; with `--start`, `--web-port PORT`, `--web-no-open` (see [docs/WEB.md](docs/WEB.md)) |
 
 Running the same command again resumes a paused, shut down or interrupted
 investigation, or reopens a finished one. Options given again replace the stored
@@ -114,6 +115,16 @@ example when the primary has stopped and waits for your answer.
 | Ctrl+Q / F10 | Exit cleanly: every agent hands off, jobs keep running; the next `run` resumes and reattaches them |
 | F2 / F3 | Show one agent's transcript / all agents |
 | Ctrl+C | Exit at once; jobs keep running, and the next `run` restarts agents from their handoffs |
+
+### The web app
+
+With `--web` the page first shows every option as a setup form (Start begins the
+investigation), then the agent tree as a live graph: every agent that ever worked,
+coloured by status, with its context use, its messages (coloured by sender) and
+tool calls, its documents, jobs and the websites it used. Single agents can be
+messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
+threshold, usage limits, number of agents and the CLI choices can be changed while it runs. See
+[docs/WEB.md](docs/WEB.md).
 
 You may edit your own files (`RESEARCH_QUESTIONS.md`, `AGENTS.md`, `FEEDBACK.md`,
 starting evidence) at any time: the primary is told, and a new `AGENTS.md`
@@ -175,6 +186,9 @@ from agents and jobs).
 uv run python -m unittest discover -s tests -t .     # unit and integration tests (no model usage)
 uv run python -m tests.live_smoke                     # live run through the real CLIs (uses quota)
 ```
+
+The web app's live checks (the page driven in Chrome against real sessions) are in
+agent_toolkit's `web-ui/live/` (`node live/research.cjs`, `node live/alongside.cjs`).
 
 The code is in `src/research_pipeline/`; [FOLDER_CONTENT.md](src/research_pipeline/FOLDER_CONTENT.md)
 describes each module. Everything specific to one agent CLI (the drivers, the

@@ -1,5 +1,9 @@
 # Status
 
+**2026-11-17.** The web app (`--web`, [docs/WEB.md](docs/WEB.md)): a setup page for every option, the agent
+graph with every agent's messages and tool calls (kept in `.research/activity/`), and the human's actions on
+single agents (message with the parent copied, pause and resume, force a handoff, cancel) and live settings.
+
 **2026-11-16.** The V0 core implements [PROJECT.md](PROJECT.md) (approved 2026-11-16). See [README.md](README.md)
 for usage.
 
@@ -19,7 +23,7 @@ for usage.
   - jobs that survive handoffs, quota pauses, shutdowns and crashes;
   - the layout check and git commits;
   - the terminal app and the command line.
-- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 66 tests, with no model usage; the shared drivers, confinement and machinery are tested in
+- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 77 tests, with no model usage; the shared drivers, confinement and machinery are tested in
   agent_toolkit.
 - **Checked against the installed CLIs without model calls** (Codex 0.167, Claude Code 2.1.325): both start inside
   the confinement with the human's own setup masked, report what they loaded, and pass the setup check. Claude

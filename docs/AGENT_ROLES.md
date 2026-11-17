@@ -53,7 +53,10 @@ across any number of sessions.
 
 - `message(agent, text)` works between a parent and its direct subagents, in both directions.
 - It is delivered during the recipient's turn, or at its next session if it has none.
-- Messages are not stored in files: the recipient notes what matters.
+- Messages are not stored in files for the agents: the recipient notes what matters. (The controller keeps
+  them, for the web app, in `.research/activity/`, which agents cannot see.)
+- The human can also write to any agent from the web app (`[human] ...`); its parent receives a copy
+  (`[human → <id>] ...`).
 - Refused when the agents aren't parent and subagent, the text is empty, the
   recipient has ended, or the recipient has submitted its result. In that last
   case, use accept, reject or cancel.
