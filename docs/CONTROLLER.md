@@ -134,5 +134,5 @@ A successful turn resets the failure count. Agents fail independently: the other
   human or by running jobs". (Resuming a pause does the same, into the agents' kept sessions.)
 - **After a crash:** agents that were running restart from their handoffs; pending
   changes are committed as "work recovered after a restart"; running jobs are reattached.
-- **After COMPLETE or STOP:** the investigation is reopened ([FINISHING.md](FINISHING.md)).
+- **After COMPLETE or STOP:** talk-only, or reopened if the human's files changed since the end ([FINISHING.md](FINISHING.md)).
 - **Every run** clears quota holds and reads the quota again.

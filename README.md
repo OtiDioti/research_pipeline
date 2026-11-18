@@ -119,7 +119,10 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 | `--web` | also show the investigation in your browser, setup page first; with `--start`, `--web-port PORT`, `--web-no-open` (see [docs/WEB.md](docs/WEB.md)) |
 
 Running the same command again resumes a paused, shut down or interrupted
-investigation, or reopens a finished one. Options given again replace the stored
+investigation. After COMPLETE or STOP the program stays open: you can still talk
+with the primary and the Reviewer about their work, talk-only, until you quit; a
+later `run` opens talk-only again, and reopens the investigation only if you changed
+your files (e.g. a line in FEEDBACK.md) ([docs/FINISHING.md](docs/FINISHING.md)). Options given again replace the stored
 ones. `research-pipeline status my-project` prints the state without starting
 anything.
 
@@ -198,8 +201,9 @@ what changed meanwhile (by you, or by jobs that kept running).
     same session, and it continues or stops.
   - STOP: the Reviewer first challenges the primary's reasons, then the primary
     decides.
-  - At the end, the Librarian places the primary's and the Reviewer's work before
-    the controller exits (unless it cannot run: then at the next `run`).
+  - At the end, the Librarian places the primary's and the Reviewer's work (unless
+    it cannot run: then at the next `run`), and the program stays open for talks
+    with the primary and the Reviewer until you quit.
 - **Quota.**
   - A CLI's short window at 15% or less left: its agents update their handoffs and
     wait in their sessions until the reset.

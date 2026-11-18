@@ -17,8 +17,10 @@ documents, and controls for single agents. It is agent_toolkit's web app
 The address carries a secret token; only pages opened with it can see or act.
 The terminal app runs as usual next to the page (`--no-tui` prints the transcript
 instead); both show and control the same investigation, and any number of pages
-may be open. The page stays readable after the investigation ends, until the
-program exits.
+may be open. After the investigation ends the page stays open for talks: the
+message box talks with the primary, the Reviewer takes messages too, and the top
+bar's only control is Quit ([FINISHING.md](FINISHING.md)). It stays readable until
+the program exits.
 
 ## The setup page
 
