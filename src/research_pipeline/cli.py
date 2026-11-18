@@ -10,10 +10,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime
-from pathlib import Path
 import signal
 import sys
+from datetime import datetime
+from pathlib import Path
 
 from agent_toolkit import DRIVERS, Spec
 from agent_toolkit.handoff import check_threshold
@@ -168,6 +168,7 @@ async def run(controller: Controller, no_tui: bool) -> int:
 async def with_web(project: Project, options: Options, args: argparse.Namespace) -> int:
     """Run with the web app: its setup page first (unless ``--start``), then the investigation."""
     from agent_toolkit.web import WebApp
+
     from research_pipeline.web import ResearchDashboard
 
     dashboard = ResearchDashboard(project.root, options)

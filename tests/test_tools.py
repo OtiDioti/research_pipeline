@@ -3,10 +3,9 @@
 import os
 import unittest
 
+from agent_toolkit.tools import ToolBridge
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
-
-from agent_toolkit.tools import ToolBridge
 
 from research_pipeline.tools import ROLE_TOOLS
 

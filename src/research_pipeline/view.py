@@ -7,11 +7,11 @@ notices and your messages; F2 cycles through single agents, F3 shows them all ag
 
 from __future__ import annotations
 
-from prompt_toolkit.layout import Dimension
+from agent_toolkit.console import Entry
+from agent_toolkit.console import TerminalApp as SharedApp
 from prompt_toolkit.document import Document
+from prompt_toolkit.layout import Dimension
 from prompt_toolkit.widgets import Frame, TextArea
-
-from agent_toolkit.console import Entry, TerminalApp as SharedApp
 
 from research_pipeline.controller import Controller
 from research_pipeline.state import ACTIVE, ENDED

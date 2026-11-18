@@ -16,8 +16,8 @@ through a symlink, and only inside the project.
 
 from __future__ import annotations
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 from agent_toolkit import git as runner
 from agent_toolkit.records import atomic_write

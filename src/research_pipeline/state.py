@@ -10,8 +10,8 @@ in the project's ordinary files.
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field, fields
 import json
+from dataclasses import asdict, dataclass, field, fields
 from pathlib import Path
 
 from agent_toolkit import Spec

@@ -23,10 +23,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import datetime
-from pathlib import Path
 import shutil
 import time
+from datetime import datetime
+from pathlib import Path
 
 from agent_toolkit import DRIVERS, quota
 
@@ -211,7 +211,7 @@ async def main() -> None:
     pausing = asyncio.ensure_future(human_pause(controller, args.pause_at)) if args.pause_at else None
     try:
         await asyncio.wait_for(controller.run(), args.limit)
-    except asyncio.TimeoutError:
+    except TimeoutError:
         print("[smoke] time limit reached: shutting down", flush=True)
     watching.cancel()
     monitor.look()  # the investigation may have ended between two looks

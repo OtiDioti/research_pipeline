@@ -9,9 +9,9 @@ the websites and sources it used, and passes the human's actions on to
 
 from __future__ import annotations
 
-from pathlib import Path
 import re
 import time
+from pathlib import Path
 
 from agent_toolkit import DRIVERS
 from agent_toolkit.activity import ActivityLog

@@ -43,18 +43,17 @@ events, tool calls and the background loops never interleave halfway.
 from __future__ import annotations
 
 import asyncio
-from contextlib import ExitStack
-from datetime import datetime
-from pathlib import Path
 import re
 import subprocess
 import time
-from typing import Callable
+from collections.abc import Callable
+from contextlib import ExitStack
+from datetime import datetime
+from pathlib import Path
 
 from agent_toolkit import CAPABILITIES, DRIVERS, Launch, Session, SessionError, SetupError, Spec, quota
 from agent_toolkit.activity import ActivityLog
-from agent_toolkit.handoff import check_threshold
-from agent_toolkit.handoff import HandoffWatch
+from agent_toolkit.handoff import HandoffWatch, check_threshold
 from agent_toolkit.quota import Guard
 from agent_toolkit.records import Busy, atomic_write, exclusive
 from agent_toolkit.tools import ToolBridge
@@ -751,7 +750,7 @@ class Controller:
             return
         try:
             await session.send(text)
-        except (SessionError, OSError, asyncio.TimeoutError):
+        except (TimeoutError, SessionError, OSError):
             agent.notices.append(text)
             return
         self.idle_since.pop(agent.id, None)  # a turn runs: the idle clock starts again when it ends

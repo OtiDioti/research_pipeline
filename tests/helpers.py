@@ -9,13 +9,13 @@ server would and emit the events a real CLI would.
 from __future__ import annotations
 
 import asyncio
-from contextlib import asynccontextmanager
-from pathlib import Path
 import shutil
 import tempfile
+from contextlib import asynccontextmanager
+from pathlib import Path
 
-from agent_toolkit.quota import Window
 from agent_toolkit import McpServer
+from agent_toolkit.quota import Window
 from agent_toolkit.testing import FAKE_DRIVERS, FakeSession, call_tool  # noqa: F401 (used by the tests)
 
 from research_pipeline import controller as controller_module

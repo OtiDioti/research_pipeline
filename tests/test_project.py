@@ -1,9 +1,9 @@
 """The project folder: layout creation and checks, git commits, the human's files."""
 
 import os
-from pathlib import Path
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from agent_toolkit import Spec

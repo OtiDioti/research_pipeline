@@ -15,12 +15,13 @@ Each job keeps its files in ``agents/<owner>/jobs/<job-id>/``: ``command.txt``,
 
 from __future__ import annotations
 
-from pathlib import Path
+import contextlib
 import os
 import signal
 import subprocess
 import time
-from typing import Iterable
+from collections.abc import Iterable
+from pathlib import Path
 
 from agent_toolkit import confine
 from agent_toolkit.records import atomic_write, create
@@ -98,10 +99,8 @@ def cancel(job: Job, status: str = "cancelled") -> None:
         for sig in (signal.SIGTERM, signal.SIGKILL):
             members = _session_members(job.pid, job.ticks)
             for pid in members:
-                try:
+                with contextlib.suppress(ProcessLookupError):
                     os.kill(pid, sig)
-                except ProcessLookupError:
-                    pass
             if not members:
                 break
             deadline = time.time() + 5
