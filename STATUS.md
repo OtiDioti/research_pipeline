@@ -1,5 +1,12 @@
 # Status
 
+**2026-11-18.** 0.8.0, prompts only (`src/research_pipeline/prompts/`): agents decide what a question leaves open and
+record each decision with its criterion; work is held to a no-shortcuts standard (only physical limits excuse
+less, with evidence), which parents apply when accepting results and the Reviewer when judging; citations must be
+sources actually opened; every summary (RESULT.md, REPORT.md, reviews) first restates the request it answers.
+Subagents are routed by task: coding to Opus 5.5, analysis to GPT-6.1 Sol, the other when a backend is not
+allowed or held by its quota. Not yet tried in a live run.
+
 **2026-11-18.** 0.7.0: the Librarian and the library ([docs/LIBRARY.md](docs/LIBRARY.md), PROJECT.md §2–§10).
 Finished work stays where it was made: an accepted or cancelled subagent's folder, and at the end the primary's and
 the Reviewer's, is shelved (catalogued in `library/CATALOG.md` and frozen, read-only for jobs too), and the

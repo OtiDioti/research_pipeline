@@ -184,8 +184,9 @@ in the library for what the project already has on the subject, and names the
 relevant files in the brief. Model and effort are always
 explicit: a spawn without them is refused, and so is a launch whose `--primary`,
 `--reviewer` or `--librarian` lacks them; an effort the CLI is known not to accept is refused before
-any session starts. The role prompt limits the choice to Opus 5.5
-(`claude-opus-5-5`) or GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high` or `xhigh`,
+any session starts. The role prompt routes coding tasks to Opus 5.5
+(`claude-opus-5-5`) and analytical ones to GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high`
+or `xhigh`, falling back to the other when a backend is not allowed or held by its quota,
 unless the human's `AGENTS.md` says otherwise. The human sets a cap on open agent sessions, idle
 ones included (6 by default, at least 2). A spawn over the cap is refused with a message such as
 "6/6 agent sessions are already open"; the agent decides what to do. Agents know nothing else about
