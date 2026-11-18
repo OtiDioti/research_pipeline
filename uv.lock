@@ -10,8 +10,8 @@ resolution-markers = [
 
 [[package]]
 name = "agent-toolkit"
-version = "0.6.2"
-source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.6.2#0be80234388ecbfe2e2929e3fcd1329534bb0090" }
+version = "0.7.0"
+source = { editable = "../agent_toolkit" }
 dependencies = [
     { name = "mcp" },
 ]
@@ -24,6 +24,22 @@ web = [
     { name = "starlette" },
     { name = "uvicorn" },
     { name = "websockets" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mcp", specifier = ">=1.26,<2" },
+    { name = "prompt-toolkit", marker = "extra == 'console'", specifier = "==3.0.52" },
+    { name = "starlette", marker = "extra == 'web'", specifier = ">=1.10,<2" },
+    { name = "uvicorn", marker = "extra == 'web'", specifier = ">=0.54,<1" },
+    { name = "websockets", marker = "extra == 'web'", specifier = ">=15,<18" },
+]
+provides-extras = ["console", "web"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.414" },
+    { name = "ruff", specifier = ">=0.17,<0.18" },
 ]
 
 [[package]]
@@ -628,7 +644,7 @@ wheels = [
 
 [[package]]
 name = "research-pipeline"
-version = "0.9.0"
+version = "0.10.0"
 source = { editable = "." }
 dependencies = [
     { name = "agent-toolkit", extra = ["console", "web"] },
@@ -641,7 +657,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.6.2" }]
+requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], editable = "../agent_toolkit" }]
 
 [package.metadata.requires-dev]
 dev = [

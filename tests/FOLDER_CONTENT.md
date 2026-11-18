@@ -12,3 +12,4 @@
 - [test_web.py](test_web.py) — The human's single-agent actions and live settings, and the web app's view.
 - [test_standards.py](test_standards.py) — The repository follows the shared development standard (agent_toolkit.standards).
 - [live_smoke.py](live_smoke.py) — Live smoke run through the real CLIs (manual; uses model quota).
+- [test_setup.py](test_setup.py) — The web setup before the first start: readiness, material placed by hand, the objectives' versions, the setup assistant on fake sessions, quota and failures.

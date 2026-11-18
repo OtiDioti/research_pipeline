@@ -94,6 +94,69 @@ SHELVED = Tool(
     ("agent",),
 )
 
+# The setup assistant's tools (research_pipeline.assistant), before the first start.
+QUESTION = {
+    "type": "object",
+    "properties": {
+        "question": {"type": "string", "description": "The complete question."},
+        "header": {"type": "string", "description": "A label of one or two words."},
+        "multi": {"type": "boolean", "description": "True if several options may be chosen."},
+        "options": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 4,
+            "items": {
+                "type": "object",
+                "properties": {"label": TEXT, "description": TEXT},
+                "required": ["label", "description"],
+            },
+        },
+    },
+    "required": ["question", "header", "options"],
+}
+ASK = Tool(
+    "ask",
+    "Ask the human one round of multiple-choice questions (1 to 4, each with 2 to 4 options); the page\n"
+    "adds a free answer to each. End your turn afterwards: the answers come as your next request.",
+    {"questions": {"type": "array", "minItems": 1, "maxItems": 4, "items": QUESTION}},
+    ("questions",),
+)
+WRITE_OBJECTIVES = Tool(
+    "write_objectives",
+    "Write starting_evidence/OBJECTIVES.md (Markdown, the whole file), replacing it; the human sees it\n"
+    "in their editor.",
+    {"text": TEXT},
+    ("text",),
+)
+PLACE = Tool(
+    "place",
+    "Place loose material in starting_evidence/, each entry with a one-line description; nothing moves if any\n"
+    "entry is refused (the reply names every problem).\n\n"
+    "entries: [{path, folder, description}], path as listed, folder 'starting_evidence' or a subfolder of it.\n"
+    "folders: [{path, description}] for every new folder on the way.",
+    {
+        "entries": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {"path": TEXT, "folder": TEXT, "description": TEXT},
+                "required": ["path", "folder", "description"],
+            },
+        },
+        "folders": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {"path": TEXT, "description": TEXT},
+                "required": ["path", "description"],
+            },
+        },
+    },
+    ("entries",),
+)
+SETUP_TOOLS = [ASK, WRITE_OBJECTIVES, PLACE]
+
 _COMMON = [SPAWN, AGENTS, MESSAGE, ACCEPT, REJECT, CANCEL, RUN_JOB, JOB_STATUS, JOB_CANCEL]
 #: Tools offered to each role.
 ROLE_TOOLS = {
