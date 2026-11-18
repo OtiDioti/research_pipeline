@@ -83,7 +83,12 @@ def place(project: Project, items: list[dict], new_folders: list[dict]) -> str:
             continue
         if not description or "\n" in description:
             problems.append(f"{path}: needs a one-line description")
-        if folder != TARGET and not folder.startswith(TARGET + "/") or ".." in Path(folder).parts:
+        parts = Path(folder).parts
+        if (
+            folder != TARGET
+            and not folder.startswith(TARGET + "/")
+            or any(p == ".." or p.startswith(".") for p in parts)
+        ):
             problems.append(f"{path}: {folder} is not a folder of {TARGET}/")
             continue
         if source.parent == project.evidence and folder != TARGET:

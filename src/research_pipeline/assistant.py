@@ -232,6 +232,8 @@ class Assistant:
     def _ask(self, questions: list) -> str:
         items = []
         for number, item in enumerate(questions, 1):
+            if not isinstance(item, dict):
+                raise ValueError(f"question {number} must be an object: question, header, options")
             options = [
                 {"label": str(option.get("label") or "").strip(), "description": str(option.get("description") or "")}
                 for option in item.get("options") or []
