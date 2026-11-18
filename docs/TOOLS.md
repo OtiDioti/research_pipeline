@@ -1,8 +1,11 @@
 # Agent tools
 
-The controller's tools reach agents through MCP (`mcp_server.py`). Each agent's CLI
-starts its own tool server inside the confinement, offering only its role's
-tools. The server forwards every call to the controller (`channel.py`).
+The controller's tools reach agents through MCP: `tools.py` defines them, and the
+controller offers each session its role's tools through agent_toolkit's
+`ToolBridge`. Each agent's CLI starts the toolkit's tool server
+(`agent_toolkit.tool_server`, on the official MCP SDK) inside the confinement; the
+SDK checks every call against the tool's schema, and the server forwards it to the
+controller.
 
 ## Tools
 
@@ -22,11 +25,10 @@ Every reply also carries the caller's pending notices.
 
 ## The channel
 
-- Each controller run listens on its own Linux abstract Unix socket. It needs no
+- Each controller run listens on its own Linux abstract Unix socket (`agent_toolkit.channel`). It needs no
   file, so it also works inside the confinement.
 - One JSON request and one reply per connection, up to 4 MB each. The tool server waits up to 300 s for a reply.
-- Every request carries the agent's id and the **token of its current session**. A
-  replaced or closed session's calls are refused.
+- Every session's tool server carries a **token of its own**. A replaced or closed session's calls are refused.
 
 ## Refusals
 
@@ -34,9 +36,9 @@ Every reply also carries the caller's pending notices.
 |---|---|
 | "Error: this session has ended …" | The call came from a replaced or closed session |
 | "Error: your result is with …; end your turn and wait …" | A submitted subagent's call, until its parent decides |
-| "… is not available to the …" | A tool of another role |
-| "Error: invalid arguments …" | A required argument is missing or wrong |
-| "Error: the research controller is unreachable …" | The controller isn't running (its socket is gone) |
+| "… is not one of your tools" | A tool of another role |
+| An input validation error | A required argument is missing or has the wrong type (checked by the MCP SDK) |
+| "… the controller is unreachable …" | The controller isn't running (its socket is gone) |
 | "Refused: the investigation is paused/…" | Nothing new starts while the investigation isn't running |
 | "Refused: N/N agent sessions are already open …" | The cap `--max-agents` is reached (idle sessions count until the idle limit) |
 | "Refused: … temporarily paused by the usage quota …" | That CLI is held ([QUOTA.md](QUOTA.md)) |

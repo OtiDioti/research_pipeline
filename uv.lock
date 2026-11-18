@@ -10,8 +10,11 @@ resolution-markers = [
 
 [[package]]
 name = "agent-toolkit"
-version = "0.4.0"
-source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.4.0#61420442778197f71b6ffaa7f0e9af076b38dc63" }
+version = "0.5.0"
+source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.5.0#a0e4155d4fbc90dec91590048493fcad0e2a1f6c" }
+dependencies = [
+    { name = "mcp" },
+]
 
 [package.optional-dependencies]
 console = [
@@ -603,18 +606,14 @@ wheels = [
 
 [[package]]
 name = "research-pipeline"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "agent-toolkit", extra = ["console", "web"] },
-    { name = "mcp" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.4.0" },
-    { name = "mcp", specifier = ">=1.26,<2" },
-]
+requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.5.0" }]
 
 [[package]]
 name = "rpds-py"

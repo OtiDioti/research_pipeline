@@ -14,10 +14,11 @@ import shutil
 import tempfile
 
 from agent_toolkit.quota import Window
-from agent_toolkit.testing import FAKE_DRIVERS, FakeSession  # noqa: F401 (used by the tests)
+from agent_toolkit import McpServer
+from agent_toolkit.testing import FAKE_DRIVERS, FakeSession, call_tool  # noqa: F401 (used by the tests)
 
 from research_pipeline import controller as controller_module
-from research_pipeline.controller import Controller
+from research_pipeline.controller import MCP_SERVER, Controller
 from research_pipeline.state import Options
 
 #: Temporary projects live here: projects may not live under /tmp (see Project.prepare).
@@ -80,12 +81,16 @@ class Harness:
         for _ in range(rounds):
             await asyncio.sleep(0.02)
 
+    def tools(self, agent_id: str) -> McpServer:
+        """The tool server entry of ``agent_id``'s latest session (current, or closed since)."""
+        session = next(session for session in reversed(FakeSession.instances) if session.launch.agent == agent_id)
+        return session.launch.mcp[MCP_SERVER]
+
     async def call(self, agent_id: str, tool: str, **args) -> str:
-        """Call a tool as ``agent_id``'s current session would."""
-        request = {'agent': agent_id, 'token': self.controller.tokens.get(agent_id), 'tool': tool, 'args': args}
-        reply = await self.controller._tool_request(request)
+        """Call a tool as ``agent_id``'s latest session would, through the controller's socket; the reply's text."""
+        reply = await call_tool(self.tools(agent_id), tool, **args)
         await self.settle()
-        return reply
+        return reply['text']
 
     async def emit(self, agent_id: str, kind: str, **data) -> None:
         self.session(agent_id).emit(kind, **data)
