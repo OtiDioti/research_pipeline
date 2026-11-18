@@ -13,11 +13,33 @@ dependencies = ["agent-toolkit[console,web]"]
 [project.scripts]
 research-pipeline = "research_pipeline.cli:main"
 
+[dependency-groups]
+dev = ["ruff>=0.17,<0.18", "pyright>=1.1.414"]
+
 [tool.uv.sources]
-agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.5.0" }
+# Local toolkit while the shared standard lands; the release restores the tag pin:
+# agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.5.0" }
+agent-toolkit = { path = "../agent_toolkit", editable = true }
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
 research_pipeline = ["prompts/*.md"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+# Investigation inputs (an archived run's scripts among them): data, not package code.
+extend-exclude = ["research_example"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "SIM", "I"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
