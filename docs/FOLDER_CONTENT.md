@@ -15,4 +15,5 @@ Reference documentation: what each part does, and what it does under each condit
 - [TOOLS.md](TOOLS.md) — The agents' MCP tools, the channel, and every refusal.
 - [PROJECT_FOLDER.md](PROJECT_FOLDER.md) — Layout, ownership, layout check, the human's files, git commits.
 - [OPERATIONS.md](OPERATIONS.md) — Launching, controls, editing files, logs and troubleshooting.
+- [SETUP.md](SETUP.md) — Setting a folder up on the web app's setup page: readiness, material, objectives, the setup assistant.
 - [WEB.md](WEB.md) — The web app: setup page, the agent graph, messages and tool calls, single-agent controls.

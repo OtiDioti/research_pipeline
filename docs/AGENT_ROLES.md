@@ -17,6 +17,10 @@ The Librarian does no research: it organises the library ([LIBRARY.md](LIBRARY.m
 It is not counted against `--max-agents`, has no other tools, and neither sends nor
 receives agents' messages (the human can write to it from the web app).
 
+Before the first start, the web setup page may also run a **setup assistant**: not part of the
+investigation, it places material and drafts `OBJECTIVES.md` on request, through its tools `place`,
+`write_objectives` and `ask`, with `prompts/setup.md` as its instructions ([SETUP.md](SETUP.md)).
+
 ## What every session receives
 
 - **Session instructions** (system or developer prompt, in force for the whole

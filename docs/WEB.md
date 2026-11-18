@@ -22,6 +22,11 @@ program exits.
 
 ## The setup page
 
+Before the first start, the page first shows the preparation steps, always, even
+for a folder that is ready already: *Material* and *Objectives*, with the setup
+assistant ([SETUP.md](SETUP.md)); the launch options are the last step, where the
+checks Start waits for are listed. Afterwards it shows the launch options alone.
+
 Every launch option, prefilled from the command line and the stored options (the
 last used): the primary, the Reviewer and the Librarian (CLI, model from the CLI's own list or
 typed, effort as a slider over the levels the model accepts), the CLIs for

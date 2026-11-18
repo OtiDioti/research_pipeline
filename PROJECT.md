@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), and quota holds limited to the held CLI's agents (§6).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), and the web setup of a folder before the first start, with its setup assistant (§2, §3, §6).
 
 ## 1. Purpose
 
@@ -90,6 +90,18 @@ Rules:
   primary is told about them and decides which subagents need them. Agents treat
   their contents as unverified evidence.
 
+**Ready to start.** Before the first start, a folder is a project only with a
+non-empty `starting_evidence/OBJECTIVES.md`, nothing loose at the top level (only
+the entries above), and a `starting_evidence/FOLDER_CONTENT.md` describing every
+entry at its top. Without `--web`, a folder that is not ready is refused; with
+`--web`, the setup page makes it ready first (docs/SETUP.md): material added
+(uploaded, copied from local paths, or by hand) and placed in `starting_evidence/`
+with a one-line description each, by hand or by the setup assistant (§3), and the
+objectives written in an editor, optionally drafted by the assistant after it has
+grilled the human with multiple-choice questions. Placing is deterministic, checked
+whole, and never overwrites. After the first start only `OBJECTIVES.md` is required,
+and strays are reported to the primary.
+
 **Layout check.** Whenever an agent hands off, submits a RESULT, proposes
 COMPLETE/STOP, delivers a verdict or reports a shelving done, the controller checks
 the folders it may write (its own, plus the root for the primary, `reviews/` for
@@ -140,7 +152,8 @@ job or a note uses stays valid.
 
 ## 3. Agents
 
-There are four roles, all running the same way:
+There are four roles, all running the same way, and a setup assistant before the
+first start:
 
 - **Primary:** responsible for the whole investigation. It is started with
   `OBJECTIVES.md`, `FEEDBACK.md`, an inventory of starting evidence and
@@ -154,6 +167,12 @@ There are four roles, all running the same way:
   research and never judges the science. The human chooses its CLI, model and
   effort at launch. It is one logical agent, started at its first shelving request;
   between requests it rests. It is not counted against the cap on agent sessions.
+- **Setup assistant:** optional, only on the web setup page before the first start
+  (docs/SETUP.md). It places the human's material and drafts `OBJECTIVES.md` on
+  request, asking multiple-choice questions first if asked to, through three tools
+  answered by deterministic code (`place`, `write_objectives`, `ask`); it writes
+  nothing else but its handoff note. Its CLI, model and effort: `--setup` or the
+  page (default `codex:gpt-6.1-sol:high`). It is not part of the investigation.
 
 Every agent:
 
@@ -416,7 +435,7 @@ folders.
 - Pause/Resume and Shutdown keys.
 
 Optionally, with `--web`, the shared web app of `agent_toolkit` as well (docs/WEB.md):
-a setup page for every launch option; every agent that ever worked as a live graph
+a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
@@ -425,7 +444,8 @@ as the primary's, the Reviewer's and the Librarian's CLI choices (from their nex
 session) and the CLIs for subagents (from the next spawn).
 
 Launch options:
-- `--primary`, `--reviewer` and `--librarian` (backend:model:effort, all three required);
+- `--primary`, `--reviewer` and `--librarian` (backend:model:effort, all three required; with `--web`, set on the page);
+- `--setup` (backend:model:effort of the setup assistant, with `--web`);
 - `--backends` (choices allowed for subagents);
 - `--max-agents`;
 - `--reference PATH` (repeatable);
