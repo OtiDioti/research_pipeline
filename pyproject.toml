@@ -14,7 +14,7 @@ dependencies = ["agent-toolkit[console,web]", "mcp>=1.26,<2"]
 research-pipeline = "research_pipeline.cli:main"
 
 [tool.uv.sources]
-agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.3.1" }
+agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.4.0" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
