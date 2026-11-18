@@ -4,4 +4,4 @@
 - [primary.md](primary.md) — The primary researcher's role.
 - [subagent.md](subagent.md) — A subagent's role.
 - [reviewer.md](reviewer.md) — The Reviewer's role.
-- [librarian.md](librarian.md) — The Librarian's role (draft, not used by the code yet).
+- [librarian.md](librarian.md) — The Librarian's role.

@@ -28,8 +28,12 @@ scientific one. In outline:
   talk-only; the Reviewer examines the proposal's commit; COMPLETE needs its
   agreement, STOP is the primary's decision after the Reviewer's challenge. The
   verdict reaches the primary in the same session; the Reviewer keeps its own.
-- **Quota, pause, shutdown, crash.** Per-CLI usage limits pause that CLI's agents
-  (or all, if it is the primary's); the holds come from the shared usage guard
+- **The library.** Accepted and cancelled subagents, and at the end the primary
+  and the Reviewer, are shelved: their folders are catalogued and frozen, and the
+  Librarian links their work from its pages (:mod:`research_pipeline.librarian`).
+  At the end, the controller waits for it before exiting, if it can run.
+- **Quota, pause, shutdown, crash.** Per-CLI usage limits pause that CLI's agents;
+  the holds come from the shared usage guard
   (:class:`agent_toolkit.quota.Guard`). At a hold each affected agent updates
   HANDOFF.md and waits in its session. A human pause lets working agents finish
   their turn and wait in their sessions, and stops jobs; a shutdown hands every
@@ -60,9 +64,10 @@ from agent_toolkit.tools import ToolBridge
 
 from research_pipeline import jobs as joblib
 from research_pipeline import prompts
+from research_pipeline.librarian import LIBRARIAN, Librarian
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
-from research_pipeline.tools import ROLE_TOOLS
+from research_pipeline.tools import ROLE_TOOLS, ToolError
 
 #: Seconds between usage-quota reads.
 QUOTA_INTERVAL = 120
@@ -76,14 +81,12 @@ RETRY_DELAYS = (30, 120, 600)
 HANDOFF_ORDER = ("idle", "context", "refresh", "quota", "shutdown")
 #: Name under which every agent's CLI attaches the controller's MCP tool server.
 MCP_SERVER = "research"
+#: The agents the human chooses a CLI for at launch; their ids are their roles.
+ROLES = ("primary", "reviewer", "librarian")
 
 #: Transcript callback: ``show(kind, agent_id, text)`` with kind 'agent', 'tool', 'notice', 'human', 'controller'
 #: or 'alert' (something the human must act on).
 Show = Callable[[str, str, str], None]
-
-
-class ToolError(Exception):
-    """A tool call the controller refuses; its message is returned to the agent."""
 
 
 class Controller:
@@ -123,6 +126,12 @@ class Controller:
         self._human_checked = 0.0
         self._quota_due = 0.0
         self._strays: set[str] = set()  # unexpected top-level entries already reported
+        self.librarian = Librarian(self.project, lambda: self.state, self._notify, self._commit)
+        self.closing = False  # the investigation ended; the Librarian places the final work before the exit
+        # Every agent tool, by name: the controller's _tool_* methods and the Librarian's (each role sees its own).
+        self.handlers: dict[str, Callable] = {
+            name.removeprefix("_tool_"): getattr(self, name) for name in dir(self) if name.startswith("_tool_")
+        } | self.librarian.handlers()
 
     # Running ------------------------------------------------------------------------------
 
@@ -243,15 +252,13 @@ class Controller:
 
         'threshold', 'short_limit', 'weekly_limit', 'max_agents' and 'idle_limit'
         (minutes, 0: none) apply at once;
-        'primary' and 'reviewer' (BACKEND:MODEL:EFFORT) from that agent's next
+        'primary', 'reviewer' and 'librarian' (BACKEND:MODEL:EFFORT) from that agent's next
         session, and 'backends' (the CLIs for subagents) from the next spawn. Raise
         ValueError for an invalid value (nothing is changed then).
         """
         if self.lock is None:
             raise ValueError("the investigation is still starting")
-        specs = {
-            role: Spec.parse(values[role], role, self.drivers) for role in ("primary", "reviewer") if role in values
-        }
+        specs = {role: Spec.parse(values[role], role, self.drivers) for role in ROLES if role in values}
         if "backends" in values and (not values["backends"] or set(values["backends"]) - set(self.drivers)):
             raise ValueError(f"backends must be some of {', '.join(self.drivers)}")
         threshold = check_threshold(values["threshold"], "the handoff threshold") if "threshold" in values else None
@@ -358,8 +365,8 @@ class Controller:
 
     async def _human_cancel(self, agent: Agent, text: str = "") -> str:
         """Cancel a subagent, its subagents and their jobs, as its parent's cancel tool does; the parent is told."""
-        await self._cancel_tree(agent)
-        self._commit(f"human: cancelled {agent.id}")
+        cancelled = await self._cancel_tree(agent)
+        await self.librarian.shelve(cancelled, self._commit(f"human: cancelled {agent.id}"))
         self.show("controller", agent.id, "Cancelled by the human, with its subagents and jobs.")
         parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
@@ -387,8 +394,7 @@ class Controller:
         options = state.options
         unknown = set(options.backends) - set(self.drivers)
         try:
-            primary = Spec.parse(options.primary, "--primary", self.drivers)
-            reviewer = Spec.parse(options.reviewer, "--reviewer", self.drivers)
+            specs = {role: Spec.parse(getattr(options, role), f"--{role}", self.drivers) for role in ROLES}
         except ValueError as error:
             raise ProjectError(str(error)) from None
         if not options.backends:
@@ -397,7 +403,7 @@ class Controller:
             raise ProjectError(f"Unknown backend(s): {', '.join(sorted(unknown))}; known: {', '.join(self.drivers)}")
         if options.max_agents < 2:
             raise ProjectError("--max-agents must be at least 2: the primary and the Reviewer.")
-        for agent_id, spec in (("primary", primary), ("reviewer", reviewer)):
+        for agent_id, spec in specs.items():
             agent = state.agents.setdefault(
                 agent_id,
                 Agent(
@@ -458,14 +464,22 @@ class Controller:
             if agent.id in self.sessions and (self.sessions[agent.id].busy or agent.handoff_reason)
         ]
 
+    def _open(self) -> int:
+        """Live sessions counted against the cap, idle ones included; the Librarian's is not counted."""
+        return len([agent_id for agent_id in self.sessions if agent_id != LIBRARIAN])
+
     def _slot_free(self) -> bool:
-        """True if another session may start: live sessions, idle ones included, stay below the cap."""
-        return len(self.sessions) < self.state.options.max_agents
+        """True if another session may start: counted sessions stay below the cap."""
+        return self._open() < self.state.options.max_agents
+
+    def _works(self, agent: Agent) -> bool:
+        """True if ``agent`` may work now: the investigation runs, or it ended and the Librarian places the rest."""
+        return self.state.status == "running" or (self.closing and agent.role == "librarian")
 
     def _scope(self, agent: Agent) -> tuple[Path, ...]:
         """What the agent's confinement leaves writable (PROJECT.md §2)."""
         root = self.project.root
-        scope = [self.project.agent_dir(agent.id), root / "sources", root / "tools"]
+        scope = [self.project.agent_dir(agent.id)]
         if agent.role == "primary":
             scope += [root / INDEX, root / "STATUS.md", root / "REPORT.md"]
         elif agent.role == "reviewer":
@@ -483,11 +497,13 @@ class Controller:
         agent.sessions += 1
         agent.started = time.time()
         notices, agent.notices = agent.notices, []
+        if agent.role == "librarian" and self.state.shelving and not notices:  # e.g. after a restart
+            notices = [prompts.shelving_pending(self.state.shelving)]
         number = agent.sessions
         tools = self.bridge.offer(
             agent.id,
             ROLE_TOOLS[agent.role],
-            lambda tool, args: self._tool_request(agent.id, number, tool, args),
+            lambda tool, args: self._on_tool(agent.id, number, tool, args),
             name=MCP_SERVER,
         )
         launch = Launch(
@@ -573,16 +589,19 @@ class Controller:
         the context threshold, or without a session, starts a fresh one if a slot is free.
         """
         state = self.state
-        if state.status != "running":
+        if state.status != "running" and not self.closing:
             return
-        order = {"primary": 0, "reviewer": 1, "subagent": 2}
+        order = {"primary": 0, "reviewer": 1, "librarian": 2, "subagent": 3}
         for agent in sorted(state.agents.values(), key=lambda a: (order[a.role], a.sessions)):
-            if agent.status != "paused" or (reasons and agent.pause_reason not in reasons):
+            if agent.status != "paused" or (reasons and agent.pause_reason not in reasons) or not self._works(agent):
                 continue
             if agent.pause_reason == "held" and not (reasons and "held" in reasons):
                 continue  # held by the human on its own: only its own resume restarts it
             pending = self._under_review()
             if agent.role == "reviewer" and not pending and not agent.notices:
+                agent.status, agent.pause_reason = "resting", None
+                continue
+            if agent.role == "librarian" and not state.shelving and not agent.notices:
                 agent.status, agent.pause_reason = "resting", None
                 continue
             if self._blocked(agent.backend):
@@ -599,7 +618,7 @@ class Controller:
                 if notice:
                     self._queue(agent, notice)
                 await self._flush(agent)
-            elif not self._slot_free():
+            elif agent.role != "librarian" and not self._slot_free():
                 agent.pause_reason = "slots"
                 continue
             else:
@@ -681,20 +700,31 @@ class Controller:
                 f"{agent.id}: its CLI has not reported context use after a full turn, "
                 "so its handoffs cannot be triggered in this session.",
             )
+        if agent.role == "librarian" and not agent.handoff_reason and self._works(agent):
+            notice = self.librarian.turn_ended()  # its page changes are committed
+            if notice:
+                self._queue(agent, notice)
         if agent.handoff_reason:
             await self._check_handoff(agent)
-        elif agent.status != "running" or self.state.status != "running":
+        elif agent.status != "running" or not self._works(agent):
             return  # it waits (for a verdict, its parent, a pause or a quota hold): its news waits too
         elif agent.notices:
             await self._flush(agent)
         elif agent.role == "reviewer" and not self._under_review():
             agent.status = "resting"  # it answered the human between rounds
+        elif agent.role == "librarian" and not self.state.shelving:
+            agent.status = "resting"  # nothing is pending: the next request wakes it
         elif self._idle(agent):
             if agent.nudged:  # told it was idle, and it ended its turn idle again without using a tool
                 await self._stalled(agent, text)
             else:
                 agent.nudged = True
-                await self._send(agent, prompts.nudge(agent.role, self._awaiting(agent)))
+                await self._send(
+                    agent,
+                    prompts.librarian_nudge(self.state.shelving)
+                    if agent.role == "librarian"
+                    else prompts.nudge(agent.role, self._awaiting(agent)),
+                )
 
     def _idle(self, agent: Agent) -> bool:
         """True unless the agent is waiting: for a running or paused subagent, a running job or a review."""
@@ -715,6 +745,14 @@ class Controller:
             await self._notify(self.state.agents[agent.parent], prompts.stalled(agent.id, last))
         elif agent.role == "primary":  # the human's reply continues it
             self.show("alert", "primary", f"The primary has stopped and is waiting for you. Its last message:\n{last}")
+        elif agent.role == "librarian":  # the work stays catalogued and frozen; its requests wait
+            self.show(
+                "alert",
+                LIBRARIAN,
+                f"The Librarian has stopped with shelving requests pending ({', '.join(self.state.shelving)}). "
+                f"Its last message:\n{last}",
+            )
+            await self._closed(force=True)
         else:  # the Reviewer: without a verdict, the proposal under review is withdrawn
             proposal, self.state.proposal = self.state.proposal, None
             agent.status = "resting"
@@ -763,7 +801,7 @@ class Controller:
     async def _notify(self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None) -> None:
         """Queue a notice; deliver it now to an agent at work, wake a resting one (not while paused or handing off)."""
         self._queue(agent, text, sender, origin)
-        if self.state.status != "running" or agent.handoff_reason:
+        if not self._works(agent) or agent.handoff_reason:
             return
         if agent.status == "resting":
             await self._wake(agent)
@@ -777,7 +815,7 @@ class Controller:
             await self._send(agent, "\n\n".join(pending), record=False)
 
     async def _flush_running(self, agent: Agent) -> None:
-        if agent.status == "running" and not agent.handoff_reason and self.state.status == "running":
+        if agent.status == "running" and not agent.handoff_reason and self._works(agent):
             await self._flush(agent)
 
     async def _wake(self, agent: Agent) -> None:
@@ -860,7 +898,7 @@ class Controller:
         if problems:
             self._queue(agent, _layout_notice(problems))
         reason, agent.handoff_reason = agent.handoff_reason, None
-        if self.state.status == "running":  # while paused, the human's edits are committed (and reported) at resume
+        if self._works(agent):  # while paused, the human's edits are committed (and reported) at resume
             self._commit(f"{agent.id}: handoff ({reason})")
         if agent.status == "handing_off":
             agent.status = "running"
@@ -883,7 +921,7 @@ class Controller:
             agent.status = "resting"
             if news:
                 await self._wake(agent)
-        elif self.state.status == "running" and not self._blocked(agent.backend):
+        elif self._works(agent) and not self._blocked(agent.backend):
             await self._start_session(agent)
         else:
             agent.status = "paused"
@@ -906,7 +944,7 @@ class Controller:
 
     # Tools ----------------------------------------------------------------------------------
 
-    async def _tool_request(self, agent_id: str, session: int, tool: str, args: dict) -> str:
+    async def _on_tool(self, agent_id: str, session: int, tool: str, args: dict) -> str:
         """Handle one tool call from session number ``session`` of ``agent_id`` (only its role's tools reach here)."""
         assert self.lock is not None  # sessions, and so their tools, exist only while run() runs
         async with self.lock:
@@ -917,13 +955,13 @@ class Controller:
                 return f"Error: your result is with {caller.parent}; end your turn and wait for its decision."
             self.show("tool", agent_id, f"{tool}({_brief(args)})")
             try:
-                reply = await getattr(self, f"_tool_{tool}")(caller, **args)
+                reply = await self.handlers[tool](caller, **args)
             except ToolError as refusal:
                 reply = f"Refused: {refusal}"
             except TypeError as error:
                 reply = f"Error: invalid arguments for {tool}: {error}"
             caller.nudged = False
-            if caller.notices and caller.status == "running" and self.state.status == "running":
+            if caller.notices and caller.status == "running" and self._works(caller):
                 reply += "\n\n" + "\n\n".join(caller.notices)  # pending notices ride along with any reply
                 caller.notices = []
             await self._after_change()
@@ -996,14 +1034,14 @@ class Controller:
         if self.state.status != "running":
             raise ToolError(f"the investigation is {self.state.status}; no new work can start now")
         if self._blocked(backend):
-            held = self.state.holds.get(backend) or self.state.holds[self.state.agents["primary"].backend]
+            held = self.state.holds[backend]
             raise ToolError(
                 f"{backend} agents are temporarily paused by the usage quota ({held['detail']}); "
                 "the controller resumes them automatically. Use another backend, or try later"
             )
         if not self._slot_free():
             raise ToolError(
-                f"{len(self.sessions)}/{self.state.options.max_agents} agent sessions are already open "
+                f"{self._open()}/{self.state.options.max_agents} agent sessions are already open "
                 "(idle ones close after the idle limit); no more subagents can be started now"
             )
 
@@ -1055,7 +1093,7 @@ class Controller:
 
     def _new_id(self, name: str) -> str:
         base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "agent"
-        base = "agent" if base in ("primary", "reviewer") else base
+        base = "agent" if base in ROLES else base
         candidate, number = base, 1
         while candidate in self.state.agents or self.project.agent_dir(candidate).exists():
             number += 1
@@ -1099,8 +1137,9 @@ class Controller:
             raise ToolError(f"{agent} has not submitted a result (it is {child.status})")
         child.status = "accepted"
         await self._close(child.id)
-        self._commit(f"{caller.id}: accepted the result of {agent}")
-        return f"Accepted the result of {agent}."
+        commit = self._commit(f"{caller.id}: accepted the result of {agent}")
+        await self.librarian.shelve([child], commit)
+        return f"Accepted the result of {agent}; its folder is now shelved and frozen."
 
     async def _tool_reject(self, caller: Agent, agent: str, feedback: str) -> str:
         child = self._child(caller, agent)
@@ -1140,12 +1179,14 @@ class Controller:
         child = self._child(caller, agent)
         if child.status in ENDED:
             raise ToolError(f"{agent} has already ended ({child.status})")
-        await self._cancel_tree(child)
-        self._commit(f"{caller.id}: cancelled {agent}")
+        cancelled = await self._cancel_tree(child)
+        await self.librarian.shelve(cancelled, self._commit(f"{caller.id}: cancelled {agent}"))
         await self._resume_agents({"slots"})
         return f"Cancelled {agent}, its subagents and its jobs."
 
-    async def _cancel_tree(self, agent: Agent) -> None:
+    async def _cancel_tree(self, agent: Agent) -> list[Agent]:
+        """Cancel ``agent`` and its open descendants, with their jobs; return those cancelled, deepest first."""
+        cancelled = []
         for member in [agent, *self.state.descendants(agent.id)]:
             if member.status in ENDED:
                 continue
@@ -1153,6 +1194,8 @@ class Controller:
             for job in self.state.running_jobs(member.id):
                 await self._stop_job(job)
             member.status, member.handoff_reason = "cancelled", None
+            cancelled.append(member)
+        return cancelled[::-1]
 
     async def _tool_run_job(self, caller: Agent, command: str, timeout_seconds: float, cwd: str = "") -> str:
         self._talk_only(caller)
@@ -1169,8 +1212,9 @@ class Controller:
         self.state.job_counter += 1
         job = Job(f"job-{self.state.job_counter}", caller.id, command, str(folder), timeout, time.time())
         try:
+            read_only = [self.project.evidence, self.project.library, *self.librarian.frozen()]
             self.processes[job.id] = joblib.start(
-                self.project.root, job, read_only=[self.project.evidence], hidden=[self.project.research]
+                self.project.root, job, read_only=read_only, hidden=[self.project.research]
             )
         except OSError as error:
             raise ToolError(f"the job could not start: {error}") from None
@@ -1309,7 +1353,7 @@ class Controller:
             proposal["challenged"] = True
         # What the primary changed after proposing: the review does not cover it.
         changed = (
-            self.project.changed_since(proposal["commit"], "reviews", "agents/reviewer")
+            self.project.changed_since(proposal["commit"], "reviews", "library", "agents/reviewer", "agents/librarian")
             if proposal.get("commit")
             else []
         )
@@ -1322,14 +1366,21 @@ class Controller:
     # Finishing ----------------------------------------------------------------------------------
 
     async def _finish(self, outcome: str, detail: str) -> None:
-        """End the investigation: stop every agent and job, record the outcome and commit."""
+        """End the investigation: stop every agent and job but the Librarian, record the outcome and commit.
+
+        The primary's and the Reviewer's folders, and any other ended agent's not shelved yet, are then
+        shelved; the controller exits once the Librarian has placed them, or at once if it cannot run.
+        """
         state = self.state
         state.status, state.proposal = outcome, None
         stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
         state.outcome = f"{outcome.upper()} on {stamp}: {detail}"
         for agent_id in list(self.sessions):
-            await self._close(agent_id)
+            if agent_id != LIBRARIAN:
+                await self._close(agent_id)
         for agent in state.agents.values():
+            if agent.role == "librarian":
+                continue
             agent.handoff_reason = None
             if agent.status not in ENDED and agent.role != "reviewer":
                 agent.status = "finished" if agent.role == "primary" else "cancelled"
@@ -1344,8 +1395,44 @@ class Controller:
             f"{text.rstrip()}\n\n## Outcome (recorded by the controller)\n\n{state.outcome}\n",
             root=self.project.root,
         )
-        self._commit(f"controller: investigation {outcome.upper()}")
+        commit = self._commit(f"controller: investigation {outcome.upper()}")
         self.show("controller", "primary", f"The investigation is {outcome.upper()}: {detail}")
+        final = [
+            agent
+            for agent in state.agents.values()
+            if self.project.agent_dir(agent.id).is_dir()
+            and (agent.role in ("primary", "reviewer") or agent.status in ENDED)
+            and (agent.role in ("primary", "reviewer") or agent.id not in self.librarian.catalogue.shelves)
+        ]
+        self.closing = True
+        await self.librarian.shelve(final, commit)
+        self._save()
+        await self._closed()
+
+    async def _closed(self, force: bool = False) -> None:
+        """After the end: exit once the Librarian placed the final work, or cannot run (``force``: it stalled).
+
+        Requests it leaves pending reach it at the controller's next run.
+        """
+        librarian = self.state.agents[LIBRARIAN]
+        if not self.closing:
+            return
+        if not force and self.state.shelving and librarian.status != "paused" and not self._blocked(librarian.backend):
+            return  # it is placing the final work
+        self.closing = False
+        await self._close(LIBRARIAN)
+        librarian.handoff_reason = None
+        if librarian.status in ACTIVE or librarian.status == "paused":
+            librarian.status, librarian.pause_reason = "resting", None
+        pending = self.state.shelving
+        self._commit("controller: the library after the end")  # the catalogue and the Librarian's last notes
+        self.show(
+            "controller",
+            LIBRARIAN,
+            f"Shelving requests wait for the next run: {', '.join(pending)}."
+            if pending
+            else "The library is up to date.",
+        )
         self._save()
         assert self.done is not None  # set by run(), within which this runs
         self.done.set()
@@ -1446,9 +1533,10 @@ class Controller:
         self._save()
 
     async def _after_change(self) -> None:
-        """Follow-ups once agents may have stopped working: complete a pause, fill free slots."""
+        """Follow-ups once agents may have stopped working: complete a pause, fill free slots, end after the end."""
         await self._pause_progress()
         await self._resume_agents({"slots"})
+        await self._closed()
 
     async def _shutdown(self) -> None:
         """Let every session save its handoff, then end the controller; jobs keep running."""
@@ -1461,15 +1549,15 @@ class Controller:
     # Usage quota ---------------------------------------------------------------------------------
 
     def _blocked(self, backend: str) -> bool:
-        """True if agents on ``backend`` must not run: their CLI, or the primary's, is held."""
-        return backend in self.state.holds or self.state.agents["primary"].backend in self.state.holds
+        """True if agents on ``backend`` must not run: their CLI is held."""
+        return backend in self.state.holds
 
     def _backends_in_use(self) -> set[str]:
         agents = [a for a in self.state.agents.values() if a.status not in ENDED]
         return (
             {a.backend for a in agents}
             | set(self.state.options.backends)
-            | {self.state.agents["primary"].backend, self.state.agents["reviewer"].backend}
+            | {self.state.agents[role].backend for role in ROLES}
         )
 
     async def _quota_loop(self) -> None:
@@ -1596,7 +1684,10 @@ class Controller:
         belongs, which the controller never writes through) is shown and skipped: it
         must not stop the commit, nor the handoff or result that asked for it.
         """
-        writes = [lambda: self.project.write_agents_index(list(self.state.agents.values()))]
+        writes = [
+            lambda: self.project.write_agents_index(list(self.state.agents.values())),
+            self.librarian.write_catalog,
+        ]
         writes += [
             lambda owner=owner: joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
             for owner in sorted({job.owner for job in self.state.jobs.values()})

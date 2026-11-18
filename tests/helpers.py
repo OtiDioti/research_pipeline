@@ -30,7 +30,12 @@ def launch_options(**changes) -> Options:
     """Launch options for tests: explicit CLI choices for the primary and Reviewer, both fake CLIs allowed."""
     return Options(
         **(
-            {"primary": "codex:gpt-test:high", "reviewer": "codex:gpt-test:high", "backends": ["codex", "claude"]}
+            {
+                "primary": "codex:gpt-test:high",
+                "reviewer": "codex:gpt-test:high",
+                "librarian": "codex:gpt-test:high",
+                "backends": ["codex", "claude"],
+            }
             | changes
         )
     )
@@ -123,6 +128,21 @@ class Harness:
 
     def handoff(self, agent_id: str) -> None:
         self.write(f"agents/{agent_id}/HANDOFF.md", "# Handoff\n\nNext: continue.\n")
+
+
+async def shelve_all(harness: Harness) -> None:
+    """Act as the Librarian: one page linking every pending agent's folder, then shelved for each."""
+    pending = list(harness.state.shelving)
+    page = "# Work\n\n" + "".join(f"- [{agent}](../agents/{agent}/)\n" for agent in pending)
+    assert "Wrote" in await harness.call("librarian", "write_page", path="work.md", text=page)
+    index = (harness.root / "library" / "FOLDER_CONTENT.md").read_text()
+    if "work.md" not in index:
+        await harness.call(
+            "librarian", "write_page", path="FOLDER_CONTENT.md", text=index + "- [work.md](work.md) — Work.\n"
+        )
+    for agent in pending:
+        reply = await harness.call("librarian", "shelved", agent=agent)
+        assert reply.startswith("Shelved"), reply
 
 
 @asynccontextmanager

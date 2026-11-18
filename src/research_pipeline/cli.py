@@ -38,6 +38,11 @@ def _parser() -> argparse.ArgumentParser:
         help="CLI, model and effort of the final Reviewer: BACKEND:MODEL:EFFORT (required on the first run)",
     )
     run.add_argument(
+        "--librarian",
+        help="CLI, model and effort of the Librarian, who keeps the library: BACKEND:MODEL:EFFORT "
+        "(required on the first run)",
+    )
+    run.add_argument(
         "--backends",
         help="comma-separated CLIs agents may choose for subagents "
         f"(default: those of the primary and Reviewer; known: {', '.join(DRIVERS)})",
@@ -98,7 +103,7 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
     context threshold outside (0, 0.8].
     """
     options = Options(**vars(stored)) if stored else Options()
-    for name in ("primary", "reviewer"):
+    for name in ("primary", "reviewer", "librarian"):
         value = getattr(args, name)
         if value:
             Spec.parse(value, f"--{name}")
@@ -206,6 +211,8 @@ def show_status(project: Project) -> int:
             f"Proposal: {state.proposal['kind'].upper()} round {state.proposal['round']}"
             + (" (reviewed)" if state.proposal.get("reviewed") else "")
         )
+    if state.shelving:
+        print(f"Shelving pending (for the Librarian): {', '.join(state.shelving)}")
     for backend, hold in state.holds.items():
         print(f"Held: {backend} ({hold['kind']}: {hold['detail']})")
     print("\nAgents:")

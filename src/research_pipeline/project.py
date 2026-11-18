@@ -32,8 +32,7 @@ TOP_LEVEL = frozenset(
         "starting_evidence",
         "STATUS.md",
         "REPORT.md",
-        "sources",
-        "tools",
+        "library",
         "agents",
         "reviews",
         ".research",
@@ -64,12 +63,19 @@ ROOT_INDEX = """# Folder contents
 - [starting_evidence](starting_evidence) — The human's questions, evidence and tools; read-only for agents.
 - [STATUS.md](STATUS.md) — Current state of the investigation, maintained by the primary researcher.
 - [REPORT.md](REPORT.md) — The synthesis submitted with COMPLETE.
-- [sources](sources) — Papers and notes on them, shared by all agents.
-- [tools](tools) — Reusable tools made by the agents, each with a README.md.
-- [agents](agents) — One folder per agent: its task, handoff, result and work.
+- [library](library) — The Librarian's pages leading to the finished work, starting at LIBRARY.md.
+- [agents](agents) — One folder per agent: its task, handoff, result and work (frozen once shelved).
 - [reviews](reviews) — The Reviewer's reviews.
 """
 EMPTY_INDEX = "# Folder contents\n\n"
+LIBRARY_INDEX = """# Folder contents
+
+- [LIBRARY.md](LIBRARY.md) — The Librarian's entry page: how the library is organised, and its changes.
+- [CATALOG.md](CATALOG.md) — Every shelved file and the work in progress, kept by the controller.
+"""
+LIBRARY_START = "# Library\n\nNothing is shelved yet. The Librarian describes the library's organisation here.\n"
+#: Top-level folders of projects made before the library: such projects are not migrated (PROJECT.md §6).
+LEGACY = ("sources", "tools")
 # Commits are made by the controller under this identity; the agent and event go in the message.
 IDENTITY = ("research-pipeline", "research-pipeline@localhost")
 _EXCLUDE_MARK = "# research-pipeline: large files"
@@ -87,6 +93,7 @@ class Project:
         self.evidence = self.root / "starting_evidence"  # the human's: read-only for agents and their jobs
         self.questions = self.evidence / "RESEARCH_QUESTIONS.md"
         self.agents = self.root / "agents"
+        self.library = self.root / "library"  # the Librarian's pages; read-only for every session and job
         self.reviews = self.root / "reviews"
         self.research = self.root / ".research"  # the controller's: hidden from agents and their jobs
         self.logs = self.research / "logs"
@@ -118,19 +125,25 @@ class Project:
             raise ProjectError("Projects cannot live under /tmp: each agent session has its own private /tmp.")
         if not self.questions.is_file():
             raise ProjectError(f"{self.questions} is missing: write the research questions there first.")
-        for folder in (self.root / "sources", self.root / "tools", self.agents, self.reviews, self.logs):
+        legacy = [name for name in LEGACY if (self.root / name).exists()]
+        if legacy:
+            raise ProjectError(
+                f"This project predates the library (it has {' and '.join(f'{name}/' for name in legacy)}) "
+                "and is not migrated: start a new project, with what it needs in starting_evidence/."
+            )
+        for folder in (self.library, self.agents, self.reviews, self.logs):
             folder.mkdir(parents=True, exist_ok=True)
-        for name, text in (
-            ("STATUS.md", "# Status\n\nThe investigation has not started yet.\n"),
-            ("REPORT.md", ""),
-            ("FEEDBACK.md", ""),
-            (INDEX, ROOT_INDEX),
+        for path, text in (
+            (self.root / "STATUS.md", "# Status\n\nThe investigation has not started yet.\n"),
+            (self.root / "REPORT.md", ""),
+            (self.root / "FEEDBACK.md", ""),
+            (self.root / INDEX, ROOT_INDEX),
+            (self.library / "LIBRARY.md", LIBRARY_START),
+            (self.library / INDEX, LIBRARY_INDEX),
+            (self.reviews / INDEX, EMPTY_INDEX),
         ):
-            if not (self.root / name).exists():
-                self.write(self.root / name, text)
-        for folder in (self.root / "sources", self.root / "tools", self.reviews):
-            if not (folder / INDEX).exists():
-                self.write(folder / INDEX, EMPTY_INDEX)
+            if not path.exists():
+                self.write(path, text)
         ignore = self.root / ".gitignore"
         if not ignore.exists():
             self.write(ignore, GITIGNORE)
@@ -149,7 +162,11 @@ class Project:
         lines = [EMPTY_INDEX.rstrip("\n"), ""]
         for agent in sorted(agents, key=lambda a: a.id):
             task = self.agent_dir(agent.id) / "TASK.md"
-            summary = {"primary": "Primary researcher.", "reviewer": "Final Reviewer."}.get(agent.role, "")
+            summary = {
+                "primary": "Primary researcher.",
+                "reviewer": "Final Reviewer.",
+                "librarian": "Keeps the library's pages.",
+            }.get(agent.role, "")
             if task.is_file():
                 summary = (
                     next(
@@ -191,11 +208,13 @@ class Project:
     def check_layout(self, agent: Agent) -> list[str]:
         """Return the problems the agent should fix in its own scope (PROJECT.md §2); empty when all is well."""
         problems = []
-        tops = [self.agent_dir(agent.id), self.root / "sources", self.root / "tools"]
+        tops = [self.agent_dir(agent.id)]
         if agent.role == "primary":
             tops.append(self.root)
         elif agent.role == "reviewer":
             tops.append(self.reviews)
+        elif agent.role == "librarian":
+            tops.append(self.library)
         for top in tops:
             try:  # files may come and go meanwhile (jobs, editors): a vanished path is simply skipped
                 if not top.is_dir():
@@ -273,6 +292,11 @@ class Project:
         """Paths with changes since the last commit (optionally only under ``paths``)."""
         output = self.git("status", "--porcelain", "--untracked-files=all", "--", *(paths or ["."]), check=False)
         return [line[3:].strip().strip('"') for line in output.splitlines() if line.strip()]
+
+    def files(self) -> list[str]:
+        """Every file git tracks or would add (tracked, or untracked and not ignored), relative to the root."""
+        output = self.git("ls-files", "-z", "--cached", "--others", "--exclude-standard", check=False)
+        return [path for path in output.split("\0") if path]
 
     def commit(self, message: str) -> str | None:
         """Commit every change except large files; return the new commit, or None if nothing changed."""

@@ -3,7 +3,7 @@
 Built on :mod:`agent_toolkit.web`. The setup page offers every launch option,
 prefilled from the command line and the stored (last used) options; the running
 page shows every agent that ever worked on the project, its jobs, documents and
-the websites and sources it used, and passes the human's actions on to
+the websites and library pages it used, and passes the human's actions on to
 :meth:`Controller.act <research_pipeline.controller.Controller.act>`.
 """
 
@@ -36,7 +36,7 @@ JOBS = {"running": "working", "finished": "finished", "cancelled": "cancelled"}
 #: Documents first in an agent's "Task & notes", in this order.
 FIRST = ("TASK.md", "HANDOFF.md", "RESULT.md", "PARENT_FEEDBACK.md", "STATUS.md", "REPORT.md")
 URL = re.compile(r'https?://[^\s\'"<>)\]]+')
-SOURCE = re.compile(r"\bsources/[\w./-]+")
+SOURCE = re.compile(r"\blibrary/[\w./-]+")
 #: Transcript entries worth a notification.
 NOTEWORTHY = re.compile(
     r"quota|failed|could not|paused|resumed|investigation is|stalled|verdict|review round|"
@@ -59,7 +59,9 @@ class ResearchDashboard(Dashboard):
         self.options, self.drivers, self.controller_options = options, drivers, controller_options
         self.paths = Project(self.project)
         self.controller: Controller | None = None
-        self.used: dict[str, dict[str, set]] = {}  # agent -> {'sites': URLs, 'sources': paths} from its tool calls
+        self.used: dict[
+            str, dict[str, set]
+        ] = {}  # agent -> {"sites": URLs, "pages": library pages} from its tool calls
         self._listing: tuple[float, dict] = (0.0, {})
         for entry in ActivityLog(self.paths.research / "activity").read(None, limit=200_000):
             self._remember(entry)
@@ -82,6 +84,14 @@ class ResearchDashboard(Dashboard):
                 "Reviewer",
                 "spec",
                 "Reviews a proposal to finish. Changed while it runs: from its next session.",
+                options=backends,
+                live=True,
+            ),
+            Field(
+                "librarian",
+                "Librarian",
+                "spec",
+                "Keeps the library's pages. Changed while it runs: from its next session.",
                 options=backends,
                 live=True,
             ),
@@ -169,6 +179,7 @@ class ResearchDashboard(Dashboard):
             for name in (
                 "primary",
                 "reviewer",
+                "librarian",
                 "backends",
                 "max_agents",
                 "threshold",
@@ -182,7 +193,9 @@ class ResearchDashboard(Dashboard):
 
     async def start(self, values: dict) -> None:
         values = validate(self.fields(), values, self.drivers)
-        missing = {name: "required" for name in ("primary", "reviewer", "backends") if not values.get(name)}
+        missing = {
+            name: "required" for name in ("primary", "reviewer", "librarian", "backends") if not values.get(name)
+        }
         if missing:
             raise SettingsError(missing)
         self.options = Options(**{**vars(self.options), **values})
@@ -224,7 +237,7 @@ class ResearchDashboard(Dashboard):
             used = self.used.get(agent.id, {})
             for url in sorted(used.get("sites", ())):
                 nodes.append(node(f"site:{url}", "site", url.split("/")[2], owners=[agent.id], url=url))
-            for path in sorted(used.get("sources", ())):
+            for path in sorted(used.get("pages", ())):
                 nodes.append(node(f"file:{path}", "file", Path(path).name, owners=[agent.id], path=path))
         if state.verdict and "reviewer" in state.agents:
             edges.append(edge("reviewer", "primary", "result", state.verdict))
@@ -336,6 +349,8 @@ class ResearchDashboard(Dashboard):
                 found += [self.project / name for name in ("STATUS.md", "REPORT.md") if (self.project / name).is_file()]
             if agent.role == "reviewer":
                 found += [path for path in self.paths.reviews.glob("*.md") if path.name != INDEX]
+            if agent.role == "librarian":
+                found += [path for path in self.paths.library.glob("*.md") if path.name != INDEX]
             order = {name: rank for rank, name in enumerate(FIRST)}
             listing[agent.id] = [
                 str(path) for path in sorted(found, key=lambda path: (order.get(path.name, 99), path.name))
@@ -386,12 +401,12 @@ class ResearchDashboard(Dashboard):
         self.publish(entry)
 
     def _remember(self, entry: dict) -> None:
-        """Note the websites and sources an agent's tool call used."""
+        """Note the websites and library pages an agent's tool call used."""
         if entry.get("kind") != "tool":
             return
-        used = self.used.setdefault(entry["agent"], {"sites": set(), "sources": set()})
+        used = self.used.setdefault(entry["agent"], {"sites": set(), "pages": set()})
         used["sites"].update(url.rstrip(".,;") for url in URL.findall(entry.get("text", "")))
         for relative in SOURCE.findall(entry.get("text", "")):
             path = self.project / relative.rstrip(".,;")
             if path.is_file() and path.name != INDEX:
-                used["sources"].add(str(path))
+                used["pages"].add(str(path))

@@ -12,7 +12,7 @@ from agent_toolkit import SetupError
 
 from research_pipeline.controller import Controller
 from research_pipeline.project import ProjectError
-from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project
+from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, shelve_all, temp_project
 
 
 def sent(harness, agent_id: str) -> str:
@@ -69,8 +69,11 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             opening = harness.session("primary").launch.message
             self.assertIn("What is the integral of x^2", opening)
             self.assertIn("session 1 of primary", opening)
-            for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "sources", "tools", "agents", "reviews"):
+            for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "agents", "reviews", "library/LIBRARY.md"):
                 self.assertTrue((self.root / name).exists(), name)
+            self.assertIn("Nothing is shelved yet", (self.root / "library" / "CATALOG.md").read_text())
+            self.assertEqual(harness.state.agents["librarian"].status, "resting")  # started at its first request
+            self.assertNotIn("librarian", harness.controller.sessions)
             log = harness.controller.project.git("log", "--oneline")
             self.assertIn("project prepared", log)
             self.assertIn("investigation started", log)
@@ -496,22 +499,22 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.emit(claude, "turn_ended", text="")
             self.assertIn("not a scientific blocker", sent(harness, "primary"))
 
-    async def test_primary_cli_hold_pauses_everyone_and_weekly_waits_for_resume(self):
+    async def test_a_hold_on_the_primarys_cli_pauses_only_its_agents_and_weekly_waits_for_resume(self):
         async with running(self.root) as harness:
             claude = await self.spawn(harness, name="lit", backend="claude")
             job = (await harness.call(claude, "run_job", command="sleep 30", timeout_seconds=60)).split()[1]
             harness.quota.remaining["codex"] = (80.0, 5.0)
             await harness.controller._check_quota()
             await harness.settle()
-            self.assertEqual({harness.state.agents[a].status for a in ("primary", claude)}, {"handing_off"})
-            for agent in ("primary", claude):
-                harness.handoff(agent)
-                await harness.emit(agent, "turn_ended", text="")
+            self.assertEqual(harness.state.agents["primary"].status, "handing_off")
+            self.assertEqual(harness.state.agents[claude].status, "running")  # its own CLI is not held
+            harness.handoff("primary")
+            await harness.emit("primary", "turn_ended", text="")
             harness.quota.remaining["codex"] = (80.0, 80.0)
             await harness.controller._check_quota()  # a weekly hold stays until the human resumes
             self.assertEqual(harness.state.agents["primary"].status, "paused")
             self.assertTrue(harness.controller.releasable)
-            harness.controller.toggle_pause()  # nothing works: the toggle is the human's resume, not a pause
+            harness.controller.release()
             await harness.settle(10)
             self.assertEqual(harness.state.agents["primary"].status, "running")
             self.assertEqual(harness.state.agents[claude].status, "running")
@@ -564,9 +567,12 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(harness.state.agents["primary"].status, "finished")
             self.assertIn("COMPLETE on", (self.root / "STATUS.md").read_text())
             self.assertIn("investigation COMPLETE", harness.controller.project.git("log", "--oneline"))
-            self.assertEqual(harness.controller.sessions, {})
+            self.assertEqual(list(harness.controller.sessions), ["librarian"])  # it places the final work
+            self.assertEqual(harness.state.shelving, ["primary", "reviewer"])
+            await shelve_all(harness)
             assert harness.task is not None
             await asyncio.wait_for(harness.task, 2)
+            self.assertEqual(harness.controller.sessions, {})
 
     async def test_proposal_needs_a_settled_layout(self):
         async with running(self.root) as harness:
@@ -630,6 +636,9 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await self.propose_complete(harness)
             self.ready_review(harness)
             await harness.call("reviewer", "verdict", review="1.md", agree=True)
+            await shelve_all(harness)  # the Librarian places the final work; then the controller exits
+            assert harness.task is not None
+            await asyncio.wait_for(harness.task, 2)
         (self.root / "starting_evidence" / "RESEARCH_QUESTIONS.md").write_text("A new question?\n")
         async with running(self.root) as harness:
             opening = harness.session("primary").launch.message
