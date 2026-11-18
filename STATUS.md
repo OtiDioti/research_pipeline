@@ -1,5 +1,8 @@
 # Status
 
+**2026-11-18.** 0.10.1: on agent_toolkit 0.7.1, the setup page keeps what was typed and not yet sent or saved
+(ideas, unsaved edits of OBJECTIVES.md, answers in progress, the organiser's drafts) when switching between its steps.
+
 **2026-11-18.** 0.10.0: the web setup ([docs/SETUP.md](docs/SETUP.md), PROJECT.md §2, §3, §6). `run DIR --web`
 opens a setup page on any folder no investigation has started in, even one that does not exist yet or is ready
 already: *Material* (upload, copy from local paths, or by hand; each loose entry placed in `starting_evidence/` with
