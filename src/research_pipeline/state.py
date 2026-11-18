@@ -34,6 +34,7 @@ class Options:
     primary: str = ""  # BACKEND:MODEL:EFFORT of the primary researcher
     reviewer: str = ""  # BACKEND:MODEL:EFFORT of the final Reviewer
     librarian: str = ""  # BACKEND:MODEL:EFFORT of the Librarian
+    setup: str = ""  # BACKEND:MODEL:EFFORT of the setup assistant (web setup, before the first start)
     backends: list[str] = field(default_factory=list)  # CLIs agents may choose for subagents
     max_agents: int = 6  # live sessions at the same time (idle ones included)
     references: list[str] = field(default_factory=list)  # read-only folders of other projects

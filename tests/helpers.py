@@ -47,6 +47,9 @@ def temp_project(question: str = "What is the integral of x^2 on [0, 1]?") -> Pa
     root = Path(tempfile.mkdtemp(dir=TEST_ROOT))
     (root / "starting_evidence").mkdir()
     (root / "starting_evidence" / "OBJECTIVES.md").write_text(question + "\n")
+    (root / "starting_evidence" / "FOLDER_CONTENT.md").write_text(
+        "- [OBJECTIVES.md](OBJECTIVES.md) — The objectives.\n"
+    )
     return root
 
 

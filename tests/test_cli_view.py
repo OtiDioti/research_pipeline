@@ -22,6 +22,7 @@ def arguments(**values):
         primary=None,
         reviewer=None,
         librarian=None,
+        setup=None,
         backends=None,
         max_agents=None,
         reference=None,
