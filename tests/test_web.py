@@ -175,7 +175,17 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(dashboard.controller.launch_options.max_agents, 3)
         self.assertEqual(
             {field["name"] for field in dashboard.live()["fields"]},
-            {"primary", "reviewer", "backends", "max_agents", "threshold", "idle_limit", "short_limit", "weekly_limit"},
+            {
+                "primary",
+                "reviewer",
+                "librarian",
+                "backends",
+                "max_agents",
+                "threshold",
+                "idle_limit",
+                "short_limit",
+                "weekly_limit",
+            },
         )
 
     async def test_the_graph_shows_agents_their_documents_websites_jobs_and_actions(self):
@@ -191,7 +201,8 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
             graph = dashboard.snapshot()["graph"]
             nodes = {item["id"]: item for item in graph["nodes"]}
             self.assertEqual(
-                {item["id"] for item in graph["nodes"] if item["kind"] == "agent"}, {"primary", "reviewer", child}
+                {item["id"] for item in graph["nodes"] if item["kind"] == "agent"},
+                {"primary", "reviewer", "librarian", child},
             )
             agent = nodes[child]
             self.assertEqual((agent["parent"], agent["role"], agent["backend"]), ("primary", "subagent", "codex"))

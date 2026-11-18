@@ -23,7 +23,7 @@ program exits.
 ## The setup page
 
 Every launch option, prefilled from the command line and the stored options (the
-last used): the primary and the Reviewer (CLI, model from the CLI's own list or
+last used): the primary, the Reviewer and the Librarian (CLI, model from the CLI's own list or
 typed, effort as a slider over the levels the model accepts), the CLIs for
 subagents, the number of sessions at once, the idle limit, the handoff threshold, the usage limits,
 and under *Advanced* the reference folders and durable state. Start checks them
@@ -31,7 +31,7 @@ like the command line does and shows what is wrong next to each setting.
 
 While the investigation runs, the settings button changes the handoff threshold
 (live sessions follow at their next context reading), the usage limits, the
-number of sessions at once and the idle limit, at once; and the primary's or the Reviewer's CLI, model
+number of sessions at once and the idle limit, at once; and the primary's, the Reviewer's or the Librarian's CLI, model
 and effort, from that agent's next session, and the CLIs for subagents, from the
 next spawn. The reference folders and durable state need a new `run`.
 
@@ -53,8 +53,9 @@ next spawn. The reference folders and durable state need a new `run`.
   sessions. Clicking selects it; Shift- or Ctrl-click and dragging a box select
   several; double-click selects its subtree. Selecting unfolds what the selected
   agents own: their documents (the files in their folder except FOLDER_CONTENT.md;
-  the primary's STATUS.md and REPORT.md; the Reviewer's reviews), their jobs, and
-  the websites and sources they used (from their tool calls). The other agents
+  the primary's STATUS.md and REPORT.md; the Reviewer's reviews; the Librarian's top
+  pages), their jobs, and
+  the websites and library pages they used (from their tool calls). The other agents
   fade. Esc or a click on empty space clears the selection.
 - Search finds agents, files and websites and highlights the path to the primary;
   filters hide agents by status, CLI or role.

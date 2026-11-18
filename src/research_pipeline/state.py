@@ -33,6 +33,7 @@ class Options:
 
     primary: str = ""  # BACKEND:MODEL:EFFORT of the primary researcher
     reviewer: str = ""  # BACKEND:MODEL:EFFORT of the final Reviewer
+    librarian: str = ""  # BACKEND:MODEL:EFFORT of the Librarian
     backends: list[str] = field(default_factory=list)  # CLIs agents may choose for subagents
     max_agents: int = 6  # live sessions at the same time (idle ones included)
     references: list[str] = field(default_factory=list)  # read-only folders of other projects
@@ -54,13 +55,14 @@ class Agent:
     """One logical agent. It keeps its identity and folder across any number of sessions."""
 
     id: str
-    role: str  # 'primary', 'subagent' or 'reviewer'
+    role: str  # 'primary', 'subagent', 'reviewer' or 'librarian'
     parent: str | None  # who spawned it (a subagent's parent); None otherwise
     backend: str
     model: str
     effort: str
     # running | handing_off | paused | submitted | resting | accepted | cancelled | finished
-    # ('resting': nothing to do until its next input, e.g. the Reviewer between rounds; a resting, paused or
+    # ('resting': nothing to do until its next input, e.g. the Reviewer between rounds or the Librarian between
+    # shelving requests; a resting, paused or
     # submitted agent may keep its idle session, which closes after the idle limit)
     status: str = "paused"
     pause_reason: str | None = None  # start, human, held, resume, quota, slots, failure, retry, restart, reopen, wake
@@ -123,6 +125,7 @@ class State:
     holds: dict[str, dict] = field(default_factory=dict)
     human: dict[str, str] = field(default_factory=dict)  # human-owned file -> fingerprint, as last seen
     job_counter: int = 0
+    shelving: list[str] = field(default_factory=list)  # agents whose shelved work awaits the Librarian, in order
     outcome: str | None = None  # how the investigation last ended
     verdict: str | None = None  # the Reviewer's last verdict: 'agree' or 'disagree'
 

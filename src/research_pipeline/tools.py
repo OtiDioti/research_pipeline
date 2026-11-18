@@ -9,6 +9,11 @@ from agent_toolkit.tools import Tool
 
 TEXT = {"type": "string"}
 
+
+class ToolError(Exception):
+    """A tool call the controller refuses; its message is returned to the agent."""
+
+
 SPAWN = Tool(
     "spawn",
     "Start a subagent on a task, to solve a subproblem separately or in parallel.\n\n"
@@ -71,10 +76,29 @@ VERDICT = Tool(
     ("review", "agree"),
 )
 
+WRITE_PAGE = Tool(
+    "write_page",
+    "Write a Markdown page of library/, replacing it if it exists; empty text removes it.\n\n"
+    "path: relative to library/, ending in .md (e.g. 'LIBRARY.md', 'methods/FOLDER_CONTENT.md').\n"
+    "library/CATALOG.md is the controller's. Link to the agents' work with relative paths (from\n"
+    "library/methods/x.md: '../../agents/fit-check/notes.md'); a link to a folder covers everything in it.",
+    {"path": TEXT, "text": TEXT},
+    ("path", "text"),
+)
+SHELVED = Tool(
+    "shelved",
+    "Report a shelving request done: every file of the agent is reachable from your pages.\n\n"
+    "Refused, with the files and links concerned, while a file of the agent is reachable from no page,\n"
+    "a link in library/ leads nowhere, or a folder of library/ lacks its FOLDER_CONTENT.md lines.",
+    {"agent": TEXT},
+    ("agent",),
+)
+
 _COMMON = [SPAWN, AGENTS, MESSAGE, ACCEPT, REJECT, CANCEL, RUN_JOB, JOB_STATUS, JOB_CANCEL]
 #: Tools offered to each role.
 ROLE_TOOLS = {
     "primary": _COMMON + [COMPLETE, STOP],
     "subagent": _COMMON + [SUBMIT_RESULT],
     "reviewer": _COMMON + [VERDICT],
+    "librarian": [WRITE_PAGE, SHELVED],
 }

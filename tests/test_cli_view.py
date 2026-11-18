@@ -21,6 +21,7 @@ def arguments(**values):
     defaults = dict(
         primary=None,
         reviewer=None,
+        librarian=None,
         backends=None,
         max_agents=None,
         reference=None,

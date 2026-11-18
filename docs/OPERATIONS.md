@@ -6,10 +6,10 @@ Running an investigation, controlling it, and finding out what went wrong.
 
 `research-pipeline run PROJECT` starts, resumes or reopens an investigation; the
 options are listed in [README.md](../README.md).
-- On the first run, `--primary` and `--reviewer` are required as
-  `BACKEND:MODEL:EFFORT`. `--backends` defaults to their CLIs. `--max-agents` (6)
-  counts open sessions, idle ones included, and must be at least 2 (the primary
-  and the Reviewer). `--idle-limit MINUTES` (58; 0: never) closes a session idle
+- On the first run, `--primary`, `--reviewer` and `--librarian` are required as
+  `BACKEND:MODEL:EFFORT`. `--backends` defaults to the primary's and the Reviewer's
+  CLIs. `--max-agents` (6) counts open sessions, idle ones included but not the
+  Librarian's, and must be at least 2 (the primary and the Reviewer). `--idle-limit MINUTES` (58; 0: never) closes a session idle
   that long ([CONTEXT.md](CONTEXT.md)).
 - Options given on a later run replace the stored ones.
 - `research-pipeline status PROJECT` prints the state without starting anything:
@@ -69,7 +69,10 @@ Resume and does the same.
 | ALERT: the primary has stopped | It ended its turn idle twice, often to ask you something | Answer in the chat box |
 | A session "loaded the human's own setup" | A personal instruction file, skill or MCP server reached it | Remove it from that CLI's configuration, then Ctrl+R |
 | A CLI is held as `unreadable` | Its usage can't be read (e.g. logged out) | Log the CLI in, then Ctrl+R |
-| Everyone paused for quota | The primary's CLI is held | Wait for the reset (short), or Ctrl+R after it (weekly) |
+| A CLI's agents paused for quota | That CLI is held | Wait for the reset (short), or Ctrl+R after it (weekly) |
+| ALERT: the Librarian has stopped | It ended its turn idle twice with shelving requests pending | Message it from the web app, or look at its log; the work stays catalogued meanwhile |
+| "This project predates the library" | It has `sources/` or `tools/` at its top level | Start a new project, with what it needs in `starting_evidence/` |
+| A job can't write another agent's folder | That agent is shelved: its folder is frozen | Copy what you need into your own folder |
 | Spawns refused at "N/N agent sessions are already open" | The cap is reached; idle sessions count until the idle limit closes them | Wait, or raise the cap (`--max-agents`, or live on the web page) |
 | No handoff although the context looks full | The CLI hasn't reported both tokens and window, or the fill is below the threshold | See [CONTEXT.md](CONTEXT.md) |
 | `sed -i` or `rm` fails on STATUS.md | A single-file bind ([CONFINEMENT.md](CONFINEMENT.md)) | Edit in place |

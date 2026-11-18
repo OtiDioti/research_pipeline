@@ -35,7 +35,7 @@ controller stops ([CONTEXT.md](CONTEXT.md)).
 | `handing_off` | yes | Asked to update HANDOFF.md and end its turn |
 | `paused` | kept, or none | Waits; see the pause reason. Paused by the human or the quota, it waits in its session |
 | `submitted` | kept, or none | A subagent submitted its result; its parent decides. Its tools are refused meanwhile |
-| `resting` | kept, or none | Nothing to do until its next input: the Reviewer between rounds, or an agent whose session closed at the idle limit. News wakes it |
+| `resting` | kept, or none | Nothing to do until its next input: the Reviewer between rounds, the Librarian between shelving requests, or an agent whose session closed at the idle limit. News wakes it |
 | `accepted`, `cancelled`, `finished` | no | Ended (until the investigation is reopened) |
 
 Pause reasons:
@@ -51,9 +51,10 @@ Pause reasons:
 - `wake`: news arrived for a resting or submitted agent; it continues as soon as it can run.
 - `reopen`: the investigation was reopened.
 
-The cap `--max-agents` (6, at least 2) counts live sessions, idle ones included. A
-slot frees only when a session closes: at the idle limit, on accept or cancel, or
-at the end. When a slot frees, paused agents without a session start in order: the
+The cap `--max-agents` (6, at least 2) counts live sessions, idle ones included;
+the Librarian's session is not counted, and it never waits for a slot. A slot
+frees only when a session closes: at the idle limit, on accept or cancel, or at
+the end. When a slot frees, paused agents without a session start in order: the
 primary, then the Reviewer, then subagents with the fewest sessions first.
 
 ## CLI events
@@ -83,7 +84,9 @@ primary, then the Reviewer, then subagents with the fewest sessions first.
   - the **primary** keeps its session, and the human gets an ALERT with its last
     message; a chat reply continues the same session;
   - for the **Reviewer**, the proposal is withdrawn, it rests, and the primary is
-    told ([FINISHING.md](FINISHING.md)).
+    told ([FINISHING.md](FINISHING.md));
+  - the **Librarian**, idle only while shelving requests are pending, keeps its
+    session, and the human gets an ALERT; its requests wait ([LIBRARY.md](LIBRARY.md)).
 
 ## Failures
 

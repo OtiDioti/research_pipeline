@@ -4,7 +4,8 @@ Reference documentation: what each part does, and what it does under each condit
 
 - [OVERVIEW.md](OVERVIEW.md) — How the parts fit together, and where to look for a given symptom.
 - [CONTROLLER.md](CONTROLLER.md) — The controller: agent statuses, events, idle and stalled agents, failures, notices, each run.
-- [AGENT_ROLES.md](AGENT_ROLES.md) — Primary, subagents and Reviewer: what they receive, spawning, results, messages.
+- [AGENT_ROLES.md](AGENT_ROLES.md) — Primary, subagents, Reviewer and Librarian: what they receive, spawning, results, messages.
+- [LIBRARY.md](LIBRARY.md) — The library and the Librarian: shelving, the catalogue, its tools, the end.
 - [CONTEXT.md](CONTEXT.md) — Context monitoring and handoffs.
 - [FINISHING.md](FINISHING.md) — COMPLETE and STOP, the review, ending and reopening.
 - [JOBS.md](JOBS.md) — Jobs: starting, files, statuses, what stops them.

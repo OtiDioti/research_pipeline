@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16.
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), and quota holds limited to the held CLI's agents (§6).
 
 ## 1. Purpose
 
@@ -9,7 +9,9 @@ supplies research questions, starting evidence and tools. A **primary researcher
 agent leads the investigation: it plans, reads literature, derives, computes, builds
 tools and writes down what it learns. It spawns **subagents** whenever that helps,
 and finishes when it judges the work done (COMPLETE, which a **Reviewer** must agree
-with) or blocked (STOP). The human judges the science.
+with) or blocked (STOP). A **Librarian** keeps a library: pages, organised for a
+human reader, that lead to the agents' finished work where it was made. The human
+judges the science.
 
 The product is discipline-agnostic: no field-specific workflows in the platform.
 **Success means scientific usefulness, not architectural completeness.** Every
@@ -31,37 +33,43 @@ organise freely.
 │   └── tools/                  the human's tools
 ├── STATUS.md               primary: current state, findings, next steps
 ├── REPORT.md               primary: the synthesis submitted with COMPLETE
-├── sources/                shared: papers, notes on them, LITERATURE.md
-├── tools/<name>/           shared: agent-made tools and environments, each with a README.md
-├── agents/<id>/            one folder per logical agent (primary, reviewer, ...)
+├── library/                Librarian: Markdown pages leading to the finished work
+│   ├── LIBRARY.md              the entry page: how the library is organised, and its changes
+│   ├── CATALOG.md              controller: every shelved file, and work in progress
+│   └── ...                     pages and folders of pages, as the Librarian sees fit
+├── agents/<id>/            one folder per logical agent (primary, reviewer, librarian, ...)
 │   ├── TASK.md             written by the parent at spawn
 │   ├── HANDOFF.md          the agent's latest handoff
 │   ├── RESULT.md           the agent's submitted result
-│   └── ...                 notes, code, data, as the agent sees fit
+│   └── ...                 notes, code, data, as the agent sees fit; frozen once shelved
 ├── reviews/                Reviewer: one file per review round
 └── .research/              controller: state and logs; hidden from agents and jobs
 ```
 
 Rules:
 
-- **Ownership.** Each agent writes in its own `agents/<id>/` and may add to the
-  shared `sources/` and `tools/`. Only the primary writes `STATUS.md` and
-  `REPORT.md`. Only the Reviewer writes `reviews/`. Files the human owns are never
-  written by agents or their jobs.
+- **Ownership.** Each agent writes in its own `agents/<id>/`. Only the primary
+  writes `STATUS.md` and `REPORT.md`. Only the Reviewer writes `reviews/`. Only the
+  Librarian writes `library/`, and only Markdown pages there, through the controller
+  (see **The library**). Nobody writes a shelved agent's folder. Files the human
+  owns are never written by agents or their jobs.
 - **Confinement.** Each agent session runs inside one `bwrap` boundary. The whole
   filesystem is readable except `.research/`, which is hidden. Everything is
-  read-only except the agent's own folder, `sources/`, `tools/`, its role's files
-  (`STATUS.md`, `REPORT.md` and the root `FOLDER_CONTENT.md` for the primary,
-  `reviews/` for the Reviewer) and the CLI's own state folder. The network is on,
-  and `/tmp` is private to the session. The CLIs' own sandboxes are switched off.
-  One mechanism serves every CLI.
+  read-only except the agent's own folder, its role's files (`STATUS.md`,
+  `REPORT.md` and the root `FOLDER_CONTENT.md` for the primary, `reviews/` for the
+  Reviewer) and the CLI's own state folder. The network is on, and `/tmp` is private
+  to the session. The CLIs' own sandboxes are switched off. One mechanism serves
+  every CLI.
 - **Job confinement.** Each job runs inside its own `bwrap` boundary, with its own
-  process namespace: `starting_evidence/` is read-only, `.research/` is hidden, and
-  the rest of the filesystem is as the controller sees it.
+  process namespace: `starting_evidence/`, `library/` and the folders of shelved
+  agents are read-only, `.research/` is hidden, and the rest of the filesystem is as
+  the controller sees it.
 - **Protected inputs.** Only the human writes `starting_evidence/`, at any time; it
-  is read-only for agents and their jobs. A job's attempt to write there fails, and
-  its owner sees the error in the job-ended notice. The human's tools therefore take
-  an output path and never write next to themselves.
+  is read-only for agents and their jobs. A job's attempt to write there, in
+  `library/` or in a shelved agent's folder fails, and its owner sees the error in
+  the job-ended notice. The human's tools therefore take an output path and never
+  write next to themselves; shelved code that does is copied first (see **The
+  library**).
 - **Markdown.** Agent-written notes and reports are Markdown with LaTeX mathematics.
   Code, data, figures and papers keep their own formats.
 - **Indexes.** Every agent-managed folder has a `FOLDER_CONTENT.md` describing its
@@ -69,9 +77,12 @@ Rules:
   index describes it), `.research/`, and folders git ignores (virtual environments,
   caches).
 - **Tools.** A tool is a folder with code and a `README.md` stating its purpose,
-  usage, dependencies and how it was checked. Software that agents install from the
-  internet goes into such documented environments under `tools/`, which agents
-  prefer to software installed elsewhere on the machine. There is no registry.
+  usage, dependencies, how it was checked, and the command that builds its
+  environment. Software that agents install from the internet goes into such
+  documented environments in their own folders, which agents prefer to software
+  installed elsewhere on the machine. Environments are git-ignored: a shelved tool
+  carries its recipe, and each agent that uses it builds its own environment in its
+  own folder. The library's catalogue is the only registry.
 - **Large files.** Files over 50 MB stay on disk but are not committed; the commit
   message lists them.
 - **Other projects.** The human may give read-only reference paths at launch. The
@@ -79,17 +90,56 @@ Rules:
   their contents as unverified evidence.
 
 **Layout check.** Whenever an agent hands off, submits a RESULT, proposes
-COMPLETE/STOP or delivers a verdict, the controller checks the folders it may
-write (its own, `sources/` and `tools/`, plus the root for the primary and
-`reviews/` for the Reviewer): indexes present and covering their folders, and
-notes in Markdown. A RESULT, proposal or verdict is refused until the problems
-are fixed; at a handoff, they are passed to the next session to fix. Unexpected
-top-level entries can only come from jobs or the human: they are reported to the
-primary and never block anyone.
+COMPLETE/STOP, delivers a verdict or reports a shelving done, the controller checks
+the folders it may write (its own, plus the root for the primary, `reviews/` for
+the Reviewer and `library/` for the Librarian): indexes present and covering their
+folders, and notes in Markdown. A RESULT, proposal, verdict or shelving is refused
+until the problems are fixed; at a handoff, they are passed to the next session to
+fix.
+Unexpected top-level entries can only come from jobs or the human: they are
+reported to the primary and never block anyone.
+
+**The library.** The agents' finished work stays in the folders where it was made.
+`library/` holds the Librarian's (§3) Markdown pages, which lead a human to it:
+what was established about each research question, how, and with which tools.
+Nothing is moved, renamed or deleted for the library, so every path an agent, a
+job or a note uses stays valid.
+
+- **Shelving.** When a subagent is accepted or cancelled (each agent of a cancelled
+  subtree), and when the investigation ends for the primary and the Reviewer (§4),
+  the controller shelves the agent's folder:
+  - it catalogues every file in it except the git-ignored ones (environments,
+    caches), which stay on disk untouched;
+  - it freezes the folder: from then on, no agent or job writes it;
+  - it asks the Librarian to place the work, giving it the agent's task, result,
+    index lines and the commit.
+- **Placing.** The Librarian writes its pages with `write_page`. Links are
+  relative, and a link to a folder covers everything in it. Once every catalogued
+  file of the agent is reachable from a page, it calls `shelved(agent)`. The
+  controller refuses that while any of those files is reachable from no page, or
+  while a link in `library/` leads nowhere, and lists them; otherwise it commits.
+- **Reorganising.** The Librarian may rewrite its pages at any time, and records
+  each change of structure and its reason, dated, in `library/LIBRARY.md`. Only
+  pages change, so nothing that agents and jobs use ever moves. At the end of each
+  of its turns, the controller commits the pages it changed and tells it of any
+  link that leads nowhere.
+- **Catalogue.** The controller keeps a catalogue of every shelved file (its path,
+  the agent that made it, the commit at shelving and its index line) and renders
+  it as `library/CATALOG.md`, together with the work in progress in agents' folders
+  (their index lines), refreshed at every commit.
+- **Using it.** Agents read and run shelved files in place, writing outputs to
+  their own folder. To change a shelved file, or to run code that writes next to
+  itself, an agent copies it into its own folder and says where it came from in
+  its index. Before solving something or spawning, agents look in `library/`
+  (starting from `LIBRARY.md`) and search `CATALOG.md`.
+- **Never waiting on it.** Shelving never blocks an agent: the controller catalogues
+  and freezes the folder at once, and the pages follow when the Librarian can run.
+  Its requests wait while it is paused, held by the quota or stalled, and survive a
+  shutdown or a crash.
 
 ## 3. Agents
 
-There are three roles, all running the same way:
+There are four roles, all running the same way:
 
 - **Primary:** responsible for the whole investigation. It is started with
   `RESEARCH_QUESTIONS.md`, `FEEDBACK.md`, an inventory of starting evidence and
@@ -99,6 +149,10 @@ There are three roles, all running the same way:
   tools, and the expected result.
 - **Reviewer:** judges the primary's COMPLETE or STOP (§4). The human chooses its
   CLI, model and effort at launch. It is one logical agent across all review rounds.
+- **Librarian:** keeps the pages of `library/` (§2, **The library**). It does no
+  research and never judges the science. The human chooses its CLI, model and
+  effort at launch. It is one logical agent, started at its first shelving request;
+  between requests it rests. It is not counted against the cap on agent sessions.
 
 Every agent:
 
@@ -111,7 +165,8 @@ Every agent:
 - hands off at 55% context (§5);
 - ends by submitting `RESULT.md` to its parent, then waits in its session, its
   tools refused, until the parent decides. The controller refuses a RESULT while
-  the agent's own subagents or jobs are still running, and lists them.
+  the agent's own subagents or jobs are still running, and lists them. (The
+  primary, the Reviewer and the Librarian finish differently: §4 and §2.)
 
 **Instructions.** Every session receives, as its CLI's system or developer
 instructions, the role prompt (§8) and the project's `AGENTS.md`; both stay in force
@@ -124,9 +179,11 @@ At every session start the driver checks the CLI's own report of what it loaded;
 session that loaded anything personal is stopped, and the human is told why.
 
 **Spawning.** An agent chooses its subagent's task, evidence, tools, CLI, model and
-effort, within the backends the human allowed at launch. Model and effort are always
-explicit: a spawn without them is refused, and so is a launch whose `--primary` or
-`--reviewer` lacks them; an effort the CLI is known not to accept is refused before
+effort, within the backends the human allowed at launch. Before spawning, it looks
+in the library for what the project already has on the subject, and names the
+relevant files in the brief. Model and effort are always
+explicit: a spawn without them is refused, and so is a launch whose `--primary`,
+`--reviewer` or `--librarian` lacks them; an effort the CLI is known not to accept is refused before
 any session starts. The role prompt limits the choice to Opus 5.5
 (`claude-opus-5-5`) or GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high` or `xhigh`,
 unless the human's `AGENTS.md` says otherwise. The human sets a cap on open agent sessions, idle
@@ -138,8 +195,8 @@ scheduling.
 parent may **accept** the result, or **reject** it with feedback. The feedback reaches
 the subagent in the session it submitted from (or, if that closed at the idle limit,
 a fresh session from its handoff, subject to the cap like any spawn). Accepting or
-cancelling closes its session. The parent may **cancel** a running subagent at any
-time.
+cancelling closes its session and shelves its folder (§2). The parent may
+**cancel** a running subagent at any time.
 
 **Messages.** A parent and each of its direct subagents can message each other at
 any time. A message is delivered during the recipient's turn, or starts its next turn
@@ -148,7 +205,8 @@ without a session when its next session starts. Messages are not stored in
 files: what matters belongs in the recipient's notes or `HANDOFF.md`. A subagent
 that has submitted its result receives no messages; its parent answers with accept,
 reject or cancel. Agents that are not parent and subagent, such as the primary and
-the Reviewer, do not message each other.
+the Reviewer, do not message each other; the Librarian neither sends nor receives
+messages, and works only from the controller's shelving requests (§2).
 
 **Working while subagents and jobs run.** Starting a subagent or a job does not
 stop its parent: the parent keeps doing whatever does not depend on it, and news
@@ -167,7 +225,11 @@ is *stalled*:
 - a stalled primary keeps its session, and the human is alerted with its last
   message; the human's reply continues that session;
 - for a stalled Reviewer, the proposal under review is withdrawn and the
-  Reviewer rests; the primary is told why, and may continue, propose again or stop.
+  Reviewer rests; the primary is told why, and may continue, propose again or stop;
+- the Librarian is idle only while a shelving request is pending; otherwise, ending
+  its turn means it rests. A stalled Librarian keeps its session, and the human is
+  alerted with its last message; its requests wait, and the work stays catalogued
+  and frozen in its folders meanwhile.
 
 ## 4. Finishing: COMPLETE and STOP
 
@@ -197,18 +259,26 @@ resumes research.
 project as of that commit. The primary waits in its session, talk-only: it answers
 the human, but its `spawn` and `run_job` calls are refused until the verdict. The
 verdict arrives in the same session and lists the files changed since the proposal's
-commit (outside `reviews/` and the Reviewer's folder), which the review does not
-cover. The Reviewer keeps its session across rounds. If the Reviewer stalls, the
-proposal is withdrawn (§3).
+commit (outside `reviews/`, `library/` and the folders of the Reviewer and the
+Librarian), which the review does not cover. The Reviewer keeps its session across
+rounds. If the Reviewer stalls, the proposal is withdrawn (§3). The Librarian's
+pages may change during a review: they move nothing the review examines.
 
-**Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs,
-makes a final commit, and `STATUS.md` records the outcome. Machine COMPLETE is not
-scientific acceptance; that is the human's judgment.
+**Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs
+except the Librarian, records the outcome in `STATUS.md`, commits, and shelves the
+folders of the primary and the Reviewer. The Librarian places their work and any
+still pending; then the controller makes a final commit and exits. If the
+Librarian cannot run, or stalls, the investigation ends without waiting: the work
+is catalogued already, and the pending requests reach the Librarian at the
+controller's next run. Machine COMPLETE is not scientific acceptance; that is the
+human's judgment.
 
 **Reopening.** After COMPLETE or STOP, the human may resume the investigation, for
 example after changing the questions, evidence or feedback. The primary restarts
 from its handoff and the reviews, with a list of the files changed since the end.
-It must not discard unaffected work.
+The folders of the primary and the Reviewer are no longer frozen: both continue in
+them, and their files stay catalogued with the commit at which they were shelved.
+The primary must not discard unaffected work.
 
 ## 5. Context handoffs
 
@@ -269,8 +339,8 @@ durable records, a safe git runner, strict prompt files and the terminal app), a
 every decision is the controller's.
 
 **Notices.** Handoff requests, results from subagents, messages between parents and
-subagents, finished jobs and the human's messages are delivered to the agent
-concerned during its turn. When an agent is waiting or idle (§3), a notice starts
+subagents, finished jobs, the human's messages and shelving requests are delivered
+to the agent concerned during its turn. When an agent is waiting or idle (§3), a notice starts
 its next turn.
 
 **Quota.** For each CLI in use, the controller reads the usage windows (each driver
@@ -282,7 +352,7 @@ holds, kept in `.research/state.json`):
   the reset (in a fresh session if the wait outlasted the idle limit).
 - **Weekly window** at 15% remaining or less, or quota unreadable twice in a row:
   the same, until the human resumes them.
-- If the primary's CLI is affected, every agent pauses.
+- Only the held CLI's agents pause, whichever CLI the primary uses.
 
 Spawns on a paused CLI are refused with the reason. Jobs keep running through quota
 pauses.
@@ -292,7 +362,8 @@ survive handoffs, quota pauses, a shutdown and a crash of the controller. Every 
 needs an explicit timeout, of any length. A job is owned by its logical agent; the
 owner is notified when it ends, with the end of its output and error output. Output
 goes to `agents/<id>/jobs/<job-id>/`. Jobs run in their own confinement (§2). A job
-is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP.
+is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP. Its
+output folder stays in its owner's folder as part of the agent's record.
 
 **Pause, shutdown and crash.**
 
@@ -314,17 +385,24 @@ is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP.
 `AGENTS.md`, `FEEDBACK.md`, starting evidence) at any time; the controller tells the
 primary. Agent-written files are edited only while paused.
 
-**Git.** The controller commits at every handoff, RESULT, review, pause and ending,
-naming the agent and event in the commit message. Agents do not commit. Jobs can
+**Git.** The controller commits at every handoff, RESULT, review, shelving, change
+of the library's pages, pause and ending, naming the agent and event in the commit
+message. Agents do not commit. Jobs can
 write `.git`, so the controller runs git with hooks, fsmonitor, the pager, signing and
 automatic stashes off and its own `GIT_*` variables ignored; the human's global git
 configuration still applies.
 
 **State.** The controller keeps its state in `.research/state.json`, written
 atomically after every change and forced to disk (`--no-durable-state` skips the
-latter). Its own files in the project's folders (indexes, starter files, briefs,
-feedback, job files) are replaced atomically (job logs grow in place), never through a
-symlink and never outside the project, since agents and jobs write the same folders.
+latter); pending shelving requests are part of it, so they survive a shutdown or
+crash. The library's catalogue is kept beside it. Its own files in the project's
+folders (indexes, starter files, briefs, feedback, job files, `CATALOG.md` and the
+Librarian's pages) are replaced atomically (job logs grow in place), never through
+a symlink and never outside the project, since agents and jobs write the same
+folders.
+
+**Earlier projects.** `run` refuses a project that still has `sources/` or
+`tools/` at its top level: it predates the library, and is not migrated.
 
 **Interface.** A terminal app, built on the shared one in `agent_toolkit`:
 - a transcript of the selected agent;
@@ -340,11 +418,11 @@ a setup page for every launch option; every agent that ever worked as a live gra
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
 threshold, usage limits, session cap and idle limit changed while the investigation runs, as well
-as the primary's and the Reviewer's CLI choices (from their next session) and the
-CLIs for subagents (from the next spawn).
+as the primary's, the Reviewer's and the Librarian's CLI choices (from their next
+session) and the CLIs for subagents (from the next spawn).
 
 Launch options:
-- `--primary` and `--reviewer` (backend:model:effort, all three required);
+- `--primary`, `--reviewer` and `--librarian` (backend:model:effort, all three required);
 - `--backends` (choices allowed for subagents);
 - `--max-agents`;
 - `--reference PATH` (repeatable);
@@ -366,9 +444,12 @@ Launch options:
 | `job_status(job)`, `job_cancel(job)` | owner | Inspect (status, output tail) or stop a job |
 | `complete(report)`, `stop(reason, final)` | primary | Propose finishing (§4) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
+| `write_page(path, text)` | Librarian | Write a Markdown page in `library/`, or remove it with empty text; never `CATALOG.md` |
+| `shelved(agent)` | Librarian | Report a shelving request done: every catalogued file of the agent is reachable from a page (§2) |
 
 Every tool reply also carries any pending notices. While its proposal is under
-review, the primary's `spawn` and `run_job` are refused (§4).
+review, the primary's `spawn` and `run_job` are refused (§4). The Librarian has
+only `write_page` and `shelved`; it reads the project with its CLI's own tools.
 
 ## 8. What agents are told
 
@@ -387,12 +468,21 @@ The scientific guidance comes from these expectations:
   check limiting cases. For numerics, check convergence, stability and sensitivity,
   and compare with analytics where possible.
 - Make computations reproducible: code, inputs, parameters, versions, seeds and a
-  command to rerun. Install software into documented environments under `tools/`
-  rather than relying on what happens to be installed on the machine.
+  command to rerun. Install software into documented environments in one's own
+  folder, with a recipe that rebuilds them, rather than relying on what happens to
+  be installed on the machine.
 - Label findings preliminary, checked, disputed or superseded. Keep failed
   approaches and negative results worth knowing.
 - Judge novelty against the literature: new to the project is not the same as new
   to the field.
+- Before solving something or spawning, find out what the project already has.
+
+The Librarian's guidance is about organisation, not science: a human finds, from
+`library/LIBRARY.md` and within a few clicks, what was established about each
+research question, how, and with which tools, including failed approaches and
+negative results; related work is presented together; the structure changes when
+the project has outgrown it, not for small gains; nothing is ever left out. There
+is no prescribed scheme: the human may add preferences in `AGENTS.md`.
 
 ## 9. V0 acceptance
 
@@ -401,14 +491,20 @@ The scientific guidance comes from these expectations:
    between parent and subagent, handoff triggering and repetition, waiting, idle and
    stalled agents, sessions kept while waiting and closed at the idle limit, quota
    pause and resume per CLI, the COMPLETE/STOP exchanges with the primary waiting in
-   its session during review, the layout check, and human-edit detection.
+   its session during review, the layout check, and human-edit detection; and
+   shelving: the catalogue on accept and on cancel (a whole subtree), `shelved`
+   refused while a file is reachable from no page or a link leads nowhere,
+   `write_page` refusals (not Markdown, outside `library/`, `CATALOG.md`), the
+   Librarian resting between requests and stalling, requests waiting while it
+   cannot run, the end without it, and the refusal of earlier projects.
    Real processes test the confinement of sessions and jobs (protected inputs,
-   hidden `.research/`) and jobs surviving a shutdown. The tests are proportionate:
+   a read-only library and shelved folders, hidden `.research/`) and jobs surviving a shutdown. The tests are proportionate:
    user-visible behaviour and consequential failures, not internals.
 2. **Public smoke run.** A small public investigation through the real CLIs shows
    spawning, a rejected and then accepted RESULT, a job surviving a handoff, a quota
    pause, sessions kept while waiting and an idle session closing, and the Reviewer
-   exchange ending in COMPLETE or STOP. Lowered thresholds and idle limits may force
+   exchange ending in COMPLETE or STOP, with an accepted subagent's work shelved and
+   the final shelving. Lowered thresholds and idle limits may force
    handoffs, quota pauses and idle closes; science and agreement are never faked.
 3. **Benchmark.** The light-hole spin-qubit question in `research_example/` (§11)
    runs to COMPLETE or STOP, and **the human judges the science**.
@@ -420,7 +516,11 @@ The scientific guidance comes from these expectations:
 - Messaging between agents other than a parent and its subagents.
 - Messaging subagents directly from the TUI.
 - Vector search or embeddings.
-- A tool registry or qualification framework.
+- A tool registry or qualification framework beyond the library's catalogue.
+- Shared, prebuilt environments for shelved tools.
+- Human approval of library reorganisations.
+- Questions to the Librarian: agents search the library themselves.
+- Migrating projects made before the library.
 - Claim graphs or automatic invalidation.
 - Event replay.
 - Remote or HPC execution.

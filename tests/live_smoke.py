@@ -3,12 +3,14 @@
 Not part of the unit tests: it uses real model sessions and costs usage. Run it with
 
     uv run python -m tests.live_smoke [--primary codex:gpt-6.1-sol:low] [--reviewer claude:haiku:low]
+        [--librarian claude:haiku:low]
 
 It shows spawning across CLIs, a rejected then accepted result, a job, handoffs
 forced by a lowered context threshold, a quota pause (a short window of one CLI is
 reported exhausted for a minute, on top of the real readings), optionally a human
-pause with edits while paused (``--pause-at``), and the Reviewer exchange ending in
-COMPLETE or STOP. The science and the agreement are the agents'
+pause with edits while paused (``--pause-at``), the Reviewer exchange ending in
+COMPLETE or STOP, and the Librarian placing the accepted subagent's work and, at
+the end, the primary's and the Reviewer's. The science and the agreement are the agents'
 own; only the threshold, the idle limit and the one quota reading are artificial.
 
 Waiting agents keep their sessions, and a :class:`Monitor` checks it: the rejected
@@ -104,6 +106,8 @@ class Monitor:
                 "agents paused by the human continued in their sessions",
                 "quota-held agent continued in its session",
                 "an idle session closed at the idle limit",
+                "an accepted subagent's work was shelved",
+                "the final work was shelved and placed",
             )
         }
         self._seen: dict[str, tuple] = {}  # agent -> (status, pause reason, its session, sessions so far)
@@ -170,6 +174,7 @@ async def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--primary", default="codex:gpt-6.1-sol:low", help="BACKEND:MODEL:EFFORT")
     parser.add_argument("--reviewer", default="claude:haiku:low", help="BACKEND:MODEL:EFFORT")
+    parser.add_argument("--librarian", default="claude:haiku:low", help="BACKEND:MODEL:EFFORT")
     parser.add_argument("--sub", default="claude", help="backend the subagent must use")
     parser.add_argument("--sub-model", default="haiku")
     parser.add_argument("--sub-effort", default="low")
@@ -200,6 +205,7 @@ async def main() -> None:
     options = Options(
         primary=args.primary,
         reviewer=args.reviewer,
+        librarian=args.librarian,
         backends=sorted({"codex", "claude"}),
         max_agents=3,
         threshold=args.threshold,
@@ -228,6 +234,9 @@ async def main() -> None:
     for job in state.jobs.values():
         print(f"  {job.id} ({job.owner}): {job.status}, exit {job.exit_code}")
     print(controller.project.git("log", "--oneline"))
+    shelved = controller.librarian.catalogue.shelves
+    monitor.note("an accepted subagent's work was shelved", any(state.agents[a].role == "subagent" for a in shelved))
+    monitor.note("the final work was shelved and placed", "primary" in shelved and not state.shelving)
     for check, ok in monitor.results.items():
         print(f"  check: {check}: {'not observed' if ok is None else 'yes' if ok else 'NO'}")
     print(f"project kept at {root}")

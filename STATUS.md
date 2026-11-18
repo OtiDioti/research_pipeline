@@ -1,5 +1,14 @@
 # Status
 
+**2026-11-18.** 0.7.0: the Librarian and the library ([docs/LIBRARY.md](docs/LIBRARY.md), PROJECT.md §2–§10).
+Finished work stays where it was made: an accepted or cancelled subagent's folder, and at the end the primary's and
+the Reviewer's, is shelved (catalogued in `library/CATALOG.md` and frozen, read-only for jobs too), and the
+Librarian (`--librarian`, required; outside `--max-agents`) links it from its Markdown pages in `library/` through
+`write_page`; `shelved(agent)` is refused until every file is reachable and no link leads nowhere. At the end the
+controller waits for it unless it cannot run or stalls. `sources/` and `tools/` are gone, and projects that still
+have them are refused. A quota hold now pauses only the held CLI's agents, also when it is the primary's. The live
+smoke run checks the shelving but has not been run since.
+
 **2026-11-18.** On agent_toolkit 0.6.2: AGENTS.md alone carries the shared standard, and CLAUDE.md is removed.
 No behaviour changed.
 
@@ -39,7 +48,7 @@ for usage.
   - jobs that survive handoffs, quota pauses, shutdowns and crashes;
   - the layout check and git commits;
   - the terminal app and the command line.
-- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 82 tests, with no model usage; the shared drivers, confinement and machinery are tested in
+- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 99 tests, with no model usage; the shared drivers, confinement and machinery are tested in
   agent_toolkit.
 - **Checked against the installed CLIs without model calls** (Codex 0.167, Claude Code 2.1.325): both start inside
   the confinement with the human's own setup masked, report what they loaded, and pass the setup check. Claude

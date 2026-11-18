@@ -17,12 +17,18 @@ from agent_toolkit.protocol import Prompts
 from research_pipeline.project import Project
 from research_pipeline.state import Agent, Options
 
-TITLES = {"primary": "primary researcher", "subagent": "research subagent", "reviewer": "independent Reviewer"}
+TITLES = {
+    "primary": "primary researcher",
+    "subagent": "research subagent",
+    "reviewer": "independent Reviewer",
+    "librarian": "Librarian",
+}
 # What "finishing" means for each role, for the nudge.
 _FINISH = {
     "primary": "propose complete (or stop) when the questions are answered",
     "subagent": "write RESULT.md and call submit_result",
     "reviewer": "write your review and call verdict",
+    "librarian": "place the pending work and call shelved",
 }
 # Longer human files are shortened in instructions and opening messages (the agent can read them in full).
 _EXCERPT = 20_000
@@ -31,7 +37,14 @@ PROMPTS = Prompts("research_pipeline")
 
 
 def instructions(agent: Agent, project: Project, options: Options) -> str:
-    """The session instructions of ``agent``: its role prompt, then the human's AGENTS.md (PROJECT.md §3)."""
+    """The session instructions of ``agent``: its role prompt, then the human's AGENTS.md (PROJECT.md §3).
+
+    The Librarian does no research: its prompt is its own, without the shared scientific part.
+    """
+    human = _section("Instructions from the human", project.root / "AGENTS.md", level="#")
+    if agent.role == "librarian":
+        text = PROMPTS.fill("librarian", project=project.root, folder=project.agent_dir(agent.id))
+        return f"{text}\n\n{human}\n" if human else text + "\n"
     extra = {
         "primary": ", and in STATUS.md, REPORT.md and the root FOLDER_CONTENT.md",
         "reviewer": ", and in reviews/",
@@ -47,7 +60,6 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
         backends=", ".join(options.backends),
         parent=agent.parent or "",
     )
-    human = _section("Instructions from the human", project.root / "AGENTS.md", level="#")
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
 
@@ -93,6 +105,8 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
     handoff = _section("Your handoff from the previous session", folder / "HANDOFF.md")
     if handoff:
         parts.append(handoff + "\n\nContinue from this handoff. Check running jobs and subagents before redoing work.")
+    elif agent.role == "librarian":
+        parts.append("Start by reading library/LIBRARY.md; keep a short HANDOFF.md of pending requests.")
     elif agent.role != "reviewer":
         parts.append("Start by writing a short plan and a first HANDOFF.md, then begin the work.")
     parts += notices
@@ -153,6 +167,40 @@ def nudge(role: str, awaiting: list[str]) -> str:
         "[controller] You ended your turn, but none of your subagents or jobs is running and nothing is "
         f"pending for you. Continue your work, or {_FINISH[role]}."
     )
+
+
+def librarian_nudge(pending: list[str]) -> str:
+    """For the Librarian when it ends its turn with shelving requests still pending."""
+    return (
+        f"[controller] You ended your turn, but shelving requests are still pending: {', '.join(pending)}. "
+        "Link each agent's files from your pages with write_page, then call shelved(agent)."
+    )
+
+
+def shelving_request(agent: Agent, commit: str | None, count: int) -> str:
+    """For the Librarian: an agent's work was shelved and awaits its place in the library."""
+    at = f" at commit {commit[:12]}" if commit else ""
+    return (
+        f"[controller] Shelving request: {agent.id} ({agent.role}, {agent.status}) is finished; its folder "
+        f"agents/{agent.id}/ is catalogued{at} ({count} files, listed in library/CATALOG.md) and frozen. Read its "
+        "TASK.md, RESULT.md and FOLDER_CONTENT.md, link all of its files from your pages with write_page (a link "
+        f'to a folder covers everything in it), then call shelved("{agent.id}").'
+    )
+
+
+def shelving_pending(agents: list[str]) -> str:
+    """For a fresh session of the Librarian while shelving requests are pending (e.g. after a restart)."""
+    return (
+        f"[controller] Shelving requests are pending: {', '.join(agents)}. For each, read the agent's TASK.md, "
+        "RESULT.md and FOLDER_CONTENT.md, link all of its files (listed in library/CATALOG.md) from your pages "
+        "with write_page, then call shelved(agent)."
+    )
+
+
+def broken_links(links: list[str]) -> str:
+    """For the Librarian after a turn that left links leading nowhere."""
+    listing = "\n".join(f"- {link}" for link in links[:30])
+    return f"[controller] These links in library/ lead nowhere; fix them with write_page:\n{listing}"
 
 
 def stalled(child: str, last: str) -> str:
