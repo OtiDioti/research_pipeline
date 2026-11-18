@@ -39,20 +39,22 @@ across any number of sessions.
   subagent, and news reaches it even during its turn. It ends its turn only when
   nothing useful remains until a subagent or job reports.
 - `submit_result` requires a non-empty RESULT.md, no running subagents or jobs of
-  its own, and a passing layout check. The subagent is then `submitted`. Its
-  session ends with its turn (after 120 s at most), and its parent is told at once.
+  its own, and a passing layout check. The subagent is then `submitted`: it ends
+  its turn and waits in its session, its tools refused, and its parent is told at once.
 - The parent decides what happens next:
-  - **accept:** the subagent ends;
-  - **reject(feedback):** the feedback is appended to PARENT_FEEDBACK.md, and a
-    fresh session continues from HANDOFF.md. If its CLI is held or every slot is
-    taken, it waits; the rejection still stands;
+  - **accept:** the subagent ends, and its session closes;
+  - **reject(feedback):** the feedback is appended to PARENT_FEEDBACK.md and
+    reaches the subagent in the same session (in a fresh one from HANDOFF.md if
+    its session closed at the idle limit). If its CLI is held, or it needs a new
+    session and every slot is taken, it waits; the rejection still stands;
   - **cancel:** the subagent, its whole subtree and all their jobs stop.
 - The Reviewer's subagents are its helpers, for independent checks.
 
 ## Messages
 
 - `message(agent, text)` works between a parent and its direct subagents, in both directions.
-- It is delivered during the recipient's turn, or at its next session if it has none.
+- It is delivered during the recipient's turn, or wakes it if it waits idle; a paused recipient receives it
+  when it continues, and one without a session at its next session.
 - Messages are not stored in files for the agents: the recipient notes what matters. (The controller keeps
   them, for the web app, in `.research/activity/`, which agents cannot see.)
 - The human can also write to any agent from the web app (`[human] ...`); its parent receives a copy

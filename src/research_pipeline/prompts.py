@@ -76,15 +76,23 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
 # Notices ------------------------------------------------------------------------------
 
 
+#: Why a handoff is requested, and what follows it, by reason (see Controller._check_handoff).
+_HANDOFFS = {
+    'context': ('Your context is {detail} full.', 'a fresh session will continue from it.'),
+    'refresh': ('The human asked you to continue in a fresh session.', 'a fresh session will continue from it.'),
+    'idle': ('You have waited {detail} minutes without news.',
+             'this session then closes, and your next message starts a fresh one from it.'),
+    'quota': ('The usage quota of {detail} is nearly exhausted, so its agents pause.',
+              'you then wait in this session and are told when to continue (after a long wait, a fresh session '
+              'continues from it).'),
+    'shutdown': ('The human is shutting the controller down.',
+                 'a fresh session will continue from it when the controller runs again.')}
+
+
 def handoff_request(reason: str, detail: str = '') -> str:
-    why = {'context': f'Your context is {detail} full.',
-           'pause': 'The human paused the investigation.',
-           'shutdown': 'The human is shutting the controller down.',
-           'quota': f'The usage quota of {detail} is nearly exhausted, so its agents pause.',
-           'hold': 'The human paused you; your subagents and jobs keep working, and their news waits for you.',
-           'refresh': 'The human asked you to continue in a fresh session.'}.get(reason, detail)
-    return (f'[controller] {why} Finish your current step, update HANDOFF.md in your folder and end your turn; '
-            'a fresh session will continue from it.')
+    why, then = _HANDOFFS[reason]
+    return (f'[controller] {why.format(detail=detail)} Finish your current step, update HANDOFF.md in your folder '
+            f'and end your turn; {then}')
 
 
 def handoff_reminder(fill: str) -> str:
@@ -156,12 +164,33 @@ def human_to_child(child: str, text: str) -> str:
 
 
 def human_paused(child: str) -> str:
-    return (f'[controller] The human paused your subagent {child}: it waits until the human resumes it. Its messages '
-            'to you and its result wait as well.')
+    return (f'[controller] The human paused your subagent {child}: it ends its turn and waits until the human '
+            'resumes it. Its messages to you and its result wait as well.')
 
 
 def human_resumed(child: str) -> str:
-    return f'[controller] The human resumed your subagent {child}; it continues from its handoff.'
+    return f'[controller] The human resumed your subagent {child}; it continues its work.'
+
+
+def pausing() -> str:
+    """For agents at work when the human pauses the investigation."""
+    return ('[controller] The human paused the investigation (jobs are stopped). Finish your current step at a clean '
+            'point and end your turn; you wait in this session and are told when it resumes. Until then you may '
+            'only talk: spawn and run_job are refused.')
+
+
+def paused_by_human() -> str:
+    """For an agent the human paused on its own."""
+    return ('[controller] The human paused you; your subagents and jobs keep working, and their news waits for you. '
+            'Finish your current step at a clean point and end your turn; you wait in this session until the human '
+            'resumes you. Until then you may only talk: spawn and run_job are refused.')
+
+
+def continue_after(reason: str | None) -> str | None:
+    """For an agent that waited in its session and may work again (None: its queued news says enough)."""
+    why = {'human': 'The investigation has resumed.', 'resume': 'The human resumed you.',
+           'quota': 'The usage quota allows work again.'}.get(reason or '')
+    return f'[controller] {why} Continue your work.' if why else None
 
 
 def human_cancelled(child: str) -> str:
@@ -169,28 +198,35 @@ def human_cancelled(child: str) -> str:
             'result, or start another subagent if the work is still needed.')
 
 
-def review_request(kind: str, round_: int, detail: str) -> str:
+def review_request(kind: str, round_: int, detail: str, commit: str | None = None) -> str:
     what = ('proposes COMPLETE. Its report is REPORT.md; its status is STATUS.md'
             if kind == 'complete' else f'proposes to STOP, giving this reason: {detail}')
+    snapshot = (f' Judge the project as committed at the proposal, commit {commit}: the primary may still talk '
+                f'meanwhile, so `git diff --stat {commit}` lists later changes and `git show {commit}:PATH` shows a '
+                'file as proposed.' if commit else '')
     return (f'[controller] Review round {round_}: the primary researcher {what}. Its work is in agents/primary/ '
-            'and the folders it links to; earlier reviews are in reviews/. Examine the results, write your review '
-            f'to reviews/ and call verdict(review, agree).')
+            f'and the folders it links to; earlier reviews are in reviews/.{snapshot} Examine the results, write '
+            'your review to reviews/ and call verdict(review, agree).')
 
 
 def talk_only(round_: int) -> str:
-    """For a primary woken by the human while its proposal is with the Reviewer."""
-    return (f'[controller] Your proposal (round {round_}) is with the Reviewer. You were woken to answer the human: '
-            'until the verdict, spawn and run_job are refused and STATUS.md and REPORT.md are read-only. The '
-            'verdict will be delivered to you.')
+    """For a fresh session of the primary while its proposal is with the Reviewer (e.g. after a restart)."""
+    return (f'[controller] Your proposal (round {round_}) is with the Reviewer. Until the verdict you may only talk: '
+            'spawn and run_job are refused. The verdict will be delivered to you.')
 
 
-def verdict_delivered(kind: str, round_: int, review: str, agree: bool) -> str:
+def verdict_delivered(kind: str, round_: int, review: str, agree: bool, changed: list[str] = ()) -> str:
     if kind == 'complete':
-        return (f'[controller] The Reviewer disagrees with COMPLETE (round {round_}). Read {review}, address its '
+        text = (f'[controller] The Reviewer disagrees with COMPLETE (round {round_}). Read {review}, address its '
                 'objections, then propose complete again, or stop.')
-    stance = 'agrees that stopping is justified' if agree else 'challenges your STOP'
-    return (f'[controller] The Reviewer {stance} (round {round_}): read {review}. Decide: confirm with '
-            'stop(reason, final=True), or continue the research.')
+    else:
+        stance = 'agrees that stopping is justified' if agree else 'challenges your STOP'
+        text = (f'[controller] The Reviewer {stance} (round {round_}): read {review}. Decide: confirm with '
+                'stop(reason, final=True), or continue the research.')
+    if changed:
+        text += ('\nThe review covers the project as you proposed it; it does not cover these files, changed since:\n'
+                 + '\n'.join(f'- {path}' for path in changed[:50]))
+    return text
 
 
 def review_withdrawn(kind: str, round_: int) -> str:

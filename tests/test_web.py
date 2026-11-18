@@ -44,26 +44,27 @@ class HumanActionsTest(unittest.IsolatedAsyncioTestCase):
     async def test_pausing_one_agent_holds_only_it_until_the_human_resumes_it(self):
         async with running(self.root) as harness:
             child = await spawn(harness)
+            session = harness.session(child)
             await harness.controller.act('pause', child)
-            self.assertEqual(harness.state.agents[child].status, 'handing_off')
-            harness.handoff(child)
-            await harness.emit(child, 'turn_ended', text='Saved.')
+            self.assertIn('The human paused you', sent(harness, child))
+            await harness.emit(child, 'turn_ended', text='Stopped at a clean point.')
             agent = harness.state.agents[child]
+            self.assertIs(harness.session(child), session)  # it waits in its session
             self.assertEqual((agent.status, agent.pause_reason), ('paused', 'held'))
             self.assertEqual(harness.state.agents['primary'].status, 'running')  # the rest keeps working
             self.assertIn(f'paused your subagent {child}', sent(harness, 'primary'))
             # Pausing and resuming the whole investigation does not restart an agent held on its own.
             harness.controller.toggle_pause()
             await harness.settle()
-            harness.handoff('primary')
-            await harness.emit('primary', 'turn_ended', text='Saved.')
+            await harness.emit('primary', 'turn_ended', text='Stopped.')
             self.assertEqual(harness.state.status, 'paused')
             harness.controller.toggle_pause()
             await harness.settle(10)
             self.assertEqual(harness.state.agents['primary'].status, 'running')
             self.assertEqual(harness.state.agents[child].pause_reason, 'held')
             await harness.controller.act('resume', child)
-            self.assertEqual((agent.status, agent.sessions), ('running', 2))
+            self.assertEqual((agent.status, agent.sessions), ('running', 1))  # in the same session
+            self.assertIn('The human resumed you. Continue your work.', sent(harness, child))
             self.assertIn(f'resumed your subagent {child}', sent(harness, 'primary'))
 
     async def test_a_forced_handoff_continues_in_a_fresh_session_even_below_the_threshold(self):
@@ -92,13 +93,16 @@ class HumanActionsTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_live_settings_apply_at_once_and_invalid_ones_change_nothing(self):
         async with running(self.root) as harness:
-            await harness.controller.configure({'threshold': 0.7, 'short_limit': 5, 'max_agents': 2})
+            await harness.controller.configure({'threshold': 0.7, 'short_limit': 5, 'max_agents': 2, 'idle_limit': 0})
             options = harness.state.options
-            self.assertEqual((options.threshold, options.short_limit, options.max_agents), (0.7, 5.0, 2))
+            self.assertEqual((options.threshold, options.short_limit, options.max_agents, options.idle_limit),
+                             (0.7, 5.0, 2, 0))
             self.assertEqual(harness.controller.watches['primary'].threshold, 0.7)
             self.assertEqual(harness.controller.guard.short_limit, 5.0)
             with self.assertRaises(ValueError):
                 await harness.controller.configure({'threshold': 0.95, 'max_agents': 3})
+            with self.assertRaises(ValueError):
+                await harness.controller.configure({'idle_limit': -5})
             self.assertEqual((options.threshold, options.max_agents), (0.7, 2))
 
 
@@ -160,7 +164,8 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
         await dashboard.start(values | {'max_agents': 3})
         self.assertEqual(dashboard.controller.launch_options.max_agents, 3)
         self.assertEqual({field['name'] for field in dashboard.live()['fields']},
-                         {'primary', 'reviewer', 'backends', 'max_agents', 'threshold', 'short_limit', 'weekly_limit'})
+                         {'primary', 'reviewer', 'backends', 'max_agents', 'threshold', 'idle_limit', 'short_limit',
+                          'weekly_limit'})
 
     async def test_the_graph_shows_agents_their_documents_websites_jobs_and_actions(self):
         async with running(self.root) as harness:

@@ -109,9 +109,9 @@ Every agent:
 - receives its instructions from the controller only (see **Instructions**);
 - keeps a stable logical identity and folder across any number of sessions;
 - hands off at 55% context (§5);
-- ends by submitting `RESULT.md` to its parent. Submitting ends its session and
-  frees its slot. The controller refuses a RESULT while the agent's own subagents
-  or jobs are still running, and lists them.
+- ends by submitting `RESULT.md` to its parent, then waits in its session, its
+  tools refused, until the parent decides. The controller refuses a RESULT while
+  the agent's own subagents or jobs are still running, and lists them.
 
 **Instructions.** Every session receives, as its CLI's system or developer
 instructions, the role prompt (§8) and the project's `AGENTS.md`; both stay in force
@@ -129,20 +129,22 @@ explicit: a spawn without them is refused, and so is a launch whose `--primary` 
 `--reviewer` lacks them; an effort the CLI is known not to accept is refused before
 any session starts. The role prompt limits the choice to Opus 5.5
 (`claude-opus-5-5`) or GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high` or `xhigh`,
-unless the human's `AGENTS.md` says otherwise. The human sets a cap on concurrently running agents. A
-spawn over the cap is refused with a message such as "4/4 agents are already working"; the agent
-decides what to do. Agents know nothing else about scheduling.
+unless the human's `AGENTS.md` says otherwise. The human sets a cap on open agent sessions, idle
+ones included (6 by default, at least 2). A spawn over the cap is refused with a message such as
+"6/6 agent sessions are already open"; the agent decides what to do. Agents know nothing else about
+scheduling.
 
 **Results.** When a subagent submits, the controller notifies its parent at once. The
-parent may **accept** the result, or **reject** it with feedback. A rejection restarts
-the same logical agent in a fresh session, with its handoff and the feedback,
-subject to the cap like any spawn. The parent may **cancel** a running subagent at
-any time.
+parent may **accept** the result, or **reject** it with feedback. The feedback reaches
+the subagent in the session it submitted from (or, if that closed at the idle limit,
+a fresh session from its handoff, subject to the cap like any spawn). Accepting or
+cancelling closes its session. The parent may **cancel** a running subagent at any
+time.
 
 **Messages.** A parent and each of its direct subagents can message each other at
 any time. A message is delivered during the recipient's turn, or starts its next turn
-if it is waiting or idle; a recipient without a session (paused, or between
-sessions) receives it when its next session starts. Messages are not stored in
+if it is waiting or idle; a paused recipient receives it when it continues, and one
+without a session when its next session starts. Messages are not stored in
 files: what matters belongs in the recipient's notes or `HANDOFF.md`. A subagent
 that has submitted its result receives no messages; its parent answers with accept,
 reject or cancel. Agents that are not parent and subagent, such as the primary and
@@ -165,8 +167,7 @@ is *stalled*:
 - a stalled primary keeps its session, and the human is alerted with its last
   message; the human's reply continues that session;
 - for a stalled Reviewer, the proposal under review is withdrawn and the
-  Reviewer's session closes; the primary is woken, told why, and may continue,
-  propose again or stop.
+  Reviewer rests; the primary is told why, and may continue, propose again or stop.
 
 ## 4. Finishing: COMPLETE and STOP
 
@@ -175,7 +176,7 @@ has an adequate answer, or an adequate demonstration that it cannot be answered.
 Negative and inconclusive findings count. The primary first settles its subagents
 and jobs and updates `HANDOFF.md`, then submits `REPORT.md`.
 
-The Reviewer then examines the results. It can read the whole project, run jobs,
+The Reviewer then examines the results, as committed at the proposal. It can read the whole project, run jobs,
 and spawn helpers to reproduce or check claims independently. It writes
 `reviews/<round>.md` with its objections and a verdict:
 
@@ -192,14 +193,13 @@ justified. The Reviewer challenges the stopping reason and the results so far,
 and may suggest further work. The decision is the primary's: it confirms STOP or
 resumes research.
 
-**During review.** The controller refuses a proposal (COMPLETE or STOP) unless the
-primary updated `HANDOFF.md` during its current session, and tells it that a brief
-handoff suffices. Once the proposal is made, the primary's session closes; the
-primary restarts from its handoff when the verdict arrives. A message from the
-human during the review wakes the primary in talk-only mode: it is told that its
-proposal is under review, its `spawn` and `run_job` calls are refused, and
-`STATUS.md` and `REPORT.md` are read-only for it until the verdict. If the Reviewer
-stalls, the proposal is withdrawn (§3).
+**During review.** The proposal records its commit, and the Reviewer judges the
+project as of that commit. The primary waits in its session, talk-only: it answers
+the human, but its `spawn` and `run_job` calls are refused until the verdict. The
+verdict arrives in the same session and lists the files changed since the proposal's
+commit (outside `reviews/` and the Reviewer's folder), which the review does not
+cover. The Reviewer keeps its session across rounds. If the Reviewer stalls, the
+proposal is withdrawn (§3).
 
 **Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs,
 makes a final commit, and `STATUS.md` records the outcome. Machine COMPLETE is not
@@ -211,6 +211,10 @@ from its handoff and the reviews, with a list of the files changed since the end
 It must not discard unaffected work.
 
 ## 5. Context handoffs
+
+An agent keeps its session while it waits; idle is not a reset. Its context is
+reset only at a context handoff (or one the human forces), at the idle limit, or
+when the controller stops (shutdown, crash, restart).
 
 Each agent session's context use (tokens and context window) is monitored
 continuously through its CLI's own built-in, deterministic reports: Codex's
@@ -241,11 +245,17 @@ While context use is unknown (not yet reported, or the CLI stops reporting it), 
 TUI shows it as unknown and the agent continues. If it is still unknown after a
 session's first turn, the human is alerted once: that session cannot be handed off.
 
+**Idle limit.** A session idle for 58 minutes (`--idle-limit`, just inside the
+one-hour prompt cache; 0 disables it) is asked for one turn to update `HANDOFF.md`,
+then closes; it closes without that turn while its CLI is held by the quota or when
+its note is already saved. The agent's next input starts a fresh session from
+`HANDOFF.md`; until then, with nothing to do, it rests, and news wakes it.
+
 ## 6. Controller
 
 A deterministic Python program; it makes no scientific decisions.
 
-**Sessions.** One persistent session per running agent, with messages delivered
+**Sessions.** At most one persistent session per agent, kept while it waits (§5), with messages delivered
 live during a turn: through Codex's app-server and Claude Code's stream-json input
 in V0. Adding a CLI means writing one driver that can start a session with
 instructions, a prompt and MCP configuration and with the CLI's own discovery
@@ -267,10 +277,11 @@ its next turn.
 probes its own CLI; the shared usage guard of `agent_toolkit` turns the readings into
 holds, kept in `.research/state.json`):
 
-- **Short window** (e.g. 5 hours) at 15% remaining or less: that CLI's agents hand
-  off and pause, and resume automatically after the reset.
+- **Short window** (e.g. 5 hours) at 15% remaining or less: that CLI's agents
+  update `HANDOFF.md` and wait in their sessions, and continue automatically after
+  the reset (in a fresh session if the wait outlasted the idle limit).
 - **Weekly window** at 15% remaining or less, or quota unreadable twice in a row:
-  that CLI's agents hand off and pause until the human resumes them.
+  the same, until the human resumes them.
 - If the primary's CLI is affected, every agent pauses.
 
 Spawns on a paused CLI are refused with the reason. Jobs keep running through quota
@@ -285,15 +296,16 @@ is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP.
 
 **Pause, shutdown and crash.**
 
-- **Human pause (Ctrl+P):** every agent hands off gracefully, then all jobs are
-  killed.
-- **Shutdown (Ctrl+Q):** every agent hands off gracefully, then the controller
-  exits; jobs keep running.
-- **Resume** (after a pause, or the next `run` after a shutdown): fresh sessions
-  start from the handoffs, and jobs still running are reattached. Changes since the
-  controller's last commit are found with `git status` and reported to the agents
-  whose folders changed, and to the primary, as made by the human or by running
-  jobs.
+- **Human pause (Ctrl+P):** agents at work finish their current step, end their
+  turn and wait in their sessions; all jobs are killed. Meanwhile the human's
+  messages are answered, talk-only, and other news waits.
+- **Shutdown (Ctrl+Q, also while paused):** every session saves its handoff, then
+  the controller exits; jobs keep running.
+- **Resume** after a pause: agents continue in their sessions. **The next `run`**
+  after a shutdown: fresh sessions start from the handoffs, and jobs still running
+  are reattached. Either way, changes since the controller's last commit are found
+  with `git status` and reported to the agents whose folders changed, and to the
+  primary, as made by the human or by running jobs.
 - **Crash:** the next `run` restarts agents from their latest handoffs, reattaches
   jobs that are still running, and reads finished jobs' exit status from their
   folders. Work since the last handoff may be lost; nothing is replayed.
@@ -327,7 +339,7 @@ a setup page for every launch option; every agent that ever worked as a live gra
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
-threshold, usage limits and agent cap changed while the investigation runs, as well
+threshold, usage limits, session cap and idle limit changed while the investigation runs, as well
 as the primary's and the Reviewer's CLI choices (from their next session) and the
 CLIs for subagents (from the next spawn).
 
@@ -338,6 +350,7 @@ Launch options:
 - `--reference PATH` (repeatable);
 - `--short-limit` and `--weekly-limit`;
 - `--context-threshold` (0.55 by default, at most 0.8);
+- `--idle-limit` (minutes, 58 by default; 0: never);
 - `--no-durable-state`, `--no-tui`.
 
 ## 7. Controller tools available to agents (MCP)
@@ -348,7 +361,7 @@ Launch options:
 | `agents()` | any | Status of the caller's subagents |
 | `message(agent, text)` | parent, subagent | Message one of the caller's direct subagents, or its parent (§3) |
 | `accept(agent)`, `reject(agent, feedback)`, `cancel(agent)` | parent | Decide on or stop a subagent |
-| `submit_result(result)` | subagent | Deliver RESULT.md to the parent; ends the session |
+| `submit_result(result)` | subagent | Deliver RESULT.md to the parent; then waits for its decision |
 | `run_job(command, timeout_seconds, cwd)` | any | Start a computation; returns a job id |
 | `job_status(job)`, `job_cancel(job)` | owner | Inspect (status, output tail) or stop a job |
 | `complete(report)`, `stop(reason, final)` | primary | Propose finishing (§4) |
@@ -386,15 +399,17 @@ The scientific guidance comes from these expectations:
 1. **Automated tests** cover the controller's decisions against a fake CLI driver:
    spawn and cap refusal, explicit model and effort, accept/reject/cancel, messages
    between parent and subagent, handoff triggering and repetition, waiting, idle and
-   stalled agents, quota pause and resume per CLI, the COMPLETE/STOP exchanges with
-   the primary closed during review, the layout check, and human-edit detection.
+   stalled agents, sessions kept while waiting and closed at the idle limit, quota
+   pause and resume per CLI, the COMPLETE/STOP exchanges with the primary waiting in
+   its session during review, the layout check, and human-edit detection.
    Real processes test the confinement of sessions and jobs (protected inputs,
    hidden `.research/`) and jobs surviving a shutdown. The tests are proportionate:
    user-visible behaviour and consequential failures, not internals.
 2. **Public smoke run.** A small public investigation through the real CLIs shows
    spawning, a rejected and then accepted RESULT, a job surviving a handoff, a quota
-   pause, and the Reviewer exchange ending in COMPLETE or STOP. Lowered thresholds
-   may force handoffs and quota pauses; science and agreement are never faked.
+   pause, sessions kept while waiting and an idle session closing, and the Reviewer
+   exchange ending in COMPLETE or STOP. Lowered thresholds and idle limits may force
+   handoffs, quota pauses and idle closes; science and agreement are never faked.
 3. **Benchmark.** The light-hole spin-qubit question in `research_example/` (§11)
    runs to COMPLETE or STOP, and **the human judges the science**.
 

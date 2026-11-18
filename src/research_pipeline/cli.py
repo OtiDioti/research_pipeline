@@ -20,7 +20,7 @@ from agent_toolkit.records import locked
 
 from research_pipeline.controller import Controller
 from research_pipeline.project import Project, ProjectError
-from research_pipeline.state import LIVE, Options, State
+from research_pipeline.state import ACTIVE, Options, State
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -34,13 +34,16 @@ def _parser() -> argparse.ArgumentParser:
                                         '(required on the first run)')
     run.add_argument('--backends', help='comma-separated CLIs agents may choose for subagents '
                                         f'(default: those of the primary and Reviewer; known: {", ".join(DRIVERS)})')
-    run.add_argument('--max-agents', type=int, help='agents working at the same time (default 4)')
+    run.add_argument('--max-agents', type=int,
+                     help='agent sessions open at the same time, idle ones included (default 6, at least 2)')
     run.add_argument('--reference', action='append', type=Path,
                      help='read-only folder of another project agents may consult (repeatable)')
     run.add_argument('--short-limit', type=float, help='%% left of a short usage window that pauses a CLI (default 15)')
     run.add_argument('--weekly-limit', type=float, help='%% left of a weekly window that pauses a CLI until you resume it (default 15)')
     run.add_argument('--context-threshold', type=float,
                      help='context fill that triggers a handoff (default 0.55, at most 0.8)')
+    run.add_argument('--idle-limit', type=float, metavar='MINUTES',
+                     help='minutes an idle session waits before it saves its handoff and closes (default 58; 0: never)')
     run.add_argument('--no-durable-state', dest='durable', action='store_false', default=None,
                      help='write the state without forcing it to disk (faster on network filesystems)')
     run.add_argument('--no-tui', action='store_true', help='print the transcript instead of the terminal app')
@@ -73,7 +76,8 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
     elif stored is None and options.primary and options.reviewer:
         options.backends = sorted({Spec.parse(options.primary).backend, Spec.parse(options.reviewer).backend})
     for name, attribute in (('max_agents', 'max_agents'), ('short_limit', 'short_limit'),
-                            ('weekly_limit', 'weekly_limit'), ('context_threshold', 'threshold')):
+                            ('weekly_limit', 'weekly_limit'), ('context_threshold', 'threshold'),
+                            ('idle_limit', 'idle_limit')):
         if getattr(args, name) is not None:
             setattr(options, attribute, getattr(args, name))
     if args.reference:
@@ -81,6 +85,8 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
     if args.durable is not None:
         options.durable = args.durable
     check_threshold(options.threshold, '--context-threshold')
+    if options.idle_limit < 0:
+        raise ValueError('--idle-limit must be 0 (never) or a number of minutes')
     return options
 
 
@@ -163,7 +169,7 @@ def show_status(project: Project) -> int:
     for agent in state.agents.values():
         reason = f' ({agent.pause_reason})' if agent.status == 'paused' and agent.pause_reason else ''
         print(f'  {agent.id:24} {agent.role:9} {str(agent.spec):28} {agent.status}{reason}'
-              + (' [no live session: controller not running]' if agent.status in LIVE and not running else ''))
+              + (' [no live session: controller not running]' if agent.status in ACTIVE and not running else ''))
     running = state.running_jobs()
     if running:
         print('\nRunning jobs:')

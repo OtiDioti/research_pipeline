@@ -239,7 +239,17 @@ class Project:
         if large:
             message += '\n\nNot committed (over 50 MB):\n' + '\n'.join(f'- {path}' for path in large)
         self.git('commit', '-q', '--no-verify', '-m', message)
+        return self.head()
+
+    def head(self) -> str:
+        """The current commit."""
         return self.git('rev-parse', 'HEAD').strip()
+
+    def changed_since(self, commit: str, *excluded: str) -> list[str]:
+        """Paths committed differently since ``commit``, except under ``excluded`` folders."""
+        output = self.git('diff', '--name-only', commit, 'HEAD', '--', '.',
+                          *(f':(exclude){path}' for path in excluded), check=False)
+        return [line.strip() for line in output.splitlines() if line.strip()]
 
     def _exclude_large(self) -> list[str]:
         """Keep files over :data:`LARGE` out of git through the repository's exclude file."""

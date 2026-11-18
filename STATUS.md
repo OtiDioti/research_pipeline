@@ -1,5 +1,12 @@
 # Status
 
+**2026-11-18.** Context resets only at the threshold ([docs/CONTEXT.md](docs/CONTEXT.md)): an agent keeps its
+CLI session while it waits (for a review, a verdict, its parent's decision, a human pause or a quota hold), and its
+context is reset only at a context or forced handoff, at the idle limit (`--idle-limit`, 58 minutes, inside the
+prompt cache's hour; editable live), or when the controller stops. `--max-agents` counts open sessions, idle ones
+included (default 6). The Reviewer judges the project as of the proposal's commit. On the first run the primary is
+no longer told wrongly that the human's files changed.
+
 **2026-11-17.** The web app (`--web`, [docs/WEB.md](docs/WEB.md)): a setup page for every option, the agent
 graph with every agent's messages and tool calls (kept in `.research/activity/`), and the human's actions on
 single agents (message with the parent copied, pause and resume, force a handoff, cancel) and live settings.
@@ -9,7 +16,7 @@ for usage.
 
 - **Implemented:**
   - the controller: the agent tree, live notices, handoffs, tools, and messages between parents and subagents;
-  - idle and stalled agents, and the Reviewer exchange with the primary's session closed during review;
+  - idle and stalled agents, the idle limit, and the Reviewer exchange with the primary waiting in its session;
   - quota holds, pause, shutdown, crash restart and reopening;
   - Codex and Claude Code sessions from the shared package `agent_toolkit` (drivers, confinement and
     quota probes, also used by coding_pipeline and project_manager), with the CLIs' own discovery switched
@@ -23,12 +30,19 @@ for usage.
   - jobs that survive handoffs, quota pauses, shutdowns and crashes;
   - the layout check and git commits;
   - the terminal app and the command line.
-- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 78 tests, with no model usage; the shared drivers, confinement and machinery are tested in
+- **Tests:** `uv run python -m unittest discover -s tests -t .` runs 82 tests, with no model usage; the shared drivers, confinement and machinery are tested in
   agent_toolkit.
 - **Checked against the installed CLIs without model calls** (Codex 0.167, Claude Code 2.1.325): both start inside
   the confinement with the human's own setup masked, report what they loaded, and pass the setup check. Claude
   Code reports its context window before the first model call.
-- **Live verification:** `tests/live_smoke.py` has not yet been run on this implementation.
+- **Live verification:** `tests/live_smoke.py` now also checks, with a Monitor, that waiting keeps sessions (a
+  rejected subagent, the verdict, a human pause, a quota hold) and that an idle session closes at a lowered idle
+  limit (`--idle-limit`, 0.5 minutes there). Run on 2026-11-18 (Codex primary, Claude Haiku Reviewer and
+  subagents; thresholds 3% and 10%), every investigation ended COMPLETE and each check passed: the rejected
+  subagent continued in its session, the primary received the verdict in its session (replaced only by context
+  handoffs), paused agents resumed in their sessions, a quota-held subagent continued in its session when the
+  hold lifted within the idle limit and, in another run, closed without a turn when the hold outlasted it, and
+  idle sessions closed after one note turn.
 
-**Next:** run the live smoke test, then the light-hole benchmark (PROJECT.md §11) on a copy of `research_example/`,
+**Next:** the light-hole benchmark (PROJECT.md §11) on a copy of `research_example/`,
 judge the science, and let project_manager deliver further increments.
