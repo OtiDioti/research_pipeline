@@ -96,13 +96,11 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             child = await self.spawn(harness)
             self.assertIn('Use SI units throughout.', harness.session(child).launch.instructions)
 
-    async def test_stale_token_and_role_tools_are_refused(self):
+    async def test_other_roles_tools_are_refused(self):
         async with running(self.root) as harness:
-            reply = await harness.controller._tool_request({'agent': 'primary', 'token': 'wrong', 'tool': 'agents'})
-            self.assertIn('session has ended', reply)
-            self.assertIn('not available', await harness.call('primary', 'submit_result'))
+            self.assertIn('not one of your tools', await harness.call('primary', 'submit_result'))
             child = await self.spawn(harness)
-            self.assertIn('not available', await harness.call(child, 'complete'))
+            self.assertIn('not one of your tools', await harness.call(child, 'complete'))
 
     async def test_session_that_loads_personal_setup_waits_for_the_human(self):
         async with running(self.root) as harness:
@@ -725,14 +723,12 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_accept_closes_the_session_and_closed_sessions_lose_their_tools(self):
         async with running(self.root) as harness:
             child = await self.spawn(harness)
-            token = harness.controller.tokens[child]
             self.prepare_result(harness, child)
             await harness.call(child, 'submit_result')
             await harness.call('primary', 'accept', agent=child)
             self.assertEqual(harness.state.agents[child].status, 'accepted')
             self.assertNotIn(child, harness.controller.sessions)
-            reply = await harness.controller._tool_request({'agent': child, 'token': token, 'tool': 'agents'})
-            self.assertIn('session has ended', reply)
+            self.assertIn('session has ended', await harness.call(child, 'agents'))
 
     async def test_a_session_idle_past_the_limit_saves_its_note_closes_and_its_next_input_starts_fresh(self):
         async with running(self.root, launch_options(idle_limit=0.005)) as harness:  # 0.3 s

@@ -9,9 +9,9 @@ scientific one. In outline:
   An agent keeps its session while it waits (for a review, a verdict, its parent's
   decision, a pause or a quota hold): its context is reset only at the context
   threshold, after the idle limit, or when the controller stops.
-- **Tools.** Agents act through the MCP tools of :mod:`research_pipeline.mcp_server`,
-  which arrive here through :mod:`research_pipeline.channel` and are handled by
-  the ``_tool_*`` methods.
+- **Tools.** Agents act through the MCP tools of :mod:`research_pipeline.tools`,
+  which the controller offers each session through a
+  :class:`~agent_toolkit.tools.ToolBridge`; calls are handled by the ``_tool_*`` methods.
 - **Handoffs.** At the context threshold an agent is asked to update HANDOFF.md and
   end its turn; its session is then replaced by a fresh one. The request is
   repeated every further 25 points of context; an agent is never killed for it.
@@ -46,24 +46,23 @@ from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
 import re
-import secrets
 import subprocess
-import sys
 import time
 from typing import Callable
 
-from agent_toolkit import CAPABILITIES, DRIVERS, Launch, McpServer, Session, SessionError, SetupError, Spec, quota
+from agent_toolkit import CAPABILITIES, DRIVERS, Launch, Session, SessionError, SetupError, Spec, quota
 from agent_toolkit.activity import ActivityLog
 from agent_toolkit.handoff import check_threshold
 from agent_toolkit.handoff import HandoffWatch
 from agent_toolkit.quota import Guard
 from agent_toolkit.records import Busy, atomic_write, exclusive
+from agent_toolkit.tools import ToolBridge
 
 from research_pipeline import jobs as joblib
 from research_pipeline import prompts
-from research_pipeline.channel import serve
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
+from research_pipeline.tools import ROLE_TOOLS
 
 #: Seconds between usage-quota reads.
 QUOTA_INTERVAL = 120
@@ -77,10 +76,6 @@ RETRY_DELAYS = (30, 120, 600)
 HANDOFF_ORDER = ('idle', 'context', 'refresh', 'quota', 'shutdown')
 #: Name under which every agent's CLI attaches the controller's MCP tool server.
 MCP_SERVER = 'research'
-#: Tools each role may call (mirrors research_pipeline.mcp_server.ROLE_TOOLS).
-_COMMON = {'spawn', 'agents', 'message', 'accept', 'reject', 'cancel', 'run_job', 'job_status', 'job_cancel'}
-ROLE_TOOLS = {'primary': _COMMON | {'complete', 'stop'}, 'subagent': _COMMON | {'submit_result'},
-              'reviewer': _COMMON | {'verdict'}}
 
 #: Transcript callback: ``show(kind, agent_id, text)`` with kind 'agent', 'tool', 'notice', 'human', 'controller'
 #: or 'alert' (something the human must act on).
@@ -112,10 +107,9 @@ class Controller:
         self.state: State = State()
         self.sessions: dict[str, Session] = {}
         self.watches: dict[str, HandoffWatch] = {}  # agent id -> the handoff rules of its current session
-        self.tokens: dict[str, str] = {}             # agent id -> token of its current session
         self.idle_since: dict[str, float] = {}       # agent id -> when its session last became idle (monotonic)
         self.processes: dict[str, subprocess.Popen] = {}  # job id -> process started by this controller
-        self.channel = f'research-pipeline-{secrets.token_hex(8)}'
+        self.bridge = ToolBridge()                   # the agents' tools, one offer per session
         self.request: str | None = None              # 'shutdown' once the human asked to exit
         self.lock: asyncio.Lock | None = None
         self.done: asyncio.Event | None = None
@@ -136,7 +130,7 @@ class Controller:
                 raise ProjectError(str(busy)) from None
             self.project.prepare()
             self.state = self._load()
-            server = await serve(self.channel, self._tool_request)
+            await self.bridge.start()
             loops = [asyncio.create_task(self._watch_loop()), asyncio.create_task(self._quota_loop())]
             try:
                 async with self.lock:
@@ -148,7 +142,7 @@ class Controller:
                 await asyncio.gather(*loops, return_exceptions=True)
                 for agent_id in list(self.sessions):  # after a forced exit, agents restart from handoffs next time
                     await self._close(agent_id)
-                server.close()
+                await self.bridge.close()
                 self._save()
         return 0
 
@@ -457,14 +451,14 @@ class Controller:
         agent.sessions += 1
         agent.started = time.time()
         notices, agent.notices = agent.notices, []
-        token = secrets.token_hex(16)
+        number = agent.sessions
+        tools = self.bridge.offer(agent.id, ROLE_TOOLS[agent.role],
+                                  lambda tool, args: self._tool_request(agent.id, number, tool, args), name=MCP_SERVER)
         launch = Launch(
             agent=agent.id, cwd=folder, instructions=prompts.instructions(agent, self.project, self.state.options),
             message=prompts.opening(agent, self.project, self.state.options, notices),
             model=agent.model, effort=agent.effort, tools=CAPABILITIES,
-            mcp={MCP_SERVER: McpServer([sys.executable, '-m', 'research_pipeline.mcp_server'],
-                                       {'RP_CHANNEL': self.channel, 'RP_AGENT': agent.id, 'RP_TOKEN': token,
-                                        'RP_ROLE': agent.role})},
+            mcp=tools,
             writable=self._scope(agent), hidden=(self.project.research,),
             log=self.project.logs / f'{agent.id}-{agent.sessions}.jsonl')
         session = self.drivers[agent.backend](launch, self._on_event)
@@ -475,7 +469,7 @@ class Controller:
         # Its handoff rules: a context handoff is called off if the CLI compacts below the threshold.
         self.watches[agent.id] = HandoffWatch(self.state.options.threshold, folder / 'HANDOFF.md',
                                               cancel_on_recovery=True)
-        self.sessions[agent.id], self.tokens[agent.id] = session, token
+        self.sessions[agent.id] = session
         try:
             await session.start()
         except Exception as error:
@@ -490,7 +484,7 @@ class Controller:
 
     async def _close(self, agent_id: str) -> None:
         """Close an agent's session, if it has one; its status stays (it waits without a session)."""
-        self.tokens.pop(agent_id, None)
+        self.bridge.withdraw(agent_id)
         self.watches.pop(agent_id, None)
         self.idle_since.pop(agent_id, None)
         session = self.sessions.pop(agent_id, None)
@@ -856,20 +850,17 @@ class Controller:
 
     # Tools ----------------------------------------------------------------------------------
 
-    async def _tool_request(self, request: dict) -> str:
-        """Handle one tool call from an agent's MCP server (see :mod:`research_pipeline.channel`)."""
+    async def _tool_request(self, agent_id: str, session: int, tool: str, args: dict) -> str:
+        """Handle one tool call from session number ``session`` of ``agent_id`` (only its role's tools reach here)."""
         async with self.lock:
-            agent_id, tool = request.get('agent'), request.get('tool')
-            if not agent_id or self.tokens.get(agent_id) != request.get('token'):
-                return 'Error: this session has ended; its tools no longer work.'
             caller = self.state.agents[agent_id]
+            if agent_id not in self.sessions or caller.sessions != session:
+                return 'Error: this session has ended; its tools no longer work.'
             if caller.status == 'submitted':
                 return f'Error: your result is with {caller.parent}; end your turn and wait for its decision.'
-            if tool not in ROLE_TOOLS[caller.role]:
-                return f'Error: {tool} is not available to the {caller.role}.'
-            self.show('tool', agent_id, f'{tool}({_brief(request.get("args") or {})})')
+            self.show('tool', agent_id, f'{tool}({_brief(args)})')
             try:
-                reply = await getattr(self, f'_tool_{tool}')(caller, **(request.get('args') or {}))
+                reply = await getattr(self, f'_tool_{tool}')(caller, **args)
             except ToolError as refusal:
                 reply = f'Refused: {refusal}'
             except TypeError as error:
