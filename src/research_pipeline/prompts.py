@@ -63,6 +63,20 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
 
+def talk_instructions(agent: Agent, project: Project, outcome: str) -> str:
+    """The instructions of a talk session after the end (research_pipeline.talks), then the human's AGENTS.md."""
+    human = _section("Instructions from the human", project.root / "AGENTS.md", level="#")
+    text = PROMPTS.fill(
+        "talk",
+        id=agent.id,
+        title=TITLES[agent.role],
+        project=project.root,
+        folder=project.agent_dir(agent.id),
+        outcome=outcome.upper(),
+    )
+    return f"{text}\n\n{human}\n" if human else text + "\n"
+
+
 def _section(title: str, path: Path, level: str = "##") -> str | None:
     """A file's content as a titled section, or None if it is missing or empty."""
     try:

@@ -6,6 +6,7 @@
 - [controller.py](controller.py) — The controller: agent tree, sessions, notices and messages, handoffs, idle and stalled agents, tools, the Reviewer exchange, quota, pause, shutdown, finishing (with the Librarian's final shelving).
 - [state.py](state.py) — Persistent state (agents, jobs, proposals, quota holds, pending shelving) in `.research/state.json`.
 - [project.py](project.py) — The project folder: layout, layout check, git commits, the human's files.
+- [talks.py](talks.py) — Talks after the end: talk-only sessions with the primary and the Reviewer, with their talk notes.
 - [librarian.py](librarian.py) — The controller's side of the Librarian: shelving requests, `write_page` and `shelved`, its turns.
 - [library.py](library.py) — The library's catalogue of shelved files (`.research/library.json`) and `library/CATALOG.md`.
 - [links.py](links.py) — Links in Markdown pages: the files they reach and the links that lead nowhere.

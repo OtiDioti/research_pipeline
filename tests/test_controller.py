@@ -12,7 +12,16 @@ from agent_toolkit import SetupError
 
 from research_pipeline.controller import Controller
 from research_pipeline.project import ProjectError
-from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, shelve_all, temp_project
+from tests.helpers import (
+    FAKE_DRIVERS,
+    FakeSession,
+    launch_options,
+    quit_after_the_end,
+    remove,
+    running,
+    shelve_all,
+    temp_project,
+)
 
 
 def sent(harness, agent_id: str) -> str:
@@ -570,9 +579,11 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(list(harness.controller.sessions), ["librarian"])  # it places the final work
             self.assertEqual(harness.state.shelving, ["primary", "reviewer"])
             await shelve_all(harness)
-            assert harness.task is not None
-            await asyncio.wait_for(harness.task, 2)
+            await harness.settle()
+            self.assertFalse(harness.task is not None and harness.task.done())  # it stays open for talks
             self.assertEqual(harness.controller.sessions, {})
+            self.assertIn("talk only", harness.controller.label)
+            await quit_after_the_end(harness)
 
     async def test_proposal_needs_a_settled_layout(self):
         async with running(self.root) as harness:
@@ -636,9 +647,8 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await self.propose_complete(harness)
             self.ready_review(harness)
             await harness.call("reviewer", "verdict", review="1.md", agree=True)
-            await shelve_all(harness)  # the Librarian places the final work; then the controller exits
-            assert harness.task is not None
-            await asyncio.wait_for(harness.task, 2)
+            await shelve_all(harness)  # the Librarian places the final work
+            await quit_after_the_end(harness)
         (self.root / "starting_evidence" / "OBJECTIVES.md").write_text("A new question?\n")
         async with running(self.root) as harness:
             opening = harness.session("primary").launch.message
