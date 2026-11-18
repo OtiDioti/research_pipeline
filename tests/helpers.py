@@ -5,6 +5,7 @@ exercise every decision (spawning, handoffs, quota, reviews, pauses) quickly and
 deterministically. Tests act as the agents: they call tools exactly as the MCP
 server would and emit the events a real CLI would.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -22,21 +23,25 @@ from research_pipeline.controller import MCP_SERVER, Controller
 from research_pipeline.state import Options
 
 #: Temporary projects live here: projects may not live under /tmp (see Project.prepare).
-TEST_ROOT = Path.home() / '.cache' / 'research-pipeline-tests'
+TEST_ROOT = Path.home() / ".cache" / "research-pipeline-tests"
 
 
 def launch_options(**changes) -> Options:
     """Launch options for tests: explicit CLI choices for the primary and Reviewer, both fake CLIs allowed."""
-    return Options(**({'primary': 'codex:gpt-test:high', 'reviewer': 'codex:gpt-test:high',
-                       'backends': ['codex', 'claude']} | changes))
+    return Options(
+        **(
+            {"primary": "codex:gpt-test:high", "reviewer": "codex:gpt-test:high", "backends": ["codex", "claude"]}
+            | changes
+        )
+    )
 
 
-def temp_project(question: str = 'What is the integral of x^2 on [0, 1]?') -> Path:
+def temp_project(question: str = "What is the integral of x^2 on [0, 1]?") -> Path:
     """A fresh project folder with a research question; remove it with :func:`remove`."""
     TEST_ROOT.mkdir(parents=True, exist_ok=True)
     root = Path(tempfile.mkdtemp(dir=TEST_ROOT))
-    (root / 'starting_evidence').mkdir()
-    (root / 'starting_evidence' / 'RESEARCH_QUESTIONS.md').write_text(question + '\n')
+    (root / "starting_evidence").mkdir()
+    (root / "starting_evidence" / "RESEARCH_QUESTIONS.md").write_text(question + "\n")
     return root
 
 
@@ -48,12 +53,12 @@ class QuotaReader:
     """Usage readings set by the test: backend -> remaining % of the short and weekly windows."""
 
     def __init__(self):
-        self.remaining = {'codex': (80.0, 80.0), 'claude': (80.0, 80.0)}
+        self.remaining = {"codex": (80.0, 80.0), "claude": (80.0, 80.0)}
         self.fail: set[str] = set()
 
     def __call__(self, backend: str) -> list[Window]:
         if backend in self.fail:
-            raise OSError(f'{backend} usage unreadable')
+            raise OSError(f"{backend} usage unreadable")
         short, weekly = self.remaining[backend]
         return [Window(backend, 300, 100 - short, None), Window(backend, 10080, 100 - weekly, None)]
 
@@ -65,8 +70,13 @@ class Harness:
         self.root = root
         self.quota = QuotaReader()
         self.lines: list[tuple[str, str, str]] = []
-        self.controller = Controller(root, options or launch_options(), drivers=FAKE_DRIVERS,
-                                     read_quota=self.quota, show=lambda *entry: self.lines.append(entry))
+        self.controller = Controller(
+            root,
+            options or launch_options(),
+            drivers=FAKE_DRIVERS,
+            read_quota=self.quota,
+            show=lambda *entry: self.lines.append(entry),
+        )
         self.task: asyncio.Task | None = None
 
     @property
@@ -90,13 +100,13 @@ class Harness:
         """Call a tool as ``agent_id``'s latest session would, through the controller's socket; the reply's text."""
         reply = await call_tool(self.tools(agent_id), tool, **args)
         await self.settle()
-        return reply['text']
+        return reply["text"]
 
     async def emit(self, agent_id: str, kind: str, **data) -> None:
         self.session(agent_id).emit(kind, **data)
         await self.settle()
 
-    def write(self, relative: str, text: str = 'content\n') -> Path:
+    def write(self, relative: str, text: str = "content\n") -> Path:
         path = self.root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text)
@@ -104,11 +114,13 @@ class Harness:
 
     def index(self, folder: str, *entries: str) -> None:
         """Write a FOLDER_CONTENT.md describing ``entries`` in ``folder``."""
-        self.write(f'{folder}/FOLDER_CONTENT.md', '# Folder contents\n\n'
-                   + ''.join(f'- [{entry}]({entry}) — described.\n' for entry in entries))
+        self.write(
+            f"{folder}/FOLDER_CONTENT.md",
+            "# Folder contents\n\n" + "".join(f"- [{entry}]({entry}) — described.\n" for entry in entries),
+        )
 
     def handoff(self, agent_id: str) -> None:
-        self.write(f'agents/{agent_id}/HANDOFF.md', '# Handoff\n\nNext: continue.\n')
+        self.write(f"agents/{agent_id}/HANDOFF.md", "# Handoff\n\nNext: continue.\n")
 
 
 @asynccontextmanager
@@ -121,7 +133,7 @@ async def running(root: Path, options: Options | None = None):
     try:
         for _ in range(200):
             await asyncio.sleep(0.02)
-            if 'primary' in harness.controller.sessions or harness.task.done():
+            if "primary" in harness.controller.sessions or harness.task.done():
                 break
         if harness.task.done():
             harness.task.result()  # raise the controller's error
