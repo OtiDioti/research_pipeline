@@ -9,8 +9,8 @@ Start waits for `Project.unready()`'s checks, which the command line now applies
 material, `starting_evidence/` described). Without `--web` an unready folder is refused with the hint. The setup
 assistant (`--setup`, default `codex:gpt-6.1-sol:high`; new prompts `setup.md`, `setup-requests.md`,
 `objectives-template.md`) runs through agent_toolkit's `Relay` and acts only through `place`, `write_objectives`
-and `ask`; its quota is read before each request. Needs agent_toolkit 0.7.0 (preparation steps on the setup page);
-a local path dependency until its release. Not yet tried with real CLIs.
+and `ask`; its quota is read before each request. Needs agent_toolkit 0.7.0 (preparation steps on the setup page),
+pinned by its tag. Not yet tried with real CLIs.
 
 **2026-11-18.** 0.9.0: objectives instead of questions. The human's input is `starting_evidence/OBJECTIVES.md`
 (formerly `RESEARCH_QUESTIONS.md`; a project that still has the old file is told to rename it), and an objective is a
