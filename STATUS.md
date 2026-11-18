@@ -1,5 +1,11 @@
 # Status
 
+**2026-11-18.** The shared development standard of agent_toolkit: AGENTS.md carries it (CLAUDE.md imports it),
+the code is formatted and linted by ruff and type-checked by pyright (`uv run ruff format --check`, `uv run ruff
+check`, `uv run pyright`), every folder has a FOLDER_CONTENT.md, `tests/test_standards.py` checks all of it, and
+CI (`.github/workflows/checks.yml`) runs the checks and the tests on Python 3.11 and 3.13. No behaviour changed.
+agent_toolkit is a local path dependency until its release restores the tag pin.
+
 **2026-11-18.** Context resets only at the threshold ([docs/CONTEXT.md](docs/CONTEXT.md)): an agent keeps its
 CLI session while it waits (for a review, a verdict, its parent's decision, a human pause or a quota hold), and its
 context is reset only at a context or forced handoff, at the idle limit (`--idle-limit`, 58 minutes, inside the
