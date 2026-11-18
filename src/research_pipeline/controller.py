@@ -67,6 +67,7 @@ from research_pipeline import prompts
 from research_pipeline.librarian import LIBRARIAN, Librarian
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
+from research_pipeline.talks import Talks
 from research_pipeline.tools import ROLE_TOOLS, ToolError
 
 #: Seconds between usage-quota reads.
@@ -127,7 +128,9 @@ class Controller:
         self._quota_due = 0.0
         self._strays: set[str] = set()  # unexpected top-level entries already reported
         self.librarian = Librarian(self.project, lambda: self.state, self._notify, self._commit)
-        self.closing = False  # the investigation ended; the Librarian places the final work before the exit
+        self.closing = False  # the investigation ended; the Librarian places the final work
+        self.talks = Talks(self)  # talk-only sessions with the primary and the Reviewer after the end
+        self._reopen_told = False  # the human was told that their changes after the end reopen at the next run
         # Every agent tool, by name: the controller's _tool_* methods and the Librarian's (each role sees its own).
         self.handlers: dict[str, Callable] = {
             name.removeprefix("_tool_"): getattr(self, name) for name in dir(self) if name.startswith("_tool_")
@@ -160,6 +163,7 @@ class Controller:
                 await asyncio.gather(*loops, return_exceptions=True)
                 for agent_id in list(self.sessions):  # after a forced exit, agents restart from handoffs next time
                     await self._close(agent_id)
+                await self.talks.close(notes=False)
                 await self.bridge.close()
                 self._save()
         return 0
@@ -173,7 +177,8 @@ class Controller:
     def label(self) -> str:
         """One-word state of the investigation, with any quota holds."""
         holds = ", ".join(f"{backend} {hold['kind']}" for backend, hold in self.state.holds.items())
-        return self.state.status + (f" (held: {holds})" if holds else "")
+        talks = " (talk only)" if self.state.status in FINISHED else ""
+        return self.state.status + talks + (f" (held: {holds})" if holds else "")
 
     def say(self, text: str) -> None:
         """The human's chat message, for the primary (from the terminal app)."""
@@ -212,7 +217,9 @@ class Controller:
 
     def actions(self, agent: Agent) -> list[str]:
         """What the human may do to ``agent`` now (see :meth:`act`)."""
-        if agent.status in ENDED or self.state.status in FINISHED:
+        if self.state.status in FINISHED:
+            return ["message"] if self.talks.open(agent) else []  # talk-only after the end
+        if agent.status in ENDED:
             return []
         allowed = [] if agent.status == "submitted" else ["message"]
         if agent.status in (*ACTIVE, "resting") or agent.status == "paused" and agent.pause_reason != "held":
@@ -301,6 +308,10 @@ class Controller:
         if not text.strip():
             raise ValueError("the message is empty")
         self.show("human", agent.id, text)
+        if self.talks.open(agent):  # after the end: a talk, which the investigation never sees
+            return await self.talks.message(agent, text)
+        if self.state.status in FINISHED:
+            raise ValueError("the investigation has ended: only the primary and the Reviewer can be talked to")
         delivered = await self._talk(agent, prompts.human_message(text))
         parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
@@ -377,11 +388,17 @@ class Controller:
     async def _locked(self, coroutine) -> None:
         """Run ``coroutine`` under the lock; report (never propagate) an unexpected error."""
         assert self.lock is not None  # set by run(), whose loops are the only callers
-        async with self.lock:
-            try:
-                await coroutine
-            except Exception as error:
-                self.show("controller", "", f"Internal error (the investigation continues): {error!r}")
+        try:
+            await self.lock.acquire()
+        except asyncio.CancelledError:  # cancelled while waiting (e.g. at the exit): the coroutine never runs
+            coroutine.close()
+            raise
+        try:
+            await coroutine
+        except Exception as error:
+            self.show("controller", "", f"Internal error (the investigation continues): {error!r}")
+        finally:
+            self.lock.release()
 
     def _load(self) -> State:
         """Load the stored state, or create it on a first run; apply new launch options."""
@@ -434,7 +451,21 @@ class Controller:
         state.human = state.human or self.project.human_fingerprint()  # changes while off are reported below
         if not state.agents["primary"].sessions:  # the first run
             self._commit("controller: investigation started")
+        elif state.status in FINISHED and not Project.changed(state.human, self.project.human_fingerprint()):
+            if changed:
+                self._commit("controller: changes after the end")
+            self.closing = bool(state.shelving)  # the Librarian places what was left pending; talks are open
+            state.holds.clear()
+            await self._check_quota()
+            librarian = state.agents[LIBRARIAN]
+            if state.shelving and librarian.status == "resting":
+                await self._wake(librarian)
+            await self._resume_agents()
+            self._announce_talks()
+            self._save()
+            return
         elif state.status in FINISHED:
+            await self.talks.discard()
             outcome = state.status.upper()
             self._commit("human: changes before reopening")
             state.status, state.proposal = "running", None
@@ -1396,6 +1427,7 @@ class Controller:
             root=self.project.root,
         )
         commit = self._commit(f"controller: investigation {outcome.upper()}")
+        state.human = self.project.human_fingerprint()  # changes from now on reopen it at the next run
         self.show("controller", "primary", f"The investigation is {outcome.upper()}: {detail}")
         final = [
             agent
@@ -1433,9 +1465,17 @@ class Controller:
             if pending
             else "The library is up to date.",
         )
+        self._announce_talks()
         self._save()
-        assert self.done is not None  # set by run(), within which this runs
-        self.done.set()
+
+    def _announce_talks(self) -> None:
+        self.show(
+            "controller",
+            "primary",
+            f"The investigation has ended ({self.state.status.upper()}). You can still talk with the primary (chat box "
+            "or web page) and the Reviewer (web page), talk-only. Ctrl+Q quits; to reopen, change your files "
+            "(e.g. FEEDBACK.md) and run again.",
+        )
 
     # Pause, resume and shutdown ------------------------------------------------------------------
 
@@ -1541,6 +1581,7 @@ class Controller:
     async def _shutdown(self) -> None:
         """Let every session save its handoff, then end the controller; jobs keep running."""
         if self.state.status in FINISHED:
+            await self.talks.close()  # each talk session saves its talk note
             assert self.done is not None  # set by run(), within which this runs
             self.done.set()
         else:  # also while paused: the sessions kept meanwhile save their notes before they end
@@ -1622,6 +1663,7 @@ class Controller:
                 agent.pause_reason = "retry"
                 await self._resume_agents({"retry"})
         await self._check_idle()
+        await self.talks.check_idle()
         if now >= self._human_checked + HUMAN_INTERVAL:
             self._human_checked = now
             await self._check_human()
@@ -1642,7 +1684,16 @@ class Controller:
         """Tell the primary when the human's own files changed (PROJECT.md §6, "Human edits")."""
         current = self.project.human_fingerprint()
         changed = Project.changed(self.state.human, current)
-        if changed:
+        if changed and self.state.status in FINISHED:  # kept for the next run, which reopens on them
+            if not self._reopen_told:
+                self._reopen_told = True
+                self.show(
+                    "alert",
+                    "primary",
+                    "Your files changed since the end: talks go on; quit (Ctrl+Q) and run again to reopen the "
+                    "investigation.",
+                )
+        elif changed:
             self.state.human = current
             self.show("controller", "primary", "The human changed: " + ", ".join(changed[:10]))
             await self._notify(self.state.agents["primary"], prompts.human_changed(changed))
@@ -1657,7 +1708,8 @@ class Controller:
         """Commit the project and return the current commit; changes to the human's files are reported first
         (PROJECT.md §2)."""
         current = self.project.human_fingerprint()
-        changed = Project.changed(self.state.human, current)
+        # After the end, the human's changes are kept for the next run, which reopens on them.
+        changed = Project.changed(self.state.human, current) if self.state.status not in FINISHED else []
         primary = self.state.agents["primary"]
         if changed:
             self.state.human = current

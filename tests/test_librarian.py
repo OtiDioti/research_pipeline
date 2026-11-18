@@ -10,7 +10,16 @@ import unittest
 
 from research_pipeline.controller import Controller
 from research_pipeline.project import ProjectError
-from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, shelve_all, temp_project
+from tests.helpers import (
+    FAKE_DRIVERS,
+    FakeSession,
+    launch_options,
+    quit_after_the_end,
+    remove,
+    running,
+    shelve_all,
+    temp_project,
+)
 
 
 def sent(harness, agent_id: str) -> str:
@@ -187,8 +196,8 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(list(harness.controller.sessions), ["librarian"])
             self.assertIn(self.root / "agents" / "primary", harness.controller.librarian.frozen())
             await shelve_all(harness)
-            assert harness.task is not None
-            await asyncio.wait_for(harness.task, 2)
+            await quit_after_the_end(harness)
+        (self.root / "FEEDBACK.md").write_text("Continue.\n")  # a change of the human's files reopens it
         async with running(self.root) as harness:
             self.assertEqual(harness.state.status, "running")
             self.assertNotIn(self.root / "agents" / "primary", harness.controller.librarian.frozen())
@@ -200,20 +209,19 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
             harness.quota.remaining["claude"] = (80.0, 5.0)
             await harness.controller._check_quota()
             await self.propose_and_agree(harness)
-            assert harness.task is not None
-            await asyncio.wait_for(harness.task, 2)
+            await quit_after_the_end(harness)
             self.assertEqual(harness.state.shelving, ["primary", "reviewer"])
-        async with running(self.root, options) as harness:  # reopened; the hold is read again
+        async with running(self.root, options) as harness:  # talk-only; the hold is read again
             await harness.settle(10)
             self.assertIn("Shelving request: primary", sent(harness, "librarian"))
 
-    async def test_a_librarian_stalling_at_the_end_lets_the_controller_exit(self):
+    async def test_a_librarian_stalling_at_the_end_leaves_its_requests_for_the_next_run(self):
         async with running(self.root) as harness:
             await self.propose_and_agree(harness)
             for _ in range(2):
                 await harness.emit("librarian", "turn_ended", text="")
-            assert harness.task is not None
-            await asyncio.wait_for(harness.task, 2)
+            self.assertNotIn("librarian", harness.controller.sessions)
+            await quit_after_the_end(harness)
             self.assertEqual(harness.state.shelving, ["primary", "reviewer"])
 
     async def test_projects_made_before_the_library_are_refused(self):

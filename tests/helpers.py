@@ -148,6 +148,13 @@ async def shelve_all(harness: Harness) -> None:
         assert reply.startswith("Shelved"), reply
 
 
+async def quit_after_the_end(harness: Harness) -> None:
+    """After the end the controller stays open for talks: the human quits (Ctrl+Q), and it exits."""
+    harness.controller.shutdown()
+    assert harness.task is not None
+    await asyncio.wait_for(harness.task, 5)
+
+
 @asynccontextmanager
 async def running(root: Path, options: Options | None = None):
     """Run a controller on fake drivers for the duration of the block."""
@@ -158,7 +165,8 @@ async def running(root: Path, options: Options | None = None):
     try:
         for _ in range(200):
             await asyncio.sleep(0.02)
-            if "primary" in harness.controller.sessions or harness.task.done():
+            ended = harness.controller.lock is not None and harness.controller.state.status in ("complete", "stopped")
+            if "primary" in harness.controller.sessions or harness.task.done() or ended:  # ended: talk-only
                 break
         if harness.task.done():
             harness.task.result()  # raise the controller's error

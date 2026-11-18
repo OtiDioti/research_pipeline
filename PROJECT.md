@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), and the web setup of a folder before the first start, with its setup assistant (§2, §3, §6).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4).
 
 ## 1. Purpose
 
@@ -289,14 +289,28 @@ pages may change during a review: they move nothing the review examines.
 **Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs
 except the Librarian, records the outcome in `STATUS.md`, commits, and shelves the
 folders of the primary and the Reviewer. The Librarian places their work and any
-still pending; then the controller makes a final commit and exits. If the
-Librarian cannot run, or stalls, the investigation ends without waiting: the work
-is catalogued already, and the pending requests reach the Librarian at the
-controller's next run. Machine COMPLETE is not scientific acceptance; that is the
-human's judgment.
+still pending; then the controller makes a final commit and stays open for talks
+until the human quits. If the Librarian cannot run, or stalls, its pending requests
+reach it at the controller's next run: the work is catalogued already. Machine
+COMPLETE is not scientific acceptance; that is the human's judgment.
 
-**Reopening.** After COMPLETE or STOP, the human may resume the investigation, for
-example after changing the objectives, evidence or feedback. The primary restarts
+**Talks after the end.** The human can still talk with the primary (chat box or web
+page) and the Reviewer (web page), talk-only. A message starts a talk session from
+the agent's last handoff and its key files (REPORT.md, the reviews), on its stored
+CLI, model and effort: it reads everything and may run commands and use the web,
+but nothing in the project is writable and it has no subagents or jobs; its
+instructions are to answer from the work, citing the files, and to say plainly what
+was not done or is uncertain. At the context threshold, the idle limit or a quit, it
+saves a talk note in `.research/talks/<agent>.md` (never its frozen HANDOFF.md), from
+which the next talk session continues. Talks are kept only in the activity log; a
+CLI held by its quota refuses them until it resets. A later `run` on a finished
+project opens talk-only again, unless the human's files changed since the end.
+
+**Reopening.** After COMPLETE or STOP, the human resumes the investigation by
+changing their files (objectives, evidence, AGENTS.md or feedback, e.g. one line in
+FEEDBACK.md) and running again; changes made while the program stays open after the
+end wait for that next run. The talk notes are removed, and the primary gets nothing
+of the talks. The primary restarts
 from its handoff and the reviews, with a list of the files changed since the end.
 The folders of the primary and the Reviewer are no longer frozen: both continue in
 them, and their files stay catalogued with the commit at which they were shelved.

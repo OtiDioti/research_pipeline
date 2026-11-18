@@ -23,7 +23,7 @@ from agent_toolkit.web import Dashboard, Field, SettingsError, edge, node, valid
 from research_pipeline.controller import Controller
 from research_pipeline.preparation import Preparation
 from research_pipeline.project import INDEX, Project
-from research_pipeline.state import ENDED, Agent, Options
+from research_pipeline.state import ENDED, FINISHED, Agent, Options
 
 #: How the page colours an agent, by status (paused agents by their pause reason, see :data:`PAUSED`).
 COLOURS = {
@@ -337,14 +337,17 @@ class ResearchDashboard(Dashboard):
         if state.outcome:
             summary = state.outcome
         held = state.status in ("paused", "pausing")
-        controls = [{"action": "pause", "label": "Resume" if held else "Pause", "confirm": None}]
+        ended = state.status in FINISHED  # talk-only: nothing to pause or release
+        controls = [] if ended else [{"action": "pause", "label": "Resume" if held else "Pause", "confirm": None}]
         if controller.releasable:
             controls.append({"action": "release", "label": "Resume held", "confirm": None})
         controls.append(
             {
                 "action": "shutdown",
-                "label": "Shut down",
-                "confirm": "Every agent saves its handoff, then the program ends (jobs keep running). Shut down?",
+                "label": "Quit" if ended else "Shut down",
+                "confirm": "The talks save their notes, then the program ends. Quit?"
+                if ended
+                else "Every agent saves its handoff, then the program ends (jobs keep running). Shut down?",
             }
         )
         return {
@@ -363,7 +366,12 @@ class ResearchDashboard(Dashboard):
                 for window in controller.windows
             ],
             "controls": controls,
-            "composer": {"target": "primary", "label": "Message the primary researcher"},
+            "composer": {
+                "target": "primary",
+                "label": "Talk with the primary researcher (the investigation has ended)"
+                if ended
+                else "Message the primary researcher",
+            },
         }
 
     def _documents(self) -> dict[str, list[str]]:

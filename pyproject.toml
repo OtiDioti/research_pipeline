@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-pipeline"
-version = "0.10.1"
+version = "0.11.0"
 description = "Autonomous research investigations led by a primary agent, with subagents and a final reviewer"
 readme = "README.md"
 requires-python = ">=3.11"

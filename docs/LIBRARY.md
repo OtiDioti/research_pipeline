@@ -78,10 +78,10 @@ file in it.
 On COMPLETE or a confirmed STOP, every session but the Librarian's closes and the
 outcome is committed. The final folders are shelved, and the controller waits for
 the Librarian to place them (no time limit; Ctrl+Q exits at once), then commits
-`controller: the library after the end` and exits. It does not wait if the
-Librarian cannot run (its CLI is held, its session failed, the human paused it) or
-once it stalls: the work is catalogued already, and its requests reach it at the
-next `run`.
+`controller: the library after the end` and stays open for talks
+([FINISHING.md](FINISHING.md)). If the Librarian cannot run (its CLI is held, its
+session failed, the human paused it) or stalls, the work is catalogued already, and
+its requests reach it at the next `run`, talk-only or reopened.
 
 ## Earlier projects
 

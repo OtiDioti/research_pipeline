@@ -4,8 +4,9 @@ Running an investigation, controlling it, and finding out what went wrong.
 
 ## Launch
 
-`research-pipeline run PROJECT` starts, resumes or reopens an investigation; the
-options are listed in [README.md](../README.md).
+`research-pipeline run PROJECT` starts or resumes an investigation, opens a finished
+one for talks, or reopens it if the human's files changed since the end
+([FINISHING.md](FINISHING.md)); the options are listed in [README.md](../README.md).
 - On the first run, `--primary`, `--reviewer` and `--librarian` are required as
   `BACKEND:MODEL:EFFORT` (with `--web`, on the setup page instead). A folder that
   is not ready is refused unless `--web` sets it up ([SETUP.md](SETUP.md)). `--backends` defaults to the primary's and the Reviewer's

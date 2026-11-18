@@ -157,6 +157,15 @@ PLACE = Tool(
 )
 SETUP_TOOLS = [ASK, WRITE_OBJECTIVES, PLACE]
 
+# The one tool of a talk session after the end (research_pipeline.talks).
+WRITE_TALK_NOTE = Tool(
+    "write_talk_note",
+    "Save your talk note (Markdown), replacing the previous one: what the human asked, what you answered,\n"
+    "what remains open. Your next talk session starts from it.",
+    {"note": TEXT},
+    ("note",),
+)
+
 _COMMON = [SPAWN, AGENTS, MESSAGE, ACCEPT, REJECT, CANCEL, RUN_JOB, JOB_STATUS, JOB_CANCEL]
 #: Tools offered to each role.
 ROLE_TOOLS = {
