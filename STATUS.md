@@ -1,5 +1,10 @@
 # Status
 
+**2026-11-19.** 0.11.1, prompts only (`common.md`): parents give subagents the time their task needs (no deadline
+unless the human sets one), message them to redirect or inform, never to hurry them, ask for an interim note when they
+need part of the work sooner, and cancel rather than ask for a rushed result. Prompted by a run in which parents asked
+subagents to finalize minutes after starting them, and a rushed priority check missed the closest antecedent.
+
 **2026-11-18.** 0.11.0: talks after the end ([docs/FINISHING.md](docs/FINISHING.md), PROJECT.md §4). After COMPLETE
 or a confirmed STOP the program stays open (`complete (talk only)`) until the human quits: a message to the primary
 (chat box, web page) or the Reviewer (web page) starts a talk session from its handoff and key files, read-only,
