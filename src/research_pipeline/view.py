@@ -13,7 +13,7 @@ from prompt_toolkit.widgets import Frame, TextArea
 from agent_toolkit.console import Entry, TerminalApp as SharedApp
 
 from research_pipeline.controller import Controller
-from research_pipeline.state import ENDED, LIVE
+from research_pipeline.state import ACTIVE, ENDED
 
 #: Transcript label of each kind of entry.
 LABELS = {'agent': '', 'tool': '·', 'notice': '→', 'human': 'YOU', 'controller': 'CONTROLLER', 'alert': 'ALERT'}
@@ -30,7 +30,7 @@ def describe(controller: Controller) -> list[str]:
             status = 'working' if session and session.busy else 'idle'
         elif status == 'paused' and agent.pause_reason:
             status = f'paused ({agent.pause_reason})'
-        fill = f'{agent.fill:4.0%}' if agent.fill is not None and agent.status in LIVE else '   –'
+        fill = f'{agent.fill:4.0%}' if agent.fill is not None and session else '   –'
         lines.append(f'{agent.id[:22]:22} {str(agent.spec)[:24]:24} {status[:18]:18} ctx {fill}  {agent.activity[:90]}')
     return lines
 
@@ -71,20 +71,21 @@ class TerminalApp(SharedApp):
 
     def held(self) -> bool:
         control = self.control
-        waiting = control.releasable and not any(a.status in LIVE for a in control.state.agents.values())
+        waiting = control.releasable and not any(a.status in ACTIVE for a in control.state.agents.values())
         return control.state.status in ('paused', 'pausing') or waiting
 
     def status(self) -> str:
         control, state = self.control, self.control.state
-        live = sum(agent.status in LIVE for agent in state.agents.values())
+        live = len(control.sessions)
         proposal = state.proposal
         review = f' | {proposal["kind"].upper()} proposal, round {proposal["round"]}' if proposal else ''
         windows = ', '.join(map(str, control.windows)) or 'not read yet'
         options = state.options
         hint = ' | Ctrl+R resumes held agents' if control.releasable else ''
-        return (f'{control.label.upper()} | {live}/{options.max_agents} agents working{review}{hint}\n'
+        return (f'{control.label.upper()} | {live}/{options.max_agents} sessions{review}{hint}\n'
                 f'Quota: {windows} (pause at {options.short_limit:g}%, stop at {options.weekly_limit:g}% left) | '
-                f'hand off at {options.threshold:.0%} context')
+                f'hand off at {options.threshold:.0%} context, '
+                f'idle sessions close after {options.idle_limit:g} min')
 
     def cycle(self) -> None:
         """Show the next agent alone."""

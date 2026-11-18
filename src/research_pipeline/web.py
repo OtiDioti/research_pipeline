@@ -65,8 +65,10 @@ class ResearchDashboard(Dashboard):
                   'session.', options=backends, live=True),
             Field('backends', 'CLIs for subagents', 'multiselect', 'The CLIs agents may choose for their subagents.',
                   options=backends, live=True),
-            Field('max_agents', 'Agents at once', 'integer', 'Agents with a live session at the same time.', min=1,
-                  max=16, step=1, live=True),
+            Field('max_agents', 'Sessions at once', 'integer', 'Agent sessions open at the same time, idle ones '
+                  'included.', min=2, max=16, step=1, live=True),
+            Field('idle_limit', 'Idle limit', 'number', 'Minutes an idle session waits before it saves its handoff '
+                  'and closes (0: never).', min=0, max=240, step=1, unit='min', live=True),
             Field('threshold', 'Handoff threshold', 'number', 'Context fill at which an agent hands off.',
                   min=0.05, max=0.8, step=0.01, live=True),
             Field('short_limit', 'Short-window limit', 'number', 'Usage left in a short window that pauses its CLI.',
@@ -81,7 +83,8 @@ class ResearchDashboard(Dashboard):
     def values(self) -> dict:
         options = self.controller.state.options if self.controller else self.options
         return {name: getattr(options, name) for name in ('primary', 'reviewer', 'backends', 'max_agents', 'threshold',
-                                                         'short_limit', 'weekly_limit', 'references', 'durable')}
+                                                         'idle_limit', 'short_limit', 'weekly_limit', 'references',
+                                                         'durable')}
 
     async def start(self, values: dict) -> None:
         values = validate(self.fields(), values, self.drivers)
@@ -146,6 +149,8 @@ class ResearchDashboard(Dashboard):
             colour, detail = PAUSED.get(agent.pause_reason, 'waiting'), f'paused ({agent.pause_reason})'
         else:
             colour, detail = COLOURS.get(agent.status, 'idle'), agent.status
+        if session and agent.status != 'running':
+            detail += ', session kept'  # it waits in its session (which occupies a slot) until the idle limit
         return node(agent.id, 'agent', agent.id, parent=agent.parent, role=agent.role, status=colour, detail=detail,
                     backend=agent.backend, model=agent.model, effort=agent.effort, fill=agent.fill,
                     tokens=agent.tokens, window=agent.window, threshold=controller.state.options.threshold,
@@ -154,8 +159,7 @@ class ResearchDashboard(Dashboard):
 
     def _status(self, controller: Controller) -> dict:
         state = controller.state
-        working = sum(agent.status in ('running', 'handing_off') for agent in state.agents.values())
-        summary = f'{working}/{state.options.max_agents} agents working'
+        summary = f'{len(controller.sessions)}/{state.options.max_agents} sessions'
         if state.proposal:
             summary += f' · {state.proposal["kind"].upper()} proposal, round {state.proposal["round"]}'
         if state.outcome:
@@ -165,7 +169,7 @@ class ResearchDashboard(Dashboard):
         if controller.releasable:
             controls.append({'action': 'release', 'label': 'Resume held', 'confirm': None})
         controls.append({'action': 'shutdown', 'label': 'Shut down',
-                         'confirm': 'Working agents hand off, then the program ends (jobs keep running). Shut down?'})
+                         'confirm': 'Every agent saves its handoff, then the program ends (jobs keep running). Shut down?'})
         return {'program': self.program, 'project': self.project.name, 'state': state.status, 'summary': summary,
                 'quota': [{'backend': window.backend, 'minutes': window.minutes, 'left': round(100 - window.used, 1),
                            'resets_at': window.resets_at, 'held': window.backend in state.holds}

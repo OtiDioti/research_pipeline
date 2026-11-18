@@ -8,27 +8,30 @@ primary's decision, after the Reviewer's challenge).
 `complete(report)` and `stop(reason)` are refused unless:
 - the primary's subagents and jobs are settled;
 - its layout check passes;
-- HANDOFF.md was written during its current session (a brief one suffices);
 - no earlier proposal is still with the Reviewer.
 
 `complete` also needs a non-empty report, REPORT.md by default.
 
 On a proposal:
-1. The round number increases, and the proposal is committed.
-2. The primary becomes `resting`: its session ends with its turn.
-3. The Reviewer is woken with the review request. It may need to wait for a slot or for its CLI's quota.
+1. The round number increases, and the proposal is committed; the proposal records that commit.
+2. The primary ends its turn and waits in its session, **talk-only**: `spawn`,
+   `run_job`, `complete` and `stop` are refused until the verdict. Its write scope
+   does not change.
+3. The Reviewer gets the review request, in its session if it kept one. A fresh
+   session may need to wait for a slot or for its CLI's quota.
 
 ## During the review
 
-- The Reviewer reads the whole project, may run jobs and spawn helpers, writes
+- The Reviewer judges the project as of the proposal's commit: `git diff --stat
+  <commit>` lists what changed since, `git show <commit>:PATH` shows a file as
+  proposed. It reads the whole project, may run jobs and spawn helpers, writes
   `reviews/<round>.md`, and calls `verdict(review, agree)`. It must settle its
   helpers and jobs first.
-- A chat message from the human wakes the primary in **talk-only** mode. It is told
-  its proposal is under review. `spawn`, `run_job`, `complete` and `stop` are
-  refused, and STATUS.md and REPORT.md are read-only for it. Its session stays
-  open until the verdict.
+- The human's chat messages reach the primary in its session; it answers, talk-only.
+  If its session closed at the idle limit, a fresh one starts, told that its
+  proposal is under review.
 - If the Reviewer stalls (ends its turn idle twice without a verdict), the proposal
-  is withdrawn, its session closes, and the primary is woken: it may continue,
+  is withdrawn, the Reviewer rests, and the primary is told: it may continue,
   propose again or stop.
 
 ## Verdicts
@@ -36,12 +39,16 @@ On a proposal:
 | Proposal | Verdict | Result |
 |---|---|---|
 | COMPLETE | agree | The investigation is COMPLETE |
-| COMPLETE | disagree | The proposal ends; the primary restarts with the review, and continues, proposes again (no round limit) or stops |
-| STOP | agree or disagree (a challenge) | The primary restarts with the review and decides: `stop(reason, final=True)` confirms; continuing the work (any `spawn` or `run_job`) withdraws the STOP |
+| COMPLETE | disagree | The proposal ends; the primary receives the review, and continues, proposes again (no round limit) or stops |
+| STOP | agree or disagree (a challenge) | The primary receives the review and decides: `stop(reason, final=True)` confirms; continuing the work (any `spawn` or `run_job`) withdraws the STOP |
 
-- After a verdict, the Reviewer's session ends with its turn, and it rests until the next round.
-- It keeps its objections across rounds in its HANDOFF.md, and its earlier reviews are in `reviews/`.
-- A talk-only session of the primary is replaced when the verdict arrives, so the new one can write STATUS.md and REPORT.md.
+- The verdict reaches the primary in the same session (a fresh one if that closed
+  at the idle limit). It lists the files changed
+  since the proposal's commit (except `reviews/` and `agents/reviewer/`): the review
+  does not cover them.
+- After a verdict, the Reviewer rests, keeping its session (until the idle limit);
+  the next round's request reaches it there.
+- It keeps its objections across rounds, in its HANDOFF.md for a fresh session, and its earlier reviews are in `reviews/`.
 
 ## Ending
 

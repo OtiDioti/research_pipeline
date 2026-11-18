@@ -25,13 +25,13 @@ program exits.
 Every launch option, prefilled from the command line and the stored options (the
 last used): the primary and the Reviewer (CLI, model from the CLI's own list or
 typed, effort as a slider over the levels the model accepts), the CLIs for
-subagents, the number of agents at once, the handoff threshold, the usage limits,
+subagents, the number of sessions at once, the idle limit, the handoff threshold, the usage limits,
 and under *Advanced* the reference folders and durable state. Start checks them
 like the command line does and shows what is wrong next to each setting.
 
 While the investigation runs, the settings button changes the handoff threshold
-(live sessions follow at their next context reading), the usage limits and the
-number of agents at once, at once; and the primary's or the Reviewer's CLI, model
+(live sessions follow at their next context reading), the usage limits, the
+number of sessions at once and the idle limit, at once; and the primary's or the Reviewer's CLI, model
 and effort, from that agent's next session, and the CLIs for subagents, from the
 next spawn. The reference folders and durable state need a new `run`.
 
@@ -43,10 +43,12 @@ next spawn. The reference folders and durable state need a new `run`.
   smaller and faded. Edges go from parent to subagent; a submitted, accepted or
   rejected result, and the Reviewer's last verdict, are marked on an edge to the
   receiver. Messages between agents travel along the edges as they happen.
-- Statuses: *working* and *idle* (a running session, busy or waiting), *handing
-  off*, *paused* (by you), *held* (by the usage quota), *waiting* (for a slot, a
-  retry or a wake), *failed* (its session failed and waits for a retry),
-  *submitted*, *finished* (accepted, or the finished primary) and *cancelled*.
+- Statuses: *working* and *idle* (a running session, busy or waiting; a resting
+  agent is idle too), *handing off*, *paused* (by you), *held* (by the usage quota),
+  *waiting* (for a slot, a retry or a wake), *failed* (its session failed and waits
+  for a retry), *submitted*, *finished* (accepted, or the finished primary) and
+  *cancelled*. A waiting agent that kept its session shows "session kept": it
+  occupies a slot until the idle limit.
 - Hovering an agent shows its CLI, status, context use, current activity and
   sessions. Clicking selects it; Shift- or Ctrl-click and dragging a box select
   several; double-click selects its subtree. Selecting unfolds what the selected
@@ -78,9 +80,9 @@ Single agents, from their right-click menu or the panel's buttons:
 
 | Action | Effect |
 |---|---|
-| Message | Delivered during the agent's turn (or at its next session); its parent receives a copy |
-| Pause | The agent hands off and waits (pause reason `held`); its subagents and jobs keep working, and their messages and results wait for it; its parent is told. Pausing and resuming the whole investigation does not restart it |
-| Resume | The agent continues from its handoff as soon as it can run (also an agent whose session failed); its parent is told |
+| Message | Delivered during the agent's turn, into its waiting session (talk-only while paused), or at its next session; its parent receives a copy |
+| Pause | The agent finishes its current step, ends its turn and waits in its session (pause reason `held`), talk-only; its subagents and jobs keep working, and their messages and results wait for it; its parent is told. Pausing and resuming the whole investigation does not resume it |
+| Resume | The agent continues in the same session (from its handoff if the session closed at the idle limit, or failed) as soon as it can run; its parent is told |
 | Force handoff | The agent updates HANDOFF.md and continues in a fresh session (unlike a context handoff, not called off by the CLI's compaction) |
 | Cancel | A subagent, its subagents and their jobs end, as with its parent's cancel tool; the parent is told |
 

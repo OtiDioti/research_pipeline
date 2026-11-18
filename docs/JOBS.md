@@ -37,8 +37,8 @@ In `agents/<owner>/jobs/<job-id>/`, indexed by the controller in the jobs folder
 | `cancelled` | Stopped by `job_cancel`, a cancelled owner, a human pause or the end of the investigation |
 | `lost` | Ended without an exit code, e.g. killed from outside |
 
-When a job ends, its owner is told, with the last 30 lines of each log; while the
-owner has no session, the notice waits for its next one. `job_status` shows the
+When a job ends, its owner is told, with the last 30 lines of each log; an owner
+resting without a session is woken by it, and a paused one gets it when it continues. `job_status` shows the
 same at any time.
 
 ## What stops a job

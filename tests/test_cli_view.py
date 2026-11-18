@@ -18,7 +18,7 @@ from tests.helpers import FAKE_DRIVERS, launch_options, remove, temp_project
 
 def arguments(**values):
     defaults = dict(primary=None, reviewer=None, backends=None, max_agents=None, reference=None, short_limit=None,
-                    weekly_limit=None, context_threshold=None, durable=None)
+                    weekly_limit=None, context_threshold=None, idle_limit=None, durable=None)
     return argparse.Namespace(**(defaults | values))
 
 
@@ -34,6 +34,9 @@ class CliTest(unittest.TestCase):
         for threshold in (2, 0.9):  # at most 0.8: room is needed to write the handoff note
             with self.subTest(threshold=threshold), self.assertRaises(ValueError):
                 cli.options_from(arguments(context_threshold=threshold), None)
+        self.assertEqual((fresh.idle_limit, cli.options_from(arguments(idle_limit=0), stored).idle_limit), (58, 0))
+        with self.assertRaises(ValueError):
+            cli.options_from(arguments(idle_limit=-1), None)
         self.assertTrue(merged.durable)
         self.assertFalse(cli.options_from(arguments(durable=False), stored).durable)
         with self.assertRaisesRegex(ValueError, 'does not accept effort'):

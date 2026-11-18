@@ -1,6 +1,6 @@
 # CLI drivers
 
-One persistent session per running agent, from the private package
+At most one persistent session per agent, from the private package
 `agent_toolkit`, shared with coding_pipeline and project_manager. It is the only
 code that knows the CLIs. research_pipeline only describes each session in
 CLI-neutral terms (a `Launch`) and reacts to its events.

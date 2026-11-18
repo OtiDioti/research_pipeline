@@ -26,14 +26,20 @@ are kept in `.research/state.json` (kind, reported reset or none, detail), and
 
 ## While a CLI is held
 
-- Its working agents get a handoff request, end their turn, and pause (`quota`).
-  Each subagent's parent is told that the pause is temporary and not a scientific blocker.
+- Each of its agents with a session updates HANDOFF.md (a request during its turn;
+  an idle one gets one short turn for it), then waits in its session, paused
+  (`quota`). Each subagent's parent is told that the pause is temporary and not a
+  scientific blocker.
 - If it is the primary's CLI, every agent pauses, whatever its CLI.
 - New spawns on that CLI are refused with the reason. A rejected subagent on it
   waits, and its rejection stands.
 - Jobs keep running.
-- When the hold ends, paused agents restart from their handoffs (if slots are
-  free), and parents are told that their subagent resumed.
+- If the hold ends within the idle limit (58 minutes, [CONTEXT.md](CONTEXT.md)),
+  each agent continues in the same session, told "The usage quota allows work
+  again. Continue your work." Otherwise its session closed at the idle limit,
+  without another turn (its note is saved), and it starts a fresh session from
+  HANDOFF.md once a slot is free. An agent whose context was at the threshold
+  continues in a fresh session too. Parents are told that their subagent resumed.
 - The terminal app shows the hold in its status line, e.g. `RUNNING (HELD: CLAUDE SHORT)`.
 
 ## If the limit is hit anyway

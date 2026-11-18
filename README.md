@@ -25,7 +25,8 @@ flowchart LR
 Agents run on agent CLIs (Codex and Claude Code today), each in a persistent
 session inside its own `bwrap` confinement. A deterministic controller makes every
 operational decision:
-- it hands an agent off to a fresh session at 55% context, measured from the CLI's own reports;
+- it keeps an agent's session while it waits, and hands it off to a fresh session at 55% context, measured
+  from the CLI's own reports, or after 58 idle minutes;
 - it pauses a CLI's agents when its usage quota runs low;
 - it runs long jobs, confined too, that survive handoffs and restarts;
 - it notices agents that stop working and tells whoever can act;
@@ -88,10 +89,11 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 |---|---|
 | `--primary`, `--reviewer` | CLI, model and effort as `BACKEND:MODEL:EFFORT`, all three required (on the first run) |
 | `--backends` | CLIs agents may choose for subagents (those of the primary and Reviewer) |
-| `--max-agents` | agents working at the same time (4); a spawn beyond it is refused |
+| `--max-agents` | agent sessions open at the same time, idle ones included (6, at least 2); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
 | `--short-limit`, `--weekly-limit` | % left of a CLI's short or weekly usage window that pauses its agents (15) |
 | `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
+| `--idle-limit MINUTES` | minutes an idle session waits before it saves its handoff and closes (58, inside the prompt cache's hour; 0: never) |
 | `--no-durable-state` | write the controller's state without forcing it to disk (for slow network filesystems) |
 | `--no-tui` | print the transcript instead of the terminal app |
 | `--web` | also show the investigation in your browser, setup page first; with `--start`, `--web-port PORT`, `--web-no-open` (see [docs/WEB.md](docs/WEB.md)) |
@@ -109,10 +111,10 @@ example when the primary has stopped and waits for your answer.
 
 | Control | Effect |
 |---|---|
-| Chat box, Enter | Message to the primary researcher, delivered during its turn (during a review it wakes the primary to answer you) |
-| Ctrl+P | Pause: every agent hands off, then jobs stop. Edit any file, then Ctrl+P again to resume |
+| Chat box, Enter | Message to the primary researcher, delivered during its turn (during a review or a pause it answers you, talk-only) |
+| Ctrl+P | Pause: agents at work finish their current step and wait in their sessions; jobs stop. Edit any file, then Ctrl+P again to resume in the same sessions |
 | Ctrl+R | Resume agents held by a weekly or unreadable quota, or failed agents no longer retried automatically (jobs keep running) |
-| Ctrl+Q / F10 | Exit cleanly: every agent hands off, jobs keep running; the next `run` resumes and reattaches them |
+| Ctrl+Q / F10 | Exit cleanly (also while paused): every agent saves its handoff, jobs keep running; the next `run` resumes and reattaches them |
 | F2 / F3 | Show one agent's transcript / all agents |
 | Ctrl+C | Exit at once; jobs keep running, and the next `run` restarts agents from their handoffs |
 
@@ -123,7 +125,7 @@ investigation), then the agent tree as a live graph: every agent that ever worke
 coloured by status, with its context use, its messages (coloured by sender) and
 tool calls, its documents, jobs and the websites it used. Single agents can be
 messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
-threshold, usage limits, number of agents and the CLI choices can be changed while it runs. See
+threshold, usage limits, number of sessions, idle limit and the CLI choices can be changed while it runs. See
 [docs/WEB.md](docs/WEB.md).
 
 You may edit your own files (`RESEARCH_QUESTIONS.md`, `AGENTS.md`, `FEEDBACK.md`,
@@ -152,6 +154,11 @@ what changed meanwhile (by you, or by jobs that kept running).
   overshooting. Context use comes only from each CLI's own reports; until a
   session's CLI has reported it, it shows as unknown and triggers nothing; if it is
   still unknown after the session's first turn, you get an ALERT.
+- **Waiting keeps the session.** An agent waiting for a review, a verdict, its
+  parent's decision, a pause or a quota hold keeps its session and context. A
+  session idle for `--idle-limit` minutes updates `HANDOFF.md` and closes; the
+  agent's next input starts a fresh session from it. Idle sessions count against
+  `--max-agents` until they close.
 - **Idle and stalled agents.** An agent that ends its turn with nothing running or
   pending is reminded once. If it ends its turn idle again, it has stalled: a
   subagent's parent is told (and may message it or cancel it), you are alerted for
@@ -162,14 +169,15 @@ what changed meanwhile (by you, or by jobs that kept running).
   when it ends.
 - **Finishing.**
   - COMPLETE: the primary writes `REPORT.md` and `HANDOFF.md` and calls `complete`.
-    Its session then closes while the Reviewer examines the work and writes a
-    review to `reviews/`. COMPLETE stands only if the Reviewer agrees; otherwise the
-    primary restarts with the review and continues or stops.
+    It then waits in its session, talk-only, while the Reviewer examines the work as
+    committed at the proposal and writes a review to `reviews/`. COMPLETE stands
+    only if the Reviewer agrees; otherwise the review reaches the primary in the
+    same session, and it continues or stops.
   - STOP: the Reviewer first challenges the primary's reasons, then the primary
     decides.
 - **Quota.**
-  - A CLI's short window at 15% or less left: its agents hand off and pause until
-    the reset.
+  - A CLI's short window at 15% or less left: its agents update their handoffs and
+    wait in their sessions until the reset.
   - A weekly window at 15% or less left, or quota that can't be read twice in a row: its
     agents pause until you resume them (Ctrl+R, or Resume when nothing is working).
   - If the primary's CLI is affected, everyone pauses. Jobs keep running through

@@ -69,7 +69,7 @@ into `.git` runs outside the confinement, while your own global git configuratio
 | Event | Message |
 |---|---|
 | First run | `controller: project prepared` (a new repository only), then `controller: investigation started` |
-| Handoff | `<agent>: handoff (context, pause, shutdown or quota)` |
+| Handoff | `<agent>: handoff (context, refresh, idle or quota)` |
 | Result, decision | `<agent>: result submitted`, `<parent>: accepted the result of <agent>`, `<parent>: cancelled <agent>` |
 | Proposal, verdict | `primary: proposes COMPLETE/STOP (round n)`, `reviewer: verdict on … (agree/disagree)` |
 | Stalled Reviewer | `reviewer: stalled in round n; proposal withdrawn` |

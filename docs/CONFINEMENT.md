@@ -17,7 +17,7 @@ serves every CLI.
 | Role | Writable |
 |---|---|
 | Every agent | Its folder `agents/<id>/`, `sources/`, `tools/`, and its CLI's state folder |
-| Primary | Also STATUS.md, REPORT.md and the root FOLDER_CONTENT.md (STATUS.md and REPORT.md stay read-only while its proposal is reviewed) |
+| Primary | Also STATUS.md, REPORT.md and the root FOLDER_CONTENT.md |
 | Reviewer | Also `reviews/` |
 
 The CLI state folders are those of Codex (`$CODEX_HOME` or `~/.codex`) and Claude

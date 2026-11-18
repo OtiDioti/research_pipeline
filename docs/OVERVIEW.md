@@ -24,9 +24,10 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 
 1. `research-pipeline run` prepares the project folder and starts the primary's session.
 2. The primary plans, writes notes and spawns subagents. Long computations run as jobs.
-3. Each agent hands off to a fresh session at 55% context. A CLI whose quota runs low pauses its agents.
+3. Each agent keeps its session while it waits, and hands off to a fresh session at 55% context; a session
+   idle for 58 minutes closes. A CLI whose quota runs low pauses its agents.
 4. Subagents submit `RESULT.md`; their parent accepts it, or rejects it with feedback.
-5. The primary proposes COMPLETE or STOP, and its session closes. The Reviewer examines the work and gives a verdict.
+5. The primary proposes COMPLETE or STOP and waits in its session. The Reviewer examines the work and gives a verdict.
 6. COMPLETE needs the Reviewer's agreement. STOP is the primary's decision after the Reviewer's challenge.
    The controller then stops everything and commits.
 
