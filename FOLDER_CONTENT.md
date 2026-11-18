@@ -1,7 +1,8 @@
 # Folder contents
 
 - [.gitignore](.gitignore) — Files git ignores: local environment, caches and the project manager's runtime files.
-- [AGENTS.md](AGENTS.md) — Instructions for coding agents developing this repository.
+- [AGENTS.md](AGENTS.md) — The shared development standard, then this repository's own notes, for whoever develops it.
+- [CLAUDE.md](CLAUDE.md) — Imports AGENTS.md for Claude Code.
 - [PROJECT.md](PROJECT.md) — V0 specification.
 - [README.md](README.md) — What it is, installation and usage.
 - [STATUS.md](STATUS.md) — Current development state and next step.
