@@ -1,7 +1,7 @@
 # Research Pipeline
 
-An autonomous research investigator. You give it research questions, starting
-evidence and tools; a **primary researcher** agent leads the investigation, spawns
+An autonomous research investigator. You give it objectives (research questions
+to answer or research tasks to perform), starting evidence and tools; a **primary researcher** agent leads the investigation, spawns
 **subagents** for subproblems, runs computations and writes what it learns into an
 ordinary project folder. When it judges the work done it proposes **COMPLETE**,
 which an independent **Reviewer** must agree with, or **STOP**. A **Librarian**
@@ -11,7 +11,7 @@ part and what it does under each condition.
 
 ```mermaid
 flowchart LR
-    You([You]) -->|questions, evidence, messages, Pause| C{{"Controller<br/>(deterministic)"}}
+    You([You]) -->|objectives, evidence, messages, Pause| C{{"Controller<br/>(deterministic)"}}
     C -->|transcript, status, alerts| You
     C <-->|tools, notices, handoffs| A
     subgraph A ["Agents: one confined CLI session each"]
@@ -54,13 +54,13 @@ uv tool install -e .        # optional: research-pipeline on your PATH
 
 ## Prepare a project
 
-A project is a folder (not under `/tmp`) containing at least the questions:
+A project is a folder (not under `/tmp`) containing at least the objectives:
 
 ```text
 my-project/
 ├── AGENTS.md                         optional instructions, given to every agent
 └── starting_evidence/
-    ├── RESEARCH_QUESTIONS.md         the authoritative questions
+    ├── OBJECTIVES.md                 the authoritative objectives: questions or tasks
     ├── ...                           papers, notes, data
     └── tools/                        optional tools of yours
 ```
@@ -76,7 +76,7 @@ When a subagent is accepted or cancelled, and at the end for the primary and the
 Reviewer, its folder is **shelved**: catalogued in `library/CATALOG.md` and frozen
 in place (nothing moves, so every path stays valid). The Librarian then links the
 work from its pages, starting at `library/LIBRARY.md`, organised for you: what was
-established about each question, how, and with which tools
+established or built for each objective, how, and with which tools
 ([docs/LIBRARY.md](docs/LIBRARY.md)). `starting_evidence/` is yours
 alone: agents and their jobs can only read it, so your tools there should write
 their output to a path they are given, never next to themselves.
@@ -139,7 +139,7 @@ messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
 threshold, usage limits, number of sessions, idle limit and the CLI choices can be changed while it runs. See
 [docs/WEB.md](docs/WEB.md).
 
-You may edit your own files (`RESEARCH_QUESTIONS.md`, `AGENTS.md`, `FEEDBACK.md`,
+You may edit your own files (`OBJECTIVES.md`, `AGENTS.md`, `FEEDBACK.md`,
 starting evidence) at any time: the primary is told, and a new `AGENTS.md`
 reaches every agent at its next session. Edit agent-written files only while
 paused or shut down: when the investigation resumes, the agents concerned are told

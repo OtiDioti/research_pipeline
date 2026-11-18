@@ -639,11 +639,11 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await shelve_all(harness)  # the Librarian places the final work; then the controller exits
             assert harness.task is not None
             await asyncio.wait_for(harness.task, 2)
-        (self.root / "starting_evidence" / "RESEARCH_QUESTIONS.md").write_text("A new question?\n")
+        (self.root / "starting_evidence" / "OBJECTIVES.md").write_text("A new question?\n")
         async with running(self.root) as harness:
             opening = harness.session("primary").launch.message
             self.assertIn("reopened after it ended (COMPLETE)", opening)
-            self.assertIn("Changes since then:\n- starting_evidence/RESEARCH_QUESTIONS.md", opening)
+            self.assertIn("Changes since then:\n- starting_evidence/OBJECTIVES.md", opening)
             self.assertIn("A new question?", opening)
             self.assertEqual(harness.state.status, "running")
 

@@ -9,7 +9,7 @@ across any number of sessions.
 |---|---|---|---|---|
 | Started by | The controller, at launch | `spawn`, by any agent | A COMPLETE or STOP proposal | Its first shelving request |
 | CLI, model, effort | `--primary` | The `spawn` arguments | `--reviewer` | `--librarian` |
-| Opening message | The questions, FEEDBACK.md, an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
+| Opening message | The objectives, FEEDBACK.md, an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
 | Writes, besides its folder | STATUS.md, REPORT.md, root FOLDER_CONTENT.md | — | `reviews/` | `library/` pages, through `write_page` |
 | Finishes with | `complete` or `stop` | `submit_result` | `verdict` | `shelved`, for each request |
 

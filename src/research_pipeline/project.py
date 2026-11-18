@@ -60,7 +60,7 @@ ROOT_INDEX = """# Folder contents
 
 - [AGENTS.md](AGENTS.md) — Instructions from the human (optional).
 - [FEEDBACK.md](FEEDBACK.md) — Feedback from the human.
-- [starting_evidence](starting_evidence) — The human's questions, evidence and tools; read-only for agents.
+- [starting_evidence](starting_evidence) — The human's objectives, evidence and tools; read-only for agents.
 - [STATUS.md](STATUS.md) — Current state of the investigation, maintained by the primary researcher.
 - [REPORT.md](REPORT.md) — The synthesis submitted with COMPLETE.
 - [library](library) — The Librarian's pages leading to the finished work, starting at LIBRARY.md.
@@ -91,7 +91,7 @@ class Project:
     def __init__(self, root: Path):
         self.root = Path(root).resolve()
         self.evidence = self.root / "starting_evidence"  # the human's: read-only for agents and their jobs
-        self.questions = self.evidence / "RESEARCH_QUESTIONS.md"
+        self.objectives = self.evidence / "OBJECTIVES.md"
         self.agents = self.root / "agents"
         self.library = self.root / "library"  # the Librarian's pages; read-only for every session and job
         self.reviews = self.root / "reviews"
@@ -123,8 +123,12 @@ class Project:
         """
         if str(self.root).startswith("/tmp/"):
             raise ProjectError("Projects cannot live under /tmp: each agent session has its own private /tmp.")
-        if not self.questions.is_file():
-            raise ProjectError(f"{self.questions} is missing: write the research questions there first.")
+        if not self.objectives.is_file():
+            if (self.evidence / "RESEARCH_QUESTIONS.md").is_file():
+                raise ProjectError(
+                    "starting_evidence/RESEARCH_QUESTIONS.md is now starting_evidence/OBJECTIVES.md: rename it."
+                )
+            raise ProjectError(f"{self.objectives} is missing: write the objectives (questions or tasks) there first.")
         legacy = [name for name in LEGACY if (self.root / name).exists()]
         if legacy:
             raise ProjectError(

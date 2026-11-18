@@ -187,7 +187,7 @@ async def main() -> None:
 
     root = ROOT / datetime.now().strftime("%Y%m%d-%H%M%S")
     (root / "starting_evidence").mkdir(parents=True)
-    (root / "starting_evidence" / "RESEARCH_QUESTIONS.md").write_text(QUESTION)
+    (root / "starting_evidence" / "OBJECTIVES.md").write_text(QUESTION)
     (root / "AGENTS.md").write_text(
         PROCEDURE.format(sub=args.sub, sub_model=args.sub_model, sub_effort=args.sub_effort)
     )

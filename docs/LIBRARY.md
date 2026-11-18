@@ -2,7 +2,7 @@
 
 `librarian.py`, `library.py`, `links.py`. Finished work stays in the folder of the
 agent that made it. `library/` holds the Librarian's Markdown pages, which lead a
-human to it: what was established about each research question, how, and with
+human to it: what was established or built for each objective, how, and with
 which tools. Nothing is moved, renamed or deleted for the library, so every path
 an agent, a job or a note uses stays valid.
 

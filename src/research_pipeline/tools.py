@@ -17,7 +17,7 @@ class ToolError(Exception):
 SPAWN = Tool(
     "spawn",
     "Start a subagent on a task, to solve a subproblem separately or in parallel.\n\n"
-    "task: path of a Markdown brief you wrote (objective, how it serves your question, relevant\n"
+    "task: path of a Markdown brief you wrote (objective, how it serves your objective, relevant\n"
     "evidence and tools, expected result). backend, model, effort: the subagent's CLI, model and\n"
     "reasoning effort, all required. name: short id such as 'convergence-check'. You are told\n"
     "when it submits its result.",
@@ -58,7 +58,7 @@ SUBMIT_RESULT = Tool(
 )
 COMPLETE = Tool(
     "complete",
-    "Propose COMPLETE: every current question is adequately answered (or shown unanswerable) in REPORT.md.\n\n"
+    "Propose COMPLETE: every current objective is met (or shown infeasible) in REPORT.md.\n\n"
     "An independent Reviewer then examines the work; COMPLETE needs its agreement.",
     {"report": {"type": "string", "default": "REPORT.md"}},
 )
