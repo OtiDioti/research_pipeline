@@ -1,5 +1,8 @@
 # Status
 
+**2026-11-18.** On agent_toolkit 0.6.2: AGENTS.md alone carries the shared standard, and CLAUDE.md is removed.
+No behaviour changed.
+
 **2026-11-18.** The shared development standard of agent_toolkit: AGENTS.md carries it (CLAUDE.md imports it),
 the code is formatted and linted by ruff and type-checked by pyright (`uv run ruff format --check`, `uv run ruff
 check`, `uv run pyright`), every folder has a FOLDER_CONTENT.md, `tests/test_standards.py` checks all of it, and
