@@ -9,7 +9,7 @@ decides what a hold pauses.
 ## Reading
 
 - Every 120 s, and at every start, resume and release, each CLI in use is read:
-  those of the primary, the Reviewer, `--backends`, and of every agent not yet ended.
+  those of the primary, the Reviewer, the Librarian, `--backends`, and of every agent not yet ended.
 - A window is **short** (e.g. 5 hours) or **weekly** (7 days or longer).
 
 ## Holds
@@ -30,7 +30,7 @@ are kept in `.research/state.json` (kind, reported reset or none, detail), and
   an idle one gets one short turn for it), then waits in its session, paused
   (`quota`). Each subagent's parent is told that the pause is temporary and not a
   scientific blocker.
-- If it is the primary's CLI, every agent pauses, whatever its CLI.
+- Agents on other CLIs keep working, whichever CLI the primary uses.
 - New spawns on that CLI are refused with the reason. A rejected subagent on it
   waits, and its rejection stands.
 - Jobs keep running.

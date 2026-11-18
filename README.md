@@ -4,7 +4,8 @@ An autonomous research investigator. You give it research questions, starting
 evidence and tools; a **primary researcher** agent leads the investigation, spawns
 **subagents** for subproblems, runs computations and writes what it learns into an
 ordinary project folder. When it judges the work done it proposes **COMPLETE**,
-which an independent **Reviewer** must agree with, or **STOP**. You judge the
+which an independent **Reviewer** must agree with, or **STOP**. A **Librarian**
+keeps a library of pages that lead to the finished work. You judge the
 science. The specification is [PROJECT.md](PROJECT.md); [docs/](docs/OVERVIEW.md) describes each
 part and what it does under each condition.
 
@@ -16,6 +17,7 @@ flowchart LR
     subgraph A ["Agents: one confined CLI session each"]
         P[Primary researcher] <-->|spawns, messages, accepts or rejects| S[Subagents]
         P -->|proposes COMPLETE or STOP| R[Reviewer]
+        L[Librarian]
     end
     C -->|runs, confined| J[Jobs]
     A -->|notes, code, data| F[("Project folder<br/>(git)")]
@@ -64,10 +66,18 @@ my-project/
 ```
 
 The controller creates the rest of the layout (PROJECT.md §2) and a git
-repository on the first run. Agents can read everything except the controller's
-`.research/` folder, and write only their own `agents/<id>/` folder and the
-shared `sources/` and `tools/`. Only the primary writes `STATUS.md` and
-`REPORT.md`; only the Reviewer writes `reviews/`. `starting_evidence/` is yours
+repository on the first run. A project made before the library (with `sources/`
+or `tools/` at its top level) is refused: start a new one. Agents can read everything except the controller's
+`.research/` folder, and write only their own `agents/<id>/` folder. Only the
+primary writes `STATUS.md` and `REPORT.md`; only the Reviewer writes `reviews/`;
+only the Librarian writes the pages of `library/`, through the controller.
+
+When a subagent is accepted or cancelled, and at the end for the primary and the
+Reviewer, its folder is **shelved**: catalogued in `library/CATALOG.md` and frozen
+in place (nothing moves, so every path stays valid). The Librarian then links the
+work from its pages, starting at `library/LIBRARY.md`, organised for you: what was
+established about each question, how, and with which tools
+([docs/LIBRARY.md](docs/LIBRARY.md)). `starting_evidence/` is yours
 alone: agents and their jobs can only read it, so your tools there should write
 their output to a path they are given, never next to themselves.
 
@@ -82,14 +92,15 @@ first, so that the investigation's git history stays separate from the code's.
 ## Run
 
 ```bash
-research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer claude:opus:high --max-agents 4
+research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer claude:opus:high \
+    --librarian claude:opus:high --max-agents 4
 ```
 
 | Option | Meaning (default) |
 |---|---|
-| `--primary`, `--reviewer` | CLI, model and effort as `BACKEND:MODEL:EFFORT`, all three required (on the first run) |
+| `--primary`, `--reviewer`, `--librarian` | CLI, model and effort as `BACKEND:MODEL:EFFORT`, all three required (on the first run) |
 | `--backends` | CLIs agents may choose for subagents (those of the primary and Reviewer) |
-| `--max-agents` | agent sessions open at the same time, idle ones included (6, at least 2); a spawn beyond it is refused |
+| `--max-agents` | agent sessions open at the same time, idle ones included, the Librarian's aside (6, at least 2); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
 | `--short-limit`, `--weekly-limit` | % left of a CLI's short or weekly usage window that pauses its agents (15) |
 | `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
@@ -162,10 +173,12 @@ what changed meanwhile (by you, or by jobs that kept running).
 - **Idle and stalled agents.** An agent that ends its turn with nothing running or
   pending is reminded once. If it ends its turn idle again, it has stalled: a
   subagent's parent is told (and may message it or cancel it), you are alerted for
-  the primary, and a stalled Reviewer's round is withdrawn.
+  the primary and for the Librarian (idle only while shelving requests are pending),
+  and a stalled Reviewer's round is withdrawn.
 - **Jobs.** `run_job(command, timeout_seconds)` runs a computation outside the
-  agent's session, in its own confinement (`starting_evidence/` read-only,
-  `.research/` hidden), with its output in `agents/<id>/jobs/`. The owner is told
+  agent's session, in its own confinement (`starting_evidence/`, `library/` and
+  shelved folders read-only, `.research/` hidden), with its output in
+  `agents/<id>/jobs/`. The owner is told
   when it ends.
 - **Finishing.**
   - COMPLETE: the primary writes `REPORT.md` and `HANDOFF.md` and calls `complete`.
@@ -175,13 +188,15 @@ what changed meanwhile (by you, or by jobs that kept running).
     same session, and it continues or stops.
   - STOP: the Reviewer first challenges the primary's reasons, then the primary
     decides.
+  - At the end, the Librarian places the primary's and the Reviewer's work before
+    the controller exits (unless it cannot run: then at the next `run`).
 - **Quota.**
   - A CLI's short window at 15% or less left: its agents update their handoffs and
     wait in their sessions until the reset.
   - A weekly window at 15% or less left, or quota that can't be read twice in a row: its
     agents pause until you resume them (Ctrl+R, or Resume when nothing is working).
-  - If the primary's CLI is affected, everyone pauses. Jobs keep running through
-    quota pauses.
+  - Only the held CLI's agents pause, whichever CLI the primary uses. Jobs keep
+    running through quota pauses.
 - **Failures.** If a session crashes or a turn fails (for example, an API outage), the
   agent restarts from its handoff after 30 s, 2 min and 10 min; after that, Ctrl+R retries it.
 

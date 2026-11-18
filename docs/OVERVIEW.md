@@ -8,7 +8,8 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | Component | Code (`src/research_pipeline/`) | Role | Details |
 |---|---|---|---|
 | Controller | `controller.py` | Runs one investigation and makes every operational decision | [CONTROLLER.md](CONTROLLER.md) |
-| Agents | `prompts.py`, `prompts/` | Primary, subagents and Reviewer: their tasks, tools and lifecycle | [AGENT_ROLES.md](AGENT_ROLES.md) |
+| Agents | `prompts.py`, `prompts/` | Primary, subagents, Reviewer and Librarian: their tasks, tools and lifecycle | [AGENT_ROLES.md](AGENT_ROLES.md) |
+| The library | `librarian.py`, `library.py`, `links.py` | Shelving finished work, the catalogue, the Librarian's pages and their checks | [LIBRARY.md](LIBRARY.md) |
 | Context handoffs | `controller.py`, `agent_toolkit` (`handoff.py`), drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
 | Review and finishing | `controller.py` | COMPLETE, STOP, the Reviewer exchange, reopening | [FINISHING.md](FINISHING.md) |
 | Jobs | `jobs.py` | Long computations outside the agents' sessions | [JOBS.md](JOBS.md) |
@@ -26,10 +27,12 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 2. The primary plans, writes notes and spawns subagents. Long computations run as jobs.
 3. Each agent keeps its session while it waits, and hands off to a fresh session at 55% context; a session
    idle for 58 minutes closes. A CLI whose quota runs low pauses its agents.
-4. Subagents submit `RESULT.md`; their parent accepts it, or rejects it with feedback.
+4. Subagents submit `RESULT.md`; their parent accepts it, or rejects it with feedback. An accepted (or
+   cancelled) subagent's folder is shelved: catalogued, frozen, and linked from the Librarian's pages.
 5. The primary proposes COMPLETE or STOP and waits in its session. The Reviewer examines the work and gives a verdict.
 6. COMPLETE needs the Reviewer's agreement. STOP is the primary's decision after the Reviewer's challenge.
-   The controller then stops everything and commits.
+   The controller then stops everything, shelves the primary's and the Reviewer's work, waits for the
+   Librarian to place it, and commits.
 
 Every significant event is committed to the project's git repository.
 

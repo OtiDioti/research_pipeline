@@ -44,7 +44,8 @@ On a proposal:
 
 - The verdict reaches the primary in the same session (a fresh one if that closed
   at the idle limit). It lists the files changed
-  since the proposal's commit (except `reviews/` and `agents/reviewer/`): the review
+  since the proposal's commit (except `reviews/`, `library/`, `agents/reviewer/` and
+  `agents/librarian/`): the review
   does not cover them.
 - After a verdict, the Reviewer rests, keeping its session (until the idle limit);
   the next round's request reaches it there.
@@ -53,12 +54,15 @@ On a proposal:
 ## Ending
 
 On COMPLETE or a confirmed STOP, the controller:
-- closes every session;
+- closes every session but the Librarian's;
 - marks the primary `finished`, open subagents `cancelled`, and the Reviewer `resting`;
 - kills every job;
 - appends the outcome to STATUS.md;
 - commits "controller: investigation COMPLETE/STOPPED";
-- exits.
+- shelves the primary's and the Reviewer's folders, and any other ended agent's not shelved yet;
+- waits for the Librarian to place them, unless it cannot run or stalls (its requests then
+  reach it at the next `run`); Ctrl+Q exits at once ([LIBRARY.md](LIBRARY.md));
+- commits "controller: the library after the end", and exits.
 
 Machine COMPLETE is not scientific acceptance: that is the human's judgment.
 
@@ -68,6 +72,8 @@ Running `research-pipeline run` on a finished project:
 1. commits the human's changes ("human: changes before reopening");
 2. sets the investigation running;
 3. restarts the primary from its handoff, with a notice listing the files changed
-   since the end. It must keep unaffected work.
+   since the end. It must keep unaffected work. Its folder and the Reviewer's are no
+   longer frozen: both continue in them;
+4. gives the Librarian any shelving requests left pending at the end.
 
 Earlier reviews stay in `reviews/`, and round numbers continue.

@@ -16,9 +16,10 @@ serves every CLI.
 
 | Role | Writable |
 |---|---|
-| Every agent | Its folder `agents/<id>/`, `sources/`, `tools/`, and its CLI's state folder |
+| Every agent | Its folder `agents/<id>/` and its CLI's state folder |
 | Primary | Also STATUS.md, REPORT.md and the root FOLDER_CONTENT.md |
 | Reviewer | Also `reviews/` |
+| Librarian | Nothing else: its pages in `library/` are written by the controller (`write_page`) |
 
 The CLI state folders are those of Codex (`$CODEX_HOME` or `~/.codex`) and Claude
 Code (`$CLAUDE_CONFIG_DIR`, or `~/.claude`, `~/.claude.json` and `~/.cache/claude`).
@@ -38,7 +39,8 @@ Jobs get the same copies.
 ## Jobs
 
 - Everything is as the controller sees it, including devices (e.g. GPUs) and the shared `/tmp`.
-- Except: `starting_evidence/` is read-only, and `.research/` appears empty.
+- Except: `starting_evidence/`, `library/` and the folders of shelved agents are read-only, and
+  `.research/` appears empty.
 - Each job has its own process namespace, and outlives the controller.
 
 ## Consequences worth knowing
@@ -53,7 +55,9 @@ Jobs get the same copies.
 - **Reads are not restricted.** Agents and jobs can read the rest of the machine
   (the home folder, CLI logins), and the network is on.
 - **Jobs can write elsewhere.** A job can write anywhere in the project other than
-  `starting_evidence/`, including other agents' folders and `.git`.
+  `starting_evidence/`, `library/` and the folders of shelved agents, including
+  other agents' working folders and `.git`. A job started before an agent was
+  shelved keeps the access it started with.
 
 ## SSH and remote machines
 

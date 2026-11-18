@@ -11,8 +11,9 @@ of the controller. Agents should use a job for anything longer than a minute.
 - `cwd` defaults to the agent's folder and must be a folder in the project (not `.research/`).
 - The job is refused while the investigation isn't running, and for the primary while its proposal is under review.
 - It runs in its own confinement ([CONFINEMENT.md](CONFINEMENT.md)):
-  `starting_evidence/` is read-only, `.research/` is hidden, everything else is
-  as the controller sees it, and it has its own process namespace.
+  `starting_evidence/`, `library/` and the folders of shelved agents
+  ([LIBRARY.md](LIBRARY.md)) are read-only, `.research/` is hidden, everything else
+  is as the controller sees it, and it has its own process namespace.
 - The timeout is enforced inside the job itself (coreutils `timeout`, then a kill
   10 s later), so it holds even while the controller is down.
 

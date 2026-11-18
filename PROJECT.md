@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16. Draft amendment of 2026-11-18, under review and not implemented: the Librarian, a library of pages over frozen agent folders (§1–§10).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), and quota holds limited to the held CLI's agents (§6).
 
 ## 1. Purpose
 
@@ -265,12 +265,13 @@ rounds. If the Reviewer stalls, the proposal is withdrawn (§3). The Librarian's
 pages may change during a review: they move nothing the review examines.
 
 **Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs
-except the Librarian, and shelves the folders of the primary and the Reviewer. The
-Librarian places their work and any still pending; then the controller makes a
-final commit, and `STATUS.md` records the outcome. If the Librarian cannot run,
-the investigation ends without waiting: the work is catalogued already, and the
-pending requests reach the Librarian at the controller's next run. Machine
-COMPLETE is not scientific acceptance; that is the human's judgment.
+except the Librarian, records the outcome in `STATUS.md`, commits, and shelves the
+folders of the primary and the Reviewer. The Librarian places their work and any
+still pending; then the controller makes a final commit and exits. If the
+Librarian cannot run, or stalls, the investigation ends without waiting: the work
+is catalogued already, and the pending requests reach the Librarian at the
+controller's next run. Machine COMPLETE is not scientific acceptance; that is the
+human's judgment.
 
 **Reopening.** After COMPLETE or STOP, the human may resume the investigation, for
 example after changing the questions, evidence or feedback. The primary restarts
@@ -351,8 +352,7 @@ holds, kept in `.research/state.json`):
   the reset (in a fresh session if the wait outlasted the idle limit).
 - **Weekly window** at 15% remaining or less, or quota unreadable twice in a row:
   the same, until the human resumes them.
-- If the primary's CLI is affected, every agent pauses, except the Librarian: it
-  does no research, so only a hold on its own CLI pauses it.
+- Only the held CLI's agents pause, whichever CLI the primary uses.
 
 Spawns on a paused CLI are refused with the reason. Jobs keep running through quota
 pauses.
