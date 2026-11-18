@@ -27,6 +27,10 @@ where = ["src"]
 [tool.setuptools.package-data]
 research_pipeline = ["prompts/*.md"]
 
+[tool.agent-toolkit]
+# An archived run's output, kept byte-for-byte as evidence (see its README.md): exempt from the folder check.
+generated = ["research_example/starting_evidence/failed_m5_20261111"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py311"

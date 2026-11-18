@@ -1,5 +1,6 @@
 # Folder contents
 
+- [__init__.py](__init__.py) — Package marker, so that tests import as `tests.*` (run with `-t .`).
 - [helpers.py](helpers.py) — Temporary projects, fake CLI drivers (from agent_toolkit's testing module) and a controller harness.
 - [test_controller.py](test_controller.py) — The controller's decisions, played through fake sessions.
 - [test_project.py](test_project.py) — Layout, layout check, git commits, the human's files, state.
