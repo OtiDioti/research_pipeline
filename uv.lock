@@ -10,8 +10,8 @@ resolution-markers = [
 
 [[package]]
 name = "agent-toolkit"
-version = "0.4.0"
-source = { editable = "../agent_toolkit" }
+version = "0.5.0"
+source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.5.0#a0e4155d4fbc90dec91590048493fcad0e2a1f6c" }
 dependencies = [
     { name = "mcp" },
 ]
@@ -25,16 +25,6 @@ web = [
     { name = "uvicorn" },
     { name = "websockets" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "mcp", specifier = ">=1.26,<2" },
-    { name = "prompt-toolkit", marker = "extra == 'console'", specifier = "==3.0.52" },
-    { name = "starlette", marker = "extra == 'web'", specifier = ">=1.10,<2" },
-    { name = "uvicorn", marker = "extra == 'web'", specifier = ">=0.54,<1" },
-    { name = "websockets", marker = "extra == 'web'", specifier = ">=15,<18" },
-]
-provides-extras = ["console", "web"]
 
 [[package]]
 name = "annotated-types"
@@ -616,14 +606,14 @@ wheels = [
 
 [[package]]
 name = "research-pipeline"
-version = "0.4.0"
+version = "0.5.0"
 source = { editable = "." }
 dependencies = [
     { name = "agent-toolkit", extra = ["console", "web"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], editable = "../agent_toolkit" }]
+requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.5.0" }]
 
 [[package]]
 name = "rpds-py"

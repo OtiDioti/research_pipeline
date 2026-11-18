@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-pipeline"
-version = "0.4.0"
+version = "0.5.0"
 description = "Autonomous research investigations led by a primary agent, with subagents and a final reviewer"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -14,8 +14,7 @@ dependencies = ["agent-toolkit[console,web]"]
 research-pipeline = "research_pipeline.cli:main"
 
 [tool.uv.sources]
-# While unreleased: the local mcp-decisions branch of agent_toolkit (restore the tag pin on release).
-agent-toolkit = { path = "../agent_toolkit", editable = true }
+agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.5.0" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
