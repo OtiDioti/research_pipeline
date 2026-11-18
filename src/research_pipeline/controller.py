@@ -39,21 +39,21 @@ scientific one. In outline:
 All state changes happen on one asyncio loop, serialised by one lock: driver
 events, tool calls and the background loops never interleave halfway.
 """
+
 from __future__ import annotations
 
 import asyncio
-from contextlib import ExitStack
-from datetime import datetime
-from pathlib import Path
 import re
 import subprocess
 import time
-from typing import Callable
+from collections.abc import Callable
+from contextlib import ExitStack
+from datetime import datetime
+from pathlib import Path
 
 from agent_toolkit import CAPABILITIES, DRIVERS, Launch, Session, SessionError, SetupError, Spec, quota
 from agent_toolkit.activity import ActivityLog
-from agent_toolkit.handoff import check_threshold
-from agent_toolkit.handoff import HandoffWatch
+from agent_toolkit.handoff import HandoffWatch, check_threshold
 from agent_toolkit.quota import Guard
 from agent_toolkit.records import Busy, atomic_write, exclusive
 from agent_toolkit.tools import ToolBridge
@@ -73,9 +73,9 @@ HUMAN_INTERVAL = 10
 #: Delays before restarting an agent whose session failed; after these, the human must resume it.
 RETRY_DELAYS = (30, 120, 600)
 #: Pending handoff reasons by precedence: a later one replaces an earlier one (it decides what follows the note).
-HANDOFF_ORDER = ('idle', 'context', 'refresh', 'quota', 'shutdown')
+HANDOFF_ORDER = ("idle", "context", "refresh", "quota", "shutdown")
 #: Name under which every agent's CLI attaches the controller's MCP tool server.
-MCP_SERVER = 'research'
+MCP_SERVER = "research"
 
 #: Transcript callback: ``show(kind, agent_id, text)`` with kind 'agent', 'tool', 'notice', 'human', 'controller'
 #: or 'alert' (something the human must act on).
@@ -89,8 +89,15 @@ class ToolError(Exception):
 class Controller:
     """Runs one investigation in one project folder until it ends or the human shuts it down."""
 
-    def __init__(self, root: Path, options: Options | None = None, *, drivers=DRIVERS,
-                 read_quota: Callable[[str], list[quota.Window]] | None = None, show: Show | None = None):
+    def __init__(
+        self,
+        root: Path,
+        options: Options | None = None,
+        *,
+        drivers=DRIVERS,
+        read_quota: Callable[[str], list[quota.Window]] | None = None,
+        show: Show | None = None,
+    ):
         """``options`` override the stored launch options (None: keep them; a first run needs them).
 
         ``drivers`` and ``read_quota`` (backend name -> usage windows; by default read
@@ -103,19 +110,19 @@ class Controller:
         self.guard = Guard(0, 0, read_quota or (lambda backend: quota.read(self.drivers[backend])))
         self.show: Show = show or (lambda kind, agent, text: None)
         # What each agent said, did and received, for the web app (hidden from agents, like all of .research/).
-        self.activity = ActivityLog(self.project.research / 'activity', root=self.project.root)
+        self.activity = ActivityLog(self.project.research / "activity", root=self.project.root)
         self.state: State = State()
         self.sessions: dict[str, Session] = {}
         self.watches: dict[str, HandoffWatch] = {}  # agent id -> the handoff rules of its current session
-        self.idle_since: dict[str, float] = {}       # agent id -> when its session last became idle (monotonic)
+        self.idle_since: dict[str, float] = {}  # agent id -> when its session last became idle (monotonic)
         self.processes: dict[str, subprocess.Popen] = {}  # job id -> process started by this controller
-        self.bridge = ToolBridge()                   # the agents' tools, one offer per session
-        self.request: str | None = None              # 'shutdown' once the human asked to exit
+        self.bridge = ToolBridge()  # the agents' tools, one offer per session
+        self.request: str | None = None  # 'shutdown' once the human asked to exit
         self.lock: asyncio.Lock | None = None
         self.done: asyncio.Event | None = None
         self._human_checked = 0.0
         self._quota_due = 0.0
-        self._strays: set[str] = set()              # unexpected top-level entries already reported
+        self._strays: set[str] = set()  # unexpected top-level entries already reported
 
     # Running ------------------------------------------------------------------------------
 
@@ -125,7 +132,9 @@ class Controller:
         self.project.research.mkdir(parents=True, exist_ok=True)
         with ExitStack() as stack:
             try:  # held for as long as this controller runs (see research_pipeline.cli.controller_running)
-                stack.enter_context(exclusive(self.project.lock_file, 'Another controller is already running this project.'))
+                stack.enter_context(
+                    exclusive(self.project.lock_file, "Another controller is already running this project.")
+                )
             except Busy as busy:
                 raise ProjectError(str(busy)) from None
             self.project.prepare()
@@ -154,8 +163,8 @@ class Controller:
     @property
     def label(self) -> str:
         """One-word state of the investigation, with any quota holds."""
-        holds = ', '.join(f'{backend} {hold["kind"]}' for backend, hold in self.state.holds.items())
-        return self.state.status + (f' (held: {holds})' if holds else '')
+        holds = ", ".join(f"{backend} {hold['kind']}" for backend, hold in self.state.holds.items())
+        return self.state.status + (f" (held: {holds})" if holds else "")
 
     def say(self, text: str) -> None:
         """The human's chat message, for the primary (from the terminal app)."""
@@ -168,7 +177,7 @@ class Controller:
 
     def shutdown(self) -> None:
         """Hand every agent off cleanly, then stop the controller; jobs keep running (from the terminal app)."""
-        self.request = 'shutdown'
+        self.request = "shutdown"
         asyncio.ensure_future(self._locked(self._shutdown()))
 
     def release(self) -> None:
@@ -182,10 +191,13 @@ class Controller:
     @property
     def releasable(self) -> bool:
         """True if something waits for the human's :meth:`release`."""
-        return self.state.status == 'running' and (
-            any(hold['kind'] != 'short' for hold in self.state.holds.values())
-            or any(a.status == 'paused' and a.pause_reason == 'failure' and a.retry_at is None
-                   for a in self.state.agents.values()))
+        return self.state.status == "running" and (
+            any(hold["kind"] != "short" for hold in self.state.holds.values())
+            or any(
+                a.status == "paused" and a.pause_reason == "failure" and a.retry_at is None
+                for a in self.state.agents.values()
+            )
+        )
 
     # The human's actions on one agent, and live settings (from the web app) ----------------------
 
@@ -193,32 +205,35 @@ class Controller:
         """What the human may do to ``agent`` now (see :meth:`act`)."""
         if agent.status in ENDED or self.state.status in FINISHED:
             return []
-        allowed = [] if agent.status == 'submitted' else ['message']
-        if agent.status in (*ACTIVE, 'resting') or agent.status == 'paused' and agent.pause_reason != 'held':
-            allowed.append('pause')
-        if agent.status == 'paused' and agent.pause_reason in ('held', 'human', 'failure') and \
-                self.state.status == 'running':
-            allowed.append('resume')
-        if agent.status == 'running' and not agent.handoff_reason:
-            allowed.append('handoff')
-        if agent.role == 'subagent':
-            allowed.append('cancel')
+        allowed = [] if agent.status == "submitted" else ["message"]
+        if agent.status in (*ACTIVE, "resting") or agent.status == "paused" and agent.pause_reason != "held":
+            allowed.append("pause")
+        if (
+            agent.status == "paused"
+            and agent.pause_reason in ("held", "human", "failure")
+            and self.state.status == "running"
+        ):
+            allowed.append("resume")
+        if agent.status == "running" and not agent.handoff_reason:
+            allowed.append("handoff")
+        if agent.role == "subagent":
+            allowed.append("cancel")
         return allowed
 
-    async def act(self, action: str, agent_id: str, text: str = '') -> str:
+    async def act(self, action: str, agent_id: str, text: str = "") -> str:
         """The human's ``action`` on one agent: 'message' (``text``), 'pause', 'resume', 'handoff' or 'cancel'.
 
         Return a confirmation; raise ValueError if it cannot be done now.
         """
         if self.lock is None:
-            raise ValueError('the investigation is still starting')
+            raise ValueError("the investigation is still starting")
         async with self.lock:
             agent = self.state.agents.get(agent_id)
             if agent is None:
-                raise ValueError(f'there is no agent {agent_id}')
+                raise ValueError(f"there is no agent {agent_id}")
             if action not in self.actions(agent):
-                raise ValueError(f'{action} is not possible for {agent_id} now ({agent.status})')
-            reply = await getattr(self, f'_human_{action}')(agent, text)
+                raise ValueError(f"{action} is not possible for {agent_id} now ({agent.status})")
+            reply = await getattr(self, f"_human_{action}")(agent, text)
             await self._after_change()
             self._save()
             return reply
@@ -233,53 +248,57 @@ class Controller:
         ValueError for an invalid value (nothing is changed then).
         """
         if self.lock is None:
-            raise ValueError('the investigation is still starting')
-        specs = {role: Spec.parse(values[role], role, self.drivers) for role in ('primary', 'reviewer') if role in values}
-        if 'backends' in values and (not values['backends'] or set(values['backends']) - set(self.drivers)):
-            raise ValueError(f'backends must be some of {", ".join(self.drivers)}')
-        threshold = check_threshold(values['threshold'], 'the handoff threshold') if 'threshold' in values else None
-        for name in ('short_limit', 'weekly_limit'):
+            raise ValueError("the investigation is still starting")
+        specs = {
+            role: Spec.parse(values[role], role, self.drivers) for role in ("primary", "reviewer") if role in values
+        }
+        if "backends" in values and (not values["backends"] or set(values["backends"]) - set(self.drivers)):
+            raise ValueError(f"backends must be some of {', '.join(self.drivers)}")
+        threshold = check_threshold(values["threshold"], "the handoff threshold") if "threshold" in values else None
+        for name in ("short_limit", "weekly_limit"):
             if name in values and not 0 <= float(values[name]) <= 100:
-                raise ValueError(f'{name} must be a percentage from 0 to 100')
-        if 'max_agents' in values and int(values['max_agents']) < 2:
-            raise ValueError('at least two sessions are needed: the primary and the Reviewer')
-        if 'idle_limit' in values and float(values['idle_limit']) < 0:
-            raise ValueError('the idle limit must be 0 (none) or a number of minutes')
+                raise ValueError(f"{name} must be a percentage from 0 to 100")
+        if "max_agents" in values and int(values["max_agents"]) < 2:
+            raise ValueError("at least two sessions are needed: the primary and the Reviewer")
+        if "idle_limit" in values and float(values["idle_limit"]) < 0:
+            raise ValueError("the idle limit must be 0 (none) or a number of minutes")
         async with self.lock:
             options = self.state.options
             if threshold is not None:
                 options.threshold = threshold
                 for watch in self.watches.values():  # live sessions follow the new threshold at their next reading
                     watch.threshold = threshold
-            for name in ('short_limit', 'weekly_limit'):
+            for name in ("short_limit", "weekly_limit"):
                 if name in values:
                     setattr(options, name, float(values[name]))
                     setattr(self.guard, name, float(values[name]))
-            if 'max_agents' in values:
-                options.max_agents = int(values['max_agents'])
-            if 'idle_limit' in values:
-                options.idle_limit = float(values['idle_limit'])
+            if "max_agents" in values:
+                options.max_agents = int(values["max_agents"])
+            if "idle_limit" in values:
+                options.idle_limit = float(values["idle_limit"])
             for role, spec in specs.items():  # its live session, if any, keeps its CLI until it hands off
                 setattr(options, role, str(spec))
                 if role in self.state.agents:
                     agent = self.state.agents[role]
                     agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
-            if 'backends' in values:
-                options.backends = list(values['backends'])
-            self.show('controller', 'primary', 'Settings changed: ' + ', '.join(f'{k} = {v}' for k, v in values.items()))
-            await self._resume_agents({'slots'})
+            if "backends" in values:
+                options.backends = list(values["backends"])
+            self.show(
+                "controller", "primary", "Settings changed: " + ", ".join(f"{k} = {v}" for k, v in values.items())
+            )
+            await self._resume_agents({"slots"})
             self._save()
 
     async def _human_message(self, agent: Agent, text: str) -> str:
         """The human writes to any agent; its parent gets a copy, so their plans stay consistent."""
         if not text.strip():
-            raise ValueError('the message is empty')
-        self.show('human', agent.id, text)
+            raise ValueError("the message is empty")
+        self.show("human", agent.id, text)
         delivered = await self._talk(agent, prompts.human_message(text))
-        parent = self.state.agents.get(agent.parent or '')
+        parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
-            await self._notify(parent, prompts.human_to_child(agent.id, text), sender='human')
-        return f'Delivered to {agent.id}.' if delivered else f'{agent.id} receives your message when it next works.'
+            await self._notify(parent, prompts.human_to_child(agent.id, text), sender="human")
+        return f"Delivered to {agent.id}." if delivered else f"{agent.id} receives your message when it next works."
 
     async def _talk(self, agent: Agent, notice: str) -> bool:
         """Deliver the human's ``notice`` now if the agent can answer; True if it was delivered.
@@ -289,25 +308,25 @@ class Controller:
         woken. Otherwise (its CLI is held, it saves its note, or it has no session
         and may not start one) the notice waits for its next turn.
         """
-        self._queue(agent, notice, 'human')
+        self._queue(agent, notice, "human")
         if agent.handoff_reason or self._blocked(agent.backend):
             return False
         if agent.id in self.sessions:
-            if agent.status == 'resting':
-                agent.status = 'running'
+            if agent.status == "resting":
+                agent.status = "running"
             await self._flush(agent)
-        elif agent.status == 'resting':
+        elif agent.status == "resting":
             await self._wake(agent)
         return agent.id in self.sessions and not agent.notices
 
-    async def _human_pause(self, agent: Agent, text: str = '') -> str:
+    async def _human_pause(self, agent: Agent, text: str = "") -> str:
         """Hold one agent: it ends its turn and waits in its session; its subagents and jobs keep working."""
-        await self._hold_agent(agent, 'held', prompts.paused_by_human())
-        self.show('controller', agent.id, 'Paused by the human; its subagents and jobs keep working.')
-        parent = self.state.agents.get(agent.parent or '')
+        await self._hold_agent(agent, "held", prompts.paused_by_human())
+        self.show("controller", agent.id, "Paused by the human; its subagents and jobs keep working.")
+        parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
             await self._notify(parent, prompts.human_paused(agent.id))
-        return f'{agent.id} ends its turn, then waits until you resume it.'
+        return f"{agent.id} ends its turn, then waits until you resume it."
 
     async def _hold_agent(self, agent: Agent, reason: str, notice: str) -> None:
         """Pause ``agent`` for ``reason``, keeping its session; one in the middle of a turn is asked to end it.
@@ -319,42 +338,43 @@ class Controller:
         if session and session.busy and not agent.handoff_reason:
             await session.steer(notice)
             self._record(agent, notice)
-        agent.status, agent.pause_reason = 'paused', reason
+        agent.status, agent.pause_reason = "paused", reason
 
-    async def _human_resume(self, agent: Agent, text: str = '') -> str:
+    async def _human_resume(self, agent: Agent, text: str = "") -> str:
         """Resume one agent the human held (or that failed): it continues in its session, or from its handoff."""
-        agent.pause_reason, agent.failures, agent.retry_at = 'resume', 0, None
-        await self._resume_agents({'resume'})
-        parent = self.state.agents.get(agent.parent or '')
+        agent.pause_reason, agent.failures, agent.retry_at = "resume", 0, None
+        await self._resume_agents({"resume"})
+        parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
             await self._notify(parent, prompts.human_resumed(agent.id))
-        if agent.status == 'paused':
-            return f'{agent.id} continues as soon as it can run ({agent.pause_reason}).'
-        return f'{agent.id} resumed.'
+        if agent.status == "paused":
+            return f"{agent.id} continues as soon as it can run ({agent.pause_reason})."
+        return f"{agent.id} resumed."
 
-    async def _human_handoff(self, agent: Agent, text: str = '') -> str:
+    async def _human_handoff(self, agent: Agent, text: str = "") -> str:
         """Make one agent continue in a fresh session (e.g. when it seems confused)."""
-        await self._request_handoff(agent, 'refresh')
-        return f'{agent.id} updates HANDOFF.md, then continues in a fresh session.'
+        await self._request_handoff(agent, "refresh")
+        return f"{agent.id} updates HANDOFF.md, then continues in a fresh session."
 
-    async def _human_cancel(self, agent: Agent, text: str = '') -> str:
+    async def _human_cancel(self, agent: Agent, text: str = "") -> str:
         """Cancel a subagent, its subagents and their jobs, as its parent's cancel tool does; the parent is told."""
         await self._cancel_tree(agent)
-        self._commit(f'human: cancelled {agent.id}')
-        self.show('controller', agent.id, 'Cancelled by the human, with its subagents and jobs.')
-        parent = self.state.agents.get(agent.parent or '')
+        self._commit(f"human: cancelled {agent.id}")
+        self.show("controller", agent.id, "Cancelled by the human, with its subagents and jobs.")
+        parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
-            await self._notify(parent, prompts.human_cancelled(agent.id), sender='human')
-        await self._resume_agents({'slots'})
-        return f'Cancelled {agent.id}, its subagents and its jobs.'
+            await self._notify(parent, prompts.human_cancelled(agent.id), sender="human")
+        await self._resume_agents({"slots"})
+        return f"Cancelled {agent.id}, its subagents and its jobs."
 
     async def _locked(self, coroutine) -> None:
         """Run ``coroutine`` under the lock; report (never propagate) an unexpected error."""
+        assert self.lock is not None  # set by run(), whose loops are the only callers
         async with self.lock:
             try:
                 await coroutine
             except Exception as error:
-                self.show('controller', '', f'Internal error (the investigation continues): {error!r}')
+                self.show("controller", "", f"Internal error (the investigation continues): {error!r}")
 
     def _load(self) -> State:
         """Load the stored state, or create it on a first run; apply new launch options."""
@@ -367,21 +387,30 @@ class Controller:
         options = state.options
         unknown = set(options.backends) - set(self.drivers)
         try:
-            primary = Spec.parse(options.primary, '--primary', self.drivers)
-            reviewer = Spec.parse(options.reviewer, '--reviewer', self.drivers)
+            primary = Spec.parse(options.primary, "--primary", self.drivers)
+            reviewer = Spec.parse(options.reviewer, "--reviewer", self.drivers)
         except ValueError as error:
             raise ProjectError(str(error)) from None
         if not options.backends:
-            raise ProjectError('--backends must name at least one CLI for subagents')
+            raise ProjectError("--backends must name at least one CLI for subagents")
         if unknown:
-            raise ProjectError(f'Unknown backend(s): {", ".join(sorted(unknown))}; known: {", ".join(self.drivers)}')
+            raise ProjectError(f"Unknown backend(s): {', '.join(sorted(unknown))}; known: {', '.join(self.drivers)}")
         if options.max_agents < 2:
-            raise ProjectError('--max-agents must be at least 2: the primary and the Reviewer.')
-        for agent_id, spec in (('primary', primary), ('reviewer', reviewer)):
-            agent = state.agents.setdefault(agent_id, Agent(agent_id, agent_id, None, spec.backend, spec.model,
-                                                            spec.effort,
-                                                            status='paused' if agent_id == 'primary' else 'resting',
-                                                            pause_reason='start' if agent_id == 'primary' else None))
+            raise ProjectError("--max-agents must be at least 2: the primary and the Reviewer.")
+        for agent_id, spec in (("primary", primary), ("reviewer", reviewer)):
+            agent = state.agents.setdefault(
+                agent_id,
+                Agent(
+                    agent_id,
+                    agent_id,
+                    None,
+                    spec.backend,
+                    spec.model,
+                    spec.effort,
+                    status="paused" if agent_id == "primary" else "resting",
+                    pause_reason="start" if agent_id == "primary" else None,
+                ),
+            )
             agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
         self.guard.short_limit, self.guard.weekly_limit = options.short_limit, options.weekly_limit
         self.guard.holds = state.holds  # the guard keeps its holds in the stored state
@@ -390,29 +419,29 @@ class Controller:
     async def _begin(self) -> None:
         """Start, resume or reopen the investigation."""
         state = self.state
-        clean = state.status in ('paused', 'pausing') or state.status in FINISHED
+        clean = state.status in ("paused", "pausing") or state.status in FINISHED
         for agent in state.agents.values():  # sessions of a previous controller ended with it
             if agent.status in ACTIVE:
-                agent.status, agent.pause_reason = 'paused', 'restart'
+                agent.status, agent.pause_reason = "paused", "restart"
             agent.handoff_reason = None
         changed = self.project.uncommitted()
         state.human = state.human or self.project.human_fingerprint()  # changes while off are reported below
-        if not state.agents['primary'].sessions:  # the first run
-            self._commit('controller: investigation started')
+        if not state.agents["primary"].sessions:  # the first run
+            self._commit("controller: investigation started")
         elif state.status in FINISHED:
             outcome = state.status.upper()
-            self._commit('human: changes before reopening')
-            state.status, state.proposal = 'running', None
-            primary = state.agents['primary']
-            primary.status, primary.pause_reason = 'paused', 'reopen'
+            self._commit("human: changes before reopening")
+            state.status, state.proposal = "running", None
+            primary = state.agents["primary"]
+            primary.status, primary.pause_reason = "paused", "reopen"
             self._queue(primary, prompts.reopened(outcome, changed))
-            self.show('controller', 'primary', f'Reopened after {outcome}.')
+            self.show("controller", "primary", f"Reopened after {outcome}.")
         elif clean and changed:
-            self._commit('controller: changes made while paused or shut down (by the human or by running jobs)')
+            self._commit("controller: changes made while paused or shut down (by the human or by running jobs)")
             self._announce_changes(changed)
         elif changed:
-            self._commit('controller: work recovered after a restart')
-        state.status = 'running'
+            self._commit("controller: work recovered after a restart")
+        state.status = "running"
         state.holds.clear()  # running again is the human's resume: holds are re-read now
         await self._check_quota()
         await self._resume_agents()
@@ -423,8 +452,11 @@ class Controller:
 
     def _working(self) -> list[Agent]:
         """Agents in the middle of a turn, or saving their note: a pause or shutdown waits for them."""
-        return [agent for agent in self.state.agents.values() if agent.id in self.sessions
-                and (self.sessions[agent.id].busy or agent.handoff_reason)]
+        return [
+            agent
+            for agent in self.state.agents.values()
+            if agent.id in self.sessions and (self.sessions[agent.id].busy or agent.handoff_reason)
+        ]
 
     def _slot_free(self) -> bool:
         """True if another session may start: live sessions, idle ones included, stay below the cap."""
@@ -433,10 +465,10 @@ class Controller:
     def _scope(self, agent: Agent) -> tuple[Path, ...]:
         """What the agent's confinement leaves writable (PROJECT.md §2)."""
         root = self.project.root
-        scope = [self.project.agent_dir(agent.id), root / 'sources', root / 'tools']
-        if agent.role == 'primary':
-            scope += [root / INDEX, root / 'STATUS.md', root / 'REPORT.md']
-        elif agent.role == 'reviewer':
+        scope = [self.project.agent_dir(agent.id), root / "sources", root / "tools"]
+        if agent.role == "primary":
+            scope += [root / INDEX, root / "STATUS.md", root / "REPORT.md"]
+        elif agent.role == "reviewer":
             scope.append(self.project.reviews)
         return tuple(scope)
 
@@ -446,29 +478,40 @@ class Controller:
         folder = self.project.agent_dir(agent.id)
         folder.mkdir(parents=True, exist_ok=True)
         if not (folder / INDEX).exists():
-            first = '- [TASK.md](TASK.md) — The task from my parent.\n' if (folder / 'TASK.md').exists() else ''
+            first = "- [TASK.md](TASK.md) — The task from my parent.\n" if (folder / "TASK.md").exists() else ""
             atomic_write(folder / INDEX, EMPTY_INDEX + first, root=self.project.root)
         agent.sessions += 1
         agent.started = time.time()
         notices, agent.notices = agent.notices, []
         number = agent.sessions
-        tools = self.bridge.offer(agent.id, ROLE_TOOLS[agent.role],
-                                  lambda tool, args: self._tool_request(agent.id, number, tool, args), name=MCP_SERVER)
+        tools = self.bridge.offer(
+            agent.id,
+            ROLE_TOOLS[agent.role],
+            lambda tool, args: self._tool_request(agent.id, number, tool, args),
+            name=MCP_SERVER,
+        )
         launch = Launch(
-            agent=agent.id, cwd=folder, instructions=prompts.instructions(agent, self.project, self.state.options),
+            agent=agent.id,
+            cwd=folder,
+            instructions=prompts.instructions(agent, self.project, self.state.options),
             message=prompts.opening(agent, self.project, self.state.options, notices),
-            model=agent.model, effort=agent.effort, tools=CAPABILITIES,
+            model=agent.model,
+            effort=agent.effort,
+            tools=CAPABILITIES,
             mcp=tools,
-            writable=self._scope(agent), hidden=(self.project.research,),
-            log=self.project.logs / f'{agent.id}-{agent.sessions}.jsonl')
+            writable=self._scope(agent),
+            hidden=(self.project.research,),
+            log=self.project.logs / f"{agent.id}-{agent.sessions}.jsonl",
+        )
         session = self.drivers[agent.backend](launch, self._on_event)
         self._record(agent, launch.message)
-        agent.status, agent.pause_reason, agent.retry_at, agent.handoff_reason = 'running', None, None, None
+        agent.status, agent.pause_reason, agent.retry_at, agent.handoff_reason = "running", None, None, None
         # A new session's context use is unknown until its CLI reports it.
         agent.nudged, agent.tokens, agent.window = False, None, None
         # Its handoff rules: a context handoff is called off if the CLI compacts below the threshold.
-        self.watches[agent.id] = HandoffWatch(self.state.options.threshold, folder / 'HANDOFF.md',
-                                              cancel_on_recovery=True)
+        self.watches[agent.id] = HandoffWatch(
+            self.state.options.threshold, folder / "HANDOFF.md", cancel_on_recovery=True
+        )
         self.sessions[agent.id] = session
         try:
             await session.start()
@@ -476,10 +519,11 @@ class Controller:
             await self._close(agent.id)
             agent.notices = notices + agent.notices
             # Personal setup would load again on every retry: only the human can fix it.
-            await self._failed(agent, f'{agent.id}: its session could not start: {error}.',
-                               retry=not isinstance(error, SetupError))
+            await self._failed(
+                agent, f"{agent.id}: its session could not start: {error}.", retry=not isinstance(error, SetupError)
+            )
             return
-        self.show('controller', agent.id, f'Session {agent.sessions} started ({agent.spec}).')
+        self.show("controller", agent.id, f"Session {agent.sessions} started ({agent.spec}).")
         self._save()
 
     async def _close(self, agent_id: str) -> None:
@@ -501,71 +545,73 @@ class Controller:
         """
         handoff, agent.handoff_reason = agent.handoff_reason, None
         if agent.status not in ACTIVE:
-            self.show('controller', agent.id, f'{reason} It was waiting; its next input starts a fresh session.')
-        elif handoff == 'idle':
-            agent.status = 'resting'
-        elif handoff == 'quota':
-            agent.status, agent.pause_reason = 'paused', 'quota'
+            self.show("controller", agent.id, f"{reason} It was waiting; its next input starts a fresh session.")
+        elif handoff == "idle":
+            agent.status = "resting"
+        elif handoff == "quota":
+            agent.status, agent.pause_reason = "paused", "quota"
         else:
-            agent.status, agent.pause_reason = 'paused', 'failure'
+            agent.status, agent.pause_reason = "paused", "failure"
             agent.failures += 1
             if not retry:
                 agent.retry_at = None
-                self.show('controller', agent.id, f'{reason} Fix this, then press Ctrl+R to retry.')
+                self.show("controller", agent.id, f"{reason} Fix this, then press Ctrl+R to retry.")
             elif agent.failures <= len(RETRY_DELAYS):
                 delay = RETRY_DELAYS[agent.failures - 1]
                 agent.retry_at = time.time() + delay
-                self.show('controller', agent.id, f'{reason} Restarting from its handoff in {delay} s.')
+                self.show("controller", agent.id, f"{reason} Restarting from its handoff in {delay} s.")
             else:
                 agent.retry_at = None
-                self.show('controller', agent.id, f'{reason} It failed {agent.failures} times: press Ctrl+R to retry.')
+                self.show("controller", agent.id, f"{reason} It failed {agent.failures} times: press Ctrl+R to retry.")
         await self._pause_progress()
         self._save()
 
-    async def _resume_agents(self, reasons: set[str] | None = None) -> None:
+    async def _resume_agents(self, reasons: set[str | None] | None = None) -> None:
         """Bring paused agents (only those paused for ``reasons``, if given) back to work where they may run now.
 
         An agent that kept its session continues in it, told why it paused; one at
         the context threshold, or without a session, starts a fresh one if a slot is free.
         """
         state = self.state
-        if state.status != 'running':
+        if state.status != "running":
             return
-        order = {'primary': 0, 'reviewer': 1, 'subagent': 2}
+        order = {"primary": 0, "reviewer": 1, "subagent": 2}
         for agent in sorted(state.agents.values(), key=lambda a: (order[a.role], a.sessions)):
-            if agent.status != 'paused' or (reasons and agent.pause_reason not in reasons):
+            if agent.status != "paused" or (reasons and agent.pause_reason not in reasons):
                 continue
-            if agent.pause_reason == 'held' and not (reasons and 'held' in reasons):
+            if agent.pause_reason == "held" and not (reasons and "held" in reasons):
                 continue  # held by the human on its own: only its own resume restarts it
             pending = self._under_review()
-            if agent.role == 'reviewer' and not pending and not agent.notices:
-                agent.status, agent.pause_reason = 'resting', None
+            if agent.role == "reviewer" and not pending and not agent.notices:
+                agent.status, agent.pause_reason = "resting", None
                 continue
             if self._blocked(agent.backend):
-                agent.pause_reason = 'quota'
+                agent.pause_reason = "quota"
                 continue
             reason, watch = agent.pause_reason, self.watches.get(agent.id)
             if watch is not None and watch.full:  # it waited at the threshold: it continues in a fresh session
                 await self._close(agent.id)
             if agent.id in self.sessions:
-                agent.status, agent.pause_reason = 'running', None
+                assert watch is not None  # a session's watch is added and removed with it
+                agent.status, agent.pause_reason = "running", None
                 watch.clear()
                 notice = prompts.continue_after(reason)
                 if notice:
                     self._queue(agent, notice)
                 await self._flush(agent)
             elif not self._slot_free():
-                agent.pause_reason = 'slots'
+                agent.pause_reason = "slots"
                 continue
             else:
-                if pending and agent.role == 'reviewer' and not any('Review round' in n for n in agent.notices):
+                if pending and agent.role == "reviewer" and not any("Review round" in n for n in agent.notices):
                     self._queue(agent, prompts.review_request(**self._review_args()))
-                if pending and agent.role == 'primary':
-                    self._queue(agent, prompts.talk_only(state.proposal['round']))
+                if pending and agent.role == "primary":
+                    assert state.proposal is not None  # pending: a proposal is under review
+                    self._queue(agent, prompts.talk_only(state.proposal["round"]))
                 await self._start_session(agent)
-            parent = state.agents.get(agent.parent or '')
-            if reason == 'quota' and agent.status == 'running' and parent and parent.status not in ENDED:
-                await self._notify(parent, f'[controller] Subagent {agent.id} has resumed after its quota pause.')
+            parent = state.agents.get(agent.parent or "")
+            if reason == "quota" and agent.status == "running" and parent and parent.status not in ENDED:
+                await self._notify(parent, f"[controller] Subagent {agent.id} has resumed after its quota pause.")
 
     # Driver events --------------------------------------------------------------------------
 
@@ -579,27 +625,27 @@ class Controller:
             return  # from a session that has already been replaced or closed
         agent = self.state.agents[agent_id]
         self.activity.event(agent_id, kind, data)
-        if kind == 'text':
-            agent.activity = data['text'].strip().splitlines()[0][:200] if data['text'].strip() else agent.activity
-            self.show('agent', agent_id, data['text'])
-        elif kind == 'tool':
-            agent.activity, agent.nudged = data['text'][:200], False
-            if data.get('server') != MCP_SERVER:  # the controller's own tools are shown when it handles them
-                self.show('tool', agent_id, data['text'])
-        elif kind == 'context':
-            await self._context(agent, data.get('tokens'), data.get('window'))
-        elif kind == 'turn_ended' and data.get('pending'):
+        if kind == "text":
+            agent.activity = data["text"].strip().splitlines()[0][:200] if data["text"].strip() else agent.activity
+            self.show("agent", agent_id, data["text"])
+        elif kind == "tool":
+            agent.activity, agent.nudged = data["text"][:200], False
+            if data.get("server") != MCP_SERVER:  # the controller's own tools are shown when it handles them
+                self.show("tool", agent_id, data["text"])
+        elif kind == "context":
+            await self._context(agent, data.get("tokens"), data.get("window"))
+        elif kind == "turn_ended" and data.get("pending"):
             pass  # a message reached the CLI too late for this turn: it runs next; act once the session settles
-        elif kind == 'turn_ended' and data.get('failed'):
+        elif kind == "turn_ended" and data.get("failed"):
             # A failed turn (e.g. an API outage) restarts the agent from its handoff after a delay.
             await self._close(agent_id)
-            await self._failed(agent, f'{agent_id}: its turn failed.')
-        elif kind == 'turn_ended':
-            await self._turn_ended(agent, data.get('text') or '')
+            await self._failed(agent, f"{agent_id}: its turn failed.")
+        elif kind == "turn_ended":
+            await self._turn_ended(agent, data.get("text") or "")
             self._save()
-        elif kind == 'exited':  # sessions the controller closes are gone from self.sessions: this one died
+        elif kind == "exited":  # sessions the controller closes are gone from self.sessions: this one died
             await self._close(agent_id)
-            await self._failed(agent, f'{agent_id}: {data.get("reason", "its session ended")}.')
+            await self._failed(agent, f"{agent_id}: {data.get('reason', 'its session ended')}.")
         await self._after_change()
 
     async def _context(self, agent: Agent, tokens: int | None, window: int | None) -> None:
@@ -614,14 +660,14 @@ class Controller:
             return
         action = watch.reading(tokens, window)
         agent.tokens, agent.window = watch.tokens, watch.window
-        if action == 'request' and agent.status == 'running':
-            await self._request_handoff(agent, 'context', f'{watch.fill:.0%}')
-        elif action == 'recovered' and agent.handoff_reason == 'context':
+        if action == "request" and agent.status == "running":
+            await self._request_handoff(agent, "context", f"{watch.fill:.0%}")
+        elif action == "recovered" and agent.handoff_reason == "context":
             agent.handoff_reason = None  # compacted below the threshold: the cycle restarts
-            if agent.status == 'handing_off':
-                agent.status = 'running'
-        elif action == 'remind' and agent.handoff_reason:
-            await self._send(agent, prompts.handoff_reminder(f'{watch.fill:.0%}'))
+            if agent.status == "handing_off":
+                agent.status = "running"
+        elif action == "remind" and agent.handoff_reason:
+            await self._send(agent, prompts.handoff_reminder(f"{watch.fill:.0%}"))
 
     async def _turn_ended(self, agent: Agent, text: str) -> None:
         """An agent ended its turn (``text`` is its final message)."""
@@ -629,16 +675,20 @@ class Controller:
         watch = self.watches.get(agent.id)
         if watch is not None and watch.unmeasured():
             # Without readings no handoff can be triggered: the agent continues, and the human is told once.
-            self.show('alert', agent.id, f'{agent.id}: its CLI has not reported context use after a full turn, '
-                                         'so its handoffs cannot be triggered in this session.')
+            self.show(
+                "alert",
+                agent.id,
+                f"{agent.id}: its CLI has not reported context use after a full turn, "
+                "so its handoffs cannot be triggered in this session.",
+            )
         if agent.handoff_reason:
             await self._check_handoff(agent)
-        elif agent.status != 'running' or self.state.status != 'running':
+        elif agent.status != "running" or self.state.status != "running":
             return  # it waits (for a verdict, its parent, a pause or a quota hold): its news waits too
         elif agent.notices:
             await self._flush(agent)
-        elif agent.role == 'reviewer' and not self._under_review():
-            agent.status = 'resting'  # it answered the human between rounds
+        elif agent.role == "reviewer" and not self._under_review():
+            agent.status = "resting"  # it answered the human between rounds
         elif self._idle(agent):
             if agent.nudged:  # told it was idle, and it ended its turn idle again without using a tool
                 await self._stalled(agent, text)
@@ -648,44 +698,49 @@ class Controller:
 
     def _idle(self, agent: Agent) -> bool:
         """True unless the agent is waiting: for a running or paused subagent, a running job or a review."""
-        busy_children = [c for c in self.state.children(agent.id) if c.status in ACTIVE or c.status == 'paused']
-        waiting = agent.role == 'primary' and self._under_review()
+        busy_children = [c for c in self.state.children(agent.id) if c.status in ACTIVE or c.status == "paused"]
+        waiting = agent.role == "primary" and self._under_review()
         return not busy_children and not self.state.running_jobs(agent.id) and not waiting
 
     def _awaiting(self, agent: Agent) -> list[str]:
         """The agent's subagents whose submitted results await its decision."""
-        return [child.id for child in self.state.children(agent.id) if child.status == 'submitted']
+        return [child.id for child in self.state.children(agent.id) if child.status == "submitted"]
 
     async def _stalled(self, agent: Agent, text: str) -> None:
         """An idle agent stopped working (PROJECT.md §3, "Waiting, idle and stalled agents"); it keeps its session."""
-        last = text.strip() or '(no final message)'
-        if agent.role == 'subagent':  # its parent decides
-            self.show('controller', agent.id, 'Stalled: its parent is told.')
+        last = text.strip() or "(no final message)"
+        if agent.role == "subagent":  # its parent decides
+            assert agent.parent is not None  # every subagent has one
+            self.show("controller", agent.id, "Stalled: its parent is told.")
             await self._notify(self.state.agents[agent.parent], prompts.stalled(agent.id, last))
-        elif agent.role == 'primary':  # the human's reply continues it
-            self.show('alert', 'primary', f'The primary has stopped and is waiting for you. Its last message:\n{last}')
+        elif agent.role == "primary":  # the human's reply continues it
+            self.show("alert", "primary", f"The primary has stopped and is waiting for you. Its last message:\n{last}")
         else:  # the Reviewer: without a verdict, the proposal under review is withdrawn
             proposal, self.state.proposal = self.state.proposal, None
-            agent.status = 'resting'
-            if proposal and not proposal.get('reviewed'):
-                self._commit(f'reviewer: stalled in round {proposal["round"]}; proposal withdrawn')
-                self.show('controller', 'reviewer', f'Stalled without a verdict: round {proposal["round"]} is withdrawn.')
-                await self._notify(self.state.agents['primary'],
-                                   prompts.review_withdrawn(proposal['kind'], proposal['round']))
+            agent.status = "resting"
+            if proposal and not proposal.get("reviewed"):
+                self._commit(f"reviewer: stalled in round {proposal['round']}; proposal withdrawn")
+                self.show(
+                    "controller", "reviewer", f"Stalled without a verdict: round {proposal['round']} is withdrawn."
+                )
+                await self._notify(
+                    self.state.agents["primary"], prompts.review_withdrawn(proposal["kind"], proposal["round"])
+                )
 
     # Messages ---------------------------------------------------------------------------------
 
-    def _record(self, agent: Agent, text: str, sender: str = 'controller', origin: str | None = None) -> None:
+    def _record(self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None) -> None:
         """Keep a message ``agent`` receives in its activity log (``sender`` as seen from the agent)."""
-        self.activity.add(agent.id, 'message', text, sender=sender, origin=origin)
+        self.activity.add(agent.id, "message", text, sender=sender, origin=origin)
 
-    def _queue(self, agent: Agent, text: str, sender: str = 'controller', origin: str | None = None) -> None:
+    def _queue(self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None) -> None:
         """Keep a notice for the agent's next delivery (recorded now)."""
         self._record(agent, text, sender, origin)
         agent.notices.append(text)
 
-    async def _send(self, agent: Agent, text: str, sender: str = 'controller', origin: str | None = None,
-                    record: bool = True) -> None:
+    async def _send(
+        self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None, record: bool = True
+    ) -> None:
         """Deliver ``text`` to the agent's session now (into its turn, or starting one), else keep it for later.
 
         ``sender`` and ``origin`` say who it comes from (see :mod:`agent_toolkit.activity`);
@@ -699,30 +754,30 @@ class Controller:
             return
         try:
             await session.send(text)
-        except (SessionError, OSError, asyncio.TimeoutError):
+        except (TimeoutError, SessionError, OSError):
             agent.notices.append(text)
             return
         self.idle_since.pop(agent.id, None)  # a turn runs: the idle clock starts again when it ends
-        self.show('notice', agent.id, text)
+        self.show("notice", agent.id, text)
 
-    async def _notify(self, agent: Agent, text: str, sender: str = 'controller', origin: str | None = None) -> None:
+    async def _notify(self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None) -> None:
         """Queue a notice; deliver it now to an agent at work, wake a resting one (not while paused or handing off)."""
         self._queue(agent, text, sender, origin)
-        if self.state.status != 'running' or agent.handoff_reason:
+        if self.state.status != "running" or agent.handoff_reason:
             return
-        if agent.status == 'resting':
+        if agent.status == "resting":
             await self._wake(agent)
-        elif agent.status == 'running':
+        elif agent.status == "running":
             await self._flush(agent)
 
     async def _flush(self, agent: Agent) -> None:
         """Send the agent's queued notices into its session, if it has one."""
         if agent.notices and agent.id in self.sessions:
             pending, agent.notices = agent.notices, []
-            await self._send(agent, '\n\n'.join(pending), record=False)
+            await self._send(agent, "\n\n".join(pending), record=False)
 
     async def _flush_running(self, agent: Agent) -> None:
-        if agent.status == 'running' and not agent.handoff_reason and self.state.status == 'running':
+        if agent.status == "running" and not agent.handoff_reason and self.state.status == "running":
             await self._flush(agent)
 
     async def _wake(self, agent: Agent) -> None:
@@ -730,30 +785,31 @@ class Controller:
 
         It continues in its session if it kept one, else in a fresh session once its CLI and a slot allow.
         """
-        agent.status, agent.pause_reason = 'paused', 'wake'
-        await self._resume_agents({'wake'})
+        agent.status, agent.pause_reason = "paused", "wake"
+        await self._resume_agents({"wake"})
 
     async def _deliver_queued(self) -> None:
         """After a resume or a restart: deliver what queued meanwhile, waking resting agents that received news."""
         for agent in list(self.state.agents.values()):
-            if agent.notices and agent.status == 'resting':
+            if agent.notices and agent.status == "resting":
                 await self._wake(agent)
             elif agent.notices:
                 await self._flush_running(agent)
 
     async def _say(self, text: str) -> None:
         """The human's chat message to the primary (see :meth:`_human_message`)."""
-        await self._human_message(self.state.agents['primary'], text)
+        await self._human_message(self.state.agents["primary"], text)
         self._save()
 
     def _announce_changes(self, paths: list[str]) -> None:
         """Tell the primary, and the owners of changed agent folders, what changed while paused or shut down."""
         notice = prompts.resumed(paths)
-        owners = {path.split('/')[1] for path in paths if path.startswith('agents/') and path.count('/') >= 2}
-        for agent_id in {'primary', *owners} & set(self.state.agents):
+        owners = {path.split("/")[1] for path in paths if path.startswith("agents/") and path.count("/") >= 2}
+        for agent_id in {"primary", *owners} & set(self.state.agents):
             self._queue(self.state.agents[agent_id], notice)
-        self.show('controller', 'primary', 'Changed while paused (by the human or by running jobs):\n'
-                  + '\n'.join(paths[:20]))
+        self.show(
+            "controller", "primary", "Changed while paused (by the human or by running jobs):\n" + "\n".join(paths[:20])
+        )
 
     # Handoffs ---------------------------------------------------------------------------------
 
@@ -762,7 +818,7 @@ class Controller:
         watch = self.watches.get(agent.id)
         return bool(watch and watch.reason and not agent.handoff_reason and watch.saved())
 
-    async def _request_handoff(self, agent: Agent, reason: str, detail: str = '') -> None:
+    async def _request_handoff(self, agent: Agent, reason: str, detail: str = "") -> None:
         """Ask an agent with a session to update HANDOFF.md and end its turn (an idle one takes a turn for it).
 
         While one is pending, a reason later in :data:`HANDOFF_ORDER` takes its place:
@@ -778,9 +834,9 @@ class Controller:
         watch.clear()
         watch.request(reason)
         agent.handoff_reason = reason
-        if agent.status == 'running':
-            agent.status = 'handing_off'
-        self.show('controller', agent.id, f'Handoff requested ({reason}).')
+        if agent.status == "running":
+            agent.status = "handing_off"
+        self.show("controller", agent.id, f"Handoff requested ({reason}).")
         await self._send(agent, prompts.handoff_request(reason, detail))
 
     async def _check_handoff(self, agent: Agent) -> None:
@@ -798,41 +854,41 @@ class Controller:
             await self._send(agent, prompts.HANDOFF_MISSING)
             return
         if not saved:  # it stopped working without updating it: its successor starts from the last one
-            self.show('controller', agent.id, 'HANDOFF.md was not updated; continuing from the existing one.')
+            self.show("controller", agent.id, "HANDOFF.md was not updated; continuing from the existing one.")
         news = bool(agent.notices)  # news that arrived during the handoff wakes a resting agent (not the below)
         problems = self.project.check_layout(agent)
         if problems:
             self._queue(agent, _layout_notice(problems))
         reason, agent.handoff_reason = agent.handoff_reason, None
-        if self.state.status == 'running':  # while paused, the human's edits are committed (and reported) at resume
-            self._commit(f'{agent.id}: handoff ({reason})')
-        if agent.status == 'handing_off':
-            agent.status = 'running'
-        if reason in ('quota', 'shutdown') and not watch.full and self.request != 'shutdown':
+        if self.state.status == "running":  # while paused, the human's edits are committed (and reported) at resume
+            self._commit(f"{agent.id}: handoff ({reason})")
+        if agent.status == "handing_off":
+            agent.status = "running"
+        if reason in ("quota", "shutdown") and not watch.full and self.request != "shutdown":
             # It waits in its session (a quota hold, or a shutdown called off) until it may continue.
-            if agent.status == 'running':
-                agent.status, agent.pause_reason = 'paused', 'quota' if reason == 'quota' else 'human'
-                parent = self.state.agents.get(agent.parent or '')
-                if reason == 'quota' and parent and parent.status not in ENDED:
+            if agent.status == "running":
+                agent.status, agent.pause_reason = "paused", "quota" if reason == "quota" else "human"
+                parent = self.state.agents.get(agent.parent or "")
+                if reason == "quota" and parent and parent.status not in ENDED:
                     await self._notify(parent, prompts.quota_paused(agent.id, agent.backend))
-            if agent.status == 'paused':
+            if agent.status == "paused":
                 await self._resume_agents({agent.pause_reason})  # at once if nothing holds it any more
             return
         await self._close(agent.id)
-        if reason == 'idle':
-            self.show('controller', agent.id, 'Idle: its session closed; its next input starts a fresh one.')
-        if agent.status != 'running' or self.request == 'shutdown':
+        if reason == "idle":
+            self.show("controller", agent.id, "Idle: its session closed; its next input starts a fresh one.")
+        if agent.status != "running" or self.request == "shutdown":
             return  # it keeps waiting (paused, submitted, resting), now without a session
-        if reason == 'idle':
-            agent.status = 'resting'
+        if reason == "idle":
+            agent.status = "resting"
             if news:
                 await self._wake(agent)
-        elif self.state.status == 'running' and not self._blocked(agent.backend):
+        elif self.state.status == "running" and not self._blocked(agent.backend):
             await self._start_session(agent)
         else:
-            agent.status = 'paused'
-            agent.pause_reason = 'quota' if self._blocked(agent.backend) else 'human'
-            self.show('controller', agent.id, f'Paused ({agent.pause_reason}).')
+            agent.status = "paused"
+            agent.pause_reason = "quota" if self._blocked(agent.backend) else "human"
+            self.show("controller", agent.id, f"Paused ({agent.pause_reason}).")
 
     async def _idle_out(self, agent: Agent) -> None:
         """A session reached the idle limit: one turn to update HANDOFF.md, then it closes.
@@ -842,32 +898,33 @@ class Controller:
         """
         if self._blocked(agent.backend) or self._noted(agent):
             await self._close(agent.id)
-            if agent.status == 'running':
-                agent.status = 'resting'
-            self.show('controller', agent.id, 'Idle: its session closed; its next input starts a fresh one.')
+            if agent.status == "running":
+                agent.status = "resting"
+            self.show("controller", agent.id, "Idle: its session closed; its next input starts a fresh one.")
         else:
-            await self._request_handoff(agent, 'idle', f'{self.state.options.idle_limit:g}')
+            await self._request_handoff(agent, "idle", f"{self.state.options.idle_limit:g}")
 
     # Tools ----------------------------------------------------------------------------------
 
     async def _tool_request(self, agent_id: str, session: int, tool: str, args: dict) -> str:
         """Handle one tool call from session number ``session`` of ``agent_id`` (only its role's tools reach here)."""
+        assert self.lock is not None  # sessions, and so their tools, exist only while run() runs
         async with self.lock:
             caller = self.state.agents[agent_id]
             if agent_id not in self.sessions or caller.sessions != session:
-                return 'Error: this session has ended; its tools no longer work.'
-            if caller.status == 'submitted':
-                return f'Error: your result is with {caller.parent}; end your turn and wait for its decision.'
-            self.show('tool', agent_id, f'{tool}({_brief(args)})')
+                return "Error: this session has ended; its tools no longer work."
+            if caller.status == "submitted":
+                return f"Error: your result is with {caller.parent}; end your turn and wait for its decision."
+            self.show("tool", agent_id, f"{tool}({_brief(args)})")
             try:
-                reply = await getattr(self, f'_tool_{tool}')(caller, **args)
+                reply = await getattr(self, f"_tool_{tool}")(caller, **args)
             except ToolError as refusal:
-                reply = f'Refused: {refusal}'
+                reply = f"Refused: {refusal}"
             except TypeError as error:
-                reply = f'Error: invalid arguments for {tool}: {error}'
+                reply = f"Error: invalid arguments for {tool}: {error}"
             caller.nudged = False
-            if caller.notices and caller.status == 'running' and self.state.status == 'running':
-                reply += '\n\n' + '\n\n'.join(caller.notices)  # pending notices ride along with any reply
+            if caller.notices and caller.status == "running" and self.state.status == "running":
+                reply += "\n\n" + "\n\n".join(caller.notices)  # pending notices ride along with any reply
                 caller.notices = []
             await self._after_change()
             self._save()
@@ -880,22 +937,25 @@ class Controller:
         if ``folder``) inside the project, and outside ``.research/``, which agents cannot see.
         """
         if not str(path).strip():
-            raise ToolError('a path is required')
+            raise ToolError("a path is required")
         given = Path(str(path)).expanduser()
-        candidates = [given] if given.is_absolute() else [base / given for base in
-                                                          bases or (self.project.agent_dir(caller.id),)]
+        candidates = (
+            [given] if given.is_absolute() else [base / given for base in bases or (self.project.agent_dir(caller.id),)]
+        )
         for candidate in candidates:
             resolved = candidate.resolve()
             visible = self.project.inside(resolved) and not resolved.is_relative_to(self.project.research)
             if visible and (resolved.is_dir() if folder else resolved.is_file()):
                 return resolved
-        raise ToolError(f'{path} is not an existing {"folder" if folder else "file"} in the project')
+        raise ToolError(f"{path} is not an existing {'folder' if folder else 'file'} in the project")
 
     def _child(self, caller: Agent, agent_id: str) -> Agent:
         child = self.state.agents.get(agent_id)
         if child is None or child.parent != caller.id:
-            raise ToolError(f'{agent_id} is not one of your subagents; yours: '
-                            + (', '.join(c.id for c in self.state.children(caller.id)) or 'none'))
+            raise ToolError(
+                f"{agent_id} is not one of your subagents; yours: "
+                + (", ".join(c.id for c in self.state.children(caller.id)) or "none")
+            )
         return child
 
     def _settled(self, caller: Agent) -> None:
@@ -903,9 +963,11 @@ class Controller:
         open_children = [c.id for c in self.state.children(caller.id) if c.status not in ENDED]
         running = [job.id for job in self.state.running_jobs(caller.id)]
         if open_children or running:
-            raise ToolError('first settle your subagents (accept, reject or cancel each: '
-                            f'{", ".join(open_children) or "none"}) and jobs (wait or cancel: '
-                            f'{", ".join(running) or "none"})')
+            raise ToolError(
+                "first settle your subagents (accept, reject or cancel each: "
+                f"{', '.join(open_children) or 'none'}) and jobs (wait or cancel: "
+                f"{', '.join(running) or 'none'})"
+            )
 
     def _layout_ok(self, caller: Agent) -> None:
         problems = self.project.check_layout(caller)
@@ -914,151 +976,174 @@ class Controller:
 
     def _under_review(self) -> bool:
         """True while a COMPLETE or STOP proposal awaits the Reviewer's verdict."""
-        return bool(self.state.proposal and not self.state.proposal.get('reviewed'))
+        return bool(self.state.proposal and not self.state.proposal.get("reviewed"))
 
     def _talk_only(self, caller: Agent) -> None:
         """Refuse new work by a paused agent, or by the primary while its proposal is under review (PROJECT.md §4)."""
-        if caller.role == 'primary' and self._under_review():
-            raise ToolError(f'your proposal (round {self.state.proposal["round"]}) is with the Reviewer: until its '
-                            'verdict you may only talk, so spawn and run_job are refused')
-        if caller.status == 'paused' or self.state.status != 'running':
-            raise ToolError('you are paused: until you are told to continue you may only talk, so spawn and run_job '
-                            'are refused')
+        if caller.role == "primary" and self._under_review():
+            assert self.state.proposal is not None  # under review
+            raise ToolError(
+                f"your proposal (round {self.state.proposal['round']}) is with the Reviewer: until its "
+                "verdict you may only talk, so spawn and run_job are refused"
+            )
+        if caller.status == "paused" or self.state.status != "running":
+            raise ToolError(
+                "you are paused: until you are told to continue you may only talk, so spawn and run_job are refused"
+            )
 
     def _admit(self, backend: str) -> None:
         """Refuse a new session while ``backend`` is held or every slot is taken."""
-        if self.state.status != 'running':
-            raise ToolError(f'the investigation is {self.state.status}; no new work can start now')
+        if self.state.status != "running":
+            raise ToolError(f"the investigation is {self.state.status}; no new work can start now")
         if self._blocked(backend):
-            held = self.state.holds.get(backend) or self.state.holds[self.state.agents['primary'].backend]
-            raise ToolError(f'{backend} agents are temporarily paused by the usage quota ({held["detail"]}); '
-                            'the controller resumes them automatically. Use another backend, or try later')
+            held = self.state.holds.get(backend) or self.state.holds[self.state.agents["primary"].backend]
+            raise ToolError(
+                f"{backend} agents are temporarily paused by the usage quota ({held['detail']}); "
+                "the controller resumes them automatically. Use another backend, or try later"
+            )
         if not self._slot_free():
-            raise ToolError(f'{len(self.sessions)}/{self.state.options.max_agents} agent sessions are already open '
-                            '(idle ones close after the idle limit); no more subagents can be started now')
+            raise ToolError(
+                f"{len(self.sessions)}/{self.state.options.max_agents} agent sessions are already open "
+                "(idle ones close after the idle limit); no more subagents can be started now"
+            )
 
-    async def _tool_spawn(self, caller: Agent, task: str, backend: str, model: str, effort: str,
-                          name: str = '') -> str:
+    async def _tool_spawn(self, caller: Agent, task: str, backend: str, model: str, effort: str, name: str = "") -> str:
         self._talk_only(caller)
         allowed = self.state.options.backends
         if backend not in allowed:
-            raise ToolError(f'backend {backend!r} is not allowed; allowed: {", ".join(allowed)}')
+            raise ToolError(f"backend {backend!r} is not allowed; allowed: {', '.join(allowed)}")
         if not model.strip() or not effort.strip():
-            raise ToolError(f'a model and an effort are required, e.g. {caller.spec}')
+            raise ToolError(f"a model and an effort are required, e.g. {caller.spec}")
         try:  # the backend's driver must accept the effort (a typo would only fail the session's start)
-            Spec(backend, model.strip(), effort.strip()).validate('the subagent', self.drivers)
+            Spec(backend, model.strip(), effort.strip()).validate("the subagent", self.drivers)
         except ValueError as error:
             raise ToolError(str(error)) from None
         brief = self._path(caller, task, self.project.agent_dir(caller.id), self.project.root)
-        if not brief.read_text(encoding='utf-8', errors='replace').strip():
-            raise ToolError(f'{task} must be a non-empty Markdown file: the subagent\'s brief')
+        if not brief.read_text(encoding="utf-8", errors="replace").strip():
+            raise ToolError(f"{task} must be a non-empty Markdown file: the subagent's brief")
         self._admit(backend)
         self._continued(caller)
-        child = Agent(self._new_id(name), 'subagent', caller.id, backend, model.strip(), effort.strip())
+        child = Agent(self._new_id(name), "subagent", caller.id, backend, model.strip(), effort.strip())
         folder = self.project.agent_dir(child.id)
         folder.mkdir(parents=True)
-        atomic_write(folder / 'TASK.md', brief.read_text(encoding='utf-8', errors='replace'), root=self.project.root)
+        atomic_write(folder / "TASK.md", brief.read_text(encoding="utf-8", errors="replace"), root=self.project.root)
         self.state.agents[child.id] = child
         await self._start_session(child)
-        if child.status != 'running':
-            return (f'Created subagent {child.id}, but its session could not start; the controller retries it or '
-                    'asks the human.')
-        return (f'Started subagent {child.id} ({child.spec}); its folder is agents/{child.id}/. '
-                'You will be told when it submits its result; meanwhile, continue any work that does not '
-                'depend on it.')
+        if child.status != "running":
+            return (
+                f"Created subagent {child.id}, but its session could not start; the controller retries it or "
+                "asks the human."
+            )
+        return (
+            f"Started subagent {child.id} ({child.spec}); its folder is agents/{child.id}/. "
+            "You will be told when it submits its result; meanwhile, continue any work that does not "
+            "depend on it."
+        )
 
     def _continued(self, caller: Agent) -> None:
         """New work by the primary after a STOP challenge means it chose to continue: the STOP lapses."""
         proposal = self.state.proposal
-        if caller.role == 'primary' and proposal and proposal['kind'] == 'stop' and proposal.get('challenged'):
+        if caller.role == "primary" and proposal and proposal["kind"] == "stop" and proposal.get("challenged"):
             self.state.proposal = None
 
     def _index_entry(self, agent: Agent, name: str, description: str) -> None:
         """Describe a file the controller put in an agent's folder, so the agent's index stays complete."""
         index = self.project.agent_dir(agent.id) / INDEX
-        text = index.read_text(encoding='utf-8') if index.exists() else EMPTY_INDEX
+        text = index.read_text(encoding="utf-8") if index.exists() else EMPTY_INDEX
         if name not in text:
-            atomic_write(index, f'{text.rstrip()}\n- [{name}]({name}) — {description}\n', root=self.project.root)
+            atomic_write(index, f"{text.rstrip()}\n- [{name}]({name}) — {description}\n", root=self.project.root)
 
     def _new_id(self, name: str) -> str:
-        base = re.sub(r'[^a-z0-9]+', '-', name.lower()).strip('-')[:40] or 'agent'
-        base = 'agent' if base in ('primary', 'reviewer') else base
+        base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "agent"
+        base = "agent" if base in ("primary", "reviewer") else base
         candidate, number = base, 1
         while candidate in self.state.agents or self.project.agent_dir(candidate).exists():
             number += 1
-            candidate = f'{base}-{number}'
+            candidate = f"{base}-{number}"
         return candidate
 
     async def _tool_agents(self, caller: Agent) -> str:
         lines = []
         for child in self.state.children(caller.id):
             session = self.sessions.get(child.id)
-            status = ('working' if session and session.busy else 'idle') if child.status == 'running' else child.status
-            fill = f', context {child.fill:.0%}' if child.fill is not None else ''
-            lines.append(f'- {child.id} ({child.spec}): {status}{fill}. {child.activity}'.rstrip())
-        return '\n'.join(lines) or 'You have no subagents.'
+            status = ("working" if session and session.busy else "idle") if child.status == "running" else child.status
+            fill = f", context {child.fill:.0%}" if child.fill is not None else ""
+            lines.append(f"- {child.id} ({child.spec}): {status}{fill}. {child.activity}".rstrip())
+        return "\n".join(lines) or "You have no subagents."
 
     async def _tool_message(self, caller: Agent, agent: str, text: str) -> str:
         """Deliver a message to the caller's parent or one of its subagents (PROJECT.md §3, "Messages")."""
         target = self.state.agents.get(agent)
         if target is None or not (target.parent == caller.id or caller.parent == target.id):
             contacts = [c.id for c in self.state.children(caller.id)] + ([caller.parent] if caller.parent else [])
-            raise ToolError(f'{agent} is neither your parent nor one of your subagents; you can message: '
-                            + (', '.join(contacts) or 'nobody'))
+            raise ToolError(
+                f"{agent} is neither your parent nor one of your subagents; you can message: "
+                + (", ".join(contacts) or "nobody")
+            )
         if not text.strip():
-            raise ToolError('the message is empty')
+            raise ToolError("the message is empty")
         if target.status in ENDED:
-            raise ToolError(f'{agent} has ended ({target.status})')
-        if target.status == 'submitted':
-            raise ToolError(f'{agent} has submitted its result: accept it, reject it with feedback, or cancel it')
+            raise ToolError(f"{agent} has ended ({target.status})")
+        if target.status == "submitted":
+            raise ToolError(f"{agent} has submitted its result: accept it, reject it with feedback, or cancel it")
         notice = prompts.agent_message(caller.id, text)
-        await self._notify(target, notice, 'parent' if target.parent == caller.id else 'child', caller.id)
-        self.show('notice', agent, f'from {caller.id}: {text.strip()}')
+        await self._notify(target, notice, "parent" if target.parent == caller.id else "child", caller.id)
+        self.show("notice", agent, f"from {caller.id}: {text.strip()}")
         if notice in target.notices:  # no running session to take it now
-            return f'{agent} has no running session; it receives your message when its next session starts.'
-        return f'Message delivered to {agent}.'
+            return f"{agent} has no running session; it receives your message when its next session starts."
+        return f"Message delivered to {agent}."
 
     async def _tool_accept(self, caller: Agent, agent: str) -> str:
         child = self._child(caller, agent)
-        if child.status != 'submitted':
-            raise ToolError(f'{agent} has not submitted a result (it is {child.status})')
-        child.status = 'accepted'
+        if child.status != "submitted":
+            raise ToolError(f"{agent} has not submitted a result (it is {child.status})")
+        child.status = "accepted"
         await self._close(child.id)
-        self._commit(f'{caller.id}: accepted the result of {agent}')
-        return f'Accepted the result of {agent}.'
+        self._commit(f"{caller.id}: accepted the result of {agent}")
+        return f"Accepted the result of {agent}."
 
     async def _tool_reject(self, caller: Agent, agent: str, feedback: str) -> str:
         child = self._child(caller, agent)
-        if child.status != 'submitted':
-            raise ToolError(f'{agent} has not submitted a result (it is {child.status})')
+        if child.status != "submitted":
+            raise ToolError(f"{agent} has not submitted a result (it is {child.status})")
         if not feedback.strip():
-            raise ToolError('feedback is required: say what is missing or wrong')
-        if self.state.status != 'running':
-            raise ToolError(f'the investigation is {self.state.status}; try again after it resumes')
+            raise ToolError("feedback is required: say what is missing or wrong")
+        if self.state.status != "running":
+            raise ToolError(f"the investigation is {self.state.status}; try again after it resumes")
         child.rejections += 1
-        record = self.project.agent_dir(child.id) / 'PARENT_FEEDBACK.md'
-        previous = record.read_text(encoding='utf-8') if record.exists() else '# Feedback from my parent\n'
-        atomic_write(record, f'{previous}\n## Rejection {child.rejections}\n\n{feedback.strip()}\n', root=self.project.root)
-        self._index_entry(child, 'PARENT_FEEDBACK.md', 'Feedback from my parent on rejected results.')
-        self._queue(child, f'[controller] {caller.id} rejected your result (rejection {child.rejections}): '
-                           f'{feedback.strip()}\nContinue the task and submit again.', 'parent', caller.id)
+        record = self.project.agent_dir(child.id) / "PARENT_FEEDBACK.md"
+        previous = record.read_text(encoding="utf-8") if record.exists() else "# Feedback from my parent\n"
+        atomic_write(
+            record, f"{previous}\n## Rejection {child.rejections}\n\n{feedback.strip()}\n", root=self.project.root
+        )
+        self._index_entry(child, "PARENT_FEEDBACK.md", "Feedback from my parent on rejected results.")
+        self._queue(
+            child,
+            f"[controller] {caller.id} rejected your result (rejection {child.rejections}): "
+            f"{feedback.strip()}\nContinue the task and submit again.",
+            "parent",
+            caller.id,
+        )
         await self._wake(child)  # in its session, if it kept one; an operational hold only delays it
-        if child.status == 'paused':
-            why = ('its CLI is paused by the usage quota' if child.pause_reason == 'quota'
-                   else 'every agent slot is taken')
-            return (f'Rejected the result of {agent}. It will continue with your feedback automatically as soon as '
-                    f'it can run ({why}; this is temporary). Meanwhile, continue any work that does not depend on '
-                    'it.')
-        return f'Rejected the result of {agent}; it continues with your feedback.'
+        if child.status == "paused":
+            why = (
+                "its CLI is paused by the usage quota" if child.pause_reason == "quota" else "every agent slot is taken"
+            )
+            return (
+                f"Rejected the result of {agent}. It will continue with your feedback automatically as soon as "
+                f"it can run ({why}; this is temporary). Meanwhile, continue any work that does not depend on "
+                "it."
+            )
+        return f"Rejected the result of {agent}; it continues with your feedback."
 
     async def _tool_cancel(self, caller: Agent, agent: str) -> str:
         child = self._child(caller, agent)
         if child.status in ENDED:
-            raise ToolError(f'{agent} has already ended ({child.status})')
+            raise ToolError(f"{agent} has already ended ({child.status})")
         await self._cancel_tree(child)
-        self._commit(f'{caller.id}: cancelled {agent}')
-        await self._resume_agents({'slots'})
-        return f'Cancelled {agent}, its subagents and its jobs.'
+        self._commit(f"{caller.id}: cancelled {agent}")
+        await self._resume_agents({"slots"})
+        return f"Cancelled {agent}, its subagents and its jobs."
 
     async def _cancel_tree(self, agent: Agent) -> None:
         for member in [agent, *self.state.descendants(agent.id)]:
@@ -1067,35 +1152,38 @@ class Controller:
             await self._close(member.id)
             for job in self.state.running_jobs(member.id):
                 await self._stop_job(job)
-            member.status, member.handoff_reason = 'cancelled', None
+            member.status, member.handoff_reason = "cancelled", None
 
-    async def _tool_run_job(self, caller: Agent, command: str, timeout_seconds: float, cwd: str = '') -> str:
+    async def _tool_run_job(self, caller: Agent, command: str, timeout_seconds: float, cwd: str = "") -> str:
         self._talk_only(caller)
-        if self.state.status != 'running':
-            raise ToolError(f'the investigation is {self.state.status}; jobs cannot start now')
+        if self.state.status != "running":
+            raise ToolError(f"the investigation is {self.state.status}; jobs cannot start now")
         try:
             timeout = float(timeout_seconds)
         except (TypeError, ValueError):
-            raise ToolError('timeout_seconds must be a number of seconds') from None
+            raise ToolError("timeout_seconds must be a number of seconds") from None
         if not command.strip() or not timeout > 0:
-            raise ToolError('a command and a positive timeout_seconds are required')
-        folder = self._path(caller, cwd or '.', self.project.agent_dir(caller.id), self.project.root, folder=True)
+            raise ToolError("a command and a positive timeout_seconds are required")
+        folder = self._path(caller, cwd or ".", self.project.agent_dir(caller.id), self.project.root, folder=True)
         self._continued(caller)
         self.state.job_counter += 1
-        job = Job(f'job-{self.state.job_counter}', caller.id, command, str(folder), timeout, time.time())
+        job = Job(f"job-{self.state.job_counter}", caller.id, command, str(folder), timeout, time.time())
         try:
-            self.processes[job.id] = joblib.start(self.project.root, job, read_only=[self.project.evidence],
-                                                  hidden=[self.project.research])
+            self.processes[job.id] = joblib.start(
+                self.project.root, job, read_only=[self.project.evidence], hidden=[self.project.research]
+            )
         except OSError as error:
-            raise ToolError(f'the job could not start: {error}') from None
+            raise ToolError(f"the job could not start: {error}") from None
         self.state.jobs[job.id] = job
-        return (f'Started {job.id} (timeout {timeout:g} s); output in agents/{caller.id}/jobs/{job.id}/. '
-                'You will be told when it ends; meanwhile, continue any work that does not depend on it.')
+        return (
+            f"Started {job.id} (timeout {timeout:g} s); output in agents/{caller.id}/jobs/{job.id}/. "
+            "You will be told when it ends; meanwhile, continue any work that does not depend on it."
+        )
 
     def _job(self, caller: Agent, job_id: str) -> Job:
         job = self.state.jobs.get(job_id)
         if job is None or job.owner != caller.id:
-            raise ToolError(f'{job_id} is not one of your jobs')
+            raise ToolError(f"{job_id} is not one of your jobs")
         return job
 
     async def _tool_job_status(self, caller: Agent, job: str) -> str:
@@ -1103,8 +1191,8 @@ class Controller:
 
     async def _tool_job_cancel(self, caller: Agent, job: str) -> str:
         record = self._job(caller, job)
-        if record.status != 'running':
-            raise ToolError(f'{job} is not running ({record.status})')
+        if record.status != "running":
+            raise ToolError(f"{job} is not running ({record.status})")
         await self._stop_job(record)
         return joblib.describe(self.project.root, record)
 
@@ -1115,18 +1203,21 @@ class Controller:
         if process is not None:
             await asyncio.to_thread(process.wait)
 
-    async def _tool_submit_result(self, caller: Agent, result: str = 'RESULT.md') -> str:
+    async def _tool_submit_result(self, caller: Agent, result: str = "RESULT.md") -> str:
         path = self._path(caller, result, self.project.agent_dir(caller.id), self.project.root)
-        if not path.read_text(encoding='utf-8', errors='replace').strip():
-            raise ToolError(f'{result} must be a non-empty Markdown file')
+        if not path.read_text(encoding="utf-8", errors="replace").strip():
+            raise ToolError(f"{result} must be a non-empty Markdown file")
         self._settled(caller)
         self._layout_ok(caller)
-        self._commit(f'{caller.id}: result submitted')
-        caller.status = 'submitted'
+        self._commit(f"{caller.id}: result submitted")
+        caller.status = "submitted"
+        assert caller.parent is not None  # submit_result is a subagent's tool
         parent = self.state.agents[caller.parent]
-        await self._notify(parent, prompts.result_submitted(caller.id, self.project.relative(path)), 'child', caller.id)
-        return (f'Your result was submitted to {caller.parent}. End your turn now and wait: if {caller.parent} '
-                'rejects it, its feedback comes to you here.')
+        await self._notify(parent, prompts.result_submitted(caller.id, self.project.relative(path)), "child", caller.id)
+        return (
+            f"Your result was submitted to {caller.parent}. End your turn now and wait: if {caller.parent} "
+            "rejects it, its feedback comes to you here."
+        )
 
     async def _propose(self, caller: Agent, kind: str, detail: str) -> str:
         """Submit a COMPLETE or STOP proposal to the Reviewer, who judges the project as committed now.
@@ -1134,77 +1225,99 @@ class Controller:
         The primary waits in its session, talk-only, until the verdict reaches it there.
         """
         if self._under_review():
-            raise ToolError(f'your previous proposal (round {self.state.proposal["round"]}) is still with the Reviewer')
+            assert self.state.proposal is not None  # under review
+            raise ToolError(f"your previous proposal (round {self.state.proposal['round']}) is still with the Reviewer")
         self._settled(caller)
         self._layout_ok(caller)
         self.state.rounds += 1
-        commit = self._commit(f'primary: proposes {kind.upper()} (round {self.state.rounds})')
-        self.state.proposal = {'kind': kind, 'round': self.state.rounds, 'detail': detail, 'commit': commit,
-                               'challenged': False, 'reviewed': False}
+        commit = self._commit(f"primary: proposes {kind.upper()} (round {self.state.rounds})")
+        self.state.proposal = {
+            "kind": kind,
+            "round": self.state.rounds,
+            "detail": detail,
+            "commit": commit,
+            "challenged": False,
+            "reviewed": False,
+        }
         await self._start_review()
-        return (f'Your {kind.upper()} proposal is with the Reviewer (round {self.state.rounds}), who judges the project '
-                f'as committed now ({(commit or "")[:12]}). End your turn now and wait: the verdict comes to you here. '
-                'Until then you may only talk: spawn and run_job are refused.')
+        return (
+            f"Your {kind.upper()} proposal is with the Reviewer (round {self.state.rounds}), who judges the project "
+            f"as committed now ({(commit or '')[:12]}). End your turn now and wait: the verdict comes to you here. "
+            "Until then you may only talk: spawn and run_job are refused."
+        )
 
-    async def _tool_complete(self, caller: Agent, report: str = 'REPORT.md') -> str:
+    async def _tool_complete(self, caller: Agent, report: str = "REPORT.md") -> str:
         path = self._path(caller, report, self.project.root, self.project.agent_dir(caller.id))
-        if not path.read_text(encoding='utf-8', errors='replace').strip():
-            raise ToolError(f'{report} must be a non-empty report')
-        return await self._propose(caller, 'complete', self.project.relative(path))
+        if not path.read_text(encoding="utf-8", errors="replace").strip():
+            raise ToolError(f"{report} must be a non-empty report")
+        return await self._propose(caller, "complete", self.project.relative(path))
 
     async def _tool_stop(self, caller: Agent, reason: str, final: bool = False) -> str:
         if not reason.strip():
-            raise ToolError('a reason is required')
+            raise ToolError("a reason is required")
         proposal = self.state.proposal
         if final:
-            if not (proposal and proposal['kind'] == 'stop' and proposal.get('challenged')):
-                raise ToolError('the Reviewer must challenge a STOP first: call stop(reason) without final')
+            if not (proposal and proposal["kind"] == "stop" and proposal.get("challenged")):
+                raise ToolError("the Reviewer must challenge a STOP first: call stop(reason) without final")
             self._settled(caller)
-            await self._finish('stopped', reason.strip())
-            return 'The investigation is stopped.'
-        return await self._propose(caller, 'stop', reason.strip())
+            await self._finish("stopped", reason.strip())
+            return "The investigation is stopped."
+        return await self._propose(caller, "stop", reason.strip())
 
     def _review_args(self) -> dict:
         """The current proposal, as :func:`prompts.review_request` takes it."""
         proposal = self.state.proposal
-        return {'kind': proposal['kind'], 'round_': proposal['round'], 'detail': proposal['detail'],
-                'commit': proposal.get('commit')}
+        assert proposal is not None  # called only while a proposal is under review
+        return {
+            "kind": proposal["kind"],
+            "round_": proposal["round"],
+            "detail": proposal["detail"],
+            "commit": proposal.get("commit"),
+        }
 
     async def _start_review(self) -> None:
         """Hand the current proposal to the Reviewer: in its session, or in a fresh one once its CLI may run."""
         proposal = self.state.proposal
-        self.show('controller', 'reviewer', f'Review round {proposal["round"]}: {proposal["kind"].upper()}.')
-        await self._notify(self.state.agents['reviewer'], prompts.review_request(**self._review_args()))
+        assert proposal is not None  # called only once a proposal was made
+        self.show("controller", "reviewer", f"Review round {proposal['round']}: {proposal['kind'].upper()}.")
+        await self._notify(self.state.agents["reviewer"], prompts.review_request(**self._review_args()))
 
     async def _tool_verdict(self, caller: Agent, review: str, agree: bool) -> str:
         proposal = self.state.proposal
-        if not proposal or proposal.get('reviewed'):
-            raise ToolError('there is no proposal awaiting your verdict')
+        if not proposal or proposal.get("reviewed"):
+            raise ToolError("there is no proposal awaiting your verdict")
         path = self._path(caller, review, self.project.reviews, self.project.root, self.project.agent_dir(caller.id))
         if not path.is_relative_to(self.project.reviews):
-            raise ToolError('the review must be a Markdown file in reviews/')
+            raise ToolError("the review must be a Markdown file in reviews/")
         self._settled(caller)
         self._layout_ok(caller)
-        agree = agree if isinstance(agree, bool) else str(agree).lower() in ('true', '1', 'yes')
-        proposal['reviewed'], proposal['review'] = True, self.project.relative(path)
-        self.state.verdict = 'agree' if agree else 'disagree'
-        self._commit(f'reviewer: verdict on {proposal["kind"].upper()} round {proposal["round"]} '
-                     f'({"agree" if agree else "disagree"})')
-        self.show('controller', 'reviewer', f'Verdict: {"agree" if agree else "disagree"} ({proposal["review"]}).')
-        caller.status = 'resting'  # it keeps its session for the next round
-        if proposal['kind'] == 'complete' and agree:
-            await self._finish('complete', f'the Reviewer agreed ({proposal["review"]})')
-            return 'Verdict recorded: the investigation is COMPLETE.'
-        if proposal['kind'] == 'complete':
+        agree = agree if isinstance(agree, bool) else str(agree).lower() in ("true", "1", "yes")
+        proposal["reviewed"], proposal["review"] = True, self.project.relative(path)
+        self.state.verdict = "agree" if agree else "disagree"
+        self._commit(
+            f"reviewer: verdict on {proposal['kind'].upper()} round {proposal['round']} "
+            f"({'agree' if agree else 'disagree'})"
+        )
+        self.show("controller", "reviewer", f"Verdict: {'agree' if agree else 'disagree'} ({proposal['review']}).")
+        caller.status = "resting"  # it keeps its session for the next round
+        if proposal["kind"] == "complete" and agree:
+            await self._finish("complete", f"the Reviewer agreed ({proposal['review']})")
+            return "Verdict recorded: the investigation is COMPLETE."
+        if proposal["kind"] == "complete":
             self.state.proposal = None
         else:
-            proposal['challenged'] = True
+            proposal["challenged"] = True
         # What the primary changed after proposing: the review does not cover it.
-        changed = self.project.changed_since(proposal['commit'], 'reviews', 'agents/reviewer') \
-            if proposal.get('commit') else []
-        await self._notify(self.state.agents['primary'], prompts.verdict_delivered(
-            proposal['kind'], proposal['round'], proposal['review'], agree, changed))
-        return 'Verdict delivered to the primary. End your turn now; a next round comes to you here.'
+        changed = (
+            self.project.changed_since(proposal["commit"], "reviews", "agents/reviewer")
+            if proposal.get("commit")
+            else []
+        )
+        await self._notify(
+            self.state.agents["primary"],
+            prompts.verdict_delivered(proposal["kind"], proposal["round"], proposal["review"], agree, changed),
+        )
+        return "Verdict delivered to the primary. End your turn now; a next round comes to you here."
 
     # Finishing ----------------------------------------------------------------------------------
 
@@ -1212,92 +1325,107 @@ class Controller:
         """End the investigation: stop every agent and job, record the outcome and commit."""
         state = self.state
         state.status, state.proposal = outcome, None
-        stamp = datetime.now().strftime('%Y-%m-%d %H:%M')
-        state.outcome = f'{outcome.upper()} on {stamp}: {detail}'
+        stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+        state.outcome = f"{outcome.upper()} on {stamp}: {detail}"
         for agent_id in list(self.sessions):
             await self._close(agent_id)
         for agent in state.agents.values():
             agent.handoff_reason = None
-            if agent.status not in ENDED and agent.role != 'reviewer':
-                agent.status = 'finished' if agent.role == 'primary' else 'cancelled'
-            elif agent.role == 'reviewer':
-                agent.status = 'resting'
+            if agent.status not in ENDED and agent.role != "reviewer":
+                agent.status = "finished" if agent.role == "primary" else "cancelled"
+            elif agent.role == "reviewer":
+                agent.status = "resting"
         for job in state.running_jobs():
             await self._stop_job(job)
-        status_file = self.project.root / 'STATUS.md'
-        text = status_file.read_text(encoding='utf-8') if status_file.exists() else '# Status\n'
-        atomic_write(status_file, f'{text.rstrip()}\n\n## Outcome (recorded by the controller)\n\n{state.outcome}\n',
-                     root=self.project.root)
-        self._commit(f'controller: investigation {outcome.upper()}')
-        self.show('controller', 'primary', f'The investigation is {outcome.upper()}: {detail}')
+        status_file = self.project.root / "STATUS.md"
+        text = status_file.read_text(encoding="utf-8") if status_file.exists() else "# Status\n"
+        atomic_write(
+            status_file,
+            f"{text.rstrip()}\n\n## Outcome (recorded by the controller)\n\n{state.outcome}\n",
+            root=self.project.root,
+        )
+        self._commit(f"controller: investigation {outcome.upper()}")
+        self.show("controller", "primary", f"The investigation is {outcome.upper()}: {detail}")
         self._save()
+        assert self.done is not None  # set by run(), within which this runs
         self.done.set()
 
     # Pause, resume and shutdown ------------------------------------------------------------------
 
     async def _toggle(self) -> None:
-        if self.state.status == 'running' and not any(a.status in ACTIVE for a in self.state.agents.values()) \
-                and self.releasable:
+        if (
+            self.state.status == "running"
+            and not any(a.status in ACTIVE for a in self.state.agents.values())
+            and self.releasable
+        ):
             await self._release()  # nothing works: "Resume" means lifting what holds the agents
-        elif self.state.status == 'running':
+        elif self.state.status == "running":
             await self._pause()
-        elif self.state.status in ('pausing', 'paused'):
+        elif self.state.status in ("pausing", "paused"):
             await self._resume()
 
-    async def _pause(self, reason: str = 'pause') -> None:
+    async def _pause(self, reason: str = "pause") -> None:
         """The human's pause, or shutdown; :meth:`_pause_progress` completes it once no agent works.
 
         At a pause, agents at work end their turn at a clean point and wait in their
         sessions. At a shutdown, every session saves its note first (without a turn
         while its CLI is held, or when its note is saved already), as all sessions end.
         """
-        self.state.status = 'pausing'
-        shutdown = reason == 'shutdown'
-        self.show('controller', 'primary', 'Shutting down: every agent saves its handoff first.' if shutdown
-                  else 'Pausing: working agents end their turn and wait in their sessions.')
+        self.state.status = "pausing"
+        shutdown = reason == "shutdown"
+        self.show(
+            "controller",
+            "primary",
+            "Shutting down: every agent saves its handoff first."
+            if shutdown
+            else "Pausing: working agents end their turn and wait in their sessions.",
+        )
         for agent in list(self.state.agents.values()):
             if shutdown and agent.id in self.sessions and not (self._blocked(agent.backend) or self._noted(agent)):
-                await self._request_handoff(agent, 'shutdown')
+                await self._request_handoff(agent, "shutdown")
             elif not shutdown and agent.status in ACTIVE:
-                await self._hold_agent(agent, 'human', prompts.pausing())
-            elif agent.status == 'paused' and agent.pause_reason == 'failure':
-                agent.pause_reason = 'human'
+                await self._hold_agent(agent, "human", prompts.pausing())
+            elif agent.status == "paused" and agent.pause_reason == "failure":
+                agent.pause_reason = "human"
         await self._pause_progress()
 
     async def _pause_progress(self) -> None:
         """Complete a pause once no agent works any more: a pause stops the jobs, a shutdown keeps them."""
         state = self.state
-        if state.status != 'pausing' or self._working():
+        if state.status != "pausing" or self._working():
             return
-        shutdown = self.request == 'shutdown'
+        shutdown = self.request == "shutdown"
         if shutdown:  # sessions end with the controller; jobs survive it, and the next run reattaches them
             for agent_id in list(self.sessions):
                 await self._close(agent_id)
         else:
             for job in state.running_jobs():
                 await self._stop_job(job)
-                self._queue(state.agents[job.owner],
-                            f'[controller] {job.id} was stopped by the human\'s pause; run it again if it is still needed.')
-        state.status = 'paused'
-        self._commit('controller: shut down by the human' if shutdown else 'controller: paused by the human')
+                self._queue(
+                    state.agents[job.owner],
+                    f"[controller] {job.id} was stopped by the human's pause; run it again if it is still needed.",
+                )
+        state.status = "paused"
+        self._commit("controller: shut down by the human" if shutdown else "controller: paused by the human")
         if not shutdown:
-            self.show('controller', 'primary', 'Paused. Agent files may now be edited; press Resume to continue.')
+            self.show("controller", "primary", "Paused. Agent files may now be edited; press Resume to continue.")
         self._save()
         if shutdown:
+            assert self.done is not None  # set by run(), within which this runs
             self.done.set()
 
     async def _resume(self) -> None:
         """The human's resume: report what changed meanwhile, re-read quota and bring the agents back to work."""
         state = self.state
         self.request = None  # resuming cancels a shutdown still waiting for handoffs (see _check_handoff)
-        if state.status == 'paused':
+        if state.status == "paused":
             changed = self.project.uncommitted()
             if changed:
-                self._commit('controller: changes made while paused (by the human or by running jobs)')
+                self._commit("controller: changes made while paused (by the human or by running jobs)")
                 self._announce_changes(changed)
-        state.status = 'running'
+        state.status = "running"
         self.guard.release()  # the human's resume lifts weekly and unreadable holds: the quota is read again
-        self.show('controller', 'primary', 'Resumed.')
+        self.show("controller", "primary", "Resumed.")
         await self._check_quota()
         await self._resume_agents()
         await self._deliver_queued()
@@ -1306,39 +1434,43 @@ class Controller:
     async def _release(self) -> None:
         """Lift weekly/unreadable quota holds and retry agents whose automatic retries are exhausted."""
         state = self.state
-        if state.status != 'running':
+        if state.status != "running":
             return
         self.guard.release()
         for agent in state.agents.values():
-            if agent.status == 'paused' and agent.pause_reason == 'failure' and agent.retry_at is None:
-                agent.failures, agent.pause_reason = 0, 'retry'
-        self.show('controller', 'primary', 'Released held CLIs and failed agents; re-reading the usage quota.')
+            if agent.status == "paused" and agent.pause_reason == "failure" and agent.retry_at is None:
+                agent.failures, agent.pause_reason = 0, "retry"
+        self.show("controller", "primary", "Released held CLIs and failed agents; re-reading the usage quota.")
         await self._check_quota()
-        await self._resume_agents({'quota', 'retry', 'slots'})
+        await self._resume_agents({"quota", "retry", "slots"})
         self._save()
 
     async def _after_change(self) -> None:
         """Follow-ups once agents may have stopped working: complete a pause, fill free slots."""
         await self._pause_progress()
-        await self._resume_agents({'slots'})
+        await self._resume_agents({"slots"})
 
     async def _shutdown(self) -> None:
         """Let every session save its handoff, then end the controller; jobs keep running."""
         if self.state.status in FINISHED:
+            assert self.done is not None  # set by run(), within which this runs
             self.done.set()
         else:  # also while paused: the sessions kept meanwhile save their notes before they end
-            await self._pause('shutdown')
+            await self._pause("shutdown")
 
     # Usage quota ---------------------------------------------------------------------------------
 
     def _blocked(self, backend: str) -> bool:
         """True if agents on ``backend`` must not run: their CLI, or the primary's, is held."""
-        return backend in self.state.holds or self.state.agents['primary'].backend in self.state.holds
+        return backend in self.state.holds or self.state.agents["primary"].backend in self.state.holds
 
     def _backends_in_use(self) -> set[str]:
         agents = [a for a in self.state.agents.values() if a.status not in ENDED]
-        return ({a.backend for a in agents} | set(self.state.options.backends)
-                | {self.state.agents['primary'].backend, self.state.agents['reviewer'].backend})
+        return (
+            {a.backend for a in agents}
+            | set(self.state.options.backends)
+            | {self.state.agents["primary"].backend, self.state.agents["reviewer"].backend}
+        )
 
     async def _quota_loop(self) -> None:
         while True:
@@ -1347,7 +1479,7 @@ class Controller:
                 readings = await self._read_quota()
                 await self._locked(self._apply_quota(readings))
 
-    async def _read_quota(self) -> dict[str, list | Exception]:
+    async def _read_quota(self) -> dict[str, list[quota.Window] | OSError]:
         """Read every CLI in use, outside the lock (probes take seconds)."""
         self._quota_due = time.time() + QUOTA_INTERVAL
         return await asyncio.to_thread(self.guard.read, self._backends_in_use())
@@ -1356,22 +1488,22 @@ class Controller:
         """Read and apply the quota now (called with the lock held)."""
         await self._apply_quota(await self._read_quota())
 
-    async def _apply_quota(self, readings: dict[str, list | Exception]) -> None:
+    async def _apply_quota(self, readings: dict[str, list[quota.Window] | OSError]) -> None:
         """Hold or release CLIs according to their usage windows (PROJECT.md §6, "Quota")."""
         for change, backend, hold in self.guard.apply(readings):
-            if change == 'held':
-                self.show('controller', 'primary', f'Usage quota: {backend} held ({hold["kind"]}: {hold["detail"]}).')
+            if change == "held":
+                self.show("controller", "primary", f"Usage quota: {backend} held ({hold['kind']}: {hold['detail']}).")
                 await self._hold(backend)
             else:
-                self.show('controller', 'primary', f'Usage quota: {backend} available again.')
-        await self._resume_agents({'quota', 'slots'})
+                self.show("controller", "primary", f"Usage quota: {backend} available again.")
+        await self._resume_agents({"quota", "slots"})
         self._save()
 
     async def _hold(self, backend: str) -> None:
         """Every session ``backend``'s hold affects saves its note (an idle one in a short turn) and waits in it."""
         for agent in list(self.state.agents.values()):
             if agent.id in self.sessions and self._blocked(agent.backend) and not self._noted(agent):
-                await self._request_handoff(agent, 'quota', backend)
+                await self._request_handoff(agent, "quota", backend)
 
     # Background checks -----------------------------------------------------------------------------
 
@@ -1387,16 +1519,20 @@ class Controller:
             if joblib.poll(self.project.root, job, self.processes.get(job.id)):
                 self.processes.pop(job.id, None)
                 owner = state.agents[job.owner]
-                self.show('controller', job.owner, f'{job.id} ended: {job.status}.')
+                self.show("controller", job.owner, f"{job.id} ended: {job.status}.")
                 if owner.status not in ENDED:
                     await self._notify(owner, prompts.job_ended(joblib.describe(self.project.root, job)))
                 self._save()
         for agent in state.agents.values():
-            if (agent.status == 'paused' and agent.pause_reason == 'failure' and agent.retry_at is not None
-                    and now >= agent.retry_at):
+            if (
+                agent.status == "paused"
+                and agent.pause_reason == "failure"
+                and agent.retry_at is not None
+                and now >= agent.retry_at
+            ):
                 agent.retry_at = None
-                agent.pause_reason = 'retry'
-                await self._resume_agents({'retry'})
+                agent.pause_reason = "retry"
+                await self._resume_agents({"retry"})
         await self._check_idle()
         if now >= self._human_checked + HUMAN_INTERVAL:
             self._human_checked = now
@@ -1420,8 +1556,8 @@ class Controller:
         changed = Project.changed(self.state.human, current)
         if changed:
             self.state.human = current
-            self.show('controller', 'primary', 'The human changed: ' + ', '.join(changed[:10]))
-            await self._notify(self.state.agents['primary'], prompts.human_changed(changed))
+            self.show("controller", "primary", "The human changed: " + ", ".join(changed[:10]))
+            await self._notify(self.state.agents["primary"], prompts.human_changed(changed))
             self._save()
 
     # Persistence ------------------------------------------------------------------------------------
@@ -1434,23 +1570,23 @@ class Controller:
         (PROJECT.md §2)."""
         current = self.project.human_fingerprint()
         changed = Project.changed(self.state.human, current)
-        primary = self.state.agents['primary']
+        primary = self.state.agents["primary"]
         if changed:
             self.state.human = current
             self._queue(primary, prompts.human_changed(changed))
-            self.show('controller', 'primary', 'The human\'s files changed: ' + ', '.join(changed[:10]))
+            self.show("controller", "primary", "The human's files changed: " + ", ".join(changed[:10]))
         strays = set(self.project.stray_entries()) - self._strays
         if strays:
             self._strays |= strays
             self._queue(primary, prompts.stray_entries(sorted(strays)))
-            self.show('controller', 'primary', 'Unexpected top-level entries: ' + ', '.join(sorted(strays)))
-        if primary.notices and primary.status == 'running':
+            self.show("controller", "primary", "Unexpected top-level entries: " + ", ".join(sorted(strays)))
+        if primary.notices and primary.status == "running":
             asyncio.ensure_future(self._locked(self._flush_running(primary)))  # after the current step
         self._write_indexes()
         try:
             return self.project.commit(message) or self.project.head()
         except ProjectError as error:
-            self.show('controller', 'primary', f'Commit failed: {error}')
+            self.show("controller", "primary", f"Commit failed: {error}")
             return None
 
     def _write_indexes(self) -> None:
@@ -1461,19 +1597,21 @@ class Controller:
         must not stop the commit, nor the handoff or result that asked for it.
         """
         writes = [lambda: self.project.write_agents_index(list(self.state.agents.values()))]
-        writes += [lambda owner=owner: joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
-                   for owner in sorted({job.owner for job in self.state.jobs.values()})]
+        writes += [
+            lambda owner=owner: joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
+            for owner in sorted({job.owner for job in self.state.jobs.values()})
+        ]
         for write in writes:
             try:
                 write()
             except (ValueError, OSError) as error:
-                self.show('controller', 'primary', f'An index was not written: {error}')
+                self.show("controller", "primary", f"An index was not written: {error}")
 
 
 def _layout_notice(problems: list[str]) -> str:
-    return ('[controller] Fix these layout problems first:\n' + '\n'.join(f'- {p}' for p in problems))
+    return "[controller] Fix these layout problems first:\n" + "\n".join(f"- {p}" for p in problems)
 
 
 def _brief(args: dict) -> str:
     """Tool arguments shortened for the transcript."""
-    return ', '.join(f'{key}={str(value)[:60]!r}' for key, value in args.items())
+    return ", ".join(f"{key}={str(value)[:60]!r}" for key, value in args.items())

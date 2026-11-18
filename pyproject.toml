@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-pipeline"
-version = "0.5.0"
+version = "0.6.0"
 description = "Autonomous research investigations led by a primary agent, with subagents and a final reviewer"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,11 +13,35 @@ dependencies = ["agent-toolkit[console,web]"]
 [project.scripts]
 research-pipeline = "research_pipeline.cli:main"
 
+[dependency-groups]
+dev = ["ruff>=0.17,<0.18", "pyright>=1.1.414"]
+
 [tool.uv.sources]
-agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.5.0" }
+agent-toolkit = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git", tag = "v0.6.0" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools.package-data]
 research_pipeline = ["prompts/*.md"]
+
+[tool.agent-toolkit]
+# An archived run's output, kept byte-for-byte as evidence (see its README.md): exempt from the folder check.
+generated = ["research_example/starting_evidence/failed_m5_20261111"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+src = ["src", "tests"]
+# Investigation inputs (an archived run's scripts among them): data, not package code.
+extend-exclude = ["research_example"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "SIM", "I"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"

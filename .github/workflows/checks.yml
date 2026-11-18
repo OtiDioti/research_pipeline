@@ -1,0 +1,43 @@
+name: Checks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      # agent_toolkit is a private repository: a token with read access to it must be stored
+      # as the repository secret AGENT_SESSIONS_TOKEN.
+      - name: Access the private agent_toolkit dependency
+        run: git config --global url."https://x-access-token:${{ secrets.AGENT_SESSIONS_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+      # Agent sessions run inside bubblewrap, which needs unprivileged user namespaces.
+      - name: Install bubblewrap
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q bubblewrap
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Install
+        run: uv sync --locked
+      - name: Formatting
+        run: uv run ruff format --check
+      - name: Lint
+        run: uv run ruff check
+      - name: Types
+        run: uv run pyright
+      # The same command the README documents; the suite makes no model calls.
+      - name: Unit tests
+        run: uv run python -m unittest discover -s tests -t .
