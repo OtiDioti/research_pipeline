@@ -28,7 +28,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="research-pipeline", description="Run autonomous research investigations.")
     commands = parser.add_subparsers(dest="command", required=True)
     run = commands.add_parser("run", help="start, resume or reopen an investigation")
-    run.add_argument("project", type=Path, help="project folder (with starting_evidence/RESEARCH_QUESTIONS.md)")
+    run.add_argument("project", type=Path, help="project folder (with starting_evidence/OBJECTIVES.md)")
     run.add_argument(
         "--primary",
         help="CLI, model and effort of the primary researcher: BACKEND:MODEL:EFFORT (required on the first run)",

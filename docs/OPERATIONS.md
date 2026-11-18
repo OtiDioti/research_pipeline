@@ -42,7 +42,7 @@ Resume and does the same.
 
 | Files | When | What happens |
 |---|---|---|
-| `RESEARCH_QUESTIONS.md`, `AGENTS.md`, `FEEDBACK.md`, starting evidence | Any time | The primary is told; a new `AGENTS.md` reaches each agent at its next session |
+| `OBJECTIVES.md`, `AGENTS.md`, `FEEDBACK.md`, starting evidence | Any time | The primary is told; a new `AGENTS.md` reaches each agent at its next session |
 | Agent-written files | Only while paused or shut down | The primary and the folder's owner are told on resume, "by the human or by running jobs" |
 
 ## Where to look

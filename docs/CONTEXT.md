@@ -42,7 +42,7 @@ over from an earlier session, or asked of the agent.
   HANDOFF.md, which agents edit with their file tools, and has no limit on the
   number of handoffs.
 - An agent is never killed for overshooting.
-- The next session gets TASK.md (the primary: the questions), HANDOFF.md and the queued notices.
+- The next session gets TASK.md (the primary: the objectives), HANDOFF.md and the queued notices.
 
 What follows the note depends on the reason. A request for a later reason in this
 table replaces a pending one (`HANDOFF_ORDER`):

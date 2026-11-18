@@ -25,7 +25,7 @@ TITLES = {
 }
 # What "finishing" means for each role, for the nudge.
 _FINISH = {
-    "primary": "propose complete (or stop) when the questions are answered",
+    "primary": "propose complete (or stop) when the objectives are met",
     "subagent": "write RESULT.md and call submit_result",
     "reviewer": "write your review and call verdict",
     "librarian": "place the pending work and call shelved",
@@ -84,7 +84,7 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
         parts += filter(
             None,
             [
-                _section("Research questions", project.questions),
+                _section("Objectives", project.objectives),
                 _section("Feedback from the human", project.root / "FEEDBACK.md"),
             ],
         )

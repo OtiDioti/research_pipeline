@@ -1,5 +1,11 @@
 # Status
 
+**2026-11-18.** 0.9.0: objectives instead of questions. The human's input is `starting_evidence/OBJECTIVES.md`
+(formerly `RESEARCH_QUESTIONS.md`; a project that still has the old file is told to rename it), and an objective is a
+question to answer or a task to perform. A task is met when its deliverable is built, verified and documented;
+prompts, the `complete` and `spawn` descriptions, notices and docs say "objective", and summaries mark each one
+met, partial, infeasible or open. PROJECT.md's summary of the prompts now also matches 0.8.0 (decide, don't ask).
+
 **2026-11-18.** 0.8.0, prompts only (`src/research_pipeline/prompts/`): agents decide what a question leaves open and
 record each decision with its criterion; work is held to a no-shortcuts standard (only physical limits excuse
 less, with evidence), which parents apply when accepting results and the Reviewer when judging; citations must be

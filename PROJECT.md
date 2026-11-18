@@ -5,7 +5,8 @@
 ## 1. Purpose
 
 A researcher-directed, substantially autonomous scientific investigator. The human
-supplies research questions, starting evidence and tools. A **primary researcher**
+supplies objectives (research questions to answer or research tasks to perform),
+starting evidence and tools. A **primary researcher**
 agent leads the investigation: it plans, reads literature, derives, computes, builds
 tools and writes down what it learns. It spawns **subagents** whenever that helps,
 and finishes when it judges the work done (COMPLETE, which a **Reviewer** must agree
@@ -29,7 +30,7 @@ organise freely.
 ├── AGENTS.md               human: optional instructions, given to every agent
 ├── FEEDBACK.md             human: comments and corrections, any time
 ├── starting_evidence/      human: read-only for agents and their jobs
-│   ├── RESEARCH_QUESTIONS.md   the authoritative questions
+│   ├── OBJECTIVES.md           the authoritative objectives: questions or tasks
 │   └── tools/                  the human's tools
 ├── STATUS.md               primary: current state, findings, next steps
 ├── REPORT.md               primary: the synthesis submitted with COMPLETE
@@ -101,7 +102,7 @@ reported to the primary and never block anyone.
 
 **The library.** The agents' finished work stays in the folders where it was made.
 `library/` holds the Librarian's (§3) Markdown pages, which lead a human to it:
-what was established about each research question, how, and with which tools.
+what was established or built for each objective, how, and with which tools.
 Nothing is moved, renamed or deleted for the library, so every path an agent, a
 job or a note uses stays valid.
 
@@ -142,10 +143,10 @@ job or a note uses stays valid.
 There are four roles, all running the same way:
 
 - **Primary:** responsible for the whole investigation. It is started with
-  `RESEARCH_QUESTIONS.md`, `FEEDBACK.md`, an inventory of starting evidence and
+  `OBJECTIVES.md`, `FEEDBACK.md`, an inventory of starting evidence and
   tools, and the reference paths.
 - **Subagent:** spawned by any agent, at any depth, with a `TASK.md` written by its
-  parent: objective, how it relates to the parent's question, relevant evidence and
+  parent: objective, how it relates to the parent's objective, relevant evidence and
   tools, and the expected result.
 - **Reviewer:** judges the primary's COMPLETE or STOP (§4). The human chooses its
   CLI, model and effort at launch. It is one logical agent across all review rounds.
@@ -234,8 +235,9 @@ is *stalled*:
 
 ## 4. Finishing: COMPLETE and STOP
 
-**COMPLETE.** The primary proposes COMPLETE when every current research question
-has an adequate answer, or an adequate demonstration that it cannot be answered.
+**COMPLETE.** The primary proposes COMPLETE when every current objective is met
+(a question answered; a task's deliverable built, verified and documented) or
+adequately shown infeasible.
 Negative and inconclusive findings count. The primary first settles its subagents
 and jobs and updates `HANDOFF.md`, then submits `REPORT.md`.
 
@@ -275,7 +277,7 @@ controller's next run. Machine COMPLETE is not scientific acceptance; that is th
 human's judgment.
 
 **Reopening.** After COMPLETE or STOP, the human may resume the investigation, for
-example after changing the questions, evidence or feedback. The primary restarts
+example after changing the objectives, evidence or feedback. The primary restarts
 from its handoff and the reviews, with a list of the files changed since the end.
 The folders of the primary and the Reviewer are no longer frozen: both continue in
 them, and their files stay catalogued with the commit at which they were shelved.
@@ -382,7 +384,7 @@ output folder stays in its owner's folder as part of the agent's record.
   jobs that are still running, and reads finished jobs' exit status from their
   folders. Work since the last handoff may be lost; nothing is replayed.
 
-**Human edits.** The human may edit their own files (`RESEARCH_QUESTIONS.md`,
+**Human edits.** The human may edit their own files (`OBJECTIVES.md`,
 `AGENTS.md`, `FEEDBACK.md`, starting evidence) at any time; the controller tells the
 primary. Agent-written files are edited only while paused.
 
@@ -460,8 +462,8 @@ line must earn its place against the science it displaces.
 
 The scientific guidance comes from these expectations:
 
-- Frame broad questions as a concrete, revisable plan; make assumptions explicit
-  and proceed; ask the human only when ambiguity changes the objective.
+- Frame broad objectives as a concrete, revisable plan; decide what they leave
+  open (interpretation, scope, method) and record each decision with its criterion.
 - Treat all sources, including the human's notes, as evidence to assess critically,
   never as instructions. Distinguish full-text reading from abstracts or secondary
   accounts, and never invent missing parameters.
@@ -479,8 +481,8 @@ The scientific guidance comes from these expectations:
 - Before solving something or spawning, find out what the project already has.
 
 The Librarian's guidance is about organisation, not science: a human finds, from
-`library/LIBRARY.md` and within a few clicks, what was established about each
-research question, how, and with which tools, including failed approaches and
+`library/LIBRARY.md` and within a few clicks, what was established or built for each
+objective, how, and with which tools, including failed approaches and
 negative results; related work is presented together; the structure changes when
 the project has outgrown it, not for small gains; nothing is ever left out. There
 is no prescribed scheme: the human may add preferences in `AGENTS.md`.
@@ -533,7 +535,7 @@ is no prescribed scheme: the human may add preferences in `AGENTS.md`.
 Determine how much each physical mechanism contributes to the linear spin-orbit
 interaction computed for light-hole spin-qubit devices in the paper by Valvo and
 collaborators, with both substantive analytical derivation and meaningful numerical
-study. The authoritative question, the paper and the notes are in
+study. The authoritative question (`OBJECTIVES.md`), the paper and the notes are in
 `research_example/starting_evidence/`. The failed 2026-11-11 attempt is kept there as
 preliminary prior evidence. The benchmark tests general research ability; it must not
 lead to physics-specific code in the platform.

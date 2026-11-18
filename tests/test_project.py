@@ -79,8 +79,11 @@ class ProjectTest(unittest.TestCase):
         with self.assertRaises(ProjectError):
             Project(Path("/tmp/somewhere")).prepare()
         empty = temp_project()
+        (empty / "starting_evidence" / "OBJECTIVES.md").rename(empty / "starting_evidence" / "RESEARCH_QUESTIONS.md")
+        with self.assertRaisesRegex(ProjectError, "is now starting_evidence/OBJECTIVES.md: rename it"):
+            Project(empty).prepare()
         (empty / "starting_evidence" / "RESEARCH_QUESTIONS.md").unlink()
-        with self.assertRaises(ProjectError):
+        with self.assertRaisesRegex(ProjectError, "OBJECTIVES.md is missing"):
             Project(empty).prepare()
         remove(empty)
 
@@ -124,7 +127,7 @@ class ProjectTest(unittest.TestCase):
 
     def test_human_fingerprint_and_uncommitted(self):
         before = self.project.human_fingerprint()
-        self.assertIn("starting_evidence/RESEARCH_QUESTIONS.md", before)
+        self.assertIn("starting_evidence/OBJECTIVES.md", before)
         self.write("AGENTS.md", "Use SI units.\n")
         self.assertEqual(Project.changed(before, self.project.human_fingerprint()), ["AGENTS.md"])
         self.assertEqual(self.project.uncommitted(), ["AGENTS.md"])
@@ -134,7 +137,7 @@ class ProjectTest(unittest.TestCase):
         self.project.write_agents_index([self.agent])
         self.assertIn("helper", (self.root / "agents" / "FOLDER_CONTENT.md").read_text())
         self.assertIn("Verify the quadrature", (self.root / "agents" / "FOLDER_CONTENT.md").read_text())
-        self.assertIn("RESEARCH_QUESTIONS.md", self.project.inventory())
+        self.assertIn("OBJECTIVES.md", self.project.inventory())
 
 
 class StateTest(unittest.TestCase):

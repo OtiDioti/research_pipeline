@@ -97,14 +97,14 @@ class CliTest(unittest.TestCase):
         finally:
             remove(root)
 
-    def test_run_rejects_a_project_without_questions(self):
+    def test_run_rejects_a_project_without_objectives(self):
         root = temp_project()
-        (root / "starting_evidence" / "RESEARCH_QUESTIONS.md").unlink()
+        (root / "starting_evidence" / "OBJECTIVES.md").unlink()
         try:
             errors = io.StringIO()
             with contextlib.redirect_stderr(errors):
                 self.assertEqual(cli.main(["run", str(root), "--no-tui"]), 2)
-            self.assertIn("RESEARCH_QUESTIONS.md is missing", errors.getvalue())
+            self.assertIn("OBJECTIVES.md is missing", errors.getvalue())
         finally:
             remove(root)
 
