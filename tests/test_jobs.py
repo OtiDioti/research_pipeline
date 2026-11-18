@@ -16,7 +16,7 @@ class JobsTest(unittest.TestCase):
     def tearDown(self):
         remove(self.root)
 
-    def job(self, command, timeout=30):
+    def job(self, command: str, timeout: float = 30) -> Job:
         return Job("job-1", "a", command, str(self.root / "agents" / "a"), timeout, time.time())
 
     def wait(self, job, process):
@@ -62,6 +62,7 @@ class JobsTest(unittest.TestCase):
         job = self.job("sleep 60 & sleep 60 & wait")
         process = jobs.start(self.root, job)
         time.sleep(0.3)
+        assert job.pid is not None
         self.assertGreaterEqual(len(jobs._session_members(job.pid, job.ticks)), 3)
         jobs.cancel(job)
         process.wait(5)

@@ -9,6 +9,7 @@ messages between a parent and its subagents, as the instructions announce.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from agent_toolkit.protocol import Prompts
@@ -292,7 +293,7 @@ def talk_only(round_: int) -> str:
     )
 
 
-def verdict_delivered(kind: str, round_: int, review: str, agree: bool, changed: list[str] = ()) -> str:
+def verdict_delivered(kind: str, round_: int, review: str, agree: bool, changed: Sequence[str] = ()) -> str:
     if kind == "complete":
         text = (
             f"[controller] The Reviewer disagrees with COMPLETE (round {round_}). Read {review}, address its "

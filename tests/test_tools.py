@@ -6,6 +6,7 @@ import unittest
 from agent_toolkit.tools import ToolBridge
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp.types import TextContent
 
 from research_pipeline.tools import ROLE_TOOLS
 
@@ -40,11 +41,15 @@ class ToolServerTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue({"submit_result", "run_job", "message"} <= set(tools))
         self.assertNotIn("complete", tools)
         self.assertEqual(set(tools["spawn"].inputSchema["required"]), {"task", "backend", "model", "effort"})
-        self.assertEqual(reply.content[0].text, "handled run_job")
+        assert reply is not None
+        content = reply.content[0]
+        assert isinstance(content, TextContent)
+        self.assertEqual(content.text, "handled run_job")
         self.assertEqual(self.calls, [("run_job", {"command": "make", "timeout_seconds": 60})])
 
     async def test_a_call_missing_a_required_argument_never_reaches_the_controller(self):
         tools, reply = await self.listed("subagent", ("run_job", {"command": "make"}))
+        assert reply is not None
         self.assertTrue(reply.isError)
         self.assertEqual(self.calls, [])
 

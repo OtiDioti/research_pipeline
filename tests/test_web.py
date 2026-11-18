@@ -171,6 +171,7 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
             await dashboard.start(values | {"primary": "codex:gpt-test", "threshold": 0.95, "backends": []})
         self.assertEqual(set(refusal.exception.errors), {"primary", "threshold", "backends"})
         await dashboard.start(values | {"max_agents": 3})
+        assert dashboard.controller is not None and dashboard.controller.launch_options is not None
         self.assertEqual(dashboard.controller.launch_options.max_agents, 3)
         self.assertEqual(
             {field["name"] for field in dashboard.live()["fields"]},
@@ -207,18 +208,20 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
             status = dashboard.snapshot()["status"]
             self.assertEqual([control["action"] for control in status["controls"]], ["pause", "shutdown"])
             self.assertEqual(status["composer"]["target"], "primary")
-            self.assertIn("Delivered", await dashboard.act("message", child, {"text": "Hello."}))
+            self.assertIn("Delivered", await dashboard.act("message", child, {"text": "Hello."}) or "")
             await dashboard.act("pause", None, {})
             await harness.settle()
             self.assertEqual(harness.state.status, "pausing")
 
     def test_only_noteworthy_controller_entries_become_notifications(self):
         dashboard = ResearchDashboard(self.root, launch_options())
-        self.assertEqual(dashboard.notice("alert", "primary", "Waiting for you.")["level"], "alert")
-        self.assertEqual(dashboard.notice("controller", "primary", "Usage quota: codex held (short).")["level"], "info")
-        self.assertEqual(
-            dashboard.notice("controller", "primary", "The investigation is COMPLETE: x")["level"], "alert"
-        )
+
+        def level(kind: str, source: str, text: str) -> str | None:
+            return (dashboard.notice(kind, source, text) or {}).get("level")
+
+        self.assertEqual(level("alert", "primary", "Waiting for you."), "alert")
+        self.assertEqual(level("controller", "primary", "Usage quota: codex held (short)."), "info")
+        self.assertEqual(level("controller", "primary", "The investigation is COMPLETE: x"), "alert")
         self.assertIsNone(dashboard.notice("controller", "helper", "Session 2 started (codex:x:high)."))
         self.assertIsNone(dashboard.notice("agent", "helper", "Thinking."))
 

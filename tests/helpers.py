@@ -84,7 +84,9 @@ class Harness:
         return self.controller.state
 
     def session(self, agent_id: str) -> FakeSession:
-        return self.controller.sessions[agent_id]
+        session = self.controller.sessions[agent_id]
+        assert isinstance(session, FakeSession)  # FAKE_DRIVERS start only fake sessions
+        return session
 
     async def settle(self, rounds: int = 5) -> None:
         """Let queued events and background loops run."""

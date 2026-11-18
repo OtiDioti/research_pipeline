@@ -369,6 +369,7 @@ class Controller:
 
     async def _locked(self, coroutine) -> None:
         """Run ``coroutine`` under the lock; report (never propagate) an unexpected error."""
+        assert self.lock is not None  # set by run(), whose loops are the only callers
         async with self.lock:
             try:
                 await coroutine
@@ -565,7 +566,7 @@ class Controller:
         await self._pause_progress()
         self._save()
 
-    async def _resume_agents(self, reasons: set[str] | None = None) -> None:
+    async def _resume_agents(self, reasons: set[str | None] | None = None) -> None:
         """Bring paused agents (only those paused for ``reasons``, if given) back to work where they may run now.
 
         An agent that kept its session continues in it, told why it paused; one at
@@ -591,6 +592,7 @@ class Controller:
             if watch is not None and watch.full:  # it waited at the threshold: it continues in a fresh session
                 await self._close(agent.id)
             if agent.id in self.sessions:
+                assert watch is not None  # a session's watch is added and removed with it
                 agent.status, agent.pause_reason = "running", None
                 watch.clear()
                 notice = prompts.continue_after(reason)
@@ -604,6 +606,7 @@ class Controller:
                 if pending and agent.role == "reviewer" and not any("Review round" in n for n in agent.notices):
                     self._queue(agent, prompts.review_request(**self._review_args()))
                 if pending and agent.role == "primary":
+                    assert state.proposal is not None  # pending: a proposal is under review
                     self._queue(agent, prompts.talk_only(state.proposal["round"]))
                 await self._start_session(agent)
             parent = state.agents.get(agent.parent or "")
@@ -707,6 +710,7 @@ class Controller:
         """An idle agent stopped working (PROJECT.md §3, "Waiting, idle and stalled agents"); it keeps its session."""
         last = text.strip() or "(no final message)"
         if agent.role == "subagent":  # its parent decides
+            assert agent.parent is not None  # every subagent has one
             self.show("controller", agent.id, "Stalled: its parent is told.")
             await self._notify(self.state.agents[agent.parent], prompts.stalled(agent.id, last))
         elif agent.role == "primary":  # the human's reply continues it
@@ -904,6 +908,7 @@ class Controller:
 
     async def _tool_request(self, agent_id: str, session: int, tool: str, args: dict) -> str:
         """Handle one tool call from session number ``session`` of ``agent_id`` (only its role's tools reach here)."""
+        assert self.lock is not None  # sessions, and so their tools, exist only while run() runs
         async with self.lock:
             caller = self.state.agents[agent_id]
             if agent_id not in self.sessions or caller.sessions != session:
@@ -976,6 +981,7 @@ class Controller:
     def _talk_only(self, caller: Agent) -> None:
         """Refuse new work by a paused agent, or by the primary while its proposal is under review (PROJECT.md §4)."""
         if caller.role == "primary" and self._under_review():
+            assert self.state.proposal is not None  # under review
             raise ToolError(
                 f"your proposal (round {self.state.proposal['round']}) is with the Reviewer: until its "
                 "verdict you may only talk, so spawn and run_job are refused"
@@ -1205,6 +1211,7 @@ class Controller:
         self._layout_ok(caller)
         self._commit(f"{caller.id}: result submitted")
         caller.status = "submitted"
+        assert caller.parent is not None  # submit_result is a subagent's tool
         parent = self.state.agents[caller.parent]
         await self._notify(parent, prompts.result_submitted(caller.id, self.project.relative(path)), "child", caller.id)
         return (
@@ -1218,6 +1225,7 @@ class Controller:
         The primary waits in its session, talk-only, until the verdict reaches it there.
         """
         if self._under_review():
+            assert self.state.proposal is not None  # under review
             raise ToolError(f"your previous proposal (round {self.state.proposal['round']}) is still with the Reviewer")
         self._settled(caller)
         self._layout_ok(caller)
@@ -1259,6 +1267,7 @@ class Controller:
     def _review_args(self) -> dict:
         """The current proposal, as :func:`prompts.review_request` takes it."""
         proposal = self.state.proposal
+        assert proposal is not None  # called only while a proposal is under review
         return {
             "kind": proposal["kind"],
             "round_": proposal["round"],
@@ -1269,6 +1278,7 @@ class Controller:
     async def _start_review(self) -> None:
         """Hand the current proposal to the Reviewer: in its session, or in a fresh one once its CLI may run."""
         proposal = self.state.proposal
+        assert proposal is not None  # called only once a proposal was made
         self.show("controller", "reviewer", f"Review round {proposal['round']}: {proposal['kind'].upper()}.")
         await self._notify(self.state.agents["reviewer"], prompts.review_request(**self._review_args()))
 
@@ -1337,6 +1347,7 @@ class Controller:
         self._commit(f"controller: investigation {outcome.upper()}")
         self.show("controller", "primary", f"The investigation is {outcome.upper()}: {detail}")
         self._save()
+        assert self.done is not None  # set by run(), within which this runs
         self.done.set()
 
     # Pause, resume and shutdown ------------------------------------------------------------------
@@ -1400,6 +1411,7 @@ class Controller:
             self.show("controller", "primary", "Paused. Agent files may now be edited; press Resume to continue.")
         self._save()
         if shutdown:
+            assert self.done is not None  # set by run(), within which this runs
             self.done.set()
 
     async def _resume(self) -> None:
@@ -1441,6 +1453,7 @@ class Controller:
     async def _shutdown(self) -> None:
         """Let every session save its handoff, then end the controller; jobs keep running."""
         if self.state.status in FINISHED:
+            assert self.done is not None  # set by run(), within which this runs
             self.done.set()
         else:  # also while paused: the sessions kept meanwhile save their notes before they end
             await self._pause("shutdown")
@@ -1466,7 +1479,7 @@ class Controller:
                 readings = await self._read_quota()
                 await self._locked(self._apply_quota(readings))
 
-    async def _read_quota(self) -> dict[str, list | Exception]:
+    async def _read_quota(self) -> dict[str, list[quota.Window] | OSError]:
         """Read every CLI in use, outside the lock (probes take seconds)."""
         self._quota_due = time.time() + QUOTA_INTERVAL
         return await asyncio.to_thread(self.guard.read, self._backends_in_use())
@@ -1475,7 +1488,7 @@ class Controller:
         """Read and apply the quota now (called with the lock held)."""
         await self._apply_quota(await self._read_quota())
 
-    async def _apply_quota(self, readings: dict[str, list | Exception]) -> None:
+    async def _apply_quota(self, readings: dict[str, list[quota.Window] | OSError]) -> None:
         """Hold or release CLIs according to their usage windows (PROJECT.md §6, "Quota")."""
         for change, backend, hold in self.guard.apply(readings):
             if change == "held":

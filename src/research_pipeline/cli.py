@@ -178,6 +178,7 @@ async def with_web(project: Project, options: Options, args: argparse.Namespace)
         if not args.start:
             print("Choose the settings on the page and press Start (Ctrl+C quits).", flush=True)
         await web.setup(start=args.start)
+        assert dashboard.controller is not None  # setup returns once the page started the investigation
         web.tap(dashboard.controller)
         status = await run(dashboard.controller, args.no_tui)
         web.end()

@@ -234,5 +234,6 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    shutil.which("bwrap") or exit("bwrap is required")
+    if not shutil.which("bwrap"):
+        exit("bwrap is required")
     asyncio.run(main())

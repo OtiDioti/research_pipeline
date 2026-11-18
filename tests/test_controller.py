@@ -455,6 +455,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIn("shutting the controller down", sent(harness, agent))
                 harness.handoff(agent)
                 await harness.emit(agent, "turn_ended", text="")
+            assert harness.task is not None
             await asyncio.wait_for(harness.task, 2)
             self.assertEqual(harness.controller.sessions, {})
 
@@ -548,6 +549,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("with the Reviewer (round 1)", reply)
             self.assertEqual(harness.state.agents["primary"].status, "running")
             self.assertIs(harness.session("primary"), primary)  # it waits in its session
+            assert harness.state.proposal is not None
             commit = harness.state.proposal["commit"]
             self.assertEqual(
                 commit,
@@ -563,6 +565,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("COMPLETE on", (self.root / "STATUS.md").read_text())
             self.assertIn("investigation COMPLETE", harness.controller.project.git("log", "--oneline"))
             self.assertEqual(harness.controller.sessions, {})
+            assert harness.task is not None
             await asyncio.wait_for(harness.task, 2)
 
     async def test_proposal_needs_a_settled_layout(self):
@@ -702,6 +705,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("shutting the controller down", sent(harness, "primary"))
             harness.handoff("primary")
             await harness.emit("primary", "turn_ended", text="")
+            assert harness.task is not None
             await asyncio.wait_for(harness.task, 2)
             self.assertEqual((harness.state.status, harness.state.jobs[job].status), ("paused", "running"))
         (self.root / "agents" / "primary" / "NOTES.md").write_text("# Edited while the controller was off\n")

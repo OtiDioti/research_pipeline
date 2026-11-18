@@ -30,7 +30,7 @@ COLOURS = {
     "finished": "finished",
     "cancelled": "cancelled",
 }
-PAUSED = {"quota": "held", "held": "paused", "human": "paused", "failure": "failed"}
+PAUSED: dict[str | None, str] = {"quota": "held", "held": "paused", "human": "paused", "failure": "failed"}
 #: Job statuses as the page colours them.
 JOBS = {"running": "working", "finished": "finished", "cancelled": "cancelled"}
 #: Documents first in an agent's "Task & notes", in this order.

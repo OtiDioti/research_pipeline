@@ -77,7 +77,7 @@ class ProjectTest(unittest.TestCase):
             self.assertTrue((self.root / name).exists(), name)
         self.assertEqual(self.project.check_layout(Agent("primary", "primary", None, "codex", "gpt-test", "high")), [])
         with self.assertRaises(ProjectError):
-            Project("/tmp/somewhere").prepare()
+            Project(Path("/tmp/somewhere")).prepare()
         empty = temp_project()
         (empty / "starting_evidence" / "RESEARCH_QUESTIONS.md").unlink()
         with self.assertRaises(ProjectError):
