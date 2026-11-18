@@ -12,6 +12,9 @@
 - [tools.py](tools.py) — The agent-facing MCP tools of each role, offered through agent_toolkit's tool bridge, and their refusal.
 - [jobs.py](jobs.py) — Long computations that outlive agent sessions.
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.
-- [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role.
+- [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role, and the setup assistant's.
 - [view.py](view.py) — The terminal app (built on agent_toolkit's shared one).
-- [web.py](web.py) — The web app's view of the investigation: setup page, agent graph, activity, single-agent controls.
+- [web.py](web.py) — The web app's view of the investigation: setup page (with its preparation steps), agent graph, activity, single-agent controls.
+- [preparation.py](preparation.py) — The web setup's preparation steps before the first start: material, objectives, the checks Start waits for.
+- [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/.
+- [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts OBJECTIVES.md on request.

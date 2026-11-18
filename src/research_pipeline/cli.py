@@ -3,7 +3,9 @@
 ``run`` starts a new investigation, resumes a paused or interrupted one, or reopens
 a finished one. Options given on a later ``run`` replace the stored ones. With
 ``--web`` the investigation is also shown in the browser (:mod:`research_pipeline.web`),
-whose setup page first offers every option, prefilled from these.
+whose setup page first helps make the folder ready (before the first start, even
+in a folder that does not exist yet) and then offers every option, prefilled from
+these. Without ``--web`` the folder must be ready already.
 """
 
 from __future__ import annotations
@@ -28,19 +30,30 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="research-pipeline", description="Run autonomous research investigations.")
     commands = parser.add_subparsers(dest="command", required=True)
     run = commands.add_parser("run", help="start, resume or reopen an investigation")
-    run.add_argument("project", type=Path, help="project folder (with starting_evidence/OBJECTIVES.md)")
+    run.add_argument(
+        "project",
+        type=Path,
+        help="project folder (with starting_evidence/OBJECTIVES.md; with --web it may be set up first)",
+    )
     run.add_argument(
         "--primary",
-        help="CLI, model and effort of the primary researcher: BACKEND:MODEL:EFFORT (required on the first run)",
+        help="CLI, model and effort of the primary researcher: BACKEND:MODEL:EFFORT "
+        "(required on the first run, unless --web: then on the setup page)",
     )
     run.add_argument(
         "--reviewer",
-        help="CLI, model and effort of the final Reviewer: BACKEND:MODEL:EFFORT (required on the first run)",
+        help="CLI, model and effort of the final Reviewer: BACKEND:MODEL:EFFORT "
+        "(required on the first run, unless --web: then on the setup page)",
     )
     run.add_argument(
         "--librarian",
         help="CLI, model and effort of the Librarian, who keeps the library: BACKEND:MODEL:EFFORT "
-        "(required on the first run)",
+        "(required on the first run, unless --web: then on the setup page)",
+    )
+    run.add_argument(
+        "--setup",
+        help="with --web: CLI, model and effort of the setup assistant, which helps make the folder ready: "
+        "BACKEND:MODEL:EFFORT (default codex:gpt-6.1-sol:high; also chosen on the page)",
     )
     run.add_argument(
         "--backends",
@@ -103,7 +116,7 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
     context threshold outside (0, 0.8].
     """
     options = Options(**vars(stored)) if stored else Options()
-    for name in ("primary", "reviewer", "librarian"):
+    for name in ("primary", "reviewer", "librarian", "setup"):
         value = getattr(args, name)
         if value:
             Spec.parse(value, f"--{name}")
@@ -239,7 +252,12 @@ def main(argv: list[str] | None = None) -> int:
         stored = State.load(project.state_file).options if project.state_file.exists() else None
         options = options_from(args, stored)
         if args.web:
+            project.check_location()
+            project.root.mkdir(parents=True, exist_ok=True)  # a new folder is set up on the page
             return asyncio.run(with_web(project, options, args))
+        problems = project.unready() if project.root.is_dir() else [f"{project.root} does not exist."]
+        if problems:
+            raise ProjectError(" ".join(problems) + " Run with --web to set the folder up on its setup page.")
         return asyncio.run(run(Controller(project.root, options), args.no_tui))
     except KeyboardInterrupt:
         return 130

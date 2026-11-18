@@ -7,7 +7,9 @@ significant event. The layout itself is in [PROJECT.md](../PROJECT.md) §2.
 ## Preparing
 
 On `run`, the controller:
-- refuses a project under `/tmp`, one without `starting_evidence/OBJECTIVES.md` (one with the former `RESEARCH_QUESTIONS.md` is told to rename it), and one made
+- refuses a folder that is not ready ([SETUP.md](SETUP.md), **Ready**): under `/tmp`, without a non-empty
+  `starting_evidence/OBJECTIVES.md` (one with the former `RESEARCH_QUESTIONS.md` is told to rename it), before the
+  first start with loose material at the top level or undescribed entries at the top of `starting_evidence/`, or made
   before the library (with `sources/` or `tools/` at its top level: it is not migrated);
 - creates whatever is missing, keeping everything already there:
   - `library/`, `agents/`, `reviews/` and `.research/logs/` (`.research/activity/`, every agent's

@@ -1,5 +1,17 @@
 # Status
 
+**2026-11-18.** 0.10.0: the web setup ([docs/SETUP.md](docs/SETUP.md), PROJECT.md §2, §3, §6). `run DIR --web`
+opens a setup page on any folder no investigation has started in, even one that does not exist yet or is ready
+already: *Material* (upload, copy from local paths, or by hand; each loose entry placed in `starting_evidence/` with
+a one-line description, new folders described too, by hand or by the setup assistant), *Objectives* (first ideas,
+an optional grill of multiple-choice questions, an editor whose saves name their version), then the launch options;
+Start waits for `Project.unready()`'s checks, which the command line now applies too (before the first start: no loose
+material, `starting_evidence/` described). Without `--web` an unready folder is refused with the hint. The setup
+assistant (`--setup`, default `codex:gpt-6.1-sol:high`; new prompts `setup.md`, `setup-requests.md`,
+`objectives-template.md`) runs through agent_toolkit's `Relay` and acts only through `place`, `write_objectives`
+and `ask`; its quota is read before each request. Needs agent_toolkit 0.7.0 (preparation steps on the setup page),
+pinned by its tag. Not yet tried with real CLIs.
+
 **2026-11-18.** 0.9.0: objectives instead of questions. The human's input is `starting_evidence/OBJECTIVES.md`
 (formerly `RESEARCH_QUESTIONS.md`; a project that still has the old file is told to rename it), and an objective is a
 question to answer or a task to perform. A task is met when its deliverable is built, verified and documented;

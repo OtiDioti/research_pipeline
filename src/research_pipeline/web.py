@@ -1,6 +1,9 @@
 """The investigation in the browser (``research-pipeline run PROJECT --web``): its agent tree as a live graph.
 
-Built on :mod:`agent_toolkit.web`. The setup page offers every launch option,
+Built on :mod:`agent_toolkit.web`. Before the first start, the setup page first
+helps make the folder ready (:mod:`research_pipeline.preparation`: material and
+objectives, with the setup assistant), always, even for a folder that is ready
+already. It then offers every launch option,
 prefilled from the command line and the stored (last used) options; the running
 page shows every agent that ever worked on the project, its jobs, documents and
 the websites and library pages it used, and passes the human's actions on to
@@ -18,6 +21,7 @@ from agent_toolkit.activity import ActivityLog
 from agent_toolkit.web import Dashboard, Field, SettingsError, edge, node, validate
 
 from research_pipeline.controller import Controller
+from research_pipeline.preparation import Preparation
 from research_pipeline.project import INDEX, Project
 from research_pipeline.state import ENDED, Agent, Options
 
@@ -63,6 +67,12 @@ class ResearchDashboard(Dashboard):
             str, dict[str, set]
         ] = {}  # agent -> {"sites": URLs, "pages": library pages} from its tool calls
         self._listing: tuple[float, dict] = (0.0, {})
+        # The preparation steps, until the first start (afterwards the human edits their files directly).
+        self.preparing = (
+            None
+            if self.paths.started
+            else Preparation(self.paths, options, drivers, read_quota=controller_options.get("read_quota"))
+        )
         for entry in ActivityLog(self.paths.research / "activity").read(None, limit=200_000):
             self._remember(entry)
 
@@ -198,6 +208,13 @@ class ResearchDashboard(Dashboard):
         }
         if missing:
             raise SettingsError(missing)
+        if self.preparing is not None:  # the same checks as the command line's, before anything starts
+            problems = self.paths.unready()
+            if problems:
+                raise SettingsError({"": "The folder is not ready: " + " ".join(problems)})
+            values["setup"] = self.preparing.assistant.spec
+            await self.preparing.close(finished=True)
+            self.preparing = None
         self.options = Options(**{**vars(self.options), **values})
         self.controller = Controller(self.project, self.options, drivers=self.drivers, **self.controller_options)
         self.controller.activity.listeners.append(self._entry)
@@ -208,6 +225,21 @@ class ResearchDashboard(Dashboard):
             await self._running().configure(values)
         except ValueError as error:
             raise SettingsError({"": str(error)}) from None
+
+    # Preparation (before the first start) ---------------------------------------------------------
+
+    def preparation(self) -> dict | None:
+        return self.preparing.view() if self.preparing is not None else None
+
+    async def prepare(self, action: str, args: dict) -> str | None:
+        if self.preparing is None:
+            raise ValueError("the investigation has started: edit its files directly")
+        return await self.preparing.act(action, args)
+
+    def upload(self, path: str) -> Path:
+        if self.preparing is None:
+            raise ValueError("the investigation has started: put files in starting_evidence/ directly")
+        return self.preparing.upload(path)
 
     # The running view -----------------------------------------------------------------------------
 

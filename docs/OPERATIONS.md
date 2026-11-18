@@ -7,7 +7,8 @@ Running an investigation, controlling it, and finding out what went wrong.
 `research-pipeline run PROJECT` starts, resumes or reopens an investigation; the
 options are listed in [README.md](../README.md).
 - On the first run, `--primary`, `--reviewer` and `--librarian` are required as
-  `BACKEND:MODEL:EFFORT`. `--backends` defaults to the primary's and the Reviewer's
+  `BACKEND:MODEL:EFFORT` (with `--web`, on the setup page instead). A folder that
+  is not ready is refused unless `--web` sets it up ([SETUP.md](SETUP.md)). `--backends` defaults to the primary's and the Reviewer's
   CLIs. `--max-agents` (6) counts open sessions, idle ones included but not the
   Librarian's, and must be at least 2 (the primary and the Reviewer). `--idle-limit MINUTES` (58; 0: never) closes a session idle
   that long ([CONTEXT.md](CONTEXT.md)).
@@ -18,7 +19,8 @@ options are listed in [README.md](../README.md).
 - `--no-tui` prints the transcript instead of the terminal app. Ctrl+C once shuts
   down cleanly; twice forces an exit.
 - `--web` also serves the investigation in your browser, setup page first
-  ([WEB.md](WEB.md)).
+  ([WEB.md](WEB.md)); before the first start the setup page helps make the folder
+  ready ([SETUP.md](SETUP.md)), with `--setup BACKEND:MODEL:EFFORT` for its assistant.
 
 ## The terminal app
 

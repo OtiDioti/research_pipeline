@@ -54,18 +54,26 @@ uv tool install -e .        # optional: research-pipeline on your PATH
 
 ## Prepare a project
 
+With `--web` you can start from any folder, even one that does not exist yet: the
+setup page helps you add your material, place it in `starting_evidence/` and write
+the objectives, by hand or with the help of a setup assistant
+([docs/SETUP.md](docs/SETUP.md)). Without `--web`, prepare it yourself.
+
 A project is a folder (not under `/tmp`) containing at least the objectives:
 
 ```text
 my-project/
 ├── AGENTS.md                         optional instructions, given to every agent
 └── starting_evidence/
+    ├── FOLDER_CONTENT.md             one line describing each entry here
     ├── OBJECTIVES.md                 the authoritative objectives: questions or tasks
     ├── ...                           papers, notes, data
     └── tools/                        optional tools of yours
 ```
 
-The controller creates the rest of the layout (PROJECT.md §2) and a git
+Before the first run nothing else may sit at the top level, and
+`starting_evidence/FOLDER_CONTENT.md` must describe every entry at its top. The
+controller creates the rest of the layout (PROJECT.md §2) and a git
 repository on the first run. A project made before the library (with `sources/`
 or `tools/` at its top level) is refused: start a new one. Agents can read everything except the controller's
 `.research/` folder, and write only their own `agents/<id>/` folder. Only the
@@ -98,7 +106,8 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 
 | Option | Meaning (default) |
 |---|---|
-| `--primary`, `--reviewer`, `--librarian` | CLI, model and effort as `BACKEND:MODEL:EFFORT`, all three required (on the first run) |
+| `--primary`, `--reviewer`, `--librarian` | CLI, model and effort as `BACKEND:MODEL:EFFORT`, all three required (on the first run; with `--web`, on the setup page) |
+| `--setup` | with `--web`: the setup assistant's `BACKEND:MODEL:EFFORT` (`codex:gpt-6.1-sol:high`; also on the page) |
 | `--backends` | CLIs agents may choose for subagents (those of the primary and Reviewer) |
 | `--max-agents` | agent sessions open at the same time, idle ones included, the Librarian's aside (6, at least 2); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
@@ -131,8 +140,9 @@ example when the primary has stopped and waits for your answer.
 
 ### The web app
 
-With `--web` the page first shows every option as a setup form (Start begins the
-investigation), then the agent tree as a live graph: every agent that ever worked,
+With `--web` the page first helps you make the folder ready, before the first
+start (material, objectives, an optional setup assistant: [docs/SETUP.md](docs/SETUP.md)),
+then shows every option as a setup form (Start begins the investigation), then the agent tree as a live graph: every agent that ever worked,
 coloured by status, with its context use, its messages (coloured by sender) and
 tool calls, its documents, jobs and the websites it used. Single agents can be
 messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff

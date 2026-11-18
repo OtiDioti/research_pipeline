@@ -121,20 +121,9 @@ class Project:
         Only a new repository is committed here: in an existing one, changes made while
         the controller was off stay uncommitted, so that the controller can report them.
         """
-        if str(self.root).startswith("/tmp/"):
-            raise ProjectError("Projects cannot live under /tmp: each agent session has its own private /tmp.")
-        if not self.objectives.is_file():
-            if (self.evidence / "RESEARCH_QUESTIONS.md").is_file():
-                raise ProjectError(
-                    "starting_evidence/RESEARCH_QUESTIONS.md is now starting_evidence/OBJECTIVES.md: rename it."
-                )
-            raise ProjectError(f"{self.objectives} is missing: write the objectives (questions or tasks) there first.")
-        legacy = [name for name in LEGACY if (self.root / name).exists()]
-        if legacy:
-            raise ProjectError(
-                f"This project predates the library (it has {' and '.join(f'{name}/' for name in legacy)}) "
-                "and is not migrated: start a new project, with what it needs in starting_evidence/."
-            )
+        problems = self.unready()
+        if problems:
+            raise ProjectError(" ".join(problems))
         for folder in (self.library, self.agents, self.reviews, self.logs):
             folder.mkdir(parents=True, exist_ok=True)
         for path, text in (
@@ -156,6 +145,87 @@ class Project:
         if not (self.root / ".git").exists():  # a new repository starts with the prepared layout; later changes
             self.git("init", "-q")  # stay uncommitted for the controller to report and commit
             self.commit("controller: project prepared")
+
+    def check_location(self) -> None:
+        """Refuse a folder under /tmp: each agent session has its own private /tmp."""
+        if str(self.root).startswith("/tmp/"):
+            raise ProjectError("Projects cannot live under /tmp: each agent session has its own private /tmp.")
+
+    @property
+    def started(self) -> bool:
+        """True once an investigation has started here (it has stored state)."""
+        return self.state_file.exists()
+
+    def unready(self) -> list[str]:
+        """What keeps the folder from being a project, as sentences (empty: it is ready; PROJECT.md §2).
+
+        Every project needs a non-empty OBJECTIVES.md and no legacy layout. Before the first
+        start it also needs no loose material at the top level, and every entry at the top of
+        starting_evidence/ described (see :meth:`evidence_problems`); the web setup makes a
+        folder ready (docs/SETUP.md).
+        """
+        self.check_location()
+        legacy = [name for name in LEGACY if (self.root / name).exists()]
+        if legacy:
+            return [
+                f"This project predates the library (it has {' and '.join(f'{name}/' for name in legacy)}) "
+                "and is not migrated: start a new project, with what it needs in starting_evidence/."
+            ]
+        problems = []
+        if not self.objectives.is_file():
+            if (self.evidence / "RESEARCH_QUESTIONS.md").is_file():
+                problems.append(
+                    "starting_evidence/RESEARCH_QUESTIONS.md is now starting_evidence/OBJECTIVES.md: rename it."
+                )
+            else:
+                problems.append(f"{self.objectives} is missing: write the objectives (questions or tasks) there first.")
+        elif not self.objectives.read_text(encoding="utf-8", errors="replace").strip():
+            problems.append(f"{self.objectives} is empty: write the objectives (questions or tasks) there first.")
+        if not self.started:
+            loose = self.stray_entries()
+            if loose:
+                problems.append(f"Loose material at the top level, to place in starting_evidence/: {', '.join(loose)}.")
+            problems += self.evidence_problems()
+        return problems
+
+    def indexed_folders(self) -> list[Path]:
+        """starting_evidence/ and, below it, every folder with its own FOLDER_CONTENT.md: where material is placed.
+
+        A folder without one (e.g. a code repository) is described as one unit by its parent.
+        """
+        found, pending = [], [self.evidence] if self.evidence.is_dir() else []
+        while pending:
+            folder = pending.pop(0)
+            found.append(folder)
+            pending += [
+                sub
+                for sub in sorted(folder.iterdir())
+                if sub.is_dir() and not sub.name.startswith(".") and (sub / INDEX).is_file()
+            ]
+        return found
+
+    def undescribed(self, folder: Path) -> list[Path]:
+        """The entries of an indexed folder its FOLDER_CONTENT.md does not mention (hidden entries need none)."""
+        index = folder / INDEX
+        text = index.read_text(encoding="utf-8", errors="replace") if index.is_file() else ""
+        return [
+            entry
+            for entry in sorted(folder.iterdir())
+            if not entry.name.startswith(".") and entry.name != INDEX and f"[{entry.name}]" not in text
+        ]
+
+    def evidence_problems(self) -> list[str]:
+        """Entries at the top of starting_evidence/ that its FOLDER_CONTENT.md does not describe.
+
+        Deeper folders are the human's own (an archived run may keep its index byte for byte);
+        those the setup creates are described as material is placed in them.
+        """
+        missing = self.undescribed(self.evidence) if self.evidence.is_dir() else []
+        if not missing:
+            return []
+        if not (self.evidence / INDEX).is_file():
+            return [f"starting_evidence/{INDEX} is missing: it describes each entry in one line."]
+        return [f"starting_evidence/{INDEX} does not describe: {', '.join(entry.name for entry in missing)}."]
 
     def write(self, path: Path, text: str) -> None:
         """Replace a file of the project atomically; never through a symlink, never outside the project."""
