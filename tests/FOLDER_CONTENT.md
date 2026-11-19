@@ -14,3 +14,4 @@
 - [live_smoke.py](live_smoke.py) — Live smoke run through the real CLIs (manual; uses model quota).
 - [test_setup.py](test_setup.py) — The web setup before the first start: readiness, material placed by hand, the objectives' versions, the setup assistant on fake sessions, quota and failures.
 - [test_talks.py](test_talks.py) — Talks after the end: talk-only sessions, talk notes, staying talk-only until the human's files change, quota.
+- [test_reopen.py](test_reopen.py) — Reopening from the web page after the end: the preparation offered again, changes and reverts, the reopening assistant, Reopen, and later runs.

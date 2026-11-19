@@ -440,3 +440,17 @@ class Project:
     def changed(before: dict[str, str], after: dict[str, str]) -> list[str]:
         """Files added, removed or modified between two fingerprints."""
         return sorted(path for path in before.keys() | after.keys() if before.get(path) != after.get(path))
+
+    def human_changes(self, baseline: dict[str, str], commit: str | None) -> list[str]:
+        """The human's files changed since ``baseline`` (their fingerprint at ``commit``), by content.
+
+        A file whose fingerprint changed but whose content is that of ``commit`` again
+        (e.g. reverted) is not a change. A file not in ``commit`` (new, or too large to be
+        committed) counts by its fingerprint. Without ``commit``, fingerprints alone decide.
+        """
+        candidates = Project.changed(baseline, self.human_fingerprint())
+        if not commit or not candidates:
+            return candidates
+        differing = self.git("diff", "--name-only", commit, "--", *candidates, check=False).split("\n")
+        committed = self.git("ls-tree", "-r", "--name-only", commit, "--", *candidates, check=False).split("\n")
+        return [path for path in candidates if path in differing or path not in committed]

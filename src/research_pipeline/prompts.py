@@ -389,11 +389,13 @@ def review_withdrawn(kind: str, round_: int) -> str:
     )
 
 
-def reopened(outcome: str, paths: list[str]) -> str:
+def reopened(outcome: str, paths: list[str], brief: str | None = None) -> str:
+    """``brief``: the heading of this reopening's section of FEEDBACK.md, if the human wrote one."""
     changes = ("\n".join(f"- {path}" for path in paths[:50]) or "- nothing") + "\n"
+    pointer = f"The human's brief for this round is the section '{brief}' of FEEDBACK.md.\n" if brief else ""
     return (
         f"[controller] The investigation was reopened after it ended ({outcome}). Changes since then:\n"
-        f"{changes}Reassess the affected results and continue; keep unaffected work. Reviews are in reviews/."
+        f"{changes}{pointer}Reassess the affected results and continue; keep unaffected work. Reviews are in reviews/."
     )
 
 

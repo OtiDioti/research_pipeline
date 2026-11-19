@@ -13,9 +13,10 @@
 - [tools.py](tools.py) — The agent-facing MCP tools of each role, offered through agent_toolkit's tool bridge, and their refusal.
 - [jobs.py](jobs.py) — Long computations that outlive agent sessions.
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.
-- [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role, and the setup assistant's.
+- [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role, and the setup and reopening assistants'.
 - [view.py](view.py) — The terminal app (built on agent_toolkit's shared one).
-- [web.py](web.py) — The web app's view of the investigation: setup page (with its preparation steps), agent graph, activity, single-agent controls.
-- [preparation.py](preparation.py) — The web setup's preparation steps before the first start: material, objectives, the checks Start waits for.
-- [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/.
-- [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts OBJECTIVES.md on request.
+- [web.py](web.py) — The web app's view of the investigation: setup page (with its preparation steps), agent graph, activity, single-agent controls, and the reopening after the end.
+- [fields.py](fields.py) — The launch options as the web page's settings (the setup page's fields, which change live).
+- [preparation.py](preparation.py) — The web page's preparation steps: before the first start (material, objectives, the checks Start waits for), and to reopen after the end (material, FEEDBACK/OBJECTIVES/AGENTS, the changes since the end and their reverts, the checks Reopen waits for).
+- [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/; reverting the human's files to the end; a reopening's FEEDBACK.md section.
+- [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts OBJECTIVES.md on request; after the end, the reopening assistant, which also writes FEEDBACK.md's section and, on request, AGENTS.md.

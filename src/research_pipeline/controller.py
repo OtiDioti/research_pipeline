@@ -39,6 +39,11 @@ scientific one. In outline:
   their turn and wait in their sessions, and stops jobs; a shutdown hands every
   agent off and leaves jobs running. After a shutdown or a crash, agents restart
   from their handoffs and running jobs are reattached.
+- **After the end.** The controller stays open for talks with the primary and the
+  Reviewer (:mod:`research_pipeline.talks`). The investigation reopens at a later run
+  if the human's files changed since the end; with the web page, only when its Reopen
+  asks (``reopen``), and :meth:`Controller.hand_over` then ends this controller for the
+  reopening one.
 
 All state changes happen on one asyncio loop, serialised by one lock: driver
 events, tool calls and the background loops never interleave halfway.
@@ -101,8 +106,13 @@ class Controller:
         drivers=DRIVERS,
         read_quota: Callable[[str], list[quota.Window]] | None = None,
         show: Show | None = None,
+        reopen: bool | None = None,
     ):
         """``options`` override the stored launch options (None: keep them; a first run needs them).
+
+        ``reopen`` decides what a finished investigation whose human files changed since
+        the end does: None reopens it (the command line, without the web page); False
+        opens it talk-only, for the web page's reopening; True reopens it (that page's Reopen).
 
         ``drivers`` and ``read_quota`` (backend name -> usage windows; by default read
         by that backend's driver) can be replaced in tests.
@@ -131,6 +141,7 @@ class Controller:
         self.closing = False  # the investigation ended; the Librarian places the final work
         self.talks = Talks(self)  # talk-only sessions with the primary and the Reviewer after the end
         self._reopen_told = False  # the human was told that their changes after the end reopen at the next run
+        self.reopen = reopen
         # Every agent tool, by name: the controller's _tool_* methods and the Librarian's (each role sees its own).
         self.handlers: dict[str, Callable] = {
             name.removeprefix("_tool_"): getattr(self, name) for name in dir(self) if name.startswith("_tool_")
@@ -201,6 +212,24 @@ class Controller:
         retries are exhausted. Unlike the pause toggle, this never stops jobs.
         """
         asyncio.ensure_future(self._locked(self._release()))
+
+    def hand_over(self) -> None:
+        """After the end: end the talks (without notes) and this controller, for one that reopens (the web page)."""
+        if self.state.status not in FINISHED:
+            raise ValueError("only an investigation that ended can be reopened")
+        self.request = "reopen"
+        asyncio.ensure_future(self._locked(self._hand_over()))
+
+    async def _hand_over(self) -> None:
+        await self.talks.close(notes=False)  # the reopening removes the talks
+        assert self.done is not None  # set by run(), within which this runs
+        self.done.set()
+
+    def human_changes(self) -> list[str]:
+        """The human's files changed since the end, by content (empty before an end)."""
+        if self.state.status not in FINISHED:
+            return []
+        return self.project.human_changes(self.state.human, self.state.end_commit)
 
     @property
     def releasable(self) -> bool:
@@ -455,9 +484,10 @@ class Controller:
             agent.handoff_reason = None
         changed = self.project.uncommitted()
         state.human = state.human or self.project.human_fingerprint()  # changes while off are reported below
+        human = self.human_changes()
         if not state.agents["primary"].sessions:  # the first run
             self._commit("controller: investigation started")
-        elif state.status in FINISHED and not Project.changed(state.human, self.project.human_fingerprint()):
+        elif state.status in FINISHED and (not human or self.reopen is False):
             if changed:
                 self._commit("controller: changes after the end")
             self.closing = bool(state.shelving)  # the Librarian places what was left pending; talks are open
@@ -474,10 +504,12 @@ class Controller:
             await self.talks.discard()
             outcome = state.status.upper()
             self._commit("human: changes before reopening")
-            state.status, state.proposal = "running", None
+            state.reopenings += 1
+            state.status, state.proposal, state.end_commit = "running", None, None
+            state.human = self.project.human_fingerprint()  # the notice below reports these changes
             primary = state.agents["primary"]
             primary.status, primary.pause_reason = "paused", "reopen"
-            self._queue(primary, prompts.reopened(outcome, changed))
+            self._queue(primary, prompts.reopened(outcome, human, self._brief(state.reopenings)))
             self.show("controller", "primary", f"Reopened after {outcome}.")
         elif clean and changed:
             self._commit("controller: changes made while paused or shut down (by the human or by running jobs)")
@@ -1434,6 +1466,7 @@ class Controller:
         )
         commit = self._commit(f"controller: investigation {outcome.upper()}")
         state.human = self.project.human_fingerprint()  # changes from now on reopen it at the next run
+        state.end_commit, state.ended = commit, time.time()
         self.show("controller", "primary", f"The investigation is {outcome.upper()}: {detail}")
         final = [
             agent
@@ -1475,13 +1508,24 @@ class Controller:
         self._save()
 
     def _announce_talks(self) -> None:
+        reopen = (
+            "to reopen, use Prepare reopening on the web page"
+            if self.reopen is False
+            else "to reopen, change your files (e.g. FEEDBACK.md) and run again"
+        )
         self.show(
             "controller",
             "primary",
             f"The investigation has ended ({self.state.status.upper()}). You can still talk with the primary (chat box "
-            "or web page) and the Reviewer (web page), talk-only. Ctrl+Q quits; to reopen, change your files "
-            "(e.g. FEEDBACK.md) and run again.",
+            f"or web page) and the Reviewer (web page), talk-only. Ctrl+Q quits; {reopen}.",
         )
+
+    def _brief(self, number: int) -> str | None:
+        """The heading of the section of FEEDBACK.md written for reopening ``number``, if there is one."""
+        path = self.project.root / "FEEDBACK.md"
+        text = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
+        found = re.search(rf"^## (Reopening {number}\b.*)$", text, re.MULTILINE)
+        return found.group(1).strip() if found else None
 
     # Pause, resume and shutdown ------------------------------------------------------------------
 
@@ -1691,7 +1735,7 @@ class Controller:
         current = self.project.human_fingerprint()
         changed = Project.changed(self.state.human, current)
         if changed and self.state.status in FINISHED:  # kept for the next run, which reopens on them
-            if not self._reopen_told:
+            if not self._reopen_told and self.reopen is not False:  # with the web page, it shows them
                 self._reopen_told = True
                 self.show(
                     "alert",

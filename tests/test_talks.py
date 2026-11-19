@@ -10,11 +10,11 @@ from tests.helpers import (
     FAKE_DRIVERS,
     FakeSession,
     call_tool,
+    complete,
     launch_options,
     quit_after_the_end,
     remove,
     running,
-    shelve_all,
     temp_project,
 )
 
@@ -53,18 +53,7 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
         remove(self.root)
 
     async def end(self, harness) -> None:
-        """COMPLETE, agreed by the Reviewer; the Librarian shelves the final work."""
-        harness.write("REPORT.md", "# Report\n\nThe integral is 1/3.\n")
-        harness.handoff("primary")
-        harness.index("agents/primary", "HANDOFF.md")
-        await harness.call("primary", "complete")
-        harness.write("reviews/1.md", "# Review\n\n1. Fine.\n")
-        harness.index("reviews", "1.md")
-        harness.handoff("reviewer")
-        harness.index("agents/reviewer", "HANDOFF.md")
-        await harness.call("reviewer", "verdict", review="1.md", agree=True)
-        await shelve_all(harness)
-        await harness.settle()
+        await complete(harness)
 
     async def answered(self, harness, agent_id: str) -> None:
         await asyncio.gather(*harness.controller.talks.tasks.values())
@@ -135,6 +124,8 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("reopened after it ended (COMPLETE)", harness.session("primary").launch.message)
             self.assertNotIn("Talked about", harness.session("primary").launch.message)
             self.assertFalse((self.root / ".research" / "talks").exists())
+            await harness.settle(10)  # the reopening's notice covers the changes: they are not reported again
+            self.assertFalse([line for line in harness.lines if "human changed" in line[2]])
 
     async def test_changes_after_the_end_wait_for_the_next_run_and_a_held_cli_refuses_talks(self):
         async with running(self.root) as harness:

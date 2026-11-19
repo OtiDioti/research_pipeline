@@ -158,7 +158,7 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(placed["starting_evidence/code"], "The fitting code, kept whole.")
         self.assertIn("starting_evidence/notes", self.view()["files"]["folders"])
         # The objectives: saved against the version the editor started from.
-        document = self.view()["document"]
+        document = self.view()["documents"][0]
         await self.dashboard.prepare("save", {"text": "# Objectives\n\nFind the gap.", "version": document["version"]})
         with self.assertRaisesRegex(ValueError, "changed meanwhile"):
             await self.dashboard.prepare("save", {"text": "# Mine", "version": document["version"]})
@@ -191,7 +191,9 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
                 "folders": [{"path": "starting_evidence/tools", "description": "Code."}],
             },
         )
-        await self.dashboard.prepare("save", {"text": "# Objectives\n", "version": self.view()["document"]["version"]})
+        await self.dashboard.prepare(
+            "save", {"text": "# Objectives\n", "version": self.view()["documents"][0]["version"]}
+        )
         entries = {entry["path"]: entry for entry in self.view()["files"]["entries"]}
         self.assertIn(str(self.outside / "notes.txt"), entries["notes.txt"]["removal"])
         self.assertIn(str(self.outside / "code"), entries["starting_evidence/tools/code"]["removal"])  # placed
@@ -286,7 +288,7 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         view = await self.answered()
         self.assertIsNone(view["questions"])
         self.assertIn("→ A value; other: with its error", FakeSession.instances[0].sent[-1])
-        self.assertEqual(view["document"]["text"], objectives)
+        self.assertEqual(view["documents"][0]["text"], objectives)
         self.assertTrue(view["ready"])
         self.assertEqual(len(FakeSession.instances), 1)  # one session served every request
         # A refused tool call is the agent's to fix: the reply names the problem.

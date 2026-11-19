@@ -1,5 +1,9 @@
 """The setup assistant: an agent that helps the human make a folder ready, before the first start (docs/SETUP.md).
 
+The same agent, with its own prompt, requests and two more tools, helps prepare a
+reopening after the end (``kind`` 'reopen', :data:`REOPEN_TOOLS`): it also writes
+this reopening's section of FEEDBACK.md and, on request, AGENTS.md.
+
 It is optional: everything it does, the human can do on the page by hand. It
 takes one request at a time (organise the material, first ideas with or
 without a grill, answers, draft now, a free message) through an
@@ -35,7 +39,7 @@ from agent_toolkit.tools import ToolBridge, ToolRefused
 from research_pipeline import material
 from research_pipeline.project import Project
 from research_pipeline.prompts import PROMPTS
-from research_pipeline.tools import SETUP_TOOLS
+from research_pipeline.tools import REOPEN_TOOLS, SETUP_TOOLS
 
 #: The agent's id, in its CLI logs and messages.
 NAME = "setup"
@@ -43,9 +47,9 @@ NAME = "setup"
 DEFAULT_SPEC = "codex:gpt-6.1-sol:high"
 
 
-def request_text(name: str, **facts) -> str:
-    """One of the messages in prompts/setup-requests.md, filled."""
-    return Template(sections(PROMPTS.text("setup-requests"))[name]).substitute(facts)
+def request_text(name: str, kind: str = "setup", **facts) -> str:
+    """One of the messages in prompts/<kind>-requests.md, filled."""
+    return Template(sections(PROMPTS.text(f"{kind}-requests"))[name]).substitute(facts)
 
 
 class Assistant:
@@ -61,8 +65,14 @@ class Assistant:
         weekly_limit: float,
         drivers: dict,
         read_quota: Callable[[str], list[quota_module.Window]] | None = None,
+        kind: str = "setup",
+        reopening: int = 0,
+        facts: Callable[[], dict[str, str]] = dict,
     ):
+        """``kind`` 'setup' (before the first start) or 'reopen' (after the end, for reopening number
+        ``reopening``); ``facts`` adds to a reopening's opening message (its ``outcome``) and prompt (``talks``)."""
         self.project, self.drivers = project, drivers
+        self.kind, self.reopening, self.facts = kind, reopening, facts
         self.threshold, self.short_limit, self.weekly_limit = threshold, short_limit, weekly_limit
         self.read_quota = read_quota or (lambda backend: quota_module.read(self.drivers[backend]))
         self.folder = project.research / NAME
@@ -75,6 +85,7 @@ class Assistant:
         self.busy = False
         self.problem = ""  # why its last request failed ('' : none)
         self.sessions = stored.get("sessions", 0)
+        self.briefed = stored.get("briefed", False)  # the human sent their first ideas
         self.bridge = ToolBridge()
         self.tools: dict = {}
         self.relay: Relay | None = None
@@ -156,14 +167,16 @@ class Assistant:
         try:
             if self.relay is None:
                 await self.bridge.start()
-                self.tools = self.bridge.offer(NAME, SETUP_TOOLS, self._on_tool, name=NAME)
+                tools = REOPEN_TOOLS if self.kind == "reopen" else SETUP_TOOLS
+                self.tools = self.bridge.offer(NAME, tools, self._on_tool, name=NAME)
                 self.relay = self._relay()
             relay = self.relay
 
             def compose(fresh: bool, note: str | None) -> str:
-                parts = [request_text("opening", state=self._state())] if fresh else []
+                opening = self.text("opening", state=self._state(), **self.facts())
+                parts = [opening] if fresh else []
                 if note:
-                    parts.append(request_text("note", note=note))
+                    parts.append(self.text("note", note=note))
                 return "\n\n".join([*parts, message])
 
             await asyncio.to_thread(relay.ask, compose)
@@ -190,7 +203,10 @@ class Assistant:
                 agent=NAME,
                 cwd=self.project.root,
                 instructions=PROMPTS.fill(
-                    "setup", project=self.project.root, template=PROMPTS.text("objectives-template")
+                    self.kind,
+                    project=self.project.root,
+                    template=PROMPTS.text("objectives-template"),
+                    **self.facts(),
                 ),
                 model=spec.model,
                 effort=spec.effort,
@@ -205,8 +221,8 @@ class Assistant:
             launch,
             note=self.note,
             threshold=self.threshold,
-            handoff_request=lambda reason: request_text("handoff", reason=reason),
-            note_missing=request_text("handoff-missing"),
+            handoff_request=lambda reason: self.text("handoff", reason=reason),
+            note_missing=self.text("handoff-missing"),
             on_turn=self._turned,
             on_warning=lambda text: self.say("program", f"The assistant's session: {text}."),
             pending=self.note.is_file(),
@@ -219,10 +235,19 @@ class Assistant:
 
     # Its tools ----------------------------------------------------------------------------------
 
+    def text(self, name: str, **facts) -> str:
+        """One of this assistant's request messages, filled (see :func:`request_text`)."""
+        return request_text(name, self.kind, **facts)
+
     def _on_tool(self, tool: str, args: dict) -> str:
         try:
             if tool == "write_objectives":
                 return material.write_objectives(self.project, str(args.get("text") or ""))
+            if tool == "write_feedback":
+                return material.write_feedback(self.project, self.reopening, str(args.get("text") or ""))
+            if tool == "write_agents_md":
+                self.project.write(self.project.root / "AGENTS.md", str(args.get("text") or "").rstrip() + "\n")
+                return "Wrote AGENTS.md."
             if tool == "place":
                 return material.place(self.project, list(args.get("entries") or []), list(args.get("folders") or []))
             return self._ask(list(args.get("questions") or []))
@@ -266,15 +291,15 @@ class Assistant:
             + (f" — {entry['description']}" if entry["description"] else "")
             for entry in material.entries(self.project)
         ]
-        objectives = (
-            self.project.objectives.read_text(encoding="utf-8").strip() if self.project.objectives.is_file() else ""
+        texts = [("starting_evidence/OBJECTIVES.md", self.project.objectives)]
+        if self.kind == "reopen":
+            texts.append(("FEEDBACK.md", self.project.root / "FEEDBACK.md"))
+        shown = "".join(
+            f"\n\n{name}:\n\n"
+            + ((path.read_text(encoding="utf-8").strip() if path.is_file() else "") or "(not written yet)")
+            for name, path in texts
         )
-        return (
-            "Material:\n"
-            + ("\n".join(lines) or "(none yet)")
-            + "\n\nstarting_evidence/OBJECTIVES.md:\n\n"
-            + (objectives or "(not written yet)")
-        )
+        return "Material:\n" + ("\n".join(lines) or "(none yet)") + shown
 
     def _load(self) -> dict:
         try:
@@ -288,6 +313,7 @@ class Assistant:
             "questions": self.questions,
             "spec": self.spec,
             "sessions": self.sessions,
+            "briefed": self.briefed,
         }
         atomic_write(self.folder / "state.json", json.dumps(state, indent=1), root=self.project.root, durable=False)
 

@@ -13,8 +13,11 @@ request.
   not exist yet (it is created), an empty one, one with material dumped at its top
   level, or an incomplete project. The page shows the preparation steps even when
   the folder is ready already, so a partial setup can still be improved.
-- Once an investigation has started, there are no preparation steps: the human
-  edits their files directly ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)).
+- Once an investigation has started, there are no preparation steps while it runs:
+  the human edits their files directly ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)).
+  After it ends, the page offers them again, to reopen it: the same Material step,
+  an Instructions step (FEEDBACK.md, OBJECTIVES.md, AGENTS.md) and the reopening
+  assistant ([FINISHING.md](FINISHING.md), "Reopening").
 - With `--no-web`, a folder that is not ready is refused, with the problems and
   the hint to run without `--no-web`; nothing is created. `--start` on a folder
   that is not ready is refused too.

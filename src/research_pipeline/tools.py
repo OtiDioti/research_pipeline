@@ -156,6 +156,22 @@ PLACE = Tool(
     ("entries",),
 )
 SETUP_TOOLS = [ASK, WRITE_OBJECTIVES, PLACE]
+# The reopening assistant's further tools (research_pipeline.assistant, after the end).
+WRITE_FEEDBACK = Tool(
+    "write_feedback",
+    "Write this reopening's section of FEEDBACK.md (Markdown, the section's whole text, without its heading),\n"
+    "replacing your earlier text of it; earlier sections stay. The reopened primary starts from it.",
+    {"text": TEXT},
+    ("text",),
+)
+WRITE_AGENTS_MD = Tool(
+    "write_agents_md",
+    "Write AGENTS.md (Markdown, the whole file), replacing it: the human's standing instructions to every\n"
+    "agent. Only when the human asks for it.",
+    {"text": TEXT},
+    ("text",),
+)
+REOPEN_TOOLS = [ASK, WRITE_FEEDBACK, WRITE_OBJECTIVES, WRITE_AGENTS_MD, PLACE]
 
 # The one tool of a talk session after the end (research_pipeline.talks).
 WRITE_TALK_NOTE = Tool(

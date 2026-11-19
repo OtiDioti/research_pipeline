@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4).
 
 ## 1. Purpose
 
@@ -312,10 +312,20 @@ project opens talk-only again, unless the human's files changed since the end.
 
 **Reopening.** After COMPLETE or STOP, the human resumes the investigation by
 changing their files (objectives, evidence, AGENTS.md or feedback, e.g. one line in
-FEEDBACK.md) and running again; changes made while the program stays open after the
-end wait for that next run. The talk notes are removed, and the primary gets nothing
+FEEDBACK.md). On the web page, *Prepare reopening* shows the setup page again while
+the talks go on: material, the three files (FEEDBACK.md, OBJECTIVES.md, AGENTS.md),
+the files changed since the end (each can be reverted to the end's commit, a new one
+set aside), the launch options, and Reopen, which waits until a file changed, the
+folder is ready, the Librarian has placed the final work and the assistant is idle.
+An optional reopening assistant (the setup assistant with its own prompt) reads the
+work and the talks since the end, may grill the human, and writes this reopening's
+section of FEEDBACK.md (`## Reopening N (date)`), the objectives, placements, and
+AGENTS.md only on request. Without the page, changing the files and running again
+reopens it; with the page, a later run opens talk-only and the changes wait for
+Reopen. The talk notes are removed, and the primary gets nothing
 of the talks. The primary restarts
-from its handoff and the reviews, with a list of the files changed since the end.
+from its handoff and the reviews, with a list of the files changed since the end,
+pointing to this reopening's FEEDBACK.md section if there is one.
 The folders of the primary and the Reviewer are no longer frozen: both continue in
 them, and their files stay catalogued with the commit at which they were shelved.
 The primary must not discard unaffected work.
