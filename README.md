@@ -128,8 +128,7 @@ research-pipeline run my-project --no-web --primary codex:gpt-6.1-sol:high --rev
 | `--no-web` | no web app (the folder must be ready already) |
 | `--start`, `--web-port PORT`, `--web-no-open` | skip the setup page; the page's port; print its address instead of opening the browser (see [docs/WEB.md](docs/WEB.md)) |
 
-`--web` and `--no-tui`, the defaults now, are still accepted. The models the agents'
-prompt recommends for subagents (coding: `claude:claude-opus-5-5:xhigh`, analysis:
+The models the agents' prompt recommends for subagents (coding: `claude:claude-opus-5-5:xhigh`, analysis:
 `codex:gpt-6.1-sol:xhigh`) are set on the setup page, at every launch.
 
 Running the same command again resumes a paused, shut down or interrupted

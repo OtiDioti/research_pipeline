@@ -474,8 +474,7 @@ Launch options:
 - `--context-threshold` (0.55 by default, at most 0.8);
 - `--idle-limit` (minutes, 58 by default; 0: never);
 - `--no-durable-state`;
-- `--tui`, `--no-web`, `--start`, `--web-port`, `--web-no-open` (`--web` and `--no-tui`, the
-  earlier opt-ins, are accepted and change nothing).
+- `--tui`, `--no-web`, `--start`, `--web-port`, `--web-no-open`.
 
 ## 7. Controller tools available to agents (MCP)
 

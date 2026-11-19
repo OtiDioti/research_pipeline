@@ -98,9 +98,6 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--no-web", dest="web", action="store_false", help="no web page (and no setup page: the folder must be ready)"
     )
-    # The defaults before 0.12.0, accepted so that existing commands keep working.
-    run.add_argument("--web", dest="web", action="store_true", help=argparse.SUPPRESS)
-    run.add_argument("--no-tui", dest="tui", action="store_false", help=argparse.SUPPRESS)
     run.add_argument("--start", action="store_true", help="skip the setup page and start at once")
     run.add_argument(
         "--web-port", type=int, metavar="PORT", help="the web page's port (default: 8780, or the next free one)"

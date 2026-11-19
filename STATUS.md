@@ -1,5 +1,9 @@
 # Status
 
+**2026-11-19.** 0.13.0: `--web` and `--no-tui` are gone. Since 0.12.0 they only repeated the defaults (the web
+page, the printed transcript); a command that still passes them is now refused by the argument parser before
+anything starts. Use `--no-web` and `--tui` for the other choices.
+
 **2026-11-19.** 0.12.0, on agent_toolkit 0.8.0:
 - **Removing material on the setup page** ([docs/SETUP.md](docs/SETUP.md)). Any entry, loose or placed, can be
   removed after a confirmation that says what happens, and nothing the human cannot get back is deleted. A copy made

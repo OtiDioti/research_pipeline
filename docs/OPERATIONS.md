@@ -22,7 +22,6 @@ one for talks, or reopens it if the human's files changed since the end
   holds, each agent with its pause reason, and running jobs.
 - The terminal prints the transcript; Ctrl+C once shuts down cleanly, twice
   forces an exit. `--tui` shows the terminal app instead.
-- `--web` and `--no-tui`, the defaults since 0.12.0, are still accepted.
 
 ## The terminal app (`--tui`)
 
