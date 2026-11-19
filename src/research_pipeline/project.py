@@ -97,6 +97,7 @@ class Project:
         self.reviews = self.root / "reviews"
         self.research = self.root / ".research"  # the controller's: hidden from agents and their jobs
         self.logs = self.research / "logs"
+        self.removed = self.research / "removed"  # material the human removed on the setup page
         self.state_file = self.research / "state.json"
         self.lock_file = self.research / "lock"
 

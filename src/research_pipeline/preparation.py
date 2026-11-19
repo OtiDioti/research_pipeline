@@ -2,8 +2,9 @@
 
 It is :meth:`ResearchDashboard.preparation <research_pipeline.web.ResearchDashboard.preparation>`'s
 content (agent_toolkit.web's preparation contract) for a folder no investigation
-has started in: two steps, *Material* (add files and place them in
-starting_evidence/) and *Objectives* (write starting_evidence/OBJECTIVES.md),
+has started in: two steps, *Material* (add files, place them in
+starting_evidence/, remove and restore them) and *Objectives* (write
+starting_evidence/OBJECTIVES.md),
 then the launch options. The setup assistant (:mod:`research_pipeline.assistant`)
 helps with both on request; the checks Start waits for are
 :meth:`Project.unready <research_pipeline.project.Project.unready>`'s, the same
@@ -78,7 +79,8 @@ class Preparation:
                     "title": "Material",
                     "kind": "files",
                     "help": "Add papers, notes, data and code, then give each a place in starting_evidence/ "
-                    "and a one-line description, by hand or with the assistant.",
+                    "and a one-line description, by hand or with the assistant. Remove what does not belong: "
+                    "nothing is lost.",
                     "done": not loose and not evidence,
                 },
                 {
@@ -94,6 +96,7 @@ class Preparation:
                 "target": material.TARGET,
                 "entries": material.entries(project),
                 "folders": material.folders(project),
+                "removed": material.removed(project),
             },
             "document": {
                 "path": "starting_evidence/OBJECTIVES.md",
@@ -122,6 +125,10 @@ class Preparation:
             return material.import_paths(project, [str(path) for path in args.get("paths") or []])
         if action == "place":
             return material.place(project, list(args.get("entries") or []), list(args.get("folders") or []))
+        if action == "remove":
+            return material.remove(project, str(args.get("path") or ""))
+        if action == "restore":
+            return material.restore(project, str(args.get("id") or ""))
         if action == "save":
             if str(args.get("version") or "") != version(self.objectives()):
                 raise ValueError("OBJECTIVES.md changed meanwhile (the assistant may have rewritten it): load it again")

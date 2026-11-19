@@ -57,14 +57,14 @@ class ReadinessTest(unittest.TestCase):
         self.project.state_file.write_text("{}")
         self.assertEqual(self.project.unready(), [])
 
-    def test_without_web_an_unready_folder_is_refused_with_the_hint(self):
+    def test_with_no_web_an_unready_folder_is_refused_with_the_hint(self):
         for target in (self.root, self.root / "new"):
             errors = io.StringIO()
             with contextlib.redirect_stderr(errors):
-                status = cli.main(["run", str(target), "--no-tui", "--primary", "codex:m:high"])
+                status = cli.main(["run", str(target), "--no-web", "--primary", "codex:m:high"])
             self.assertEqual(status, 2)
-            self.assertIn("Run with --web to set the folder up", errors.getvalue())
-        self.assertFalse((self.root / "new").exists())  # nothing is created without --web
+            self.assertIn("Run without --no-web to set the folder up", errors.getvalue())
+        self.assertFalse((self.root / "new").exists())  # nothing is created without the web page
 
 
 def scripted(loop: asyncio.AbstractEventLoop, answers: dict, results: list):
@@ -173,6 +173,77 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(self.dashboard.preparation())
         self.assertFalse((self.root / ".research" / "setup").exists())
         self.assertEqual(self.dashboard.options.setup, "codex:gpt-test:high")
+
+    async def test_removed_material_is_deleted_only_as_an_unchanged_copy_and_otherwise_set_aside_to_restore(self):
+        (self.outside / "notes.txt").write_text("gaps: 1.1 eV")
+        (self.outside / "code").mkdir()
+        (self.outside / "code" / "fit.py").write_text("print(1)")
+        await self.dashboard.prepare("import", {"paths": [str(self.outside / "notes.txt"), str(self.outside / "code")]})
+        (self.root / "paper.pdf").write_text("%PDF")  # uploaded or copied by hand: no original anywhere
+        evidence = self.root / "starting_evidence"
+        await self.dashboard.prepare(
+            "place",
+            {
+                "entries": [
+                    {"path": "code", "folder": "starting_evidence/tools", "description": "The fitting code."},
+                    {"path": "paper.pdf", "folder": "starting_evidence", "description": "The paper."},
+                ],
+                "folders": [{"path": "starting_evidence/tools", "description": "Code."}],
+            },
+        )
+        await self.dashboard.prepare("save", {"text": "# Objectives\n", "version": self.view()["document"]["version"]})
+        entries = {entry["path"]: entry for entry in self.view()["files"]["entries"]}
+        self.assertIn(str(self.outside / "notes.txt"), entries["notes.txt"]["removal"])
+        self.assertIn(str(self.outside / "code"), entries["starting_evidence/tools/code"]["removal"])  # placed
+        self.assertIn(".research/removed/", entries["starting_evidence/paper.pdf"]["removal"])
+        self.assertEqual(entries["starting_evidence/OBJECTIVES.md"]["removal"], "")
+        with self.assertRaisesRegex(ValueError, "not removable"):
+            await self.dashboard.prepare("remove", {"path": "starting_evidence/OBJECTIVES.md"})
+        with self.assertRaisesRegex(ValueError, "not removable"):
+            await self.dashboard.prepare("remove", {"path": "../outside"})
+        # An unchanged imported copy is deleted: its original stays.
+        self.assertIn("Deleted the copy", await self.dashboard.prepare("remove", {"path": "notes.txt"}) or "")
+        self.assertFalse((self.root / "notes.txt").exists())
+        self.assertEqual((self.outside / "notes.txt").read_text(), "gaps: 1.1 eV")
+        self.assertEqual(self.view()["files"]["removed"], [])
+        # A changed copy is set aside; its folder, left empty, goes with its line.
+        (evidence / "tools" / "code" / "fit.py").write_text("print(2)")
+        self.assertIn("aside", await self.dashboard.prepare("remove", {"path": "starting_evidence/tools/code"}) or "")
+        self.assertFalse((evidence / "tools").exists())
+        self.assertNotIn("[tools]", (evidence / "FOLDER_CONTENT.md").read_text())
+        # Anything without an original is set aside too; its line goes, the other lines stay.
+        await self.dashboard.prepare("remove", {"path": "starting_evidence/paper.pdf"})
+        index = (evidence / "FOLDER_CONTENT.md").read_text()
+        self.assertNotIn("[paper.pdf]", index)
+        self.assertIn("[OBJECTIVES.md]", index)
+        removed = self.view()["files"]["removed"]
+        self.assertEqual(
+            [(item["path"], item["name"], item["folder"]) for item in removed],
+            [("starting_evidence/tools/code", "code", True), ("starting_evidence/paper.pdf", "paper.pdf", False)],
+        )
+        self.assertTrue(self.view()["ready"])  # nothing is loose: removed material is out of the way
+        # Restoring brings material back loose at the top level, never over an existing entry.
+        (self.root / "paper.pdf").write_text("another")
+        with self.assertRaisesRegex(ValueError, "exists already"):
+            await self.dashboard.prepare("restore", {"id": removed[1]["id"]})
+        (self.root / "paper.pdf").unlink()
+        await self.dashboard.prepare("restore", {"id": removed[1]["id"]})
+        await self.dashboard.prepare("restore", {"id": removed[0]["id"]})
+        self.assertEqual((self.root / "paper.pdf").read_text(), "%PDF")
+        self.assertEqual(self.view()["files"]["removed"], [])
+        with self.assertRaisesRegex(ValueError, "nothing removed has this id"):
+            await self.dashboard.prepare("restore", {"id": removed[0]["id"]})
+        loose = {entry["path"] for entry in self.view()["files"]["entries"] if entry["state"] == "loose"}
+        self.assertEqual(loose, {"code", "paper.pdf"})
+        # The restored copy is still known as one: once it matches its original again, removing deletes it.
+        (self.root / "code" / "fit.py").write_text("print(1)")
+        self.assertIn("Deleted the copy", await self.dashboard.prepare("remove", {"path": "code"}) or "")
+        self.assertTrue((self.outside / "code" / "fit.py").exists())
+        # Removed material and the import record stay after the start.
+        await self.dashboard.prepare("remove", {"path": "paper.pdf"})
+        await self.dashboard.start(self.dashboard.values())
+        self.assertEqual([path.name for path in (self.root / ".research" / "removed").glob("*/*")], ["paper.pdf"])
+        self.assertTrue((self.root / ".research" / "material" / "removed.json").is_file())
 
     async def test_the_assistant_organises_grills_and_drafts_through_its_tools(self):
         (self.root / "paper.pdf").write_text("%PDF")

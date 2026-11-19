@@ -54,10 +54,11 @@ uv tool install -e .        # optional: research-pipeline on your PATH
 
 ## Prepare a project
 
-With `--web` you can start from any folder, even one that does not exist yet: the
-setup page helps you add your material, place it in `starting_evidence/` and write
-the objectives, by hand or with the help of a setup assistant
-([docs/SETUP.md](docs/SETUP.md)). Without `--web`, prepare it yourself.
+You can start from any folder, even one that does not exist yet: the web app's
+setup page helps you add your material (and remove what you added by mistake),
+place it in `starting_evidence/` and write the objectives, by hand or with the help
+of a setup assistant ([docs/SETUP.md](docs/SETUP.md)). With `--no-web`, prepare it
+yourself.
 
 A project is a folder (not under `/tmp`) containing at least the objectives:
 
@@ -100,14 +101,22 @@ first, so that the investigation's git history stays separate from the code's.
 ## Run
 
 ```bash
-research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer claude:opus:high \
+research-pipeline run my-project
+```
+
+opens the web app in your browser: its setup page helps you get the folder ready and
+offers every option below, then Start shows the investigation as a live graph. The
+terminal prints the transcript. Without the page:
+
+```bash
+research-pipeline run my-project --no-web --primary codex:gpt-6.1-sol:high --reviewer claude:opus:high \
     --librarian claude:opus:high --max-agents 4
 ```
 
 | Option | Meaning (default) |
 |---|---|
-| `--primary`, `--reviewer`, `--librarian` | CLI, model and effort as `BACKEND:MODEL:EFFORT`, all three required (on the first run; with `--web`, on the setup page) |
-| `--setup` | with `--web`: the setup assistant's `BACKEND:MODEL:EFFORT` (`codex:gpt-6.1-sol:high`; also on the page) |
+| `--primary`, `--reviewer`, `--librarian` | CLI, model and effort as `BACKEND:MODEL:EFFORT` (chosen on the setup page; all three required on the first run with `--no-web`) |
+| `--setup` | the setup assistant's `BACKEND:MODEL:EFFORT` (`codex:gpt-6.1-sol:high`; also on the page) |
 | `--backends` | CLIs agents may choose for subagents (those of the primary and Reviewer) |
 | `--max-agents` | agent sessions open at the same time, idle ones included, the Librarian's aside (6, at least 2); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
@@ -115,8 +124,13 @@ research-pipeline run my-project --primary codex:gpt-6.1-sol:high --reviewer cla
 | `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
 | `--idle-limit MINUTES` | minutes an idle session waits before it saves its handoff and closes (58, inside the prompt cache's hour; 0: never) |
 | `--no-durable-state` | write the controller's state without forcing it to disk (for slow network filesystems) |
-| `--no-tui` | print the transcript instead of the terminal app |
-| `--web` | also show the investigation in your browser, setup page first; with `--start`, `--web-port PORT`, `--web-no-open` (see [docs/WEB.md](docs/WEB.md)) |
+| `--tui` | show the terminal app instead of printing the transcript |
+| `--no-web` | no web app (the folder must be ready already) |
+| `--start`, `--web-port PORT`, `--web-no-open` | skip the setup page; the page's port; print its address instead of opening the browser (see [docs/WEB.md](docs/WEB.md)) |
+
+`--web` and `--no-tui`, the defaults now, are still accepted. The models the agents'
+prompt recommends for subagents (coding: `claude:claude-opus-5-5:xhigh`, analysis:
+`codex:gpt-6.1-sol:xhigh`) are set on the setup page, at every launch.
 
 Running the same command again resumes a paused, shut down or interrupted
 investigation. After COMPLETE or STOP the program stays open: you can still talk
@@ -128,7 +142,7 @@ anything.
 
 ### The terminal app
 
-The app shows the transcript, the agent tree (status, CLI, context fill, latest
+With `--tui`, the app shows the transcript, the agent tree (status, CLI, context fill, latest
 activity), the usage quota and a chat box. Lines marked ALERT need you, for
 example when the primary has stopped and waits for your answer.
 
@@ -143,13 +157,13 @@ example when the primary has stopped and waits for your answer.
 
 ### The web app
 
-With `--web` the page first helps you make the folder ready, before the first
+The page first helps you make the folder ready, before the first
 start (material, objectives, an optional setup assistant: [docs/SETUP.md](docs/SETUP.md)),
 then shows every option as a setup form (Start begins the investigation), then the agent tree as a live graph: every agent that ever worked,
 coloured by status, with its context use, its messages (coloured by sender) and
 tool calls, its documents, jobs and the websites it used. Single agents can be
 messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
-threshold, usage limits, number of sessions, idle limit and the CLI choices can be changed while it runs. See
+threshold, usage limits, number of sessions, idle limit, the CLI choices and the recommended models can be changed while it runs. See
 [docs/WEB.md](docs/WEB.md).
 
 You may edit your own files (`OBJECTIVES.md`, `AGENTS.md`, `FEEDBACK.md`,

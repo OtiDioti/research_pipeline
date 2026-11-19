@@ -1,7 +1,6 @@
 # The web app
 
-`research-pipeline run PROJECT --web` also shows the investigation in your
-browser: the agent tree as a live graph, what every agent says and does, its
+`research-pipeline run PROJECT` shows the investigation in your browser: the agent tree as a live graph, what every agent says and does, its
 documents, and controls for single agents. It is agent_toolkit's web app
 (`agent-toolkit[web]`), described for this program by `web.py`.
 
@@ -9,14 +8,16 @@ documents, and controls for single agents. It is agent_toolkit's web app
 
 | Option | Meaning (default) |
 |---|---|
-| `--web` | serve the page on 127.0.0.1 and open it in your browser; its setup page comes first |
+| (default) | serve the page on 127.0.0.1 and open it in your browser; its setup page comes first |
+| `--no-web` | no page: the terminal alone, and the folder must be ready |
 | `--start` | skip the setup page: start at once with the options given and stored |
 | `--web-port PORT` | use this port (8780, or the next free one) |
 | `--web-no-open` | print the page's address instead of opening the browser |
 
-The address carries a secret token; only pages opened with it can see or act.
-The terminal app runs as usual next to the page (`--no-tui` prints the transcript
-instead); both show and control the same investigation, and any number of pages
+The address is always printed, so the page can be opened by hand (e.g. over an SSH
+tunnel) when no browser can be opened. It carries a secret token; only pages opened
+with it can see or act. The terminal prints the transcript next to the page
+(`--tui` shows the terminal app instead); both show and control the same investigation, and any number of pages
 may be open. After the investigation ends the page stays open for talks: the
 message box talks with the primary, the Reviewer takes messages too, and the top
 bar's only control is Quit ([FINISHING.md](FINISHING.md)). It stays readable until
@@ -32,15 +33,17 @@ checks Start waits for are listed. Afterwards it shows the launch options alone.
 Every launch option, prefilled from the command line and the stored options (the
 last used): the primary, the Reviewer and the Librarian (CLI, model from the CLI's own list or
 typed, effort as a slider over the levels the model accepts), the CLIs for
-subagents, the number of sessions at once, the idle limit, the handoff threshold, the usage limits,
+subagents, the models the agents' prompt recommends for subagents' coding and
+analytical tasks (a warning, not a refusal, when one's CLI is not among the CLIs
+for subagents: agents then choose another), the number of sessions at once, the idle limit, the handoff threshold, the usage limits,
 and under *Advanced* the reference folders and durable state. Start checks them
 like the command line does and shows what is wrong next to each setting.
 
 While the investigation runs, the settings button changes the handoff threshold
 (live sessions follow at their next context reading), the usage limits, the
 number of sessions at once and the idle limit, at once; and the primary's, the Reviewer's or the Librarian's CLI, model
-and effort, from that agent's next session, and the CLIs for subagents, from the
-next spawn. The reference folders and durable state need a new `run`.
+and effort, from that agent's next session, the recommended models, from each
+agent's next session, and the CLIs for subagents, from the next spawn. The reference folders and durable state need a new `run`.
 
 ## The graph
 

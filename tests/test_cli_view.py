@@ -6,6 +6,7 @@ import contextlib
 import fcntl
 import io
 import unittest
+from unittest import mock
 
 from prompt_toolkit.input import create_pipe_input
 from prompt_toolkit.output import DummyOutput
@@ -59,6 +60,37 @@ class CliTest(unittest.TestCase):
             cli.options_from(arguments(primary="claude:opus"), None)  # model and effort are always explicit
         self.assertIn("--primary", str(raised.exception))
 
+    def test_the_web_page_is_the_default_and_the_terminal_app_an_option(self):
+        root, seen = temp_project(), []
+
+        async def web(project, options, args):
+            seen.append(("web", args.tui))
+            return 0
+
+        async def terminal(controller, tui):
+            seen.append(("no web", tui))
+            return 0
+
+        cases = (
+            ([], ("web", False)),
+            (["--tui"], ("web", True)),
+            (["--no-web"], ("no web", False)),
+            (["--no-web", "--tui"], ("no web", True)),
+            (["--web", "--no-tui"], ("web", False)),  # the old flags still work: they are the defaults now
+        )
+        try:
+            with (
+                mock.patch.object(cli, "with_web", web),
+                mock.patch.object(cli, "run", terminal),
+                mock.patch.object(cli, "Controller", lambda root, options: None),
+            ):
+                for argv, expected in cases:
+                    with self.subTest(argv=argv):
+                        self.assertEqual(cli.main(["run", str(root), *argv]), 0)
+                        self.assertEqual(seen.pop(), expected)
+        finally:
+            remove(root)
+
     def test_status_command(self):
         root = temp_project()
         try:
@@ -104,7 +136,7 @@ class CliTest(unittest.TestCase):
         try:
             errors = io.StringIO()
             with contextlib.redirect_stderr(errors):
-                self.assertEqual(cli.main(["run", str(root), "--no-tui"]), 2)
+                self.assertEqual(cli.main(["run", str(root), "--no-web"]), 2)
             self.assertIn("OBJECTIVES.md is missing", errors.getvalue())
         finally:
             remove(root)

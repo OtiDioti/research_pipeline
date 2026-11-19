@@ -1,4 +1,4 @@
-"""The investigation in the browser (``research-pipeline run PROJECT --web``): its agent tree as a live graph.
+"""The investigation in the browser (``research-pipeline run PROJECT``, unless ``--no-web``): its agent tree as a graph.
 
 Built on :mod:`agent_toolkit.web`. Before the first start, the setup page first
 helps make the folder ready (:mod:`research_pipeline.preparation`: material and
@@ -114,6 +114,26 @@ class ResearchDashboard(Dashboard):
                 live=True,
             ),
             Field(
+                "coding",
+                "Recommended for coding",
+                "spec",
+                "The model the prompt recommends for subagents that write, debug and run code, simulations and "
+                "tools (agents may choose another). Changed while it runs: from each agent's next session.",
+                options=backends,
+                live=True,
+                within="backends",
+            ),
+            Field(
+                "analysis",
+                "Recommended for analysis",
+                "spec",
+                "The model the prompt recommends for subagents that derive, read literature, interpret data and "
+                "critique (agents may choose another). Changed while it runs: from each agent's next session.",
+                options=backends,
+                live=True,
+                within="backends",
+            ),
+            Field(
                 "max_agents",
                 "Sessions at once",
                 "integer",
@@ -191,6 +211,8 @@ class ResearchDashboard(Dashboard):
                 "reviewer",
                 "librarian",
                 "backends",
+                "coding",
+                "analysis",
                 "max_agents",
                 "threshold",
                 "idle_limit",

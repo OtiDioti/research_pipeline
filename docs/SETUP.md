@@ -8,17 +8,17 @@ request.
 
 ## When
 
-- `research-pipeline run DIR --web` opens the setup page on any folder no
+- `research-pipeline run DIR` opens the setup page on any folder no
   investigation has started in (it has no `.research/state.json`): one that does
   not exist yet (it is created), an empty one, one with material dumped at its top
   level, or an incomplete project. The page shows the preparation steps even when
   the folder is ready already, so a partial setup can still be improved.
 - Once an investigation has started, there are no preparation steps: the human
   edits their files directly ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)).
-- Without `--web`, a folder that is not ready is refused, with the problems and
-  the hint to run with `--web`; nothing is created. `--web --start` on a folder
+- With `--no-web`, a folder that is not ready is refused, with the problems and
+  the hint to run without `--no-web`; nothing is created. `--start` on a folder
   that is not ready is refused too.
-- With `--web`, `--primary`, `--reviewer` and `--librarian` are optional: the
+- With the page, `--primary`, `--reviewer` and `--librarian` are optional: the
   page's last step sets them.
 
 ## Ready
@@ -54,6 +54,26 @@ material is placed in them.
    Every placement is checked whole before anything moves, and nothing is ever
    overwritten. By hand, the page offers a folder and a description per entry;
    *Let the assistant organise* asks the assistant.
+
+   **Removing.** Every entry, loose or placed, has a remove button (only the human
+   removes; the assistant has no such tool); a confirmation says what removing it
+   does. Nothing the human cannot get back is ever deleted:
+   - a copy made by Copy in whose original is still where it was copied from, byte
+     for byte, is deleted (the original stays). Copy in records each import (its
+     project path and source) in `.research/material/imports.json`, and placing
+     keeps that record in step, so a placed copy, or a file of a copied folder, is
+     still recognised;
+   - anything else (uploaded, copied by hand, or a changed copy) is set aside in
+     `.research/removed/<id>/`, listed in `.research/material/removed.json`.
+     *Removed* lists it on the page, and *Restore* brings it back to the top level
+     as loose material (never over an existing entry; a restored copy is known as
+     one again).
+
+   A placed entry loses its line in its folder's `FOLDER_CONTENT.md`; a folder left
+   with nothing but an index that says nothing more than its title is removed too,
+   with its line in its parent's. `OBJECTIVES.md` cannot be removed this way (it is
+   the Objectives step's). Both records and the removed material stay after the
+   start, in `.research/`, hidden from agents and ignored by git.
 2. **Objectives.** The human writes first ideas and sends them to the assistant,
    optionally asking to be *grilled* first: the assistant then asks rounds of one
    to four multiple-choice questions (each with a free answer), informed by the
@@ -65,8 +85,8 @@ material is placed in them.
    (`prompts/objectives-template.md`: per objective its kind, statement, what counts
    as met, constraints) is shown in the empty editor and given to the assistant;
    nothing enforces it.
-3. **Settings.** The launch options, as before, with the checks above; Start waits
-   until they all hold.
+3. **Settings.** The launch options ([WEB.md](WEB.md)), with the checks above;
+   Start waits until they all hold.
 
 ## The setup assistant
 
@@ -83,4 +103,5 @@ material is placed in them.
 - If its session fails, the page says so and everything stays doable by hand.
 - What the page shows of it (the conversation, open questions, its CLI choice) is
   kept in `.research/setup/`, so a restarted program continues there. At the start
-  that folder is removed; only its CLI logs stay, in `.research/logs/setup-N.jsonl`.
+  that folder is removed; only its CLI logs stay, in `.research/logs/setup-N.jsonl`
+  (and the material records above, which are not the assistant's).

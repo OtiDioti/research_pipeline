@@ -260,12 +260,16 @@ class Controller:
         'threshold', 'short_limit', 'weekly_limit', 'max_agents' and 'idle_limit'
         (minutes, 0: none) apply at once;
         'primary', 'reviewer' and 'librarian' (BACKEND:MODEL:EFFORT) from that agent's next
-        session, and 'backends' (the CLIs for subagents) from the next spawn. Raise
-        ValueError for an invalid value (nothing is changed then).
+        session, 'coding' and 'analysis' (the models the prompt recommends for subagents) from
+        each agent's next session, and 'backends' (the CLIs for subagents) from the next spawn.
+        Raise ValueError for an invalid value (nothing is changed then).
         """
         if self.lock is None:
             raise ValueError("the investigation is still starting")
         specs = {role: Spec.parse(values[role], role, self.drivers) for role in ROLES if role in values}
+        recommended = {
+            task: Spec.parse(values[task], task, self.drivers) for task in ("coding", "analysis") if task in values
+        }
         if "backends" in values and (not values["backends"] or set(values["backends"]) - set(self.drivers)):
             raise ValueError(f"backends must be some of {', '.join(self.drivers)}")
         threshold = check_threshold(values["threshold"], "the handoff threshold") if "threshold" in values else None
@@ -295,6 +299,8 @@ class Controller:
                 if role in self.state.agents:
                     agent = self.state.agents[role]
                     agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
+            for task, spec in recommended.items():  # in the instructions of each agent's next session
+                setattr(options, task, str(spec))
             if "backends" in values:
                 options.backends = list(values["backends"])
             self.show(
