@@ -76,7 +76,6 @@ class CliTest(unittest.TestCase):
             (["--tui"], ("web", True)),
             (["--no-web"], ("no web", False)),
             (["--no-web", "--tui"], ("no web", True)),
-            (["--web", "--no-tui"], ("web", False)),  # the old flags still work: they are the defaults now
         )
         try:
             with (
@@ -88,6 +87,14 @@ class CliTest(unittest.TestCase):
                     with self.subTest(argv=argv):
                         self.assertEqual(cli.main(["run", str(root), *argv]), 0)
                         self.assertEqual(seen.pop(), expected)
+                for old in ("--web", "--no-tui"):  # the defaults' former opt-ins are gone
+                    with (
+                        self.subTest(old=old),
+                        contextlib.redirect_stderr(io.StringIO()),
+                        self.assertRaises(SystemExit),
+                    ):
+                        cli.main(["run", str(root), old])
+                self.assertEqual(seen, [])
         finally:
             remove(root)
 
