@@ -7,6 +7,8 @@
 - [librarian.md](librarian.md) — The Librarian's role.
 - [setup.md](setup.md) — The setup assistant's role (the web setup, before the first start).
 - [setup-requests.md](setup-requests.md) — The messages the setup assistant receives, one section each.
+- [reopen.md](reopen.md) — The reopening assistant's role (the web page's reopening, after the end).
+- [reopen-requests.md](reopen-requests.md) — The messages the reopening assistant receives, one section each.
 - [objectives-template.md](objectives-template.md) — The light template of OBJECTIVES.md, for the setup page and the assistant.
 - [talk.md](talk.md) — The instructions of a talk session with the primary or the Reviewer after the end.
 - [talk-messages.md](talk-messages.md) — The messages of a talk session, one section each.

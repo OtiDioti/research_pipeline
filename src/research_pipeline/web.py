@@ -8,6 +8,11 @@ prefilled from the command line and the stored (last used) options; the running
 page shows every agent that ever worked on the project, its jobs, documents and
 the websites and library pages it used, and passes the human's actions on to
 :meth:`Controller.act <research_pipeline.controller.Controller.act>`.
+
+After the end, the page offers the preparation again, to reopen the investigation
+(*Prepare reopening*, docs/FINISHING.md): its Reopen hands the talk-only controller
+over (:meth:`Controller.hand_over <research_pipeline.controller.Controller.hand_over>`),
+and :meth:`ResearchDashboard.restarted` gives the command line the reopening one.
 """
 
 from __future__ import annotations
@@ -21,6 +26,7 @@ from agent_toolkit.activity import ActivityLog
 from agent_toolkit.web import Dashboard, Field, SettingsError, edge, node, validate
 
 from research_pipeline.controller import Controller
+from research_pipeline.fields import NAMES, fields
 from research_pipeline.preparation import Preparation
 from research_pipeline.project import INDEX, Project
 from research_pipeline.state import ENDED, FINISHED, Agent, Options
@@ -67,161 +73,24 @@ class ResearchDashboard(Dashboard):
             str, dict[str, set]
         ] = {}  # agent -> {"sites": URLs, "pages": library pages} from its tool calls
         self._listing: tuple[float, dict] = (0.0, {})
-        # The preparation steps, until the first start (afterwards the human edits their files directly).
+        # The preparation steps: until the first start, and again after an end (to reopen).
         self.preparing = (
             None
             if self.paths.started
             else Preparation(self.paths, options, drivers, read_quota=controller_options.get("read_quota"))
         )
+        self.restart = False  # the page's Reopen asked for a reopening controller (see restarted)
         for entry in ActivityLog(self.paths.research / "activity").read(None, limit=200_000):
             self._remember(entry)
 
     # Settings ----------------------------------------------------------------------------------
 
     def fields(self) -> list[Field]:
-        backends = list(self.drivers)
-        return [
-            Field(
-                "primary",
-                "Primary researcher",
-                "spec",
-                "Leads the investigation. Changed while it runs: from its next session.",
-                options=backends,
-                live=True,
-            ),
-            Field(
-                "reviewer",
-                "Reviewer",
-                "spec",
-                "Reviews a proposal to finish. Changed while it runs: from its next session.",
-                options=backends,
-                live=True,
-            ),
-            Field(
-                "librarian",
-                "Librarian",
-                "spec",
-                "Keeps the library's pages. Changed while it runs: from its next session.",
-                options=backends,
-                live=True,
-            ),
-            Field(
-                "backends",
-                "CLIs for subagents",
-                "multiselect",
-                "The CLIs agents may choose for their subagents.",
-                options=backends,
-                live=True,
-            ),
-            Field(
-                "coding",
-                "Recommended for coding",
-                "spec",
-                "The model the prompt recommends for subagents that write, debug and run code, simulations and "
-                "tools (agents may choose another). Changed while it runs: from each agent's next session.",
-                options=backends,
-                live=True,
-                within="backends",
-            ),
-            Field(
-                "analysis",
-                "Recommended for analysis",
-                "spec",
-                "The model the prompt recommends for subagents that derive, read literature, interpret data and "
-                "critique (agents may choose another). Changed while it runs: from each agent's next session.",
-                options=backends,
-                live=True,
-                within="backends",
-            ),
-            Field(
-                "max_agents",
-                "Sessions at once",
-                "integer",
-                "Agent sessions open at the same time, idle ones included.",
-                min=2,
-                max=16,
-                step=1,
-                live=True,
-            ),
-            Field(
-                "idle_limit",
-                "Idle limit",
-                "number",
-                "Minutes an idle session waits before it saves its handoff and closes (0: never).",
-                min=0,
-                max=240,
-                step=1,
-                unit="min",
-                live=True,
-            ),
-            Field(
-                "threshold",
-                "Handoff threshold",
-                "number",
-                "Context fill at which an agent hands off.",
-                min=0.05,
-                max=0.8,
-                step=0.01,
-                live=True,
-            ),
-            Field(
-                "short_limit",
-                "Short-window limit",
-                "number",
-                "Usage left in a short window that pauses its CLI.",
-                min=0,
-                max=50,
-                step=1,
-                unit="%",
-                live=True,
-            ),
-            Field(
-                "weekly_limit",
-                "Weekly limit",
-                "number",
-                "Usage left in a weekly window that pauses its CLI until you resume it.",
-                min=0,
-                max=50,
-                step=1,
-                unit="%",
-                live=True,
-            ),
-            Field(
-                "references",
-                "Reference folders",
-                "paths",
-                "Read-only folders of other projects agents may consult.",
-                group="advanced",
-            ),
-            Field(
-                "durable",
-                "Durable state",
-                "bool",
-                "Force every state write to disk (off: faster on network filesystems).",
-                group="advanced",
-            ),
-        ]
+        return fields(list(self.drivers))
 
     def values(self) -> dict:
         options = self.controller.state.options if self.controller else self.options
-        return {
-            name: getattr(options, name)
-            for name in (
-                "primary",
-                "reviewer",
-                "librarian",
-                "backends",
-                "coding",
-                "analysis",
-                "max_agents",
-                "threshold",
-                "idle_limit",
-                "short_limit",
-                "weekly_limit",
-                "references",
-                "durable",
-            )
-        }
+        return {name: getattr(options, name) for name in NAMES}
 
     async def start(self, values: dict) -> None:
         values = validate(self.fields(), values, self.drivers)
@@ -230,6 +99,9 @@ class ResearchDashboard(Dashboard):
         }
         if missing:
             raise SettingsError(missing)
+        if self.controller is not None:  # Reopen, after the end
+            await self._reopen(values)
+            return
         if self.preparing is not None:  # the same checks as the command line's, before anything starts
             problems = self.paths.unready()
             if problems:
@@ -238,7 +110,38 @@ class ResearchDashboard(Dashboard):
             await self.preparing.close(finished=True)
             self.preparing = None
         self.options = Options(**{**vars(self.options), **values})
-        self.controller = Controller(self.project, self.options, drivers=self.drivers, **self.controller_options)
+        self._control(reopen=False)  # after an end, only the page's Reopen reopens
+
+    async def _reopen(self, values: dict) -> None:
+        controller, preparation = self._running(), self.preparation()
+        if self.preparing is None or preparation is None or self.restart:
+            raise SettingsError({"": "there is nothing to reopen"})
+        if not preparation["ready"]:
+            waiting = [check["label"] for check in preparation["checks"] if not check["ok"]]
+            raise SettingsError({"": "Not ready to reopen: " + ("; ".join(waiting) or "the folder is not ready")})
+        values["setup"] = self.preparing.assistant.spec
+        await self.preparing.close(finished=True)
+        self.preparing, self.restart = None, True
+        self.options = Options(**{**vars(controller.state.options), **values})
+        controller.hand_over()
+
+    async def restarted(self) -> bool:
+        """After the controller ended: True, with the reopening controller, if the page's Reopen ended it."""
+        if not self.restart:
+            return False
+        self.restart = False
+        self._control(reopen=True)
+        return True
+
+    async def close(self) -> None:
+        """End the assistant's session of a preparation still open (it keeps what the page shows of it)."""
+        if self.preparing is not None:
+            await self.preparing.close()
+
+    def _control(self, reopen: bool) -> None:
+        self.controller = Controller(
+            self.project, self.options, drivers=self.drivers, reopen=reopen, **self.controller_options
+        )
         self.controller.activity.listeners.append(self._entry)
 
     async def configure(self, values: dict) -> None:
@@ -251,6 +154,19 @@ class ResearchDashboard(Dashboard):
     # Preparation (before the first start) ---------------------------------------------------------
 
     def preparation(self) -> dict | None:
+        controller = self.controller
+        if (
+            self.preparing is None
+            and controller is not None
+            and controller.lock is not None  # it runs (its state is loaded)
+            and controller.state.status in FINISHED
+            and not self.restart
+        ):  # ended: offered again, to reopen
+            read_quota = self.controller_options.get("read_quota")
+            options = controller.state.options
+            self.preparing = Preparation(
+                self.paths, options, self.drivers, read_quota=read_quota, controller=controller
+            )
         return self.preparing.view() if self.preparing is not None else None
 
     async def prepare(self, action: str, args: dict) -> str | None:
@@ -359,8 +275,14 @@ class ResearchDashboard(Dashboard):
         if state.outcome:
             summary = state.outcome
         held = state.status in ("paused", "pausing")
-        ended = state.status in FINISHED  # talk-only: nothing to pause or release
-        controls = [] if ended else [{"action": "pause", "label": "Resume" if held else "Pause", "confirm": None}]
+        ended = state.status in FINISHED  # talk-only: nothing to pause or release, but it can be reopened
+        controls = (
+            [{"action": "prepare", "label": "Prepare reopening", "confirm": None}]
+            if ended and self.preparing is not None
+            else []
+            if ended
+            else [{"action": "pause", "label": "Resume" if held else "Pause", "confirm": None}]
+        )
         if controller.releasable:
             controls.append({"action": "release", "label": "Resume held", "confirm": None})
         controls.append(

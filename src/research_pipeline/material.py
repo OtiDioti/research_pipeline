@@ -19,6 +19,11 @@ its folder's FOLDER_CONTENT.md, and a folder left with nothing else goes too, wi
 its own line. Imports are recorded (project path and source) in
 .research/material/imports.json, so a copy is recognised after it was placed;
 that record and the removed material stay after the start.
+
+When an investigation that ended is reopened from the page, the human's files
+changed since the end can be reverted (:func:`revert`): a file the end's commit
+has comes back from it, a new one is set aside like removed material. The
+reopening's feedback goes to its own section of FEEDBACK.md (:func:`write_feedback`).
 """
 
 from __future__ import annotations
@@ -30,6 +35,7 @@ import re
 import shutil
 import time
 from dataclasses import asdict, dataclass
+from datetime import date
 from pathlib import Path
 
 from research_pipeline.project import EMPTY_INDEX, INDEX, TOP_LEVEL, Project
@@ -198,21 +204,82 @@ def remove(project: Project, path: str) -> str:
             target.unlink()
         done = f"Deleted the copy of {path}; the original stays at {source}."
     else:
-        removed = _removed(project)
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        slot = next(f"{stamp}-{n}" for n in range(1, 10_000) if not (project.removed / f"{stamp}-{n}").exists())
-        (project.removed / slot).mkdir(parents=True)
-        shutil.move(target, project.removed / slot / target.name)
-        size = None if entry["folder"] else entry["size"]
-        item = {"id": slot, "path": path, "name": target.name, "size": size, "folder": entry["folder"]}
-        removed.append(item | ({"source": str(source)} if source is not None else {}))
-        _write_record(project, REMOVED, removed)
+        _set_aside(project, path, None if entry["folder"] else entry["size"], source)
         done = f"Set {path} aside in .research/removed/: restore it from the Removed list."
     for key in [key for key in imports if key == path or key.startswith(path + "/")]:
         del imports[key]
     _write_record(project, IMPORTS, imports)
     _unlist(project, target)
     return done
+
+
+def _set_aside(project: Project, path: str, size: int | None, source: Path | None = None) -> None:
+    """Move ``path`` (relative to the project) into its own slot of .research/removed/, and record it."""
+    target, removed = project.root / path, _removed(project)
+    stamp = time.strftime("%Y%m%d-%H%M%S")
+    slot = next(f"{stamp}-{n}" for n in range(1, 10_000) if not (project.removed / f"{stamp}-{n}").exists())
+    (project.removed / slot).mkdir(parents=True)
+    folder = target.is_dir() and not target.is_symlink()
+    shutil.move(target, project.removed / slot / target.name)
+    item = {"id": slot, "path": path, "name": target.name, "size": size, "folder": folder}
+    removed.append(item | ({"source": str(source)} if source is not None else {}))
+    _write_record(project, REMOVED, removed)
+
+
+def reverting(project: Project, commit: str | None, existed: bool, path: str) -> str:
+    """What reverting the human's file ``path`` to ``commit`` does, in one line ('' : it cannot be reverted).
+
+    ``existed``: the file was there at the end (in the fingerprint taken with ``commit``).
+    """
+    if not commit:
+        return ""
+    if _committed(project, commit, path):
+        return "It comes back as it was at the end."
+    if existed:
+        return ""  # too large to be committed: its version at the end was never kept
+    return "It is set aside in .research/removed/ (restore it from the Removed list)."
+
+
+def revert(project: Project, commit: str | None, existed: bool, path: str) -> str:
+    """Undo the change of the human's file ``path`` since the end's ``commit`` (see :func:`reverting`)."""
+    path = _clean(path)
+    if not reverting(project, commit, existed, path):
+        raise ValueError(f"{path}: its version at the end was not committed (too large?), so it cannot be reverted")
+    assert commit is not None
+    if _committed(project, commit, path):
+        project.git("checkout", commit, "--", path)
+        return f"{path} is back as it was at the end."
+    target = project.root / path
+    if not target.is_file():
+        raise ValueError(f"{path}: not there any more")
+    _set_aside(project, path, target.stat().st_size)
+    imports = _imports(project)
+    if imports.pop(path, None) is not None:
+        _write_record(project, IMPORTS, imports)
+    _unlist(project, target)
+    return f"Set {path} aside in .research/removed/: restore it from the Removed list."
+
+
+def write_feedback(project: Project, number: int, text: str) -> str:
+    """Write the section '## Reopening ``number`` (date)' of FEEDBACK.md, keeping everything else."""
+    path = project.root / "FEEDBACK.md"
+    old = path.read_text(encoding="utf-8") if path.is_file() else ""
+    heading = re.compile(rf"^## Reopening {number}\b.*$", re.MULTILINE)
+    found = heading.search(old)
+    title = found.group(0) if found else f"## Reopening {number} ({date.today().isoformat()})"
+    section = f"{title}\n\n{text.strip()}\n"
+    if found:
+        after = re.search(r"^## ", old[found.end() :], re.MULTILINE)
+        end = found.end() + after.start() if after else len(old)
+        new = old[: found.start()] + section + ("\n" + old[end:] if after else "")
+    else:
+        new = (old.rstrip() + "\n\n" if old.strip() else "") + section
+    project.write(path, new)
+    return f"Wrote the section '{title.removeprefix('## ')}' of FEEDBACK.md."
+
+
+def _committed(project: Project, commit: str, path: str) -> bool:
+    return project.git("ls-tree", "--name-only", commit, "--", path, check=False).strip() == path
 
 
 def restore(project: Project, id: str) -> str:

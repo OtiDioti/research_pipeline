@@ -200,9 +200,14 @@ async def with_web(project: Project, options: Options, args: argparse.Namespace)
         assert dashboard.controller is not None  # setup returns once the page started the investigation
         web.tap(dashboard.controller)
         status = await run(dashboard.controller, args.tui)
+        while await dashboard.restarted():  # the page's Reopen ended the talk-only controller
+            assert dashboard.controller is not None
+            web.tap(dashboard.controller)
+            status = await run(dashboard.controller, args.tui)
         web.end()
         return status
     finally:
+        await dashboard.close()
         await web.close()
 
 

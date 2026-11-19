@@ -131,6 +131,9 @@ class State:
     job_counter: int = 0
     shelving: list[str] = field(default_factory=list)  # agents whose shelved work awaits the Librarian, in order
     outcome: str | None = None  # how the investigation last ended
+    end_commit: str | None = None  # the commit of the last end, whose human files a reopening's changes are against
+    ended: float | None = None  # when it last ended (POSIX time): the talks after it are since then
+    reopenings: int = 0  # times it was reopened after an end
     verdict: str | None = None  # the Reviewer's last verdict: 'agree' or 'disagree'
 
     def save(self, path: Path, durable: bool = True) -> None:

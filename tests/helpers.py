@@ -74,7 +74,7 @@ class QuotaReader:
 class Harness:
     """A controller running on fake drivers, with helpers to act as its agents."""
 
-    def __init__(self, root: Path, options: Options | None = None):
+    def __init__(self, root: Path, options: Options | None = None, reopen: bool | None = None):
         self.root = root
         self.quota = QuotaReader()
         self.lines: list[tuple[str, str, str]] = []
@@ -84,6 +84,7 @@ class Harness:
             drivers=FAKE_DRIVERS,
             read_quota=self.quota,
             show=lambda *entry: self.lines.append(entry),
+            reopen=reopen,
         )
         self.task: asyncio.Task | None = None
 
@@ -148,6 +149,22 @@ async def shelve_all(harness: Harness) -> None:
         assert reply.startswith("Shelved"), reply
 
 
+async def complete(harness: Harness, shelve: bool = True) -> None:
+    """COMPLETE, agreed by the Reviewer; the Librarian shelves the final work (unless not ``shelve``)."""
+    harness.write("REPORT.md", "# Report\n\nThe integral is 1/3.\n")
+    harness.handoff("primary")
+    harness.index("agents/primary", "HANDOFF.md")
+    await harness.call("primary", "complete")
+    harness.write("reviews/1.md", "# Review\n\n1. Fine.\n")
+    harness.index("reviews", "1.md")
+    harness.handoff("reviewer")
+    harness.index("agents/reviewer", "HANDOFF.md")
+    await harness.call("reviewer", "verdict", review="1.md", agree=True)
+    if shelve:
+        await shelve_all(harness)
+    await harness.settle()
+
+
 async def quit_after_the_end(harness: Harness) -> None:
     """After the end the controller stays open for talks: the human quits (Ctrl+Q), and it exits."""
     harness.controller.shutdown()
@@ -156,11 +173,11 @@ async def quit_after_the_end(harness: Harness) -> None:
 
 
 @asynccontextmanager
-async def running(root: Path, options: Options | None = None):
-    """Run a controller on fake drivers for the duration of the block."""
+async def running(root: Path, options: Options | None = None, reopen: bool | None = None):
+    """Run a controller on fake drivers for the duration of the block (``reopen``: see Controller)."""
     saved = (controller_module.WATCH_INTERVAL, controller_module.HUMAN_INTERVAL)
     controller_module.WATCH_INTERVAL, controller_module.HUMAN_INTERVAL = 0.02, 0.05
-    harness = Harness(root, options)
+    harness = Harness(root, options, reopen)
     harness.task = asyncio.create_task(harness.controller.run())
     try:
         for _ in range(200):
