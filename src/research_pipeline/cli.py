@@ -1,11 +1,12 @@
 """Command line: ``research-pipeline run PROJECT`` and ``research-pipeline status PROJECT``.
 
 ``run`` starts a new investigation, resumes a paused or interrupted one, or reopens
-a finished one. Options given on a later ``run`` replace the stored ones. With
-``--web`` the investigation is also shown in the browser (:mod:`research_pipeline.web`),
-whose setup page first helps make the folder ready (before the first start, even
-in a folder that does not exist yet) and then offers every option, prefilled from
-these. Without ``--web`` the folder must be ready already.
+a finished one. Options given on a later ``run`` replace the stored ones. The
+investigation is shown in the browser (:mod:`research_pipeline.web`), whose setup
+page first helps make the folder ready (before the first start, even in a folder
+that does not exist yet) and then offers every option, prefilled from these; the
+terminal prints the transcript, or shows the terminal app with ``--tui``. With
+``--no-web`` there is no page, and the folder must be ready already.
 """
 
 from __future__ import annotations
@@ -33,26 +34,26 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(
         "project",
         type=Path,
-        help="project folder (with starting_evidence/OBJECTIVES.md; with --web it may be set up first)",
+        help="project folder (with starting_evidence/OBJECTIVES.md; unless --no-web, it may be set up first)",
     )
     run.add_argument(
         "--primary",
         help="CLI, model and effort of the primary researcher: BACKEND:MODEL:EFFORT "
-        "(required on the first run, unless --web: then on the setup page)",
+        "(chosen on the setup page; required on the first run with --no-web)",
     )
     run.add_argument(
         "--reviewer",
         help="CLI, model and effort of the final Reviewer: BACKEND:MODEL:EFFORT "
-        "(required on the first run, unless --web: then on the setup page)",
+        "(chosen on the setup page; required on the first run with --no-web)",
     )
     run.add_argument(
         "--librarian",
         help="CLI, model and effort of the Librarian, who keeps the library: BACKEND:MODEL:EFFORT "
-        "(required on the first run, unless --web: then on the setup page)",
+        "(chosen on the setup page; required on the first run with --no-web)",
     )
     run.add_argument(
         "--setup",
-        help="with --web: CLI, model and effort of the setup assistant, which helps make the folder ready: "
+        help="CLI, model and effort of the setup assistant, which helps make the folder ready on the setup page: "
         "BACKEND:MODEL:EFFORT (default codex:gpt-6.1-sol:high; also chosen on the page)",
     )
     run.add_argument(
@@ -93,16 +94,19 @@ def _parser() -> argparse.ArgumentParser:
         default=None,
         help="write the state without forcing it to disk (faster on network filesystems)",
     )
-    run.add_argument("--no-tui", action="store_true", help="print the transcript instead of the terminal app")
+    run.add_argument("--tui", action="store_true", help="show the terminal app instead of printing the transcript")
     run.add_argument(
-        "--web", action="store_true", help="also show the investigation in your browser; its setup page comes first"
+        "--no-web", dest="web", action="store_false", help="no web page (and no setup page: the folder must be ready)"
     )
-    run.add_argument("--start", action="store_true", help="with --web: skip the setup page and start at once")
+    # The defaults before 0.12.0, accepted so that existing commands keep working.
+    run.add_argument("--web", dest="web", action="store_true", help=argparse.SUPPRESS)
+    run.add_argument("--no-tui", dest="tui", action="store_false", help=argparse.SUPPRESS)
+    run.add_argument("--start", action="store_true", help="skip the setup page and start at once")
     run.add_argument(
-        "--web-port", type=int, metavar="PORT", help="with --web: the port to use (default: 8780, or the next free one)"
+        "--web-port", type=int, metavar="PORT", help="the web page's port (default: 8780, or the next free one)"
     )
     run.add_argument(
-        "--web-no-open", action="store_true", help="with --web: print the page's address instead of opening the browser"
+        "--web-no-open", action="store_true", help="print the web page's address instead of opening the browser"
     )
     status = commands.add_parser("status", help="show the state of an investigation")
     status.add_argument("project", type=Path)
@@ -174,9 +178,9 @@ async def headless(controller: Controller) -> int:
         return 130
 
 
-async def run(controller: Controller, no_tui: bool) -> int:
+async def run(controller: Controller, tui: bool) -> int:
     """Run the controller in the terminal app, or without it (printing the transcript)."""
-    if no_tui:
+    if not tui:
         return await headless(controller)
     from research_pipeline.view import TerminalApp
 
@@ -198,7 +202,7 @@ async def with_web(project: Project, options: Options, args: argparse.Namespace)
         await web.setup(start=args.start)
         assert dashboard.controller is not None  # setup returns once the page started the investigation
         web.tap(dashboard.controller)
-        status = await run(dashboard.controller, args.no_tui)
+        status = await run(dashboard.controller, args.tui)
         web.end()
         return status
     finally:
@@ -257,8 +261,8 @@ def main(argv: list[str] | None = None) -> int:
             return asyncio.run(with_web(project, options, args))
         problems = project.unready() if project.root.is_dir() else [f"{project.root} does not exist."]
         if problems:
-            raise ProjectError(" ".join(problems) + " Run with --web to set the folder up on its setup page.")
-        return asyncio.run(run(Controller(project.root, options), args.no_tui))
+            raise ProjectError(" ".join(problems) + " Run without --no-web to set the folder up on its setup page.")
+        return asyncio.run(run(Controller(project.root, options), args.tui))
     except KeyboardInterrupt:
         return 130
     except (ProjectError, ValueError, OSError) as error:

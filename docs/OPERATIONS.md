@@ -7,9 +7,12 @@ Running an investigation, controlling it, and finding out what went wrong.
 `research-pipeline run PROJECT` starts or resumes an investigation, opens a finished
 one for talks, or reopens it if the human's files changed since the end
 ([FINISHING.md](FINISHING.md)); the options are listed in [README.md](../README.md).
-- On the first run, `--primary`, `--reviewer` and `--librarian` are required as
-  `BACKEND:MODEL:EFFORT` (with `--web`, on the setup page instead). A folder that
-  is not ready is refused unless `--web` sets it up ([SETUP.md](SETUP.md)). `--backends` defaults to the primary's and the Reviewer's
+- The web app opens in the browser, setup page first ([WEB.md](WEB.md)): before
+  the first start it helps make the folder ready ([SETUP.md](SETUP.md)), with
+  `--setup BACKEND:MODEL:EFFORT` for its assistant, then it offers every option.
+- With `--no-web` there is no page: on the first run `--primary`, `--reviewer`
+  and `--librarian` are required as `BACKEND:MODEL:EFFORT`, and a folder that is
+  not ready is refused. `--backends` defaults to the primary's and the Reviewer's
   CLIs. `--max-agents` (6) counts open sessions, idle ones included but not the
   Librarian's, and must be at least 2 (the primary and the Reviewer). `--idle-limit MINUTES` (58; 0: never) closes a session idle
   that long ([CONTEXT.md](CONTEXT.md)).
@@ -17,13 +20,11 @@ one for talks, or reopens it if the human's files changed since the end
 - `research-pipeline status PROJECT` prints the state without starting anything:
   the investigation, whether a controller is running it, the proposal, quota
   holds, each agent with its pause reason, and running jobs.
-- `--no-tui` prints the transcript instead of the terminal app. Ctrl+C once shuts
-  down cleanly; twice forces an exit.
-- `--web` also serves the investigation in your browser, setup page first
-  ([WEB.md](WEB.md)); before the first start the setup page helps make the folder
-  ready ([SETUP.md](SETUP.md)), with `--setup BACKEND:MODEL:EFFORT` for its assistant.
+- The terminal prints the transcript; Ctrl+C once shuts down cleanly, twice
+  forces an exit. `--tui` shows the terminal app instead.
+- `--web` and `--no-tui`, the defaults since 0.12.0, are still accepted.
 
-## The terminal app
+## The terminal app (`--tui`)
 
 - **Panels:** the transcript (one agent with F2, all with F3), the agents (status,
   CLI, context fill, latest activity), the status line (state, holds, open

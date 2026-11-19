@@ -9,12 +9,26 @@ too, and placing it only adds its line. The person places material by hand on
 the page, or the setup assistant submits the same placement through its tool
 (:mod:`research_pipeline.assistant`); both go through :func:`place`, which checks
 everything before it moves anything. Nothing is ever overwritten.
+
+The human may also remove any entry (:func:`remove`), loose or placed, without
+losing anything: a copy imported from this machine whose original is still there,
+unchanged, is deleted (the original stays); anything else is set aside in
+.research/removed/ (hidden from agents, ignored by git), from where
+:func:`restore` brings it back as loose material. A placed entry loses its line in
+its folder's FOLDER_CONTENT.md, and a folder left with nothing else goes too, with
+its own line. Imports are recorded (project path and source) in
+.research/material/imports.json, so a copy is recognised after it was placed;
+that record and the removed material stay after the start.
 """
 
 from __future__ import annotations
 
+import filecmp
+import json
+import os
 import re
 import shutil
+import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -34,6 +48,7 @@ class Entry:
     folder: bool
     state: str  # 'loose' or 'placed'
     description: str
+    removal: str  # what removing it does ('' if it cannot be removed)
 
 
 def loose(project: Project) -> list[Path]:
@@ -45,7 +60,8 @@ def loose(project: Project) -> list[Path]:
 def entries(project: Project) -> list[dict]:
     """Every loose entry, then every placed one (the entries of starting_evidence/'s indexed folders)."""
     waiting = {path for path in loose(project)}
-    found = [_entry(project, path, "loose", "") for path in sorted(waiting)]
+    imports = _imports(project)
+    found = [_entry(project, path, "loose", "", imports) for path in sorted(waiting)]
     for folder in project.indexed_folders():
         text = _index_text(folder)
         for path in sorted(folder.iterdir()):
@@ -53,7 +69,7 @@ def entries(project: Project) -> list[dict]:
                 continue
             if (path / INDEX).is_file():
                 continue  # an indexed folder lists its own entries
-            found.append(_entry(project, path, "placed", _description(text, path.name)))
+            found.append(_entry(project, path, "placed", _description(text, path.name), imports))
     return [asdict(entry) for entry in found]
 
 
@@ -116,10 +132,13 @@ def place(project: Project, items: list[dict], new_folders: list[dict]) -> str:
         (project.root / name).mkdir()
         _describe(project, project.root / name, None, None)  # its own index, empty for now
         _describe(project, (project.root / name).parent, name.rsplit("/", 1)[1], description)
+    imports = _imports(project)
     for source, destination, description in moves:
         if source.parent != destination:
             shutil.move(source, destination / source.name)
+            _follow(imports, project.relative(source), project.relative(destination / source.name))
         _describe(project, destination, source.name, description)
+    _write_record(project, IMPORTS, imports)
     return f"Placed {len(moves)} entr{'y' if len(moves) == 1 else 'ies'} in {TARGET}/."
 
 
@@ -148,12 +167,75 @@ def import_paths(project: Project, paths: list[str]) -> str:
             sources.append(source)
     if problems:
         raise ValueError("; ".join(problems))
+    imports = _imports(project)
     for source in sources:
         if source.is_dir():
             shutil.copytree(source, project.root / source.name, symlinks=True)
         else:
             shutil.copy2(source, project.root / source.name)
+        imports[source.name] = str(source)
+    _write_record(project, IMPORTS, imports)
     return f"Copied {len(sources)} into the project."
+
+
+def remove(project: Project, path: str) -> str:
+    """Take an entry (``path`` relative to the project, as :func:`entries` lists it) out of the material.
+
+    An imported copy whose original is unchanged is deleted; anything else is set aside
+    in .research/removed/. Raise ValueError if ``path`` is not a removable entry.
+    """
+    path = _clean(path)
+    entry = next((item for item in entries(project) if item["path"] == path), None)
+    if entry is None or not entry["removal"]:
+        raise ValueError(f"{path or '(no path)'}: not removable material (see the list of entries)")
+    target, imports = project.root / path, _imports(project)
+    source = _source(imports, path)
+    original = source is not None and not source.resolve().is_relative_to(project.root.resolve())
+    if source is not None and original and _same(target, source):
+        if target.is_dir() and not target.is_symlink():
+            shutil.rmtree(target)
+        else:
+            target.unlink()
+        done = f"Deleted the copy of {path}; the original stays at {source}."
+    else:
+        removed = _removed(project)
+        stamp = time.strftime("%Y%m%d-%H%M%S")
+        slot = next(f"{stamp}-{n}" for n in range(1, 10_000) if not (project.removed / f"{stamp}-{n}").exists())
+        (project.removed / slot).mkdir(parents=True)
+        shutil.move(target, project.removed / slot / target.name)
+        size = None if entry["folder"] else entry["size"]
+        item = {"id": slot, "path": path, "name": target.name, "size": size, "folder": entry["folder"]}
+        removed.append(item | ({"source": str(source)} if source is not None else {}))
+        _write_record(project, REMOVED, removed)
+        done = f"Set {path} aside in .research/removed/: restore it from the Removed list."
+    for key in [key for key in imports if key == path or key.startswith(path + "/")]:
+        del imports[key]
+    _write_record(project, IMPORTS, imports)
+    _unlist(project, target)
+    return done
+
+
+def restore(project: Project, id: str) -> str:
+    """Bring removed material back to the top level as loose material; raise ValueError if it cannot be."""
+    removed = _removed(project)
+    item = next((item for item in removed if item["id"] == id), None)
+    if item is None:
+        raise ValueError("nothing removed has this id (it may have been restored already)")
+    _check_name(project, item["name"])
+    slot = project.removed / item["id"]
+    shutil.move(slot / item["name"], project.root / item["name"])
+    shutil.rmtree(slot)
+    _write_record(project, REMOVED, [other for other in removed if other["id"] != id])
+    if item.get("source"):
+        imports = _imports(project)
+        imports[item["name"]] = item["source"]
+        _write_record(project, IMPORTS, imports)
+    return f"Restored {item['name']} as loose material."
+
+
+def removed(project: Project) -> list[dict]:
+    """What :func:`remove` set aside, oldest first, as agent_toolkit.web's *removed* entries."""
+    return [{key: item[key] for key in ("id", "path", "name", "size", "folder")} for item in _removed(project)]
 
 
 def upload_target(project: Project, path: str) -> Path:
@@ -181,9 +263,101 @@ def _clean(path: str) -> str:
     return path.strip().strip("/")
 
 
-def _entry(project: Project, path: Path, state: str, description: str) -> Entry:
-    folder = path.is_dir()
-    return Entry(project.relative(path), path.name, None if folder else path.stat().st_size, folder, state, description)
+def _entry(project: Project, path: Path, state: str, description: str, imports: dict[str, str]) -> Entry:
+    folder, relative = path.is_dir(), project.relative(path)
+    source = _source(imports, relative)
+    if path == project.objectives:
+        removal = ""  # written in the Objectives step, never material
+    elif source is not None:
+        removal = (
+            f"Its copy is deleted if it still matches the original at {source}, which stays there; "
+            "otherwise it is set aside in .research/removed/, from where it can be restored."
+        )
+    else:
+        removal = "It is set aside in .research/removed/ (nothing is deleted), from where it can be restored."
+    size = None if folder else path.stat().st_size
+    return Entry(relative, path.name, size, folder, state, description, removal)
+
+
+#: The setup's records of material, in .research/ (not in setup/, the assistant's folder, removed at the start).
+RECORDS = "material"
+IMPORTS = "imports.json"
+REMOVED = "removed.json"
+
+
+def _record(project: Project, name: str, empty):
+    """A record in .research/material/ (``empty`` if there is none, or it is unreadable)."""
+    try:
+        return json.loads((project.research / RECORDS / name).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return empty
+
+
+def _write_record(project: Project, name: str, data) -> None:
+    (project.research / RECORDS).mkdir(parents=True, exist_ok=True)
+    project.write(project.research / RECORDS / name, json.dumps(data, indent=1) + "\n")
+
+
+def _imports(project: Project) -> dict[str, str]:
+    """Imported copies: their path in the project -> where they were copied from."""
+    return _record(project, IMPORTS, {})
+
+
+def _removed(project: Project) -> list[dict]:
+    """Material set aside: ``{id, path, name, size, folder}`` and, for an imported copy, its ``source``."""
+    return _record(project, REMOVED, [])
+
+
+def _source(imports: dict[str, str], path: str) -> Path | None:
+    """Where the imported ``path`` (or the file of an imported folder) came from, or None."""
+    for key, source in imports.items():
+        if path == key or path.startswith(key + "/"):
+            return Path(source) / path[len(key) :].lstrip("/")
+    return None
+
+
+def _follow(imports: dict[str, str], old: str, new: str) -> None:
+    """Keep the import records of an entry that moved from ``old`` to ``new`` (both project paths)."""
+    for key in [key for key in imports if key == old or key.startswith(old + "/")]:
+        imports[new + key[len(old) :]] = imports.pop(key)
+
+
+def _same(copy: Path, original: Path) -> bool:
+    """Whether ``copy`` is still byte for byte ``original`` (a folder: the same names, links and contents)."""
+    try:
+        if copy.is_symlink() or original.is_symlink():
+            return copy.is_symlink() and original.is_symlink() and os.readlink(copy) == os.readlink(original)
+        if copy.is_dir() and original.is_dir():
+            names = sorted(entry.name for entry in copy.iterdir())
+            if names != sorted(entry.name for entry in original.iterdir()):
+                return False
+            return all(_same(copy / name, original / name) for name in names)
+        return copy.is_file() and original.is_file() and filecmp.cmp(copy, original, shallow=False)
+    except OSError:  # unreadable: keep the copy
+        return False
+
+
+def _unlist(project: Project, path: Path) -> None:
+    """Drop a removed entry's line from its folder's index; a folder left empty goes too, with its own line."""
+    folder = path.parent
+    index = folder / INDEX
+    if not folder.is_relative_to(project.evidence) or not index.is_file():
+        return  # loose at the top level: no index lists it
+    try:
+        text = index.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return  # not written by the setup: the human's, left as it is
+    lines = text.splitlines(keepends=True)
+    kept = [line for line in lines if not (line.lstrip().startswith(("-", "*")) and f"[{path.name}]" in line)]
+    if kept != lines:
+        project.write(index, "".join(kept))
+    if folder == project.evidence or any(entry.name != INDEX for entry in folder.iterdir()):
+        return
+    if "".join(kept).strip() != EMPTY_INDEX.strip():
+        return  # the index says more than its title: the human's, kept
+    index.unlink()
+    folder.rmdir()
+    _unlist(project, folder)
 
 
 def _index_text(folder: Path) -> str:

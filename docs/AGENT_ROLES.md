@@ -41,9 +41,12 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
 ## Subagents
 
 - `spawn(task, backend, model, effort, name)` needs all four arguments. The role
-  prompt routes coding tasks to `claude-opus-5-5` (claude) and analytical ones to
-  `gpt-6.1-sol` (codex), at `high` or `xhigh`, using the other when a backend is not
-  allowed or held by its quota, unless the project's `AGENTS.md` says otherwise. An effort
+  prompt recommends a model for coding tasks and one for analytical ones, the
+  options `coding` and `analysis` (default `claude:claude-opus-5-5:xhigh` and
+  `codex:gpt-6.1-sol:xhigh`), set on the setup page or live, from each agent's next
+  session. When a recommended model's backend is not allowed or held by its quota,
+  agents use the best model they can on an available backend; the project's
+  `AGENTS.md` may say otherwise. An effort
   Claude Code does not accept (it accepts `low`, `medium`, `high`, `xhigh` and `max`) is
   refused before any session starts; Codex checks the effort itself when the session starts. The brief
   `task` (a non-empty Markdown file) is copied to `agents/<id>/TASK.md`. The id

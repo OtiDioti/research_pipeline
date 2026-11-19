@@ -4,6 +4,7 @@ import unittest
 
 from agent_toolkit.web import SettingsError
 
+from research_pipeline.state import Options
 from research_pipeline.web import ResearchDashboard
 from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project
 
@@ -155,6 +156,39 @@ class SettlingTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((primary.status, primary.sessions), ("running", 2))
 
 
+class RecommendationTest(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        self.root = temp_project()
+        FakeSession.reset()
+
+    def tearDown(self):
+        remove(self.root)
+
+    async def test_the_recommended_models_reach_the_prompt_and_change_from_each_agents_next_session(self):
+        async with running(self.root) as harness:
+            first = harness.session("primary").launch.instructions
+            self.assertIn(
+                "coding (writing, debugging and running code, simulations, tools) on claude-opus-5-5 "
+                "(backend claude, effort xhigh)",
+                first,
+            )
+            self.assertIn(
+                "analysis (derivations, literature, data interpretation, critique) on gpt-6.1-sol "
+                "(backend codex, effort xhigh)",
+                first,
+            )
+            self.assertIn("use the best model you can on an available backend", first)
+            with self.assertRaises(ValueError):
+                await harness.controller.configure({"coding": "claude:sonnet:huge"})  # an effort claude refuses
+            await harness.controller.configure({"coding": "codex:gpt-test:high"})
+            self.assertEqual(harness.state.options.coding, "codex:gpt-test:high")
+            self.assertEqual(harness.session("primary").launch.instructions, first)  # its session keeps them
+            await harness.controller.act("handoff", "primary")
+            harness.handoff("primary")
+            await harness.emit("primary", "turn_ended", text="Saved.")
+            self.assertIn("on gpt-test (backend codex, effort high)", harness.session("primary").launch.instructions)
+
+
 class DashboardTest(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.root = temp_project()
@@ -180,6 +214,8 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
                 "reviewer",
                 "librarian",
                 "backends",
+                "coding",
+                "analysis",
                 "max_agents",
                 "threshold",
                 "idle_limit",
@@ -187,6 +223,20 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
                 "weekly_limit",
             },
         )
+
+    async def test_the_recommended_models_are_set_on_the_page_and_warn_outside_the_subagents_clis(self):
+        dashboard = ResearchDashboard(self.root, launch_options(), drivers=FAKE_DRIVERS, read_quota=lambda backend: [])
+        values = dashboard.values()
+        self.assertEqual((values["coding"], values["analysis"]), (Options().coding, Options().analysis))
+        fields = {field.name: field for field in dashboard.fields()}
+        self.assertEqual((fields["coding"].within, fields["analysis"].within), ("backends", "backends"))
+        with self.assertRaises(SettingsError) as refusal:
+            await dashboard.start(values | {"coding": "codex:gpt-test"})
+        self.assertEqual(set(refusal.exception.errors), {"coding"})
+        # Outside the CLIs for subagents it is only a recommendation: Start accepts it (the page warns).
+        await dashboard.start(values | {"coding": "claude:sonnet:high", "backends": ["codex"]})
+        assert dashboard.controller is not None and dashboard.controller.launch_options is not None
+        self.assertEqual(dashboard.controller.launch_options.coding, "claude:sonnet:high")
 
     async def test_the_graph_shows_agents_their_documents_websites_jobs_and_actions(self):
         async with running(self.root) as harness:

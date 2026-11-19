@@ -44,7 +44,7 @@ organise freely.
 │   ├── RESULT.md           the agent's submitted result
 │   └── ...                 notes, code, data, as the agent sees fit; frozen once shelved
 ├── reviews/                Reviewer: one file per review round
-└── .research/              controller: state and logs; hidden from agents and jobs
+└── .research/              controller: state, logs, removed setup material; hidden from agents and jobs
 ```
 
 Rules:
@@ -93,9 +93,11 @@ Rules:
 **Ready to start.** Before the first start, a folder is a project only with a
 non-empty `starting_evidence/OBJECTIVES.md`, nothing loose at the top level (only
 the entries above), and a `starting_evidence/FOLDER_CONTENT.md` describing every
-entry at its top. Without `--web`, a folder that is not ready is refused; with
-`--web`, the setup page makes it ready first (docs/SETUP.md): material added
-(uploaded, copied from local paths, or by hand) and placed in `starting_evidence/`
+entry at its top. With `--no-web`, a folder that is not ready is refused; otherwise
+the setup page makes it ready first (docs/SETUP.md): material added
+(uploaded, copied from local paths, or by hand; removed again without loss: an
+unchanged copy is deleted, its original kept, anything else set aside in
+`.research/removed/` to restore) and placed in `starting_evidence/`
 with a one-line description each, by hand or by the setup assistant (§3), and the
 objectives written in an editor, optionally drafted by the assistant after it has
 grilled the human with multiple-choice questions. Placing is deterministic, checked
@@ -204,10 +206,12 @@ in the library for what the project already has on the subject, and names the
 relevant files in the brief. Model and effort are always
 explicit: a spawn without them is refused, and so is a launch whose `--primary`,
 `--reviewer` or `--librarian` lacks them; an effort the CLI is known not to accept is refused before
-any session starts. The role prompt routes coding tasks to Opus 5.5
-(`claude-opus-5-5`) and analytical ones to GPT-6.1 Sol (`gpt-6.1-sol`), at effort `high`
-or `xhigh`, falling back to the other when a backend is not allowed or held by its quota,
-unless the human's `AGENTS.md` says otherwise. The human sets a cap on open agent sessions, idle
+any session starts. The role prompt recommends a model for coding tasks (by default
+Opus 5.5, `claude:claude-opus-5-5:xhigh`) and one for analytical ones (by default
+GPT-6.1 Sol, `codex:gpt-6.1-sol:xhigh`), which the human sets on the setup page at every
+launch or while the investigation runs (from each agent's next session); when a
+recommended model's backend is not allowed or held by its quota, agents use the best
+model they can on an available backend, unless the human's `AGENTS.md` says otherwise. The human sets a cap on open agent sessions, idle
 ones included (6 by default, at least 2). A spawn over the cap is refused with a message such as
 "6/6 agent sessions are already open"; the agent decides what to do. Agents know nothing else about
 scheduling.
@@ -440,7 +444,9 @@ folders.
 **Earlier projects.** `run` refuses a project that still has `sources/` or
 `tools/` at its top level: it predates the library, and is not migrated.
 
-**Interface.** A terminal app, built on the shared one in `agent_toolkit`:
+**Interface.** By default the shared web app of `agent_toolkit` (below), with the
+transcript printed in the terminal; with `--tui`, a terminal app instead of the
+printed transcript, built on the shared one in `agent_toolkit`:
 - a transcript of the selected agent;
 - the agent tree with each agent's status, CLI and context use;
 - quota status;
@@ -448,25 +454,28 @@ folders.
 - highlighted alerts, such as a stalled primary;
 - Pause/Resume and Shutdown keys.
 
-Optionally, with `--web`, the shared web app of `agent_toolkit` as well (docs/WEB.md):
+The web app (docs/WEB.md; none with `--no-web`):
 a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
 threshold, usage limits, session cap and idle limit changed while the investigation runs, as well
 as the primary's, the Reviewer's and the Librarian's CLI choices (from their next
-session) and the CLIs for subagents (from the next spawn).
+session), the recommended models (from each agent's next session) and the CLIs for
+subagents (from the next spawn).
 
 Launch options:
-- `--primary`, `--reviewer` and `--librarian` (backend:model:effort, all three required; with `--web`, set on the page);
-- `--setup` (backend:model:effort of the setup assistant, with `--web`);
+- `--primary`, `--reviewer` and `--librarian` (backend:model:effort, set on the page; all three required with `--no-web`);
+- `--setup` (backend:model:effort of the setup assistant);
 - `--backends` (choices allowed for subagents);
 - `--max-agents`;
 - `--reference PATH` (repeatable);
 - `--short-limit` and `--weekly-limit`;
 - `--context-threshold` (0.55 by default, at most 0.8);
 - `--idle-limit` (minutes, 58 by default; 0: never);
-- `--no-durable-state`, `--no-tui`.
+- `--no-durable-state`;
+- `--tui`, `--no-web`, `--start`, `--web-port`, `--web-no-open` (`--web` and `--no-tui`, the
+  earlier opt-ins, are accepted and change nothing).
 
 ## 7. Controller tools available to agents (MCP)
 

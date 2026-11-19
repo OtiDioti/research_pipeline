@@ -1,5 +1,23 @@
 # Status
 
+**2026-11-19.** 0.12.0, on agent_toolkit 0.8.0:
+- **Removing material on the setup page** ([docs/SETUP.md](docs/SETUP.md)). Any entry, loose or placed, can be
+  removed after a confirmation that says what happens, and nothing the human cannot get back is deleted. A copy made
+  by Copy in is deleted only while its original is still there, byte for byte; imports are recorded in
+  `.research/material/imports.json` and followed through placing. Anything else is set aside in
+  `.research/removed/` and restored from the page as loose material. A placed entry's index line goes too, and so
+  does a folder left empty. Only the human removes: the assistant has no such tool.
+- **The web app is the default.** `run` opens the page (setup page first), and the terminal prints the transcript.
+  `--no-web` runs without the page (an unready folder is refused), and `--tui` shows the terminal app. `--web` and
+  `--no-tui` are still accepted, as no-ops.
+- **Recommended models.** The prompt's model routing (`common.md`) now fills in two options, `coding` and `analysis`
+  (default `claude:claude-opus-5-5:xhigh` and `codex:gpt-6.1-sol:xhigh`). They are set on the setup page at every
+  launch, or live from each agent's next session, and the page warns when one's CLI is not among the CLIs for
+  subagents. Deliberate prompt change: each recommendation's effort replaces "xhigh for the most demanding, high
+  otherwise", and when a backend is unavailable agents use "the best model you can on an available backend" instead
+  of "the other".
+Not yet tried with real CLIs.
+
 **2026-11-19.** 0.11.1, prompts only (`common.md`): parents give subagents the time their task needs (no deadline
 unless the human sets one), message them to redirect or inform, never to hurry them, ask for an interim note when they
 need part of the work sooner, and cancel rather than ask for a rushed result. Prompted by a run in which parents asked

@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from pathlib import Path
 
+from agent_toolkit import Spec
 from agent_toolkit.protocol import Prompts
 
 from research_pipeline.project import Project
@@ -49,6 +50,10 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
         "primary": ", and in STATUS.md, REPORT.md and the root FOLDER_CONTENT.md",
         "reviewer": ", and in reviews/",
     }.get(agent.role, "")
+    recommended = {}  # the human's choice of models for subagents' tasks (see Options)
+    for task in ("coding", "analysis"):
+        spec = Spec.parse(getattr(options, task), task)
+        recommended |= {f"{task}_backend": spec.backend, f"{task}_model": spec.model, f"{task}_effort": spec.effort}
     text = PROMPTS.fill(
         "common",
         agent.role,
@@ -59,6 +64,7 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
         extra=extra,
         backends=", ".join(options.backends),
         parent=agent.parent or "",
+        **recommended,
     )
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
