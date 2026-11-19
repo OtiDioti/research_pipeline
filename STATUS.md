@@ -1,5 +1,19 @@
 # Status
 
+**2026-11-19.** 0.14.0, on agent_toolkit 0.9.0: reopening from the web page
+([docs/FINISHING.md](docs/FINISHING.md), PROJECT.md §4). After COMPLETE or STOP the top bar offers *Prepare reopening*:
+the setup page again, while the talks go on, with Material, Instructions (FEEDBACK.md, OBJECTIVES.md, AGENTS.md as
+tabs), the files changed since the end (Revert each, Discard all), the launch options and Reopen. Reopen waits for a
+change, a ready folder, the Librarian's final shelving and an idle assistant, and says which it waits for; it ends the
+talks and restarts the investigation in the same program and page. The reopening assistant (new `prompts/reopen.md`,
+`reopen-requests.md`; tools `write_feedback`, `write_agents_md`) reads the talks since the end
+(`.research/setup/TALKS.md`), can grill the human, and writes this reopening's `## Reopening N (date)` section of
+FEEDBACK.md. With the page, a later `run` keeps prepared changes waiting for Reopen; `--no-web` still reopens on
+changed files. Changes since the end are now judged by content against the end's commit (kept in the state), so a
+reverted file is no change. Deliberate prompt change: the reopened primary's notice points to this reopening's
+FEEDBACK.md section when there is one. Also fixed: after a reopening the primary was told about the same changes a
+second time. `web.py`'s settings moved to `fields.py`. Not yet tried with real CLIs.
+
 **2026-11-19.** 0.13.0: `--web` and `--no-tui` are gone. Since 0.12.0 they only repeated the defaults (the web
 page, the printed transcript); a command that still passes them is now refused by the argument parser before
 anything starts. Use `--no-web` and `--tui` for the other choices.

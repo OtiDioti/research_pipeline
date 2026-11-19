@@ -4,9 +4,10 @@ Running an investigation, controlling it, and finding out what went wrong.
 
 ## Launch
 
-`research-pipeline run PROJECT` starts or resumes an investigation, opens a finished
-one for talks, or reopens it if the human's files changed since the end
-([FINISHING.md](FINISHING.md)); the options are listed in [README.md](../README.md).
+`research-pipeline run PROJECT` starts or resumes an investigation, or opens a finished
+one for talks, from where the web page's *Prepare reopening* reopens it; with `--no-web`
+it reopens it if the human's files changed since the end ([FINISHING.md](FINISHING.md));
+the options are listed in [README.md](../README.md).
 - The web app opens in the browser, setup page first ([WEB.md](WEB.md)): before
   the first start it helps make the folder ready ([SETUP.md](SETUP.md)), with
   `--setup BACKEND:MODEL:EFFORT` for its assistant, then it offers every option.

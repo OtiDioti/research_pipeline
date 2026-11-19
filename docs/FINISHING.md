@@ -59,12 +59,14 @@ On COMPLETE or a confirmed STOP, the controller:
 - kills every job;
 - appends the outcome to STATUS.md;
 - commits "controller: investigation COMPLETE/STOPPED", and takes the human's files
-  as they are then as the baseline for reopening;
+  as they are then as the baseline for reopening (their fingerprint, that commit
+  and the time are kept in the state);
 - shelves the primary's and the Reviewer's folders, and any other ended agent's not shelved yet;
 - lets the Librarian place them (if it cannot run or stalls, its requests reach it at the next `run`)
   and commits "controller: the library after the end";
-- stays open for talks until the human quits (Ctrl+Q, or Quit on the web page). The
-  state reads `complete (talk only)` or `stopped (talk only)`.
+- stays open for talks until the human quits (Ctrl+Q, or Quit on the web page), or
+  reopens it from the web page. The state reads `complete (talk only)` or
+  `stopped (talk only)`.
 
 Machine COMPLETE is not scientific acceptance: that is the human's judgment.
 
@@ -89,23 +91,63 @@ the Reviewer (the web page), talk-only; no other agent takes messages after the 
   handoff plus that note. The frozen HANDOFF.md never changes.
 - Talks are kept in the activity log only (transcript, web page); nothing is committed.
 - While the agent's CLI is held by its usage quota, a message is refused, naming the hold.
-- Changes to the human's files while the program stays open do not reopen anything:
-  the human is told once to quit and run again.
+- Changes to the human's files while the program stays open do not reopen anything.
+  With the web page they wait for its Reopen (below); without it the human is told
+  once to quit and run again.
 
 ## Reopening
 
-Running `research-pipeline run` on a finished project:
-- **without** changes to the human's files (OBJECTIVES.md, FEEDBACK.md, AGENTS.md,
-  starting_evidence/) since the end: opens talk-only again (other pending changes are
-  committed as "controller: changes after the end"; the Librarian places what was
-  left pending);
-- **with** such changes: reopens the investigation:
-  1. commits the human's changes ("human: changes before reopening");
-  2. ends the talks and removes their notes (the primary gets nothing of them);
-  3. sets the investigation running;
-  4. restarts the primary from its handoff, with a notice listing the files changed
-     since the end. It must keep unaffected work. Its folder and the Reviewer's are no
-     longer frozen: both continue in them;
-  5. gives the Librarian any shelving requests left pending at the end.
+The human's files (OBJECTIVES.md, FEEDBACK.md, AGENTS.md, starting_evidence/) changed
+*since the end* are those whose content differs from the end's commit (a file the
+commit lacks, new or too large to be committed, counts by its fingerprint).
 
-Earlier reviews stay in `reviews/`, and round numbers continue.
+**From the web page** (`preparation.py`, `web.py`). After the end the top bar offers
+*Prepare reopening*, which opens the setup page again ([WEB.md](WEB.md)); the
+program stays open and the talks go on meanwhile.
+- *Material*: add, place and remove material, as before the first start.
+- *Instructions*: FEEDBACK.md, OBJECTIVES.md and AGENTS.md, one editor each (a save
+  names the version it started from, as on the setup page).
+- The last step lists the files changed since the end. *Revert* brings a file back
+  from the end's commit, or sets a new one aside in `.research/removed/` (restorable
+  from the Material step's Removed list, with its index line dropped); a file too
+  large to be committed at the end cannot be reverted. *Discard all* reverts every
+  one that can be.
+- **Reopen** waits until a file of the human's changed since the end, the folder is
+  ready (as for the first start), the Librarian has placed the final work and the
+  assistant is idle; the page says which of these it waits for. The launch options
+  can be changed there as at a start.
+- Reopen ends the talks (without their notes) and the talk-only controller; a new
+  controller then reopens the investigation, as below, in the same program and page.
+
+**The reopening assistant** (`assistant.py`, `prompts/reopen.md`) is the setup
+assistant with its own prompt and requests, on the same CLI choice, and is optional:
+- it reads the project and the talks with the primary and the Reviewer since the end,
+  written for it to `.research/setup/TALKS.md` (each request says when that changed);
+- it can grill the human (rounds of one to four multiple-choice questions) and writes
+  through tools: `write_feedback` (this reopening's section of FEEDBACK.md,
+  `## Reopening N (date)`, rewritten in place; earlier text stays), `write_objectives`,
+  `place`, and `write_agents_md` (AGENTS.md, only when asked);
+- its conversation is kept in `.research/setup/` while the human prepares (across
+  *Back* and a quit), and removed at Reopen, leaving only its CLI logs.
+
+**From the command line.** `research-pipeline run` on a finished project:
+- with the web page: opens talk-only, whatever changed; prepared changes wait for
+  the page's Reopen;
+- with `--no-web`: opens talk-only if nothing changed since the end, and otherwise
+  reopens the investigation.
+
+Opening talk-only commits pending changes as "controller: changes after the end" (the
+end's commit stays the reference), and the Librarian places what was left pending.
+
+**Reopening the investigation**:
+1. commits the human's changes ("human: changes before reopening");
+2. ends the talks and removes their notes (the primary gets nothing of them);
+3. sets the investigation running, and takes the human's files as they are as known;
+4. restarts the primary from its handoff, with a notice listing the files changed
+   since the end and, if FEEDBACK.md has a section `## Reopening N` for this
+   reopening, pointing to it as the brief for this round. It must keep unaffected
+   work. Its folder and the Reviewer's are no longer frozen: both continue in them;
+5. gives the Librarian any shelving requests left pending at the end.
+
+The Reviewer gets nothing new: it sees the new feedback and objectives with the next
+proposal. Earlier reviews stay in `reviews/`, and round numbers continue.

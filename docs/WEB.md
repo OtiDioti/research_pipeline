@@ -20,8 +20,29 @@ with it can see or act. The terminal prints the transcript next to the page
 (`--tui` shows the terminal app instead); both show and control the same investigation, and any number of pages
 may be open. After the investigation ends the page stays open for talks: the
 message box talks with the primary, the Reviewer takes messages too, and the top
-bar's only control is Quit ([FINISHING.md](FINISHING.md)). It stays readable until
-the program exits.
+bar's controls are *Prepare reopening* and Quit ([FINISHING.md](FINISHING.md)).
+*Prepare reopening* opens the setup page again, to reopen the investigation
+(below); *Back* returns to the graph. The page stays readable until the program exits.
+
+## Reopening on the page
+
+After COMPLETE or STOP, *Prepare reopening* shows the preparation again
+([FINISHING.md](FINISHING.md), "Reopening"), titled with the outcome:
+
+1. **Material**, as before the first start: new material, placed and described, or
+   removed (set aside, restorable).
+2. **Instructions**: FEEDBACK.md, OBJECTIVES.md and AGENTS.md, one tab each, with
+   the reopening assistant's conversation and questions beside them.
+3. **Settings**: the files changed since the end, each with Revert (a file the end's
+   commit has comes back from it; a new one is set aside), and *Discard all*; the
+   checks; every launch option, as at a start; and **Reopen**. Reopen waits until a
+   file of yours changed, the folder is ready, the Librarian has placed the final
+   work and the assistant is idle; hovering over it says what it waits for.
+
+The page can switch between this and the graph at any time (*Back*, *Prepare
+reopening*): saved edits are files, kept; the talks go on until Reopen. A change typed
+but not saved is lost when switching. Reopen ends the talks and restarts the
+investigation in the same program and page.
 
 ## The setup page
 

@@ -133,9 +133,12 @@ The models the agents' prompt recommends for subagents (coding: `claude:claude-o
 
 Running the same command again resumes a paused, shut down or interrupted
 investigation. After COMPLETE or STOP the program stays open: you can still talk
-with the primary and the Reviewer about their work, talk-only, until you quit; a
-later `run` opens talk-only again, and reopens the investigation only if you changed
-your files (e.g. a line in FEEDBACK.md) ([docs/FINISHING.md](docs/FINISHING.md)). Options given again replace the stored
+with the primary and the Reviewer about their work, talk-only, until you quit. To
+reopen it, press *Prepare reopening* on the web page: change your files there (by
+hand, or with the reopening assistant, which can grill you and write this round's
+FEEDBACK.md section), then press Reopen, without leaving the page. With `--no-web`, a
+later `run` reopens the investigation if you changed your files (e.g. a line in
+FEEDBACK.md) ([docs/FINISHING.md](docs/FINISHING.md)). Options given again replace the stored
 ones. `research-pipeline status my-project` prints the state without starting
 anything.
 
