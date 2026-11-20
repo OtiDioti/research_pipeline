@@ -16,7 +16,7 @@ def sent(harness, agent_id: str) -> str:
 
 async def spawn(harness, parent: str = "primary", name: str = "helper") -> str:
     """``parent`` starts a subagent; return its id."""
-    harness.write(f"agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
+    harness.write(f"phases/1/agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
     reply = await harness.call(
         parent, "spawn", task=f"brief-{name}.md", name=name, backend="codex", model="gpt-test", effort="high"
     )
@@ -242,7 +242,7 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
         async with running(self.root) as harness:
             dashboard = ResearchDashboard(self.root, launch_options(), drivers=FAKE_DRIVERS)
             dashboard.controller = harness.controller
-            harness.controller.activity.listeners.append(dashboard._entry)
+            harness.controller.activity.listeners.append(lambda entry: dashboard._entry(1, entry))
             pushed = []
             dashboard.publish = pushed.append
             child = await spawn(harness)
@@ -282,7 +282,7 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(level("alert", "primary", "Waiting for you."), "alert")
         self.assertEqual(level("controller", "primary", "Usage quota: codex held (short)."), "info")
-        self.assertEqual(level("controller", "primary", "The investigation is COMPLETE: x"), "alert")
+        self.assertEqual(level("controller", "primary", "Phase 1 is COMPLETE: x"), "alert")
         self.assertIsNone(dashboard.notice("controller", "helper", "Session 2 started (codex:x:high)."))
         self.assertIsNone(dashboard.notice("agent", "helper", "Thinking."))
 

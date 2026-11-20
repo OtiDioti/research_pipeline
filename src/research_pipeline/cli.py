@@ -5,8 +5,10 @@ a finished one. Options given on a later ``run`` replace the stored ones. The
 investigation is shown in the browser (:mod:`research_pipeline.web`), whose setup
 page first helps make the folder ready (before the first start, even in a folder
 that does not exist yet) and then offers every option, prefilled from these; the
-terminal prints the transcript, or shows the terminal app with ``--tui``. With
-``--no-web`` there is no page, and the folder must be ready already.
+terminal prints the transcript, or shows the terminal app with ``--tui``. The page
+also starts new phases, reopens and switches between them. With ``--no-web`` there
+is no page: the folder must be ready already, and ``run`` runs its latest phase
+(reopening it if its objectives changed since its end).
 """
 
 from __future__ import annotations
@@ -23,8 +25,9 @@ from agent_toolkit.handoff import check_threshold
 from agent_toolkit.records import locked
 
 from research_pipeline.controller import Controller
+from research_pipeline.phases import Home, load_state, summaries
 from research_pipeline.project import Project, ProjectError
-from research_pipeline.state import ACTIVE, Options, State
+from research_pipeline.state import ACTIVE, Options
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -34,7 +37,7 @@ def _parser() -> argparse.ArgumentParser:
     run.add_argument(
         "project",
         type=Path,
-        help="project folder (with starting_evidence/OBJECTIVES.md; unless --no-web, it may be set up first)",
+        help="project folder (with phases/1/OBJECTIVES.md; unless --no-web, it may be set up first)",
     )
     run.add_argument(
         "--primary",
@@ -216,22 +219,32 @@ def controller_running(project: Project) -> bool:
     return locked(project.lock_file)
 
 
+def latest(project: Project) -> Project:
+    """The project bound to its latest phase (the first, before any)."""
+    return project.at(Home.load(project.home_file).latest or 1)
+
+
 def show_status(project: Project) -> int:
-    """Print the stored state; live agents have sessions only while a controller is running."""
-    if not project.state_file.exists():
+    """Print the phases and the latest one's stored state; live agents have sessions only while a controller runs."""
+    home = Home.load(project.home_file)
+    project = latest(project)
+    state = load_state(project)
+    if state is None:
         print(f"No investigation in {project.root}.")
         return 1
-    state = State.load(project.state_file)
     running = controller_running(project)
-    print(f"Investigation: {state.status}" + (f" — {state.outcome}" if state.outcome else ""))
+    print("Phases:")
+    for item in summaries(project, home):
+        print(f"  {item.line()}" + (" ← run last" if item.number == home.active else ""))
+    print(f"\nPhase {project.phase}: {state.status}" + (f" — {state.outcome}" if state.outcome else ""))
     print("Controller: " + ("running" if running else "not running"))
     if state.proposal:
         print(
             f"Proposal: {state.proposal['kind'].upper()} round {state.proposal['round']}"
             + (" (reviewed)" if state.proposal.get("reviewed") else "")
         )
-    if state.shelving:
-        print(f"Shelving pending (for the Librarian): {', '.join(state.shelving)}")
+    if home.shelving:
+        print(f"Shelving pending (for the Librarian): {', '.join(home.shelving)}")
     for backend, hold in state.holds.items():
         print(f"Held: {backend} ({hold['kind']}: {hold['detail']})")
     print("\nAgents:")
@@ -255,8 +268,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "status":
         return show_status(project)
     try:
-        stored = State.load(project.state_file).options if project.state_file.exists() else None
-        options = options_from(args, stored)
+        project = latest(project)
+        state = load_state(project)
+        options = options_from(args, state.options if state else None)
         if args.web:
             project.check_location()
             project.root.mkdir(parents=True, exist_ok=True)  # a new folder is set up on the page
@@ -264,7 +278,7 @@ def main(argv: list[str] | None = None) -> int:
         problems = project.unready() if project.root.is_dir() else [f"{project.root} does not exist."]
         if problems:
             raise ProjectError(" ".join(problems) + " Run without --no-web to set the folder up on its setup page.")
-        return asyncio.run(run(Controller(project.root, options), args.tui))
+        return asyncio.run(run(Controller(project.root, options, phase=project.phase), args.tui))
     except KeyboardInterrupt:
         return 130
     except (ProjectError, ValueError, OSError) as error:

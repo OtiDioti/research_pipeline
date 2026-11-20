@@ -15,6 +15,7 @@ from pathlib import Path
 from agent_toolkit import Spec
 from agent_toolkit.protocol import Prompts
 
+from research_pipeline.phases import Summary
 from research_pipeline.project import Project
 from research_pipeline.state import Agent, Options
 
@@ -46,9 +47,10 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
     if agent.role == "librarian":
         text = PROMPTS.fill("librarian", project=project.root, folder=project.agent_dir(agent.id))
         return f"{text}\n\n{human}\n" if human else text + "\n"
+    phase = project.folder
     extra = {
-        "primary": ", and in STATUS.md, REPORT.md and the root FOLDER_CONTENT.md",
-        "reviewer": ", and in reviews/",
+        "primary": f", and in {phase}/STATUS.md, {phase}/REPORT.md and {phase}/FOLDER_CONTENT.md",
+        "reviewer": f", and in {phase}/reviews/",
     }.get(agent.role, "")
     recommended = {}  # the human's choice of models for subagents' tasks (see Options)
     for task in ("coding", "analysis"):
@@ -61,6 +63,8 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
         title=TITLES[agent.role],
         project=project.root,
         folder=project.agent_dir(agent.id),
+        phase=phase,
+        number=project.phase,
         extra=extra,
         backends=", ".join(options.backends),
         parent=agent.parent or "",
@@ -69,8 +73,11 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
 
-def talk_instructions(agent: Agent, project: Project, outcome: str) -> str:
-    """The instructions of a talk session after the end (research_pipeline.talks), then the human's AGENTS.md."""
+def talk_instructions(agent: Agent, project: Project, situation: str) -> str:
+    """The instructions of a talk session (research_pipeline.talks), then the human's AGENTS.md.
+
+    ``situation`` says what the agent's phase is: ended (and how), or paused.
+    """
     human = _section("Instructions from the human", project.root / "AGENTS.md", level="#")
     text = PROMPTS.fill(
         "talk",
@@ -78,7 +85,8 @@ def talk_instructions(agent: Agent, project: Project, outcome: str) -> str:
         title=TITLES[agent.role],
         project=project.root,
         folder=project.agent_dir(agent.id),
-        outcome=outcome.upper(),
+        number=project.phase,
+        situation=situation,
     )
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
@@ -96,18 +104,16 @@ def _section(title: str, path: Path, level: str = "##") -> str | None:
     return f"{level} {title} ({path.name})\n\n{text}"
 
 
-def opening(agent: Agent, project: Project, options: Options, notices: list[str]) -> str:
-    """The first message of a session: the agent's task, its handoff if any, and pending notices."""
+def opening(agent: Agent, project: Project, options: Options, notices: list[str], phases: str = "") -> str:
+    """The first message of a session: the agent's task, its handoff if any, and pending notices.
+
+    ``phases`` (the primary's): the project's phases (see :func:`phases_section`).
+    """
     folder = project.agent_dir(agent.id)
     parts = [f"[controller] This is session {agent.sessions} of {agent.id}."]
     if agent.role == "primary":
-        parts += filter(
-            None,
-            [
-                _section("Objectives", project.objectives),
-                _section("Feedback from the human", project.root / "FEEDBACK.md"),
-            ],
-        )
+        objectives = _section(f"Objectives of phase {project.phase}", project.objectives)
+        parts += filter(None, [objectives, phases])
         parts.append("## Starting evidence\n\n" + project.inventory())
         if options.references:
             parts.append(
@@ -193,27 +199,63 @@ def librarian_nudge(pending: list[str]) -> str:
     """For the Librarian when it ends its turn with shelving requests still pending."""
     return (
         f"[controller] You ended your turn, but shelving requests are still pending: {', '.join(pending)}. "
-        "Link each agent's files from your pages with write_page, then call shelved(agent)."
+        "Link each folder's files from your pages with write_page, then call shelved(folder)."
     )
 
 
-def shelving_request(agent: Agent, commit: str | None, count: int) -> str:
+def shelving_request(folder: str, about: str, commit: str | None, count: int) -> str:
     """For the Librarian: an agent's work was shelved and awaits its place in the library."""
     at = f" at commit {commit[:12]}" if commit else ""
     return (
-        f"[controller] Shelving request: {agent.id} ({agent.role}, {agent.status}) is finished; its folder "
-        f"agents/{agent.id}/ is catalogued{at} ({count} files, listed in library/CATALOG.md) and frozen. Read its "
-        "TASK.md, RESULT.md and FOLDER_CONTENT.md, link all of its files from your pages with write_page (a link "
-        f'to a folder covers everything in it), then call shelved("{agent.id}").'
+        f"[controller] Shelving request: the agent of {folder}/ ({about}) is finished; its folder is "
+        f"catalogued{at} ({count} files, listed in library/CATALOG.md) and frozen. Read its TASK.md, RESULT.md and "
+        "FOLDER_CONTENT.md, link all of its files from your pages with write_page (a link to a folder covers "
+        f'everything in it), then call shelved("{folder}").'
     )
 
 
-def shelving_pending(agents: list[str]) -> str:
+def shelving_pending(folders: list[str]) -> str:
     """For a fresh session of the Librarian while shelving requests are pending (e.g. after a restart)."""
     return (
-        f"[controller] Shelving requests are pending: {', '.join(agents)}. For each, read the agent's TASK.md, "
+        f"[controller] Shelving requests are pending: {', '.join(folders)}. For each folder, read its TASK.md, "
         "RESULT.md and FOLDER_CONTENT.md, link all of its files (listed in library/CATALOG.md) from your pages "
-        "with write_page, then call shelved(agent)."
+        "with write_page, then call shelved(folder)."
+    )
+
+
+def new_phase(line: str) -> str:
+    """For the Librarian when a new phase starts: the library now serves it too."""
+    return (
+        f"[controller] A new phase of the investigation has started: {line}. Its objectives are its OBJECTIVES.md. "
+        "The library now serves it too: organise your pages so that a reader finds the work by phase and by "
+        "objective (record any change of structure in library/LIBRARY.md). Its work reaches you as shelving "
+        "requests, as usual."
+    )
+
+
+def phases_section(current: Summary | None, others: str) -> str:
+    """The primary's view of the project's phases, for its opening message (``others``: the other phases' listing)."""
+    if current is None or not others and not current.builds_on:
+        return ""
+    lines = [f"## Phases\n\nThis is phase {current.number} of the project, {current.title} ({current.folder}/)."]
+    if current.builds_on:
+        lines.append(
+            f"It builds on phase {current.builds_on}: start from that phase's REPORT.md and STATUS.md "
+            f"(phases/{current.builds_on}/)."
+        )
+    if others:
+        lines.append(
+            "The other phases (their folders are read-only for you; their finished work is in the library):\n" + others
+        )
+    return "\n".join(lines)
+
+
+def later_phases(listing: str) -> str:
+    """For the primary of a phase that continues after other phases ran: what came after it."""
+    return (
+        "[controller] Since this phase last ran, the investigation went on in later phases:\n"
+        f"{listing}\nRead their reports and the library (library/LIBRARY.md) for what they established; reuse it "
+        "rather than redo it, and do not contradict it without saying why."
     )
 
 
@@ -333,9 +375,10 @@ def human_cancelled(child: str) -> str:
     )
 
 
-def review_request(kind: str, round_: int, detail: str, commit: str | None = None) -> str:
+def review_request(kind: str, round_: int, detail: str, phase: str, commit: str | None = None) -> str:
+    """For the Reviewer: a proposal to judge (``phase``: the phase's folder, e.g. 'phases/2')."""
     what = (
-        "proposes COMPLETE. Its report is REPORT.md; its status is STATUS.md"
+        f"proposes COMPLETE. Its report is {phase}/REPORT.md; its status is {phase}/STATUS.md"
         if kind == "complete"
         else f"proposes to STOP, giving this reason: {detail}"
     )
@@ -347,9 +390,9 @@ def review_request(kind: str, round_: int, detail: str, commit: str | None = Non
         else ""
     )
     return (
-        f"[controller] Review round {round_}: the primary researcher {what}. Its work is in agents/primary/ "
-        f"and the folders it links to; earlier reviews are in reviews/.{snapshot} Examine the results, write "
-        "your review to reviews/ and call verdict(review, agree)."
+        f"[controller] Review round {round_}: the primary researcher {what}. Its work is in {phase}/agents/primary/ "
+        f"and the folders it links to; earlier reviews are in {phase}/reviews/.{snapshot} Examine the results, "
+        f"write your review to {phase}/reviews/ and call verdict(review, agree)."
     )
 
 
@@ -389,13 +432,13 @@ def review_withdrawn(kind: str, round_: int) -> str:
     )
 
 
-def reopened(outcome: str, paths: list[str], brief: str | None = None) -> str:
-    """``brief``: the heading of this reopening's section of FEEDBACK.md, if the human wrote one."""
+def reopened(outcome: str, paths: list[str]) -> str:
+    """For the primary of a phase the human reopened by changing its objectives."""
     changes = ("\n".join(f"- {path}" for path in paths[:50]) or "- nothing") + "\n"
-    pointer = f"The human's brief for this round is the section '{brief}' of FEEDBACK.md.\n" if brief else ""
     return (
-        f"[controller] The investigation was reopened after it ended ({outcome}). Changes since then:\n"
-        f"{changes}{pointer}Reassess the affected results and continue; keep unaffected work. Reviews are in reviews/."
+        f"[controller] This phase was reopened after it ended ({outcome}): the human changed its objectives. "
+        f"Changes since then:\n{changes}Read the objectives again, reassess the affected results and continue; keep "
+        "unaffected work. The reviews are in your phase's reviews/."
     )
 
 

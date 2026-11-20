@@ -1,11 +1,12 @@
-"""Persistent state of one investigation: its agents, jobs and the controller's decisions.
+"""Persistent state of one phase of an investigation: its agents, jobs and the controller's decisions.
 
-Everything lives in one JSON file, ``.research/state.json``, rewritten atomically
+Each phase's lives in one JSON file, ``.research/phases/<N>/state.json``, rewritten atomically
 after every change and forced to disk unless the ``durable`` option is off
 (``--no-durable-state``). It holds only what the project files cannot:
 which agents exist and what they are doing, which jobs run, what the Reviewer is
 examining and which CLIs are held by their usage quota. The science itself stays
-in the project's ordinary files.
+in the project's ordinary files. What every phase shares (the list of phases, the
+Librarian and its pending requests) is kept apart (:mod:`research_pipeline.phases`).
 """
 
 from __future__ import annotations
@@ -21,9 +22,9 @@ from agent_toolkit.records import atomic_write
 #: Agent statuses of an agent at work: it always has a live CLI session. Agents in other statuses may keep
 #: theirs while they wait (see research_pipeline.controller); every live session occupies one slot.
 ACTIVE = frozenset({"running", "handing_off"})
-#: Agent statuses after which an agent never runs again (unless the investigation is reopened).
+#: Agent statuses after which an agent never runs again (unless its phase is reopened).
 ENDED = frozenset({"accepted", "cancelled", "finished"})
-#: Investigation statuses in which no agent works any more.
+#: Phase statuses in which no agent works any more.
 FINISHED = frozenset({"complete", "stopped"})
 
 
@@ -115,7 +116,7 @@ class Job:
 
 @dataclass
 class State:
-    """Everything the controller must remember across restarts."""
+    """Everything the controller must remember of one phase across restarts."""
 
     options: Options = field(default_factory=Options)
     status: str = "running"  # running | pausing | paused | complete | stopped
@@ -129,16 +130,20 @@ class State:
     holds: dict[str, dict] = field(default_factory=dict)
     human: dict[str, str] = field(default_factory=dict)  # human-owned file -> fingerprint, as last seen
     job_counter: int = 0
-    shelving: list[str] = field(default_factory=list)  # agents whose shelved work awaits the Librarian, in order
-    outcome: str | None = None  # how the investigation last ended
+    outcome: str | None = None  # how the phase last ended
     end_commit: str | None = None  # the commit of the last end, whose human files a reopening's changes are against
     ended: float | None = None  # when it last ended (POSIX time): the talks after it are since then
-    reopenings: int = 0  # times it was reopened after an end
     verdict: str | None = None  # the Reviewer's last verdict: 'agree' or 'disagree'
 
-    def save(self, path: Path, durable: bool = True) -> None:
-        """Write the state atomically, and (``durable``) force it to disk: a crash never leaves a half-written file."""
-        atomic_write(path, json.dumps(asdict(self), indent=1), durable=durable)
+    def save(self, path: Path, durable: bool = True, omit: tuple[str, ...] = ()) -> None:
+        """Write the state atomically, and (``durable``) force it to disk: a crash never leaves a half-written file.
+
+        Agents in ``omit`` are kept elsewhere (the Librarian, which every phase shares).
+        """
+        data = asdict(self)
+        data["agents"] = {key: value for key, value in data["agents"].items() if key not in omit}
+        path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write(path, json.dumps(data, indent=1), durable=durable)
 
     @classmethod
     def load(cls, path: Path) -> State:

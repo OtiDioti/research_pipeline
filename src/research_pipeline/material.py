@@ -20,10 +20,10 @@ its own line. Imports are recorded (project path and source) in
 .research/material/imports.json, so a copy is recognised after it was placed;
 that record and the removed material stay after the start.
 
-When an investigation that ended is reopened from the page, the human's files
-changed since the end can be reverted (:func:`revert`): a file the end's commit
-has comes back from it, a new one is set aside like removed material. The
-reopening's feedback goes to its own section of FEEDBACK.md (:func:`write_feedback`).
+When a phase that ended is reopened from the page, the human's files changed
+since its end can be reverted (:func:`revert`): a file the end's commit has comes
+back from it, a new one is set aside like removed material. A phase's objectives
+are its own OBJECTIVES.md (:func:`write_objectives`), in its folder.
 """
 
 from __future__ import annotations
@@ -35,13 +35,11 @@ import re
 import shutil
 import time
 from dataclasses import asdict, dataclass
-from datetime import date
 from pathlib import Path
 
 from research_pipeline.project import EMPTY_INDEX, INDEX, TOP_LEVEL, Project
 
 TARGET = "starting_evidence"
-OBJECTIVES_LINE = "The objectives: the questions to answer and the tasks to perform."
 
 
 @dataclass
@@ -149,11 +147,10 @@ def place(project: Project, items: list[dict], new_folders: list[dict]) -> str:
 
 
 def write_objectives(project: Project, text: str) -> str:
-    """Write starting_evidence/OBJECTIVES.md (the human's editor and the assistant alike), with its index line."""
-    project.evidence.mkdir(exist_ok=True)
+    """Write the phase's OBJECTIVES.md (the human's editor and the assistant alike); its folder's index has it."""
+    project.create_phase()
     project.write(project.objectives, text if text.endswith("\n") or not text else text + "\n")
-    _describe(project, project.evidence, project.objectives.name, OBJECTIVES_LINE)
-    return f"Wrote {TARGET}/{project.objectives.name}."
+    return f"Wrote {project.relative(project.objectives)}."
 
 
 def import_paths(project: Project, paths: list[str]) -> str:
@@ -258,24 +255,6 @@ def revert(project: Project, commit: str | None, existed: bool, path: str) -> st
         _write_record(project, IMPORTS, imports)
     _unlist(project, target)
     return f"Set {path} aside in .research/removed/: restore it from the Removed list."
-
-
-def write_feedback(project: Project, number: int, text: str) -> str:
-    """Write the section '## Reopening ``number`` (date)' of FEEDBACK.md, keeping everything else."""
-    path = project.root / "FEEDBACK.md"
-    old = path.read_text(encoding="utf-8") if path.is_file() else ""
-    heading = re.compile(rf"^## Reopening {number}\b.*$", re.MULTILINE)
-    found = heading.search(old)
-    title = found.group(0) if found else f"## Reopening {number} ({date.today().isoformat()})"
-    section = f"{title}\n\n{text.strip()}\n"
-    if found:
-        after = re.search(r"^## ", old[found.end() :], re.MULTILINE)
-        end = found.end() + after.start() if after else len(old)
-        new = old[: found.start()] + section + ("\n" + old[end:] if after else "")
-    else:
-        new = (old.rstrip() + "\n\n" if old.strip() else "") + section
-    project.write(path, new)
-    return f"Wrote the section '{title.removeprefix('## ')}' of FEEDBACK.md."
 
 
 def _committed(project: Project, commit: str, path: str) -> bool:

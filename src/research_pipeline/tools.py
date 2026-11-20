@@ -81,17 +81,18 @@ WRITE_PAGE = Tool(
     "Write a Markdown page of library/, replacing it if it exists; empty text removes it.\n\n"
     "path: relative to library/, ending in .md (e.g. 'LIBRARY.md', 'methods/FOLDER_CONTENT.md').\n"
     "library/CATALOG.md is the controller's. Link to the agents' work with relative paths (from\n"
-    "library/methods/x.md: '../../agents/fit-check/notes.md'); a link to a folder covers everything in it.",
+    "library/methods/x.md: '../../phases/1/agents/fit-check/notes.md'); a link to a folder covers everything in it.",
     {"path": TEXT, "text": TEXT},
     ("path", "text"),
 )
 SHELVED = Tool(
     "shelved",
-    "Report a shelving request done: every file of the agent is reachable from your pages.\n\n"
-    "Refused, with the files and links concerned, while a file of the agent is reachable from no page,\n"
+    "Report a shelving request done: every file of the agent's folder is reachable from your pages.\n\n"
+    "folder: as the request names it (e.g. 'phases/2/agents/fit-check').\n"
+    "Refused, with the files and links concerned, while a file of the folder is reachable from no page,\n"
     "a link in library/ leads nowhere, or a folder of library/ lacks its FOLDER_CONTENT.md lines.",
-    {"agent": TEXT},
-    ("agent",),
+    {"folder": TEXT},
+    ("folder",),
 )
 
 # The setup assistant's tools (research_pipeline.assistant), before the first start.
@@ -123,8 +124,7 @@ ASK = Tool(
 )
 WRITE_OBJECTIVES = Tool(
     "write_objectives",
-    "Write starting_evidence/OBJECTIVES.md (Markdown, the whole file), replacing it; the human sees it\n"
-    "in their editor.",
+    "Write the phase's OBJECTIVES.md (Markdown, the whole file), replacing it; the human sees it\nin their editor.",
     {"text": TEXT},
     ("text",),
 )
@@ -156,14 +156,7 @@ PLACE = Tool(
     ("entries",),
 )
 SETUP_TOOLS = [ASK, WRITE_OBJECTIVES, PLACE]
-# The reopening assistant's further tools (research_pipeline.assistant, after the end).
-WRITE_FEEDBACK = Tool(
-    "write_feedback",
-    "Write this reopening's section of FEEDBACK.md (Markdown, the section's whole text, without its heading),\n"
-    "replacing your earlier text of it; earlier sections stay. The reopened primary starts from it.",
-    {"text": TEXT},
-    ("text",),
-)
+# The further tool of the assistants of a reopening and of a new phase (research_pipeline.assistant).
 WRITE_AGENTS_MD = Tool(
     "write_agents_md",
     "Write AGENTS.md (Markdown, the whole file), replacing it: the human's standing instructions to every\n"
@@ -171,7 +164,7 @@ WRITE_AGENTS_MD = Tool(
     {"text": TEXT},
     ("text",),
 )
-REOPEN_TOOLS = [ASK, WRITE_FEEDBACK, WRITE_OBJECTIVES, WRITE_AGENTS_MD, PLACE]
+PHASE_TOOLS = [ASK, WRITE_OBJECTIVES, WRITE_AGENTS_MD, PLACE]
 
 # The one tool of a talk session after the end (research_pipeline.talks).
 WRITE_TALK_NOTE = Tool(

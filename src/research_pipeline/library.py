@@ -2,7 +2,8 @@
 
 Shelving changes no file. The controller lists what a finished agent left in its
 folder, freezes the folder and keeps the list here, in
-``.research/library.json``; :func:`render` turns it, with the work still in
+``.research/library.json``, under the folder's path (e.g. ``phases/2/agents/fit``:
+agent ids repeat across phases); :func:`render` turns it, with the work still in
 progress, into ``library/CATALOG.md``. The Librarian's pages must then reach
 every catalogued file (see :mod:`research_pipeline.links`).
 """
@@ -19,7 +20,6 @@ from pathlib import Path
 from agent_toolkit.records import atomic_write
 
 from research_pipeline.project import INDEX, LARGE, Project
-from research_pipeline.state import Agent
 
 CATALOG = "CATALOG.md"
 _LINK_TARGET = re.compile(r"\]\(([^)\s]+)\)")
@@ -29,7 +29,8 @@ _LINK_TARGET = re.compile(r"\]\(([^)\s]+)\)")
 class Shelf:
     """One agent's shelved work."""
 
-    agent: str
+    folder: str  # the agent's folder, relative to the project
+    about: str  # who it is, e.g. 'primary, finished, phase 2'
     commit: str | None  # the commit at shelving
     shelved: float  # when
     files: dict[str, str] = field(default_factory=dict)  # project-relative path -> its index line
@@ -43,25 +44,26 @@ class Catalogue:
         self.shelves: dict[str, Shelf] = {}
         if path.exists():
             data = json.loads(path.read_text(encoding="utf-8"))
-            self.shelves = {agent: Shelf(**shelf) for agent, shelf in data.items()}
+            self.shelves = {folder: Shelf(**shelf) for folder, shelf in data.items()}
 
     def save(self, durable: bool = True) -> None:
-        payload = json.dumps({agent: asdict(shelf) for agent, shelf in self.shelves.items()}, indent=1)
+        payload = json.dumps({folder: asdict(shelf) for folder, shelf in self.shelves.items()}, indent=1)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         atomic_write(self.path, payload, durable=durable)
 
-    def shelve(self, project: Project, agent_id: str, commit: str | None) -> Shelf:
-        """Catalogue what ``agent_id``'s folder holds now (replacing an earlier entry, e.g. after a reopening)."""
-        shelf = Shelf(agent_id, commit, time.time(), files(project, agent_id))
-        self.shelves[agent_id] = shelf
+    def shelve(self, project: Project, folder: Path, about: str, commit: str | None) -> Shelf:
+        """Catalogue what ``folder`` holds now (replacing an earlier entry, e.g. after a reopening)."""
+        key = project.relative(folder)
+        shelf = Shelf(key, about, commit, time.time(), files(project, folder))
+        self.shelves[key] = shelf
         return shelf
 
 
-def files(project: Project, agent_id: str) -> dict[str, str]:
+def files(project: Project, folder: Path) -> dict[str, str]:
     """The files of an agent's folder, each with its index line: what git tracks, and files too large for it.
 
     What git ignores otherwise (environments, caches) is not part of the work; it stays on disk untouched.
     """
-    folder = project.agent_dir(agent_id)
     relative = project.relative(folder)
     listed = set(project.git("ls-files", "-z", "--", relative, check=False).split("\0")) - {""}
     for directory, folders, names in os.walk(folder):
@@ -90,8 +92,8 @@ def _index_line(path: Path, cache: dict[Path, list[str]]) -> str:
     return ""
 
 
-def render(project: Project, catalogue: Catalogue, agents: list[Agent], working: set[str]) -> str:
-    """``library/CATALOG.md``: every shelved file by agent, then the work in progress (``working`` agents)."""
+def render(project: Project, catalogue: Catalogue, working: list[str]) -> str:
+    """``library/CATALOG.md``: every shelved file by agent, then the work in progress (``working`` folders)."""
     lines = [
         "# Catalogue",
         "",
@@ -102,14 +104,11 @@ def render(project: Project, catalogue: Catalogue, agents: list[Agent], working:
         "## Shelved",
         "",
     ]
-    roles = {agent.id: agent for agent in agents}
     shelves = sorted(catalogue.shelves.values(), key=lambda shelf: shelf.shelved)
     for shelf in shelves:
-        agent = roles.get(shelf.agent)
-        about = f"{agent.role}, {agent.status}" if agent else "agent"
         when = time.strftime("%Y-%m-%d %H:%M", time.localtime(shelf.shelved))
         commit = f", commit {shelf.commit[:12]}" if shelf.commit else ""
-        lines += [f"### [{shelf.agent}](../agents/{shelf.agent}/) — {about}, shelved {when}{commit}", ""]
+        lines += [f"### [{shelf.folder}](../{shelf.folder}/) — {shelf.about}, shelved {when}{commit}", ""]
         lines += [
             f"- [{path}]({_href('../' + path)})" + (f" — {line}" if line else "") for path, line in shelf.files.items()
         ]
@@ -117,14 +116,14 @@ def render(project: Project, catalogue: Catalogue, agents: list[Agent], working:
     if not shelves:
         lines += ["Nothing is shelved yet.", ""]
     lines += ["## Work in progress", ""]
-    for agent_id in sorted(working):
-        index = project.agent_dir(agent_id) / INDEX
+    for folder in sorted(working):
+        index = project.root / folder / INDEX
         try:
             entries = index.read_text(encoding="utf-8", errors="replace").splitlines()
         except OSError:
             entries = []
-        entries = [_rebase(line, agent_id) for line in entries if line.lstrip().startswith(("- ", "* "))]
-        lines += [f"### [{agent_id}](../agents/{agent_id}/)", "", *(entries or ["- (nothing indexed yet)"]), ""]
+        entries = [_rebase(line, folder) for line in entries if line.lstrip().startswith(("- ", "* "))]
+        lines += [f"### [{folder}](../{folder}/)", "", *(entries or ["- (nothing indexed yet)"]), ""]
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -133,13 +132,13 @@ def _href(target: str) -> str:
     return f"<{target}>" if " " in target else target
 
 
-def _rebase(line: str, agent_id: str) -> str:
-    """An index line of ``agents/<agent_id>/`` with its relative links made relative to ``library/``."""
+def _rebase(line: str, folder: str) -> str:
+    """An index line of ``folder`` (relative to the project) with its relative links made relative to ``library/``."""
 
     def rebase(match: re.Match) -> str:
         target = match.group(1)
         if target.startswith(("/", "#")) or re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", target):
             return match.group(0)
-        return f"](../agents/{agent_id}/{target})"
+        return f"](../{folder}/{target})"
 
     return _LINK_TARGET.sub(rebase, line)

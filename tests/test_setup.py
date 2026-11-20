@@ -31,30 +31,28 @@ class ReadinessTest(unittest.TestCase):
         remove(self.root)
 
     def test_a_folder_is_ready_with_objectives_no_loose_material_and_described_evidence(self):
-        self.assertIn("OBJECTIVES.md is missing", " ".join(self.project.unready()))
+        self.assertIn("phases/1/OBJECTIVES.md is missing", " ".join(self.project.unready()))
         (self.root / "starting_evidence").mkdir()
-        (self.root / "starting_evidence" / "OBJECTIVES.md").write_text("  \n")
+        self.project.create_phase()
+        (self.root / "phases" / "1" / "OBJECTIVES.md").write_text("  \n")
         (self.root / "paper.pdf").write_text("%PDF")
         problems = " ".join(self.project.unready())
         self.assertIn("is empty", problems)
         self.assertIn("Loose material at the top level, to place in starting_evidence/: paper.pdf", problems)
-        self.assertIn("starting_evidence/FOLDER_CONTENT.md is missing", problems)
-        (self.root / "starting_evidence" / "OBJECTIVES.md").write_text("# Objectives\n\nFind x.\n")
+        (self.root / "phases" / "1" / "OBJECTIVES.md").write_text("# Objectives\n\nFind x.\n")
         (self.root / "paper.pdf").unlink()
-        (self.root / "starting_evidence" / "FOLDER_CONTENT.md").write_text("- [OBJECTIVES.md](OBJECTIVES.md) — x\n")
+        (self.root / "starting_evidence" / "FOLDER_CONTENT.md").write_text("# Folder contents\n")
         (self.root / "starting_evidence" / "deep").mkdir()
         (self.root / "starting_evidence" / "deep" / "FOLDER_CONTENT.md").write_text("an archive's own index\n")
         (self.root / "starting_evidence" / "deep" / "raw.txt").write_text("kept as it is")
         self.assertEqual(self.project.unready(), ["starting_evidence/FOLDER_CONTENT.md does not describe: deep."])
-        (self.root / "starting_evidence" / "FOLDER_CONTENT.md").write_text(
-            "- [OBJECTIVES.md](OBJECTIVES.md) — x\n- [deep](deep) — an archive\n"
-        )
+        (self.root / "starting_evidence" / "FOLDER_CONTENT.md").write_text("- [deep](deep) — an archive\n")
         self.assertEqual(self.project.unready(), [])  # deeper folders are the human's own
         # Once an investigation has started, loose files are strays for the primary, not a refusal.
         (self.root / "late.txt").write_text("x")
         self.assertNotEqual(self.project.unready(), [])
         self.project.research.mkdir()
-        self.project.state_file.write_text("{}")
+        self.project.home_file.write_text("{}")
         self.assertEqual(self.project.unready(), [])
 
     def test_with_no_web_an_unready_folder_is_refused_with_the_hint(self):
@@ -128,7 +126,7 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         upload = self.dashboard.upload("papers/gap.pdf")
         upload.parent.mkdir(parents=True)
         upload.write_text("%PDF")  # the web app writes the body there
-        for refused in ("../x", ".hidden", "agents/x", "starting_evidence/x", ""):
+        for refused in ("../x", ".hidden", "phases/x", "starting_evidence/x", ""):
             with self.assertRaises(ValueError):
                 self.dashboard.upload(refused)
         with self.assertRaisesRegex(ValueError, "exists already"):
@@ -162,7 +160,8 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         await self.dashboard.prepare("save", {"text": "# Objectives\n\nFind the gap.", "version": document["version"]})
         with self.assertRaisesRegex(ValueError, "changed meanwhile"):
             await self.dashboard.prepare("save", {"text": "# Mine", "version": document["version"]})
-        self.assertIn("[OBJECTIVES.md]", (evidence / "FOLDER_CONTENT.md").read_text())
+        self.assertIn("Find the gap.", (self.root / "phases" / "1" / "OBJECTIVES.md").read_text())
+        self.assertIn("[OBJECTIVES.md]", (self.root / "phases" / "1" / "FOLDER_CONTENT.md").read_text())
         # Start waits for the checks (papers/ is still loose), then starts and keeps nothing of the setup.
         with self.assertRaisesRegex(SettingsError, "Loose material"):
             await self.dashboard.start(self.dashboard.values())
@@ -171,7 +170,7 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(self.view()["ready"])
         await self.dashboard.start(self.dashboard.values())
         self.assertIsNone(self.dashboard.preparation())
-        self.assertFalse((self.root / ".research" / "setup").exists())
+        self.assertFalse((self.root / ".research" / "setup" / "1").exists())
         self.assertEqual(self.dashboard.options.setup, "codex:gpt-test:high")
 
     async def test_removed_material_is_deleted_only_as_an_unchanged_copy_and_otherwise_set_aside_to_restore(self):
@@ -198,9 +197,7 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn(str(self.outside / "notes.txt"), entries["notes.txt"]["removal"])
         self.assertIn(str(self.outside / "code"), entries["starting_evidence/tools/code"]["removal"])  # placed
         self.assertIn(".research/removed/", entries["starting_evidence/paper.pdf"]["removal"])
-        self.assertEqual(entries["starting_evidence/OBJECTIVES.md"]["removal"], "")
-        with self.assertRaisesRegex(ValueError, "not removable"):
-            await self.dashboard.prepare("remove", {"path": "starting_evidence/OBJECTIVES.md"})
+        self.assertNotIn("phases/1/OBJECTIVES.md", entries)  # a phase's objectives are not material
         with self.assertRaisesRegex(ValueError, "not removable"):
             await self.dashboard.prepare("remove", {"path": "../outside"})
         # An unchanged imported copy is deleted: its original stays.
@@ -217,7 +214,6 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         await self.dashboard.prepare("remove", {"path": "starting_evidence/paper.pdf"})
         index = (evidence / "FOLDER_CONTENT.md").read_text()
         self.assertNotIn("[paper.pdf]", index)
-        self.assertIn("[OBJECTIVES.md]", index)
         removed = self.view()["files"]["removed"]
         self.assertEqual(
             [(item["path"], item["name"], item["folder"]) for item in removed],
@@ -276,7 +272,7 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(
             view["conversation"][-1], view["conversation"][-1] | {"sender": "assistant", "text": "Placed the paper."}
         )
-        self.assertIn("starting_evidence/OBJECTIVES.md:\n\n(not written yet)", FakeSession.instances[0].sent[0])
+        self.assertIn("phases/1/OBJECTIVES.md:\n\n(not written yet)", FakeSession.instances[0].sent[0])
         await self.dashboard.prepare("ideas", {"text": "Band gaps of perovskites.", "grill": True})
         view = await self.answered()
         asked = view["questions"]
@@ -326,10 +322,10 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([m["text"] for m in view["conversation"]], ["Hi.", "Hello."])
         await again.preparing.close()  # type: ignore[union-attr]
         Project(self.root).research.mkdir(exist_ok=True)
-        Project(self.root).state_file.write_text("{}")
+        Project(self.root).home_file.write_text("{}")
         started = ResearchDashboard(self.root, launch_options(), drivers=FAKE_DRIVERS)
         self.assertIsNone(started.preparation())
-        with self.assertRaisesRegex(ValueError, "has started"):
+        with self.assertRaisesRegex(ValueError, "nothing to prepare"):
             await started.prepare("rescan", {})
         shutil.rmtree(self.root / ".research")
 

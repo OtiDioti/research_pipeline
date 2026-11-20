@@ -3,10 +3,13 @@
 When an agent's work is finished, :meth:`Librarian.shelve` catalogues its folder
 (:mod:`research_pipeline.library`), which is frozen from then on, and asks the
 Librarian to place it. Nothing moves: the Librarian writes Markdown pages in
-``library/`` through ``write_page``, and ``shelved(agent)`` is refused until its
-pages reach every catalogued file of that agent and no link leads nowhere
-(:mod:`research_pipeline.links`). The controller wires this service in: it
-supplies the state, delivers notices and commits.
+``library/`` through ``write_page``, and ``shelved(folder)`` is refused until its
+pages reach every catalogued file of that folder and no link leads nowhere
+(:mod:`research_pipeline.links`). The Librarian serves every phase: its record and
+pending requests are the project's (:class:`research_pipeline.phases.Home`), and
+requests name agents by folder (agent ids repeat across phases). The controller
+of the phase that runs wires this service in: it supplies the state, delivers
+notices and commits.
 """
 
 from __future__ import annotations
@@ -20,12 +23,13 @@ from agent_toolkit.records import atomic_write
 
 from research_pipeline import links, prompts
 from research_pipeline.library import CATALOG, Catalogue, render
-from research_pipeline.project import Project
+from research_pipeline.phases import Home
+from research_pipeline.project import LIBRARIAN, Project
 from research_pipeline.state import ENDED, FINISHED, Agent, State
 from research_pipeline.tools import ToolError
 
-#: The Librarian's agent id (and folder name).
-LIBRARIAN = "librarian"
+__all__ = ["LIBRARIAN", "Librarian"]
+
 #: At most this many files or links are listed in a refusal or notice.
 LISTED = 30
 
@@ -39,11 +43,13 @@ class Librarian:
         self,
         project: Project,
         state: Callable[[], State],
+        home: Callable[[], Home],
         notify: Notify,
         commit: Callable[[str], str | None],
     ):
         self.project = project
-        self.state = state  # the controller's current state (replaced when it loads)
+        self.state = state  # the running phase's state (replaced when it loads), the Librarian's record included
+        self.home = home  # what the phases share: the Librarian's pending requests
         self.notify = notify
         self.commit = commit
         self.catalogue = Catalogue(project.research / "library.json")
@@ -59,40 +65,46 @@ class Librarian:
 
     # Shelving -------------------------------------------------------------------------------------
 
+    def folder(self, agent: Agent) -> str:
+        """The agent's folder, relative to the project: its name in the catalogue and in shelving requests."""
+        return self.project.relative(self.project.agent_dir(agent.id))
+
+    def pending(self) -> list[str]:
+        """The running phase's folders still awaiting the Librarian."""
+        mine = self.project.folder + "/"
+        return [folder for folder in self.home().shelving if folder.startswith(mine)]
+
     async def shelve(self, agents: list[Agent], commit: str | None) -> None:
         """Catalogue and freeze each agent's folder as committed in ``commit``, and ask the Librarian to place it."""
-        state = self.state()
+        state, home = self.state(), self.home()
         for agent in agents:
-            shelf = self.catalogue.shelve(self.project, agent.id, commit)
+            about = f"{agent.role}, {agent.status}, phase {self.project.phase}"
+            shelf = self.catalogue.shelve(self.project, self.project.agent_dir(agent.id), about, commit)
             self.catalogue.save(state.options.durable)
-            if agent.id not in state.shelving:
-                state.shelving.append(agent.id)
-            await self.notify(self.agent, prompts.shelving_request(agent, commit, len(shelf.files)))
+            if shelf.folder not in home.shelving:
+                home.shelving.append(shelf.folder)
+            await self.notify(self.agent, prompts.shelving_request(shelf.folder, about, commit, len(shelf.files)))
         with contextlib.suppress(ValueError, OSError):  # rendered again, and reported if it fails, at every commit
             self.write_catalog()  # committed with the next commit
 
     def frozen(self) -> list[Path]:
-        """The folders no job may write: those of shelved agents that have ended."""
-        agents = self.state().agents
-        return [
-            self.project.agent_dir(agent_id)
-            for agent_id in self.catalogue.shelves
-            if agent_id in agents and agents[agent_id].status in ENDED
-        ]
+        """The folders no job may write: shelved ones, except those of the running phase's agents still at work."""
+        live = {self.folder(agent) for agent in self.state().agents.values() if agent.status not in ENDED}
+        return [self.project.root / folder for folder in self.catalogue.shelves if folder not in live]
 
     def write_catalog(self) -> None:
         """Render ``library/CATALOG.md`` (the controller does this at every commit)."""
         state = self.state()
         finished = state.status in FINISHED
-        working = {
-            agent.id
+        working = [
+            self.folder(agent)
             for agent in state.agents.values()
             if agent.role != "librarian"
             and agent.status not in ENDED
-            and not (finished and agent.id in self.catalogue.shelves)
+            and not (finished and self.folder(agent) in self.catalogue.shelves)
             and self.project.agent_dir(agent.id).is_dir()
-        }
-        text = render(self.project, self.catalogue, list(state.agents.values()), working)
+        ]
+        text = render(self.project, self.catalogue, working)
         atomic_write(self.project.library / CATALOG, text, root=self.project.root, durable=state.options.durable)
 
     # The Librarian's tools -----------------------------------------------------------------------
@@ -131,9 +143,10 @@ class Librarian:
             "\nIts links that lead nowhere:\n" + "\n".join(f"- {link}" for link in broken) if broken else ""
         )
 
-    async def shelved(self, caller: Agent, agent: str) -> str:
-        """The Librarian reports ``agent``'s work placed: refused until its pages reach every file of it."""
-        pending = self.state().shelving
+    async def shelved(self, caller: Agent, folder: str) -> str:
+        """The Librarian reports the work of ``folder`` placed: refused until its pages reach every file of it."""
+        pending = self.home().shelving
+        agent = str(folder).strip().strip("/")
         if agent not in pending:
             raise ToolError(f"no shelving request for {agent} is pending; pending: {', '.join(pending) or 'none'}")
         report = self.check()
