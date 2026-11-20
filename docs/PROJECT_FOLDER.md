@@ -33,7 +33,7 @@ On `run`, the controller:
 | The primary | Also its phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md |
 | The Reviewer | Also its phase's `reviews/` |
 | The Librarian | Also the Markdown pages of `library/`, only through `write_page` |
-| The controller | `.research/` (hidden from agents and jobs), `phases/FOLDER_CONTENT.md`, each phase's `agents/FOLDER_CONTENT.md` and `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md and PARENT_FEEDBACK.md, `library/CATALOG.md`, the Librarian's pages (as it asks), and the outcome line of STATUS.md |
+| The controller | `.research/` (hidden from agents and jobs), `phases/FOLDER_CONTENT.md`, each phase's `agents/FOLDER_CONTENT.md` and `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md and PARENT_FEEDBACK.md, `library/CATALOG.md` and `library/catalog/`, the Librarian's pages (as it asks), and the outcome line of STATUS.md |
 
 Other phases' folders are read-only for a phase's agents and jobs.
 

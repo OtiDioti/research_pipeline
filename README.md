@@ -92,7 +92,7 @@ primary and Reviewer while another runs; `starting_evidence/`, `AGENTS.md`, the
 library and the Librarian are shared ([docs/WEB.md](docs/WEB.md)).
 
 When a subagent is accepted or cancelled, and at a phase's end for its primary and
-Reviewer, its folder is **shelved**: catalogued in `library/CATALOG.md` and frozen
+Reviewer, its folder is **shelved**: catalogued (indexed in `library/CATALOG.md`, its files listed in `library/catalog/`) and frozen
 in place (nothing moves, so every path stays valid). The Librarian then links the
 work from its pages, starting at `library/LIBRARY.md`, organised for you: what was
 established or built in each phase and for each objective, how, and with which tools

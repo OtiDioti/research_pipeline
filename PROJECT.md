@@ -33,7 +33,8 @@ organise freely.
 ├── starting_evidence/      human: evidence and tools shared by every phase; read-only for agents and jobs
 ├── library/                Librarian: Markdown pages leading to the finished work of every phase
 │   ├── LIBRARY.md              the entry page: how the library is organised, and its changes
-│   ├── CATALOG.md              controller: every shelved file, and work in progress
+│   ├── CATALOG.md              controller: index of the shelved agents (with their tasks) and the agents at work
+│   ├── catalog/                controller: one page per shelved agent, listing its files
 │   └── ...                     pages and folders of pages, as the Librarian sees fit
 ├── librarian/              the Librarian's own folder (its HANDOFF.md)
 ├── phases/                 one folder per phase; FOLDER_CONTENT.md (controller) lists them
@@ -166,13 +167,14 @@ job or a note uses stays valid.
   link that leads nowhere.
 - **Catalogue.** The controller keeps a catalogue of every shelved file (its path,
   the agent's folder, which agent it is, the commit at shelving and its index line) and renders
-  it as `library/CATALOG.md`, together with the work in progress in agents' folders
-  (their index lines), refreshed at every commit.
+  it, refreshed at every commit, as a short index, `library/CATALOG.md` (the shelved
+  agents by phase with their tasks, then the agents at work), and one page per
+  shelved agent in `library/catalog/` listing its files with their index lines.
 - **Using it.** Agents read and run shelved files in place, writing outputs to
   their own folder. To change a shelved file, or to run code that writes next to
   itself, an agent copies it into its own folder and says where it came from in
   its index. Before solving something or spawning, agents look in `library/`
-  (starting from `LIBRARY.md`) and search `CATALOG.md`.
+  (starting from `LIBRARY.md`), read `CATALOG.md` and search `catalog/`.
 - **Never waiting on it.** Shelving never blocks an agent: the controller catalogues
   and freezes the folder at once, and the pages follow when the Librarian can run.
   Its requests wait while it is paused, held by the quota or stalled, and survive a
@@ -480,7 +482,7 @@ configuration still applies.
 run last, the Librarian and its pending shelving requests) in
 `.research/project.json`, written atomically after every change and forced to disk
 (`--no-durable-state` skips the latter), so they survive a shutdown or crash. The library's catalogue is kept beside it. Its own files in the project's
-folders (indexes, starter files, briefs, feedback, job files, `CATALOG.md` and the
+folders (indexes, starter files, briefs, feedback, job files, the catalogue and the
 Librarian's pages) are replaced atomically (job logs grow in place), never through
 a symlink and never outside the project, since agents and jobs write the same
 folders.
@@ -533,7 +535,7 @@ Launch options:
 | `job_status(job)`, `job_cancel(job)` | owner | Inspect (status, output tail) or stop a job |
 | `complete(report)`, `stop(reason, final)` | primary | Propose finishing (§4) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
-| `write_page(path, text)` | Librarian | Write a Markdown page in `library/`, or remove it with empty text; never `CATALOG.md` |
+| `write_page(path, text)` | Librarian | Write a Markdown page in `library/`, or remove it with empty text; never `CATALOG.md` or `catalog/` |
 | `shelved(folder)` | Librarian | Report a shelving request done: every catalogued file of the agent's folder is reachable from a page (§2) |
 
 Every tool reply also carries any pending notices. While its proposal is under
@@ -583,7 +585,7 @@ is no prescribed scheme: the human may add preferences in `AGENTS.md`.
    its session during review, the layout check, and human-edit detection; and
    shelving: the catalogue on accept and on cancel (a whole subtree), `shelved`
    refused while a file is reachable from no page or a link leads nowhere,
-   `write_page` refusals (not Markdown, outside `library/`, `CATALOG.md`), the
+   `write_page` refusals (not Markdown, outside `library/`, the catalogue), the
    Librarian resting between requests and stalling, requests waiting while it
    cannot run, the end without it, and the refusal of earlier projects.
    Real processes test the confinement of sessions and jobs (protected inputs,

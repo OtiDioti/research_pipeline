@@ -30,10 +30,19 @@ until the next end replaces it.
 
 ## The catalogue
 
-`library/CATALOG.md` is rendered by the controller at every commit and after every
-shelving: each shelved agent with its files and index lines, then the work in
-progress in the other agents' folders (the lines of their `FOLDER_CONTENT.md`).
-Agents search it, with `library/LIBRARY.md`, before solving something or spawning.
+The controller renders it at every commit and after every shelving, in two parts,
+so that agents can read the index whole and search the rest:
+- `library/CATALOG.md`, a short index: the shelved agents by phase, each with the
+  title of its TASK.md, who it is, its number of files and when it was shelved,
+  linking to its page; then the agents at work, each linking to its folder and
+  its `FOLDER_CONTENT.md`;
+- `library/catalog/phase-<N>/<id>.md`, one page per shelved agent: its folder,
+  the commit at shelving, and every catalogued file with its index line. Each
+  folder of `catalog/` has a `FOLDER_CONTENT.md`, written by the controller too.
+
+Agents read `library/LIBRARY.md` and `CATALOG.md`, and search `library/catalog/`,
+before solving something or spawning. Pages are rewritten only when they change.
+A Librarian's page elsewhere in `library/` is never touched.
 
 ## The Librarian
 
@@ -50,12 +59,13 @@ Agents search it, with `library/LIBRARY.md`, before solving something or spawnin
 - **`write_page(path, text)`** writes a Markdown page of `library/` (the path is
   relative to `library/`), atomically and never through a symlink; empty text
   removes it, with folders left empty. Refused: a path outside `library/`, not
-  ending in `.md`, hidden, a folder, or `CATALOG.md`. The reply lists the page's
+  ending in `.md`, hidden, a folder, `CATALOG.md` or under `catalog/`. The reply lists the page's
   links that lead nowhere.
 - **`shelved(folder)`** reports a request done; requests name agents by folder (e.g. `phases/2/agents/fit`), as agent ids repeat across phases. It is refused, with the list,
   while a catalogued file of that agent is reachable from no page, a link in
   `library/` leads nowhere, or the layout check of `library/` fails (a folder's
-  `FOLDER_CONTENT.md` missing an entry). `CATALOG.md` does not count as a page.
+  `FOLDER_CONTENT.md` missing an entry; `catalog/` needs no line, and its folders are
+  the controller's). `CATALOG.md` and `catalog/` do not count as pages.
   Accepted: the request is removed and the controller commits
   `librarian: shelved <folder>`.
 - **Its turns.** At the end of each turn, the pages it changed are committed

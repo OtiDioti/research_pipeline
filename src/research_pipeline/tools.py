@@ -80,7 +80,7 @@ WRITE_PAGE = Tool(
     "write_page",
     "Write a Markdown page of library/, replacing it if it exists; empty text removes it.\n\n"
     "path: relative to library/, ending in .md (e.g. 'LIBRARY.md', 'methods/FOLDER_CONTENT.md').\n"
-    "library/CATALOG.md is the controller's. Link to the agents' work with relative paths (from\n"
+    "library/CATALOG.md and library/catalog/ are the controller's. Link to the agents' work with relative paths (from\n"
     "library/methods/x.md: '../../phases/1/agents/fit-check/notes.md'); a link to a folder covers everything in it.",
     {"path": TEXT, "text": TEXT},
     ("path", "text"),

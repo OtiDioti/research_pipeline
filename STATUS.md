@@ -1,5 +1,22 @@
 # Status
 
+**2026-11-20.** 0.20.0, on agent_toolkit 0.14.0: prompts only (`common.md`, `reviewer.md`), from what the
+`transport` run showed (below the primary, every subagent spawned at most one child, nearly always a check of its
+own work; parents reread and reran their children's work and rarely rejected). Spawning now splits work: parallel
+subproblems go to sibling subagents spawned together with a shared conventions file, a serial chain stays with one
+agent, and no agent spawns a checker of its own result. Checking is divided: the author checks fully and lists its
+key claims with evidence, check and reproducing command in every summary; the parent spot-checks one or two
+deciding claims, records what it checked, and rejects rather than redoes; the Reviewer checks independently what
+only the author checked. Every brief has a **"Prior work" section** (it may be empty): what the project already
+has for the task, linked, or what was searched for and not found; summaries also link the earlier work they built
+on. This is asked by the prompts only, not
+checked by the controller, so that it can be changed in the prompts alone.
+The **catalogue is split**: `library/CATALOG.md` is now a short index (the shelved agents by phase with the titles
+of their tasks, then the agents at work), and each shelved agent's files are on its own page in
+`library/catalog/phase-<N>/<id>.md`, for agents to search ([docs/LIBRARY.md](docs/LIBRARY.md)); in the transport
+run the single file had grown to 285 KB, and agents read it whole. Existing projects get the new form at their
+next commit. Not yet tried with real CLIs.
+
 **2026-11-20.** 0.19.0, on agent_toolkit 0.14.0: acting on agents moved to an **action ring**
 ([docs/WEB.md](docs/WEB.md)). Hovering an agent shows, besides its card, round buttons on its left (on its right
 near the page's edge): chat, pause or resume, hand off, cancel and files, greyed with the reason when not possible

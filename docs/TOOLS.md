@@ -55,6 +55,6 @@ Every reply also carries the caller's pending notices.
 | "Refused: … is neither your parent nor one of your subagents" | `message` aimed at another agent |
 | "Refused: … has submitted its result …" | `message` to a submitted subagent: accept, reject or cancel it |
 | "Refused: … is not an existing file/folder in the project" | A path outside the project, inside `.research/`, or missing |
-| "Refused: …: a page's path is relative to library/ …", "… must end in .md", "… CATALOG.md is written by the controller" | `write_page` outside `library/`, not Markdown, hidden, or on the catalogue |
+| "Refused: …: a page's path is relative to library/ …", "… must end in .md", "… library/CATALOG.md and library/catalog/ are written by the controller" | `write_page` outside `library/`, not Markdown, hidden, or on the catalogue |
 | "Refused: <agent> is not shelved yet: …" | `shelved` while a file of the agent is reachable from no page, a link leads nowhere, or `library/` fails the layout check |
 | "Refused: no shelving request for … is pending" | `shelved` for an agent without a pending request |

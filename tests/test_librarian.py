@@ -8,6 +8,7 @@ import asyncio
 import json
 import unittest
 
+from research_pipeline import links
 from research_pipeline.controller import Controller
 from research_pipeline.project import ProjectError
 from tests.helpers import (
@@ -88,7 +89,19 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn(f"phases/1/agents/{child}/data/table.csv", shelf["files"])
             self.assertEqual(shelf["files"][f"phases/1/agents/{child}/RESULT.md"], "described.")
             self.assertEqual(shelf["about"], "subagent, accepted, phase 1")
-            self.assertIn(f"phases/1/agents/{child}/RESULT.md", (self.root / "library" / "CATALOG.md").read_text())
+            index = (self.root / "library" / "CATALOG.md").read_text()
+            self.assertIn(f"- [phases/1/agents/{child}](catalog/phase-1/{child}.md) — Check {child} (subagent,", index)
+            self.assertIn("- [phases/1/agents/primary](../phases/1/agents/primary/) (primary, running)", index)
+            self.assertNotIn("RESULT.md", index)  # the files are on the agent's page
+            page = self.root / "library" / "catalog" / "phase-1" / f"{child}.md"
+            self.assertIn(
+                f"- [phases/1/agents/{child}/RESULT.md](../../../phases/1/agents/{child}/RESULT.md) — described.",
+                page.read_text(),
+            )
+            report = links.check([page], self.root, lambda name: [])
+            self.assertEqual(report.broken, [])
+            self.assertIn(self.root / "phases" / "1" / "agents" / child / "data" / "table.csv", report.reached)
+            self.assertIn(f"[{child}.md]({child}.md)", (page.parent / "FOLDER_CONTENT.md").read_text())
             await spawn(harness, "next")  # primary and next fill the cap of 2; the Librarian's session is not counted
             for command in (f"echo x > ../{child}/new.txt", "echo x > ../../../../library/new.md"):
                 reply = await harness.call("primary", "run_job", command=command, timeout_seconds=30)
@@ -107,6 +120,7 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
                 "notes.txt": "must end in .md",
                 "../agents/x.md": "stays inside",
                 "CATALOG.md": "written by the controller",
+                "catalog/phase-1/x.md": "written by the controller",
                 ".hidden/x.md": "hidden",
             }
             for path, why in refusals.items():
