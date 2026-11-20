@@ -72,8 +72,8 @@ from agent_toolkit.quota import Guard
 from agent_toolkit.records import Busy, atomic_write, exclusive
 from agent_toolkit.tools import ToolBridge
 
-from research_pipeline import briefs, phases, prompts
 from research_pipeline import jobs as joblib
+from research_pipeline import phases, prompts
 from research_pipeline.librarian import LIBRARIAN, Librarian
 from research_pipeline.phases import NOT_STARTED, Home
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
@@ -1182,19 +1182,14 @@ class Controller:
         except ValueError as error:
             raise ToolError(str(error)) from None
         brief = self._path(caller, task, self.project.agent_dir(caller.id), self.project.root)
-        text = brief.read_text(encoding="utf-8", errors="replace")
-        if not text.strip():
+        if not brief.read_text(encoding="utf-8", errors="replace").strip():
             raise ToolError(f"{task} must be a non-empty Markdown file: the subagent's brief")
-        beside = self.project.agents / "subagent" / "TASK.md"  # any subagent's TASK.md: they all sit side by side
-        problem = briefs.problem(text, task, beside, self.project.root, self.librarian.by_name())
-        if problem:
-            raise ToolError(problem)
         self._admit(backend)
         self._continued(caller)
         child = Agent(self._new_id(name), "subagent", caller.id, backend, model.strip(), effort.strip())
         folder = self.project.agent_dir(child.id)
         folder.mkdir(parents=True)
-        atomic_write(folder / "TASK.md", text, root=self.project.root)
+        atomic_write(folder / "TASK.md", brief.read_text(encoding="utf-8", errors="replace"), root=self.project.root)
         self.state.agents[child.id] = child
         await self._start_session(child)
         if child.status != "running":

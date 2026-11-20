@@ -14,7 +14,6 @@ from research_pipeline.project import ProjectError
 from tests.helpers import (
     FAKE_DRIVERS,
     FakeSession,
-    brief,
     launch_options,
     quit_after_the_end,
     remove,
@@ -31,7 +30,7 @@ def sent(harness, agent_id: str) -> str:
 
 
 async def spawn(harness, name: str, parent: str = "primary", backend: str = "codex") -> str:
-    harness.write(f"phases/1/agents/{parent}/brief-{name}.md", brief(f"Check {name}"))
+    harness.write(f"phases/1/agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
     reply = await harness.call(
         parent, "spawn", task=f"brief-{name}.md", name=name, backend=backend, model="gpt-test", effort="high"
     )

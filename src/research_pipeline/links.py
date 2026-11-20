@@ -38,14 +38,9 @@ class Report:
         return path in self.reached or any(parent in self.reached for parent in path.parents)
 
 
-def without_code(text: str) -> str:
-    """``text`` without its code blocks and code spans, where nothing is a link or a heading."""
-    return _CODE.sub("", _FENCE.sub("", text))
-
-
 def targets(text: str) -> list[tuple[str, bool]]:
     """The link targets of a Markdown text, each with whether it is a wikilink (code spans and blocks skipped)."""
-    text = without_code(text)
+    text = _CODE.sub("", _FENCE.sub("", text))
     found = [(match.group(1), False) for match in _INLINE.finditer(text)]
     found += [(match.group(1), False) for match in _REFERENCE.finditer(text)]
     found += [(match.group(1), True) for match in _WIKI.finditer(text)]
@@ -64,23 +59,14 @@ def check(pages: Iterable[Path], root: Path, by_name: Callable[[str], list[Path]
             text = page.read_text(encoding="utf-8", errors="replace")
         except OSError:
             continue
-        check_text(text, page, root, by_name, report)
-    return report
-
-
-def check_text(
-    text: str, page: Path, root: Path, by_name: Callable[[str], list[Path]], report: Report | None = None
-) -> Report:
-    """Resolve the links of ``text`` as if it were the page ``page`` (which need not exist), adding to ``report``."""
-    report = Report() if report is None else report
-    for target, wiki in targets(text):
-        path = _resolve(page, target, wiki, root, by_name)
-        if path is None:
-            continue  # an external URL or an in-page anchor
-        if path.exists():
-            report.reached.add(path)
-        else:
-            report.broken.append((page, target))
+        for target, wiki in targets(text):
+            path = _resolve(page, target, wiki, root, by_name)
+            if path is None:
+                continue  # an external URL or an in-page anchor
+            if path.exists():
+                report.reached.add(path)
+            else:
+                report.broken.append((page, target))
     return report
 
 

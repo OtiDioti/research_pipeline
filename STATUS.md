@@ -7,16 +7,15 @@ subproblems go to sibling subagents spawned together with a shared conventions f
 agent, and no agent spawns a checker of its own result. Checking is divided: the author checks fully and lists its
 key claims with evidence, check and reproducing command in every summary; the parent spot-checks one or two
 deciding claims, records what it checked, and rejects rather than redoes; the Reviewer checks independently what
-only the author checked. Every brief needs a **"Prior work" section** (it may be empty): what the project already
-has for the task, linked, or what was searched for and not found. `spawn` refuses a brief without it, or with a
-link in it that leads nowhere from the subagent's TASK.md ([docs/AGENT_ROLES.md](docs/AGENT_ROLES.md)); summaries
-also link the earlier work they built on, and the Reviewer objects to work redone that the project already had.
+only the author checked. Every brief has a **"Prior work" section** (it may be empty): what the project already
+has for the task, linked, or what was searched for and not found; summaries also link the earlier work they built
+on, and the Reviewer objects to work redone that the project already had. This is asked by the prompts only, not
+checked by the controller, so that it can be changed in the prompts alone.
 The **catalogue is split**: `library/CATALOG.md` is now a short index (the shelved agents by phase with the titles
 of their tasks, then the agents at work), and each shelved agent's files are on its own page in
 `library/catalog/phase-<N>/<id>.md`, for agents to search ([docs/LIBRARY.md](docs/LIBRARY.md)); in the transport
 run the single file had grown to 285 KB, and agents read it whole. Existing projects get the new form at their
-next commit.
-Not yet tried with real CLIs.
+next commit. Not yet tried with real CLIs.
 
 **2026-11-20.** 0.19.0, on agent_toolkit 0.14.0: acting on agents moved to an **action ring**
 ([docs/WEB.md](docs/WEB.md)). Hovering an agent shows, besides its card, round buttons on its left (on its right

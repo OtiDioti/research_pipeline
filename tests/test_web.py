@@ -6,7 +6,7 @@ from agent_toolkit.web import SettingsError
 
 from research_pipeline.state import Options
 from research_pipeline.web import ResearchDashboard
-from tests.helpers import FAKE_DRIVERS, FakeSession, brief, launch_options, remove, running, temp_project
+from tests.helpers import FAKE_DRIVERS, FakeSession, launch_options, remove, running, temp_project
 
 
 def sent(harness, agent_id: str) -> str:
@@ -16,7 +16,7 @@ def sent(harness, agent_id: str) -> str:
 
 async def spawn(harness, parent: str = "primary", name: str = "helper") -> str:
     """``parent`` starts a subagent; return its id."""
-    harness.write(f"phases/1/agents/{parent}/brief-{name}.md", brief(f"Check {name}"))
+    harness.write(f"phases/1/agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
     reply = await harness.call(
         parent, "spawn", task=f"brief-{name}.md", name=name, backend="codex", model="gpt-test", effort="high"
     )

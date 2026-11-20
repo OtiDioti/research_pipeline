@@ -232,11 +232,8 @@ session that loaded anything personal is stopped, and the human is told why.
 
 **Spawning.** An agent chooses its subagent's task, evidence, tools, CLI, model and
 effort, within the backends the human allowed at launch. Before spawning, it looks
-in the library for what the project already has on the subject, and shows it in
-the brief's "Prior work" section: the relevant files, linked, or what it searched
-for and did not find. The section may be empty, but a brief without it is
-refused, and so is one whose section has a link that leads nowhere, read from
-the subagent's TASK.md (where the brief is copied). Model and effort are always
+in the library for what the project already has on the subject, and names the
+relevant files in the brief. Model and effort are always
 explicit: a spawn without them is refused, and so is a launch whose `--primary`,
 `--reviewer` or `--librarian` lacks them; an effort the CLI is known not to accept is refused before
 any session starts. The role prompt recommends a model for coding tasks (by default
@@ -581,8 +578,7 @@ is no prescribed scheme: the human may add preferences in `AGENTS.md`.
 ## 9. V0 acceptance
 
 1. **Automated tests** cover the controller's decisions against a fake CLI driver:
-   spawn and cap refusal, explicit model and effort, a brief without its "Prior work"
-   section or with a link in it that leads nowhere, accept/reject/cancel, messages
+   spawn and cap refusal, explicit model and effort, accept/reject/cancel, messages
    between parent and subagent, handoff triggering and repetition, waiting, idle and
    stalled agents, sessions kept while waiting and closed at the idle limit, quota
    pause and resume per CLI, the COMPLETE/STOP exchanges with the primary waiting in

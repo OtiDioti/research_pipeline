@@ -49,11 +49,7 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
   `AGENTS.md` may say otherwise. An effort
   Claude Code does not accept (it accepts `low`, `medium`, `high`, `xhigh` and `max`) is
   refused before any session starts; Codex checks the effort itself when the session starts. The brief
-  `task` (a non-empty Markdown file) is copied to the phase's `agents/<id>/TASK.md`. It needs a
-  section headed "Prior work" (any heading level; it may be empty): what the project already
-  has for the task, linked, or what was searched for and not found. Its links must lead
-  somewhere, read from the subagent's TASK.md, so from a folder beside the parent's (a brief
-  kept in a subfolder of the parent's folder still links as if it sat beside it). The id
+  `task` (a non-empty Markdown file) is copied to the phase's `agents/<id>/TASK.md`. The id
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.
 - Spawning does not stop the parent: it keeps doing whatever does not depend on the
