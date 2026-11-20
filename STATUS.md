@@ -1,5 +1,16 @@
 # Status
 
+**2026-11-20.** 0.21.0, on agent_toolkit 0.15.0: **statistics** of a run ([docs/STATS.md](docs/STATS.md)),
+deterministic and read-only. The web page's *Stats* button replaces the graph with them (then *Graph* goes back):
+library use; the spawn tree and agents at work over time; for each child, which links of its brief it opened and
+which of its parent's files it read without a link; for each result, what the parent read and ran of the child's
+work before deciding; resources; per-agent cards; live (every 5 s while shown) and comparable with other projects,
+including those made before phases. `research-pipeline stats PROJECT [--phase N|all]` prints the key numbers.
+Tool calls become file accesses by fixed rules (`stats/calls.py`), from the whole calls agent_toolkit 0.15.0 now
+records; older runs are parsed from their summaries and marked approximate (a third of transport's calls were cut).
+On transport: children opened 42% of their brief links and read 223 of their parents' files unlinked; parents
+rejected 3 of 70 results. Not yet tried in a live run.
+
 **2026-11-20.** 0.20.0, on agent_toolkit 0.14.0: prompts only (`common.md`, `reviewer.md`), from what the
 `transport` run showed (below the primary, every subagent spawned at most one child, nearly always a check of its
 own work; parents reread and reran their children's work and rarely rejected). Spawning now splits work: parallel
