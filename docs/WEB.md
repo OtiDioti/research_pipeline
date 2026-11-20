@@ -119,10 +119,12 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
 
 ## The panel
 
-For the selected agents (all agents when none is selected): **Messages**,
-coloured by sender (its parent orange, you teal, the controller green, its
-subagents violet, its own neutral), and **Tool calls**, in two windows; and
-**Task & notes**, its documents. A file opens in the panel or, with *Open outside*,
+For the selected agents (all agents when none is selected): **Activity**, their
+messages coloured by sender (its parent orange, you teal, the controller green,
+its subagents violet, its own neutral) and, with the *Tools* switch on, their
+tool calls, in time order; its header names the agent with its status and
+actions. Below it, **Task & notes**, its documents. Either window folds to its
+header, and the page remembers the folds, the switch and the sizes. A file opens in the panel or, with *Open outside*,
 in your desktop's application; a website in a new tab.
 
 Messages and tool calls come from `.research/phases/<N>/activity/<agent>.jsonl` (the
