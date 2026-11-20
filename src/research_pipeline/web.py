@@ -344,7 +344,7 @@ class ResearchDashboard(Dashboard):
 
     async def act(self, action: str, target: str | None, args: dict) -> str | None:
         controller, shown = self._running(), self._shown()
-        if target is None:  # the top bar's controls, and the message box's default recipient
+        if target is None:  # the top bar's controls
             if action == "resume_phase":
                 state = self._state(self.selected)
                 if shown is not None or state is None or state.status != "paused":
@@ -362,9 +362,7 @@ class ResearchDashboard(Dashboard):
             if action == "shutdown":
                 controller.shutdown()
                 return "shutting down"
-            if action != "message":
-                raise ValueError(f"{action} is not available")
-            target = "primary"
+            raise ValueError(f"{action} is not available")
         if shown is None:  # another phase: talks with its primary and Reviewer only
             if action != "message":
                 raise ValueError(f"phase {self.selected} does not run: you can only talk with its primary and Reviewer")

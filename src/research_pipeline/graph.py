@@ -159,9 +159,6 @@ def status(
         )
         if controller.releasable:
             controls.append({"action": "release", "label": "Resume held", "confirm": None})
-        composer = (
-            f"Talk with {name}'s primary researcher (it has ended)" if ended else f"Message {name}'s primary researcher"
-        )
     else:
         controls = (
             [{"action": "prepare", "label": "Prepare reopening", "confirm": None}]
@@ -173,7 +170,6 @@ def status(
             else []
         )
         summary = summary or ("not started" if not started else state.status)
-        composer = f"Talk with {name}'s primary researcher (talk only: it does not run)"
     finished = running.status in FINISHED
     controls.append(
         {
@@ -200,7 +196,6 @@ def status(
             for window in controller.windows
         ],
         "controls": controls,
-        "composer": {"target": "primary", "label": composer},
     }
 
 
