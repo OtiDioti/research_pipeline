@@ -9,7 +9,7 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 |---|---|---|---|
 | Controller | `controller.py` | Runs one phase of the investigation and makes every operational decision | [CONTROLLER.md](CONTROLLER.md) |
 | Phases | `phases.py`, `web.py` | The phases of a project, what they share, and switching between them | [PROJECT_FOLDER.md](PROJECT_FOLDER.md), [WEB.md](WEB.md) |
-| Agents | `prompts.py`, `prompts/` | Primary, subagents, Reviewer and Librarian: their tasks, tools and lifecycle | [AGENT_ROLES.md](AGENT_ROLES.md) |
+| Agents | `prompts.py`, `prompts/`, `briefs.py` | Primary, subagents, Reviewer and Librarian: their tasks, tools and lifecycle | [AGENT_ROLES.md](AGENT_ROLES.md) |
 | The library | `librarian.py`, `library.py`, `links.py` | Shelving finished work, the catalogue, the Librarian's pages and their checks | [LIBRARY.md](LIBRARY.md) |
 | Context handoffs | `controller.py`, `agent_toolkit` (`handoff.py`), drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
 | Review and finishing | `controller.py` | COMPLETE, STOP, the Reviewer exchange, reopening | [FINISHING.md](FINISHING.md) |

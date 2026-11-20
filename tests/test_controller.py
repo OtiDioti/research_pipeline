@@ -15,6 +15,7 @@ from research_pipeline.project import ProjectError
 from tests.helpers import (
     FAKE_DRIVERS,
     FakeSession,
+    brief,
     launch_options,
     quit_after_the_end,
     remove,
@@ -39,7 +40,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
         remove(self.root)
 
     async def spawn(self, harness, parent="primary", name="helper", backend="codex", model="gpt-test", effort="high"):
-        harness.write(f"phases/1/agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
+        harness.write(f"phases/1/agents/{parent}/brief-{name}.md", brief(f"Check {name}"))
         reply = await harness.call(
             parent, "spawn", task=f"brief-{name}.md", name=name, backend=backend, model=model, effort=effort
         )
@@ -124,7 +125,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_session_that_loads_personal_setup_waits_for_the_human(self):
         async with running(self.root) as harness:
             FakeSession.start_error = SetupError("codex loaded the human's own setup (skill personal-notes)")
-            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", brief("Task"))
             reply = await harness.call(
                 "primary", "spawn", task="brief.md", name="helper", backend="codex", model="gpt-test", effort="high"
             )
@@ -143,7 +144,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_spawn_beyond_cap_is_refused_with_count(self):
         async with running(self.root, launch_options(max_agents=2, backends=["codex"])) as harness:
             await self.spawn(harness, name="first")
-            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", brief("Task"))
             reply = await harness.call("primary", "spawn", task="brief.md", backend="codex", model="m", effort="low")
             self.assertIn("2/2 agent sessions are already open", reply)
             self.assertIn(
@@ -153,7 +154,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_spawn_needs_backend_model_and_effort(self):
         async with running(self.root) as harness:
-            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", brief("Task"))
             self.assertIn("invalid arguments", await harness.call("primary", "spawn", task="brief.md"))
             self.assertIn(
                 "model and an effort are required",
@@ -175,6 +176,28 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual((launch.model, launch.effort), ("opus", "max"))
             self.assertIn("# Check Convergence Check", launch.message)
             self.assertTrue((self.root / "phases" / "1" / "agents" / child / "TASK.md").is_file())
+
+    async def test_spawn_needs_a_prior_work_section_whose_links_lead_somewhere(self):
+        async with running(self.root) as harness:
+
+            async def spawn(task: str, text: str) -> str:
+                harness.write(f"phases/1/agents/primary/{task}", text)
+                return await harness.call(
+                    "primary", "spawn", task=task, name="fit", backend="codex", model="gpt-test", effort="high"
+                )
+
+            reply = await spawn("a.md", "# Fit\n\nFit the data.\n\n```\n## Prior work\n```\n")  # not in code
+            self.assertIn('no "Prior work" section', reply)
+            self.assertIn("may be empty, but it must be there", reply)
+            library = "../../../../library/LIBRARY.md"  # from any subagent's folder, beside the primary's
+            reply = await spawn("briefs/b.md", f"# Fit\n\n## Prior work\n\n[library](../{library}), [x](gone.md)\n")
+            self.assertIn("lead nowhere", reply)
+            self.assertIn(f"- ../{library}\n- gone.md", reply)  # relative to the brief, not to TASK.md
+            self.assertIn(f"is {library}", reply)
+            self.assertNotIn("fit", harness.state.agents)
+            reply = await spawn("briefs/b.md", f"# Fit\n\n## Prior work\n\nThe [library]({library}).\n\n# Task\n")
+            self.assertIn("Started subagent fit", reply)
+            self.assertIn(f"The [library]({library}).", harness.session("fit").launch.message)
 
     async def test_result_requires_settled_children_and_layout(self):
         async with running(self.root) as harness:
@@ -432,7 +455,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             harness.handoff(claude)
             await harness.emit(claude, "turn_ended", text="")
             self.assertEqual(harness.state.agents[claude].status, "paused")
-            harness.write("phases/1/agents/primary/b.md", "# Task\n")
+            harness.write("phases/1/agents/primary/b.md", brief("Task"))
             self.assertIn(
                 "paused by the usage quota",
                 await harness.call("primary", "spawn", task="b.md", backend="claude", model="m", effort="low"),
@@ -608,7 +631,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
                 self.root / "phases" / "1" / "STATUS.md", session.launch.writable
             )  # its write scope never changes
             self.assertIn("may only talk", await harness.call("primary", "run_job", command="true", timeout_seconds=5))
-            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", brief("Task"))
             self.assertIn(
                 "may only talk",
                 await harness.call("primary", "spawn", task="brief.md", backend="codex", model="m", effort="low"),
@@ -703,7 +726,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             harness.controller.say("Why the second method?")  # the human's messages are answered, talk-only
             await harness.settle()
             self.assertIn("[human] Why the second method?", sent(harness, "primary"))
-            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", brief("Task"))
             self.assertIn(
                 "may only talk",
                 await harness.call("primary", "spawn", task="brief.md", backend="codex", model="m", effort="low"),

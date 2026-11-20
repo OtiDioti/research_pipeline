@@ -26,6 +26,11 @@ from research_pipeline.state import Options
 TEST_ROOT = Path.home() / ".cache" / "research-pipeline-tests"
 
 
+def brief(title: str) -> str:
+    """A subagent's brief that spawn accepts: a title, a "Prior work" section (empty) and the task."""
+    return f"# {title}\n\n## Prior work\n\n## Task\n\nDo it.\n"
+
+
 def launch_options(**changes) -> Options:
     """Launch options for tests: explicit CLI choices for the primary and Reviewer, both fake CLIs allowed."""
     return Options(

@@ -190,16 +190,16 @@ class Librarian:
             and path.is_file()
             and not any(part.startswith(".") for part in path.relative_to(library).parts)
         ]
-        return links.check(pages, self.project.root, self._by_name())
+        return links.check(pages, self.project.root, self.by_name())
 
     def _broken(self, pages: list[Path]) -> list[str]:
-        return self._listed(links.check(pages, self.project.root, self._by_name()))
+        return self._listed(links.check(pages, self.project.root, self.by_name()))
 
     def _listed(self, report: links.Report) -> list[str]:
         """The report's broken links as 'page: link', at most :data:`LISTED`."""
         return [f"{self.project.relative(page)}: {target}" for page, target in report.broken[:LISTED]]
 
-    def _by_name(self) -> Callable[[str], list[Path]]:
+    def by_name(self) -> Callable[[str], list[Path]]:
         """Find project files by name (for wikilinks), shortest path first, as Obsidian does; listed once."""
         found: dict[str, list[Path]] | None = None
 

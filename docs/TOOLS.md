@@ -45,6 +45,7 @@ Every reply also carries the caller's pending notices.
 | "Refused: N/N agent sessions are already open …" | The cap `--max-agents` is reached (idle sessions count until the idle limit) |
 | "Refused: … temporarily paused by the usage quota …" | That CLI is held ([QUOTA.md](QUOTA.md)) |
 | "Refused: backend … is not allowed" / "a model and an effort are required" | `spawn` without an allowed backend, a model and an effort |
+| "Refused: … has no "Prior work" section …", "… links in the "Prior work" section of … lead nowhere …" | `spawn` with a brief without that section (it may be empty), or with a link in it that leads nowhere from the subagent's TASK.md ([AGENT_ROLES.md](AGENT_ROLES.md)) |
 | "Refused: the subagent: … does not accept effort …" | `spawn` with an effort the backend's CLI rejects ([AGENT_ROLES.md](AGENT_ROLES.md)) |
 | "Refused: first settle your subagents … and jobs …" | Before `submit_result`, a proposal or a verdict, running work must end |
 | "Refused: Fix these layout problems first …" | The layout check failed ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)) |
