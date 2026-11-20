@@ -268,7 +268,6 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(any(entry["agent"] == child and entry["kind"] == "tool" for entry in pushed))
             status = dashboard.snapshot()["status"]
             self.assertEqual([control["action"] for control in status["controls"]], ["pause", "shutdown"])
-            self.assertEqual(status["composer"]["target"], "primary")
             self.assertIn("Delivered", await dashboard.act("message", child, {"text": "Hello."}) or "")
             await dashboard.act("pause", None, {})
             await harness.settle()

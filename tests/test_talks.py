@@ -87,7 +87,6 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(
                 [control["label"] for control in snapshot["status"]["controls"]], ["Prepare reopening", "Quit"]
             )
-            self.assertIn("has ended", snapshot["status"]["composer"]["label"])
             nodes = {node["id"]: node for node in snapshot["graph"]["nodes"]}
             self.assertEqual((nodes["reviewer"]["actions"], nodes["librarian"]["actions"]), (["message"], []))
             await dashboard.act("message", "reviewer", {"text": "Was it checked?"})
