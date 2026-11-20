@@ -1,5 +1,14 @@
 # Status
 
+**2026-11-20.** 0.20.0, on agent_toolkit 0.14.0: prompts only (`common.md`, `reviewer.md`), from what the
+`transport` run showed (below the primary, every subagent spawned at most one child, nearly always a check of its
+own work; parents reread and reran their children's work and rarely rejected). Spawning now splits work: parallel
+subproblems go to sibling subagents spawned together with a shared conventions file, a serial chain stays with one
+agent, and no agent spawns a checker of its own result. Checking is divided: the author checks fully and lists its
+key claims with evidence, check and reproducing command in every summary; the parent spot-checks one or two
+deciding claims, records what it checked, and rejects rather than redoes; the Reviewer checks independently what
+only the author checked. No change to the controller or the tools. Not yet tried with real CLIs.
+
 **2026-11-20.** 0.19.0, on agent_toolkit 0.14.0: acting on agents moved to an **action ring**
 ([docs/WEB.md](docs/WEB.md)). Hovering an agent shows, besides its card, round buttons on its left (on its right
 near the page's edge): chat, pause or resume, hand off, cancel and files, greyed with the reason when not possible
