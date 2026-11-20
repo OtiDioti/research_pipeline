@@ -11,6 +11,11 @@ only the author checked. Every brief needs a **"Prior work" section** (it may be
 has for the task, linked, or what was searched for and not found. `spawn` refuses a brief without it, or with a
 link in it that leads nowhere from the subagent's TASK.md ([docs/AGENT_ROLES.md](docs/AGENT_ROLES.md)); summaries
 also link the earlier work they built on, and the Reviewer objects to work redone that the project already had.
+The **catalogue is split**: `library/CATALOG.md` is now a short index (the shelved agents by phase with the titles
+of their tasks, then the agents at work), and each shelved agent's files are on its own page in
+`library/catalog/phase-<N>/<id>.md`, for agents to search ([docs/LIBRARY.md](docs/LIBRARY.md)); in the transport
+run the single file had grown to 285 KB, and agents read it whole. Existing projects get the new form at their
+next commit.
 Not yet tried with real CLIs.
 
 **2026-11-20.** 0.19.0, on agent_toolkit 0.14.0: acting on agents moved to an **action ring**

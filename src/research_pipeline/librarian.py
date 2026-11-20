@@ -24,7 +24,7 @@ from agent_toolkit.records import atomic_write
 from research_pipeline import links, prompts
 from research_pipeline.library import CATALOG, Catalogue, render
 from research_pipeline.phases import Home
-from research_pipeline.project import LIBRARIAN, Project
+from research_pipeline.project import CATALOG_PAGES, LIBRARIAN, Project
 from research_pipeline.state import ENDED, FINISHED, Agent, State
 from research_pipeline.tools import ToolError
 
@@ -93,19 +93,23 @@ class Librarian:
         return [self.project.root / folder for folder in self.catalogue.shelves if folder not in live]
 
     def write_catalog(self) -> None:
-        """Render ``library/CATALOG.md`` (the controller does this at every commit)."""
+        """Render ``library/CATALOG.md`` and ``library/catalog/`` (the controller does this at every commit)."""
         state = self.state()
         finished = state.status in FINISHED
-        working = [
-            self.folder(agent)
+        working = {
+            self.folder(agent): f"{agent.role}, {agent.status}"
             for agent in state.agents.values()
             if agent.role != "librarian"
             and agent.status not in ENDED
             and not (finished and self.folder(agent) in self.catalogue.shelves)
             and self.project.agent_dir(agent.id).is_dir()
-        ]
-        text = render(self.project, self.catalogue, working)
-        atomic_write(self.project.library / CATALOG, text, root=self.project.root, durable=state.options.durable)
+        }
+        library = self.project.library
+        files = render(self.project, self.catalogue, working)
+        for path, text in files.items():
+            target = library / path
+            if not (target.is_file() and target.read_text(encoding="utf-8", errors="replace") == text):
+                atomic_write(target, text, root=self.project.root, durable=state.options.durable)
 
     # The Librarian's tools -----------------------------------------------------------------------
 
@@ -118,8 +122,8 @@ class Librarian:
             raise ToolError(f"{path}: a page's path is relative to library/ and stays inside it")
         if page.suffix.lower() != ".md":
             raise ToolError(f"{path}: pages are Markdown, so the path must end in .md")
-        if page == library / CATALOG:
-            raise ToolError("library/CATALOG.md is written by the controller")
+        if page == library / CATALOG or page.is_relative_to(library / CATALOG_PAGES):
+            raise ToolError(f"library/{CATALOG} and library/{CATALOG_PAGES}/ are written by the controller")
         if any(part.startswith(".") for part in page.relative_to(library).parts):
             raise ToolError(f"{path}: hidden files and folders are not pages")
         if page.is_dir():
@@ -169,7 +173,8 @@ class Librarian:
 
     def turn_ended(self) -> str | None:
         """After each of the Librarian's turns: commit the pages it changed; a notice of new broken links, if any."""
-        if [path for path in self.project.uncommitted("library") if path != f"library/{CATALOG}"]:
+        controller = (f"library/{CATALOG}", f"library/{CATALOG_PAGES}/")
+        if [path for path in self.project.uncommitted("library") if not path.startswith(controller)]:
             self.commit("librarian: library pages updated")
         broken = self._listed(self.check())
         if not broken:
@@ -181,12 +186,13 @@ class Librarian:
         return prompts.broken_links(broken)
 
     def check(self) -> links.Report:
-        """The links of every page of ``library/`` (``CATALOG.md`` aside: it reaches every file by itself)."""
+        """The links of the Librarian's pages (the catalogue's aside: it reaches every file by itself)."""
         library = self.project.library
         pages = [
             path
             for path in sorted(library.rglob("*.md"))
             if path != library / CATALOG
+            and not path.is_relative_to(library / CATALOG_PAGES)
             and path.is_file()
             and not any(part.startswith(".") for part in path.relative_to(library).parts)
         ]

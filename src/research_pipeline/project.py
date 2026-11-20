@@ -54,6 +54,8 @@ DOCUMENT_FORMATS = frozenset({".docx", ".doc", ".odt", ".rtf", ".rst", ".org"})
 #: Files above this size stay on disk but are not committed.
 LARGE = 50 * 1024 * 1024
 INDEX = "FOLDER_CONTENT.md"
+#: The controller's folder of library/: one catalogue page per shelved agent.
+CATALOG_PAGES = "catalog"
 GITIGNORE = """# Written by research-pipeline: controller state, environments and caches stay out of git.
 .research/
 .venv/
@@ -82,7 +84,8 @@ EMPTY_INDEX = "# Folder contents\n\n"
 LIBRARY_INDEX = """# Folder contents
 
 - [LIBRARY.md](LIBRARY.md) — The Librarian's entry page: how the library is organised, and its changes.
-- [CATALOG.md](CATALOG.md) — Every shelved file and the work in progress, kept by the controller.
+- [CATALOG.md](CATALOG.md) — Index of the shelved agents (with their tasks) and the agents at work, by the controller.
+- [catalog](catalog) — One page per shelved agent listing its files, kept by the controller.
 """
 LIBRARY_START = "# Library\n\nNothing is shelved yet. The Librarian describes the library's organisation here.\n"
 #: Top-level folders of projects made before the library: such projects are not migrated (PROJECT.md §6).
@@ -340,6 +343,8 @@ class Project:
                     continue
                 below = self._below(top) if top != self.phase_dir else []
                 ignored = self._ignored([top, *below, *top.iterdir()])
+                if top == self.library:  # the controller's own folder of library/: no index line needed
+                    ignored.add(self.library / CATALOG_PAGES)
                 for folder in [top, *(path for path in below if path.is_dir())]:
                     if not (folder in ignored or any(parent in ignored for parent in folder.parents)):
                         problems += self._index_problems(folder, ignored)

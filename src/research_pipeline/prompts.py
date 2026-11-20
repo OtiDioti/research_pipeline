@@ -15,8 +15,9 @@ from pathlib import Path
 from agent_toolkit import Spec
 from agent_toolkit.protocol import Prompts
 
+from research_pipeline.library import page
 from research_pipeline.phases import Summary
-from research_pipeline.project import Project
+from research_pipeline.project import CATALOG_PAGES, Project
 from research_pipeline.state import Agent, Options
 
 TITLES = {
@@ -208,7 +209,7 @@ def shelving_request(folder: str, about: str, commit: str | None, count: int) ->
     at = f" at commit {commit[:12]}" if commit else ""
     return (
         f"[controller] Shelving request: the agent of {folder}/ ({about}) is finished; its folder is "
-        f"catalogued{at} ({count} files, listed in library/CATALOG.md) and frozen. Read its TASK.md, RESULT.md and "
+        f"catalogued{at} ({count} files, listed in library/{page(folder)}) and frozen. Read its TASK.md, RESULT.md and "
         "FOLDER_CONTENT.md, link all of its files from your pages with write_page (a link to a folder covers "
         f'everything in it), then call shelved("{folder}").'
     )
@@ -218,8 +219,8 @@ def shelving_pending(folders: list[str]) -> str:
     """For a fresh session of the Librarian while shelving requests are pending (e.g. after a restart)."""
     return (
         f"[controller] Shelving requests are pending: {', '.join(folders)}. For each folder, read its TASK.md, "
-        "RESULT.md and FOLDER_CONTENT.md, link all of its files (listed in library/CATALOG.md) from your pages "
-        "with write_page, then call shelved(folder)."
+        "RESULT.md and FOLDER_CONTENT.md, link all of its files (listed on its page in "
+        f"library/{CATALOG_PAGES}/) from your pages with write_page, then call shelved(folder)."
     )
 
 

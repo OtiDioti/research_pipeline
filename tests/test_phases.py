@@ -241,7 +241,7 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((home.latest, home.shelving), (1, []))
         catalog = (self.root / "library" / "CATALOG.md").read_text()
         self.assertIn(
-            "### [phases/1/agents/primary](../phases/1/agents/primary/) — primary, finished, phase 1", catalog
+            "### Phase 1\n\n- [phases/1/agents/primary](catalog/phase-1/primary.md) (primary, finished", catalog
         )
         (self.root / "AGENTS.md").write_text("Cite every source.\n")
         async with running(self.root) as harness:  # without the page: not on AGENTS.md alone
