@@ -1,20 +1,24 @@
 # Project folder
 
-`project.py`, `state.py`. A project is an ordinary folder kept in git. The
-controller creates its layout, checks agents' work against it, and commits every
+`project.py`, `state.py`, `phases.py`. A project is an ordinary folder kept in git,
+split into phases (`phases/<N>/`), which share the human's AGENTS.md and
+starting_evidence/, the library and the Librarian. The controller of the phase that
+runs creates its layout, checks agents' work against it, and commits every
 significant event. The layout itself is in [PROJECT.md](../PROJECT.md) §2.
 
 ## Preparing
 
 On `run`, the controller:
 - refuses a folder that is not ready ([SETUP.md](SETUP.md), **Ready**): under `/tmp`, without a non-empty
-  `starting_evidence/OBJECTIVES.md` (one with the former `RESEARCH_QUESTIONS.md` is told to rename it), before the
+  `phases/<N>/OBJECTIVES.md` for the phase it runs, before the
   first start with loose material at the top level or undescribed entries at the top of `starting_evidence/`, or made
   before the library (with `sources/` or `tools/` at its top level: it is not migrated);
 - creates whatever is missing, keeping everything already there:
-  - `library/`, `agents/`, `reviews/` and `.research/logs/` (`.research/activity/`, every agent's
-    messages and tool calls for the web app, appears with the first session);
-  - STATUS.md, REPORT.md, FEEDBACK.md, the root FOLDER_CONTENT.md, and `library/LIBRARY.md`;
+  - `library/`, `librarian/`, the phase's `agents/` and `reviews/`, and `.research/logs/`
+    (`.research/phases/<N>/activity/`, every agent's messages and tool calls for the web
+    app, appears with the first session);
+  - the phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md, the root FOLDER_CONTENT.md,
+    `phases/FOLDER_CONTENT.md` and `library/LIBRARY.md`;
   - the folder indexes;
   - a `.gitignore` covering `.research/`, virtual environments and caches (or `.research/`
     added to an existing one);
@@ -24,12 +28,14 @@ On `run`, the controller:
 
 | Who | Writes |
 |---|---|
-| The human | `AGENTS.md`, `FEEDBACK.md`, `starting_evidence/` (read-only for agents and jobs) |
-| Every agent | Its own `agents/<id>/`, until it is shelved ([LIBRARY.md](LIBRARY.md)) |
-| The primary | Also STATUS.md, REPORT.md and the root FOLDER_CONTENT.md |
-| The Reviewer | Also `reviews/` |
+| The human | `AGENTS.md`, `starting_evidence/` (read-only for agents and jobs), each phase's `OBJECTIVES.md` |
+| Every agent | Its own `phases/<N>/agents/<id>/` (the Librarian: `librarian/`), until it is shelved ([LIBRARY.md](LIBRARY.md)) |
+| The primary | Also its phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md |
+| The Reviewer | Also its phase's `reviews/` |
 | The Librarian | Also the Markdown pages of `library/`, only through `write_page` |
-| The controller | `.research/` (hidden from agents and jobs), `agents/FOLDER_CONTENT.md`, each `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md and PARENT_FEEDBACK.md, `library/CATALOG.md`, the Librarian's pages (as it asks), and the outcome line of STATUS.md |
+| The controller | `.research/` (hidden from agents and jobs), `phases/FOLDER_CONTENT.md`, each phase's `agents/FOLDER_CONTENT.md` and `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md and PARENT_FEEDBACK.md, `library/CATALOG.md`, the Librarian's pages (as it asks), and the outcome line of STATUS.md |
+
+Other phases' folders are read-only for a phase's agents and jobs.
 
 These controller files, the starter files and a job's files are written atomically
 (a job's logs are created fresh), never through a symlink and never outside the
@@ -41,8 +47,9 @@ project: agents and jobs can write the same folders ([CONTROLLER.md](CONTROLLER.
 - At a handoff, problems go to the next session as a notice.
 - At the other four, the call is refused until they are fixed.
 
-**Where:** the agent's own folder, plus the root (for the primary), `reviews/`
-(for the Reviewer) or `library/` (for the Librarian).
+**Where:** the agent's own folder, plus its phase's folder (for the primary, its
+own entries), its phase's `reviews/` (for the Reviewer) or `library/` (for the
+Librarian).
 
 **What is checked:**
 - every folder has a `FOLDER_CONTENT.md` naming each of its files and subfolders;
@@ -56,9 +63,11 @@ from jobs or the human. They are reported to the primary once each, and never bl
 
 ## The human's files
 
-The controller fingerprints `AGENTS.md`, `FEEDBACK.md` and everything in
-`starting_evidence/` by size and modification time. A change, whether by the human
-or by anything else, is reported to the primary within about 10 s, and at every commit.
+The controller fingerprints `AGENTS.md`, everything in `starting_evidence/` and the
+phase's `OBJECTIVES.md` by size and modification time. A change, whether by the human
+or by anything else, is reported to the primary (by file name) within about 10 s, and
+at every commit. There is no FEEDBACK.md: corrections and constraints go in the
+objectives, one-off remarks in messages, standing instructions in AGENTS.md.
 
 ## Git
 
@@ -71,15 +80,15 @@ into `.git` runs outside the confinement, while your own global git configuratio
 
 | Event | Message |
 |---|---|
-| First run | `controller: project prepared` (a new repository only), then `controller: investigation started` |
+| First run of a phase | `controller: project prepared` (a new repository only), then `controller: phase N started` |
 | Handoff | `<agent>: handoff (context, refresh, idle or quota)` |
 | Result, decision | `<agent>: result submitted`, `<parent>: accepted the result of <agent>`, `<parent>: cancelled <agent>` |
-| Library | `librarian: shelved <agent>`, `librarian: library pages updated` |
+| Library | `librarian: shelved <folder>`, `librarian: library pages updated` |
 | Proposal, verdict | `primary: proposes COMPLETE/STOP (round n)`, `reviewer: verdict on … (agree/disagree)` |
 | Stalled Reviewer | `reviewer: stalled in round n; proposal withdrawn` |
 | Pause, shutdown | `controller: paused by the human`, `controller: shut down by the human` |
 | Resume, restart, reopen | `controller: changes made while paused …`, `controller: work recovered after a restart`, `human: changes before reopening` |
-| End | `controller: investigation COMPLETE/STOPPED`, then `controller: the library after the end` |
+| End | `controller: phase N COMPLETE/STOPPED`, then `controller: the library after the end` |
 
 - Files over 50 MB stay on disk but are kept out of git (`.git/info/exclude`) and
   listed in the commit message. A file that grows past the limit is removed from git.

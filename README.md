@@ -60,16 +60,19 @@ place it in `starting_evidence/` and write the objectives, by hand or with the h
 of a setup assistant ([docs/SETUP.md](docs/SETUP.md)). With `--no-web`, prepare it
 yourself.
 
-A project is a folder (not under `/tmp`) containing at least the objectives:
+A project is a folder (not under `/tmp`) containing at least the first phase's
+objectives:
 
 ```text
 my-project/
 ├── AGENTS.md                         optional instructions, given to every agent
-└── starting_evidence/
-    ├── FOLDER_CONTENT.md             one line describing each entry here
-    ├── OBJECTIVES.md                 the authoritative objectives: questions or tasks
-    ├── ...                           papers, notes, data
-    └── tools/                        optional tools of yours
+├── starting_evidence/                material shared by every phase
+│   ├── FOLDER_CONTENT.md             one line describing each entry here
+│   ├── ...                           papers, notes, data
+│   └── tools/                        optional tools of yours
+└── phases/
+    └── 1/
+        └── OBJECTIVES.md             the phase's authoritative objectives: questions or tasks
 ```
 
 Before the first run nothing else may sit at the top level, and
@@ -77,15 +80,22 @@ Before the first run nothing else may sit at the top level, and
 controller creates the rest of the layout (PROJECT.md §2) and a git
 repository on the first run. A project made before the library (with `sources/`
 or `tools/` at its top level) is refused: start a new one. Agents can read everything except the controller's
-`.research/` folder, and write only their own `agents/<id>/` folder. Only the
-primary writes `STATUS.md` and `REPORT.md`; only the Reviewer writes `reviews/`;
+`.research/` folder, and write only their own folder (`phases/<N>/agents/<id>/`). Only a
+phase's primary writes its `STATUS.md` and `REPORT.md`; only its Reviewer writes its `reviews/`;
 only the Librarian writes the pages of `library/`, through the controller.
 
-When a subagent is accepted or cancelled, and at the end for the primary and the
+The investigation runs in **phases**, one folder each under `phases/`, each with its
+own objectives, primary, Reviewer and subagents. One phase runs at a time. On the web
+page you can start a new phase (a fresh primary, for a new direction, optionally
+building on an earlier phase), continue an earlier one, and talk with any phase's
+primary and Reviewer while another runs; `starting_evidence/`, `AGENTS.md`, the
+library and the Librarian are shared ([docs/WEB.md](docs/WEB.md)).
+
+When a subagent is accepted or cancelled, and at a phase's end for its primary and
 Reviewer, its folder is **shelved**: catalogued in `library/CATALOG.md` and frozen
 in place (nothing moves, so every path stays valid). The Librarian then links the
 work from its pages, starting at `library/LIBRARY.md`, organised for you: what was
-established or built for each objective, how, and with which tools
+established or built in each phase and for each objective, how, and with which tools
 ([docs/LIBRARY.md](docs/LIBRARY.md)). `starting_evidence/` is yours
 alone: agents and their jobs can only read it, so your tools there should write
 their output to a path they are given, never next to themselves.
@@ -132,15 +142,16 @@ The models the agents' prompt recommends for subagents (coding: `claude:claude-o
 `codex:gpt-6.1-sol:xhigh`) are set on the setup page, at every launch.
 
 Running the same command again resumes a paused, shut down or interrupted
-investigation. After COMPLETE or STOP the program stays open: you can still talk
-with the primary and the Reviewer about their work, talk-only, until you quit. To
-reopen it, press *Prepare reopening* on the web page: change your files there (by
-hand, or with the reopening assistant, which can grill you and write this round's
-FEEDBACK.md section), then press Reopen, without leaving the page. With `--no-web`, a
-later `run` reopens the investigation if you changed your files (e.g. a line in
-FEEDBACK.md) ([docs/FINISHING.md](docs/FINISHING.md)). Options given again replace the stored
-ones. `research-pipeline status my-project` prints the state without starting
-anything.
+investigation (with `--no-web`, its latest phase). After a phase's COMPLETE or STOP
+the program stays open: you can still talk with its primary and Reviewer about
+their work, talk-only, until you quit. To reopen it, press *Prepare reopening* on the
+web page: change its objectives there (by hand, or with the reopening assistant,
+which can grill you and revise them), then press Reopen, without leaving the page.
+Only a change of the phase's OBJECTIVES.md reopens it. With `--no-web`, a later `run`
+reopens the latest phase if you changed its objectives
+([docs/FINISHING.md](docs/FINISHING.md)). Or start a new phase from the page's sidebar.
+Options given again replace the stored ones. `research-pipeline status my-project`
+prints the phases and the latest one's state without starting anything.
 
 ### The terminal app
 
@@ -161,16 +172,19 @@ example when the primary has stopped and waits for your answer.
 
 The page first helps you make the folder ready, before the first
 start (material, objectives, an optional setup assistant: [docs/SETUP.md](docs/SETUP.md)),
-then shows every option as a setup form (Start begins the investigation), then the agent tree as a live graph: every agent that ever worked,
+then shows every option as a setup form (Start begins the investigation), then the phases in a sidebar and the
+selected phase's agent tree as a graph (live for the phase that runs): every agent that ever worked,
 coloured by status, with its context use, its messages (coloured by sender) and
 tool calls, its documents, jobs and the websites it used. Single agents can be
 messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
 threshold, usage limits, number of sessions, idle limit, the CLI choices and the recommended models can be changed while it runs. See
 [docs/WEB.md](docs/WEB.md).
 
-You may edit your own files (`OBJECTIVES.md`, `AGENTS.md`, `FEEDBACK.md`,
-starting evidence) at any time: the primary is told, and a new `AGENTS.md`
-reaches every agent at its next session. Edit agent-written files only while
+You may edit your own files (a phase's `OBJECTIVES.md`, `AGENTS.md`, starting
+evidence) at any time: the primary is told which files changed, and a new
+`AGENTS.md` reaches every agent at its next session. Put corrections and
+constraints in the objectives (their *Constraints*), one-off remarks in a message,
+and standing instructions in `AGENTS.md`; there is no FEEDBACK.md. Edit agent-written files only while
 paused or shut down: when the investigation resumes, the agents concerned are told
 what changed meanwhile (by you, or by jobs that kept running).
 
@@ -207,12 +221,12 @@ what changed meanwhile (by you, or by jobs that kept running).
 - **Jobs.** `run_job(command, timeout_seconds)` runs a computation outside the
   agent's session, in its own confinement (`starting_evidence/`, `library/` and
   shelved folders read-only, `.research/` hidden), with its output in
-  `agents/<id>/jobs/`. The owner is told
+  `phases/<N>/agents/<id>/jobs/`. The owner is told
   when it ends.
 - **Finishing.**
-  - COMPLETE: the primary writes `REPORT.md` and `HANDOFF.md` and calls `complete`.
+  - COMPLETE: the primary writes its phase's `REPORT.md` and its `HANDOFF.md` and calls `complete`.
     It then waits in its session, talk-only, while the Reviewer examines the work as
-    committed at the proposal and writes a review to `reviews/`. COMPLETE stands
+    committed at the proposal and writes a review to its phase's `reviews/`. COMPLETE stands
     only if the Reviewer agrees; otherwise the review reaches the primary in the
     same session, and it continues or stops.
   - STOP: the Reviewer first challenges the primary's reasons, then the primary

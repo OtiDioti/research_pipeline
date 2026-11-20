@@ -7,7 +7,8 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 
 | Component | Code (`src/research_pipeline/`) | Role | Details |
 |---|---|---|---|
-| Controller | `controller.py` | Runs one investigation and makes every operational decision | [CONTROLLER.md](CONTROLLER.md) |
+| Controller | `controller.py` | Runs one phase of the investigation and makes every operational decision | [CONTROLLER.md](CONTROLLER.md) |
+| Phases | `phases.py`, `web.py` | The phases of a project, what they share, and switching between them | [PROJECT_FOLDER.md](PROJECT_FOLDER.md), [WEB.md](WEB.md) |
 | Agents | `prompts.py`, `prompts/` | Primary, subagents, Reviewer and Librarian: their tasks, tools and lifecycle | [AGENT_ROLES.md](AGENT_ROLES.md) |
 | The library | `librarian.py`, `library.py`, `links.py` | Shelving finished work, the catalogue, the Librarian's pages and their checks | [LIBRARY.md](LIBRARY.md) |
 | Context handoffs | `controller.py`, `agent_toolkit` (`handoff.py`), drivers | Fresh sessions before the context fills up | [CONTEXT.md](CONTEXT.md) |
@@ -17,7 +18,7 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | Confinement | `agent_toolkit` (`confine.py`) | The bwrap boundary of every session and job | [CONFINEMENT.md](CONFINEMENT.md) |
 | CLI drivers | `agent_toolkit` (shared package) | One persistent session per agent; everything CLI-specific | [DRIVERS.md](DRIVERS.md) |
 | Agent tools | `tools.py` (served by agent_toolkit's tool bridge) | The MCP tools agents call, and how calls reach the controller | [TOOLS.md](TOOLS.md) |
-| Project folder | `project.py`, `state.py` | Layout, layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
+| Project folder | `project.py`, `state.py`, `phases.py` | Layout (with the phases' folders), layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
 | Operating it | `cli.py`, `view.py` (on `agent_toolkit`'s terminal app) | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |
 | The web app | `web.py` (on `agent_toolkit`'s web app) | Setup page, the agent graph, activity, single-agent controls, live settings | [WEB.md](WEB.md) |
 

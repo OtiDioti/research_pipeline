@@ -2,22 +2,26 @@
 
 `preparation.py`, `material.py`, `assistant.py`, `project.py`. The web app's setup
 page makes a folder ready to be a project before the first start: material in
-`starting_evidence/`, each entry described, and the objectives written. Most of
+`starting_evidence/`, each entry described, and the first phase's objectives
+written (`phases/1/OBJECTIVES.md`). The same steps prepare a new phase, or the
+reopening of one that ended. Most of
 the work is deterministic code; an optional setup assistant (an agent) helps on
 request.
 
 ## When
 
 - `research-pipeline run DIR` opens the setup page on any folder no
-  investigation has started in (it has no `.research/state.json`): one that does
+  investigation has started in (it has no `.research/project.json`): one that does
   not exist yet (it is created), an empty one, one with material dumped at its top
   level, or an incomplete project. The page shows the preparation steps even when
   the folder is ready already, so a partial setup can still be improved.
-- Once an investigation has started, there are no preparation steps while it runs:
-  the human edits their files directly ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)).
-  After it ends, the page offers them again, to reopen it: the same Material step,
-  an Instructions step (FEEDBACK.md, OBJECTIVES.md, AGENTS.md) and the reopening
-  assistant ([FINISHING.md](FINISHING.md), "Reopening").
+- Once an investigation has started, there are no preparation steps for the phase
+  that runs: the human edits their files directly ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)).
+  The page offers them for a **new phase** (*New phase* in the sidebar: the same
+  Material step, an Objectives step with its OBJECTIVES.md and AGENTS.md, and the new
+  phase's assistant, [WEB.md](WEB.md)), and for a phase that ended, to **reopen** it
+  (the same Material step, an Instructions step with its OBJECTIVES.md and AGENTS.md,
+  and the reopening assistant, [FINISHING.md](FINISHING.md), "Reopening").
 - With `--no-web`, a folder that is not ready is refused, with the problems and
   the hint to run without `--no-web`; nothing is created. `--start` on a folder
   that is not ready is refused too.
@@ -32,7 +36,7 @@ the command line and the page's Start:
 | Check | Before the first start | Afterwards |
 |---|---|---|
 | Not under `/tmp`, no `sources/` or `tools/` at the top level | yes | yes |
-| `starting_evidence/OBJECTIVES.md` exists and is not empty (the former `RESEARCH_QUESTIONS.md` is named) | yes | yes |
+| The phase's `phases/<N>/OBJECTIVES.md` exists and is not empty | yes | yes |
 | No loose material: nothing at the top level but the project's own entries (hidden ones aside) | yes | no: strays are reported to the primary |
 | `starting_evidence/FOLDER_CONTENT.md` describes every entry at the top of `starting_evidence/` | yes | no |
 
@@ -100,11 +104,18 @@ material is placed in them.
   over through a handoff note (`write_handoff`) at the context threshold.
 - It reads the whole folder and may search the web, and writes nothing but its
   note: it acts through three tools, answered by the deterministic code above:
-  `place(entries, folders)`, `write_objectives(text)` and `ask(questions)`.
+  `place(entries, folders)`, `write_objectives(text)` (the phase's OBJECTIVES.md) and
+  `ask(questions)`; for a new or reopened phase also `write_agents_md(text)`, only
+  when asked.
+- Its prompt depends on what it prepares: `prompts/setup.md` (the first phase),
+  `prompts/phase.md` (a new phase: it also reads the earlier phases, and the talks
+  with them since they ended, written for it to `.research/setup/<N>/TALKS.md`) or
+  `prompts/reopen.md` ([FINISHING.md](FINISHING.md)).
 - Its usage quota is read before each request; at a short or weekly limit the
   request is refused, naming the limit (choose another CLI, or work by hand).
 - If its session fails, the page says so and everything stays doable by hand.
 - What the page shows of it (the conversation, open questions, its CLI choice) is
-  kept in `.research/setup/`, so a restarted program continues there. At the start
-  that folder is removed; only its CLI logs stay, in `.research/logs/setup-N.jsonl`
+  kept in `.research/setup/<N>/` (per phase), so a restarted program continues there.
+  When the phase starts that folder is removed; only its CLI logs stay, in
+  `.research/logs/setup-N.jsonl`
   (and the material records above, which are not the assistant's).

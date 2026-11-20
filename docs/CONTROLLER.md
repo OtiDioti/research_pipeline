@@ -1,15 +1,27 @@
 # Controller
 
-`controller.py`. A deterministic program that runs one investigation. It owns the
-agent tree, starts and closes sessions, handles every CLI event and tool call, and
-makes every operational decision. It never makes a scientific one.
+`controller.py`. A deterministic program that runs one phase of the investigation
+(`Controller(root, options, phase=N)`). It owns the phase's agent tree and hosts the
+Librarian's sessions, which serve every phase; it starts and closes sessions,
+handles every CLI event and tool call, and makes every operational decision. It
+never makes a scientific one. What the phases share (`phases.py`), the Librarian's
+side (`librarian.py`) and the talks (`talks.py`) are services it wires together.
+
+To run another phase, the web page has `Controller.hand_over()` end it once its phase
+has ended (the talks save their notes) or is paused (its sessions save their
+handoffs, as at a shutdown); the next phase's controller then starts in the same
+program. At its start a controller records its phase as the one run last; a phase
+continued after others ran tells its primary of the later ones.
+
 
 ## How it runs
 
 - One asyncio loop. One lock serialises driver events, tool calls and background
   checks, so no two changes interleave halfway.
-- State lives in `.research/state.json`, rewritten atomically after every change and
-  forced to disk (`--no-durable-state` skips that, for slow network filesystems).
+- The phase's state lives in `.research/phases/<N>/state.json`, and what the phases
+  share (the phases, the phase run last, the Librarian's record and pending shelving
+  requests) in `.research/project.json`; both are rewritten atomically after every
+  change and forced to disk (`--no-durable-state` skips that, for slow network filesystems).
 - The files the controller writes in the project (the starter files and
   `.gitignore`, indexes, TASK.md, PARENT_FEEDBACK.md, the outcome in STATUS.md, a
   job's `command.txt`) are replaced atomically, and a job's logs are created fresh;
@@ -20,7 +32,7 @@ makes every operational decision. It never makes a scientific one.
 | Loop | Interval | Does |
 |---|---|---|
 | Watch | 2 s (`WATCH_INTERVAL`) | Notices jobs that ended, restarts agents whose retry is due, closes sessions past the idle limit ([CONTEXT.md](CONTEXT.md)) |
-| Human files | 10 s (`HUMAN_INTERVAL`) | Tells the primary when `AGENTS.md`, `FEEDBACK.md` or `starting_evidence/` changed |
+| Human files | 10 s (`HUMAN_INTERVAL`) | Tells the primary when `AGENTS.md`, `starting_evidence/` or its phase's `OBJECTIVES.md` changed |
 | Quota | 120 s (`QUOTA_INTERVAL`) | Reads the usage of every CLI in use ([QUOTA.md](QUOTA.md)) |
 
 ## Agent statuses
@@ -119,7 +131,7 @@ A successful turn resets the failure count. Agents fail independently: the other
 | Chat message | Goes to the primary. During a review or a pause it answers in its session, talk-only (`spawn` and `run_job` refused) |
 | Message to another agent (web app) | Delivered during its turn, or into its waiting session (talk-only if paused), or at its next session; its parent receives a copy |
 | Pause, resume, force handoff or cancel of one agent (web app) | [WEB.md](WEB.md) |
-| `AGENTS.md`, `FEEDBACK.md` or `starting_evidence/` changed | The primary is told within about 10 s; a new `AGENTS.md` reaches each agent at its next session |
+| `AGENTS.md`, `starting_evidence/` or the phase's `OBJECTIVES.md` changed | The primary is told within about 10 s; a new `AGENTS.md` reaches each agent at its next session |
 | Agent-written files edited while running | Not detected; included in the next commit (edit them only while paused) |
 | Pause, shutdown, forced exit, release | [OPERATIONS.md](OPERATIONS.md) |
 

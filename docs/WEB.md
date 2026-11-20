@@ -1,7 +1,7 @@
 # The web app
 
-`research-pipeline run PROJECT` shows the investigation in your browser: the agent tree as a live graph, what every agent says and does, its
-documents, and controls for single agents. It is agent_toolkit's web app
+`research-pipeline run PROJECT` shows the investigation in your browser: its phases in a sidebar, the selected phase's agent tree as a
+graph (live for the phase that runs), what every agent says and does, its documents, and controls for single agents. It is agent_toolkit's web app
 (`agent-toolkit[web]`), described for this program by `web.py`.
 
 ## Starting
@@ -18,37 +18,62 @@ The address is always printed, so the page can be opened by hand (e.g. over an S
 tunnel) when no browser can be opened. It carries a secret token; only pages opened
 with it can see or act. The terminal prints the transcript next to the page
 (`--tui` shows the terminal app instead); both show and control the same investigation, and any number of pages
-may be open. After the investigation ends the page stays open for talks: the
-message box talks with the primary, the Reviewer takes messages too, and the top
+may be open. After a phase ends the page stays open for talks: the
+message box talks with its primary, its Reviewer takes messages too, and the top
 bar's controls are *Prepare reopening* and Quit ([FINISHING.md](FINISHING.md)).
-*Prepare reopening* opens the setup page again, to reopen the investigation
-(below); *Back* returns to the graph. The page stays readable until the program exits.
+*Prepare reopening* opens the setup page again, to reopen the phase (below); *Back*
+returns to the graph. The page stays readable until the program exits.
+
+## Phases
+
+The collapsible sidebar on the left lists the phases (its *Phases* section folds
+too; both stay as you left them in this browser): each with its number, title and
+state (running, paused, COMPLETE, STOPPED, not started, and the phase it builds on),
+the running one marked *running*, the selected one highlighted, and **New phase**
+at the bottom. One phase runs at a time.
+
+- **Selecting a phase** shows its graph, activity and documents. The running phase
+  is live. Another phase is shown as it was left: its primary and Reviewer take
+  messages, as talks ([FINISHING.md](FINISHING.md), "Talks"), and the top bar offers
+  *Prepare reopening* (it ended), *Resume phase N* (it is paused) or *Prepare
+  phase N* (not started yet). Selecting changes what every open page shows.
+- **New phase** adds the next phase (one not started at a time) and opens its
+  preparation: *Material*, *Objectives* (its OBJECTIVES.md, and AGENTS.md in a second
+  tab) with the new phase's assistant ([SETUP.md](SETUP.md)), then its title, the
+  earlier phase it builds on, every launch option, and **Start phase N**.
+- **Start phase N**, **Reopen** and **Resume phase N** wait until no other phase runs:
+  pause the running phase first (select it, Pause). Then its controller hands over:
+  a paused phase's sessions save their handoffs first; an ended phase's talks save
+  their notes. The new phase's controller starts in the same program and page.
+- Each phase's settings are its own (prefilled from the phase run last); a phase's
+  title and the phase it builds on can be changed in its preparation.
 
 ## Reopening on the page
 
-After COMPLETE or STOP, *Prepare reopening* shows the preparation again
-([FINISHING.md](FINISHING.md), "Reopening"), titled with the outcome:
+With a phase that ended (COMPLETE or STOP) selected, *Prepare reopening* shows the
+preparation again ([FINISHING.md](FINISHING.md), "Reopening"), titled with the outcome:
 
 1. **Material**, as before the first start: new material, placed and described, or
    removed (set aside, restorable).
-2. **Instructions**: FEEDBACK.md, OBJECTIVES.md and AGENTS.md, one tab each, with
+2. **Instructions**: the phase's OBJECTIVES.md and AGENTS.md, one tab each, with
    the reopening assistant's conversation and questions beside them.
 3. **Settings**: the files changed since the end, each with Revert (a file the end's
    commit has comes back from it; a new one is set aside), and *Discard all*; the
-   checks; every launch option, as at a start; and **Reopen**. Reopen waits until a
-   file of yours changed, the folder is ready, the Librarian has placed the final
-   work and the assistant is idle; hovering over it says what it waits for.
+   checks; every launch option, as at a start; and **Reopen**. Reopen waits until the
+   phase's objectives changed, the folder is ready, the Librarian has placed the
+   phase's final work, the assistant is idle and no other phase runs; hovering over
+   it says what it waits for.
 
 The page can switch between this and the graph at any time (*Back*, *Prepare
-reopening*): saved edits are files, kept; the talks go on until Reopen. A change typed
-but not saved is lost when switching. Reopen ends the talks and restarts the
-investigation in the same program and page.
+reopening*, the sidebar): saved edits are files, kept; the talks go on until Reopen.
+A change typed but not saved is lost when switching. Reopen ends the talks and
+reopens the phase in the same program and page.
 
 ## The setup page
 
-Before the first start, the page first shows the preparation steps, always, even
-for a folder that is ready already: *Material* and *Objectives*, with the setup
-assistant ([SETUP.md](SETUP.md)); the launch options are the last step, where the
+Before the first start, the page first shows the preparation steps of the first
+phase, always, even for a folder that is ready already: *Material* and *Objectives*
+(`phases/1/OBJECTIVES.md`), with the setup assistant ([SETUP.md](SETUP.md)); the launch options are the last step, where the
 checks Start waits for are listed. Afterwards it shows the launch options alone.
 
 Every launch option, prefilled from the command line and the stored options (the
@@ -68,7 +93,8 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
 
 ## The graph
 
-- One node per agent that ever worked on the project, its shape by role (primary,
+- One node per agent that ever worked on the selected phase (and the Librarian, which
+  serves every phase), its shape by role (primary,
   subagent, Reviewer), its colour by status, a ring showing its context use (amber
   near the handoff threshold, red past it), its CLI as a badge. Ended agents are
   smaller and faded. Edges go from parent to subagent; a submitted, accepted or
@@ -84,7 +110,7 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
   sessions. Clicking selects it; Shift- or Ctrl-click and dragging a box select
   several; double-click selects its subtree. Selecting unfolds what the selected
   agents own: their documents (the files in their folder except FOLDER_CONTENT.md;
-  the primary's STATUS.md and REPORT.md; the Reviewer's reviews; the Librarian's top
+  the primary's OBJECTIVES.md, STATUS.md and REPORT.md; the Reviewer's reviews; the Librarian's top
   pages), their jobs, and
   the websites and library pages they used (from their tool calls). The other agents
   fade. Esc or a click on empty space clears the selection.
@@ -99,13 +125,15 @@ subagents violet, its own neutral), and **Tool calls**, in two windows; and
 **Task & notes**, its documents. A file opens in the panel or, with *Open outside*,
 in your desktop's application; a website in a new tab.
 
-Messages and tool calls come from `.research/activity/<agent>.jsonl`, which the
-controller appends for every agent (hidden from agents, like all of `.research/`).
+Messages and tool calls come from `.research/phases/<N>/activity/<agent>.jsonl` (the
+Librarian's from `.research/activity/`), which the controller appends for every
+agent (hidden from agents, like all of `.research/`).
 
 ## Controls
 
-The top bar has the investigation's controls (Pause/Resume, *Resume held* when
-something waits for you, Shut down) and the usage quota; the message box writes
+The top bar has the selected phase's state and controls (for the running phase:
+Pause/Resume, *Resume held* when something waits for you; Shut down) and the usage
+quota; the message box writes
 to the primary by default, or to the agent you choose.
 
 Single agents, from their right-click menu or the panel's buttons:

@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6).
 
 ## 1. Purpose
 
@@ -10,9 +10,11 @@ starting evidence and tools. A **primary researcher**
 agent leads the investigation: it plans, reads literature, derives, computes, builds
 tools and writes down what it learns. It spawns **subagents** whenever that helps,
 and finishes when it judges the work done (COMPLETE, which a **Reviewer** must agree
-with) or blocked (STOP). A **Librarian** keeps a library: pages, organised for a
-human reader, that lead to the agents' finished work where it was made. The human
-judges the science.
+with) or blocked (STOP). The investigation runs in **phases**: each has its own
+objectives, primary and Reviewer, and the human can start a new phase (a fresh
+primary, for a new direction) or continue an earlier one. A **Librarian** keeps a
+library shared by every phase: pages, organised for a human reader, that lead to
+the agents' finished work where it was made. The human judges the science.
 
 The product is discipline-agnostic: no field-specific workflows in the platform.
 **Success means scientific usefulness, not architectural completeness.** Every
@@ -27,43 +29,44 @@ organise freely.
 
 ```text
 <project>/
-├── AGENTS.md               human: optional instructions, given to every agent
-├── FEEDBACK.md             human: comments and corrections, any time
-├── starting_evidence/      human: read-only for agents and their jobs
-│   ├── OBJECTIVES.md           the authoritative objectives: questions or tasks
-│   └── tools/                  the human's tools
-├── STATUS.md               primary: current state, findings, next steps
-├── REPORT.md               primary: the synthesis submitted with COMPLETE
-├── library/                Librarian: Markdown pages leading to the finished work
+├── AGENTS.md               human: optional instructions, given to every agent of every phase
+├── starting_evidence/      human: evidence and tools shared by every phase; read-only for agents and jobs
+├── library/                Librarian: Markdown pages leading to the finished work of every phase
 │   ├── LIBRARY.md              the entry page: how the library is organised, and its changes
 │   ├── CATALOG.md              controller: every shelved file, and work in progress
 │   └── ...                     pages and folders of pages, as the Librarian sees fit
-├── agents/<id>/            one folder per logical agent (primary, reviewer, librarian, ...)
-│   ├── TASK.md             written by the parent at spawn
-│   ├── HANDOFF.md          the agent's latest handoff
-│   ├── RESULT.md           the agent's submitted result
-│   └── ...                 notes, code, data, as the agent sees fit; frozen once shelved
-├── reviews/                Reviewer: one file per review round
+├── librarian/              the Librarian's own folder (its HANDOFF.md)
+├── phases/                 one folder per phase; FOLDER_CONTENT.md (controller) lists them
+│   └── <N>/
+│       ├── OBJECTIVES.md       human: the phase's authoritative objectives (questions or tasks)
+│       ├── STATUS.md           primary: current state, findings, next steps
+│       ├── REPORT.md           primary: the synthesis submitted with COMPLETE
+│       ├── agents/<id>/        one folder per logical agent of the phase (primary, reviewer, ...)
+│       │   ├── TASK.md             written by the parent at spawn
+│       │   ├── HANDOFF.md          the agent's latest handoff
+│       │   ├── RESULT.md           the agent's submitted result
+│       │   └── ...                 notes, code, data, as the agent sees fit; frozen once shelved
+│       └── reviews/            Reviewer: one file per review round
 └── .research/              controller: state, logs, removed setup material; hidden from agents and jobs
 ```
 
 Rules:
 
-- **Ownership.** Each agent writes in its own `agents/<id>/`. Only the primary
-  writes `STATUS.md` and `REPORT.md`. Only the Reviewer writes `reviews/`. Only the
-  Librarian writes `library/`, and only Markdown pages there, through the controller
+- **Ownership.** Each agent writes in its own folder (`phases/<N>/agents/<id>/`; the
+  Librarian's is `librarian/`). Only a phase's primary writes its `STATUS.md` and
+  `REPORT.md`. Only its Reviewer writes its `reviews/`. Only the Librarian writes `library/`, and only Markdown pages there, through the controller
   (see **The library**). Nobody writes a shelved agent's folder. Files the human
   owns are never written by agents or their jobs.
 - **Confinement.** Each agent session runs inside one `bwrap` boundary. The whole
   filesystem is readable except `.research/`, which is hidden. Everything is
-  read-only except the agent's own folder, its role's files (`STATUS.md`,
-  `REPORT.md` and the root `FOLDER_CONTENT.md` for the primary, `reviews/` for the
+  read-only except the agent's own folder, its role's files (its phase's `STATUS.md`,
+  `REPORT.md` and `FOLDER_CONTENT.md` for the primary, its phase's `reviews/` for the
   Reviewer) and the CLI's own state folder. The network is on, and `/tmp` is private
   to the session. The CLIs' own sandboxes are switched off. One mechanism serves
   every CLI.
 - **Job confinement.** Each job runs inside its own `bwrap` boundary, with its own
-  process namespace: `starting_evidence/`, `library/` and the folders of shelved
-  agents are read-only, `.research/` is hidden, and the rest of the filesystem is as
+  process namespace: `starting_evidence/`, `library/`, the folders of the other
+  phases and the folders of shelved agents are read-only, `.research/` is hidden, and the rest of the filesystem is as
   the controller sees it.
 - **Protected inputs.** Only the human writes `starting_evidence/`, at any time; it
   is read-only for agents and their jobs. A job's attempt to write there, in
@@ -91,7 +94,7 @@ Rules:
   their contents as unverified evidence.
 
 **Ready to start.** Before the first start, a folder is a project only with a
-non-empty `starting_evidence/OBJECTIVES.md`, nothing loose at the top level (only
+non-empty `phases/1/OBJECTIVES.md`, nothing loose at the top level (only
 the entries above), and a `starting_evidence/FOLDER_CONTENT.md` describing every
 entry at its top. With `--no-web`, a folder that is not ready is refused; otherwise
 the setup page makes it ready first (docs/SETUP.md): material added
@@ -101,27 +104,49 @@ unchanged copy is deleted, its original kept, anything else set aside in
 with a one-line description each, by hand or by the setup assistant (§3), and the
 objectives written in an editor, optionally drafted by the assistant after it has
 grilled the human with multiple-choice questions. Placing is deterministic, checked
-whole, and never overwrites. After the first start only `OBJECTIVES.md` is required,
-and strays are reported to the primary.
+whole, and never overwrites. After the first start only each phase's `OBJECTIVES.md`
+is required, and strays are reported to the primary.
 
 **Layout check.** Whenever an agent hands off, submits a RESULT, proposes
 COMPLETE/STOP, delivers a verdict or reports a shelving done, the controller checks
-the folders it may write (its own, plus the root for the primary, `reviews/` for
-the Reviewer and `library/` for the Librarian): indexes present and covering their
+the folders it may write (its own, plus its phase's folder for the primary, its
+phase's `reviews/` for the Reviewer and `library/` for the Librarian): indexes present and covering their
 folders, and notes in Markdown. A RESULT, proposal, verdict or shelving is refused
 until the problems are fixed; at a handoff, they are passed to the next session to
 fix.
 Unexpected top-level entries can only come from jobs or the human: they are
 reported to the primary and never block anyone.
 
+**Phases.** The investigation runs in numbered phases, one folder each
+(`phases/<N>/`), each with its own objectives, primary, Reviewer, subagents,
+status, report and reviews. The human's `AGENTS.md` and `starting_evidence/`, the
+library and the Librarian are shared by every phase. One phase runs at a time:
+
+- **A new phase** (from the web page) starts a fresh primary and Reviewer on its own
+  objectives, with a title, and optionally an earlier phase it builds on, whose
+  report and status its primary starts from. Every primary is told of the other
+  phases (their folders, outcomes and reports); their folders are read-only for it,
+  and their finished work is in the library.
+- **An earlier phase can be continued**: a paused one resumes from its handoffs; one
+  that ended (COMPLETE or STOP) reopens only on a change of its own `OBJECTIVES.md`
+  (§4). Its primary is then told of the phases that ran after it.
+- **Switching** to another phase needs the running one paused (its sessions then save
+  their handoffs) or ended. While a phase runs, the human can talk with the primary
+  and the Reviewer of any other phase that has started (§4).
+- The controller keeps the list of phases (title, the phase built on), the phase run
+  last, the Librarian and its pending requests in `.research/project.json`, each
+  phase's own state in `.research/phases/<N>/state.json`, and the list in
+  `phases/FOLDER_CONTENT.md`. Without the web page, `run` runs the latest phase.
+
 **The library.** The agents' finished work stays in the folders where it was made.
 `library/` holds the Librarian's (§3) Markdown pages, which lead a human to it:
-what was established or built for each objective, how, and with which tools.
+what was established or built in each phase and for each objective, how, and with
+which tools.
 Nothing is moved, renamed or deleted for the library, so every path an agent, a
 job or a note uses stays valid.
 
 - **Shelving.** When a subagent is accepted or cancelled (each agent of a cancelled
-  subtree), and when the investigation ends for the primary and the Reviewer (§4),
+  subtree), and when a phase ends for its primary and its Reviewer (§4),
   the controller shelves the agent's folder:
   - it catalogues every file in it except the git-ignored ones (environments,
     caches), which stay on disk untouched;
@@ -130,7 +155,8 @@ job or a note uses stays valid.
     index lines and the commit.
 - **Placing.** The Librarian writes its pages with `write_page`. Links are
   relative, and a link to a folder covers everything in it. Once every catalogued
-  file of the agent is reachable from a page, it calls `shelved(agent)`. The
+  file of the agent is reachable from a page, it calls `shelved(folder)`, naming the
+  agent's folder (agent ids repeat across phases). The
   controller refuses that while any of those files is reachable from no page, or
   while a link in `library/` leads nowhere, and lists them; otherwise it commits.
 - **Reorganising.** The Librarian may rewrite its pages at any time, and records
@@ -139,7 +165,7 @@ job or a note uses stays valid.
   of its turns, the controller commits the pages it changed and tells it of any
   link that leads nowhere.
 - **Catalogue.** The controller keeps a catalogue of every shelved file (its path,
-  the agent that made it, the commit at shelving and its index line) and renders
+  the agent's folder, which agent it is, the commit at shelving and its index line) and renders
   it as `library/CATALOG.md`, together with the work in progress in agents' folders
   (their index lines), refreshed at every commit.
 - **Using it.** Agents read and run shelved files in place, writing outputs to
@@ -154,24 +180,26 @@ job or a note uses stays valid.
 
 ## 3. Agents
 
-There are four roles, all running the same way, and a setup assistant before the
-first start:
+There are four roles, all running the same way, and a setup assistant on the web page:
 
-- **Primary:** responsible for the whole investigation. It is started with
-  `OBJECTIVES.md`, `FEEDBACK.md`, an inventory of starting evidence and
-  tools, and the reference paths.
+- **Primary:** responsible for its phase of the investigation. It is started with
+  its phase's `OBJECTIVES.md`, the other phases (and the one it builds on), an
+  inventory of starting evidence and tools, and the reference paths.
 - **Subagent:** spawned by any agent, at any depth, with a `TASK.md` written by its
   parent: objective, how it relates to the parent's objective, relevant evidence and
   tools, and the expected result.
 - **Reviewer:** judges the primary's COMPLETE or STOP (§4). The human chooses its
-  CLI, model and effort at launch. It is one logical agent across all review rounds.
-- **Librarian:** keeps the pages of `library/` (§2, **The library**). It does no
-  research and never judges the science. The human chooses its CLI, model and
+  CLI, model and effort at launch. It is one logical agent per phase, across all its
+  review rounds.
+- **Librarian:** keeps the pages of `library/` (§2, **The library**), for every phase;
+  it is told when a new phase starts. It does no research and never judges the science. The human chooses its CLI, model and
   effort at launch. It is one logical agent, started at its first shelving request;
   between requests it rests. It is not counted against the cap on agent sessions.
-- **Setup assistant:** optional, only on the web setup page before the first start
-  (docs/SETUP.md). It places the human's material and drafts `OBJECTIVES.md` on
-  request, asking multiple-choice questions first if asked to, through three tools
+- **Setup assistant:** optional, only on the web page, to prepare a phase: the first
+  one before the first start, a new one, or the reopening of one that ended
+  (docs/SETUP.md), each with its own prompt. It places the human's material and
+  drafts the phase's `OBJECTIVES.md` on request (and, for a new or reopened phase,
+  rewrites `AGENTS.md` when asked, a fourth tool), asking multiple-choice questions first if asked to, through three tools
   answered by deterministic code (`place`, `write_objectives`, `ask`); it writes
   nothing else but its handoff note. Its CLI, model and effort: `--setup` or the
   page (default `codex:gpt-6.1-sol:high`). It is not part of the investigation.
@@ -262,13 +290,13 @@ is *stalled*:
 (a question answered; a task's deliverable built, verified and documented) or
 adequately shown infeasible.
 Negative and inconclusive findings count. The primary first settles its subagents
-and jobs and updates `HANDOFF.md`, then submits `REPORT.md`.
+and jobs and updates `HANDOFF.md`, then submits its phase's `REPORT.md`.
 
 The Reviewer then examines the results, as committed at the proposal. It can read the whole project, run jobs,
 and spawn helpers to reproduce or check claims independently. It writes
-`reviews/<round>.md` with its objections and a verdict:
+`phases/<N>/reviews/<round>.md` with its objections and a verdict:
 
-- **agree** → the investigation is COMPLETE;
+- **agree** → the phase is COMPLETE;
 - **disagree** → the primary continues, with the review. It may do more research and
   propose COMPLETE again; there is no round limit. Or it may STOP, recording the
   Reviewer's unresolved objections.
@@ -276,8 +304,8 @@ and spawn helpers to reproduce or check claims independently. It writes
 The Reviewer keeps its earlier objections across rounds and checks whether they
 were addressed.
 
-**STOP.** The primary may STOP when continuing needs human intervention or is not
-justified. The Reviewer challenges the stopping reason and the results so far,
+**STOP.** The primary may STOP only when its objectives cannot be achieved:
+continuing needs human intervention or is not justified. The Reviewer challenges the stopping reason and the results so far,
 and may suggest further work. The decision is the primary's: it confirms STOP or
 resumes research.
 
@@ -285,47 +313,50 @@ resumes research.
 project as of that commit. The primary waits in its session, talk-only: it answers
 the human, but its `spawn` and `run_job` calls are refused until the verdict. The
 verdict arrives in the same session and lists the files changed since the proposal's
-commit (outside `reviews/`, `library/` and the folders of the Reviewer and the
-Librarian), which the review does not cover. The Reviewer keeps its session across
+commit (outside the phase's `reviews/`, `library/` and the folders of the Reviewer
+and the Librarian), which the review does not cover. The Reviewer keeps its session across
 rounds. If the Reviewer stalls, the proposal is withdrawn (§3). The Librarian's
 pages may change during a review: they move nothing the review examines.
 
 **Ending.** On COMPLETE or confirmed STOP, the controller stops all agents and jobs
-except the Librarian, records the outcome in `STATUS.md`, commits, and shelves the
+except the Librarian, records the outcome in the phase's `STATUS.md`, commits, and shelves the
 folders of the primary and the Reviewer. The Librarian places their work and any
 still pending; then the controller makes a final commit and stays open for talks
 until the human quits. If the Librarian cannot run, or stalls, its pending requests
 reach it at the controller's next run: the work is catalogued already. Machine
 COMPLETE is not scientific acceptance; that is the human's judgment.
 
-**Talks after the end.** The human can still talk with the primary (chat box or web
-page) and the Reviewer (web page), talk-only. A message starts a talk session from
+**Talks.** After a phase's end the human can still talk with its primary (chat box
+or web page) and its Reviewer (web page), talk-only; on the web page, also with the
+primary and the Reviewer of any other phase that has started (ended or paused),
+while another phase runs. A message starts a talk session from
 the agent's last handoff and its key files (REPORT.md, the reviews), on its stored
 CLI, model and effort: it reads everything and may run commands and use the web,
 but nothing in the project is writable and it has no subagents or jobs; its
 instructions are to answer from the work, citing the files, and to say plainly what
 was not done or is uncertain. At the context threshold, the idle limit or a quit, it
-saves a talk note in `.research/talks/<agent>.md` (never its frozen HANDOFF.md), from
-which the next talk session continues. Talks are kept only in the activity log; a
-CLI held by its quota refuses them until it resets. A later `run` on a finished
-project opens talk-only again, unless the human's files changed since the end.
+saves a talk note in `.research/phases/<N>/talks/<agent>.md` (never its HANDOFF.md),
+from which the next talk session continues. Talks are kept only in the phase's
+activity log; a CLI held by its quota refuses them until it resets. A later `run` on
+a finished phase opens talk-only again, unless its objectives changed since the end.
 
-**Reopening.** After COMPLETE or STOP, the human resumes the investigation by
-changing their files (objectives, evidence, AGENTS.md or feedback, e.g. one line in
-FEEDBACK.md). On the web page, *Prepare reopening* shows the setup page again while
-the talks go on: material, the three files (FEEDBACK.md, OBJECTIVES.md, AGENTS.md),
-the files changed since the end (each can be reverted to the end's commit, a new one
-set aside), the launch options, and Reopen, which waits until a file changed, the
-folder is ready, the Librarian has placed the final work and the assistant is idle.
-An optional reopening assistant (the setup assistant with its own prompt) reads the
-work and the talks since the end, may grill the human, and writes this reopening's
-section of FEEDBACK.md (`## Reopening N (date)`), the objectives, placements, and
-AGENTS.md only on request. Without the page, changing the files and running again
-reopens it; with the page, a later run opens talk-only and the changes wait for
-Reopen. The talk notes are removed, and the primary gets nothing
-of the talks. The primary restarts
-from its handoff and the reviews, with a list of the files changed since the end,
-pointing to this reopening's FEEDBACK.md section if there is one.
+**Reopening.** After COMPLETE or STOP, the human reopens a phase by changing its
+`OBJECTIVES.md` (a new or extended objective, a sharper criterion, or a constraint
+such as an objection to answer or a correction); no other change reopens it. On
+the web page, *Prepare reopening* (for the phase selected) shows the setup page
+again while the talks go on: material, the phase's OBJECTIVES.md and AGENTS.md, the
+files of the human's changed since the end (each can be reverted to the end's
+commit, a new one set aside), the launch options, and Reopen, which waits until the
+objectives changed, the folder is ready, the Librarian has placed the phase's final
+work, the assistant is idle and no other phase runs; hovering it says what it waits
+for. An optional reopening assistant (the setup assistant with its own prompt) reads
+the work and the phase's talks since the end, may grill the human, and revises the
+objectives, places material, and rewrites AGENTS.md only on request. Without the
+page, changing the objectives and running again reopens the latest phase; with the
+page, a later run opens talk-only and the changes wait for Reopen. The phase's talk
+notes are removed, and the primary gets nothing of the talks. The primary restarts
+from its handoff and the reviews, with a list of the files changed since the end
+(and of the phases that ran after it, if any).
 The folders of the primary and the Reviewer are no longer frozen: both continue in
 them, and their files stay catalogued with the commit at which they were shelved.
 The primary must not discard unaffected work.
@@ -395,7 +426,7 @@ its next turn.
 
 **Quota.** For each CLI in use, the controller reads the usage windows (each driver
 probes its own CLI; the shared usage guard of `agent_toolkit` turns the readings into
-holds, kept in `.research/state.json`):
+holds, kept in the phase's `.research/phases/<N>/state.json`):
 
 - **Short window** (e.g. 5 hours) at 15% remaining or less: that CLI's agents
   update `HANDOFF.md` and wait in their sessions, and continue automatically after
@@ -411,7 +442,7 @@ pauses.
 survive handoffs, quota pauses, a shutdown and a crash of the controller. Every job
 needs an explicit timeout, of any length. A job is owned by its logical agent; the
 owner is notified when it ends, with the end of its output and error output. Output
-goes to `agents/<id>/jobs/<job-id>/`. Jobs run in their own confinement (§2). A job
+goes to `phases/<N>/agents/<id>/jobs/<job-id>/`. Jobs run in their own confinement (§2). A job
 is killed at its timeout, on cancel, on a human pause, and on COMPLETE/STOP. Its
 output folder stays in its owner's folder as part of the agent's record.
 
@@ -431,9 +462,11 @@ output folder stays in its owner's folder as part of the agent's record.
   jobs that are still running, and reads finished jobs' exit status from their
   folders. Work since the last handoff may be lost; nothing is replayed.
 
-**Human edits.** The human may edit their own files (`OBJECTIVES.md`,
-`AGENTS.md`, `FEEDBACK.md`, starting evidence) at any time; the controller tells the
-primary. Agent-written files are edited only while paused.
+**Human edits.** The human may edit their own files (the phase's `OBJECTIVES.md`,
+`AGENTS.md`, starting evidence) at any time; the controller tells the primary which
+files changed. Corrections and constraints go in the objectives (their
+*Constraints*), one-off remarks in messages, standing instructions in `AGENTS.md`.
+Agent-written files are edited only while paused.
 
 **Git.** The controller commits at every handoff, RESULT, review, shelving, change
 of the library's pages, pause and ending, naming the agent and event in the commit
@@ -442,10 +475,11 @@ write `.git`, so the controller runs git with hooks, fsmonitor, the pager, signi
 automatic stashes off and its own `GIT_*` variables ignored; the human's global git
 configuration still applies.
 
-**State.** The controller keeps its state in `.research/state.json`, written
-atomically after every change and forced to disk (`--no-durable-state` skips the
-latter); pending shelving requests are part of it, so they survive a shutdown or
-crash. The library's catalogue is kept beside it. Its own files in the project's
+**State.** The controller keeps each phase's state in
+`.research/phases/<N>/state.json`, and what the phases share (the phases, the phase
+run last, the Librarian and its pending shelving requests) in
+`.research/project.json`, written atomically after every change and forced to disk
+(`--no-durable-state` skips the latter), so they survive a shutdown or crash. The library's catalogue is kept beside it. Its own files in the project's
 folders (indexes, starter files, briefs, feedback, job files, `CATALOG.md` and the
 Librarian's pages) are replaced atomically (job logs grow in place), never through
 a symlink and never outside the project, since agents and jobs write the same
@@ -500,7 +534,7 @@ Launch options:
 | `complete(report)`, `stop(reason, final)` | primary | Propose finishing (§4) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
 | `write_page(path, text)` | Librarian | Write a Markdown page in `library/`, or remove it with empty text; never `CATALOG.md` |
-| `shelved(agent)` | Librarian | Report a shelving request done: every catalogued file of the agent is reachable from a page (§2) |
+| `shelved(folder)` | Librarian | Report a shelving request done: every catalogued file of the agent's folder is reachable from a page (§2) |
 
 Every tool reply also carries any pending notices. While its proposal is under
 review, the primary's `spawn` and `run_job` are refused (§4). The Librarian has
