@@ -522,6 +522,15 @@ Launch options:
 - `--no-durable-state`;
 - `--tui`, `--no-web`, `--start`, `--web-port`, `--web-no-open`.
 
+**Statistics** (docs/STATS.md). How a run went, computed deterministically and
+read-only from the phases' states, the activity logs (whole tool calls, as the CLI
+drivers report them) and the briefs: library use; the spawn tree, agents at work over
+time, children started together; for each child, which links of its TASK.md it opened
+and which of its parent's files it read without a link; for each result, what the
+parent read and ran of the child's work before deciding; resources. Shown in the web
+app's Stats view (in place of the graph, live, comparable with other projects) and
+printed by `research-pipeline stats PROJECT`. No verdicts: numbers only.
+
 ## 7. Controller tools available to agents (MCP)
 
 | Tool | Who | Effect |

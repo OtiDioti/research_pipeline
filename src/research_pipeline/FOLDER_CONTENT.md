@@ -11,6 +11,7 @@
 - [librarian.py](librarian.py) — The controller's side of the Librarian: shelving requests, `write_page` and `shelved`, its turns.
 - [library.py](library.py) — The library's catalogue of shelved files (`.research/library.json`), rendered as the index `library/CATALOG.md` and a page per shelved agent in `library/catalog/`.
 - [links.py](links.py) — Links in Markdown pages: the files they reach and the links that lead nowhere.
+- [stats](stats) — Statistics of a run, deterministic and read-only: the Stats view and `research-pipeline stats`.
 - [tools.py](tools.py) — The agent-facing MCP tools of each role, offered through agent_toolkit's tool bridge, and their refusal.
 - [jobs.py](jobs.py) — Long computations that outlive agent sessions.
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.

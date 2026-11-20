@@ -153,6 +153,16 @@ reopens the latest phase if you changed its objectives
 Options given again replace the stored ones. `research-pipeline status my-project`
 prints the phases and the latest one's state without starting anything.
 
+### Statistics
+
+The page's *Stats* button replaces the graph with how the run went: library use,
+whether work was split into parallel subagents or passed down chains, which links of
+their briefs children opened and which of their parent's files they read without
+being given them, what parents read and ran of their children's work before deciding,
+and resources, as charts and tables, live and compared with other projects.
+`research-pipeline stats my-project [--phase N|all]` prints the key numbers
+([docs/STATS.md](docs/STATS.md)). Both only read: nothing is computed by a model.
+
 ### The terminal app
 
 With `--tui`, the app shows the transcript, the agent tree (status, CLI, context fill, latest

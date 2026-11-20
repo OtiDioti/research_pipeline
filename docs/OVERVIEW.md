@@ -21,6 +21,7 @@ specification is [PROJECT.md](../PROJECT.md); usage is in [README.md](../README.
 | Project folder | `project.py`, `state.py`, `phases.py` | Layout (with the phases' folders), layout check, git commits, the human's files | [PROJECT_FOLDER.md](PROJECT_FOLDER.md) |
 | Operating it | `cli.py`, `view.py` (on `agent_toolkit`'s terminal app) | Launch, terminal app, pause, shutdown, logs, troubleshooting | [OPERATIONS.md](OPERATIONS.md) |
 | The web app | `web.py` (on `agent_toolkit`'s web app) | Setup page, the agent graph, activity, single-agent controls, live settings | [WEB.md](WEB.md) |
+| Statistics | `stats/` | How a run went (library use, spawning, briefs, reviews, resources), read-only, for the Stats view and `stats` | [STATS.md](STATS.md) |
 
 ## One investigation
 

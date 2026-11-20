@@ -16,3 +16,4 @@
 - [test_talks.py](test_talks.py) — Talks after a phase's end: talk-only sessions, talk notes, staying talk-only until its objectives change, quota.
 - [test_reopen.py](test_reopen.py) — Reopening a phase from the web page after its end: the preparation offered again, changes and reverts, the reopening assistant, Reopen on changed objectives, and later runs.
 - [test_phases.py](test_phases.py) — Phases: a new phase from the web page, talks with another phase while one runs, switching phases through a pause, later phases' notice, the library across phases.
+- [test_stats.py](test_stats.py) — Statistics: tool calls to file accesses (whole calls and older summaries), a run attributed per agent, the Stats view, comparison, the dashboard and `stats`.

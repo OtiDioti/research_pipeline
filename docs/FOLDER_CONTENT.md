@@ -16,4 +16,5 @@ Reference documentation: what each part does, and what it does under each condit
 - [PROJECT_FOLDER.md](PROJECT_FOLDER.md) — Layout, ownership, layout check, the human's files, git commits.
 - [OPERATIONS.md](OPERATIONS.md) — Launching, controls, editing files, logs and troubleshooting.
 - [SETUP.md](SETUP.md) — Setting a folder up on the web app's setup page: readiness, material, objectives, the setup assistant.
+- [STATS.md](STATS.md) — Statistics of a run: what is read, how tool calls become file accesses, the Stats view and `stats`.
 - [WEB.md](WEB.md) — The web app: setup page, the agent graph, messages and tool calls, single-agent controls.

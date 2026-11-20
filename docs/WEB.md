@@ -139,8 +139,9 @@ agent (hidden from agents, like all of `.research/`).
 ## Controls
 
 The top bar has the selected phase's state and controls (for the running phase:
-Pause/Resume, *Resume held* when something waits for you; Shut down) and the usage
-quota.
+Pause/Resume, *Resume held* when something waits for you; Shut down), the usage
+quota, and *Stats*, which replaces the graph with the run's statistics (then
+*Graph* goes back; see [STATS.md](STATS.md)).
 
 Single agents, from their action ring (a button that does not apply now is greyed,
 its tooltip saying why):
