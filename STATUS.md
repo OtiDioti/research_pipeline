@@ -1,5 +1,12 @@
 # Status
 
+**2026-11-20.** 0.16.0, on agent_toolkit 0.11.0: a roomier web panel ([docs/WEB.md](docs/WEB.md)). Messages and
+tool calls share one **Activity** window, in time order; tool calls show only with its *Tools* switch on (off by
+default). The separate header card is gone: the Activity header names the agent with its status and actions
+(Cancel behind a ⋯ menu). Activity and Task & notes each fold to their header, one at a time; the folds, the
+switch and the panel sizes are remembered in the browser. No change to the controller or prompts. Not yet tried
+with real CLIs.
+
 **2026-11-20.** 0.15.0, on agent_toolkit 0.10.0: **phases** (PROJECT.md §2 "Phases", §4;
 [docs/WEB.md](docs/WEB.md)). A project's investigation runs in numbered phases, one folder each (`phases/<N>/`: its
 OBJECTIVES.md, STATUS.md, REPORT.md, `agents/` and `reviews/`); `AGENTS.md`, `starting_evidence/`, `library/` and
