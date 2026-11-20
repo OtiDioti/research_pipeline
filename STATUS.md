@@ -1,5 +1,14 @@
 # Status
 
+**2026-11-20.** 0.19.0, on agent_toolkit 0.14.0: acting on agents moved to an **action ring**
+([docs/WEB.md](docs/WEB.md)). Hovering an agent shows, besides its card, round buttons on its left (on its right
+near the page's edge): chat, pause or resume, hand off, cancel and files, greyed with the reason when not possible
+now. The right-click menu and the message box are gone: chat opens a window over the page with one agent (your
+messages and its own text, from its activity log, so earlier talks are there; Markdown and LaTeX), and the status
+bar no longer names a default recipient (a message without a target is refused). Selecting only highlights;
+*files* unfolds an agent's documents, jobs and sites, and a click on empty space folds them all. No change to the
+controller's behaviour or the prompts. Not yet tried with real CLIs.
+
 **2026-11-20.** 0.18.0, on agent_toolkit 0.13.0: folded panel windows drop to bars at the bottom-right of the
 web page (Activity above Task & notes), leaving the graph visible above ([docs/WEB.md](docs/WEB.md)). Open windows
 fill the height down to the bars; two open windows split it at a border to drag (remembered). The legend sits in
