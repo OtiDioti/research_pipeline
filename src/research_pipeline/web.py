@@ -35,6 +35,7 @@ from research_pipeline.phases import NOT_STARTED, Home, load_state, summaries
 from research_pipeline.preparation import Preparation
 from research_pipeline.project import INDEX, LIBRARIAN, Project
 from research_pipeline.state import FINISHED, Options, State
+from research_pipeline.stats import Statistics
 
 URL = re.compile(r'https?://[^\s\'"<>)\]]+')
 SOURCE = re.compile(r"\blibrary/[\w./-]+")
@@ -62,6 +63,7 @@ class ResearchDashboard(Dashboard):
 
     program = "research_pipeline"
     port = 8780
+    offers_stats = True
 
     def __init__(self, root: Path, options: Options, drivers=DRIVERS, **controller_options):
         """Prefill the setup page from ``options``; ``controller_options`` go to the :class:`Controller` (tests)."""
@@ -75,6 +77,7 @@ class ResearchDashboard(Dashboard):
         self.target: tuple[int, Options | None] | None = None
         self.used: dict[str, dict[str, set]] = {}  # '<phase>/<agent>' -> {"sites", "pages"} from its tool calls
         self._listing: tuple[float, int, dict] = (0.0, 0, {})
+        self.statistics = Statistics(self.project)
         # The preparation of the selected phase, if it has one: the first phase's before the first start, a new
         # phase's, or the reopening of one that ended.
         self.preparing = (
@@ -87,6 +90,12 @@ class ResearchDashboard(Dashboard):
                 self._remember(number, entry)
         for entry in ActivityLog(self.paths.library_activity).read(None, limit=200_000):
             self._remember(None, entry)
+
+    # Statistics ---------------------------------------------------------------------------------
+
+    def stats(self, scope: str | None, compare: list[str]) -> dict:
+        """The Stats view (research_pipeline.stats); by default, of the phase the page shows."""
+        return self.statistics.describe(scope or str(self.selected), compare)
 
     # Settings ----------------------------------------------------------------------------------
 

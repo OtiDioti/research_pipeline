@@ -21,6 +21,8 @@ the options are listed in [README.md](../README.md).
 - `research-pipeline status PROJECT` prints the state without starting anything:
   the investigation, whether a controller is running it, the proposal, quota
   holds, each agent with its pause reason, and running jobs.
+- `research-pipeline stats PROJECT [--phase N|all]` prints a run's key numbers
+  (library use, spawning, briefs, reviews, resources), read-only ([STATS.md](STATS.md)).
 - The terminal prints the transcript; Ctrl+C once shuts down cleanly, twice
   forces an exit. `--tui` shows the terminal app instead.
 

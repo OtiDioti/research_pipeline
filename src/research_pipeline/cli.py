@@ -1,4 +1,4 @@
-"""Command line: ``research-pipeline run PROJECT`` and ``research-pipeline status PROJECT``.
+"""Command line: ``research-pipeline run PROJECT``, ``status PROJECT`` and ``stats PROJECT``.
 
 ``run`` starts a new investigation, resumes a paused or interrupted one, or reopens
 a finished one. Options given on a later ``run`` replace the stored ones. The
@@ -8,7 +8,8 @@ that does not exist yet) and then offers every option, prefilled from these; the
 terminal prints the transcript, or shows the terminal app with ``--tui``. The page
 also starts new phases, reopens and switches between them. With ``--no-web`` there
 is no page: the folder must be ready already, and ``run`` runs its latest phase
-(reopening it if its objectives changed since its end).
+(reopening it if its objectives changed since its end). ``stats`` prints the key
+numbers of the web page's Stats view (:mod:`research_pipeline.stats`), read-only.
 """
 
 from __future__ import annotations
@@ -28,6 +29,7 @@ from research_pipeline.controller import Controller
 from research_pipeline.phases import Home, load_state, summaries
 from research_pipeline.project import Project, ProjectError
 from research_pipeline.state import ACTIVE, Options
+from research_pipeline.stats import Statistics, summary
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -110,6 +112,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     status = commands.add_parser("status", help="show the state of an investigation")
     status.add_argument("project", type=Path)
+    stats = commands.add_parser("stats", help="summarise an investigation's statistics (read-only)")
+    stats.add_argument("project", type=Path)
+    stats.add_argument(
+        "--phase", metavar="N", default=None, help="a phase's number, or 'all' (default: the latest phase)"
+    )
     return parser
 
 
@@ -264,6 +271,13 @@ def show_status(project: Project) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "stats":
+        try:
+            print(summary(Statistics(args.project), args.phase), end="")
+        except (ValueError, OSError) as error:
+            print(f"research-pipeline: {error}", file=sys.stderr)
+            return 2
+        return 0
     project = Project(args.project)
     if args.command == "status":
         return show_status(project)
