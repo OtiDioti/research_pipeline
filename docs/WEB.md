@@ -124,9 +124,10 @@ messages coloured by sender (its parent orange, you teal, the controller green,
 its subagents violet, its own neutral) and, with the *Tools* switch on, their
 tool calls, in time order; its header names the agent with its status and
 actions. Below it, **Task & notes**, its documents. Both float over the graph at
-its right edge: each folds to a bar on its own, leaving the graph visible around
-it, and each is resized by dragging its bottom edge (their left edge sets the
-width). The page remembers the folds, the switch and the sizes. A file opens in the panel or, with *Open outside*,
+its right edge. Each folds on its own to a bar at the bottom, leaving the graph
+visible above; open windows fill the height down to the bars, two of them split
+it at a border you drag, and their left edge sets the width. The page remembers
+the folds, the switch, the split and the width. A file opens in the panel or, with *Open outside*,
 in your desktop's application; a website in a new tab.
 
 Messages and tool calls come from `.research/phases/<N>/activity/<agent>.jsonl` (the

@@ -1,5 +1,11 @@
 # Status
 
+**2026-11-20.** 0.18.0, on agent_toolkit 0.13.0: folded panel windows drop to bars at the bottom-right of the
+web page (Activity above Task & notes), leaving the graph visible above ([docs/WEB.md](docs/WEB.md)). Open windows
+fill the height down to the bars; two open windows split it at a border to drag (remembered). The legend sits in
+the top-right corner while every window is folded, beside the windows otherwise. No change to the controller or
+prompts. Not yet tried with real CLIs.
+
 **2026-11-20.** 0.17.0, on agent_toolkit 0.12.0: the web panel's windows float over the graph
 ([docs/WEB.md](docs/WEB.md)). The graph takes the whole width; Activity and Task & notes are docked at its right
 edge, each folding to a bar on its own (the graph shows, and stays usable, around them), each with its own height
