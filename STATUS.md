@@ -9,7 +9,7 @@ key claims with evidence, check and reproducing command in every summary; the pa
 deciding claims, records what it checked, and rejects rather than redoes; the Reviewer checks independently what
 only the author checked. Every brief has a **"Prior work" section** (it may be empty): what the project already
 has for the task, linked, or what was searched for and not found; summaries also link the earlier work they built
-on, and the Reviewer objects to work redone that the project already had. This is asked by the prompts only, not
+on. This is asked by the prompts only, not
 checked by the controller, so that it can be changed in the prompts alone.
 The **catalogue is split**: `library/CATALOG.md` is now a short index (the shelved agents by phase with the titles
 of their tasks, then the agents at work), and each shelved agent's files are on its own page in
