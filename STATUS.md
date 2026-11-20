@@ -1,5 +1,12 @@
 # Status
 
+**2026-11-20.** 0.17.0, on agent_toolkit 0.12.0: the web panel's windows float over the graph
+([docs/WEB.md](docs/WEB.md)). The graph takes the whole width; Activity and Task & notes are docked at its right
+edge, each folding to a bar on its own (the graph shows, and stays usable, around them), each with its own height
+and a shared width, dragged by their edges. The legend sits above the folded bars and slides beside the windows
+while one is unfolded; the message box stays left of them. No change to the controller or prompts. Not yet tried
+with real CLIs.
+
 **2026-11-20.** 0.16.0, on agent_toolkit 0.11.0: a roomier web panel ([docs/WEB.md](docs/WEB.md)). Messages and
 tool calls share one **Activity** window, in time order; tool calls show only with its *Tools* switch on (off by
 default). The separate header card is gone: the Activity header names the agent with its status and actions
