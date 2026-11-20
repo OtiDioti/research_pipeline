@@ -18,8 +18,8 @@ The address is always printed, so the page can be opened by hand (e.g. over an S
 tunnel) when no browser can be opened. It carries a secret token; only pages opened
 with it can see or act. The terminal prints the transcript next to the page
 (`--tui` shows the terminal app instead); both show and control the same investigation, and any number of pages
-may be open. After a phase ends the page stays open for talks: the
-message box talks with its primary, its Reviewer takes messages too, and the top
+may be open. After a phase ends the page stays open for talks: the chat window
+talks with its primary and its Reviewer (below), and the top
 bar's controls are *Prepare reopening* and Quit ([FINISHING.md](FINISHING.md)).
 *Prepare reopening* opens the setup page again, to reopen the phase (below); *Back*
 returns to the graph. The page stays readable until the program exits.
@@ -107,13 +107,16 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
   *cancelled*. A waiting agent that kept its session shows "session kept": it
   occupies a slot until the idle limit.
 - Hovering an agent shows its CLI, status, context use, current activity and
-  sessions. Clicking selects it; Shift- or Ctrl-click and dragging a box select
-  several; double-click selects its subtree. Selecting unfolds what the selected
-  agents own: their documents (the files in their folder except FOLDER_CONTENT.md;
-  the primary's OBJECTIVES.md, STATUS.md and REPORT.md; the Reviewer's reviews; the Librarian's top
-  pages), their jobs, and
-  the websites and library pages they used (from their tool calls). The other agents
-  fade. Esc or a click on empty space clears the selection.
+  sessions, and its action ring: round buttons on its left (on its right near the
+  page's right edge) for chat, pause or resume, hand off, cancel and files (below).
+  Clicking selects it, which highlights it and shows it in the panel; Shift- or
+  Ctrl-click and dragging a box select several; double-click selects its subtree.
+  Esc clears the selection.
+- The ring's *files* button unfolds what the agent owns: its documents (the files
+  in its folder except FOLDER_CONTENT.md; the primary's OBJECTIVES.md, STATUS.md
+  and REPORT.md; the Reviewer's reviews; the Librarian's top pages), its jobs, and
+  the websites and library pages it used (from its tool calls). Several agents'
+  can be open at once; a click on empty space folds them all.
 - Search finds agents, files and websites and highlights the path to the primary;
   filters hide agents by status, CLI or role.
 
@@ -122,8 +125,7 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
 For the selected agents (all agents when none is selected): **Activity**, their
 messages coloured by sender (its parent orange, you teal, the controller green,
 its subagents violet, its own neutral) and, with the *Tools* switch on, their
-tool calls, in time order; its header names the agent with its status and
-actions. Below it, **Task & notes**, its documents. Both float over the graph at
+tool calls, in time order; its header names the agent with its status. Below it, **Task & notes**, its documents. Both float over the graph at
 its right edge. Each folds on its own to a bar at the bottom, leaving the graph
 visible above; open windows fill the height down to the bars, two of them split
 it at a border you drag, and their left edge sets the width. The page remembers
@@ -138,17 +140,17 @@ agent (hidden from agents, like all of `.research/`).
 
 The top bar has the selected phase's state and controls (for the running phase:
 Pause/Resume, *Resume held* when something waits for you; Shut down) and the usage
-quota; the message box writes
-to the primary by default, or to the agent you choose.
+quota.
 
-Single agents, from their right-click menu or the panel's buttons:
+Single agents, from their action ring (a button that does not apply now is greyed,
+its tooltip saying why):
 
 | Action | Effect |
 |---|---|
-| Message | Delivered during the agent's turn, into its waiting session (talk-only while paused), or at its next session; its parent receives a copy |
+| Chat | Opens the chat window over the page: your messages and the agent's own text, from its activity log (so earlier talks are there whenever it opens), with Markdown and LaTeX. A message is delivered during the agent's turn, into its waiting session (talk-only while paused), or at its next session; its parent receives a copy |
 | Pause | The agent finishes its current step, ends its turn and waits in its session (pause reason `held`), talk-only; its subagents and jobs keep working, and their messages and results wait for it; its parent is told. Pausing and resuming the whole investigation does not resume it |
 | Resume | The agent continues in the same session (from its handoff if the session closed at the idle limit, or failed) as soon as it can run; its parent is told |
-| Force handoff | The agent updates HANDOFF.md and continues in a fresh session (unlike a context handoff, not called off by the CLI's compaction) |
+| Hand off | The agent updates HANDOFF.md and continues in a fresh session (unlike a context handoff, not called off by the CLI's compaction) |
 | Cancel | A subagent, its subagents and their jobs end, as with its parent's cancel tool; the parent is told |
 
 Notifications: the page shows a toast for alerts and noteworthy controller events
