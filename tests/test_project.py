@@ -20,7 +20,7 @@ class ProjectTest(unittest.TestCase):
         self.project = Project(self.root)
         self.project.prepare()
         self.agent = Agent("helper", "subagent", "primary", "codex", "gpt-test", "high")
-        (self.root / "agents" / "helper").mkdir()
+        (self.root / "phases" / "1" / "agents" / "helper").mkdir()
 
     def tearDown(self):
         remove(self.root)
@@ -41,20 +41,20 @@ class ProjectTest(unittest.TestCase):
             (Path(home) / "ignore").write_text("*.swp\n")
             (Path(home) / ".gitconfig").write_text(f"[core]\n\texcludesFile = {home}/ignore\n")
             with patch.dict(os.environ, HOME=home):
-                self.write("agents/helper/notes.md")
-                self.write("agents/helper/notes.md.swp")
+                self.write("phases/1/agents/helper/notes.md")
+                self.write("phases/1/agents/helper/notes.md.swp")
                 self.project.commit("helper: notes")
         self.assertFalse(marker.exists())
         committed = self.project.git("ls-files").split()
-        self.assertIn("agents/helper/notes.md", committed)
-        self.assertNotIn("agents/helper/notes.md.swp", committed)
+        self.assertIn("phases/1/agents/helper/notes.md", committed)
+        self.assertNotIn("phases/1/agents/helper/notes.md.swp", committed)
         self.assertEqual(self.project.git("log", "-1", "--format=%an").strip(), "research-pipeline")
 
     def test_controller_writes_never_follow_a_symlink(self):
         outside = self.root.parent / f"{self.root.name}-outside.txt"
         outside.write_text("keep\n")
         self.addCleanup(outside.unlink)
-        index = self.root / "agents" / "FOLDER_CONTENT.md"
+        index = self.root / "phases" / "1" / "agents" / "FOLDER_CONTENT.md"
         index.unlink(missing_ok=True)
         index.symlink_to(outside)
         with self.assertRaises(ValueError):
@@ -73,71 +73,76 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(outside.read_text(), "keep\n")
 
     def test_prepare_creates_layout_and_refuses_bad_locations(self):
-        for name in ("STATUS.md", "REPORT.md", "FEEDBACK.md", "FOLDER_CONTENT.md", ".gitignore", ".git"):
+        for name in ("FOLDER_CONTENT.md", ".gitignore", ".git", "library/LIBRARY.md", "librarian/FOLDER_CONTENT.md"):
             self.assertTrue((self.root / name).exists(), name)
+        for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "agents", "reviews/FOLDER_CONTENT.md"):
+            self.assertTrue((self.root / "phases" / "1" / name).exists(), name)
+        self.assertFalse((self.root / "FEEDBACK.md").exists())
         self.assertEqual(self.project.check_layout(Agent("primary", "primary", None, "codex", "gpt-test", "high")), [])
         with self.assertRaises(ProjectError):
             Project(Path("/tmp/somewhere")).prepare()
         empty = temp_project()
-        (empty / "starting_evidence" / "OBJECTIVES.md").rename(empty / "starting_evidence" / "RESEARCH_QUESTIONS.md")
-        with self.assertRaisesRegex(ProjectError, "is now starting_evidence/OBJECTIVES.md: rename it"):
+        (empty / "phases" / "1" / "OBJECTIVES.md").unlink()
+        with self.assertRaisesRegex(ProjectError, "phases/1/OBJECTIVES.md is missing"):
             Project(empty).prepare()
-        (empty / "starting_evidence" / "RESEARCH_QUESTIONS.md").unlink()
-        with self.assertRaisesRegex(ProjectError, "OBJECTIVES.md is missing"):
-            Project(empty).prepare()
+        with self.assertRaisesRegex(ProjectError, "phases/2/OBJECTIVES.md is missing"):
+            Project(empty, 2).prepare()
         remove(empty)
 
     def test_layout_check_reports_missing_and_incomplete_indexes(self):
-        self.write("agents/helper/notes.md")
-        self.assertIn("agents/helper/FOLDER_CONTENT.md is missing", self.project.check_layout(self.agent))
-        self.write("agents/helper/FOLDER_CONTENT.md", "- notes.md — notes\n")
-        self.write("agents/helper/sub/data.csv")
+        self.write("phases/1/agents/helper/notes.md")
+        self.assertIn("phases/1/agents/helper/FOLDER_CONTENT.md is missing", self.project.check_layout(self.agent))
+        self.write("phases/1/agents/helper/FOLDER_CONTENT.md", "- notes.md — notes\n")
+        self.write("phases/1/agents/helper/sub/data.csv")
         problems = self.project.check_layout(self.agent)
         self.assertEqual(
             problems,
             [
-                "agents/helper/FOLDER_CONTENT.md does not describe: sub",
-                "agents/helper/sub/FOLDER_CONTENT.md is missing",
+                "phases/1/agents/helper/FOLDER_CONTENT.md does not describe: sub",
+                "phases/1/agents/helper/sub/FOLDER_CONTENT.md is missing",
             ],
         )
 
     def test_layout_check_exemptions_and_formats(self):
-        self.write("agents/helper/FOLDER_CONTENT.md", "- draft.docx\n")
-        self.write("agents/helper/draft.docx")
-        self.write("agents/helper/.venv/lib/x.py")  # hidden
-        self.write("agents/helper/venv/lib/x.py")  # git-ignored
-        self.write("agents/helper/jobs/job-1/stdout.log")  # the controller's job output
+        self.write("phases/1/agents/helper/FOLDER_CONTENT.md", "- draft.docx\n")
+        self.write("phases/1/agents/helper/draft.docx")
+        self.write("phases/1/agents/helper/.venv/lib/x.py")  # hidden
+        self.write("phases/1/agents/helper/venv/lib/x.py")  # git-ignored
+        self.write("phases/1/agents/helper/jobs/job-1/stdout.log")  # the controller's job output
         self.write("junk.txt")
         self.write(".obsidian/workspace.json")  # hidden: the human's editor
         problems = self.project.check_layout(self.agent)
-        self.assertEqual(problems, ["agents/helper/draft.docx: notes must be Markdown"])
+        self.assertEqual(problems, ["phases/1/agents/helper/draft.docx: notes must be Markdown"])
         self.assertEqual(self.project.stray_entries(), ["junk.txt"])  # reported, never blocking
 
     def test_commit_skips_large_files(self):
-        big = self.root / "agents" / "helper" / "big.bin"
+        big = self.root / "phases" / "1" / "agents" / "helper" / "big.bin"
         with open(big, "wb") as file:
             file.truncate(project_module.LARGE + 1)
-        self.write("agents/helper/small.md")
+        self.write("phases/1/agents/helper/small.md")
         self.assertIsNotNone(self.project.commit("test: add files"))
         tracked = self.project.git("ls-files")
-        self.assertIn("agents/helper/small.md", tracked)
+        self.assertIn("phases/1/agents/helper/small.md", tracked)
         self.assertNotIn("big.bin", tracked)
-        self.assertIn("agents/helper/big.bin", self.project.git("log", "-1", "--format=%B"))
+        self.assertIn("phases/1/agents/helper/big.bin", self.project.git("log", "-1", "--format=%B"))
         self.assertIsNone(self.project.commit("test: nothing"))
 
     def test_human_fingerprint_and_uncommitted(self):
         before = self.project.human_fingerprint()
-        self.assertIn("starting_evidence/OBJECTIVES.md", before)
+        self.assertIn("phases/1/OBJECTIVES.md", before)
+        self.assertNotIn("phases/1/OBJECTIVES.md", Project(self.root, 2).human_fingerprint())
         self.write("AGENTS.md", "Use SI units.\n")
         self.assertEqual(Project.changed(before, self.project.human_fingerprint()), ["AGENTS.md"])
         self.assertEqual(self.project.uncommitted(), ["AGENTS.md"])
 
     def test_agents_index_and_inventory(self):
-        self.write("agents/helper/TASK.md", "# Verify the quadrature\n\nDetails.\n")
+        self.write("phases/1/agents/helper/TASK.md", "# Verify the quadrature\n\nDetails.\n")
         self.project.write_agents_index([self.agent])
-        self.assertIn("helper", (self.root / "agents" / "FOLDER_CONTENT.md").read_text())
-        self.assertIn("Verify the quadrature", (self.root / "agents" / "FOLDER_CONTENT.md").read_text())
-        self.assertIn("OBJECTIVES.md", self.project.inventory())
+        self.assertIn("helper", (self.root / "phases" / "1" / "agents" / "FOLDER_CONTENT.md").read_text())
+        self.assertIn(
+            "Verify the quadrature", (self.root / "phases" / "1" / "agents" / "FOLDER_CONTENT.md").read_text()
+        )
+        self.assertIn("starting_evidence/FOLDER_CONTENT.md", self.project.inventory())
 
 
 class StateTest(unittest.TestCase):

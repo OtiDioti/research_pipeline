@@ -1,9 +1,13 @@
-"""The project folder: its layout, the layout check, git commits and the human's files.
+"""The project folder: its layout, its phases' folders, the layout check, git commits and the human's files.
 
-A project is an ordinary folder kept in git (PROJECT.md §2). The controller
-creates the top-level layout, commits on every significant event, notices when
-the human changes their own files, and checks agents' work against the layout
-rules before accepting a handoff, a result or a proposal.
+A project is an ordinary folder kept in git (PROJECT.md §2). Shared by every phase
+are the human's AGENTS.md and starting_evidence/, the library and the Librarian's
+folder; each phase has its own folder, ``phases/<N>/``, with the human's
+OBJECTIVES.md and the phase's agents, status, report and reviews. A
+:class:`Project` is bound to one phase. The controller creates the layout,
+commits on every significant event, notices when the human changes their own
+files, and checks agents' work against the layout rules before accepting a
+handoff, a result or a proposal.
 
 The controller runs git outside any confinement, on a repository agents and
 their jobs write, through the shared safe runner (:mod:`agent_toolkit.git`):
@@ -28,21 +32,23 @@ from research_pipeline.state import Agent
 TOP_LEVEL = frozenset(
     {
         "AGENTS.md",
-        "FEEDBACK.md",
         "starting_evidence",
-        "STATUS.md",
-        "REPORT.md",
         "library",
-        "agents",
-        "reviews",
+        "librarian",
+        "phases",
         ".research",
         "FOLDER_CONTENT.md",
         ".git",
         ".gitignore",
     }
 )
-#: The human's files: agents never write them, and the primary is told when they change.
-HUMAN = ("AGENTS.md", "FEEDBACK.md", "starting_evidence")
+#: The entries of a phase's folder (``phases/<N>/``).
+PHASE_LEVEL = frozenset({"OBJECTIVES.md", "STATUS.md", "REPORT.md", "agents", "reviews", "FOLDER_CONTENT.md"})
+#: The human's files shared by every phase (with each phase's OBJECTIVES.md): agents never write them, and the
+#: primary is told when they change.
+HUMAN = ("AGENTS.md", "starting_evidence")
+#: The Librarian's agent id and folder (at the top level: it serves every phase).
+LIBRARIAN = "librarian"
 #: Document formats that are not Markdown; agent notes must be Markdown (code and data are not flagged).
 DOCUMENT_FORMATS = frozenset({".docx", ".doc", ".odt", ".rtf", ".rst", ".org"})
 #: Files above this size stay on disk but are not committed.
@@ -58,12 +64,17 @@ __pycache__/
 """
 ROOT_INDEX = """# Folder contents
 
-- [AGENTS.md](AGENTS.md) — Instructions from the human (optional).
-- [FEEDBACK.md](FEEDBACK.md) — Feedback from the human.
-- [starting_evidence](starting_evidence) — The human's objectives, evidence and tools; read-only for agents.
-- [STATUS.md](STATUS.md) — Current state of the investigation, maintained by the primary researcher.
+- [AGENTS.md](AGENTS.md) — Instructions from the human to every agent (optional).
+- [starting_evidence](starting_evidence) — The human's evidence and tools, shared by every phase; read-only for agents.
+- [library](library) — The Librarian's pages leading to the finished work of every phase, starting at LIBRARY.md.
+- [librarian](librarian) — The Librarian's own folder.
+- [phases](phases) — One folder per phase of the investigation: its objectives, agents, status, report and reviews.
+"""
+PHASE_INDEX = """# Folder contents
+
+- [OBJECTIVES.md](OBJECTIVES.md) — The human's objectives for this phase: the questions to answer, the tasks to perform.
+- [STATUS.md](STATUS.md) — Current state of this phase, maintained by its primary researcher.
 - [REPORT.md](REPORT.md) — The synthesis submitted with COMPLETE.
-- [library](library) — The Librarian's pages leading to the finished work, starting at LIBRARY.md.
 - [agents](agents) — One folder per agent: its task, handoff, result and work (frozen once shelved).
 - [reviews](reviews) — The Reviewer's reviews.
 """
@@ -86,23 +97,48 @@ class ProjectError(RuntimeError):
 
 
 class Project:
-    """Paths and operations of one project folder."""
+    """Paths and operations of one project folder, bound to one of its phases (``phase``)."""
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, phase: int = 1):
         self.root = Path(root).resolve()
         self.evidence = self.root / "starting_evidence"  # the human's: read-only for agents and their jobs
-        self.objectives = self.evidence / "OBJECTIVES.md"
-        self.agents = self.root / "agents"
         self.library = self.root / "library"  # the Librarian's pages; read-only for every session and job
-        self.reviews = self.root / "reviews"
+        self.librarian = self.root / LIBRARIAN
+        self.phases = self.root / "phases"
         self.research = self.root / ".research"  # the controller's: hidden from agents and their jobs
         self.logs = self.research / "logs"
         self.removed = self.research / "removed"  # material the human removed on the setup page
-        self.state_file = self.research / "state.json"
+        self.home_file = self.research / "project.json"  # the phases and the Librarian (research_pipeline.phases)
         self.lock_file = self.research / "lock"
+        self.library_activity = self.research / "activity"  # the Librarian's activity log
+        # The phase's own.
+        self.phase = phase
+        self.phase_dir = self.phases / str(phase)
+        self.objectives = self.phase_dir / "OBJECTIVES.md"  # the human's
+        self.status_file = self.phase_dir / "STATUS.md"
+        self.report = self.phase_dir / "REPORT.md"
+        self.agents = self.phase_dir / "agents"
+        self.reviews = self.phase_dir / "reviews"
+        self.state_file = self.research / "phases" / str(phase) / "state.json"
+        self.activity = self.research / "phases" / str(phase) / "activity"
+        self.talks = self.research / "phases" / str(phase) / "talks"
+
+    def at(self, phase: int) -> Project:
+        """The same project, bound to ``phase``."""
+        return Project(self.root, phase)
+
+    @property
+    def folder(self) -> str:
+        """The phase's folder, relative to the project (e.g. 'phases/2')."""
+        return f"phases/{self.phase}"
 
     def agent_dir(self, agent_id: str) -> Path:
-        return self.agents / agent_id
+        return self.librarian if agent_id == LIBRARIAN else self.agents / agent_id
+
+    def session_log(self, agent_id: str, number: int, kind: str = "") -> Path:
+        """The CLI log of an agent's session ``number`` (``kind`` e.g. 'talk'); the Librarian's are the project's."""
+        name = "-".join(filter(None, [agent_id if agent_id == LIBRARIAN else f"phase{self.phase}-{agent_id}", kind]))
+        return self.logs / f"{name}-{number}.jsonl"
 
     def relative(self, path: Path) -> str:
         return str(Path(path).resolve().relative_to(self.root))
@@ -117,7 +153,7 @@ class Project:
     # Layout ---------------------------------------------------------------------------
 
     def prepare(self) -> None:
-        """Create the top-level layout and the git repository; keep everything already there.
+        """Create the layout (the top level and the phase's folder) and the git repository; keep what is there.
 
         Only a new repository is committed here: in an existing one, changes made while
         the controller was off stay uncommitted, so that the controller can report them.
@@ -125,16 +161,17 @@ class Project:
         problems = self.unready()
         if problems:
             raise ProjectError(" ".join(problems))
-        for folder in (self.library, self.agents, self.reviews, self.logs):
+        self.create_phase()
+        for folder in (self.library, self.librarian, self.agents, self.reviews, self.logs):
             folder.mkdir(parents=True, exist_ok=True)
         for path, text in (
-            (self.root / "STATUS.md", "# Status\n\nThe investigation has not started yet.\n"),
-            (self.root / "REPORT.md", ""),
-            (self.root / "FEEDBACK.md", ""),
+            (self.status_file, f"# Status\n\nPhase {self.phase} has not started yet.\n"),
+            (self.report, ""),
             (self.root / INDEX, ROOT_INDEX),
             (self.library / "LIBRARY.md", LIBRARY_START),
             (self.library / INDEX, LIBRARY_INDEX),
             (self.reviews / INDEX, EMPTY_INDEX),
+            (self.librarian / INDEX, EMPTY_INDEX),
         ):
             if not path.exists():
                 self.write(path, text)
@@ -152,18 +189,30 @@ class Project:
         if str(self.root).startswith("/tmp/"):
             raise ProjectError("Projects cannot live under /tmp: each agent session has its own private /tmp.")
 
+    def create_phase(self) -> None:
+        """Create the phase's folder with its index and an OBJECTIVES.md to write (kept if they exist)."""
+        self.phase_dir.mkdir(parents=True, exist_ok=True)
+        for path, text in ((self.phase_dir / INDEX, PHASE_INDEX), (self.objectives, "")):
+            if not path.exists():
+                self.write(path, text)
+
     @property
     def started(self) -> bool:
-        """True once an investigation has started here (it has stored state)."""
+        """True once an investigation has started here, in any phase (it has stored state)."""
+        return self.home_file.exists()
+
+    @property
+    def phase_started(self) -> bool:
+        """True once this phase has started (it has stored state)."""
         return self.state_file.exists()
 
     def unready(self) -> list[str]:
         """What keeps the folder from being a project, as sentences (empty: it is ready; PROJECT.md §2).
 
-        Every project needs a non-empty OBJECTIVES.md and no legacy layout. Before the first
-        start it also needs no loose material at the top level, and every entry at the top of
-        starting_evidence/ described (see :meth:`evidence_problems`); the web setup makes a
-        folder ready (docs/SETUP.md).
+        Every phase needs a non-empty OBJECTIVES.md in its folder, and the project no legacy
+        layout. Before the first start it also needs no loose material at the top level, and
+        every entry at the top of starting_evidence/ described (see :meth:`evidence_problems`);
+        the web setup makes a folder ready (docs/SETUP.md).
         """
         self.check_location()
         legacy = [name for name in LEGACY if (self.root / name).exists()]
@@ -174,12 +223,7 @@ class Project:
             ]
         problems = []
         if not self.objectives.is_file():
-            if (self.evidence / "RESEARCH_QUESTIONS.md").is_file():
-                problems.append(
-                    "starting_evidence/RESEARCH_QUESTIONS.md is now starting_evidence/OBJECTIVES.md: rename it."
-                )
-            else:
-                problems.append(f"{self.objectives} is missing: write the objectives (questions or tasks) there first.")
+            problems.append(f"{self.objectives} is missing: write the objectives (questions or tasks) there first.")
         elif not self.objectives.read_text(encoding="utf-8", errors="replace").strip():
             problems.append(f"{self.objectives} is empty: write the objectives (questions or tasks) there first.")
         if not self.started:
@@ -233,9 +277,9 @@ class Project:
         atomic_write(path, text, root=self.root)
 
     def write_agents_index(self, agents: list[Agent]) -> None:
-        """Maintain agents/FOLDER_CONTENT.md: one line per agent, from its task's first line."""
+        """Maintain the phase's agents/FOLDER_CONTENT.md: one line per agent, from its task's first line."""
         lines = [EMPTY_INDEX.rstrip("\n"), ""]
-        for agent in sorted(agents, key=lambda a: a.id):
+        for agent in sorted((a for a in agents if a.id != LIBRARIAN), key=lambda a: a.id):
             task = self.agent_dir(agent.id) / "TASK.md"
             summary = {
                 "primary": "Primary researcher.",
@@ -285,7 +329,7 @@ class Project:
         problems = []
         tops = [self.agent_dir(agent.id)]
         if agent.role == "primary":
-            tops.append(self.root)
+            tops.append(self.phase_dir)
         elif agent.role == "reviewer":
             tops.append(self.reviews)
         elif agent.role == "librarian":
@@ -294,7 +338,7 @@ class Project:
             try:  # files may come and go meanwhile (jobs, editors): a vanished path is simply skipped
                 if not top.is_dir():
                     continue
-                below = self._below(top) if top != self.root else []
+                below = self._below(top) if top != self.phase_dir else []
                 ignored = self._ignored([top, *below, *top.iterdir()])
                 for folder in [top, *(path for path in below if path.is_dir())]:
                     if not (folder in ignored or any(parent in ignored for parent in folder.parents)):
@@ -321,7 +365,7 @@ class Project:
         return {Path(line.rstrip("/")) for line in output.splitlines()}
 
     def _index_problems(self, folder: Path, ignored: set[Path]) -> list[str]:
-        name = self.relative(folder) if folder != self.root else "."
+        name = self.relative(folder)
         index = folder / INDEX
         # Hidden or ignored entries, the index itself and the controller's job folders need no description.
         entries = [
@@ -334,8 +378,8 @@ class Project:
             for entry in entries
             if entry.is_file() and entry.suffix.lower() in DOCUMENT_FORMATS
         ]
-        if folder == self.root:
-            entries = [entry for entry in entries if entry.name in TOP_LEVEL]
+        if folder == self.phase_dir:  # the primary maintains the index of these; the rest is the human's or others'
+            entries = [entry for entry in entries if entry.name in PHASE_LEVEL]
         if not index.is_file():
             return problems + ([f"{name}/{INDEX} is missing"] if entries else [])
         text = index.read_text(encoding="utf-8", errors="replace")
@@ -423,10 +467,9 @@ class Project:
     # The human's files ----------------------------------------------------------------
 
     def human_fingerprint(self) -> dict[str, str]:
-        """Size and modification time of every human-owned file, to notice changes cheaply."""
+        """Size and modification time of every file of the human's for this phase, to notice changes cheaply."""
         found = {}
-        for name in HUMAN:
-            path = self.root / name
+        for path in [*(self.root / name for name in HUMAN), self.objectives]:
             for item in [path] if path.is_file() else sorted(path.rglob("*")) if path.is_dir() else []:
                 try:
                     if item.is_file():

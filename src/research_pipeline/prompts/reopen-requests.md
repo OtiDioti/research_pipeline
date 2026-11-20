@@ -1,7 +1,7 @@
 The messages the reopening assistant receives, one section each (filled by research_pipeline.assistant).
 
 <!-- section:opening -->
-[reopen] The investigation ended: $outcome
+[reopen] Phase $number ended: $outcome
 
 $state
 <!-- /section:opening -->
@@ -13,7 +13,7 @@ $note
 <!-- /section:note -->
 
 <!-- section:talks -->
-[reopen] The human talked with the primary or the Reviewer since your last request: $talks has the new messages.
+[reopen] The human talked with the phase's primary or Reviewer since your last request: $talks has the new messages.
 <!-- /section:talks -->
 
 <!-- section:organise -->
@@ -25,7 +25,7 @@ Read each entry, enough to describe it, then place them all with one call of pla
 <!-- /section:organise -->
 
 <!-- section:ideas-grill -->
-[human] What I want from the reopening:
+[human] What I want from the reopened phase:
 
 $ideas
 
@@ -33,11 +33,11 @@ Grill me first: ask your first round of questions with ask, informed by these id
 <!-- /section:ideas-grill -->
 
 <!-- section:ideas-draft -->
-[human] What I want from the reopening:
+[human] What I want from the reopened phase:
 
 $ideas
 
-Write this reopening's section of FEEDBACK.md from these ideas, the talks and the work, with write_feedback (and the objectives, if they change).
+Revise $objectives from these ideas, the talks and the work, with write_objectives.
 <!-- /section:ideas-draft -->
 
 <!-- section:answers -->
@@ -45,11 +45,11 @@ Write this reopening's section of FEEDBACK.md from these ideas, the talks and th
 
 $answers
 
-Ask another round with ask, or, if you know enough, write this reopening's section of FEEDBACK.md with write_feedback (and the objectives, if they change).
+Ask another round with ask, or, if you know enough, revise the objectives with write_objectives.
 <!-- /section:answers -->
 
 <!-- section:draft -->
-[human] Enough questions: write this reopening's section of FEEDBACK.md now with write_feedback (and the objectives, if they change), from what you know.
+[human] Enough questions: revise $objectives now with write_objectives, from what you know.
 <!-- /section:draft -->
 
 <!-- section:message -->

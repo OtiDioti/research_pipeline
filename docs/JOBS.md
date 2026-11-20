@@ -19,7 +19,7 @@ of the controller. Agents should use a job for anything longer than a minute.
 
 ## Files
 
-In `agents/<owner>/jobs/<job-id>/`, indexed by the controller in the jobs folder's `FOLDER_CONTENT.md`:
+In the phase's `agents/<owner>/jobs/<job-id>/`, indexed by the controller in the jobs folder's `FOLDER_CONTENT.md`:
 
 | File | Content |
 |---|---|

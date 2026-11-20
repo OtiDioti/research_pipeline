@@ -21,7 +21,7 @@ decides what a hold pauses.
 | Unreadable twice in a row (one failure is taken for a glitch) | `unreadable` | As for weekly |
 
 A limit of 0 disables that check. A CLI without a usage probe is never held. Holds
-are kept in `.research/state.json` (kind, reported reset or none, detail), and
+are kept in the phase's `.research/phases/<N>/state.json` (kind, reported reset or none, detail), and
 `research-pipeline status` lists them.
 
 ## While a CLI is held

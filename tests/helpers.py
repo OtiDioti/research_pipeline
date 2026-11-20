@@ -42,14 +42,13 @@ def launch_options(**changes) -> Options:
 
 
 def temp_project(question: str = "What is the integral of x^2 on [0, 1]?") -> Path:
-    """A fresh project folder with a research question; remove it with :func:`remove`."""
+    """A fresh project folder with a research question for its first phase; remove it with :func:`remove`."""
     TEST_ROOT.mkdir(parents=True, exist_ok=True)
     root = Path(tempfile.mkdtemp(dir=TEST_ROOT))
     (root / "starting_evidence").mkdir()
-    (root / "starting_evidence" / "OBJECTIVES.md").write_text(question + "\n")
-    (root / "starting_evidence" / "FOLDER_CONTENT.md").write_text(
-        "- [OBJECTIVES.md](OBJECTIVES.md) — The objectives.\n"
-    )
+    (root / "starting_evidence" / "FOLDER_CONTENT.md").write_text("# Folder contents\n\n")
+    (root / "phases" / "1").mkdir(parents=True)
+    (root / "phases" / "1" / "OBJECTIVES.md").write_text(question + "\n")
     return root
 
 
@@ -74,8 +73,9 @@ class QuotaReader:
 class Harness:
     """A controller running on fake drivers, with helpers to act as its agents."""
 
-    def __init__(self, root: Path, options: Options | None = None, reopen: bool | None = None):
+    def __init__(self, root: Path, options: Options | None = None, reopen: bool | None = None, phase: int = 1):
         self.root = root
+        self.phase = f"phases/{phase}"  # the phase's folder, relative to the project
         self.quota = QuotaReader()
         self.lines: list[tuple[str, str, str]] = []
         self.controller = Controller(
@@ -85,6 +85,7 @@ class Harness:
             read_quota=self.quota,
             show=lambda *entry: self.lines.append(entry),
             reopen=reopen,
+            phase=phase,
         )
         self.task: asyncio.Task | None = None
 
@@ -131,34 +132,36 @@ class Harness:
         )
 
     def handoff(self, agent_id: str) -> None:
-        self.write(f"agents/{agent_id}/HANDOFF.md", "# Handoff\n\nNext: continue.\n")
+        folder = "librarian" if agent_id == "librarian" else f"{self.phase}/agents/{agent_id}"
+        self.write(f"{folder}/HANDOFF.md", "# Handoff\n\nNext: continue.\n")
 
 
 async def shelve_all(harness: Harness) -> None:
     """Act as the Librarian: one page linking every pending agent's folder, then shelved for each."""
-    pending = list(harness.state.shelving)
-    page = "# Work\n\n" + "".join(f"- [{agent}](../agents/{agent}/)\n" for agent in pending)
+    pending = list(harness.controller.home.shelving)
+    page = "# Work\n\n" + "".join(f"- [{folder}](../{folder}/)\n" for folder in pending)
     assert "Wrote" in await harness.call("librarian", "write_page", path="work.md", text=page)
     index = (harness.root / "library" / "FOLDER_CONTENT.md").read_text()
     if "work.md" not in index:
         await harness.call(
             "librarian", "write_page", path="FOLDER_CONTENT.md", text=index + "- [work.md](work.md) — Work.\n"
         )
-    for agent in pending:
-        reply = await harness.call("librarian", "shelved", agent=agent)
+    for folder in pending:
+        reply = await harness.call("librarian", "shelved", folder=folder)
         assert reply.startswith("Shelved"), reply
 
 
 async def complete(harness: Harness, shelve: bool = True) -> None:
     """COMPLETE, agreed by the Reviewer; the Librarian shelves the final work (unless not ``shelve``)."""
-    harness.write("REPORT.md", "# Report\n\nThe integral is 1/3.\n")
+    phase = harness.phase
+    harness.write(f"{phase}/REPORT.md", "# Report\n\nThe integral is 1/3.\n")
     harness.handoff("primary")
-    harness.index("agents/primary", "HANDOFF.md")
+    harness.index(f"{phase}/agents/primary", "HANDOFF.md")
     await harness.call("primary", "complete")
-    harness.write("reviews/1.md", "# Review\n\n1. Fine.\n")
-    harness.index("reviews", "1.md")
+    harness.write(f"{phase}/reviews/1.md", "# Review\n\n1. Fine.\n")
+    harness.index(f"{phase}/reviews", "1.md")
     harness.handoff("reviewer")
-    harness.index("agents/reviewer", "HANDOFF.md")
+    harness.index(f"{phase}/agents/reviewer", "HANDOFF.md")
     await harness.call("reviewer", "verdict", review="1.md", agree=True)
     if shelve:
         await shelve_all(harness)
@@ -173,11 +176,11 @@ async def quit_after_the_end(harness: Harness) -> None:
 
 
 @asynccontextmanager
-async def running(root: Path, options: Options | None = None, reopen: bool | None = None):
-    """Run a controller on fake drivers for the duration of the block (``reopen``: see Controller)."""
+async def running(root: Path, options: Options | None = None, reopen: bool | None = None, phase: int = 1):
+    """Run a controller of ``phase`` on fake drivers for the duration of the block (``reopen``: see Controller)."""
     saved = (controller_module.WATCH_INTERVAL, controller_module.HUMAN_INTERVAL)
     controller_module.WATCH_INTERVAL, controller_module.HUMAN_INTERVAL = 0.02, 0.05
-    harness = Harness(root, options, reopen)
+    harness = Harness(root, options, reopen, phase)
     harness.task = asyncio.create_task(harness.controller.run())
     try:
         for _ in range(200):

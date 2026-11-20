@@ -46,7 +46,7 @@ Resume and does the same.
 
 | Files | When | What happens |
 |---|---|---|
-| `OBJECTIVES.md`, `AGENTS.md`, `FEEDBACK.md`, starting evidence | Any time | The primary is told; a new `AGENTS.md` reaches each agent at its next session |
+| The phase's `OBJECTIVES.md`, `AGENTS.md`, starting evidence | Any time | The primary is told which files changed; a new `AGENTS.md` reaches each agent at its next session; after a phase's end, only changed objectives reopen it |
 | Agent-written files | Only while paused or shut down | The primary and the folder's owner are told on resume, "by the human or by running jobs" |
 
 ## Where to look
@@ -55,8 +55,8 @@ Resume and does the same.
 |---|---|
 | What happened | The transcript; `git log` in the project |
 | What an agent's CLI said and did, line by line | `.research/logs/<agent>-<session>.jsonl` |
-| The controller's view (agents, jobs, proposal, holds) | `.research/state.json`, or `research-pipeline status` |
-| A job's command and output | `agents/<owner>/jobs/<job-id>/` |
+| The controller's view (agents, jobs, proposal, holds) | `.research/phases/<N>/state.json` and `.research/project.json`, or `research-pipeline status` |
+| A job's command and output | `phases/<N>/agents/<owner>/jobs/<job-id>/` |
 | An agent's own account | Its `HANDOFF.md`, and `RESULT.md` if it has submitted one |
 
 ## Troubleshooting

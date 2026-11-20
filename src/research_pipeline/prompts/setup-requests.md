@@ -33,7 +33,7 @@ Grill me first: ask your first round of questions with ask, informed by these id
 
 $ideas
 
-Write starting_evidence/OBJECTIVES.md from these ideas and the material, with write_objectives.
+Write $objectives from these ideas and the material, with write_objectives.
 <!-- /section:ideas-draft -->
 
 <!-- section:answers -->
@@ -45,7 +45,7 @@ Ask another round with ask, or, if you know enough, write the objectives with wr
 <!-- /section:answers -->
 
 <!-- section:draft -->
-[human] Enough questions: write starting_evidence/OBJECTIVES.md now with write_objectives, from what you know.
+[human] Enough questions: write $objectives now with write_objectives, from what you know.
 <!-- /section:draft -->
 
 <!-- section:message -->

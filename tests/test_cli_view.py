@@ -81,7 +81,7 @@ class CliTest(unittest.TestCase):
             with (
                 mock.patch.object(cli, "with_web", web),
                 mock.patch.object(cli, "run", terminal),
-                mock.patch.object(cli, "Controller", lambda root, options: None),
+                mock.patch.object(cli, "Controller", lambda root, options, **kwargs: None),
             ):
                 for argv, expected in cases:
                     with self.subTest(argv=argv):
@@ -108,10 +108,10 @@ class CliTest(unittest.TestCase):
             state.agents["primary"] = Agent(
                 "primary", "primary", None, "codex", "gpt-test", "high", status="paused", pause_reason="human"
             )
-            state.save(root / ".research" / "state.json")
+            state.save(root / ".research" / "phases" / "1" / "state.json")
             with contextlib.redirect_stdout(output):
                 self.assertEqual(cli.main(["status", str(root)]), 0)
-            self.assertIn("Investigation: paused", output.getvalue())
+            self.assertIn("Phase 1: paused", output.getvalue())
             self.assertIn("paused (human)", output.getvalue())
         finally:
             remove(root)
@@ -121,7 +121,7 @@ class CliTest(unittest.TestCase):
         try:
             state = State(status="running")
             state.agents["primary"] = Agent("primary", "primary", None, "codex", "gpt-test", "high", status="running")
-            state.save(root / ".research" / "state.json")
+            state.save(root / ".research" / "phases" / "1" / "state.json")
             stopped = io.StringIO()
             with contextlib.redirect_stdout(stopped):
                 cli.main(["status", str(root)])
@@ -139,7 +139,7 @@ class CliTest(unittest.TestCase):
 
     def test_run_rejects_a_project_without_objectives(self):
         root = temp_project()
-        (root / "starting_evidence" / "OBJECTIVES.md").unlink()
+        (root / "phases" / "1" / "OBJECTIVES.md").unlink()
         try:
             errors = io.StringIO()
             with contextlib.redirect_stderr(errors):
@@ -211,7 +211,7 @@ class AppLifecycleTest(unittest.IsolatedAsyncioTestCase):
                 session = controller.sessions["primary"]
                 app.shutdown()  # Ctrl+Q: agents hand off, then the app exits
                 await asyncio.sleep(0.1)
-                (root / "agents" / "primary" / "HANDOFF.md").write_text("# Handoff\n")
+                (root / "phases" / "1" / "agents" / "primary" / "HANDOFF.md").write_text("# Handoff\n")
                 session.emit("turn_ended", text="")
                 self.assertEqual(await asyncio.wait_for(running, 10), 0)
                 self.assertEqual(controller.state.status, "paused")

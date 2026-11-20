@@ -21,7 +21,7 @@ controller.
 | `complete(report)`, `stop(reason, final)` | primary | Propose finishing ([FINISHING.md](FINISHING.md)) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
 | `write_page(path, text)` | Librarian | Write a Markdown page of `library/` (empty text removes it) ([LIBRARY.md](LIBRARY.md)) |
-| `shelved(agent)` | Librarian | Report a shelving request done |
+| `shelved(folder)` | Librarian | Report a shelving request done (the agent's folder, as the request names it) |
 
 Every reply also carries the caller's pending notices.
 

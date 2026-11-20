@@ -1,4 +1,4 @@
-"""Talks after the end (PROJECT.md §4): talk-only sessions with the primary and the Reviewer, driven by fake CLIs."""
+"""Talks after a phase's end (PROJECT.md §4): talk-only sessions with its primary and Reviewer, on fake CLIs."""
 
 import asyncio
 import unittest
@@ -84,21 +84,23 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             dashboard = ResearchDashboard(self.root, launch_options(), drivers=FAKE_DRIVERS)  # the web page
             dashboard.controller = controller
             snapshot = dashboard.snapshot()
-            self.assertEqual([control["label"] for control in snapshot["status"]["controls"]], ["Quit"])
+            self.assertEqual(
+                [control["label"] for control in snapshot["status"]["controls"]], ["Prepare reopening", "Quit"]
+            )
             self.assertIn("has ended", snapshot["status"]["composer"]["label"])
             nodes = {node["id"]: node for node in snapshot["graph"]["nodes"]}
             self.assertEqual((nodes["reviewer"]["actions"], nodes["librarian"]["actions"]), (["message"], []))
             await dashboard.act("message", "reviewer", {"text": "Was it checked?"})
             await self.answered(harness, "reviewer")
-            self.assertIn("reviews/1.md", talks("reviewer")[0].sent[0])
+            self.assertIn("phases/1/reviews/1.md", talks("reviewer")[0].sent[0])
             with self.assertRaisesRegex(ValueError, "not possible"):
                 await controller.act("message", "librarian", "Hello?")
             self.assertEqual((harness.state.status, agents["primary"].status), ("complete", "finished"))
             self.assertEqual(controller.project.uncommitted(), [])  # nothing was written in the project
             await quit_after_the_end(harness)  # each talk saves its note first
-        self.assertIn("Talked about", (self.root / ".research" / "talks" / "primary.md").read_text())
+        self.assertIn("Talked about", (self.root / ".research" / "phases" / "1" / "talks" / "primary.md").read_text())
 
-    async def test_a_talk_continues_from_its_note_and_reopening_needs_a_change_of_the_humans_files(self):
+    async def test_a_talk_continues_from_its_note_and_reopening_needs_a_change_of_the_objectives(self):
         async with running(self.root) as harness:
             await self.end(harness)
             FakeSession.script = talker(asyncio.get_running_loop(), [0.9])  # the first answer fills the context
@@ -117,20 +119,28 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             await self.answered(harness, "primary")
             self.assertIn("Talked about", talks("primary")[-1].sent[0])
             await quit_after_the_end(harness)
-        (self.root / "FEEDBACK.md").write_text("Also check the error bars.\n")
+        (self.root / "AGENTS.md").write_text("Use SI units.\n")
+        async with running(self.root) as harness:  # a change of other files of the human's does not reopen it
+            self.assertEqual(harness.state.status, "complete")
+            await quit_after_the_end(harness)
+        (self.root / "phases" / "1" / "OBJECTIVES.md").write_text("Also check the error bars.\n")
         FakeSession.script = None
-        async with running(self.root) as harness:  # the human's change reopens it; the talks are gone
+        async with running(self.root) as harness:  # a change of its objectives reopens it; the talks are gone
             self.assertEqual(harness.state.status, "running")
             self.assertIn("reopened after it ended (COMPLETE)", harness.session("primary").launch.message)
             self.assertNotIn("Talked about", harness.session("primary").launch.message)
-            self.assertFalse((self.root / ".research" / "talks").exists())
+            self.assertIn("- phases/1/OBJECTIVES.md", harness.session("primary").launch.message)
+            self.assertFalse((self.root / ".research" / "phases" / "1" / "talks").exists())
             await harness.settle(10)  # the reopening's notice covers the changes: they are not reported again
             self.assertFalse([line for line in harness.lines if "human changed" in line[2]])
 
     async def test_changes_after_the_end_wait_for_the_next_run_and_a_held_cli_refuses_talks(self):
         async with running(self.root) as harness:
             await self.end(harness)
-            (self.root / "FEEDBACK.md").write_text("More, please.\n")
+            (self.root / "AGENTS.md").write_text("More, please.\n")
+            await harness.controller._check_human()
+            self.assertFalse([line for line in harness.lines if "run again to reopen" in line[2]])
+            (self.root / "phases" / "1" / "OBJECTIVES.md").write_text("More, please.\n")
             for _ in range(2):
                 await harness.controller._check_human()
             alerts = [line for line in harness.lines if "run again to reopen" in line[2]]

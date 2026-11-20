@@ -2,21 +2,23 @@
 
 - [__init__.py](__init__.py) — Package marker.
 - [__main__.py](__main__.py) — `python -m research_pipeline` entry point.
-- [cli.py](cli.py) — Command line: `run` (start, resume, reopen) and `status`.
-- [controller.py](controller.py) — The controller: agent tree, sessions, notices and messages, handoffs, idle and stalled agents, tools, the Reviewer exchange, quota, pause, shutdown, finishing (with the Librarian's final shelving).
-- [state.py](state.py) — Persistent state (agents, jobs, proposals, quota holds, pending shelving) in `.research/state.json`.
-- [project.py](project.py) — The project folder: layout, layout check, git commits, the human's files.
-- [talks.py](talks.py) — Talks after the end: talk-only sessions with the primary and the Reviewer, with their talk notes.
+- [cli.py](cli.py) — Command line: `run` (start, resume, reopen; the latest phase without the web page) and `status`.
+- [controller.py](controller.py) — The controller of one phase: agent tree, sessions (the Librarian's too), notices and messages, handoffs, idle and stalled agents, tools, the Reviewer exchange, quota, pause, shutdown, finishing (with the Librarian's final shelving), handing over to another phase.
+- [state.py](state.py) — A phase's persistent state (agents, jobs, proposals, quota holds) in `.research/phases/<N>/state.json`.
+- [phases.py](phases.py) — The phases of a project and what they share (the list of phases, the Librarian and its pending requests) in `.research/project.json`.
+- [project.py](project.py) — The project folder and its phases' folders: layout, layout check, git commits, the human's files.
+- [talks.py](talks.py) — Talks: talk-only sessions with the primary and the Reviewer of a phase that does not run, with their talk notes.
 - [librarian.py](librarian.py) — The controller's side of the Librarian: shelving requests, `write_page` and `shelved`, its turns.
 - [library.py](library.py) — The library's catalogue of shelved files (`.research/library.json`) and `library/CATALOG.md`.
 - [links.py](links.py) — Links in Markdown pages: the files they reach and the links that lead nowhere.
 - [tools.py](tools.py) — The agent-facing MCP tools of each role, offered through agent_toolkit's tool bridge, and their refusal.
 - [jobs.py](jobs.py) — Long computations that outlive agent sessions.
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.
-- [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role, and the setup and reopening assistants'.
+- [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role, and the setup, new phase and reopening assistants'.
 - [view.py](view.py) — The terminal app (built on agent_toolkit's shared one).
-- [web.py](web.py) — The web app's view of the investigation: setup page (with its preparation steps), agent graph, activity, single-agent controls, and the reopening after the end.
+- [web.py](web.py) — The web app's view of the investigation: setup page (with its preparation steps), the phases' sidebar, new phases, reopening and switching phases, activity, single-agent controls.
+- [graph.py](graph.py) — One phase as the web page shows it: its agent graph and its top bar.
 - [fields.py](fields.py) — The launch options as the web page's settings (the setup page's fields, which change live).
-- [preparation.py](preparation.py) — The web page's preparation steps: before the first start (material, objectives, the checks Start waits for), and to reopen after the end (material, FEEDBACK/OBJECTIVES/AGENTS, the changes since the end and their reverts, the checks Reopen waits for).
-- [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/; reverting the human's files to the end; a reopening's FEEDBACK.md section.
-- [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts OBJECTIVES.md on request; after the end, the reopening assistant, which also writes FEEDBACK.md's section and, on request, AGENTS.md.
+- [preparation.py](preparation.py) — The web page's preparation of a phase: the first one, a new one (material, objectives, AGENTS.md, the checks Start waits for), or the reopening of one that ended (also the changes since its end and their reverts, the checks Reopen waits for).
+- [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/; a phase's objectives; reverting the human's files to a phase's end.
+- [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts a phase's OBJECTIVES.md on request, for the first phase, a new one or a reopening (then also AGENTS.md, on request).

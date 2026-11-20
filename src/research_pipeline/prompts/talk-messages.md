@@ -1,7 +1,7 @@
 The messages of a talk session after the end, one section each (filled by research_pipeline.talks).
 
 <!-- section:opening -->
-[controller] The investigation has ended ($outcome). The human wants to talk with you about the work. Your last handoff:
+[controller] Phase $phase $situation. The human wants to talk with you about the work. Your last handoff:
 
 $handoff
 
@@ -9,11 +9,11 @@ $files
 <!-- /section:opening -->
 
 <!-- section:primary-files -->
-Your report is REPORT.md and your status STATUS.md; the library's entry page is library/LIBRARY.md.
+Your report is $report and your status $status; the library's entry page is library/LIBRARY.md.
 <!-- /section:primary-files -->
 
 <!-- section:reviewer-files -->
-Your reviews are in reviews/ (the last one: $review); the primary's report is REPORT.md.
+Your reviews are in $reviews/ (the last one: $review); the primary's report is $report.
 <!-- /section:reviewer-files -->
 
 <!-- section:note -->

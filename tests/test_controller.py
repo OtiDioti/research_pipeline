@@ -39,7 +39,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
         remove(self.root)
 
     async def spawn(self, harness, parent="primary", name="helper", backend="codex", model="gpt-test", effort="high"):
-        harness.write(f"agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
+        harness.write(f"phases/1/agents/{parent}/brief-{name}.md", f"# Check {name}\n\nDo it.\n")
         reply = await harness.call(
             parent, "spawn", task=f"brief-{name}.md", name=name, backend=backend, model=model, effort=effort
         )
@@ -47,22 +47,23 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
         return reply.split()[2]
 
     def prepare_result(self, harness, agent_id):
-        harness.write(f"agents/{agent_id}/RESULT.md", "# Result\n\nFound it.\n")
+        harness.write(f"phases/1/agents/{agent_id}/RESULT.md", "# Result\n\nFound it.\n")
         harness.handoff(agent_id)
-        harness.index(f"agents/{agent_id}", "TASK.md", "RESULT.md", "HANDOFF.md", "brief-x.md")
+        harness.index(f"phases/1/agents/{agent_id}", "TASK.md", "RESULT.md", "HANDOFF.md", "brief-x.md")
 
     def ready_report(self, harness):
-        harness.write("REPORT.md", "# Report\n\nThe integral is 1/3.\n")
+        harness.write("phases/1/REPORT.md", "# Report\n\nThe integral is 1/3.\n")
         harness.handoff("primary")
-        harness.index("agents/primary", "HANDOFF.md")
+        harness.index("phases/1/agents/primary", "HANDOFF.md")
 
     def ready_review(self, harness, name="1.md"):
-        harness.write(f"reviews/{name}", "# Review\n\n1. Fine.\n")
+        harness.write(f"phases/1/reviews/{name}", "# Review\n\n1. Fine.\n")
         harness.index(
-            "reviews", *sorted(p.name for p in (self.root / "reviews").glob("*.md") if p.name != "FOLDER_CONTENT.md")
+            "phases/1/reviews",
+            *sorted(p.name for p in (self.root / "phases/1/reviews").glob("*.md") if p.name != "FOLDER_CONTENT.md"),
         )
         harness.handoff("reviewer")
-        harness.index("agents/reviewer", "HANDOFF.md")
+        harness.index("phases/1/agents/reviewer", "HANDOFF.md")
 
     async def propose_complete(self, harness):
         """The primary proposes COMPLETE and ends its turn; it waits in its session for the verdict."""
@@ -78,17 +79,20 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             opening = harness.session("primary").launch.message
             self.assertIn("What is the integral of x^2", opening)
             self.assertIn("session 1 of primary", opening)
-            for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "agents", "reviews", "library/LIBRARY.md"):
+            for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "agents", "reviews"):
+                self.assertTrue((self.root / "phases" / "1" / name).exists(), name)
+            for name in ("FOLDER_CONTENT.md", "library/LIBRARY.md", "phases/FOLDER_CONTENT.md"):
                 self.assertTrue((self.root / name).exists(), name)
+            self.assertIn("- [1](1) — Phase 1: running.", (self.root / "phases" / "FOLDER_CONTENT.md").read_text())
             self.assertIn("Nothing is shelved yet", (self.root / "library" / "CATALOG.md").read_text())
             self.assertEqual(harness.state.agents["librarian"].status, "resting")  # started at its first request
             self.assertNotIn("librarian", harness.controller.sessions)
             log = harness.controller.project.git("log", "--oneline")
             self.assertIn("project prepared", log)
-            self.assertIn("investigation started", log)
+            self.assertIn("phase 1 started", log)
             self.assertEqual(harness.state.agents["reviewer"].status, "resting")
             launch = harness.session("primary").launch
-            self.assertIn(self.root / "STATUS.md", launch.writable)
+            self.assertIn(self.root / "phases" / "1" / "STATUS.md", launch.writable)
             self.assertNotIn(self.root / "starting_evidence", launch.writable)
             self.assertEqual(launch.hidden, (self.root / ".research",))
             self.assertEqual((launch.model, launch.effort), ("gpt-test", "high"))
@@ -120,7 +124,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_session_that_loads_personal_setup_waits_for_the_human(self):
         async with running(self.root) as harness:
             FakeSession.start_error = SetupError("codex loaded the human's own setup (skill personal-notes)")
-            harness.write("agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
             reply = await harness.call(
                 "primary", "spawn", task="brief.md", name="helper", backend="codex", model="gpt-test", effort="high"
             )
@@ -139,7 +143,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
     async def test_spawn_beyond_cap_is_refused_with_count(self):
         async with running(self.root, launch_options(max_agents=2, backends=["codex"])) as harness:
             await self.spawn(harness, name="first")
-            harness.write("agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
             reply = await harness.call("primary", "spawn", task="brief.md", backend="codex", model="m", effort="low")
             self.assertIn("2/2 agent sessions are already open", reply)
             self.assertIn(
@@ -149,7 +153,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_spawn_needs_backend_model_and_effort(self):
         async with running(self.root) as harness:
-            harness.write("agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
             self.assertIn("invalid arguments", await harness.call("primary", "spawn", task="brief.md"))
             self.assertIn(
                 "model and an effort are required",
@@ -170,7 +174,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             launch = harness.session(child).launch
             self.assertEqual((launch.model, launch.effort), ("opus", "max"))
             self.assertIn("# Check Convergence Check", launch.message)
-            self.assertTrue((self.root / "agents" / child / "TASK.md").is_file())
+            self.assertTrue((self.root / "phases" / "1" / "agents" / child / "TASK.md").is_file())
 
     async def test_result_requires_settled_children_and_layout(self):
         async with running(self.root) as harness:
@@ -180,7 +184,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             reply = await harness.call(child, "submit_result")
             self.assertIn(grandchild, reply)
             await harness.call(child, "cancel", agent=grandchild)
-            (self.root / "agents" / child / "FOLDER_CONTENT.md").unlink()
+            (self.root / "phases" / "1" / "agents" / child / "FOLDER_CONTENT.md").unlink()
             self.assertIn("FOLDER_CONTENT.md is missing", await harness.call(child, "submit_result"))
 
     async def test_result_is_reviewed_by_parent_reject_then_accept(self):
@@ -374,7 +378,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
         self.addCleanup(outside.unlink, missing_ok=True)
         async with running(self.root) as harness:
             await harness.call("primary", "run_job", command="true", timeout_seconds=30)
-            index = self.root / "agents" / "primary" / "jobs" / "FOLDER_CONTENT.md"
+            index = self.root / "phases" / "1" / "agents" / "primary" / "jobs" / "FOLDER_CONTENT.md"
             index.unlink(missing_ok=True)
             index.symlink_to(outside)  # what the agent, or its job, can do in its own folder
             await harness.emit("primary", "context", tokens=60_000, window=100_000)
@@ -428,7 +432,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             harness.handoff(claude)
             await harness.emit(claude, "turn_ended", text="")
             self.assertEqual(harness.state.agents[claude].status, "paused")
-            harness.write("agents/primary/b.md", "# Task\n")
+            harness.write("phases/1/agents/primary/b.md", "# Task\n")
             self.assertIn(
                 "paused by the usage quota",
                 await harness.call("primary", "spawn", task="b.md", backend="claude", model="m", effort="low"),
@@ -570,14 +574,14 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Review round 1", harness.session("reviewer").launch.message)
             self.assertIn(f"git show {commit}:PATH", harness.session("reviewer").launch.message)
             self.ready_review(harness)
-            reply = await harness.call("reviewer", "verdict", review="reviews/1.md", agree=True)
+            reply = await harness.call("reviewer", "verdict", review="phases/1/reviews/1.md", agree=True)
             self.assertIn("COMPLETE", reply)
             self.assertEqual(harness.state.status, "complete")
             self.assertEqual(harness.state.agents["primary"].status, "finished")
-            self.assertIn("COMPLETE on", (self.root / "STATUS.md").read_text())
-            self.assertIn("investigation COMPLETE", harness.controller.project.git("log", "--oneline"))
+            self.assertIn("COMPLETE on", (self.root / "phases" / "1" / "STATUS.md").read_text())
+            self.assertIn("phase 1 COMPLETE", harness.controller.project.git("log", "--oneline"))
             self.assertEqual(list(harness.controller.sessions), ["librarian"])  # it places the final work
-            self.assertEqual(harness.state.shelving, ["primary", "reviewer"])
+            self.assertEqual(harness.controller.home.shelving, ["phases/1/agents/primary", "phases/1/agents/reviewer"])
             await shelve_all(harness)
             await harness.settle()
             self.assertFalse(harness.task is not None and harness.task.done())  # it stays open for talks
@@ -587,8 +591,8 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_proposal_needs_a_settled_layout(self):
         async with running(self.root) as harness:
-            harness.write("REPORT.md", "# Report\n")
-            harness.write("agents/primary/notes.md", "# Notes\n")
+            harness.write("phases/1/REPORT.md", "# Report\n")
+            harness.write("phases/1/agents/primary/notes.md", "# Notes\n")
             self.assertIn("FOLDER_CONTENT.md", await harness.call("primary", "complete"))
             self.assertIsNone(harness.state.proposal)
 
@@ -600,16 +604,18 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.settle()
             self.assertIs(harness.session("primary"), session)
             self.assertIn("[human] How confident are you?", sent(harness, "primary"))
-            self.assertIn(self.root / "STATUS.md", session.launch.writable)  # its write scope never changes
+            self.assertIn(
+                self.root / "phases" / "1" / "STATUS.md", session.launch.writable
+            )  # its write scope never changes
             self.assertIn("may only talk", await harness.call("primary", "run_job", command="true", timeout_seconds=5))
-            harness.write("agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
             self.assertIn(
                 "may only talk",
                 await harness.call("primary", "spawn", task="brief.md", backend="codex", model="m", effort="low"),
             )
             self.assertIn("still with the Reviewer", await harness.call("primary", "complete"))
             self.assertEqual(harness.state.rounds, 1)
-            harness.write("STATUS.md", "# Status\n\nEdited during the review.\n")
+            harness.write("phases/1/STATUS.md", "# Status\n\nEdited during the review.\n")
             await harness.emit("primary", "turn_ended", text="Fairly confident.")  # waiting: no nudge
             self.assertNotIn("You ended your turn", sent(harness, "primary"))
             self.ready_review(harness)
@@ -617,8 +623,8 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIs(harness.session("primary"), session)  # the verdict arrives in the same session
             text = sent(harness, "primary")
             self.assertIn("disagrees with COMPLETE", text)
-            self.assertIn("changed since:\n- STATUS.md", text)
-            self.assertNotIn("- reviews/1.md", text)
+            self.assertIn("changed since:\n- phases/1/STATUS.md", text)
+            self.assertNotIn("- phases/1/reviews/1.md", text)
 
     async def test_disagreement_then_stop_challenge_then_final_stop(self):
         async with running(self.root) as harness:
@@ -649,18 +655,18 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.call("reviewer", "verdict", review="1.md", agree=True)
             await shelve_all(harness)  # the Librarian places the final work
             await quit_after_the_end(harness)
-        (self.root / "starting_evidence" / "OBJECTIVES.md").write_text("A new question?\n")
+        (self.root / "phases" / "1" / "OBJECTIVES.md").write_text("A new question?\n")
         async with running(self.root) as harness:
             opening = harness.session("primary").launch.message
             self.assertIn("reopened after it ended (COMPLETE)", opening)
-            self.assertIn("Changes since then:\n- starting_evidence/OBJECTIVES.md", opening)
+            self.assertIn("Changes since then:\n- phases/1/OBJECTIVES.md", opening)
             self.assertIn("A new question?", opening)
             self.assertEqual(harness.state.status, "running")
 
     async def test_challenged_stop_lapses_when_the_primary_continues(self):
         async with running(self.root) as harness:
             harness.handoff("primary")
-            harness.index("agents/primary", "HANDOFF.md")
+            harness.index("phases/1/agents/primary", "HANDOFF.md")
             await harness.call("primary", "stop", reason="Blocked.")
             self.ready_review(harness)
             await harness.call("reviewer", "verdict", review="1.md", agree=False)
@@ -697,7 +703,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             harness.controller.say("Why the second method?")  # the human's messages are answered, talk-only
             await harness.settle()
             self.assertIn("[human] Why the second method?", sent(harness, "primary"))
-            harness.write("agents/primary/brief.md", "# Task\n")
+            harness.write("phases/1/agents/primary/brief.md", "# Task\n")
             self.assertIn(
                 "may only talk",
                 await harness.call("primary", "spawn", task="brief.md", backend="codex", model="m", effort="low"),
@@ -705,13 +711,13 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await harness.call(child, "message", agent="primary", text="Found it.")  # other news waits
             self.assertNotIn("Found it.", sent(harness, "primary"))
             await harness.emit("primary", "turn_ended", text="Because it converges.")
-            harness.write(f"agents/{child}/NOTES.md", "# Corrected by the human\n")
+            harness.write(f"phases/1/agents/{child}/NOTES.md", "# Corrected by the human\n")
             harness.controller.toggle_pause()
             await harness.settle(10)
             self.assertEqual(harness.state.status, "running")
             for agent, session in sessions.items():
                 self.assertIs(harness.session(agent), session)
-                self.assertIn(f"agents/{child}/NOTES.md", sent(harness, agent))
+                self.assertIn(f"phases/1/agents/{child}/NOTES.md", sent(harness, agent))
                 self.assertIn("The investigation has resumed", sent(harness, agent))
             self.assertIn("Found it.", sent(harness, "primary"))
             self.assertIn("stopped by the human's pause", sent(harness, child))
@@ -727,20 +733,22 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             assert harness.task is not None
             await asyncio.wait_for(harness.task, 2)
             self.assertEqual((harness.state.status, harness.state.jobs[job].status), ("paused", "running"))
-        (self.root / "agents" / "primary" / "NOTES.md").write_text("# Edited while the controller was off\n")
+        (self.root / "phases" / "1" / "agents" / "primary" / "NOTES.md").write_text(
+            "# Edited while the controller was off\n"
+        )
         async with running(self.root) as harness:
             await harness.settle(10)
             self.assertEqual(harness.state.jobs[job].status, "running")  # reattached
             opening = harness.session("primary").launch.message
-            self.assertIn("agents/primary/NOTES.md", opening)
+            self.assertIn("phases/1/agents/primary/NOTES.md", opening)
             self.assertIn("by the human or by running jobs", opening)
             self.assertIn("cancelled", await harness.call("primary", "job_cancel", job=job))
 
     async def test_human_file_change_reaches_primary_live(self):
         async with running(self.root) as harness:
-            harness.write("FEEDBACK.md", "Please also compute the error.\n")
+            harness.write("phases/1/OBJECTIVES.md", "Also compute the error.\n")
             await asyncio.sleep(0.3)
-            self.assertIn("FEEDBACK.md", sent(harness, "primary"))
+            self.assertIn("- phases/1/OBJECTIVES.md", sent(harness, "primary"))
             harness.controller.say("Hello from the human.")
             await harness.settle()
             self.assertIn("[human] Hello from the human.", sent(harness, "primary"))
@@ -787,7 +795,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             await asyncio.sleep(0.5)
             self.assertIn("without news", sent(harness, child))  # one turn for its note
             self.assertEqual(harness.state.agents[child].status, "submitted")
-            harness.write(f"agents/{child}/HANDOFF.md", "# Handoff\n\nSubmitted; wait for the parent.\n")
+            harness.write(f"phases/1/agents/{child}/HANDOFF.md", "# Handoff\n\nSubmitted; wait for the parent.\n")
             await harness.emit(child, "turn_ended", text="")
             self.assertTrue(first.closed)
             self.assertNotIn(child, harness.controller.sessions)

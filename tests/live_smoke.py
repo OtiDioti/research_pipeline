@@ -86,10 +86,11 @@ async def human_pause(controller: Controller, at: float) -> None:
         print("[smoke] the pause did not complete within 10 minutes", flush=True)
         return
     root = controller.project.root
-    (root / "FEEDBACK.md").write_text("Please also state the value to 12 significant digits in REPORT.md.\n")
-    status = root / "STATUS.md"
+    objectives = root / "phases" / "1" / "OBJECTIVES.md"
+    objectives.write_text(objectives.read_text() + "\nAlso state the value to 12 significant digits in the report.\n")
+    status = root / "phases" / "1" / "STATUS.md"
     status.write_text(status.read_text() + "\nHuman note (edited while paused): keep the report short.\n")
-    print("[smoke] edited FEEDBACK.md and STATUS.md while paused; resuming", flush=True)
+    print("[smoke] edited OBJECTIVES.md and STATUS.md while paused; resuming", flush=True)
     controller.toggle_pause()
 
 
@@ -187,8 +188,9 @@ async def main() -> None:
 
     root = ROOT / datetime.now().strftime("%Y%m%d-%H%M%S")
     (root / "starting_evidence").mkdir(parents=True)
-    (root / "starting_evidence" / "OBJECTIVES.md").write_text(QUESTION)
-    (root / "starting_evidence" / "FOLDER_CONTENT.md").write_text("- [OBJECTIVES.md](OBJECTIVES.md) — The objective.\n")
+    (root / "starting_evidence" / "FOLDER_CONTENT.md").write_text("# Folder contents\n\n")
+    (root / "phases" / "1").mkdir(parents=True)
+    (root / "phases" / "1" / "OBJECTIVES.md").write_text(QUESTION)
     (root / "AGENTS.md").write_text(
         PROCEDURE.format(sub=args.sub, sub_model=args.sub_model, sub_effort=args.sub_effort)
     )
@@ -236,8 +238,10 @@ async def main() -> None:
         print(f"  {job.id} ({job.owner}): {job.status}, exit {job.exit_code}")
     print(controller.project.git("log", "--oneline"))
     shelved = controller.librarian.catalogue.shelves
-    monitor.note("an accepted subagent's work was shelved", any(state.agents[a].role == "subagent" for a in shelved))
-    monitor.note("the final work was shelved and placed", "primary" in shelved and not state.shelving)
+    agents = {controller.librarian.folder(agent): agent for agent in state.agents.values()}
+    monitor.note("an accepted subagent's work was shelved", any(agents[f].role == "subagent" for f in shelved))
+    pending = controller.home.shelving
+    monitor.note("the final work was shelved and placed", "phases/1/agents/primary" in shelved and not pending)
     for check, ok in monitor.results.items():
         print(f"  check: {check}: {'not observed' if ok is None else 'yes' if ok else 'NO'}")
     print(f"project kept at {root}")

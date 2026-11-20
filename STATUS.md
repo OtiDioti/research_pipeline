@@ -1,5 +1,27 @@
 # Status
 
+**2026-11-20.** 0.15.0, on agent_toolkit 0.10.0: **phases** (PROJECT.md §2 "Phases", §4;
+[docs/WEB.md](docs/WEB.md)). A project's investigation runs in numbered phases, one folder each (`phases/<N>/`: its
+OBJECTIVES.md, STATUS.md, REPORT.md, `agents/` and `reviews/`); `AGENTS.md`, `starting_evidence/`, `library/` and
+the Librarian (now in `librarian/`) are shared. One phase runs at a time. The web page has a collapsible sidebar
+listing the phases (running one marked): selecting a phase shows its graph (live, or as it was left, with talks
+with its primary and Reviewer while another phase runs), *New phase* prepares a fresh primary on new objectives
+(with a title and an optional phase it builds on, and its own assistant, `prompts/phase.md`), and an earlier phase
+can be continued: a paused one resumes from its handoffs, an ended one reopens. Switching needs the running phase
+paused (its sessions save their handoffs) or ended. A phase continued after others ran is told of the later ones;
+every primary is told of the other phases; the Librarian is told of each new phase, and shelving requests name
+folders (`shelved(folder)`). **FEEDBACK.md is gone**: only a change of a phase's own OBJECTIVES.md reopens it after
+COMPLETE or STOP (AGENTS.md or material alone do not), and the reopening assistant revises the objectives instead
+of writing a FEEDBACK section. State: each phase's in `.research/phases/<N>/state.json`, what the phases share in
+`.research/project.json`; `run --no-web` runs the latest phase. New modules `phases.py` and `graph.py` (the web
+page's per-phase graph); the controller runs one phase and hosts the Librarian's sessions; it is still over 500
+lines. Deliberate prompt changes: every role is told its phase and folder paths; the primary's prompt drops
+FEEDBACK.md, points to earlier phases' work through the library, and reserves STOP for objectives that cannot be
+achieved; the Librarian organises by phase and objective; the talk, setup and reopening prompts are per phase; new
+notices for a new phase (Librarian), the other phases (primary's opening) and later phases (on continuing); tool
+descriptions of `shelved`, `write_objectives` and `write_page`, and `write_feedback` removed. No migration of
+existing projects (to be moved by hand). Not yet tried with real CLIs.
+
 **2026-11-19.** 0.14.0, on agent_toolkit 0.9.0: reopening from the web page
 ([docs/FINISHING.md](docs/FINISHING.md), PROJECT.md §4). After COMPLETE or STOP the top bar offers *Prepare reopening*:
 the setup page again, while the talks go on, with Material, Instructions (FEEDBACK.md, OBJECTIVES.md, AGENTS.md as

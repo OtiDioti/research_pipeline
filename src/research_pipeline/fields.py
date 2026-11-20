@@ -1,4 +1,7 @@
-"""The launch options as the web page's settings: the setup page's fields, and which of them change live."""
+"""The launch options as the web page's settings: the setup page's fields, and which of them change live.
+
+A phase's own settings (its title, and the earlier phase it builds on) come first on the setup page.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +23,21 @@ NAMES = (
     "references",
     "durable",
 )
+
+
+def phase_fields(earlier: list[int]) -> list[Field]:
+    """A phase's title and the phase it builds on (``earlier``: the phases it may build on)."""
+    return [
+        Field("title", "Phase title", "line", "A short name for this phase, shown in the Phases list."),
+        Field(
+            "builds_on",
+            "Builds on",
+            "select",
+            "An earlier phase whose report and status the primary starts from; every phase's finished work is "
+            "in the library anyway.",
+            options=["none", *(str(number) for number in earlier)],
+        ),
+    ]
 
 
 def fields(backends: list[str]) -> list[Field]:

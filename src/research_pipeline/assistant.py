@@ -1,8 +1,9 @@
-"""The setup assistant: an agent that helps the human make a folder ready, before the first start (docs/SETUP.md).
+"""The setup assistant: an agent that helps the human prepare a phase on the web page (docs/SETUP.md).
 
-The same agent, with its own prompt, requests and two more tools, helps prepare a
-reopening after the end (``kind`` 'reopen', :data:`REOPEN_TOOLS`): it also writes
-this reopening's section of FEEDBACK.md and, on request, AGENTS.md.
+``kind`` 'setup' makes a folder ready before the first start (the first phase);
+the same agent, with its own prompt and requests, helps prepare a new phase
+(``kind`` 'phase') or the reopening of a phase that ended (``kind`` 'reopen'), and
+may then also write AGENTS.md, on request (:data:`PHASE_TOOLS`).
 
 It is optional: everything it does, the human can do on the page by hand. It
 takes one request at a time (organise the material, first ideas with or
@@ -15,9 +16,9 @@ answered here by the deterministic code of :mod:`research_pipeline.material`.
 
 The usage quota of its CLI is read before every request; a request is refused
 while it is at a limit. What the page shows of it (the conversation, its open
-questions) is kept in ``.research/setup/`` with the note, so a restarted
-program continues where it was; the folder is removed at the start, leaving
-only the CLI logs in ``.research/logs/``.
+questions) is kept in ``.research/setup/<phase>/`` with the note, so a restarted
+program continues where it was; the folder is removed when the phase starts,
+leaving only the CLI logs in ``.research/logs/``.
 """
 
 from __future__ import annotations
@@ -39,7 +40,7 @@ from agent_toolkit.tools import ToolBridge, ToolRefused
 from research_pipeline import material
 from research_pipeline.project import Project
 from research_pipeline.prompts import PROMPTS
-from research_pipeline.tools import REOPEN_TOOLS, SETUP_TOOLS
+from research_pipeline.tools import PHASE_TOOLS, SETUP_TOOLS
 
 #: The agent's id, in its CLI logs and messages.
 NAME = "setup"
@@ -66,16 +67,15 @@ class Assistant:
         drivers: dict,
         read_quota: Callable[[str], list[quota_module.Window]] | None = None,
         kind: str = "setup",
-        reopening: int = 0,
         facts: Callable[[], dict[str, str]] = dict,
     ):
-        """``kind`` 'setup' (before the first start) or 'reopen' (after the end, for reopening number
-        ``reopening``); ``facts`` adds to a reopening's opening message (its ``outcome``) and prompt (``talks``)."""
+        """``kind`` 'setup' (the first phase), 'phase' (a new one) or 'reopen' (one that ended), for ``project``'s
+        phase; ``facts`` adds to its opening message and prompt (e.g. a reopening's ``outcome`` and ``talks``)."""
         self.project, self.drivers = project, drivers
-        self.kind, self.reopening, self.facts = kind, reopening, facts
+        self.kind, self.facts = kind, facts
         self.threshold, self.short_limit, self.weekly_limit = threshold, short_limit, weekly_limit
         self.read_quota = read_quota or (lambda backend: quota_module.read(self.drivers[backend]))
-        self.folder = project.research / NAME
+        self.folder = project.research / NAME / str(project.phase)
         self.folder.mkdir(parents=True, exist_ok=True)
         self.note = self.folder / "HANDOFF.md"
         stored = self._load()
@@ -167,13 +167,13 @@ class Assistant:
         try:
             if self.relay is None:
                 await self.bridge.start()
-                tools = REOPEN_TOOLS if self.kind == "reopen" else SETUP_TOOLS
+                tools = SETUP_TOOLS if self.kind == "setup" else PHASE_TOOLS
                 self.tools = self.bridge.offer(NAME, tools, self._on_tool, name=NAME)
                 self.relay = self._relay()
             relay = self.relay
 
             def compose(fresh: bool, note: str | None) -> str:
-                opening = self.text("opening", state=self._state(), **self.facts())
+                opening = self.text("opening", state=self._state())
                 parts = [opening] if fresh else []
                 if note:
                     parts.append(self.text("note", note=note))
@@ -206,7 +206,7 @@ class Assistant:
                     self.kind,
                     project=self.project.root,
                     template=PROMPTS.text("objectives-template"),
-                    **self.facts(),
+                    **self._facts(),
                 ),
                 model=spec.model,
                 effort=spec.effort,
@@ -237,14 +237,22 @@ class Assistant:
 
     def text(self, name: str, **facts) -> str:
         """One of this assistant's request messages, filled (see :func:`request_text`)."""
-        return request_text(name, self.kind, **facts)
+        return request_text(name, self.kind, **(self._facts() | facts))
+
+    def _facts(self) -> dict[str, str]:
+        """What its prompt and requests name: the phase, its folder and objectives, and the kind's own facts."""
+        project = self.project
+        own = {
+            "number": str(project.phase),
+            "phase": project.folder,
+            "objectives": project.relative(project.objectives),
+        }
+        return own | self.facts()
 
     def _on_tool(self, tool: str, args: dict) -> str:
         try:
             if tool == "write_objectives":
                 return material.write_objectives(self.project, str(args.get("text") or ""))
-            if tool == "write_feedback":
-                return material.write_feedback(self.project, self.reopening, str(args.get("text") or ""))
             if tool == "write_agents_md":
                 self.project.write(self.project.root / "AGENTS.md", str(args.get("text") or "").rstrip() + "\n")
                 return "Wrote AGENTS.md."
@@ -291,9 +299,7 @@ class Assistant:
             + (f" — {entry['description']}" if entry["description"] else "")
             for entry in material.entries(self.project)
         ]
-        texts = [("starting_evidence/OBJECTIVES.md", self.project.objectives)]
-        if self.kind == "reopen":
-            texts.append(("FEEDBACK.md", self.project.root / "FEEDBACK.md"))
+        texts = [(self.project.relative(self.project.objectives), self.project.objectives)]
         shown = "".join(
             f"\n\n{name}:\n\n"
             + ((path.read_text(encoding="utf-8").strip() if path.is_file() else "") or "(not written yet)")

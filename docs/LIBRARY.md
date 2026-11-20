@@ -11,7 +11,7 @@ an agent, a job or a note uses stays valid.
 An agent's folder is shelved when:
 - its parent accepts it, or it is cancelled (each agent of a cancelled subtree,
   deepest first, also when the human cancels it);
-- the investigation ends: the primary's and the Reviewer's folders, and any other
+- a phase ends: its primary's and Reviewer's folders, and any other
   ended agent's not shelved yet.
 
 Shelving:
@@ -22,9 +22,9 @@ Shelving:
 2. **freezes** the folder: agents could never write another agent's folder, and
    jobs now see it read-only too (a job started before the shelving keeps the
    access it started with);
-3. **asks the Librarian** to place the work (`Shelving request: <id> …`).
+3. **asks the Librarian** to place the work (`Shelving request: the agent of <folder>/ …`).
 
-Nothing is deleted. A reopened investigation's primary and Reviewer continue in
+Nothing is deleted. A reopened phase's primary and Reviewer continue in
 their folders, which are no longer frozen; the catalogue keeps the earlier entry
 until the next end replaces it.
 
@@ -42,8 +42,8 @@ Agents search it, with `library/LIBRARY.md`, before solving something or spawnin
 | CLI, model, effort | `--librarian` (required on the first run; editable live in the web app) |
 | Started | At its first shelving request; between requests it rests |
 | Session cap | Not counted against `--max-agents` |
-| Writes | Its own folder (`agents/librarian/`); `library/` only through `write_page` |
-| Tools | `write_page(path, text)`, `shelved(agent)` |
+| Writes | Its own folder (`librarian/`, at the top level: it serves every phase); `library/` only through `write_page` |
+| Tools | `write_page(path, text)`, `shelved(folder)` |
 | Instructions | `prompts/librarian.md` (no shared scientific part), then the human's `AGENTS.md` |
 | Quota | Paused only by a hold on its own CLI, or by the human |
 
@@ -52,12 +52,12 @@ Agents search it, with `library/LIBRARY.md`, before solving something or spawnin
   removes it, with folders left empty. Refused: a path outside `library/`, not
   ending in `.md`, hidden, a folder, or `CATALOG.md`. The reply lists the page's
   links that lead nowhere.
-- **`shelved(agent)`** reports a request done. It is refused, with the list,
+- **`shelved(folder)`** reports a request done; requests name agents by folder (e.g. `phases/2/agents/fit`), as agent ids repeat across phases. It is refused, with the list,
   while a catalogued file of that agent is reachable from no page, a link in
   `library/` leads nowhere, or the layout check of `library/` fails (a folder's
   `FOLDER_CONTENT.md` missing an entry). `CATALOG.md` does not count as a page.
   Accepted: the request is removed and the controller commits
-  `librarian: shelved <agent>`.
+  `librarian: shelved <folder>`.
 - **Its turns.** At the end of each turn, the pages it changed are committed
   (`librarian: library pages updated`), and new links that lead nowhere are sent
   to it once.

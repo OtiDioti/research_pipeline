@@ -1,4 +1,4 @@
-"""The controller: a deterministic program that runs one investigation (PROJECT.md §3–§7).
+"""The controller: a deterministic program that runs one phase of an investigation (PROJECT.md §3–§7).
 
 It owns the agent tree and makes every operational decision; it never makes a
 scientific one. In outline:
@@ -40,10 +40,15 @@ scientific one. In outline:
   agent off and leaves jobs running. After a shutdown or a crash, agents restart
   from their handoffs and running jobs are reattached.
 - **After the end.** The controller stays open for talks with the primary and the
-  Reviewer (:mod:`research_pipeline.talks`). The investigation reopens at a later run
-  if the human's files changed since the end; with the web page, only when its Reopen
-  asks (``reopen``), and :meth:`Controller.hand_over` then ends this controller for the
-  reopening one.
+  Reviewer (:mod:`research_pipeline.talks`). The phase reopens at a later run if the
+  human changed its OBJECTIVES.md since the end; with the web page, only when its
+  Reopen asks (``reopen``).
+- **Phases.** A project's phases (:mod:`research_pipeline.phases`) share the human's
+  files, the library and the Librarian, whose sessions the running phase's controller
+  hosts. One phase runs at a time; the human can talk with the primary and the
+  Reviewer of any other phase meanwhile. To run another phase (or to reopen this one
+  from the web page), :meth:`Controller.hand_over` ends this controller, once the
+  phase has ended or is paused, for that phase's.
 
 All state changes happen on one asyncio loop, serialised by one lock: driver
 events, tool calls and the background loops never interleave halfway.
@@ -68,8 +73,9 @@ from agent_toolkit.records import Busy, atomic_write, exclusive
 from agent_toolkit.tools import ToolBridge
 
 from research_pipeline import jobs as joblib
-from research_pipeline import prompts
+from research_pipeline import phases, prompts
 from research_pipeline.librarian import LIBRARIAN, Librarian
+from research_pipeline.phases import NOT_STARTED, Home
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
 from research_pipeline.talks import Talks
@@ -96,35 +102,43 @@ Show = Callable[[str, str, str], None]
 
 
 class Controller:
-    """Runs one investigation in one project folder until it ends or the human shuts it down."""
+    """Runs one phase of the investigation in one project folder until it ends or the human shuts it down."""
 
     def __init__(
         self,
         root: Path,
         options: Options | None = None,
         *,
+        phase: int = 1,
         drivers=DRIVERS,
         read_quota: Callable[[str], list[quota.Window]] | None = None,
         show: Show | None = None,
         reopen: bool | None = None,
     ):
-        """``options`` override the stored launch options (None: keep them; a first run needs them).
+        """Run ``phase``; ``options`` override its stored launch options (None: keep them; a first run needs them).
 
-        ``reopen`` decides what a finished investigation whose human files changed since
-        the end does: None reopens it (the command line, without the web page); False
+        ``reopen`` decides what a finished phase whose OBJECTIVES.md changed since the
+        end does: None reopens it (the command line, without the web page); False
         opens it talk-only, for the web page's reopening; True reopens it (that page's Reopen).
 
         ``drivers`` and ``read_quota`` (backend name -> usage windows; by default read
         by that backend's driver) can be replaced in tests.
         """
-        self.project = Project(root)
+        self.project = Project(root, phase)
         self.launch_options = options
         self.drivers = drivers
         # The limits and the holds come from the state once it is loaded (see _load).
         self.guard = Guard(0, 0, read_quota or (lambda backend: quota.read(self.drivers[backend])))
         self.show: Show = show or (lambda kind, agent, text: None)
-        # What each agent said, did and received, for the web app (hidden from agents, like all of .research/).
-        self.activity = ActivityLog(self.project.research / "activity", root=self.project.root)
+        # What each agent said, did and received, for the web app (hidden from agents, like all of .research/):
+        # one log per phase, and the Librarian's, which serves them all. Talks reach other phases' logs.
+        self.home = Home.load(self.project.home_file)  # what the phases share (loaded again at the start)
+        self.activity = ActivityLog(self.project.activity, root=self.project.root)
+        self.library_log = ActivityLog(self.project.library_activity, root=self.project.root)
+        self.logs = {
+            number: ActivityLog(self.project.at(number).activity, root=self.project.root)
+            for number in {phase.number for phase in self.home.phases} - {phase}
+        } | {phase: self.activity}
         self.state: State = State()
         self.sessions: dict[str, Session] = {}
         self.watches: dict[str, HandoffWatch] = {}  # agent id -> the handoff rules of its current session
@@ -137,7 +151,7 @@ class Controller:
         self._human_checked = 0.0
         self._quota_due = 0.0
         self._strays: set[str] = set()  # unexpected top-level entries already reported
-        self.librarian = Librarian(self.project, lambda: self.state, self._notify, self._commit)
+        self.librarian = Librarian(self.project, lambda: self.state, lambda: self.home, self._notify, self._commit)
         self.closing = False  # the investigation ended; the Librarian places the final work
         self.talks = Talks(self)  # talk-only sessions with the primary and the Reviewer after the end
         self._reopen_told = False  # the human was told that their changes after the end reopen at the next run
@@ -161,6 +175,7 @@ class Controller:
             except Busy as busy:
                 raise ProjectError(str(busy)) from None
             self.project.prepare()
+            self.home = Home.load(self.project.home_file)
             self.state = self._load()
             await self.bridge.start()
             loops = [asyncio.create_task(self._watch_loop()), asyncio.create_task(self._quota_loop())]
@@ -214,22 +229,44 @@ class Controller:
         asyncio.ensure_future(self._locked(self._release()))
 
     def hand_over(self) -> None:
-        """After the end: end the talks (without notes) and this controller, for one that reopens (the web page)."""
+        """End this controller for another phase's, or for this phase reopened (the web page).
+
+        Only once the phase has ended (its talks then save their notes) or is paused (its
+        sessions then save their handoffs, as at a shutdown).
+        """
+        if self.state.status == "paused":
+            self.shutdown()
+            return
         if self.state.status not in FINISHED:
-            raise ValueError("only an investigation that ended can be reopened")
+            raise ValueError(f"phase {self.project.phase} is {self.state.status}: pause it first")
         self.request = "reopen"
         asyncio.ensure_future(self._locked(self._hand_over()))
 
     async def _hand_over(self) -> None:
-        await self.talks.close(notes=False)  # the reopening removes the talks
+        await self.talks.close()
         assert self.done is not None  # set by run(), within which this runs
         self.done.set()
 
     def human_changes(self) -> list[str]:
-        """The human's files changed since the end, by content (empty before an end)."""
+        """The human's files changed since the phase's end, by content (empty before an end)."""
         if self.state.status not in FINISHED:
             return []
         return self.project.human_changes(self.state.human, self.state.end_commit)
+
+    def objectives_changed(self) -> bool:
+        """True if the phase's OBJECTIVES.md changed since its end: what reopens it (PROJECT.md §4)."""
+        return self.project.relative(self.project.objectives) in self.human_changes()
+
+    async def talk(self, phase: int, agent_id: str, text: str) -> str:
+        """The human's ``text`` to the primary or the Reviewer of another phase: a talk (research_pipeline.talks)."""
+        if self.lock is None:
+            raise ValueError("the investigation is still starting")
+        async with self.lock:
+            return await self.talks.message_phase(phase, agent_id, text)
+
+    def log(self, agent_id: str) -> ActivityLog:
+        """The activity log ``agent_id`` of this phase writes to (the Librarian's is the project's)."""
+        return self.library_log if agent_id == LIBRARIAN else self.activity
 
     @property
     def releasable(self) -> bool:
@@ -436,7 +473,10 @@ class Controller:
             self.lock.release()
 
     def _load(self) -> State:
-        """Load the stored state, or create it on a first run; apply new launch options."""
+        """Load the phase's stored state, or create it on a first run; apply new launch options.
+
+        The Librarian's record is the project's (every phase shares it); it joins the phase's agents here.
+        """
         if self.project.state_file.exists():
             state = State.load(self.project.state_file)
             if self.launch_options:
@@ -455,6 +495,8 @@ class Controller:
             raise ProjectError(f"Unknown backend(s): {', '.join(sorted(unknown))}; known: {', '.join(self.drivers)}")
         if options.max_agents < 2:
             raise ProjectError("--max-agents must be at least 2: the primary and the Reviewer.")
+        if self.home.librarian is not None:
+            state.agents[LIBRARIAN] = self.home.librarian
         for agent_id, spec in specs.items():
             agent = state.agents.setdefault(
                 agent_id,
@@ -472,11 +514,14 @@ class Controller:
             agent.backend, agent.model, agent.effort = spec.backend, spec.model, spec.effort
         self.guard.short_limit, self.guard.weekly_limit = options.short_limit, options.weekly_limit
         self.guard.holds = state.holds  # the guard keeps its holds in the stored state
+        self.home.librarian = state.agents[LIBRARIAN]
+        if self.home.phase(self.project.phase) is None:  # e.g. a first phase prepared by hand (--no-web)
+            self.home.phases.append(phases.Phase(self.project.phase, f"Phase {self.project.phase}"))
         return state
 
     async def _begin(self) -> None:
-        """Start, resume or reopen the investigation."""
-        state = self.state
+        """Start, resume or reopen the phase."""
+        state, home, number = self.state, self.home, self.project.phase
         clean = state.status in ("paused", "pausing") or state.status in FINISHED
         for agent in state.agents.values():  # sessions of a previous controller ended with it
             if agent.status in ACTIVE:
@@ -485,16 +530,22 @@ class Controller:
         changed = self.project.uncommitted()
         state.human = state.human or self.project.human_fingerprint()  # changes while off are reported below
         human = self.human_changes()
-        if not state.agents["primary"].sessions:  # the first run
-            self._commit("controller: investigation started")
-        elif state.status in FINISHED and (not human or self.reopen is False):
+        switched = home.active is not None and home.active != number  # another phase ran meanwhile
+        home.active = number
+        primary = state.agents["primary"]
+        if not primary.sessions:  # the phase's first run
+            self._commit(f"controller: phase {number} started")
+            if len(home.phases) > 1:  # the library now serves one more phase
+                summary = next(item for item in phases.summaries(self.project, home, state) if item.number == number)
+                self._queue(state.agents[LIBRARIAN], prompts.new_phase(summary.line()))
+        elif state.status in FINISHED and (not self.objectives_changed() or self.reopen is False):
             if changed:
                 self._commit("controller: changes after the end")
-            self.closing = bool(state.shelving)  # the Librarian places what was left pending; talks are open
+            self.closing = bool(home.shelving)  # the Librarian places what was left pending; talks are open
             state.holds.clear()
             await self._check_quota()
             librarian = state.agents[LIBRARIAN]
-            if state.shelving and librarian.status == "resting":
+            if home.shelving and librarian.status == "resting":
                 await self._wake(librarian)
             await self._resume_agents()
             self._announce_talks()
@@ -504,18 +555,19 @@ class Controller:
             await self.talks.discard()
             outcome = state.status.upper()
             self._commit("human: changes before reopening")
-            state.reopenings += 1
             state.status, state.proposal, state.end_commit = "running", None, None
             state.human = self.project.human_fingerprint()  # the notice below reports these changes
-            primary = state.agents["primary"]
             primary.status, primary.pause_reason = "paused", "reopen"
-            self._queue(primary, prompts.reopened(outcome, human, self._brief(state.reopenings)))
-            self.show("controller", "primary", f"Reopened after {outcome}.")
+            self._queue(primary, prompts.reopened(outcome, human))
+            self.show("controller", "primary", f"Phase {number} reopened after {outcome}.")
         elif clean and changed:
             self._commit("controller: changes made while paused or shut down (by the human or by running jobs)")
             self._announce_changes(changed)
         elif changed:
             self._commit("controller: work recovered after a restart")
+        later = [item for item in phases.summaries(self.project, home, state) if item.number > number]
+        if switched and primary.sessions and [item for item in later if item.status != NOT_STARTED]:
+            self._queue(primary, prompts.later_phases(phases.listing(later)))
         state.status = "running"
         state.holds.clear()  # running again is the human's resume: holds are re-read now
         await self._check_quota()
@@ -547,10 +599,9 @@ class Controller:
 
     def _scope(self, agent: Agent) -> tuple[Path, ...]:
         """What the agent's confinement leaves writable (PROJECT.md §2)."""
-        root = self.project.root
         scope = [self.project.agent_dir(agent.id)]
         if agent.role == "primary":
-            scope += [root / INDEX, root / "STATUS.md", root / "REPORT.md"]
+            scope += [self.project.phase_dir / INDEX, self.project.status_file, self.project.report]
         elif agent.role == "reviewer":
             scope.append(self.project.reviews)
         return tuple(scope)
@@ -566,8 +617,8 @@ class Controller:
         agent.sessions += 1
         agent.started = time.time()
         notices, agent.notices = agent.notices, []
-        if agent.role == "librarian" and self.state.shelving and not notices:  # e.g. after a restart
-            notices = [prompts.shelving_pending(self.state.shelving)]
+        if agent.role == "librarian" and self.home.shelving and not notices:  # e.g. after a restart
+            notices = [prompts.shelving_pending(self.home.shelving)]
         number = agent.sessions
         tools = self.bridge.offer(
             agent.id,
@@ -579,14 +630,14 @@ class Controller:
             agent=agent.id,
             cwd=folder,
             instructions=prompts.instructions(agent, self.project, self.state.options),
-            message=prompts.opening(agent, self.project, self.state.options, notices),
+            message=prompts.opening(agent, self.project, self.state.options, notices, self._phases()),
             model=agent.model,
             effort=agent.effort,
             tools=CAPABILITIES,
             mcp=tools,
             writable=self._scope(agent),
             hidden=(self.project.research,),
-            log=self.project.logs / f"{agent.id}-{agent.sessions}.jsonl",
+            log=self.project.session_log(agent.id, agent.sessions),
         )
         session = self.drivers[agent.backend](launch, self._on_event)
         self._record(agent, launch.message)
@@ -670,7 +721,7 @@ class Controller:
             if agent.role == "reviewer" and not pending and not agent.notices:
                 agent.status, agent.pause_reason = "resting", None
                 continue
-            if agent.role == "librarian" and not state.shelving and not agent.notices:
+            if agent.role == "librarian" and not self.home.shelving and not agent.notices:
                 agent.status, agent.pause_reason = "resting", None
                 continue
             if self._blocked(agent.backend):
@@ -712,7 +763,7 @@ class Controller:
         if self.sessions.get(agent_id) is not session:
             return  # from a session that has already been replaced or closed
         agent = self.state.agents[agent_id]
-        self.activity.event(agent_id, kind, data)
+        self.log(agent_id).event(agent_id, kind, data)
         if kind == "text":
             agent.activity = data["text"].strip().splitlines()[0][:200] if data["text"].strip() else agent.activity
             self.show("agent", agent_id, data["text"])
@@ -781,7 +832,7 @@ class Controller:
             await self._flush(agent)
         elif agent.role == "reviewer" and not self._under_review():
             agent.status = "resting"  # it answered the human between rounds
-        elif agent.role == "librarian" and not self.state.shelving:
+        elif agent.role == "librarian" and not self.home.shelving:
             agent.status = "resting"  # nothing is pending: the next request wakes it
         elif self._idle(agent):
             if agent.nudged:  # told it was idle, and it ended its turn idle again without using a tool
@@ -790,7 +841,7 @@ class Controller:
                 agent.nudged = True
                 await self._send(
                     agent,
-                    prompts.librarian_nudge(self.state.shelving)
+                    prompts.librarian_nudge(self.home.shelving)
                     if agent.role == "librarian"
                     else prompts.nudge(agent.role, self._awaiting(agent)),
                 )
@@ -818,7 +869,7 @@ class Controller:
             self.show(
                 "alert",
                 LIBRARIAN,
-                f"The Librarian has stopped with shelving requests pending ({', '.join(self.state.shelving)}). "
+                f"The Librarian has stopped with shelving requests pending ({', '.join(self.home.shelving)}). "
                 f"Its last message:\n{last}",
             )
             await self._closed(force=True)
@@ -838,7 +889,7 @@ class Controller:
 
     def _record(self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None) -> None:
         """Keep a message ``agent`` receives in its activity log (``sender`` as seen from the agent)."""
-        self.activity.add(agent.id, "message", text, sender=sender, origin=origin)
+        self.log(agent.id).add(agent.id, "message", text, sender=sender, origin=origin)
 
     def _queue(self, agent: Agent, text: str, sender: str = "controller", origin: str | None = None) -> None:
         """Keep a notice for the agent's next delivery (recorded now)."""
@@ -911,7 +962,12 @@ class Controller:
     def _announce_changes(self, paths: list[str]) -> None:
         """Tell the primary, and the owners of changed agent folders, what changed while paused or shut down."""
         notice = prompts.resumed(paths)
-        owners = {path.split("/")[1] for path in paths if path.startswith("agents/") and path.count("/") >= 2}
+        agents = f"{self.project.folder}/agents/"
+        owners = {
+            path.removeprefix(agents).split("/")[0]
+            for path in paths
+            if path.startswith(agents) and "/" in path[len(agents) :]
+        }
         for agent_id in {"primary", *owners} & set(self.state.agents):
             self._queue(self.state.agents[agent_id], notice)
         self.show(
@@ -1142,7 +1198,8 @@ class Controller:
                 "asks the human."
             )
         return (
-            f"Started subagent {child.id} ({child.spec}); its folder is agents/{child.id}/. "
+            f"Started subagent {child.id} ({child.spec}); its folder is "
+            f"{self.project.relative(self.project.agent_dir(child.id))}/. "
             "You will be told when it submits its result; meanwhile, continue any work that does not "
             "depend on it."
         )
@@ -1281,15 +1338,19 @@ class Controller:
         self.state.job_counter += 1
         job = Job(f"job-{self.state.job_counter}", caller.id, command, str(folder), timeout, time.time())
         try:
-            read_only = [self.project.evidence, self.project.library, *self.librarian.frozen()]
+            others = [self.project.at(phase.number).phase_dir for phase in self.home.phases]
+            read_only = [self.project.evidence, self.project.library, *self.librarian.frozen()] + [
+                folder for folder in others if folder != self.project.phase_dir and folder.is_dir()
+            ]
             self.processes[job.id] = joblib.start(
-                self.project.root, job, read_only=read_only, hidden=[self.project.research]
+                self.project.phase_dir, job, read_only=read_only, hidden=[self.project.research]
             )
         except OSError as error:
             raise ToolError(f"the job could not start: {error}") from None
         self.state.jobs[job.id] = job
         return (
-            f"Started {job.id} (timeout {timeout:g} s); output in agents/{caller.id}/jobs/{job.id}/. "
+            f"Started {job.id} (timeout {timeout:g} s); output in "
+            f"{self.project.relative(self.project.agent_dir(caller.id))}/jobs/{job.id}/. "
             "You will be told when it ends; meanwhile, continue any work that does not depend on it."
         )
 
@@ -1300,14 +1361,14 @@ class Controller:
         return job
 
     async def _tool_job_status(self, caller: Agent, job: str) -> str:
-        return joblib.describe(self.project.root, self._job(caller, job))
+        return joblib.describe(self.project.phase_dir, self._job(caller, job))
 
     async def _tool_job_cancel(self, caller: Agent, job: str) -> str:
         record = self._job(caller, job)
         if record.status != "running":
             raise ToolError(f"{job} is not running ({record.status})")
         await self._stop_job(record)
-        return joblib.describe(self.project.root, record)
+        return joblib.describe(self.project.phase_dir, record)
 
     async def _stop_job(self, job: Job) -> None:
         """Stop a job's processes and reap the process this controller started, if any."""
@@ -1360,7 +1421,7 @@ class Controller:
         )
 
     async def _tool_complete(self, caller: Agent, report: str = "REPORT.md") -> str:
-        path = self._path(caller, report, self.project.root, self.project.agent_dir(caller.id))
+        path = self._path(caller, report, self.project.phase_dir, self.project.root, self.project.agent_dir(caller.id))
         if not path.read_text(encoding="utf-8", errors="replace").strip():
             raise ToolError(f"{report} must be a non-empty report")
         return await self._propose(caller, "complete", self.project.relative(path))
@@ -1385,6 +1446,7 @@ class Controller:
             "kind": proposal["kind"],
             "round_": proposal["round"],
             "detail": proposal["detail"],
+            "phase": self.project.folder,
             "commit": proposal.get("commit"),
         }
 
@@ -1421,8 +1483,11 @@ class Controller:
         else:
             proposal["challenged"] = True
         # What the primary changed after proposing: the review does not cover it.
+        excluded = [
+            self.project.relative(folder) for folder in (self.project.reviews, self.project.agent_dir("reviewer"))
+        ]
         changed = (
-            self.project.changed_since(proposal["commit"], "reviews", "library", "agents/reviewer", "agents/librarian")
+            self.project.changed_since(proposal["commit"], *excluded, "library", LIBRARIAN)
             if proposal.get("commit")
             else []
         )
@@ -1457,23 +1522,26 @@ class Controller:
                 agent.status = "resting"
         for job in state.running_jobs():
             await self._stop_job(job)
-        status_file = self.project.root / "STATUS.md"
+        status_file = self.project.status_file
         text = status_file.read_text(encoding="utf-8") if status_file.exists() else "# Status\n"
         atomic_write(
             status_file,
             f"{text.rstrip()}\n\n## Outcome (recorded by the controller)\n\n{state.outcome}\n",
             root=self.project.root,
         )
-        commit = self._commit(f"controller: investigation {outcome.upper()}")
+        commit = self._commit(f"controller: phase {self.project.phase} {outcome.upper()}")
         state.human = self.project.human_fingerprint()  # changes from now on reopen it at the next run
         state.end_commit, state.ended = commit, time.time()
-        self.show("controller", "primary", f"The investigation is {outcome.upper()}: {detail}")
+        self.show("controller", "primary", f"Phase {self.project.phase} is {outcome.upper()}: {detail}")
         final = [
             agent
             for agent in state.agents.values()
             if self.project.agent_dir(agent.id).is_dir()
             and (agent.role in ("primary", "reviewer") or agent.status in ENDED)
-            and (agent.role in ("primary", "reviewer") or agent.id not in self.librarian.catalogue.shelves)
+            and (
+                agent.role in ("primary", "reviewer")
+                or self.librarian.folder(agent) not in self.librarian.catalogue.shelves
+            )
         ]
         self.closing = True
         await self.librarian.shelve(final, commit)
@@ -1488,14 +1556,14 @@ class Controller:
         librarian = self.state.agents[LIBRARIAN]
         if not self.closing:
             return
-        if not force and self.state.shelving and librarian.status != "paused" and not self._blocked(librarian.backend):
+        if not force and self.home.shelving and librarian.status != "paused" and not self._blocked(librarian.backend):
             return  # it is placing the final work
         self.closing = False
         await self._close(LIBRARIAN)
         librarian.handoff_reason = None
         if librarian.status in ACTIVE or librarian.status == "paused":
             librarian.status, librarian.pause_reason = "resting", None
-        pending = self.state.shelving
+        pending = self.home.shelving
         self._commit("controller: the library after the end")  # the catalogue and the Librarian's last notes
         self.show(
             "controller",
@@ -1509,23 +1577,23 @@ class Controller:
 
     def _announce_talks(self) -> None:
         reopen = (
-            "to reopen, use Prepare reopening on the web page"
+            "to reopen it or start another phase, use the web page"
             if self.reopen is False
-            else "to reopen, change your files (e.g. FEEDBACK.md) and run again"
+            else f"to reopen it, change {self.project.relative(self.project.objectives)} and run again"
         )
         self.show(
             "controller",
             "primary",
-            f"The investigation has ended ({self.state.status.upper()}). You can still talk with the primary (chat box "
-            f"or web page) and the Reviewer (web page), talk-only. Ctrl+Q quits; {reopen}.",
+            f"Phase {self.project.phase} has ended ({self.state.status.upper()}). You can still talk with its primary "
+            f"(chat box or web page) and its Reviewer (web page), talk-only. Ctrl+Q quits; {reopen}.",
         )
 
-    def _brief(self, number: int) -> str | None:
-        """The heading of the section of FEEDBACK.md written for reopening ``number``, if there is one."""
-        path = self.project.root / "FEEDBACK.md"
-        text = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""
-        found = re.search(rf"^## (Reopening {number}\b.*)$", text, re.MULTILINE)
-        return found.group(1).strip() if found else None
+    def _phases(self) -> str:
+        """The project's phases, as the primary's opening message lists them."""
+        items = phases.summaries(self.project, self.home, self.state)
+        current = next((item for item in items if item.number == self.project.phase), None)
+        others = [item for item in items if item.number != self.project.phase and item.status != NOT_STARTED]
+        return prompts.phases_section(current, phases.listing(others) if others else "")
 
     # Pause, resume and shutdown ------------------------------------------------------------------
 
@@ -1635,6 +1703,7 @@ class Controller:
             assert self.done is not None  # set by run(), within which this runs
             self.done.set()
         else:  # also while paused: the sessions kept meanwhile save their notes before they end
+            await self.talks.close()  # talks with other phases save their notes
             await self._pause("shutdown")
 
     # Usage quota ---------------------------------------------------------------------------------
@@ -1695,12 +1764,12 @@ class Controller:
         """Jobs that ended, failed agents due a retry, idle sessions and the human's files."""
         state, now = self.state, time.time()
         for job in state.running_jobs():
-            if joblib.poll(self.project.root, job, self.processes.get(job.id)):
+            if joblib.poll(self.project.phase_dir, job, self.processes.get(job.id)):
                 self.processes.pop(job.id, None)
                 owner = state.agents[job.owner]
                 self.show("controller", job.owner, f"{job.id} ended: {job.status}.")
                 if owner.status not in ENDED:
-                    await self._notify(owner, prompts.job_ended(joblib.describe(self.project.root, job)))
+                    await self._notify(owner, prompts.job_ended(joblib.describe(self.project.phase_dir, job)))
                 self._save()
         for agent in state.agents.values():
             if (
@@ -1734,14 +1803,14 @@ class Controller:
         """Tell the primary when the human's own files changed (PROJECT.md §6, "Human edits")."""
         current = self.project.human_fingerprint()
         changed = Project.changed(self.state.human, current)
-        if changed and self.state.status in FINISHED:  # kept for the next run, which reopens on them
-            if not self._reopen_told and self.reopen is not False:  # with the web page, it shows them
-                self._reopen_told = True
+        if changed and self.state.status in FINISHED:  # kept for the next run, which reopens on changed objectives
+            if not self._reopen_told and self.reopen is not False and self.objectives_changed():
+                self._reopen_told = True  # with the web page, it shows them
                 self.show(
                     "alert",
                     "primary",
-                    "Your files changed since the end: talks go on; quit (Ctrl+Q) and run again to reopen the "
-                    "investigation.",
+                    f"The objectives of phase {self.project.phase} changed since its end: talks go on; quit (Ctrl+Q) "
+                    "and run again to reopen it.",
                 )
         elif changed:
             self.state.human = current
@@ -1752,7 +1821,9 @@ class Controller:
     # Persistence ------------------------------------------------------------------------------------
 
     def _save(self) -> None:
-        self.state.save(self.project.state_file, durable=self.state.options.durable)
+        durable = self.state.options.durable
+        self.state.save(self.project.state_file, durable=durable, omit=(LIBRARIAN,))
+        self.home.save(self.project.home_file, durable=durable)
 
     def _commit(self, message: str) -> str | None:
         """Commit the project and return the current commit; changes to the human's files are reported first
@@ -1789,9 +1860,10 @@ class Controller:
         writes = [
             lambda: self.project.write_agents_index(list(self.state.agents.values())),
             self.librarian.write_catalog,
+            lambda: phases.write_index(self.project, self.home, self.state),
         ]
         writes += [
-            lambda owner=owner: joblib.write_index(self.project.root, owner, list(self.state.jobs.values()))
+            lambda owner=owner: joblib.write_index(self.project.phase_dir, owner, list(self.state.jobs.values()))
             for owner in sorted({job.owner for job in self.state.jobs.values()})
         ]
         for write in writes:

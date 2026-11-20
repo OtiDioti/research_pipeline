@@ -2,15 +2,15 @@
 
 Four roles that run the same way: one persistent CLI session at a time, inside its
 confinement ([CONFINEMENT.md](CONFINEMENT.md)), with the controller's tools
-([TOOLS.md](TOOLS.md)). Each agent keeps its id and its folder `agents/<id>/`
+([TOOLS.md](TOOLS.md)). Each agent keeps its id and its folder `phases/<N>/agents/<id>/` (the Librarian's: `librarian/`)
 across any number of sessions.
 
 | | Primary | Subagent | Reviewer | Librarian |
 |---|---|---|---|---|
 | Started by | The controller, at launch | `spawn`, by any agent | A COMPLETE or STOP proposal | Its first shelving request |
 | CLI, model, effort | `--primary` | The `spawn` arguments | `--reviewer` | `--librarian` |
-| Opening message | The objectives, FEEDBACK.md, an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
-| Writes, besides its folder | STATUS.md, REPORT.md, root FOLDER_CONTENT.md | — | `reviews/` | `library/` pages, through `write_page` |
+| Opening message | Its phase's objectives, the other phases (and the one it builds on), an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
+| Writes, besides its folder | Its phase's STATUS.md, REPORT.md, FOLDER_CONTENT.md | — | Its phase's `reviews/` | `library/` pages, through `write_page` |
 | Finishes with | `complete` or `stop` | `submit_result` | `verdict` | `shelved`, for each request |
 
 The Librarian does no research: it organises the library ([LIBRARY.md](LIBRARY.md)).
@@ -49,7 +49,7 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
   `AGENTS.md` may say otherwise. An effort
   Claude Code does not accept (it accepts `low`, `medium`, `high`, `xhigh` and `max`) is
   refused before any session starts; Codex checks the effort itself when the session starts. The brief
-  `task` (a non-empty Markdown file) is copied to `agents/<id>/TASK.md`. The id
+  `task` (a non-empty Markdown file) is copied to the phase's `agents/<id>/TASK.md`. The id
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.
 - Spawning does not stop the parent: it keeps doing whatever does not depend on the

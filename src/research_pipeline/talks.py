@@ -1,19 +1,20 @@
-"""Talks after the end: talk-only sessions with the primary and the Reviewer (docs/FINISHING.md, PROJECT.md §4).
+"""Talks: talk-only sessions with the primary and the Reviewer of a phase that does not run (PROJECT.md §4).
 
-After COMPLETE or a confirmed STOP the controller stays open, and so does a
-later ``run`` on a finished project whose human files did not change. A message
-from the human to the primary or the Reviewer then starts a *talk session*: the
-agent answers from its work, starting from its last handoff note and its key
-files, with every native capability but nothing writable in the project, and
-no controller tool but ``write_talk_note``. The finished work stays frozen as
-it was catalogued.
+After COMPLETE or a confirmed STOP the controller stays open, and so does a later
+``run`` on a finished phase whose objectives did not change. A message from the
+human to the phase's primary or Reviewer then starts a *talk session*. The human
+can also talk, at any time, with the primary and the Reviewer of any other phase
+that has started (ended or paused), while this one runs. The agent answers from
+its work, starting from its last handoff note and its key files, with every
+native capability but nothing writable in the project, and no controller tool but
+``write_talk_note``. The work stays as it was.
 
 Each agent's talk runs as an :class:`agent_toolkit.Relay`: at the context
 threshold, the idle limit or a shutdown the session saves a *talk note* in
-``.research/talks/<agent>.md`` (never its frozen HANDOFF.md), and the next talk
-session starts from the handoff plus that note. Talks are kept only in the
-activity log, like any message; reopening the investigation removes the notes,
-and the reopened primary gets nothing of them.
+``.research/phases/<N>/talks/<agent>.md`` (never its HANDOFF.md), and the next
+talk session starts from the handoff plus that note. Talks are kept only in the
+phase's activity log, like any message; reopening a phase removes its notes, and
+its reopened primary gets nothing of them.
 """
 
 from __future__ import annotations
@@ -24,18 +25,21 @@ from string import Template
 from typing import TYPE_CHECKING
 
 from agent_toolkit import CAPABILITIES, ContextExhausted, Launch, Relay, SessionError, SetupError
+from agent_toolkit.activity import ActivityLog
 from agent_toolkit.protocol import sections
 from agent_toolkit.records import atomic_write
 
 from research_pipeline import prompts
+from research_pipeline.phases import load_state
+from research_pipeline.project import Project
 from research_pipeline.prompts import PROMPTS
-from research_pipeline.state import FINISHED, Agent
+from research_pipeline.state import FINISHED, Agent, State
 from research_pipeline.tools import WRITE_TALK_NOTE
 
 if TYPE_CHECKING:
     from research_pipeline.controller import Controller
 
-#: The agents the human can talk with after the end.
+#: The agents the human can talk with.
 TALKERS = ("primary", "reviewer")
 #: The MCP server of a talk session (the same name as the investigation's tools).
 SERVER = "research"
@@ -46,102 +50,133 @@ def message(name: str, **facts) -> str:
     return Template(sections(PROMPTS.text("talk-messages"))[name]).substitute(facts)
 
 
+def situation(state: State, full: bool = False) -> str:
+    """What a phase that does not run is, for its talkers: ended (``full``: and how), or paused."""
+    if state.status in FINISHED:
+        return f"has ended ({state.outcome if full and state.outcome else state.status.upper()})"
+    return "is paused: its work may continue later"
+
+
 class Talks:
-    """The talk sessions of one controller after the end."""
+    """The talk sessions one controller hosts: with its own phase after the end, and with other phases."""
 
     def __init__(self, controller: Controller):
         self.controller = controller
-        self.folder = controller.project.research / "talks"
-        self.relays: dict[str, Relay] = {}
-        self.tasks: dict[str, asyncio.Task] = {}  # agent id -> its running answer or handoff
-        self.sessions: dict[str, int] = {}  # agent id -> talk sessions started (for their logs)
+        self.relays: dict[str, Relay] = {}  # '<phase>/<agent>' -> its talk
+        self.tasks: dict[str, asyncio.Task] = {}  # its running answer or handoff
+        self.sessions: dict[str, int] = {}  # talk sessions started (for their logs)
+        self.agents: dict[str, Agent] = {}  # the talkers of other phases, from their stored states
 
     def open(self, agent: Agent) -> bool:
-        """True if the human can talk with ``agent`` now: the investigation has ended, and it is a talker."""
+        """True if the human can talk with ``agent`` of this phase now: it has ended, and it is a talker."""
         return self.controller.state.status in FINISHED and agent.id in TALKERS
 
-    def busy(self, agent_id: str) -> bool:
-        task = self.tasks.get(agent_id)
+    def busy(self, key: str) -> bool:
+        task = self.tasks.get(key)
         return task is not None and not task.done()
 
     async def message(self, agent: Agent, text: str) -> str:
-        """The human's ``text`` to ``agent``: into its running answer, else as a new request of its talk."""
+        """The human's ``text`` to ``agent`` of this phase, which has ended."""
         controller = self.controller
+        return await self._message(controller.project, agent, controller.state, text)
+
+    async def message_phase(self, phase: int, agent_id: str, text: str) -> str:
+        """The human's ``text`` to the primary or the Reviewer of another phase."""
+        project = self.controller.project
+        if phase == project.phase:
+            raise ValueError(f"phase {phase} is this controller's own")
+        state = load_state(project.at(phase))
+        if state is None:
+            raise ValueError(f"phase {phase} has not started")
+        if agent_id not in TALKERS or agent_id not in state.agents:
+            raise ValueError(f"only the primary and the Reviewer of phase {phase} can be talked to")
+        agent = self.agents.setdefault(f"{phase}/{agent_id}", state.agents[agent_id])
+        return await self._message(project.at(phase), agent, state, text)
+
+    async def check_idle(self) -> None:
+        """Close talk sessions idle past the idle limit, each after saving its talk note (unless its CLI is held)."""
+        limit = self.controller.state.options.idle_limit * 60
+        for key, relay in self.relays.items():
+            if limit and relay.session_id and not self.busy(key) and relay.idle >= limit:
+                ask = not self.controller._blocked(self._agent(key).backend)
+                self.tasks[key] = asyncio.create_task(self._hand_off(key, relay, "idle", ask))
+
+    async def close(self, notes: bool = True) -> None:
+        """End every talk session, each saving its talk note first if ``notes``."""
+        await self._close(list(self.relays), notes)
+
+    async def discard(self) -> None:
+        """At this phase's reopening: end its talks and remove their notes; it continues without them."""
+        mine = f"{self.controller.project.phase}/"
+        await self._close([key for key in self.relays if key.startswith(mine)], notes=False)
+        shutil.rmtree(self.controller.project.talks, ignore_errors=True)
+
+    async def _close(self, keys: list[str], notes: bool) -> None:
+        await asyncio.gather(*(self.tasks[key] for key in keys if key in self.tasks), return_exceptions=True)
+        for key in keys:
+            relay = self.relays.pop(key)
+            if notes and relay.session_id:
+                ask = not self.controller._blocked(self._agent(key).backend)
+                await self._hand_off(key, relay, "the human is shutting the controller down", ask)
+            await asyncio.to_thread(relay.close)
+            self.controller.bridge.withdraw(_offer(key))
+
+    # Sessions ---------------------------------------------------------------------------------------
+
+    async def _message(self, project: Project, agent: Agent, state: State, text: str) -> str:
+        """The human's ``text`` to ``agent`` of ``project``'s phase: into its running answer, else a new request."""
+        controller, key = self.controller, f"{project.phase}/{agent.id}"
         if controller._blocked(agent.backend):
             hold = controller.state.holds[agent.backend]
             raise ValueError(
                 f"the usage quota of {agent.backend} is held ({hold['detail']}): write again once it resets"
             )
         notice = prompts.human_message(text)
-        controller.activity.add(agent.id, "message", notice, sender="human")
-        relay = self._relay(agent)
-        if self.busy(agent.id):
+        self._log(project.phase).add(agent.id, "message", notice, sender="human")
+        relay = self._relay(project, agent, situation(state))
+        if self.busy(key):
             relay.post(notice)
             return f"{agent.id} receives your message during its answer."
-        self.tasks[agent.id] = asyncio.create_task(self._ask(agent, relay, notice))
-        return f"{agent.id} answers (talk only: the investigation has ended)."
+        self.tasks[key] = asyncio.create_task(self._ask(project, agent, relay, notice, situation(state, full=True)))
+        return f"{agent.id} of phase {project.phase} answers (talk only: the phase does not run)."
 
-    async def check_idle(self) -> None:
-        """Close talk sessions idle past the idle limit, each after saving its talk note (unless its CLI is held)."""
-        limit = self.controller.state.options.idle_limit * 60
-        for agent_id, relay in self.relays.items():
-            if limit and relay.session_id and not self.busy(agent_id) and relay.idle >= limit:
-                ask = not self.controller._blocked(self.controller.state.agents[agent_id].backend)
-                self.tasks[agent_id] = asyncio.create_task(self._hand_off(agent_id, relay, "idle", ask))
-
-    async def close(self, notes: bool = True) -> None:
-        """End every talk session, each saving its talk note first if ``notes`` (at a shutdown)."""
-        await asyncio.gather(*self.tasks.values(), return_exceptions=True)
-        for agent_id, relay in self.relays.items():
-            if notes and relay.session_id:
-                ask = not self.controller._blocked(self.controller.state.agents[agent_id].backend)
-                await self._hand_off(agent_id, relay, "the human is shutting the controller down", ask)
-            await asyncio.to_thread(relay.close)
-            self.controller.bridge.withdraw(_offer(agent_id))
-        self.relays.clear()
-
-    async def discard(self) -> None:
-        """At reopening: end the talks and remove their notes; the investigation continues without them."""
-        await self.close(notes=False)
-        shutil.rmtree(self.folder, ignore_errors=True)
-
-    # Sessions ---------------------------------------------------------------------------------------
-
-    def _relay(self, agent: Agent) -> Relay:
-        relay = self.relays.get(agent.id)
+    def _relay(self, project: Project, agent: Agent, where: str) -> Relay:
+        key = f"{project.phase}/{agent.id}"
+        relay = self.relays.get(key)
         if relay is not None:
             return relay
-        controller, project = self.controller, self.controller.project
-        self.folder.mkdir(parents=True, exist_ok=True)
-        note = self.folder / f"{agent.id}.md"
+        controller = self.controller
+        project.talks.mkdir(parents=True, exist_ok=True)
+        note = project.talks / f"{agent.id}.md"
 
         def save(tool: str, args: dict) -> str:
             atomic_write(note, str(args.get("note") or "").strip() + "\n", root=project.root)
             return "Saved your talk note."
 
-        tools = controller.bridge.offer(_offer(agent.id), [WRITE_TALK_NOTE], save, name=SERVER)
+        tools = controller.bridge.offer(_offer(key), [WRITE_TALK_NOTE], save, name=SERVER)
 
         def launch() -> Launch:
-            number = self.sessions[agent.id] = self.sessions.get(agent.id, 0) + 1
+            number = self.sessions[key] = self.sessions.get(key, 0) + 1
             return Launch(
                 agent=agent.id,
                 cwd=project.agent_dir(agent.id),
-                instructions=prompts.talk_instructions(agent, project, self.controller.state.status),
+                instructions=prompts.talk_instructions(agent, project, where),
                 model=agent.model,
                 effort=agent.effort,
                 tools=CAPABILITIES,
                 mcp=tools,
                 hidden=(project.research,),
-                log=project.logs / f"{agent.id}-talk-{number}.jsonl",
+                log=project.session_log(agent.id, number, "talk"),
             )
 
         loop = asyncio.get_running_loop()
+        label = self._label(project.phase, agent.id)
 
         def warn(text: str) -> None:  # from the relay's thread
-            loop.call_soon_threadsafe(controller.show, "controller", agent.id, f"{agent.id}'s talk session: {text}.")
+            loop.call_soon_threadsafe(controller.show, "controller", label, f"{label}'s talk session: {text}.")
 
         def event(kind: str, data: dict) -> None:  # from the relay's thread
-            loop.call_soon_threadsafe(self._event, agent.id, kind, data)
+            loop.call_soon_threadsafe(self._event, key, kind, data)
 
         relay = Relay(
             controller.drivers[agent.backend],
@@ -154,12 +189,14 @@ class Talks:
             on_event=event,
             pending=note.is_file(),
         )
-        self.relays[agent.id] = relay
+        self.relays[key] = relay
         return relay
 
-    async def _ask(self, agent: Agent, relay: Relay, notice: str) -> None:
+    async def _ask(self, project: Project, agent: Agent, relay: Relay, notice: str, where: str) -> None:
+        label = self._label(project.phase, agent.id)
+
         def compose(fresh: bool, note: str | None) -> str:
-            parts = [self._opening(agent)] if fresh else []
+            parts = [self._opening(project, agent, where)] if fresh else []
             if note:
                 parts.append(message("note", note=note))
             return "\n\n".join([*parts, notice])
@@ -167,44 +204,69 @@ class Talks:
         try:
             await asyncio.to_thread(relay.ask, compose)
         except ContextExhausted:
-            self.controller.show("alert", agent.id, f"{agent.id}'s talk filled its context: ask a shorter question.")
+            self.controller.show("alert", label, f"{label}'s talk filled its context: ask a shorter question.")
         except (SetupError, SessionError, OSError) as error:
-            self.controller.show("alert", agent.id, f"{agent.id}'s talk session failed: {error}")
+            self.controller.show("alert", label, f"{label}'s talk session failed: {error}")
 
-    async def _hand_off(self, agent_id: str, relay: Relay, reason: str, ask: bool) -> None:
+    async def _hand_off(self, key: str, relay: Relay, reason: str, ask: bool) -> None:
         try:
             await asyncio.to_thread(relay.hand_off, reason, ask)
         except (SessionError, OSError) as error:
-            self.controller.show("controller", agent_id, f"{agent_id}'s talk session ended without its note: {error}")
+            self.controller.show("controller", key, f"{key}'s talk session ended without its note: {error}")
 
-    def _opening(self, agent: Agent) -> str:
-        """What a fresh talk session starts from: the outcome, its last handoff and its key files."""
-        project = self.controller.project
+    def _opening(self, project: Project, agent: Agent, where: str) -> str:
+        """What a fresh talk session starts from: where its phase stands, its last handoff and its key files."""
         handoff = project.agent_dir(agent.id) / "HANDOFF.md"
         text = handoff.read_text(encoding="utf-8", errors="replace").strip() if handoff.is_file() else "(none)"
+        report, status = project.relative(project.report), project.relative(project.status_file)
         if agent.id == "primary":
-            files = message("primary-files")
+            files = message("primary-files", report=report, status=status)
         else:
             reviews = sorted(path.name for path in project.reviews.glob("*.md") if path.name != "FOLDER_CONTENT.md")
-            files = message("reviewer-files", review=f"reviews/{reviews[-1]}" if reviews else "none")
-        return message("opening", outcome=self.controller.state.outcome or "", handoff=text, files=files)
+            folder = project.relative(project.reviews)
+            files = message(
+                "reviewer-files",
+                reviews=folder,
+                review=f"{folder}/{reviews[-1]}" if reviews else "none",
+                report=report,
+            )
+        return message("opening", phase=project.phase, situation=where, handoff=text, files=files)
 
-    def _event(self, agent_id: str, kind: str, data: dict) -> None:
+    def _event(self, key: str, kind: str, data: dict) -> None:
         """A talk session's driver event, on the controller's loop: shown and kept like any agent's."""
         controller = self.controller
-        agent = controller.state.agents[agent_id]
-        controller.activity.event(agent_id, kind, data)
+        phase, agent_id = key.split("/", 1)
+        agent = self._agent(key)
+        self._log(int(phase)).event(agent_id, kind, data)
+        label = self._label(int(phase), agent_id)
         if kind == "text" and data["text"].strip():
             agent.activity = data["text"].strip().splitlines()[0][:200]
-            controller.show("agent", agent_id, data["text"])
+            controller.show("agent", label, data["text"])
         elif kind == "tool":
             agent.activity = data["text"][:200]
             if data.get("server") != SERVER:
-                controller.show("tool", agent_id, data["text"])
+                controller.show("tool", label, data["text"])
         elif kind == "context":
             agent.tokens, agent.window = data.get("tokens"), data.get("window")
 
+    def _agent(self, key: str) -> Agent:
+        phase, agent_id = key.split("/", 1)
+        if int(phase) == self.controller.project.phase:
+            return self.controller.state.agents[agent_id]
+        return self.agents[key]
 
-def _offer(agent_id: str) -> str:
-    """The name a talk session's tools are offered under (apart from the agent's own investigation sessions)."""
-    return f"{agent_id}-talk"
+    def _log(self, phase: int) -> ActivityLog:
+        controller = self.controller
+        if phase not in controller.logs:
+            project = controller.project.at(phase)
+            controller.logs[phase] = ActivityLog(project.activity, root=project.root)
+        return controller.logs[phase]
+
+    def _label(self, phase: int, agent_id: str) -> str:
+        """How the transcript names a talker: by its id in this phase, with its phase in another."""
+        return agent_id if phase == self.controller.project.phase else f"{agent_id} (phase {phase})"
+
+
+def _offer(key: str) -> str:
+    """The name a talk session's tools are offered under (apart from the agents' own sessions)."""
+    return f"{key.replace('/', '-')}-talk"

@@ -9,8 +9,9 @@ inside the job itself, so it holds even while the controller is down. A small
 wrapper writes the exit status to a file, so a restarted controller can tell how
 a job ended.
 
-Each job keeps its files in ``agents/<owner>/jobs/<job-id>/``: ``command.txt``,
-``stdout.log``, ``stderr.log`` and ``exit_code``.
+Each job keeps its files in its phase's ``agents/<owner>/jobs/<job-id>/``:
+``command.txt``, ``stdout.log``, ``stderr.log`` and ``exit_code``. The functions
+here take that phase's folder as ``base`` (``phases/<N>/``).
 """
 
 from __future__ import annotations
@@ -34,24 +35,20 @@ TIMEOUT_CODES = (124, 137)
 _WRAPPER = 'timeout --kill-after=10 "$1" bash -c "$2"; echo $? > "$3"'
 
 
-def folder(project_root: Path, job: Job) -> Path:
-    return Path(project_root) / "agents" / job.owner / "jobs" / job.id
+def folder(base: Path, job: Job) -> Path:
+    return Path(base) / "agents" / job.owner / "jobs" / job.id
 
 
-def start(
-    project_root: Path, job: Job, *, read_only: Iterable[Path] = (), hidden: Iterable[Path] = ()
-) -> subprocess.Popen:
+def start(base: Path, job: Job, *, read_only: Iterable[Path] = (), hidden: Iterable[Path] = ()) -> subprocess.Popen:
     """Launch ``job`` in its confinement; record its process identity on it and return the process.
 
     The recorded process is the confinement's own (bwrap), the leader of the job's
     process session: it lives exactly as long as the job and exits with its status.
     """
-    where = folder(project_root, job)
+    where = folder(base, job)
     # The job's folder is in its owner's folder, which the owner can write: the controller's own files there
     # are never written through a symlink, nor outside the project.
-    atomic_write(
-        where / "command.txt", f"# cwd: {job.cwd}\n# timeout: {job.timeout:g} s\n{job.command}\n", root=project_root
-    )
+    atomic_write(where / "command.txt", f"# cwd: {job.cwd}\n# timeout: {job.timeout:g} s\n{job.command}\n", root=base)
     argv = confine.job(
         ["bash", "-c", _WRAPPER, "research-job", f"{job.timeout:g}", job.command, str(where / "exit_code")],
         cwd=Path(job.cwd),
@@ -59,8 +56,8 @@ def start(
         hidden=hidden,
     )
     with (
-        create(where / "stdout.log", root=project_root) as stdout,
-        create(where / "stderr.log", root=project_root) as stderr,
+        create(where / "stdout.log", root=base) as stdout,
+        create(where / "stderr.log", root=base) as stderr,
     ):
         process = subprocess.Popen(
             argv, cwd=job.cwd, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr, start_new_session=True
@@ -69,7 +66,7 @@ def start(
     return process
 
 
-def poll(project_root: Path, job: Job, process: subprocess.Popen | None) -> bool:
+def poll(base: Path, job: Job, process: subprocess.Popen | None) -> bool:
     """Update a running ``job`` from its process or files; return True if it has just ended."""
     if job.status != "running":
         return False
@@ -78,7 +75,7 @@ def poll(project_root: Path, job: Job, process: subprocess.Popen | None) -> bool
             return False
     elif _alive(job.pid, job.ticks):
         return False
-    exit_file = folder(project_root, job) / "exit_code"
+    exit_file = folder(base, job) / "exit_code"
     try:
         code = int(exit_file.read_text().strip())
     except (OSError, ValueError):
@@ -109,9 +106,9 @@ def cancel(job: Job, status: str = "cancelled") -> None:
     job.status, job.ended = status, time.time()
 
 
-def write_index(project_root: Path, owner: str, jobs: list[Job]) -> None:
-    """Maintain ``agents/<owner>/jobs/FOLDER_CONTENT.md``: one line per job of that agent."""
-    folder = Path(project_root) / "agents" / owner / "jobs"
+def write_index(base: Path, owner: str, jobs: list[Job]) -> None:
+    """Maintain ``base/agents/<owner>/jobs/FOLDER_CONTENT.md``: one line per job of that agent."""
+    folder = Path(base) / "agents" / owner / "jobs"
     if not folder.is_dir():
         return
     lines = ["# Folder contents", "", "Jobs run by the controller for this agent (maintained by the controller).", ""]
@@ -119,12 +116,12 @@ def write_index(project_root: Path, owner: str, jobs: list[Job]) -> None:
         if job.owner == owner:
             first = job.command.strip().splitlines()[0][:100] if job.command.strip() else ""
             lines.append(f"- [{job.id}]({job.id}) — {job.status}: `{first}`")
-    atomic_write(folder / "FOLDER_CONTENT.md", "\n".join(lines) + "\n", root=project_root)
+    atomic_write(folder / "FOLDER_CONTENT.md", "\n".join(lines) + "\n", root=base)
 
 
-def describe(project_root: Path, job: Job, lines: int = 30) -> str:
+def describe(base: Path, job: Job, lines: int = 30) -> str:
     """A job's status and the end of its output, for the job_status tool and notices."""
-    where = folder(project_root, job)
+    where = folder(base, job)
     elapsed = (job.ended or time.time()) - job.started
     parts = [
         f"Job {job.id}: {job.status}"
