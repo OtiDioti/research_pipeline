@@ -141,13 +141,13 @@ def status(
     """The top bar for phase ``number``: the running one's controls (``live``), else what can be done with it."""
     running = controller.state
     name = f"Phase {number}"
-    summary = f"{len(controller.sessions)}/{state.options.max_agents} sessions" if live else ""
-    if state.proposal:
-        summary += f" · {state.proposal['kind'].upper()} proposal, round {state.proposal['round']}"
-    if state.outcome:
-        summary = state.outcome
     started = bool(state.agents)
     ended = state.status in FINISHED
+    # Only what the state ("phase 2: complete") does not say: the outcome line stays in the phase's STATUS.md.
+    parts = [f"{len(controller.sessions)}/{state.options.max_agents} sessions"] if live and not ended else []
+    if state.proposal:
+        parts.append(f"{state.proposal['kind'].upper()} proposal, round {state.proposal['round']}")
+    summary = " · ".join(parts)
     if live:
         held = state.status in ("paused", "pausing")
         controls = (
@@ -169,7 +169,6 @@ def status(
             if not started
             else []
         )
-        summary = summary or ("not started" if not started else state.status)
     finished = running.status in FINISHED
     controls.append(
         {

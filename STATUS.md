@@ -1,5 +1,10 @@
 # Status
 
+**2026-11-21.** 0.21.1, on agent_toolkit 0.15.0: the top bar no longer repeats the phase's state. After the
+state (`phase 2: complete`) it showed the whole outcome line (`COMPLETE on <date>: the Reviewer agreed (…)`, true by
+construction for COMPLETE) or, for a phase not running, its status again; now it shows only the running phase's
+sessions and a proposal under review. The outcome line stays in the phase's STATUS.md ([docs/WEB.md](docs/WEB.md)).
+
 **2026-11-20.** 0.21.0, on agent_toolkit 0.15.0: **statistics** of a run ([docs/STATS.md](docs/STATS.md)),
 deterministic and read-only. The web page's *Stats* button replaces the graph with them (then *Graph* goes back):
 library use; the spawn tree and agents at work over time; for each child, which links of its brief it opened and

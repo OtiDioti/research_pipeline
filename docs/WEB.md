@@ -138,7 +138,9 @@ agent (hidden from agents, like all of `.research/`).
 
 ## Controls
 
-The top bar has the selected phase's state and controls (for the running phase:
+The top bar has the selected phase's state (e.g. `phase 2: complete`; while it runs,
+also its open sessions and any proposal under review, and nothing more once it ended:
+the outcome line is in its STATUS.md) and controls (for the running phase:
 Pause/Resume, *Resume held* when something waits for you; Shut down), the usage
 quota, and *Stats*, which replaces the graph with the run's statistics (then
 *Graph* goes back; see [STATS.md](STATS.md)).

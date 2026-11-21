@@ -178,6 +178,7 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await dashboard.select("phases", "1"), {"view": "graph", "text": ""})
         snapshot = dashboard.snapshot()
         self.assertEqual(snapshot["status"]["state"], "phase 1: complete")
+        self.assertEqual(snapshot["status"]["summary"], "")  # the state says it all
         self.assertEqual([c["label"] for c in snapshot["status"]["controls"]], ["Prepare reopening", "Shut down"])
         nodes = {node["id"]: node for node in snapshot["graph"]["nodes"] if node["kind"] == "agent"}
         self.assertEqual((nodes["primary"]["actions"], nodes["librarian"]["actions"]), (["message"], []))
