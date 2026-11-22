@@ -55,7 +55,7 @@ class ResearchWorkbench(Workbench):
         self._described: dict[str, tuple[float, dict]] = {}
 
     def name_file(self, folder: Path) -> Path:
-        return Project(folder).research / "name"
+        return Project(folder).name_file
 
     def check(self, folder: Path) -> None:
         try:

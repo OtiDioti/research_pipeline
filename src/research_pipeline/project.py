@@ -200,6 +200,19 @@ class Project:
                 self.write(path, text)
 
     @property
+    def name_file(self) -> Path:
+        """Where the web page keeps the project's display name (the folder's own name never changes)."""
+        return self.research / "name"
+
+    @property
+    def name(self) -> str:
+        """The project's display name: the one given on the web page, else its folder's."""
+        try:
+            return self.name_file.read_text(encoding="utf-8").strip() or self.root.name
+        except OSError:
+            return self.root.name
+
+    @property
     def started(self) -> bool:
         """True once an investigation has started here, in any phase (it has stored state)."""
         return self.home_file.exists()

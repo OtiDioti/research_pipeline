@@ -269,8 +269,8 @@ async def workbench(args: argparse.Namespace, project: Project | None, options: 
         nonlocal interrupts
         interrupts += 1
         if interrupts == 1:
+            stop.set()  # first: printing fails once the terminal is gone
             print("Shutting down cleanly (agents hand off first); press Ctrl+C again to force.", flush=True)
-            stop.set()
         elif task is not None:
             task.cancel()
 

@@ -209,7 +209,7 @@ def status(
     holds = controller.state.holds if controller is not None else {}
     return {
         "program": dashboard.program,
-        "project": dashboard.project.name,
+        "project": dashboard.paths.name,
         "state": f"{name.lower()}: {state.status if started else 'not started'}",
         "summary": summary,
         "quota": [
