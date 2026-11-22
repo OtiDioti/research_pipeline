@@ -1,15 +1,22 @@
-"""Command line: ``research-pipeline run PROJECT``, ``status PROJECT`` and ``stats PROJECT``.
+"""Command line: ``research-pipeline run [PROJECT]``, ``status PROJECT`` and ``stats PROJECT``.
 
-``run`` starts a new investigation, resumes a paused or interrupted one, or reopens
-a finished one. Options given on a later ``run`` replace the stored ones. The
-investigation is shown in the browser (:mod:`research_pipeline.web`), whose setup
-page first helps make the folder ready (before the first start, even in a folder
-that does not exist yet) and then offers every option, prefilled from these; the
-terminal prints the transcript, or shows the terminal app with ``--tui``. The page
-also starts new phases, reopens and switches between them. With ``--no-web`` there
-is no page: the folder must be ready already, and ``run`` runs its latest phase
-(reopening it if its objectives changed since its end). ``stats`` prints the key
-numbers of the web page's Stats view (:mod:`research_pipeline.stats`), read-only.
+``run`` opens the web page's workbench (:mod:`research_pipeline.workbench`): every
+project of this machine in its sidebar, where one is selected, created or added.
+Each project starts a new investigation, resumes a paused or interrupted one, or
+reopens a finished one there; its setup page first helps make the folder ready
+(before the first start, even in a folder that does not exist yet) and then offers
+every option. The page also starts new phases, reopens and switches between them.
+The terminal prints the transcripts. A second ``run`` while the page's server runs
+opens the page in the browser and exits.
+
+``run PROJECT`` also adds that folder to the list and shows it at once; the options
+for one project (the models, limits, ``--start``, ``--tui``, ``--no-web``) need it,
+and given on a later ``run`` they replace the stored ones. ``--tui`` shows the
+terminal app for that project instead of the printed transcripts. With
+``--no-web`` there is no page: the folder must be ready already, and ``run`` runs
+its latest phase (reopening it if its objectives changed since its end). ``stats``
+prints the key numbers of the web page's Stats view (:mod:`research_pipeline.stats`),
+read-only.
 """
 
 from __future__ import annotations
@@ -18,6 +25,7 @@ import argparse
 import asyncio
 import signal
 import sys
+import webbrowser
 from datetime import datetime
 from pathlib import Path
 
@@ -28,18 +36,37 @@ from agent_toolkit.records import locked
 from research_pipeline.controller import Controller
 from research_pipeline.phases import Home, load_state, summaries
 from research_pipeline.project import Project, ProjectError
-from research_pipeline.state import ACTIVE, Options
+from research_pipeline.state import ACTIVE, FINISHED, Options
 from research_pipeline.stats import Statistics, summary
+from research_pipeline.web import ResearchDashboard
+from research_pipeline.workbench import ResearchWorkbench, home
+
+#: The options of ``run`` that concern one project: they need PROJECT.
+FOR_PROJECT = (
+    "primary",
+    "reviewer",
+    "librarian",
+    "setup",
+    "backends",
+    "max_agents",
+    "reference",
+    "short_limit",
+    "weekly_limit",
+    "context_threshold",
+    "idle_limit",
+)
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="research-pipeline", description="Run autonomous research investigations.")
     commands = parser.add_subparsers(dest="command", required=True)
-    run = commands.add_parser("run", help="start, resume or reopen an investigation")
+    run = commands.add_parser("run", help="open the projects' web page, to start, resume or reopen investigations")
     run.add_argument(
         "project",
         type=Path,
-        help="project folder (with phases/1/OBJECTIVES.md; unless --no-web, it may be set up first)",
+        nargs="?",
+        help="a project folder to add to the page's list and show at once (unless --no-web, it may be set up "
+        "first); the options for one project need it",
     )
     run.add_argument(
         "--primary",
@@ -194,31 +221,128 @@ async def run(controller: Controller, tui: bool) -> int:
     return await TerminalApp(controller).run()
 
 
-async def with_web(project: Project, options: Options, args: argparse.Namespace) -> int:
-    """Run with the web app: its setup page first (unless ``--start``), then the investigation."""
+async def printed(controller: Controller, project: str) -> int:
+    """Run ``controller`` (of the page), printing its transcript under the project's name."""
+    forward = controller.show  # the web app's notifications
+
+    def show(kind: str, agent: str, text: str) -> None:
+        marker = {"tool": "·", "notice": "→", "human": "YOU", "controller": "CONTROLLER", "alert": "ALERT"}.get(
+            kind, ""
+        )
+        heading = f"[{datetime.now():%H:%M:%S}] {project} · {agent} {marker}".rstrip(" ·")
+        print(f"{heading}\n{text.rstrip()}\n", flush=True)
+        forward(kind, agent, text)
+
+    controller.show = show
+    return await controller.run()
+
+
+async def workbench(args: argparse.Namespace, project: Project | None, options: Options | None) -> int:
+    """Serve the workbench until Ctrl+C (or the terminal app closes), then shut every project down cleanly."""
     from agent_toolkit.web import WebApp
 
-    from research_pipeline.web import ResearchDashboard
+    stop = asyncio.Event()
+    tui = project.root if project is not None and args.tui else None
 
-    dashboard = ResearchDashboard(project.root, options)
-    web = WebApp(dashboard, port=args.web_port, open_browser=not args.web_no_open)
-    print(f"Web app: {await web.serve()}", flush=True)
+    async def runner(controller: Controller, dashboard: ResearchDashboard) -> int:
+        web.tap(controller, dashboard)
+        try:
+            if dashboard.project == tui:
+                from research_pipeline.view import TerminalApp
+
+                status = await TerminalApp(controller).run()
+                stop.set()  # closing the terminal app ends the program
+                return status
+            if tui is not None:  # the terminal app owns the terminal: the other projects run quietly
+                return await controller.run()
+            return await printed(controller, workbench.name(dashboard.project))
+        except ProjectError as error:
+            print(f"research-pipeline: {error}", file=sys.stderr, flush=True)
+            web.show("alert", "", str(error), dashboard)
+            return 2
+
+    workbench = ResearchWorkbench(home(), runner=runner)
+    web = WebApp(workbench, port=args.web_port, open_browser=not args.web_no_open)
+    task, interrupts = asyncio.current_task(), 0
+
+    def interrupt() -> None:
+        nonlocal interrupts
+        interrupts += 1
+        if interrupts == 1:
+            print("Shutting down cleanly (agents hand off first); press Ctrl+C again to force.", flush=True)
+            stop.set()
+        elif task is not None:
+            task.cancel()
+
+    loop = asyncio.get_running_loop()
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, interrupt)
     try:
-        if not args.start:
-            print("Choose the settings on the page and press Start (Ctrl+C quits).", flush=True)
-        await web.setup(start=args.start)
-        assert dashboard.controller is not None  # setup returns once the page started the investigation
-        web.tap(dashboard.controller)
-        status = await run(dashboard.controller, args.tui)
-        while await dashboard.restarted():  # the page's Reopen ended the talk-only controller
-            assert dashboard.controller is not None
-            web.tap(dashboard.controller)
-            status = await run(dashboard.controller, args.tui)
-        web.end()
-        return status
+        if project is not None and options is not None:
+            workbench.options[str(project.root)] = options
+            dashboard = await workbench.select(workbench.remember(project.root))
+            assert isinstance(dashboard, ResearchDashboard)
+            if args.start:
+                await start_now(dashboard)
+        print(f"Web app: {await web.serve()}", flush=True)
+        print("Pick or create a project on the page (Ctrl+C quits).", flush=True)
+        await stop.wait()
+        await workbench.close()  # each project's agents hand off
+        return 0
+    except asyncio.CancelledError:
+        for dashboard in workbench.dashboards.values():  # forced: agents restart from their handoffs next time
+            if isinstance(dashboard, ResearchDashboard) and dashboard.task is not None:
+                dashboard.task.cancel()
+        return 130
     finally:
-        await dashboard.close()
         await web.close()
+
+
+async def start_now(dashboard: ResearchDashboard) -> None:
+    """``--start``: start the project with its prefilled settings, or resume its phase, without the page."""
+    if dashboard.stage == "setup":
+        await dashboard.start(dashboard.values())
+        return
+    state = load_state(dashboard.paths.at(dashboard.selected))
+    if dashboard.controller is None and state is not None and state.status not in FINISHED:
+        dashboard.resume(dashboard.selected)
+
+
+def for_project(args: argparse.Namespace) -> list[str]:
+    """The options given that concern one project (they need PROJECT)."""
+    named = [f"--{name.replace('_', '-')}" for name in FOR_PROJECT if getattr(args, name) not in (None, [])]
+    named += ["--no-durable-state"] if args.durable is not None else []
+    named += [
+        flag for flag, given in (("--start", args.start), ("--tui", args.tui), ("--no-web", not args.web)) if given
+    ]
+    return named
+
+
+def open_page(args: argparse.Namespace) -> int:
+    """``run``: serve the workbench, or open the page of the one already running."""
+    flags = for_project(args)
+    if args.project is None and flags:
+        raise ValueError(f"{', '.join(flags)} need a PROJECT folder (or set them on the page)")
+    project = Project(args.project) if args.project is not None else None
+    if project is not None:
+        project.check_location()
+    running = ResearchWorkbench(home()).server()
+    if running is not None:
+        if flags:
+            raise ValueError(f"the page already runs at {running}: set {', '.join(flags)} there, or quit it first")
+        if project is not None:
+            project.root.mkdir(parents=True, exist_ok=True)
+            running += f"#/projects/{ResearchWorkbench(home()).remember(project.root)}"
+        print(f"research_pipeline already runs: {running}", flush=True)
+        if not args.web_no_open:
+            webbrowser.open(running)
+        return 0
+    options = None
+    if project is not None:
+        project.root.mkdir(parents=True, exist_ok=True)  # a new folder is set up on the page
+        state = load_state(latest(project))
+        options = options_from(args, state.options if state else None)
+    return asyncio.run(workbench(args, project, options))
 
 
 def controller_running(project: Project) -> bool:
@@ -278,17 +402,16 @@ def main(argv: list[str] | None = None) -> int:
             print(f"research-pipeline: {error}", file=sys.stderr)
             return 2
         return 0
-    project = Project(args.project)
     if args.command == "status":
-        return show_status(project)
+        return show_status(Project(args.project))
     try:
-        project = latest(project)
+        if args.web:
+            return open_page(args)
+        if args.project is None:
+            raise ValueError("--no-web needs a PROJECT folder")
+        project = latest(Project(args.project))
         state = load_state(project)
         options = options_from(args, state.options if state else None)
-        if args.web:
-            project.check_location()
-            project.root.mkdir(parents=True, exist_ok=True)  # a new folder is set up on the page
-            return asyncio.run(with_web(project, options, args))
         problems = project.unready() if project.root.is_dir() else [f"{project.root} does not exist."]
         if problems:
             raise ProjectError(" ".join(problems) + " Run without --no-web to set the folder up on its setup page.")

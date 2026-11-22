@@ -11,7 +11,7 @@ resolution-markers = [
 [[package]]
 name = "agent-toolkit"
 version = "0.15.0"
-source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.15.0#19822d60dd135cc4312b0d444089be8e5bcfc428" }
+source = { editable = "../agent_toolkit" }
 dependencies = [
     { name = "mcp" },
 ]
@@ -24,6 +24,22 @@ web = [
     { name = "starlette" },
     { name = "uvicorn" },
     { name = "websockets" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "mcp", specifier = ">=1.26,<2" },
+    { name = "prompt-toolkit", marker = "extra == 'console'", specifier = "==3.0.52" },
+    { name = "starlette", marker = "extra == 'web'", specifier = ">=1.10,<2" },
+    { name = "uvicorn", marker = "extra == 'web'", specifier = ">=0.54,<1" },
+    { name = "websockets", marker = "extra == 'web'", specifier = ">=15,<18" },
+]
+provides-extras = ["console", "web"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.414" },
+    { name = "ruff", specifier = ">=0.17,<0.18" },
 ]
 
 [[package]]
@@ -641,7 +657,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.15.0" }]
+requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], editable = "../agent_toolkit" }]
 
 [package.metadata.requires-dev]
 dev = [

@@ -136,49 +136,77 @@ def _agent(agent: Agent, documents: list[str], session: Session | None, actions:
 
 
 def status(
-    dashboard: ResearchDashboard, controller: Controller, number: int, state: State, *, live: bool, preparable: bool
+    dashboard: ResearchDashboard,
+    controller: Controller | None,
+    number: int,
+    state: State,
+    *,
+    live: bool,
+    preparable: bool,
+    waiting: str = "",
+    elsewhere: bool = False,
 ) -> dict:
-    """The top bar for phase ``number``: the running one's controls (``live``), else what can be done with it."""
-    running = controller.state
+    """The top bar for phase ``number``: the running one's controls (``live``), else what can be done with it.
+
+    Without a controller the project is shown as it was left (``elsewhere``: another
+    process runs it, so nothing can be done here); ``waiting`` says why work cannot
+    start now (another project works), on the controls that would start it.
+    """
     name = f"Phase {number}"
     started = bool(state.agents)
     ended = state.status in FINISHED
     # Only what the state ("phase 2: complete") does not say: the outcome line stays in the phase's STATUS.md.
-    parts = [f"{len(controller.sessions)}/{state.options.max_agents} sessions"] if live and not ended else []
+    sessions = f"{len(controller.sessions)}/{state.options.max_agents} sessions" if controller is not None else ""
+    parts = [sessions] if live and sessions and not ended else []
     if state.proposal:
         parts.append(f"{state.proposal['kind'].upper()} proposal, round {state.proposal['round']}")
+    if elsewhere:
+        parts.append("another research_pipeline process runs this project: read-only here")
     summary = " · ".join(parts)
-    if live:
+    resume = {"action": "resume_phase", "label": f"Resume {name.lower()}", "confirm": None, "waiting": waiting}
+    if elsewhere:
+        controls = []
+    elif live and controller is not None:
         held = state.status in ("paused", "pausing")
         controls = (
             [{"action": "prepare", "label": "Prepare reopening", "confirm": None}]
             if ended and preparable
             else []
             if ended
-            else [{"action": "pause", "label": "Resume" if held else "Pause", "confirm": None}]
+            else [
+                {
+                    "action": "pause",
+                    "label": "Resume" if held else "Pause",
+                    "confirm": None,
+                    "waiting": waiting if state.status == "paused" else "",
+                }
+            ]
         )
         if controller.releasable:
             controls.append({"action": "release", "label": "Resume held", "confirm": None})
     else:
+        interrupted = controller is None and state.status in ("running", "pausing")  # left by a crash or shutdown
         controls = (
             [{"action": "prepare", "label": "Prepare reopening", "confirm": None}]
             if ended
-            else [{"action": "resume_phase", "label": f"Resume {name.lower()}", "confirm": None}]
-            if state.status == "paused"
+            else [resume]
+            if state.status == "paused" or interrupted
             else [{"action": "prepare", "label": f"Prepare {name.lower()}", "confirm": None}]
             if not started
             else []
         )
-    finished = running.status in FINISHED
-    controls.append(
-        {
-            "action": "shutdown",
-            "label": "Quit" if finished else "Shut down",
-            "confirm": "The talks save their notes, then the program ends. Quit?"
-            if finished
-            else "Every agent saves its handoff, then the program ends (jobs keep running). Shut down?",
-        }
-    )
+    if controller is not None:
+        finished = controller.state.status in FINISHED
+        controls.append(
+            {
+                "action": "shutdown",
+                "label": "Close" if finished else "Shut down",
+                "confirm": "The talks save their notes, then the project closes. Close it?"
+                if finished
+                else "Every agent saves its handoff, then the project closes (jobs keep running). Shut down?",
+            }
+        )
+    holds = controller.state.holds if controller is not None else {}
     return {
         "program": dashboard.program,
         "project": dashboard.project.name,
@@ -190,9 +218,9 @@ def status(
                 "minutes": window.minutes,
                 "left": round(100 - window.used, 1),
                 "resets_at": window.resets_at,
-                "held": window.backend in running.holds,
+                "held": window.backend in holds,
             }
-            for window in controller.windows
+            for window in (controller.windows if controller is not None else [])
         ],
         "controls": controls,
     }

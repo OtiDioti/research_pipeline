@@ -8,7 +8,7 @@
 - [test_project.py](test_project.py) — Layout (with the phases' folders), layout check, git commits, the human's files, state.
 - [test_jobs.py](test_jobs.py) — Real job processes: exit status, timeout, cancellation, reattachment.
 - [test_tools.py](test_tools.py) — Each role's tools, through the toolkit's MCP tool server over real stdio.
-- [test_cli_view.py](test_cli_view.py) — Command line and terminal app.
+- [test_cli_view.py](test_cli_view.py) — Command line (`run` with and without a project, a second `run`) and terminal app.
 - [test_web.py](test_web.py) — The human's single-agent actions and live settings, and the web app's view.
 - [test_standards.py](test_standards.py) — The repository follows the shared development standard (agent_toolkit.standards).
 - [live_smoke.py](live_smoke.py) — Live smoke run through the real CLIs (manual; uses model quota).
@@ -17,3 +17,4 @@
 - [test_reopen.py](test_reopen.py) — Reopening a phase from the web page after its end: the preparation offered again, changes and reverts, the reopening assistant, Reopen on changed objectives, and later runs.
 - [test_phases.py](test_phases.py) — Phases: a new phase from the web page, talks with another phase while one runs, switching phases through a pause, later phases' notice, the library across phases.
 - [test_stats.py](test_stats.py) — Statistics: tool calls to file accesses (whole calls and older summaries), a run attributed per agent, the Stats view, comparison, the dashboard and `stats`.
+- [test_workbench.py](test_workbench.py) — The workbench: one project at work at a time, the others waiting, a stopped one shown read-only until resumed, phases and projects renamed, a project another process runs.
