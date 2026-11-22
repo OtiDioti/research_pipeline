@@ -19,6 +19,7 @@
 - [view.py](view.py) — The terminal app (built on agent_toolkit's shared one).
 - [web.py](web.py) — One project on the web page: setup page (with its preparation steps), its phases in the sidebar (renamed there), new phases, reopening, switching and resuming phases, activity, single-agent controls; read-only while it does not run.
 - [workbench.py](workbench.py) — The web page's workbench: every project of this machine in the sidebar, each running its controllers, one at work at a time.
+- [readiness.py](readiness.py) — Whether the CLIs a stopped phase needs (its primary's, Reviewer's and Librarian's) can run now, kept fresh while the page shows it.
 - [usage.py](usage.py) — What each agent used, for the graph: the websites and library pages its tool calls reached.
 - [graph.py](graph.py) — One phase as the web page shows it: its agent graph and its top bar.
 - [fields.py](fields.py) — The launch options as the web page's settings (the setup page's fields, which change live).

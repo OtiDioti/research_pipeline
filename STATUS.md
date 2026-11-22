@@ -4,7 +4,9 @@
 choices ([docs/WEB.md](docs/WEB.md), "The setup page"; PROJECT.md §6): one not installed, or not logged in (asked
 of `claude auth status` / `codex login status`, no model call), with the reason on hover and *Check again*. The
 primary, the Reviewer and the Librarian on such a CLI keep Start waiting; the recommended models and the CLIs for
-subagents only warn. A failed turn now gives the CLI's reason ("primary: its turn failed (Not logged in · Please run
+subagents only warn. A stopped project shown on the page waits the same way: *Resume phase N*, and *Open for
+talks* for one whose phase ended (no longer opened at once then), wait with the reason until its role CLIs can run
+(checked again every 30 s while shown, and at the press). A failed turn now gives the CLI's reason ("primary: its turn failed (Not logged in · Please run
 /login)"), still retried after 30 s / 2 min / 10 min; the setup assistant passes it on too. Found by trying both CLIs
 logged out and missing: before, a logged-out CLI started its sessions normally and only "its turn failed" was shown.
 

@@ -45,7 +45,11 @@ the folder, whose own name never changes.
   opens on its setup page (below). A project whose phase ended opens for talks at once
   (no work resumes; the Librarian finishes placing what was left). A project that does
   not run (paused, shut down, interrupted) is shown as it was left, read-only, with
-  *Resume phase N* in the top bar. A project another research_pipeline process runs
+  *Resume phase N* in the top bar. Both use the CLIs the phase last ran with: while
+  its primary's, Reviewer's or Librarian's CLI is not installed or not logged in, the
+  ended project is not opened (*Open for talks* waits) and *Resume phase N* waits,
+  each with the reason on hover. The page checks again every 30 seconds while it shows
+  the project, and once more at the press, so logging in elsewhere frees them. A project another research_pipeline process runs
   is read-only, and a project whose folder is gone is greyed and cannot be selected.
   The page's address names the project and phase (`#/projects/<id>/phases/<n>`), so a
   reload, Back and Forward, and bookmarks work.

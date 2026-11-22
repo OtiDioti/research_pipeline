@@ -144,13 +144,16 @@ def status(
     live: bool,
     preparable: bool,
     waiting: str = "",
+    unready: str = "",
     elsewhere: bool = False,
 ) -> dict:
     """The top bar for phase ``number``: the running one's controls (``live``), else what can be done with it.
 
     Without a controller the project is shown as it was left (``elsewhere``: another
     process runs it, so nothing can be done here); ``waiting`` says why work cannot
-    start now (another project works), on the controls that would start it.
+    start now (another project works), on the controls that would start it, and
+    ``unready`` why the phase's CLIs cannot run (not installed, not logged in), on those
+    that would start a controller.
     """
     name = f"Phase {number}"
     started = bool(state.agents)
@@ -163,7 +166,13 @@ def status(
     if elsewhere:
         parts.append("another research_pipeline process runs this project: read-only here")
     summary = " · ".join(parts)
-    resume = {"action": "resume_phase", "label": f"Resume {name.lower()}", "confirm": None, "waiting": waiting}
+    resume = {
+        "action": "resume_phase",
+        "label": f"Resume {name.lower()}",
+        "confirm": None,
+        "waiting": waiting or unready,
+    }
+    talks = {"action": "open_talks", "label": "Open for talks", "confirm": None, "waiting": unready}
     if elsewhere:
         controls = []
     elif live and controller is not None:
@@ -187,7 +196,10 @@ def status(
     else:
         interrupted = controller is None and state.status in ("running", "pausing")  # left by a crash or shutdown
         controls = (
-            [{"action": "prepare", "label": "Prepare reopening", "confirm": None}]
+            [
+                *([talks] if controller is None else []),
+                {"action": "prepare", "label": "Prepare reopening", "confirm": None},
+            ]
             if ended
             else [resume]
             if state.status == "paused" or interrupted
