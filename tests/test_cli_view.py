@@ -5,6 +5,8 @@ import asyncio
 import contextlib
 import fcntl
 import io
+import os
+import tempfile
 import unittest
 from unittest import mock
 
@@ -60,33 +62,45 @@ class CliTest(unittest.TestCase):
             cli.options_from(arguments(primary="claude:opus"), None)  # model and effort are always explicit
         self.assertIn("--primary", str(raised.exception))
 
-    def test_the_web_page_is_the_default_and_the_terminal_app_an_option(self):
+    def test_run_opens_the_workbench_and_the_options_for_one_project_need_one(self):
         root, seen = temp_project(), []
 
-        async def web(project, options, args):
-            seen.append(("web", args.tui))
+        async def workbench(args, project, options):
+            seen.append((project.root if project else None, args.tui, options.max_agents if options else None))
             return 0
 
         async def terminal(controller, tui):
             seen.append(("no web", tui))
             return 0
 
-        cases = (
-            ([], ("web", False)),
-            (["--tui"], ("web", True)),
-            (["--no-web"], ("no web", False)),
-            (["--no-web", "--tui"], ("no web", True)),
-        )
+        def refused(argv: list[str]) -> str:
+            errors = io.StringIO()
+            with contextlib.redirect_stderr(errors):
+                self.assertEqual(cli.main(["run", *argv]), 2)
+            return errors.getvalue()
+
         try:
             with (
-                mock.patch.object(cli, "with_web", web),
+                tempfile.TemporaryDirectory() as config,
+                mock.patch.dict(os.environ, {"XDG_CONFIG_HOME": config}),
+                mock.patch.object(cli, "workbench", workbench),
                 mock.patch.object(cli, "run", terminal),
                 mock.patch.object(cli, "Controller", lambda root, options, **kwargs: None),
             ):
+                cases = (
+                    ([], (None, False, None)),
+                    ([str(root)], (root, False, 6)),
+                    ([str(root), "--tui", "--max-agents", "3"], (root, True, 3)),
+                    ([str(root), "--no-web"], ("no web", False)),
+                    ([str(root), "--no-web", "--tui"], ("no web", True)),
+                )
                 for argv, expected in cases:
                     with self.subTest(argv=argv):
-                        self.assertEqual(cli.main(["run", str(root), *argv]), 0)
+                        self.assertEqual(cli.main(["run", *argv]), 0)
                         self.assertEqual(seen.pop(), expected)
+                for argv in (["--tui"], ["--max-agents", "3"], ["--start"], ["--no-web"]):
+                    with self.subTest(argv=argv):
+                        self.assertRegex(refused(argv), "needs? a PROJECT")
                 for old in ("--web", "--no-tui"):  # the defaults' former opt-ins are gone
                     with (
                         self.subTest(old=old),
@@ -94,6 +108,18 @@ class CliTest(unittest.TestCase):
                         self.assertRaises(SystemExit),
                     ):
                         cli.main(["run", str(root), old])
+                # A second run while the page's server runs opens that page, with the project added to its list.
+                page = "http://127.0.0.1:8780/?token=t"
+                with (
+                    mock.patch.object(cli.ResearchWorkbench, "server", return_value=page),
+                    mock.patch.object(cli.webbrowser, "open") as opened,
+                    contextlib.redirect_stdout(io.StringIO()),
+                ):
+                    self.assertEqual(cli.main(["run", str(root)]), 0)
+                    ident = cli.ResearchWorkbench(cli.home()).ident(root.resolve())
+                    opened.assert_called_once_with(f"{page}#/projects/{ident}")
+                    self.assertEqual(cli.ResearchWorkbench(cli.home()).known(), [root.resolve()])
+                    self.assertIn("already runs", refused([str(root), "--max-agents", "3"]))
                 self.assertEqual(seen, [])
         finally:
             remove(root)

@@ -2,10 +2,10 @@
 
 - [__init__.py](__init__.py) — Package marker.
 - [__main__.py](__main__.py) — `python -m research_pipeline` entry point.
-- [cli.py](cli.py) — Command line: `run` (start, resume, reopen; the latest phase without the web page) and `status`.
+- [cli.py](cli.py) — Command line: `run` (the projects' web page, or one project's latest phase without it), `status` and `stats`.
 - [controller.py](controller.py) — The controller of one phase: agent tree, sessions (the Librarian's too), notices and messages, handoffs, idle and stalled agents, tools, the Reviewer exchange, quota, pause, shutdown, finishing (with the Librarian's final shelving), handing over to another phase.
 - [state.py](state.py) — A phase's persistent state (agents, jobs, proposals, quota holds) in `.research/phases/<N>/state.json`.
-- [phases.py](phases.py) — The phases of a project and what they share (the list of phases, the Librarian and its pending requests) in `.research/project.json`.
+- [phases.py](phases.py) — The phases of a project and what they share (the list of phases, the Librarian and its pending requests) in `.research/project.json`, and the web page's 'Phases' section.
 - [project.py](project.py) — The project folder and its phases' folders: layout, layout check, git commits, the human's files.
 - [talks.py](talks.py) — Talks: talk-only sessions with the primary and the Reviewer of a phase that does not run, with their talk notes.
 - [librarian.py](librarian.py) — The controller's side of the Librarian: shelving requests, `write_page` and `shelved`, its turns.
@@ -17,7 +17,9 @@
 - [prompts.py](prompts.py) — Session instructions (role prompt and the human's AGENTS.md), opening messages and notices.
 - [prompts](prompts) — Role prompt texts: shared scientific and operational guidance, one file per role, and the setup, new phase and reopening assistants'.
 - [view.py](view.py) — The terminal app (built on agent_toolkit's shared one).
-- [web.py](web.py) — The web app's view of the investigation: setup page (with its preparation steps), the phases' sidebar, new phases, reopening and switching phases, activity, single-agent controls.
+- [web.py](web.py) — One project on the web page: setup page (with its preparation steps), its phases in the sidebar (renamed there), new phases, reopening, switching and resuming phases, activity, single-agent controls; read-only while it does not run.
+- [workbench.py](workbench.py) — The web page's workbench: every project of this machine in the sidebar, each running its controllers, one at work at a time.
+- [usage.py](usage.py) — What each agent used, for the graph: the websites and library pages its tool calls reached.
 - [graph.py](graph.py) — One phase as the web page shows it: its agent graph and its top bar.
 - [fields.py](fields.py) — The launch options as the web page's settings (the setup page's fields, which change live).
 - [preparation.py](preparation.py) — The web page's preparation of a phase: the first one, a new one (material, objectives, AGENTS.md, the checks Start waits for), or the reopening of one that ended (also the changes since its end and their reverts, the checks Reopen waits for).

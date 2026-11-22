@@ -85,7 +85,7 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             dashboard.controller = controller
             snapshot = dashboard.snapshot()
             self.assertEqual(
-                [control["label"] for control in snapshot["status"]["controls"]], ["Prepare reopening", "Quit"]
+                [control["label"] for control in snapshot["status"]["controls"]], ["Prepare reopening", "Close"]
             )
             self.assertEqual(snapshot["status"]["summary"], "")  # not the outcome line again
             nodes = {node["id"]: node for node in snapshot["graph"]["nodes"]}

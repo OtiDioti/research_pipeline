@@ -24,7 +24,7 @@ from pathlib import Path
 from agent_toolkit.records import atomic_write
 
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project
-from research_pipeline.state import Agent, State
+from research_pipeline.state import FINISHED, Agent, State
 
 #: A phase's status before its first start.
 NOT_STARTED = "not started"
@@ -141,3 +141,36 @@ def write_index(project: Project, home: Home, live: State | None = None) -> None
         lines.append(f"- [{item.number}]({item.number}) — {item.title}: {item.outcome or item.status}.{builds}")
     project.phases.mkdir(parents=True, exist_ok=True)
     project.write(project.phases / INDEX, "\n".join(lines) + "\n")
+
+
+#: How the sidebar colours a phase, by status.
+PHASE_COLOURS = {
+    NOT_STARTED: "waiting",
+    "running": "working",
+    "pausing": "paused",
+    "paused": "paused",
+    "complete": "finished",
+    "stopped": "cancelled",
+}
+#: The phases' sidebar section on the web page.
+SECTION = "phases"
+
+
+def sidebar(project: Project, home: Home, live: tuple[int, State] | None, selected: int) -> dict:
+    """The web page's 'Phases' section: each phase's state (``live``: the running phase's, fresher than stored)."""
+    items = []
+    for summary in summaries(project, home):
+        status = live[1].status if live is not None and live[0] == summary.number else summary.status
+        detail = status.upper() if status in FINISHED else status
+        items.append(
+            {
+                "id": str(summary.number),
+                "label": f"{summary.number}. {summary.title}",
+                "detail": detail + (f" · builds on {summary.builds_on}" if summary.builds_on else ""),
+                "status": PHASE_COLOURS.get(status, "idle"),
+                "running": status in ("running", "pausing") and live is not None and live[0] == summary.number,
+                "selected": summary.number == selected,
+                "rename": summary.title,
+            }
+        )
+    return {"id": SECTION, "title": "Phases", "items": items, "add": {"label": "New phase"}}

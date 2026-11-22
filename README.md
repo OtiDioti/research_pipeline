@@ -111,17 +111,23 @@ first, so that the investigation's git history stays separate from the code's.
 ## Run
 
 ```bash
-research-pipeline run my-project
+research-pipeline run
 ```
 
-opens the web app in your browser: its setup page helps you get the folder ready and
-offers every option below, then Start shows the investigation as a live graph. The
-terminal prints the transcript. Without the page:
+opens the web app in your browser, on the projects of this machine: pick one in the
+sidebar, or create one (*+ New project*) or add a folder (*+ Open folder*). A new
+project's setup page helps you get the folder ready and offers every option below,
+then Start shows the investigation as a live graph. One project works at a time. The
+terminal prints the transcripts. `research-pipeline run my-project` also adds that
+folder and shows it at once. Without the page:
 
 ```bash
 research-pipeline run my-project --no-web --primary codex:gpt-6.1-sol:high --reviewer claude:opus:high \
     --librarian claude:opus:high --max-agents 4
 ```
+
+The options below concern one project, so they need `PROJECT` (except `--web-port`
+and `--web-no-open`); on the page each project's are set on its setup page.
 
 | Option | Meaning (default) |
 |---|---|
@@ -134,17 +140,17 @@ research-pipeline run my-project --no-web --primary codex:gpt-6.1-sol:high --rev
 | `--context-threshold` | context fill that triggers a handoff (0.55, at most 0.8); keep it well above a fresh session's own start-up context |
 | `--idle-limit MINUTES` | minutes an idle session waits before it saves its handoff and closes (58, inside the prompt cache's hour; 0: never) |
 | `--no-durable-state` | write the controller's state without forcing it to disk (for slow network filesystems) |
-| `--tui` | show the terminal app instead of printing the transcript |
+| `--tui` | show the project in the terminal app instead of printing the transcripts |
 | `--no-web` | no web app (the folder must be ready already) |
-| `--start`, `--web-port PORT`, `--web-no-open` | skip the setup page; the page's port; print its address instead of opening the browser (see [docs/WEB.md](docs/WEB.md)) |
+| `--start`, `--web-port PORT`, `--web-no-open` | start (or resume) the project at once; the page's port; print its address instead of opening the browser (see [docs/WEB.md](docs/WEB.md)) |
 
 The models the agents' prompt recommends for subagents (coding: `claude:claude-opus-5-5:xhigh`, analysis:
 `codex:gpt-6.1-sol:xhigh`) are set on the setup page, at every launch.
 
-Running the same command again resumes a paused, shut down or interrupted
-investigation (with `--no-web`, its latest phase). After a phase's COMPLETE or STOP
-the program stays open: you can still talk with its primary and Reviewer about
-their work, talk-only, until you quit. To reopen it, press *Prepare reopening* on the
+On the page, a paused, shut down or interrupted project is shown as it was left, with
+*Resume phase N* (with `--no-web`, running the same command again resumes its latest
+phase). After a phase's COMPLETE or STOP its project stays open: you can still talk
+with its primary and Reviewer about their work, talk-only, until you close it. To reopen it, press *Prepare reopening* on the
 web page: change its objectives there (by hand, or with the reopening assistant,
 which can grill you and revise them), then press Reopen, without leaving the page.
 Only a change of the phase's OBJECTIVES.md reopens it. With `--no-web`, a later `run`

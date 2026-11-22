@@ -1,33 +1,82 @@
 # The web app
 
-`research-pipeline run PROJECT` shows the investigation in your browser: its phases in a sidebar, the selected phase's agent tree as a
-graph (live for the phase that runs), what every agent says and does, its documents, and controls for single agents. It is agent_toolkit's web app
-(`agent-toolkit[web]`), described for this program by `web.py`.
+`research-pipeline run` shows every project of this machine in your browser: the projects in a sidebar, and for the
+selected one its phases under it, the selected phase's agent tree as a graph (live for the phase that runs), what every
+agent says and does, its documents, and controls for single agents. It is agent_toolkit's web app
+(`agent-toolkit[web]`, its workbench), described for this program by `workbench.py` and `web.py`.
 
 ## Starting
 
 | Option | Meaning (default) |
 |---|---|
-| (default) | serve the page on 127.0.0.1 and open it in your browser; its setup page comes first |
-| `--no-web` | no page: the terminal alone, and the folder must be ready |
-| `--start` | skip the setup page: start at once with the options given and stored |
+| (default) | serve the page on 127.0.0.1 and open it in your browser, on the empty workbench |
+| `PROJECT` | also add this folder to the list and show it at once (a new folder opens on its setup page) |
+| `--start` | with `PROJECT`: start it at once with the options given and stored (a started one resumes) |
+| `--no-web` | with `PROJECT`: no page, the terminal alone, and the folder must be ready |
 | `--web-port PORT` | use this port (8780, or the next free one) |
 | `--web-no-open` | print the page's address instead of opening the browser |
 
 The address is always printed, so the page can be opened by hand (e.g. over an SSH
 tunnel) when no browser can be opened. It carries a secret token; only pages opened
-with it can see or act. The terminal prints the transcript next to the page
-(`--tui` shows the terminal app instead); both show and control the same investigation, and any number of pages
-may be open. After a phase ends the page stays open for talks: the chat window
-talks with its primary and its Reviewer (below), and the top
-bar's controls are *Prepare reopening* and Quit ([FINISHING.md](FINISHING.md)).
-*Prepare reopening* opens the setup page again, to reopen the phase (below); *Back*
-returns to the graph. The page stays readable until the program exits.
+with it can see or act. A second `run` while the page's server runs opens that page
+(with `PROJECT`, adding it to the list and showing it) and exits; the options for one
+project are refused then, since they cannot reach the running server. The terminal
+prints every project's transcript, each line under its project's name (`run PROJECT
+--tui` shows that project in the terminal app instead, the others quietly; closing it
+ends the program). Ctrl+C shuts every project down cleanly (twice forces). Any number
+of pages may be open: they all show the same project and act on it.
+
+## Projects
+
+The collapsible sidebar on the left lists the projects of this machine, most recently
+created, added or started first, each with a status dot and its latest phase's state.
+The list lives in `~/.config/research_pipeline/projects.json` (`$XDG_CONFIG_HOME`);
+a project's display name lives in the project, in `.research/name`, so it moves with
+the folder, whose own name never changes.
+
+- **The empty workbench.** The page opens with no project selected and the sidebar
+  open; a line in the middle points to the sidebar. Everything about a project
+  (Settings, Stats, the windows) is greyed until one is picked. Once picked, you
+  switch between projects; there is no closing back to the empty workbench. The
+  sidebar starts open when a page loads with no project selected and collapsed when
+  one is (e.g. after `run PROJECT`, or a reload); picking a project leaves it as it is.
+- **Selecting a project** unfolds its phases under it (only the selected project is
+  unfolded) and shows its running phase, else its latest. A project not started yet
+  opens on its setup page (below). A project whose phase ended opens for talks at once
+  (no work resumes; the Librarian finishes placing what was left). A project that does
+  not run (paused, shut down, interrupted) is shown as it was left, read-only, with
+  *Resume phase N* in the top bar. A project another research_pipeline process runs
+  is read-only, and a project whose folder is gone is greyed and cannot be selected.
+  The page's address names the project and phase (`#/projects/<id>/phases/<n>`), so a
+  reload, Back and Forward, and bookmarks work.
+- **One project works at a time.** While one runs (or is pausing), the others can be
+  browsed, set up and talked with, but their Start, Resume and Reopen wait (hovering
+  says which project runs): pause it first. A paused or ended project does not block.
+- **+ New project** opens a folder browser (folders of this machine, served by the
+  program: go up or in, type a path, create a folder), starting where the last
+  project was created or added; then a name field in the list. Enter creates the
+  folder, named after the project in a simple form (`Protein Folding 2` →
+  `protein-folding-2/`; an existing one is refused), and opens its setup page.
+  **+ Open folder** puts an existing folder in the list (a folder that is not a
+  project yet opens on its setup page).
+- **Renaming.** Hovering a project or a phase shows a pencil: the name becomes a
+  field, Enter or clicking away saves, Esc cancels. A phase's title can change at
+  any time, even while it runs (`phases/FOLDER_CONTENT.md` follows; agents see it the
+  next time they are told of the phases). Names need not be unique.
+- **Removing** a project from the list (✕ on hover, after a confirmation) leaves its
+  folder as it is; *+ Open folder* brings it back. The project that runs cannot be
+  removed.
+
+After a phase ends its project stays open for talks: the chat window talks with its
+primary and its Reviewer (below), and the top bar's controls are *Prepare reopening*
+and Close ([FINISHING.md](FINISHING.md)). *Prepare reopening* opens the setup page
+again, to reopen the phase (below); *Back* returns to the graph. *Close* and *Shut
+down* end the project's controller (its talks save their notes, its agents their
+handoffs); the project then stays shown as it was left, and the program goes on.
 
 ## Phases
 
-The collapsible sidebar on the left lists the phases (its *Phases* section folds
-too; both stay as you left them in this browser): each with its number, title and
+Under the selected project the sidebar lists its phases: each with its number, title and
 state (running, paused, COMPLETE, STOPPED, not started, and the phase it builds on),
 the running one marked *running*, the selected one highlighted, and **New phase**
 at the bottom. One phase runs at a time.

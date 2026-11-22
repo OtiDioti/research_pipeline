@@ -64,7 +64,7 @@ On COMPLETE or a confirmed STOP, the controller:
 - shelves the primary's and the Reviewer's folders, and any other ended agent's not shelved yet;
 - lets the Librarian place them (if it cannot run or stalls, its requests reach it at the next `run`)
   and commits "controller: the library after the end";
-- stays open for talks until the human quits (Ctrl+Q, or Quit on the web page), or
+- stays open for talks until the human quits (Ctrl+Q, or Close on the web page), or
   reopens the phase, or starts or resumes another, from the web page. The state reads `complete (talk only)` or
   `stopped (talk only)`.
 

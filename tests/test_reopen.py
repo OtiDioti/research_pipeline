@@ -70,7 +70,7 @@ class ReopenTest(unittest.IsolatedAsyncioTestCase):
             await shelve_all(harness)
             await harness.settle()
             controls = [control["label"] for control in dashboard.snapshot()["status"]["controls"]]
-            self.assertEqual(controls, ["Prepare reopening", "Quit"])
+            self.assertEqual(controls, ["Prepare reopening", "Close"])
             with self.assertRaisesRegex(SettingsError, "Not ready: The phase's objectives changed"):
                 await dashboard.start(dashboard.values())
             # Edits: a document saved on the page, new material placed; the program stays open, unalarmed.

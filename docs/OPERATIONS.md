@@ -4,13 +4,18 @@ Running an investigation, controlling it, and finding out what went wrong.
 
 ## Launch
 
-`research-pipeline run PROJECT` starts or resumes an investigation, or opens a finished
-one for talks, from where the web page's *Prepare reopening* reopens it; with `--no-web`
-it reopens it if the human's files changed since the end ([FINISHING.md](FINISHING.md));
-the options are listed in [README.md](../README.md).
-- The web app opens in the browser, setup page first ([WEB.md](WEB.md)): before
-  the first start it helps make the folder ready ([SETUP.md](SETUP.md)), with
+`research-pipeline run` opens the web page on every project of this machine
+([WEB.md](WEB.md)), where each one starts or resumes an investigation, or opens a
+finished one for talks, from where *Prepare reopening* reopens it. `run PROJECT` also
+adds that folder and shows it; with `--no-web` it runs that project's latest phase,
+reopening it if the human's files changed since the end ([FINISHING.md](FINISHING.md)).
+The options are listed in [README.md](../README.md); those for one project (models,
+limits, `--setup`, `--start`, `--tui`, `--no-web`) need `PROJECT`. A second `run`
+while the page's server runs opens that page and exits.
+- On the page, a project not started yet opens on its setup page: before the first
+  start it helps make the folder ready ([SETUP.md](SETUP.md)), with
   `--setup BACKEND:MODEL:EFFORT` for its assistant, then it offers every option.
+  One project works at a time.
 - With `--no-web` there is no page: on the first run `--primary`, `--reviewer`
   and `--librarian` are required as `BACKEND:MODEL:EFFORT`, and a folder that is
   not ready is refused. `--backends` defaults to the primary's and the Reviewer's
@@ -23,8 +28,9 @@ the options are listed in [README.md](../README.md).
   holds, each agent with its pause reason, and running jobs.
 - `research-pipeline stats PROJECT [--phase N|all]` prints a run's key numbers
   (library use, spawning, briefs, reviews, resources), read-only ([STATS.md](STATS.md)).
-- The terminal prints the transcript; Ctrl+C once shuts down cleanly, twice
-  forces an exit. `--tui` shows the terminal app instead.
+- The terminal prints the transcripts (each line under its project's name); Ctrl+C
+  once shuts every project down cleanly, twice forces an exit. `run PROJECT --tui`
+  shows that project in the terminal app instead.
 
 ## The terminal app (`--tui`)
 

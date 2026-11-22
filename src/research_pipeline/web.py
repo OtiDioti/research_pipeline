@@ -1,4 +1,4 @@
-"""The investigation in the browser (``research-pipeline run PROJECT``, unless ``--no-web``): its phases and agents.
+"""One project in the browser, among the workbench's (:mod:`research_pipeline.workbench`): its phases and agents.
 
 Built on :mod:`agent_toolkit.web`. Before the first start, the setup page first
 helps make the folder ready for the first phase (:mod:`research_pipeline.preparation`:
@@ -15,47 +15,45 @@ another phase's as it was left, whose primary and Reviewer the human can talk wi
 reopening; their Start (or Reopen), like a paused phase's Resume, hands the running
 controller over (:meth:`Controller.hand_over <research_pipeline.controller.Controller.hand_over>`)
 once its phase has ended or is paused, and :meth:`ResearchDashboard.restarted`
-gives the command line the next phase's controller.
+gives the next phase's controller.
+
+In the workbench the dashboard also runs its controllers (its ``runner``), one after
+the other as the page hands over, until the last ends: the project is then shown as
+it was left, read-only, like a project started in an earlier session, until its
+*Resume*. Selecting a project whose phase ended opens it at once for talks (no
+work resumes). Starting or resuming work waits while another project of the
+workbench works (``others``), and a project another process runs is read-only.
 """
 
 from __future__ import annotations
 
+import asyncio
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from agent_toolkit import DRIVERS
 from agent_toolkit.activity import ActivityLog
+from agent_toolkit.records import locked
 from agent_toolkit.web import Dashboard, Field, SettingsError, validate
 
 from research_pipeline import graph
 from research_pipeline.controller import Controller
 from research_pipeline.fields import NAMES, fields, phase_fields
-from research_pipeline.phases import NOT_STARTED, Home, load_state, summaries
+from research_pipeline.phases import SECTION, Home, load_state, sidebar, write_index
 from research_pipeline.preparation import Preparation
-from research_pipeline.project import INDEX, LIBRARIAN, Project
+from research_pipeline.project import LIBRARIAN, Project
 from research_pipeline.state import FINISHED, Options, State
 from research_pipeline.stats import Statistics
+from research_pipeline.usage import Usage
 
-URL = re.compile(r'https?://[^\s\'"<>)\]]+')
-SOURCE = re.compile(r"\blibrary/[\w./-]+")
 #: Transcript entries worth a notification.
 NOTEWORTHY = re.compile(
     r"quota|failed|could not|paused|resumed|investigation is|is complete|is stopped|stalled|verdict|review round|"
     r"waiting for you|cancelled|reopened",
     re.IGNORECASE,
 )
-#: How the sidebar colours a phase, by status.
-PHASE_COLOURS = {
-    NOT_STARTED: "waiting",
-    "running": "working",
-    "pausing": "paused",
-    "paused": "paused",
-    "complete": "finished",
-    "stopped": "cancelled",
-}
-#: The phases' sidebar section.
-SECTION = "phases"
 
 
 class ResearchDashboard(Dashboard):
@@ -65,17 +63,33 @@ class ResearchDashboard(Dashboard):
     port = 8780
     offers_stats = True
 
-    def __init__(self, root: Path, options: Options, drivers=DRIVERS, **controller_options):
-        """Prefill the setup page from ``options``; ``controller_options`` go to the :class:`Controller` (tests)."""
+    def __init__(
+        self,
+        root: Path,
+        options: Options,
+        drivers=DRIVERS,
+        *,
+        launch: Callable[[ResearchDashboard], None] | None = None,
+        others: Callable[[], str] = lambda: "",
+        **controller_options,
+    ):
+        """Prefill the setup page from ``options``; ``controller_options`` go to the :class:`Controller` (tests).
+
+        ``launch`` runs the new controller, and those the page then hands over to, until
+        the last ends, setting :attr:`task` (None: the caller runs them, as tests do);
+        ``others`` says why another project keeps work from starting here ('' if nothing does).
+        """
         super().__init__(root)
         self.options, self.drivers, self.controller_options = options, drivers, controller_options
+        self.launch, self.others = launch, others
         self.paths = Project(self.project)
         self.controller: Controller | None = None
+        self.task: asyncio.Task | None = None  # running the controllers (set by ``launch``)
+        self.stage = "running" if self.paths.started else "setup"  # a started project shows its phases at once
         home = Home.load(self.paths.home_file)
         self.selected = home.active or home.latest or 1  # the phase the page shows
         # The phase the page's Start, Reopen or Resume hands over to, with its options (None: the stored ones).
         self.target: tuple[int, Options | None] | None = None
-        self.used: dict[str, dict[str, set]] = {}  # '<phase>/<agent>' -> {"sites", "pages"} from its tool calls
         self._listing: tuple[float, int, dict] = (0.0, 0, {})
         self.statistics = Statistics(self.project)
         # The preparation of the selected phase, if it has one: the first phase's before the first start, a new
@@ -83,13 +97,15 @@ class ResearchDashboard(Dashboard):
         self.preparing = (
             None
             if self.paths.started
-            else Preparation(self.paths, options, drivers, read_quota=controller_options.get("read_quota"))
+            else Preparation(
+                self.paths,
+                options,
+                drivers,
+                read_quota=controller_options.get("read_quota"),
+                checks=lambda: self._checks(1),
+            )
         )
-        for number in {phase.number for phase in home.phases} | {self.selected}:
-            for entry in ActivityLog(self.paths.at(number).activity).read(None, limit=200_000):
-                self._remember(number, entry)
-        for entry in ActivityLog(self.paths.library_activity).read(None, limit=200_000):
-            self._remember(None, entry)
+        self.usage = Usage(self.paths, {phase.number for phase in home.phases} | {self.selected})
 
     # Statistics ---------------------------------------------------------------------------------
 
@@ -120,28 +136,26 @@ class ResearchDashboard(Dashboard):
         if missing:
             raise SettingsError(missing)
         preparing, number = self.preparing, self.selected
-        if self.controller is not None:  # a new phase, or a reopening, while another controller runs
-            if preparing is None or self.target is not None:
-                raise SettingsError({"": "there is nothing to start"})
-            view = preparing.view()
-            if not view["ready"]:
-                waiting = [check["label"] for check in view["checks"] if not check["ok"]]
-                raise SettingsError({"": "Not ready: " + ("; ".join(waiting) or "the folder is not ready")})
-        elif preparing is not None:  # the first start: the same checks as the command line's
+        if preparing is None or self.target is not None:
+            raise SettingsError({"": "there is nothing to start"})
+        if preparing.kind == "setup":  # the first start: the same checks as the command line's
             problems = self.paths.at(number).unready()
             if problems:
                 raise SettingsError({"": "The folder is not ready: " + " ".join(problems)})
-        if preparing is not None:
-            values["setup"] = preparing.assistant.spec
-            await preparing.close(finished=True)
-            self.preparing = None
+        view = preparing.view()
+        if not view["ready"]:
+            waiting = [check["label"] for check in view["checks"] if not check["ok"]]
+            raise SettingsError({"": "Not ready: " + ("; ".join(waiting) or "the folder is not ready")})
+        values["setup"] = preparing.assistant.spec
+        await preparing.close(finished=True)
+        self.preparing = None
         self._name(number, title, None if builds_on == "none" else int(builds_on))
-        state = self._state(number)
-        base = state.options if state else self.controller.state.options if self.controller else self.options
-        options = Options(**{**vars(base), **values})
+        options = Options(**{**vars(self._options(number)), **values})
+        self.stage = "running"
         if self.controller is None:
             self.options = options
-            self._control(number, options, reopen=False)  # after an end, only the page's Reopen reopens
+            self._control(number, options, reopen=preparing.reopening)  # after an end, only Reopen reopens
+            self._drive()
         else:
             self._switch(number, options)
 
@@ -154,9 +168,51 @@ class ResearchDashboard(Dashboard):
         return True
 
     async def close(self) -> None:
-        """End the assistant's session of a preparation still open (it keeps what the page shows of it)."""
+        """End the assistant's session of a preparation still open (it keeps what the page shows of it), and shut
+        the controller down cleanly (its agents hand off), waiting for it."""
         if self.preparing is not None:
             await self.preparing.close()
+        task = self.task
+        if task is not None and not task.done():
+            if self.controller is not None:
+                self.target = None
+                self.controller.shutdown()
+            await asyncio.gather(task, return_exceptions=True)
+
+    async def visit(self) -> None:
+        """Selected in the workbench: show the phase that runs, else the latest; open an ended one for talks."""
+        if self.preparing is not None and self.preparing.kind != "setup":
+            return  # a phase being prepared stays shown
+        controller = self.controller
+        home = self._home()
+        self.selected = controller.project.phase if controller is not None else home.latest or 1
+        if controller is None and self.launch is not None and self.paths.started and not self.elsewhere:
+            state = self._state(self.selected)
+            if state is not None and state.status in FINISHED:  # talk-only: no work resumes
+                self._control(self.selected, None, reopen=False)
+                self._drive()
+
+    def resume(self, number: int) -> None:
+        """Run phase ``number`` again (paused, or left running by a crash), with its stored options."""
+        if self.elsewhere:
+            raise ValueError("another process runs this project")
+        reason = self.others()
+        if reason:
+            raise ValueError(reason)
+        if self.controller is not None:
+            self._switch(number, None)
+            return
+        self._control(number, None, reopen=False)
+        self._drive()
+
+    @property
+    def elsewhere(self) -> bool:
+        """True while another process runs this project (it holds its lock): it is shown read-only."""
+        return self.controller is None and locked(self.paths.lock_file)
+
+    def _drive(self) -> None:
+        if self.launch is not None and (self.task is None or self.task.done()):
+            self.launch(self)
 
     def _control(self, number: int, options: Options | None, reopen: bool) -> None:
         controller = Controller(
@@ -174,6 +230,16 @@ class ResearchDashboard(Dashboard):
             raise ValueError(f"phase {controller.project.phase} is {controller.state.status}: pause it first")
         self.target = (number, options)
         controller.hand_over()
+
+    def _options(self, number: int) -> Options:
+        """The options phase ``number`` starts from: its own, else the running controller's, else the last stored."""
+        state = self._state(number)
+        if state is not None:
+            return state.options
+        if self.controller is not None:
+            return self.controller.state.options
+        stored = load_state(self.paths.at(self._home().active or 1)) if self.paths.started else None
+        return stored.options if stored is not None else self.options
 
     async def configure(self, values: dict) -> None:
         values = validate([item for item in self.fields() if item.live], values, self.drivers)
@@ -194,9 +260,22 @@ class ResearchDashboard(Dashboard):
         self.selected = number
         return {"view": "prepare" if self._state(number) is None else "graph", "text": ""}
 
+    async def rename(self, section: str, item: str, name: str) -> str | None:
+        number = self._phase(section, item)
+        if self.elsewhere:
+            raise ValueError("another process runs this project: rename the phase there")
+        if not name.strip():
+            return None
+        self._name(number, name.strip(), self._home().phase(number).builds_on)  # type: ignore[union-attr]
+        shown = self._shown()
+        write_index(self.paths, self._home(), shown.state if shown else None)
+        return f"Phase {number} is now {name.strip()}"
+
     async def add(self, section: str) -> dict:
         if section != SECTION:
             raise ValueError(f"there is no section {section}")
+        if self.elsewhere:
+            raise ValueError("another process runs this project: add the phase there")
         home = self._home()
         unstarted = [phase.number for phase in home.phases if self._state(phase.number) is None]
         if unstarted:  # one new phase at a time
@@ -217,25 +296,8 @@ class ResearchDashboard(Dashboard):
 
     def _sidebar(self) -> list[dict]:
         live = self._shown() or self.controller
-        items = []
-        for summary in summaries(self.paths, self._home()):
-            status = summary.status
-            if live is not None and live.project.phase == summary.number:
-                status = live.state.status  # fresher than its stored state
-            detail = status.upper() if status in FINISHED else status
-            items.append(
-                {
-                    "id": str(summary.number),
-                    "label": f"{summary.number}. {summary.title}",
-                    "detail": detail + (f" · builds on {summary.builds_on}" if summary.builds_on else ""),
-                    "status": PHASE_COLOURS.get(status, "idle"),
-                    "running": status in ("running", "pausing")
-                    and live is not None
-                    and live.project.phase == summary.number,
-                    "selected": summary.number == self.selected,
-                }
-            )
-        return [{"id": SECTION, "title": "Phases", "items": items, "add": {"label": "New phase"}}]
+        running = (live.project.phase, live.state) if live is not None else None
+        return [sidebar(self.paths, self._home(), running, self.selected)]
 
     def _name(self, number: int, title: str, builds_on: int | None) -> None:
         """Register phase ``number`` (if new) with its title and the phase it builds on."""
@@ -256,15 +318,18 @@ class ResearchDashboard(Dashboard):
     def preparation(self) -> dict | None:
         if self.target is not None:  # handing over: nothing to prepare meanwhile
             return None
-        if self.preparing is None and self.controller is not None and self.controller.lock is not None:
-            number = self.selected
+        controller = self.controller
+        number = self.selected
+        registered = self._home().phase(number) is not None
+        available = controller.lock is not None if controller is not None else registered and not self.elsewhere
+        if self.preparing is None and available:
             state = self._state(number)
             kind = "phase" if state is None else "reopen" if state.status in FINISHED else None
             if kind is not None:
                 phase = self._home().phase(number)
                 self.preparing = Preparation(
                     self.paths.at(number),
-                    state.options if state else self.controller.state.options,
+                    self._options(number),
                     self.drivers,
                     read_quota=self.controller_options.get("read_quota"),
                     kind=kind,
@@ -275,19 +340,34 @@ class ResearchDashboard(Dashboard):
         return self.preparing.view() if self.preparing is not None else None
 
     def _checks(self, number: int) -> list[dict]:
-        """What a phase's Start or Reopen waits for beyond its folder: no other phase runs, the Librarian is done."""
-        controller = self._running()
-        running = controller.project.phase != number and controller.state.status in ("running", "pausing")
-        pending = [folder for folder in controller.home.shelving if folder.startswith(f"phases/{number}/")]
+        """What a phase's Start or Reopen waits for beyond its folder: no other phase or project runs, and the
+        Librarian is done."""
+        controller, other = self.controller, self.others()
+        running = (
+            controller is not None
+            and controller.project.phase != number
+            and controller.state.status in ("running", "pausing")
+        )
+        pending = [folder for folder in self._home().shelving if folder.startswith(f"phases/{number}/")]
         checks = [
+            {
+                "label": "No other project runs",
+                "ok": not other,
+                "detail": other,
+            },
+        ]
+        if not self.paths.started:
+            return checks
+        checks.insert(
+            0,
             {
                 "label": "No other phase runs",
                 "ok": not running,
                 "detail": f"phase {controller.project.phase} is {controller.state.status}: pause it first"
-                if running
+                if running and controller is not None
                 else "",
-            }
-        ]
+            },
+        )
         if self._state(number) is not None:
             checks.append(
                 {
@@ -311,7 +391,7 @@ class ResearchDashboard(Dashboard):
     # The phase shown ------------------------------------------------------------------------------
 
     def snapshot(self) -> dict:
-        controller, number = self._running(), self.selected
+        controller, number = self.controller, self.selected
         shown = self._shown()
         home = self._home()
         state = shown.state if shown else self._state(number) or State()
@@ -319,7 +399,7 @@ class ResearchDashboard(Dashboard):
         view = graph.build(
             state,
             documents,
-            self.used,
+            self.usage.used,
             number,
             sessions=shown.sessions if shown else {},
             actions=shown.actions if shown else self._talk_actions,
@@ -333,6 +413,8 @@ class ResearchDashboard(Dashboard):
             state,
             live=shown is not None,
             preparable=state.status in FINISHED,
+            waiting=self.others(),
+            elsewhere=self.elsewhere,
         )
         return {"graph": view, "status": status, "settings": self.live(), "sidebar": self._sidebar()}
 
@@ -352,16 +434,23 @@ class ResearchDashboard(Dashboard):
     # The human's actions -----------------------------------------------------------------------------
 
     async def act(self, action: str, target: str | None, args: dict) -> str | None:
-        controller, shown = self._running(), self._shown()
-        if target is None:  # the top bar's controls
-            if action == "resume_phase":
-                state = self._state(self.selected)
-                if shown is not None or state is None or state.status != "paused":
-                    raise ValueError(f"phase {self.selected} is not paused")
-                self._switch(self.selected, None)
-                return f"switching to phase {self.selected}"
+        shown = self._shown()
+        if target is None and action == "resume_phase":  # the top bar's controls
+            state = self._state(self.selected)
+            resumable = ("paused",) if self.controller is not None else ("paused", "running", "pausing")
+            if shown is not None or state is None or state.status not in resumable:
+                raise ValueError(f"phase {self.selected} is not paused")
+            switching = self.controller is not None
+            self.resume(self.selected)
+            return f"{'switching to' if switching else 'resuming'} phase {self.selected}"
+        if self.controller is None:
+            raise ValueError("another process runs this project" if self.elsewhere else "resume the project first")
+        controller = self.controller
+        if target is None:
             if action in ("pause", "release") and shown is None:
                 raise ValueError(f"phase {self.selected} does not run")
+            if action == "pause" and controller.state.status == "paused" and self.others():
+                raise ValueError(self.others())
             if action == "pause":
                 controller.toggle_pause()
                 return "pausing" if controller.state.status == "running" else "resuming"
@@ -419,18 +508,6 @@ class ResearchDashboard(Dashboard):
 
     def _entry(self, phase: int | None, entry: dict) -> None:
         """A new activity entry (of ``phase``, or the Librarian's): remember what it used; pass it to the page."""
-        self._remember(phase, entry)
+        self.usage.note(phase, entry)
         if phase is None or phase == self.selected:
             self.publish(entry)
-
-    def _remember(self, phase: int | None, entry: dict) -> None:
-        """Note the websites and library pages an agent's tool call used (``phase`` None: the Librarian's)."""
-        if entry.get("kind") != "tool":
-            return
-        key = entry["agent"] if phase is None else f"{phase}/{entry['agent']}"
-        used = self.used.setdefault(key, {"sites": set(), "pages": set()})
-        used["sites"].update(url.rstrip(".,;") for url in URL.findall(entry.get("text", "")))
-        for relative in SOURCE.findall(entry.get("text", "")):
-            path = self.project / relative.rstrip(".,;")
-            if path.is_file() and path.name != INDEX:
-                used["pages"].add(str(path))
