@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6).
 
 ## 1. Purpose
 
@@ -491,8 +491,8 @@ folders.
 `tools/` at its top level: it predates the library, and is not migrated.
 
 **Interface.** By default the shared web app of `agent_toolkit` (below), with the
-transcript printed in the terminal; with `--tui`, a terminal app instead of the
-printed transcript, built on the shared one in `agent_toolkit`:
+transcripts printed in the terminal; with `run PROJECT --tui`, a terminal app for that
+project instead of its printed transcript, built on the shared one in `agent_toolkit`:
 - a transcript of the selected agent;
 - the agent tree with each agent's status, CLI and context use;
 - quota status;
@@ -500,8 +500,18 @@ printed transcript, built on the shared one in `agent_toolkit`:
 - highlighted alerts, such as a stalled primary;
 - Pause/Resume and Shutdown keys.
 
-The web app (docs/WEB.md; none with `--no-web`):
-a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
+The web app (docs/WEB.md; none with `--no-web`) is a **workbench**: `run` needs no
+project and opens on an empty workbench whose sidebar lists every project of the
+machine (a list kept in the user's configuration folder, most recently created, added
+or started first; a project's display name kept in the project). Projects are selected
+there, created in a new folder chosen with a folder browser, added from an existing
+folder, renamed, and removed from the list (never deleted); the selected project's
+phases unfold under it, renamed there too. `run PROJECT` adds and shows that project;
+a second `run` while the page's server runs opens that page. One project works at a
+time: the others can be browsed, set up and talked with, and their Start, Resume or
+Reopen waits. A project that does not run is shown as it was left, read-only, until
+resumed; one whose phase ended opens for talks when selected; one another process runs
+is read-only. For each project: a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
@@ -521,6 +531,8 @@ Launch options:
 - `--idle-limit` (minutes, 58 by default; 0: never);
 - `--no-durable-state`;
 - `--tui`, `--no-web`, `--start`, `--web-port`, `--web-no-open`.
+
+All but `--web-port` and `--web-no-open` concern one project and need `PROJECT`.
 
 **Statistics** (docs/STATS.md). How a run went, computed deterministically and
 read-only from the phases' states, the activity logs (whole tool calls, as the CLI

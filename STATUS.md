@@ -1,5 +1,18 @@
 # Status
 
+**2026-11-22.** 0.22.0, on agent_toolkit 0.16.0: **`research-pipeline run` opens a workbench** of every project
+of this machine ([docs/WEB.md](docs/WEB.md), "Projects"; PROJECT.md §6 amended). The page opens with no project and
+the sidebar open (a line points to it; the project's parts are greyed); projects are selected, created (a folder
+browser, then a name: `Protein Folding 2` → `protein-folding-2/`), added from a folder, renamed (display name in
+`.research/name`) and removed from the list (the folder stays); the selected one's phases unfold under it and are
+renamed there too (`phases/FOLDER_CONTENT.md` follows). The list is `~/.config/research_pipeline/projects.json`.
+`run PROJECT` adds and shows one; the options for one project need it; a second `run` opens the running server's
+page. One project works at a time: the others' Start, Resume and Reopen wait ("No other project runs"). Each
+project's dashboard now runs its own controllers, so the server outlives them: a project that stopped is shown as it
+was left, read-only, with *Resume phase N*; one whose phase ended opens for talks when selected; one another process
+runs is read-only. The top bar's Quit is now Close (the program goes on). The page's address names the project and
+phase. Not yet tried with real CLIs.
+
 **2026-11-21.** 0.21.1, on agent_toolkit 0.15.0: the top bar no longer repeats the phase's state. After the
 state (`phase 2: complete`) it showed the whole outcome line (`COMPLETE on <date>: the Reviewer agreed (…)`, true by
 construction for COMPLETE) or, for a phase not running, its status again; now it shows only the running phase's

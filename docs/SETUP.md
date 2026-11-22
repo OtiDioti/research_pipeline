@@ -10,10 +10,11 @@ request.
 
 ## When
 
-- `research-pipeline run DIR` opens the setup page on any folder no
-  investigation has started in (it has no `.research/project.json`): one that does
-  not exist yet (it is created), an empty one, one with material dumped at its top
-  level, or an incomplete project. The page shows the preparation steps even when
+- The web page opens the setup page on any project no investigation has started
+  in (it has no `.research/project.json`): one created with *+ New project*, a folder
+  added with *+ Open folder* or `research-pipeline run DIR` (one that does not exist
+  yet is created), an empty one, one with material dumped at its top level, or an
+  incomplete project. The page shows the preparation steps even when
   the folder is ready already, so a partial setup can still be improved.
 - Once an investigation has started, there are no preparation steps for the phase
   that runs: the human edits their files directly ([PROJECT_FOLDER.md](PROJECT_FOLDER.md)).
