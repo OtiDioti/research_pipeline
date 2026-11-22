@@ -84,6 +84,7 @@ def fields(backends: list[str]) -> list[Field]:
             options=backends,
             live=True,
             within="backends",
+            advisory=True,
         ),
         Field(
             "analysis",
@@ -94,6 +95,7 @@ def fields(backends: list[str]) -> list[Field]:
             options=backends,
             live=True,
             within="backends",
+            advisory=True,
         ),
         Field(
             "max_agents",

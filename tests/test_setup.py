@@ -301,11 +301,12 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         with self.assertRaisesRegex(ValueError, "usage quota of codex is at its limit"):
             await self.dashboard.prepare("organise", {})
         await self.dashboard.prepare("assistant", {"spec": "claude:opus-test:high"})
-        FakeSession.script = lambda session, text: turn(text="", failed=True)
+        FakeSession.script = lambda session, text: turn(text="", failed=True, error="Not logged in · Please run /login")
         await self.dashboard.prepare("organise", {})
         view = await self.answered()
         self.assertEqual(view["assistant"]["state"], "unavailable")
         self.assertIn("could not answer", view["conversation"][-1]["text"])
+        self.assertIn("Not logged in · Please run /login", view["conversation"][-1]["text"])  # the CLI's reason
         entry = {"path": "paper.pdf", "folder": "starting_evidence", "description": "The paper."}
         await self.dashboard.prepare("place", {"entries": [entry]})
         self.assertTrue((self.root / "starting_evidence" / "paper.pdf").exists())

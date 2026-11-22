@@ -778,7 +778,8 @@ class Controller:
         elif kind == "turn_ended" and data.get("failed"):
             # A failed turn (e.g. an API outage) restarts the agent from its handoff after a delay.
             await self._close(agent_id)
-            await self._failed(agent, f"{agent_id}: its turn failed.")
+            reason = str(data.get("error") or "").strip().rstrip(".")
+            await self._failed(agent, f"{agent_id}: its turn failed" + (f" ({reason})." if reason else "."))
         elif kind == "turn_ended":
             await self._turn_ended(agent, data.get("text") or "")
             self._save()

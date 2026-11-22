@@ -45,7 +45,11 @@ the folder, whose own name never changes.
   opens on its setup page (below). A project whose phase ended opens for talks at once
   (no work resumes; the Librarian finishes placing what was left). A project that does
   not run (paused, shut down, interrupted) is shown as it was left, read-only, with
-  *Resume phase N* in the top bar. A project another research_pipeline process runs
+  *Resume phase N* in the top bar. Both use the CLIs the phase last ran with: while
+  its primary's, Reviewer's or Librarian's CLI is not installed or not logged in, the
+  ended project is not opened (*Open for talks* waits) and *Resume phase N* waits,
+  each with the reason on hover. The page checks again every 30 seconds while it shows
+  the project, and once more at the press, so logging in elsewhere frees them. A project another research_pipeline process runs
   is read-only, and a project whose folder is gone is greyed and cannot be selected.
   The page's address names the project and phase (`#/projects/<id>/phases/<n>`), so a
   reload, Back and Forward, and bookmarks work.
@@ -133,6 +137,14 @@ analytical tasks (a warning, not a refusal, when one's CLI is not among the CLIs
 for subagents: agents then choose another), the number of sessions at once, the idle limit, the handoff threshold, the usage limits,
 and under *Advanced* the reference folders and durable state. Start checks them
 like the command line does and shows what is wrong next to each setting.
+
+A CLI that is not installed or not logged in (asked of the CLI itself, `claude auth
+status` and `codex login status`, without any model call) is greyed in every CLI
+choice, with the reason on hover (e.g. "codex is not logged in: run `codex login`").
+The page asks when it opens and again with *Check again* (after logging in in a
+terminal). A primary, Reviewer or Librarian on such a CLI keeps Start waiting; a
+recommended model or a CLI for subagents on one only warns (agents choose another).
+The same holds for the live settings and the setup assistant's CLI (a warning only).
 
 While the investigation runs, the settings button changes the handoff threshold
 (live sessions follow at their next context reading), the usage limits, the

@@ -42,8 +42,9 @@ from research_pipeline import graph
 from research_pipeline.controller import Controller
 from research_pipeline.fields import NAMES, fields, phase_fields
 from research_pipeline.phases import SECTION, Home, load_state, sidebar, write_index
-from research_pipeline.preparation import Preparation
+from research_pipeline.preparation import Preparation, start_checks
 from research_pipeline.project import LIBRARIAN, Project
+from research_pipeline.readiness import Readiness
 from research_pipeline.state import FINISHED, Options, State
 from research_pipeline.stats import Statistics
 from research_pipeline.usage import Usage
@@ -85,6 +86,7 @@ class ResearchDashboard(Dashboard):
         self.paths = Project(self.project)
         self.controller: Controller | None = None
         self.task: asyncio.Task | None = None  # running the controllers (set by ``launch``)
+        self.readiness = Readiness(drivers)  # whether the CLIs a stopped phase needs can run
         self.stage = "running" if self.paths.started else "setup"  # a started project shows its phases at once
         home = Home.load(self.paths.home_file)
         self.selected = home.active or home.latest or 1  # the phase the page shows
@@ -188,9 +190,16 @@ class ResearchDashboard(Dashboard):
         self.selected = controller.project.phase if controller is not None else home.latest or 1
         if controller is None and self.launch is not None and self.paths.started and not self.elsewhere:
             state = self._state(self.selected)
-            if state is not None and state.status in FINISHED:  # talk-only: no work resumes
+            ready = not await self.readiness.check(self._options(self.selected))
+            if state is not None and state.status in FINISHED and ready:  # talk-only: no work resumes
                 self._control(self.selected, None, reopen=False)
                 self._drive()
+
+    async def _ready(self, number: int) -> None:
+        """Refuse to run phase ``number`` while a CLI of its primary, Reviewer or Librarian cannot run (checked now)."""
+        reason = await self.readiness.check(self._options(number))
+        if reason:
+            raise ValueError(reason)
 
     def resume(self, number: int) -> None:
         """Run phase ``number`` again (paused, or left running by a crash), with its stored options."""
@@ -340,43 +349,9 @@ class ResearchDashboard(Dashboard):
         return self.preparing.view() if self.preparing is not None else None
 
     def _checks(self, number: int) -> list[dict]:
-        """What a phase's Start or Reopen waits for beyond its folder: no other phase or project runs, and the
-        Librarian is done."""
-        controller, other = self.controller, self.others()
-        running = (
-            controller is not None
-            and controller.project.phase != number
-            and controller.state.status in ("running", "pausing")
-        )
-        pending = [folder for folder in self._home().shelving if folder.startswith(f"phases/{number}/")]
-        checks = [
-            {
-                "label": "No other project runs",
-                "ok": not other,
-                "detail": other,
-            },
-        ]
-        if not self.paths.started:
-            return checks
-        checks.insert(
-            0,
-            {
-                "label": "No other phase runs",
-                "ok": not running,
-                "detail": f"phase {controller.project.phase} is {controller.state.status}: pause it first"
-                if running and controller is not None
-                else "",
-            },
-        )
-        if self._state(number) is not None:
-            checks.append(
-                {
-                    "label": "The Librarian has placed the phase's final work",
-                    "ok": not pending,
-                    "detail": f"still placing: {', '.join(pending)}" if pending else "",
-                }
-            )
-        return checks
+        controller = self.controller
+        live = (controller.project.phase, controller.state) if controller is not None else None
+        return start_checks(number, live, self.others(), self.paths.started, self._home(), self._state(number))
 
     async def prepare(self, action: str, args: dict) -> str | None:
         if self.preparing is None:
@@ -414,8 +389,11 @@ class ResearchDashboard(Dashboard):
             live=shown is not None,
             preparable=state.status in FINISHED,
             waiting=self.others(),
+            unready=self.readiness.reason if controller is None else "",
             elsewhere=self.elsewhere,
         )
+        if controller is None and self.launch is not None and self.paths.started and not self.elsewhere:
+            self.readiness.refresh(self._options(number))  # logging in elsewhere frees Resume by itself
         return {"graph": view, "status": status, "settings": self.live(), "sidebar": self._sidebar()}
 
     def _talk_actions(self, agent) -> list[str]:
@@ -440,9 +418,15 @@ class ResearchDashboard(Dashboard):
             resumable = ("paused",) if self.controller is not None else ("paused", "running", "pausing")
             if shown is not None or state is None or state.status not in resumable:
                 raise ValueError(f"phase {self.selected} is not paused")
+            await self._ready(self.selected)
             switching = self.controller is not None
             self.resume(self.selected)
             return f"{'switching to' if switching else 'resuming'} phase {self.selected}"
+        if target is None and action == "open_talks" and self.controller is None and not self.elsewhere:
+            await self._ready(self.selected)  # an ended phase, not opened when selected: its CLIs could not run
+            self._control(self.selected, None, reopen=False)
+            self._drive()
+            return f"phase {self.selected} is open for talks"
         if self.controller is None:
             raise ValueError("another process runs this project" if self.elsewhere else "resume the project first")
         controller = self.controller

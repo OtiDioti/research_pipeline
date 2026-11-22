@@ -388,3 +388,27 @@ class Preparation:
         self.assistant.folder.mkdir(parents=True, exist_ok=True)
         self.project.write(self.assistant.folder / "TALKS.md", talks)
         return talks
+
+
+def start_checks(
+    number: int, live: tuple[int, State] | None, other: str, started: bool, home: Home, state: State | None
+) -> list[dict]:
+    """What phase ``number``'s Start or Reopen waits for beyond its folder (``live``: the phase that has a
+    controller, and its state; ``other``: why another project keeps work from starting): no other phase or
+    project runs, and the Librarian has placed the phase's final work."""
+    checks = [{"label": "No other project runs", "ok": not other, "detail": other}]
+    if not started:
+        return checks
+    running = live is not None and live[0] != number and live[1].status in ("running", "pausing")
+    detail = f"phase {live[0]} is {live[1].status}: pause it first" if running and live is not None else ""
+    checks.insert(0, {"label": "No other phase runs", "ok": not running, "detail": detail})
+    pending = [folder for folder in home.shelving if folder.startswith(f"phases/{number}/")]
+    if state is not None:
+        checks.append(
+            {
+                "label": "The Librarian has placed the phase's final work",
+                "ok": not pending,
+                "detail": f"still placing: {', '.join(pending)}" if pending else "",
+            }
+        )
+    return checks

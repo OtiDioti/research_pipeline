@@ -7,15 +7,37 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from agent_toolkit.testing import FakeClaude
 from agent_toolkit.web import SettingsError
 
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller
-from research_pipeline.phases import Home
+from research_pipeline.phases import Home, Phase
 from research_pipeline.project import Project
+from research_pipeline.state import Agent, State
 from research_pipeline.web import ResearchDashboard
 from research_pipeline.workbench import ResearchWorkbench
-from tests.helpers import FAKE_DRIVERS, FakeSession, QuotaReader, launch_options, remove, temp_project
+from tests.helpers import (
+    FAKE_DRIVERS,
+    FakeSession,
+    QuotaReader,
+    complete,
+    launch_options,
+    quit_after_the_end,
+    remove,
+    running,
+    temp_project,
+)
+
+
+class LoggedOut(FakeSession):
+    """The fake codex, as a CLI that is not logged in says (agent_toolkit's CLI status)."""
+
+    reason = ""
+
+    @classmethod
+    def status(cls) -> str:
+        return cls.reason
 
 
 def failing(dashboard: ResearchDashboard) -> list[str]:
@@ -130,6 +152,38 @@ class WorkbenchTest(unittest.IsolatedAsyncioTestCase):
             with self.assertRaisesRegex(ValueError, "rename it there"):
                 self.workbench.rename(item["id"], "Elsewhere")
         self.assertEqual(self.runs, [])
+
+    async def test_a_stopped_project_waits_for_its_clis_to_be_set_up(self):
+        # A phase that ended (its controller closed) and one that a shutdown left paused, both on codex.
+        async with running(self.first) as harness:
+            await complete(harness)
+            await quit_after_the_end(harness)
+        paused = Project(self.second, 1)
+        paused.research.mkdir(exist_ok=True)
+        Home(phases=[Phase(1, "Phase 1")], active=1).save(paused.home_file)
+        state = State(status="paused", options=launch_options())
+        state.agents["primary"] = Agent("primary", "primary", None, "codex", "gpt-test", "high", status="paused")
+        state.save(paused.state_file)
+        LoggedOut.reason = "codex is not logged in: run `codex login`"
+        self.workbench.drivers = {"codex": LoggedOut, "claude": FakeClaude}
+
+        ended = await self.open(self.first)
+        self.assertIsNone(ended.controller)  # not opened for talks: its CLIs cannot run
+        controls = {control["action"]: control for control in ended.snapshot()["status"]["controls"]}
+        self.assertEqual(list(controls), ["open_talks", "prepare"])
+        self.assertEqual(controls["open_talks"]["waiting"], LoggedOut.reason)
+        with self.assertRaisesRegex(ValueError, "codex is not logged in"):
+            await ended.act("open_talks", None, {})
+
+        stopped = await self.open(self.second)
+        (resume,) = stopped.snapshot()["status"]["controls"]
+        self.assertEqual((resume["action"], resume["waiting"]), ("resume_phase", LoggedOut.reason))
+        with self.assertRaisesRegex(ValueError, "codex is not logged in"):
+            await stopped.act("resume_phase", None, {})
+
+        LoggedOut.reason = ""  # logged in, in a terminal: pressing the button checks again
+        self.assertEqual(await ended.act("open_talks", None, {}), "phase 1 is open for talks")
+        await until(lambda: ended.controller is not None and ended.controller.lock is not None)
 
     async def test_a_project_name_lives_in_the_project(self):
         ident = self.workbench.remember(self.first)
