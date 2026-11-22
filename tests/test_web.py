@@ -230,6 +230,8 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((values["coding"], values["analysis"]), (Options().coding, Options().analysis))
         fields = {field.name: field for field in dashboard.fields()}
         self.assertEqual((fields["coding"].within, fields["analysis"].within), ("backends", "backends"))
+        # Recommendations only warn on a CLI that is not set up; the roles keep Start waiting.
+        self.assertEqual([fields[name].advisory for name in ("coding", "analysis", "primary")], [True, True, False])
         with self.assertRaises(SettingsError) as refusal:
             await dashboard.start(values | {"coding": "codex:gpt-test"})
         self.assertEqual(set(refusal.exception.errors), {"coding"})

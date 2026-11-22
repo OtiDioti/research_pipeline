@@ -134,6 +134,14 @@ for subagents: agents then choose another), the number of sessions at once, the 
 and under *Advanced* the reference folders and durable state. Start checks them
 like the command line does and shows what is wrong next to each setting.
 
+A CLI that is not installed or not logged in (asked of the CLI itself, `claude auth
+status` and `codex login status`, without any model call) is greyed in every CLI
+choice, with the reason on hover (e.g. "codex is not logged in: run `codex login`").
+The page asks when it opens and again with *Check again* (after logging in in a
+terminal). A primary, Reviewer or Librarian on such a CLI keeps Start waiting; a
+recommended model or a CLI for subagents on one only warns (agents choose another).
+The same holds for the live settings and the setup assistant's CLI (a warning only).
+
 While the investigation runs, the settings button changes the handoff threshold
 (live sessions follow at their next context reading), the usage limits, the
 number of sessions at once and the idle limit, at once; and the primary's, the Reviewer's or the Librarian's CLI, model

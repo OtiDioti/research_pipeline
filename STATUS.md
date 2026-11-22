@@ -1,5 +1,13 @@
 # Status
 
+**2026-11-22.** 0.23.0, on agent_toolkit 0.17.0: **CLIs that are not set up are greyed** in the page's CLI
+choices ([docs/WEB.md](docs/WEB.md), "The setup page"; PROJECT.md §6): one not installed, or not logged in (asked
+of `claude auth status` / `codex login status`, no model call), with the reason on hover and *Check again*. The
+primary, the Reviewer and the Librarian on such a CLI keep Start waiting; the recommended models and the CLIs for
+subagents only warn. A failed turn now gives the CLI's reason ("primary: its turn failed (Not logged in · Please run
+/login)"), still retried after 30 s / 2 min / 10 min; the setup assistant passes it on too. Found by trying both CLIs
+logged out and missing: before, a logged-out CLI started its sessions normally and only "its turn failed" was shown.
+
 **2026-11-22.** 0.22.0, on agent_toolkit 0.16.0: **`research-pipeline run` opens a workbench** of every project
 of this machine ([docs/WEB.md](docs/WEB.md), "Projects"; PROJECT.md §6 amended). The page opens with no project and
 the sidebar open (a line points to it; the project's parts are greyed); projects are selected, created (a folder

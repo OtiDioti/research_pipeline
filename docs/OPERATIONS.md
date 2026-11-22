@@ -77,7 +77,7 @@ Resume and does the same.
 | "--context-threshold must be > 0 and <= 0.8 …" | A threshold that leaves no room to write the handoff | Choose one in that range (default 0.55) |
 | "Projects cannot live under /tmp" | Each session has a private `/tmp` | Move the project |
 | "bubblewrap (bwrap) is required" | bwrap is not installed | Install it |
-| An agent paused (`failure`), restarting in 30 s / 2 min / 10 min | Its CLI crashed or a turn failed | See its session log; after the third retry, press Ctrl+R |
+| An agent paused (`failure`), restarting in 30 s / 2 min / 10 min | Its CLI crashed or a turn failed: the message gives the CLI's reason (e.g. "Not logged in · Please run /login", or "execvp claude: No such file or directory" when the CLI is not installed) | Fix the cause (log in, install), see its session log; after the third retry, press Ctrl+R |
 | ALERT: the primary has stopped | It ended its turn idle twice, often to ask you something | Answer in the chat box |
 | A session "loaded the human's own setup" | A personal instruction file, skill or MCP server reached it | Remove it from that CLI's configuration, then Ctrl+R |
 | A CLI is held as `unreadable` | Its usage can't be read (e.g. logged out) | Log the CLI in, then Ctrl+R |

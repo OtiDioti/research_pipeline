@@ -511,7 +511,8 @@ a second `run` while the page's server runs opens that page. One project works a
 time: the others can be browsed, set up and talked with, and their Start, Resume or
 Reopen waits. A project that does not run is shown as it was left, read-only, until
 resumed; one whose phase ended opens for talks when selected; one another process runs
-is read-only. For each project: a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
+is read-only. CLIs that are not installed or not logged in are greyed in every CLI choice, with the
+reason; a primary, Reviewer or Librarian on one keeps Start waiting. For each project: a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff

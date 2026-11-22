@@ -839,9 +839,14 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_failed_turn_restarts_from_handoff(self):
         async with running(self.root) as harness:
-            await harness.emit("primary", "turn_ended", text="", failed=True)
+            await harness.emit("primary", "turn_ended", text="", failed=True, error="Not logged in · Please run /login")
             agent = harness.state.agents["primary"]
             self.assertEqual((agent.status, agent.pause_reason), ("paused", "failure"))
+            said = [text for kind, _, text in harness.lines if kind == "controller"]
+            self.assertIn(  # the CLI's own reason, then the retry as before
+                "primary: its turn failed (Not logged in · Please run /login). Restarting from its handoff in 30 s.",
+                said,
+            )
             agent.retry_at = 0
             await harness.settle(10)
             self.assertEqual((agent.status, agent.sessions), ("running", 2))
