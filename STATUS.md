@@ -1,5 +1,14 @@
 # Status
 
+**2026-11-23.** 0.24.0, on agent_toolkit 0.18.0: **a machine where bwrap cannot confine sessions says so.** Being
+installed is not enough: bwrap must be allowed to create unprivileged user namespaces, which Ubuntu 23.10 and later
+forbid through AppArmor until bwrap has a profile ([docs/CONFINEMENT.md](docs/CONFINEMENT.md), "What the machine must
+allow", with the check and the profile). A CLI's status now runs bwrap once, so on such a machine every CLI is greyed
+with "bubblewrap cannot confine sessions on this machine (…)", Start and Resume wait, and the setup assistant refuses
+its requests with that reason before trying a session. A session that ends before replying now says why ("codex ended
+before replying: exited with status 1: bwrap: setting up uid map: Permission denied"). Found after an upgrade from
+Ubuntu 22.04 to 24.04: "Let the assistant organise" only answered "codex ended before replying".
+
 **2026-11-22.** 0.23.0, on agent_toolkit 0.17.0: **CLIs that are not set up are greyed** in the page's CLI
 choices ([docs/WEB.md](docs/WEB.md), "The setup page"; PROJECT.md §6): one not installed, or not logged in (asked
 of `claude auth status` / `codex login status`, no model call), with the reason on hover and *Check again*. The
