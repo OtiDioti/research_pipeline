@@ -1,5 +1,11 @@
 # Status
 
+**2026-11-23.** 0.27.1: **a flaky test fixed**; no behaviour changed. The pause test
+(`test_pause_keeps_sessions_stops_jobs_and_resume_reports_changes_in_them`) failed in the full suite ("pausing" !=
+"paused") and passed alone: the pause completes only once the stopped job's process is reaped in a worker thread,
+which under load took longer than the fixed wait after the agents' last turns. The test now waits for the pause to
+complete, up to five seconds.
+
 **2026-11-23.** 0.27.0, on agent_toolkit 0.21.0: **links are written from the project's root**
 ([PROJECT.md](PROJECT.md) §2, "Links"; docs/AGENT_ROLES.md, LIBRARY.md, JOBS.md, STATS.md). Every link in the
 project's Markdown names its file with a leading slash (`[the fit](/phases/2/agents/fit/RESULT.md)`), so it leads to
