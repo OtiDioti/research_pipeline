@@ -769,6 +769,10 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertNotIn("HANDOFF", sent(harness, child).split("human paused")[-1])  # no note is asked for
             for agent in ("primary", child):
                 await harness.emit(agent, "turn_ended", text="")
+            for _ in range(250):  # the pause completes once the job's process is reaped, off the event loop
+                await asyncio.sleep(0.02)
+                if harness.state.status != "pausing":
+                    break
             self.assertEqual(harness.state.status, "paused")
             self.assertEqual(harness.state.jobs[job].status, "cancelled")
             self.assertEqual({harness.state.agents[a].status for a in sessions}, {"paused"})
