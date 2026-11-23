@@ -53,23 +53,32 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.
 - TASK.md is read from the subagent's folder, not from the brief's, so the copy's
-  relative links are rewritten to lead to the same files (`links.rebase`). A link
-  is rewritten only if it reaches an existing file or folder from the brief's folder
-  and none from the subagent's; every other link is kept as written, so a link the
-  parent already wrote for TASK.md never changes. The `spawn` reply lists the kept
-  links that reach nothing from either folder, or a different file from each.
-  URLs, anchors, absolute paths, wikilinks and links in code are untouched.
+  relative links become links from the project's root (`links.rebase`; PROJECT.md
+  §2, "Links"), to the file each reaches from the brief's folder, or from the
+  subagent's if the parent wrote it for TASK.md. A link that reaches nothing from
+  either folder, or a different file from each, is kept as written, and the `spawn`
+  reply names it. URLs, anchors, links from the root, wikilinks and links in code
+  are untouched.
+- **Links.** Every agent writes its links from the project's root, with a leading
+  slash; `PROJECT` in its sessions and jobs is the project's folder. At the end of
+  each turn of the primary, a subagent or the Reviewer, the controller reads the
+  Markdown it changed in what it may write (`linkcheck.py`; its FOLDER_CONTENT.md
+  files and the controller's TASK.md and PARENT_FEEDBACK.md aside) and tells it,
+  once each, of the links that are relative, absolute paths into the project, or
+  lead nowhere. Nothing is refused.
 - Spawning does not stop the parent: it keeps doing whatever does not depend on the
   subagent, and news reaches it even during its turn. It ends its turn only when
   nothing useful remains until a subagent or job reports.
 - `submit_result` requires a non-empty RESULT.md, no running subagents or jobs of
   its own, and a passing layout check. The subagent is then `submitted`: it ends
-  its turn and waits in its session, its tools refused, and its parent is told at once.
+  its turn and waits in its session, its tools refused, and its parent is told at once,
+  with the links of its files that break the link convention, if any (it then
+  decides whether they matter; the subagent's reply names them too).
 - The parent decides what happens next:
   - **accept:** the subagent ends, its session closes, and its folder is shelved
     ([LIBRARY.md](LIBRARY.md));
-  - **reject(feedback):** the feedback, its relative links rewritten from the
-    parent's folder as for TASK.md, is appended to PARENT_FEEDBACK.md and
+  - **reject(feedback):** the feedback, its relative links made links from the
+    root as for TASK.md, is appended to PARENT_FEEDBACK.md and
     reaches the subagent in the same session (in a fresh one from HANDOFF.md if
     its session closed at the idle limit). If its CLI is held, or it needs a new
     session and every slot is taken, it waits; the rejection still stands;

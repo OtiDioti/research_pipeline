@@ -14,6 +14,8 @@ of the controller. Agents should use a job for anything longer than a minute.
   `starting_evidence/`, `library/` and the folders of shelved agents
   ([LIBRARY.md](LIBRARY.md)) are read-only, `.research/` is hidden, everything else
   is as the controller sees it, and it has its own process namespace.
+- Its environment is the controller's, plus `PROJECT`: the project's folder, from
+  which agents write their links (`/phases/…` is `$PROJECT/phases/…` in a command).
 - The timeout is enforced inside the job itself (coreutils `timeout`, then a kill
   10 s later), so it holds even while the controller is down.
 
