@@ -18,7 +18,8 @@ SPAWN = Tool(
     "spawn",
     "Start a subagent on a task, to solve a subproblem separately or in parallel.\n\n"
     "task: path of a Markdown brief you wrote (objective, how it serves your objective, relevant\n"
-    "evidence and tools, expected result). backend, model, effort: the subagent's CLI, model and\n"
+    "evidence and tools, expected result). It is copied to the subagent's TASK.md, its relative\n"
+    "links rewritten to lead to the same files from there. backend, model, effort: the subagent's CLI, model and\n"
     "reasoning effort, all required. name: short id such as 'convergence-check'. You are told\n"
     "when it submits its result.",
     {"task": TEXT, "backend": TEXT, "model": TEXT, "effort": TEXT, "name": {"type": "string", "default": ""}},
