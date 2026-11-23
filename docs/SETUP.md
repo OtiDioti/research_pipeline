@@ -103,15 +103,25 @@ material is placed in them.
 - It runs one request at a time (organise, ideas with or without a grill, answers,
   draft now, a free message), through agent_toolkit's `Relay`: its sessions hand
   over through a handoff note (`write_handoff`) at the context threshold.
-- It reads the whole folder and may search the web, and writes nothing but its
+- It reads the whole folder (but the program's records in `.research/`, as for every
+  agent; its own folder there stays visible) and may search the web, and writes nothing but its
   note: it acts through three tools, answered by the deterministic code above:
   `place(entries, folders)`, `write_objectives(text)` (the phase's OBJECTIVES.md) and
   `ask(questions)`; for a new or reopened phase also `write_agents_md(text)`, only
   when asked.
 - Its prompt depends on what it prepares: `prompts/setup.md` (the first phase),
-  `prompts/phase.md` (a new phase: it also reads the earlier phases, and the talks
-  with them since they ended, written for it to `.research/setup/<N>/TALKS.md`) or
+  `prompts/phase.md` (a new phase: it also reads the earlier phases) or
   `prompts/reopen.md` ([FINISHING.md](FINISHING.md)).
+- **The talks** (a new phase's and a reopening's): a *Talks* switch above the
+  conversation, on by default, says whether the assistant reads the human's talks
+  with the earlier phases' primaries and Reviewers since those phases ended (a
+  reopening's: with this phase since its end); its note on hover says how many
+  messages there are. The human's first conversation message (ideas, answers, draft
+  now or a free message; not *organise*) fixes it, greyed from then on, and it is
+  kept with the preparation. If it is on, that message gives the assistant the
+  talks, written for it to `.research/setup/<N>/TALKS.md`, and each later request
+  says when they changed; if it is off, the assistant never gets them (until then
+  its prompt only says the human may give them).
 - Before each request its CLI is asked whether it can run (installed, logged in,
   and confinable by bwrap on this machine: [CONFINEMENT.md](CONFINEMENT.md)); while
   it cannot, the request is refused with the reason, before any session is tried.

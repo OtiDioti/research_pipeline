@@ -19,6 +19,7 @@ from tests.helpers import (
     running,
     temp_project,
 )
+from tests.test_setup import scripted
 from tests.test_talks import talker, talks
 
 
@@ -163,6 +164,61 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
                 break
         self.assertEqual(second.state.jobs["job-1"].status, "failed")
         self.assertNotIn("x", (self.root / "phases" / "1" / "STATUS.md").read_text().splitlines())
+
+    async def test_the_talks_switch_is_free_until_the_first_message_and_off_keeps_the_talks_from_the_assistant(self):
+        async with running(self.root, reopen=False) as harness:
+            await complete(harness)
+            harness.controller.activity.add("primary", "message", "[human] Is 1/3 exact?", sender="human")
+            harness.controller.activity.add("primary", "message", "Yes: the integral is exact.")
+            dashboard = self.page(harness)
+            await dashboard.add("phases")
+            switch = self.view(dashboard)["assistant"]["switch"]
+            self.assertEqual((switch["label"], switch["on"], switch["locked"]), ("Talks", True, False))
+            self.assertIn(
+                "earlier phases' primaries and Reviewers since they ended (2 messages so far)", switch["note"]
+            )
+            loop = asyncio.get_running_loop()
+            FakeSession.script = scripted(
+                loop,
+                {
+                    "Place the loose material": ("", {}, "Nothing to place after all."),
+                    "What I want from the new phase": ("write_objectives", {"text": "Fit the gaps."}, "Wrote it."),
+                },
+                [],
+            )
+            # 'organise' is no conversation message: the switch stays free, and no talks are written yet.
+            (self.root / "notes.txt").write_text("Gaps.\n")
+            await dashboard.prepare("organise", {})
+            # A first message refused (the assistant still works) fixes nothing.
+            with self.assertRaisesRegex(ValueError, "still working"):
+                await dashboard.prepare("ideas", {"text": "Fit the gaps.", "grill": False})
+            assert dashboard.preparing is not None
+            assistant = dashboard.preparing.assistant
+            await assistant.wait()
+            talks = self.root / ".research" / "setup" / "2" / "TALKS.md"
+            self.assertFalse(talks.exists())
+            self.assertFalse(self.view(dashboard)["assistant"]["switch"]["locked"])
+            await dashboard.prepare("switch", {"on": False})
+            await dashboard.prepare("ideas", {"text": "Fit the gaps.", "grill": False})
+            await assistant.wait()
+            switch = self.view(dashboard)["assistant"]["switch"]
+            self.assertEqual((switch["on"], switch["locked"]), (False, True))
+            self.assertIn("Fixed at your first message to the assistant: it does not get", switch["note"])
+            with self.assertRaisesRegex(ValueError, "fixed at your first message"):
+                await dashboard.prepare("switch", {"on": True})
+            # Off: no talks file, neither the talks nor where they would be in its prompt or requests (its session
+            # began while the switch was free: its prompt only says the human may give them), and the logs hidden.
+            self.assertFalse(talks.exists())
+            [session] = [s for s in FakeSession.instances if s.launch.agent == "setup"]
+            told = session.launch.instructions + "\n".join(session.sent)
+            self.assertIn("The human may give you their talks", told)
+            for given in ("TALKS.md", "Is 1/3 exact?", "the integral is exact"):
+                self.assertNotIn(given, told)
+            research = self.root / ".research"
+            self.assertIn(research / "phases", session.launch.hidden)
+            self.assertNotIn(research / "setup", session.launch.hidden)
+            self.assertEqual((self.root / "phases" / "2" / "OBJECTIVES.md").read_text(), "Fit the gaps.\n")
+            await dashboard.close()
 
     async def test_another_phase_can_be_talked_with_while_one_runs_and_switching_goes_through_a_pause(self):
         async with running(self.root, reopen=False) as harness:

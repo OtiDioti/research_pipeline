@@ -1,4 +1,4 @@
-The messages the new phase's assistant receives, one section each (filled by research_pipeline.assistant).
+The messages the new phase's assistant receives, and the sentences on the human's talks in its prompt, one section each (filled by research_pipeline.assistant and research_pipeline.preparation).
 
 <!-- section:opening -->
 [phase] Phase $number is new. The earlier phases:
@@ -15,8 +15,20 @@ $note
 <!-- /section:note -->
 
 <!-- section:talks -->
-[phase] The human talked with earlier phases' primaries or Reviewers since your last request: $talks has the new messages.
+[phase] The human talked with earlier phases' primaries or Reviewers since your last request: $talks_file has the new messages.
 <!-- /section:talks -->
+
+<!-- section:talks-open -->
+The human may give you their talks with earlier phases' primaries and Reviewers since those phases ended: if they do, you are told where they are with their first message to you.
+<!-- /section:talks-open -->
+
+<!-- section:talks-given -->
+The human's talks with earlier phases' primaries and Reviewers since those phases ended are in $talks_file (you are told when it changes).
+<!-- /section:talks-given -->
+
+<!-- section:talks-now -->
+[phase] The human gives you their talks with earlier phases' primaries and Reviewers since those phases ended: they are in $talks_file, kept up to date (you are told when it changes). Read what their requests need.
+<!-- /section:talks-now -->
 
 <!-- section:organise -->
 [human] Place the loose material:

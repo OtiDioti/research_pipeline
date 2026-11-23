@@ -23,6 +23,6 @@
 - [usage.py](usage.py) — What each agent used, for the graph: the websites and library pages its tool calls reached.
 - [graph.py](graph.py) — One phase as the web page shows it: its agent graph and its top bar.
 - [fields.py](fields.py) — The launch options as the web page's settings (the setup page's fields, which change live).
-- [preparation.py](preparation.py) — The web page's preparation of a phase: the first one, a new one (material, objectives, AGENTS.md, the checks Start waits for), or the reopening of one that ended (also the changes since its end and their reverts, the checks Reopen waits for).
+- [preparation.py](preparation.py) — The web page's preparation of a phase: the first one, a new one (material, objectives, AGENTS.md, the checks Start waits for, the Talks switch), or the reopening of one that ended (also the changes since its end and their reverts, the checks Reopen waits for).
 - [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/; a phase's objectives; reverting the human's files to a phase's end.
 - [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts a phase's OBJECTIVES.md on request, for the first phase, a new one or a reopening (then also AGENTS.md, on request).

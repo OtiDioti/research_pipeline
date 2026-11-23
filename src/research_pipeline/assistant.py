@@ -9,7 +9,8 @@ It is optional: everything it does, the human can do on the page by hand. It
 takes one request at a time (organise the material, first ideas with or
 without a grill, answers, draft now, a free message) through an
 :class:`agent_toolkit.Relay`, which carries its work across sessions through a
-handoff note. It reads the whole folder and may search the web, but writes
+handoff note. It reads the whole folder (but the program's records in
+``.research/``, apart from its own folder) and may search the web, but writes
 nothing itself except that note: it places material, writes OBJECTIVES.md and
 asks its multiple-choice questions through its tools (:data:`SETUP_TOOLS`),
 answered here by the deterministic code of :mod:`research_pipeline.material`.
@@ -88,6 +89,10 @@ class Assistant:
         self.problem = ""  # why its last request failed ('' : none)
         self.sessions = stored.get("sessions", 0)
         self.briefed = stored.get("briefed", False)  # the human sent their first ideas
+        # Whether it gets the human's talks (a new phase's or a reopening's), fixed by their first conversation
+        # message; a preparation saved before the switch existed had the talks, fixed once the human wrote.
+        self.talks = stored.get("talks", True)
+        self.talks_fixed = stored.get("talks_fixed", any(line["sender"] == "human" for line in self.conversation))
         self.bridge = ToolBridge()
         self.tools: dict = {}
         self.relay: Relay | None = None
@@ -121,6 +126,18 @@ class Assistant:
             self.relay.close()
             self.relay = None
         self.spec, self.problem = spec, ""
+        self._save()
+
+    def set_talks(self, on: bool) -> None:
+        """Whether it will get the human's talks; refused once their first conversation message fixed it."""
+        if self.talks_fixed:
+            raise ValueError("the talks were fixed at your first message to the assistant")
+        self.talks = on
+        self._save()
+
+    def fix_talks(self) -> None:
+        """The human's first conversation message reached it: the talks switch stays as it is."""
+        self.talks_fixed = True
         self._save()
 
     async def request(self, message: str, shown: str) -> str:
@@ -219,6 +236,10 @@ class Assistant:
                 tools=CAPABILITIES,
                 mcp=handoff | self.tools,
                 writable=(folder,),
+                # The program's records, the earlier phases' activity (with the human's talks) among them, stay
+                # hidden as from every agent: the talks reach the assistant only through TALKS.md, if the human
+                # gives them. Its own folder of .research/setup/ stays visible.
+                hidden=tuple(path for path in self.project.research.iterdir() if path.is_dir() and path.name != NAME),
                 log=self.project.logs / f"{NAME}-{self.sessions}.jsonl",
             )
 
@@ -326,6 +347,8 @@ class Assistant:
             "spec": self.spec,
             "sessions": self.sessions,
             "briefed": self.briefed,
+            "talks": self.talks,
+            "talks_fixed": self.talks_fixed,
         }
         atomic_write(self.folder / "state.json", json.dumps(state, indent=1), root=self.project.root, durable=False)
 

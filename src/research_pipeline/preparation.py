@@ -19,9 +19,12 @@ content (agent_toolkit.web's preparation contract), for one phase (``kind``):
   Librarian has placed the phase's final work, the assistant is idle and no other
   phase runs (docs/FINISHING.md).
 
-The assistant (:mod:`research_pipeline.assistant`) helps with each on request; a
-reopening's assistant also reads the talks since the phase's end, and a new
-phase's those with the earlier phases, kept for it in its folder's TALKS.md.
+The assistant (:mod:`research_pipeline.assistant`) helps with each on request.
+A new phase's and a reopening's page has a *Talks* switch (on by default): whether
+the assistant reads the human's talks with the earlier phases (a reopening's: with
+this phase since its end), kept for it in its folder's TALKS.md. The human's first
+conversation message (ideas, answers, draft now or a free message; not
+'organise') fixes it; TALKS.md is written only from then on, and only if it is on.
 """
 
 from __future__ import annotations
@@ -34,7 +37,7 @@ from pathlib import Path
 from agent_toolkit.activity import ActivityLog
 
 from research_pipeline import material, phases
-from research_pipeline.assistant import Assistant, answers_text
+from research_pipeline.assistant import Assistant, answers_text, request_text
 from research_pipeline.phases import Home, load_state
 from research_pipeline.project import Project
 from research_pipeline.prompts import PROMPTS
@@ -75,6 +78,7 @@ class Preparation:
         self.state = state or (lambda: load_state(project))
         self.checks = checks
         self._talks = ""  # the talks last written for the assistant
+        self._lines: tuple[tuple, list[str]] | None = None  # the activity logs' fingerprint, the talks read from them
         self._changes: tuple[dict[str, str], list[dict]] | None = None  # the human's fingerprint, its changes
         self.assistant = Assistant(
             project,
@@ -164,6 +168,7 @@ class Preparation:
             "done": written,
         }
         if self.kind != "setup":
+            view["assistant"]["switch"] = self._switch()
             checks.append(
                 {
                     "label": "The assistant is idle",
@@ -205,8 +210,9 @@ class Preparation:
                 "help": "Say what the reopened phase should do, as changed objectives (and, if you like, standing "
                 "instructions in AGENTS.md). Let the assistant grill you and write them, or edit them yourself.",
                 "done": changed,
-                "prompt": "What should the reopened phase do? What the talks settled, what to redo or extend, what "
-                "to keep…",
+                "prompt": "What should the reopened phase do? "
+                + ("What the talks settled, what" if assistant.talks else "What")
+                + " to redo or extend, what to keep…",
             }
             view["changes"] = changes
         view["steps"] = [material_step, objectives_step]
@@ -259,12 +265,21 @@ class Preparation:
         if action == "assistant":
             assistant.set_spec(str(args.get("spec") or ""))
             return "The assistant's CLI is changed."
+        if action == "switch":
+            if self.kind == "setup":
+                raise ValueError("the first phase has no talks to give the assistant")
+            on = bool(args.get("on"))
+            assistant.set_talks(on)
+            if not on:  # e.g. written by a version that gave the talks with every request
+                self._talks_path().unlink(missing_ok=True)
+            return "The assistant will read your talks." if on else "The assistant will not get your talks."
         if action == "organise":
             loose = [entry for entry in material.entries(project) if entry["state"] == "loose"]
             if not loose:
                 raise ValueError("nothing is loose")
             listing = "\n".join(f"- {entry['path']}{'/' if entry['folder'] else ''}" for entry in loose)
-            return await self._request(assistant.text("organise", loose=listing), "Place the loose material.")
+            organise = assistant.text("organise", loose=listing)
+            return await self._request(organise, "Place the loose material.", conversation=False)
         if action == "ideas":
             ideas = str(args.get("text") or "").strip()
             if not ideas:
@@ -333,47 +348,109 @@ class Preparation:
         self._changes = None
         return " ".join(done) or "Nothing could be reverted."
 
-    async def _request(self, message: str, shown: str) -> str:
-        """Send a request to the assistant; a reopening's or a new phase's tells it first when the talks changed."""
-        if self.kind != "setup":
+    async def _request(self, message: str, shown: str, conversation: bool = True) -> str:
+        """Send a request to the assistant (``conversation``: one of the human's messages, not 'organise').
+
+        A new phase's or a reopening's first conversation message fixes the talks switch: if it is on, the
+        assistant is given TALKS.md with that message, and from then on is told when the talks changed.
+        """
+        assistant = self.assistant
+        if self.kind == "setup":
+            return await assistant.request(message, shown)
+        fixing = conversation and not assistant.talks_fixed
+        if assistant.talks and (assistant.talks_fixed or fixing):
             talks = self._write_talks()
-            if talks != self._talks and self._talks:
-                message = self.assistant.text("talks", talks=self._talks_file()) + "\n\n" + message
+            if fixing:
+                message = assistant.text("talks-now") + "\n\n" + message
+            elif self._talks and talks != self._talks:
+                message = assistant.text("talks") + "\n\n" + message
             self._talks = talks
-        return await self.assistant.request(message, shown)
+        try:
+            sent = await assistant.request(message, shown)
+        except ValueError:
+            if fixing:  # refused before reaching it: the switch stays free, and no talks are left to read
+                self._talks_path().unlink(missing_ok=True)
+                self._talks = ""
+            raise
+        if fixing:
+            assistant.fix_talks()
+        return sent
 
     def _facts(self) -> dict[str, str]:
-        """What the assistant is told: a reopening's outcome, a new phase's earlier phases, and where the talks are.
+        """What the assistant is told: a reopening's outcome, a new phase's earlier phases, and the talks.
 
-        The talks themselves are written before each request (see :meth:`_request`).
+        ``talks`` is its prompt's sentence on them: that the human may still give them, where they are once
+        given, or nothing once the human chose not to. The talks themselves are written by :meth:`_request`.
         """
         if self.kind == "setup":
             return {}
+        assistant, file = self.assistant, self._talks_file()
+        sentence = (
+            request_text("talks-open", self.kind)
+            if not assistant.talks_fixed
+            else request_text("talks-given", self.kind, talks_file=file)
+            if assistant.talks
+            else ""
+        )
+        facts = {"talks": sentence, "talks_file": file}
         if self.reopening:
             state = self.state()
-            return {"outcome": (state.outcome if state else "") or "", "talks": self._talks_file()}
+            return facts | {"outcome": (state.outcome if state else "") or ""}
         earlier = [item for item in self._phases() if item.number < self.project.phase]
-        return {"phases": phases.listing(earlier), "talks": self._talks_file()}
+        return facts | {"phases": phases.listing(earlier)}
+
+    def _switch(self) -> dict:
+        """The page's *Talks* switch (agent_toolkit.web's assistant ``switch``), with its note on hover."""
+        assistant, count = self.assistant, len(self._talk_lines())
+        whose = (
+            "your talks with this phase's primary and Reviewer since its end"
+            if self.reopening
+            else "your talks with the earlier phases' primaries and Reviewers since they ended"
+        )
+        so_far = f"{count} message{'' if count == 1 else 's'} so far" if count else "none yet"
+        if assistant.talks_fixed:
+            reads = "reads" if assistant.talks else "does not get"
+            note = f"Fixed at your first message to the assistant: it {reads} {whose} ({so_far})."
+        else:
+            note = (
+                f"On: the assistant reads {whose} ({so_far}). Off: it gets none of them. "
+                "Fixed once you first write to it."
+            )
+        return {"label": "Talks", "on": assistant.talks, "locked": assistant.talks_fixed, "note": note}
 
     def _phases(self) -> list[phases.Summary]:
         return phases.summaries(self.project, Home.load(self.project.home_file))
 
-    def _talks_file(self) -> str:
-        return self.project.relative(self.assistant.folder / "TALKS.md")
+    def _talks_path(self) -> Path:
+        return self.assistant.folder / "TALKS.md"
 
-    def _write_talks(self) -> str:
-        """Write the talks for the assistant (this phase's since its end, or every earlier phase's); return them."""
+    def _talks_file(self) -> str:
+        return self.project.relative(self._talks_path())
+
+    def _talk_lines(self) -> list[str]:
+        """The talks the assistant may be given (this phase's since its end, or every earlier phase's), one entry
+        each; read again only when an activity log changed, since the page asks for the count twice a second."""
         if self.reopening:
             numbers = [self.project.phase]
         else:
             numbers = [item.number for item in self._phases() if item.number < self.project.phase]
+        ended = [(number, load_state(self.project.at(number))) for number in numbers]
+        ended = [(number, state) for number, state in ended if state is not None and state.ended is not None]
+        logs = {number: self.project.at(number).activity for number, _ in ended}
+        fingerprint = tuple(
+            (
+                number,
+                state.ended,
+                *((path.name, path.stat().st_mtime_ns) for path in sorted(logs[number].glob("*.jsonl"))),
+            )
+            for number, state in ended
+        )
+        if self._lines is not None and self._lines[0] == fingerprint:
+            return self._lines[1]
         lines = []
-        for number in numbers:
-            project, state = self.project.at(number), load_state(self.project.at(number))
-            if state is None or state.ended is None:
-                continue
-            log = ActivityLog(project.activity)
-            for entry in log.read(None, limit=2000):
+        for number, state in ended:
+            assert state.ended is not None  # kept above
+            for entry in ActivityLog(logs[number]).read(None, limit=2000):
                 if entry["agent"] not in TALKERS or entry["time"] < state.ended or entry["kind"] != "message":
                     continue
                 if entry["sender"] not in ("human", "self"):
@@ -383,10 +460,15 @@ class Preparation:
                 to = f" to {entry['agent']}" if entry["sender"] == "human" else ""
                 text = entry["text"].strip().removeprefix("[human] ")
                 lines.append(f"## {stamp}, phase {number} — {who}{to}\n\n{text}\n")
+        self._lines = (fingerprint, lines)
+        return lines
+
+    def _write_talks(self) -> str:
+        """Write the talks for the assistant to TALKS.md; return them."""
         heading = "# Talks since the phase's end" if self.reopening else "# Talks with the earlier phases"
-        talks = f"{heading}\n\n" + ("\n".join(lines) or "(none yet)\n")
+        talks = f"{heading}\n\n" + ("\n".join(self._talk_lines()) or "(none yet)\n")
         self.assistant.folder.mkdir(parents=True, exist_ok=True)
-        self.project.write(self.assistant.folder / "TALKS.md", talks)
+        self.project.write(self._talks_path(), talks)
         return talks
 
 

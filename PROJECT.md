@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4).
 
 ## 1. Purpose
 
@@ -205,6 +205,11 @@ There are four roles, all running the same way, and a setup assistant on the web
   answered by deterministic code (`place`, `write_objectives`, `ask`); it writes
   nothing else but its handoff note. Its CLI, model and effort: `--setup` or the
   page (default `codex:gpt-6.1-sol:high`). It is not part of the investigation.
+  For a new phase or a reopening, a *Talks* switch on the page (on by default)
+  says whether it reads the human's talks with the earlier phases (a reopening's:
+  with that phase since its end); the human's first message to it fixes the
+  choice. Like every agent it does not see the program's records in `.research/`
+  (but its own folder there), so with the switch off it never gets the talks.
 
 Every agent:
 
@@ -363,7 +368,8 @@ commit, a new one set aside), the launch options, and Reopen, which waits until 
 objectives changed, the folder is ready, the Librarian has placed the phase's final
 work, the assistant is idle and no other phase runs; hovering it says what it waits
 for. An optional reopening assistant (the setup assistant with its own prompt) reads
-the work and the phase's talks since the end, may grill the human, and revises the
+the work and, if the human leaves the *Talks* switch on (§3), the phase's talks since
+the end, may grill the human, and revises the
 objectives, places material, and rewrites AGENTS.md only on request. Without the
 page, changing the objectives and running again reopens the latest phase; with the
 page, a later run opens talk-only and the changes wait for Reopen. The phase's talk
