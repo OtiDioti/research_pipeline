@@ -1,5 +1,12 @@
 # Status
 
+**2026-11-23.** 0.25.1, on agent_toolkit 0.19.0: **unfolding an agent's files shows only its own
+relations** ([docs/WEB.md](docs/WEB.md), "The graph"). A website or library page several agents used was one node
+with edges to all of them, so unfolding one agent drew lines to every other agent that used it (in lh_cavity,
+LIBRARY.md, CATALOG.md and an arXiv paper six agents looked up) and the layout pulled it between them. The page now
+draws it once per agent, beside it and linked only to it; its hover card says "Also used by" the others, and a
+search hit on it shows a copy beside each agent that used it. The snapshot sent to the page is unchanged.
+
 **2026-11-23.** 0.25.0, on agent_toolkit 0.18.0: **links keep working in texts read from another folder**
 ([docs/AGENT_ROLES.md](docs/AGENT_ROLES.md), "Spawning"; PROJECT.md §3 amended). A brief is written in the parent's
 folder, often in `briefs/`, and read as the subagent's `TASK.md`; it was copied unchanged, so its relative links led

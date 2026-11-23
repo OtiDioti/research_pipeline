@@ -179,7 +179,10 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
   in its folder except FOLDER_CONTENT.md; the primary's OBJECTIVES.md, STATUS.md
   and REPORT.md; the Reviewer's reviews; the Librarian's top pages), its jobs, and
   the websites and library pages it used (from its tool calls). Several agents'
-  can be open at once; a click on empty space folds them all.
+  can be open at once; a click on empty space folds them all. A website or
+  library page several agents used is drawn once per agent, beside it and linked
+  only to it, so unfolding an agent shows no edges to the others; its card says
+  "Also used by" them, and a search hit on it shows a copy beside each.
 - Search finds agents, files and websites and highlights the path to the primary;
   filters hide agents by status, CLI or role.
 
