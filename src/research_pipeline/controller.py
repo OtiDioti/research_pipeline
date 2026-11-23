@@ -75,6 +75,7 @@ from agent_toolkit.tools import ToolBridge
 from research_pipeline import jobs as joblib
 from research_pipeline import links, phases, prompts
 from research_pipeline.librarian import LIBRARIAN, Librarian
+from research_pipeline.linkcheck import LISTED, LinkCheck
 from research_pipeline.phases import NOT_STARTED, Home
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
@@ -152,6 +153,7 @@ class Controller:
         self._quota_due = 0.0
         self._strays: set[str] = set()  # unexpected top-level entries already reported
         self.librarian = Librarian(self.project, lambda: self.state, lambda: self.home, self._notify, self._commit)
+        self.linkcheck = LinkCheck(self.project)
         self.closing = False  # the investigation ended; the Librarian places the final work
         self.talks = Talks(self)  # talk-only sessions with the primary and the Reviewer after the end
         self._reopen_told = False  # the human was told that their changes after the end reopen at the next run
@@ -637,6 +639,7 @@ class Controller:
             mcp=tools,
             writable=self._scope(agent),
             hidden=(self.project.research,),
+            environment=self.project.environment,
             log=self.project.session_log(agent.id, agent.sessions),
         )
         session = self.drivers[agent.backend](launch, self._on_event)
@@ -823,6 +826,10 @@ class Controller:
             )
         if agent.role == "librarian" and not agent.handoff_reason and self._works(agent):
             notice = self.librarian.turn_ended()  # its page changes are committed
+            if notice:
+                self._queue(agent, notice)
+        elif agent.status == "running" and not agent.handoff_reason and self._works(agent):
+            notice = self.linkcheck.turn_ended(agent.id, self._scope(agent))  # links breaking the convention
             if notice:
                 self._queue(agent, notice)
         if agent.handoff_reason:
@@ -1191,7 +1198,9 @@ class Controller:
         folder = self.project.agent_dir(child.id)
         folder.mkdir(parents=True)
         # TASK.md is read from the child's folder, not the brief's: its relative links must lead there too
-        moved = links.rebase(brief.read_text(encoding="utf-8", errors="replace"), brief.parent, folder)
+        moved = links.rebase(
+            brief.read_text(encoding="utf-8", errors="replace"), brief.parent, folder, self.project.root
+        )
         atomic_write(folder / "TASK.md", moved.text, root=self.project.root)
         kept = prompts.kept_links(moved, "the brief", f"{self.project.relative(folder)}/TASK.md")
         self.state.agents[child.id] = child
@@ -1282,7 +1291,7 @@ class Controller:
         child.rejections += 1
         folder = self.project.agent_dir(child.id)
         # written in the parent's folder, read in the child's: its relative links must lead there too
-        moved = links.rebase(feedback.strip(), self.project.agent_dir(caller.id), folder)
+        moved = links.rebase(feedback.strip(), self.project.agent_dir(caller.id), folder, self.project.root)
         kept = prompts.kept_links(moved, "the feedback", f"{self.project.relative(folder)}/")
         record = folder / "PARENT_FEEDBACK.md"
         previous = record.read_text(encoding="utf-8") if record.exists() else "# Feedback from my parent\n"
@@ -1349,7 +1358,11 @@ class Controller:
                 folder for folder in others if folder != self.project.phase_dir and folder.is_dir()
             ]
             self.processes[job.id] = joblib.start(
-                self.project.phase_dir, job, read_only=read_only, hidden=[self.project.research]
+                self.project.phase_dir,
+                job,
+                read_only=read_only,
+                hidden=[self.project.research],
+                environment=self.project.environment,
             )
         except OSError as error:
             raise ToolError(f"the job could not start: {error}") from None
@@ -1393,10 +1406,13 @@ class Controller:
         caller.status = "submitted"
         assert caller.parent is not None  # submit_result is a subagent's tool
         parent = self.state.agents[caller.parent]
-        await self._notify(parent, prompts.result_submitted(caller.id, self.project.relative(path)), "child", caller.id)
+        found = self.linkcheck.found(self._scope(caller))  # links breaking the convention: the parent decides
+        submitted = prompts.result_submitted(caller.id, self.project.relative(path), found[:LISTED], len(found))
+        await self._notify(parent, submitted, "child", caller.id)
         return (
             f"Your result was submitted to {caller.parent}. End your turn now and wait: if {caller.parent} "
             "rejects it, its feedback comes to you here."
+            + prompts.links_submitted(found[:LISTED], len(found), caller.parent)
         )
 
     async def _propose(self, caller: Agent, kind: str, detail: str) -> str:

@@ -22,6 +22,7 @@ from pathlib import Path
 
 from agent_toolkit.records import atomic_write
 
+from research_pipeline import links
 from research_pipeline.project import CATALOG_PAGES, EMPTY_INDEX, INDEX, LARGE, Project
 
 CATALOG = "CATALOG.md"
@@ -94,7 +95,11 @@ def _index_line(path: Path, cache: dict[Path, list[str]]) -> str:
             cache[path.parent] = []
     for line in cache[path.parent]:
         if f"[{path.name}]" in line or f"({path.name})" in line:
-            return line.split(" — ", 1)[-1].strip() if " — " in line else line.strip("-* ").strip()
+            if " — " in line:
+                return line.split(" — ", 1)[-1].strip()
+            # A line without the dash: its link to the file itself repeats the catalogue's own.
+            link = rf"\[[^\]]*\]\(<?(\./)?{re.escape(path.name)}>?\)\s*"
+            return re.sub(rf"^{link}", "", line.strip("-* ").strip())
     return ""
 
 
@@ -116,9 +121,10 @@ def render(project: Project, catalogue: Catalogue, working: dict[str, str]) -> d
     lines = [
         "# Catalogue",
         "",
-        "Kept by the controller. The Librarian's pages start at [LIBRARY.md](LIBRARY.md). Below: every shelved agent "
-        "with its task, then the agents at work. Each shelved agent's page in "
-        f"[{CATALOG_PAGES}/]({CATALOG_PAGES}/{INDEX}) lists its files with their descriptions: search them all at once "
+        "Kept by the controller. The Librarian's pages start at [LIBRARY.md](/library/LIBRARY.md). Below: every "
+        "shelved agent with its task, then the agents at work. Each shelved agent's page in "
+        f"[{CATALOG_PAGES}/](/library/{CATALOG_PAGES}/{INDEX}) lists its files with their descriptions: search them "
+        "all at once "
         f"in library/{CATALOG_PAGES}/. Shelved folders are frozen: copy a file into your own folder to change it.",
         "",
         "## Shelved",
@@ -130,7 +136,7 @@ def render(project: Project, catalogue: Catalogue, working: dict[str, str]) -> d
         when = time.strftime("%Y-%m-%d %H:%M", time.localtime(shelf.shelved))
         task = _task(project, shelf.folder)
         phases.setdefault(f"Phase {match.group(1)}" if match else "Other", []).append(
-            f"- [{shelf.folder}]({page(shelf.folder)})"
+            f"- [{shelf.folder}](/library/{page(shelf.folder)})"
             + (f" — {task}" if task else "")
             + f" ({shelf.about}; {len(shelf.files)} files; shelved {when})"
         )
@@ -142,8 +148,8 @@ def render(project: Project, catalogue: Catalogue, working: dict[str, str]) -> d
     for folder in sorted(working):
         task = _task(project, folder)
         lines.append(
-            f"- [{folder}](../{folder}/)" + (f" — {task}" if task else "") + f" ({working[folder]}); its files: "
-            f"[{INDEX}](../{folder}/{INDEX})"
+            f"- [{folder}](/{folder}/)" + (f" — {task}" if task else "") + f" ({working[folder]}); its files: "
+            f"[{INDEX}](/{folder}/{INDEX})"
         )
     if not working:
         lines.append("Nobody is at work.")
@@ -165,18 +171,27 @@ def render(project: Project, catalogue: Catalogue, working: dict[str, str]) -> d
 
 
 def _shelf_page(project: Project, shelf: Shelf) -> str:
-    """The catalogue page of one shelved agent: who it is, then each of its files with its index line."""
-    up = "../" * page(shelf.folder).count("/") + "../"  # from the page's folder to the project
+    """The catalogue page of one shelved agent: who it is, then each of its files with its index line.
+
+    Links are from the project's root; an index line's own relative links, written in its file's folder,
+    become links from the root too (:func:`links.rebase`), as the page is read elsewhere.
+    """
+    root = project.root
+    here = project.library / page(shelf.folder)
     when = time.strftime("%Y-%m-%d %H:%M", time.localtime(shelf.shelved))
     commit = f", commit {shelf.commit[:12]}" if shelf.commit else ""
     task = _task(project, shelf.folder)
     lines = [
-        f"# [{shelf.folder}]({_href(up + shelf.folder + '/')})",
+        f"# [{shelf.folder}]({_href('/' + shelf.folder + '/')})",
         "",
         f"{shelf.about}; shelved {when}{commit}." + (f" Task: {task}" if task else ""),
         "",
     ]
-    lines += [f"- [{path}]({_href(up + path)})" + (f" — {line}" if line else "") for path, line in shelf.files.items()]
+    lines += [
+        f"- [{path}]({_href('/' + path)})"
+        + (f" — {links.rebase(line, (root / path).parent, here.parent, root).text}" if line else "")
+        for path, line in shelf.files.items()
+    ]
     if not shelf.files:
         lines.append("Nothing was shelved from this folder.")
     return "\n".join(lines) + "\n"

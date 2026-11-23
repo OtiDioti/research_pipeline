@@ -177,37 +177,76 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue((self.root / "phases" / "1" / "agents" / child / "TASK.md").is_file())
 
     async def test_links_lead_to_the_same_files_from_where_texts_are_read(self):
-        """A brief in a subfolder, a parent's feedback and the objectives are read from another folder."""
+        """A brief in a subfolder, a parent's feedback and the objectives are read from another folder: their
+        relative links become links from the project's root."""
         (self.root / "phases/1/OBJECTIVES.md").write_text(
             "Use [the evidence](../../starting_evidence/FOLDER_CONTENT.md).\n"
         )
         async with running(self.root) as harness:
             opening = harness.session("primary").launch.message
-            self.assertIn("[the evidence](../../../../starting_evidence/FOLDER_CONTENT.md)", opening)
+            self.assertIn("[the evidence](/starting_evidence/FOLDER_CONTENT.md)", opening)
             harness.write("phases/1/agents/primary/NOTATION.md", "# Notation\n")
             harness.write(
                 "phases/1/agents/primary/briefs/fit.md",
                 "# Fit\n\nUse [the notation](../NOTATION.md), [the shared one](../primary/NOTATION.md), "
-                "[the library](../../../../../library/LIBRARY.md) and [a plan](plan.md).\n",
+                "[the library](../../../../../library/LIBRARY.md), [the root](/library/LIBRARY.md) "
+                "and [a plan](plan.md).\n",
             )
             reply = await harness.call(
                 "primary", "spawn", task="briefs/fit.md", name="fit", backend="codex", model="gpt-test", effort="high"
             )
             self.assertIn("lead nowhere from phases/1/agents/fit/TASK.md: plan.md", reply)
             task = (self.root / "phases/1/agents/fit/TASK.md").read_text()
-            self.assertIn("[the notation](../primary/NOTATION.md)", task)
-            self.assertIn("[the shared one](../primary/NOTATION.md)", task)  # written for TASK.md already: kept
-            self.assertIn("[the library](../../../../library/LIBRARY.md)", task)
+            self.assertIn("[the notation](/phases/1/agents/primary/NOTATION.md)", task)
+            self.assertIn("[the shared one](/phases/1/agents/primary/NOTATION.md)", task)  # written for TASK.md
+            self.assertIn("[the library](/library/LIBRARY.md)", task)
+            self.assertIn("[the root](/library/LIBRARY.md)", task)
             self.assertIn("[a plan](plan.md)", task)
-            self.assertIn("[the notation](../primary/NOTATION.md)", harness.session("fit").launch.message)
+            self.assertIn("[the notation](/phases/1/agents/primary/NOTATION.md)", harness.session("fit").launch.message)
             self.prepare_result(harness, "fit")
             await harness.call("fit", "submit_result")
             await harness.emit("fit", "turn_ended", text="done")
             reply = await harness.call("primary", "reject", agent="fit", feedback="Follow [the notation](NOTATION.md).")
             self.assertNotIn("Kept as written", reply)
-            feedback = "Follow [the notation](../primary/NOTATION.md)."
+            feedback = "Follow [the notation](/phases/1/agents/primary/NOTATION.md)."
             self.assertIn(feedback, (self.root / "phases/1/agents/fit/PARENT_FEEDBACK.md").read_text())
             self.assertIn(feedback, sent(harness, "fit"))
+
+    async def test_an_agent_is_told_of_links_breaking_the_convention_and_its_parent_with_its_result(self):
+        async with running(self.root) as harness:
+            child = await self.spawn(harness, name="fit")
+            self.assertEqual(harness.session(child).launch.environment["PROJECT"], str(self.root))
+            notes = (
+                "[plan](plan.md) [fine](/phases/1/agents/fit/notes.md) [web](https://example.org) [gone](/gone.md)\n"
+            )
+            harness.write(f"phases/1/agents/{child}/notes.md", notes)
+            await harness.emit(child, "turn_ended", text="Wrote notes.")
+            told = sent(harness, child)
+            self.assertIn("do not follow the project's link convention", told)
+            self.assertIn(f"/phases/1/agents/{child}/notes.md: plan.md (relative", told)
+            self.assertIn(f"/phases/1/agents/{child}/notes.md: /gone.md (leads nowhere)", told)
+            notice = told.split("do not follow the project's link convention", 1)[1]
+            for kept in ("/phases/1/agents/fit/notes.md (", "example.org", "TASK.md", "FOLDER_CONTENT.md"):
+                self.assertNotIn(kept, notice)  # fine links, the controller's TASK.md and the indexes are left alone
+            await harness.emit(child, "turn_ended", text="Still the same notes.")
+            self.assertEqual(sent(harness, child).count("do not follow the project's link convention"), 1)
+            # Its job sees PROJECT too.
+            await harness.call(child, "run_job", command='printf %s "$PROJECT" > project.txt', timeout_seconds=30)
+            for _ in range(250):
+                await asyncio.sleep(0.02)
+                if harness.state.jobs["job-1"].status != "running":
+                    break
+            self.assertEqual((self.root / "phases/1/agents/fit/project.txt").read_text(), str(self.root))
+            # With its result, the parent is told too; nothing is refused.
+            self.prepare_result(harness, child)
+            harness.index(f"phases/1/agents/{child}", "TASK.md", "RESULT.md", "HANDOFF.md", "notes.md", "project.txt")
+            reply = await harness.call(child, "submit_result")
+            self.assertIn("was submitted", reply)
+            self.assertIn("primary is told of 2 links in your files", reply)
+            self.assertIn(f"Subagent {child} submitted its result", sent(harness, "primary"))
+            self.assertIn(
+                "Its files have 2 links that do not follow the project's link convention", sent(harness, "primary")
+            )
 
     async def test_result_requires_settled_children_and_layout(self):
         async with running(self.root) as harness:

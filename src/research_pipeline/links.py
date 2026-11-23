@@ -1,17 +1,22 @@
-"""Links in Markdown texts: which files they reach, which lead nowhere, and keeping them right when a text moves.
+"""Links in Markdown texts: the project's convention, which files they reach, and what moved text becomes.
 
-The Librarian's pages lead to the agents' work with relative links. The
-controller checks them: every shelved file must be reachable from a page (a link
-to a folder covers everything in it), and no link may lead nowhere. Recognised:
-inline links and images (``[text](path)``, ``![alt](path)``), reference
-definitions (``[label]: path``) and Obsidian wikilinks (``[[note]]``, resolved
-next to the page, from the project root, or by file name as Obsidian does).
-Links inside code are not links; external URLs and in-page anchors are ignored.
+Every link in a project's Markdown names its file from the project's root, with a
+leading slash (``[the fit](/phases/2/agents/fit/RESULT.md)``), so it leads to the
+same file wherever the text is read: in a brief copied to TASK.md, a message, the
+catalogue (PROJECT.md §2, "Links"). The one exception is a folder's
+FOLDER_CONTENT.md, whose entries name their own files (``[fit.py](fit.py)``).
+Text written before the convention keeps its relative links, read from its file's
+folder.
 
-A text written in one folder and read from another (a brief copied to the
-subagent's TASK.md, a parent's feedback, the objectives in the primary's first
-message) keeps its relative links right with :func:`rebase` (PROJECT.md §3,
-"Spawning").
+The controller checks the Librarian's pages: every shelved file must be reachable
+from a page (a link to a folder covers everything in it), and no link may lead
+nowhere. Recognised: inline links and images (``[text](path)``, ``![alt](path)``),
+reference definitions (``[label]: path``) and Obsidian wikilinks (``[[note]]``,
+resolved next to the page, from the project root, or by file name as Obsidian
+does). Links inside code are not links; external URLs and in-page anchors are
+ignored. :func:`unconventional` finds the links of an agent's text that break the
+convention, and :func:`rebase` turns a moved text's relative links into links
+from the root.
 """
 
 from __future__ import annotations
@@ -52,17 +57,22 @@ class Rebased:
     ambiguous: list[str] = field(default_factory=list)  # reach a different existing file from each folder
 
 
-def rebase(text: str, source: Path, target: Path) -> Rebased:
-    """``text``, written in the folder ``source``, made to be read from the folder ``target``.
+def from_root(root: Path, path: Path) -> str:
+    """The link to ``path`` (inside the project ``root``), as the convention writes it: ``/phases/…``."""
+    return "/" + Path(os.path.relpath(path, root)).as_posix()
 
-    A relative link is rewritten only if it reaches an existing file or folder from
-    ``source`` and none from ``target``: such a link is broken where the text is
-    read, and its author meant the file it reaches. Every other link is kept as
-    written, so a link that works from ``target`` (its author may have written it
-    for the new folder) never changes. Kept links that reach nothing from either
-    folder, or a different file from each, are listed for the author. Anchors and
-    queries stay; wikilinks, absolute paths, URLs and links inside code are untouched.
-    Both folders must be absolute.
+
+def rebase(text: str, source: Path, target: Path, root: Path) -> Rebased:
+    """``text``, written in the folder ``source``, made to be read from the folder ``target`` of the project ``root``.
+
+    Each relative link that reaches one existing file or folder, from ``source`` or
+    from ``target`` (its author may have written it for the new folder), or the same
+    one from both, becomes a link from the root to that file: it then leads there
+    wherever the text goes. A link that reaches nothing from either folder, or a
+    different file from each, is kept as written and listed for the author. Anchors
+    and queries stay; links from the root, wikilinks, URLs and links inside code are
+    untouched. A file outside the project is linked relatively from ``target``. The
+    folders and the root must be absolute.
     """
     masked = _mask(text)
     spans = {match.span(1) for pattern in (_INLINE, _REFERENCE) for match in pattern.finditer(masked)}
@@ -70,14 +80,14 @@ def rebase(text: str, source: Path, target: Path) -> Rebased:
     pieces = []
     last = 0
     for start, end in sorted(spans):
-        pieces += [text[last:start], _moved(text[start:end], source, target, moved)]
+        pieces += [text[last:start], _moved(text[start:end], source, target, root, moved)]
         last = end
     moved.text = "".join(pieces) + text[last:]
     return moved
 
 
-def _moved(link: str, source: Path, target: Path, moved: Rebased) -> str:
-    """One link target of a text moved from ``source`` to ``target``, rewritten if broken there (see :func:`rebase`)."""
+def _moved(link: str, source: Path, target: Path, root: Path, moved: Rebased) -> str:
+    """One link target of a text moved from ``source`` to ``target`` (see :func:`rebase`)."""
     bracketed = link.startswith("<") and link.endswith(">")
     inner = link[1:-1].strip() if bracketed else link
     if not inner or inner.startswith(("#", "/")) or _SCHEME.match(inner):
@@ -87,18 +97,38 @@ def _moved(link: str, source: Path, target: Path, moved: Rebased) -> str:
     if not path:
         return link
     was, now = _normal(source / unquote(path)), _normal(target / unquote(path))
-    if was == now:
+    reached = [place for place in dict.fromkeys((was, now)) if place.exists()]
+    if len(reached) != 1:
+        (moved.ambiguous if reached else moved.nowhere).append(inner)
         return link
-    if not was.exists():
-        if not now.exists():
-            moved.nowhere.append(inner)
-        return link
-    if now.exists():
-        moved.ambiguous.append(inner)
-        return link
-    written = os.path.relpath(was, target) + ("/" if path.endswith("/") else "")
+    file = reached[0]
+    written = from_root(root, file) if file.is_relative_to(root) else os.path.relpath(file, target)
+    written += "/" if path.endswith("/") and not written.endswith("/") else ""
     written = quote(written, safe="/") if "%" in path else written  # keep the author's encoding
     return f"<{written}{suffix}>" if bracketed or re.search(r"[\s()<>]", written) else written + suffix
+
+
+def unconventional(text: str, root: Path) -> list[tuple[str, str]]:
+    """The links of ``text`` that break the convention, each with why: a relative link, an absolute path into the
+    project, or a link from the root that leads nowhere. URLs, anchors, wikilinks and code are left alone."""
+    found = []
+    for target, wiki in targets(text):
+        inner = target.strip().strip("<>").strip()
+        if wiki or not inner or inner.startswith("#") or _SCHEME.match(inner):
+            continue
+        path = unquote(inner.split("#", 1)[0].split("?", 1)[0])
+        if not path:
+            continue
+        if not path.startswith("/"):
+            found.append((target, "relative: write it from the project root, with a leading /"))
+        elif _normal(root / path.lstrip("/")).exists():
+            continue
+        elif Path(path).exists():
+            if _normal(Path(path)).is_relative_to(root):
+                found.append((target, "an absolute path: write it from the project root, with a leading /"))
+        else:
+            found.append((target, "leads nowhere"))
+    return found
 
 
 def _mask(text: str) -> str:
@@ -153,7 +183,10 @@ def _resolve(page: Path, target: str, wiki: bool, root: Path, by_name: Callable[
         target = unquote(target.split("#", 1)[0].split("?", 1)[0])
         if not target:
             return None
-        return _normal(Path(target) if target.startswith("/") else page.parent / target)
+        if not target.startswith("/"):
+            return _normal(page.parent / target)
+        from_the_root = _normal(root / target.lstrip("/"))  # the convention; an absolute path still works
+        return from_the_root if from_the_root.exists() or not Path(target).exists() else _normal(Path(target))
     if not target:
         return None  # [[#heading]]: a link within the page
     names = [target] if Path(target).suffix else [target, target + ".md"]

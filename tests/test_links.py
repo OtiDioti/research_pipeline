@@ -83,9 +83,9 @@ class RebaseTest(unittest.TestCase):
         remove(self.root)
 
     def moved(self, text: str) -> links.Rebased:
-        return links.rebase(text, self.source, self.target)
+        return links.rebase(text, self.source, self.target, self.root)
 
-    def test_links_that_work_only_where_written_are_rewritten(self):
+    def test_links_that_work_where_written_become_links_from_the_root(self):
         moved = self.moved(
             "See [notation](../NOTATION.md#units), ![code](../code/) "
             "and the [library](../../../library/LIBRARY.md).\n"
@@ -94,17 +94,16 @@ class RebaseTest(unittest.TestCase):
         )
         self.assertEqual(
             moved.text,
-            "See [notation](../fit/NOTATION.md#units), ![code](../fit/code/) "
-            "and the [library](../../library/LIBRARY.md).\n"
-            '[ref]: ../fit/code/run.py "The run"\n'
-            "[spaced](<../fit/my notes.md>) [encoded](../fit/my%20notes.md)\n",
+            "See [notation](/agents/fit/NOTATION.md#units), ![code](/agents/fit/code/) "
+            "and the [library](/library/LIBRARY.md).\n"
+            '[ref]: /agents/fit/code/run.py "The run"\n'
+            "[spaced](</agents/fit/my notes.md>) [encoded](/agents/fit/my%20notes.md)\n",
         )
         self.assertEqual((moved.nowhere, moved.ambiguous), ([], []))
 
-    def test_links_written_for_the_new_folder_are_kept(self):
-        text = "[notation](../fit/NOTATION.md) [library](../../library/LIBRARY.md)\n"
-        moved = self.moved(text)
-        self.assertEqual(moved.text, text)
+    def test_links_written_for_the_new_folder_become_links_from_the_root_too(self):
+        moved = self.moved("[notation](../fit/NOTATION.md) [library](../../library/LIBRARY.md)\n")
+        self.assertEqual(moved.text, "[notation](/agents/fit/NOTATION.md) [library](/library/LIBRARY.md)\n")
         self.assertEqual((moved.nowhere, moved.ambiguous), ([], []))
 
     def test_links_that_cannot_be_settled_are_kept_and_listed(self):
@@ -114,15 +113,51 @@ class RebaseTest(unittest.TestCase):
         self.assertEqual(moved.nowhere, ["gone.md", "figures/"])
         self.assertEqual(moved.ambiguous, ["plan.md#step-2"])
 
-    def test_urls_anchors_absolute_paths_wikilinks_and_code_are_untouched(self):
+    def test_links_from_the_root_urls_anchors_absolute_paths_wikilinks_and_code_are_untouched(self):
         absolute = self.root / "agents/fit/NOTATION.md"
         text = (
-            f"[web](https://example.org/a.md) [top](#top) [abs]({absolute}) [[NOTATION]]\n"
-            "`[code](../NOTATION.md)`\n```\n[fenced](../NOTATION.md)\n```\n"
+            f"[root](/agents/fit/NOTATION.md) [web](https://example.org/a.md) [top](#top) [abs]({absolute}) "
+            "[[NOTATION]]\n`[code](../NOTATION.md)`\n```\n[fenced](../NOTATION.md)\n```\n"
         )
         moved = self.moved(text)
         self.assertEqual(moved.text, text)
         self.assertEqual((moved.nowhere, moved.ambiguous), ([], []))
+
+
+class ConventionTest(unittest.TestCase):
+    """Links from the project's root: what breaks the convention, and how the Librarian's check reads them."""
+
+    def setUp(self):
+        self.root = temp_project()
+        (self.root / "agents/fit").mkdir(parents=True)
+        (self.root / "agents/fit/RESULT.md").write_text("x\n")
+        (self.root / "library").mkdir()
+
+    def tearDown(self):
+        remove(self.root)
+
+    def test_relative_links_absolute_paths_and_links_leading_nowhere_break_it(self):
+        absolute = self.root / "agents/fit/RESULT.md"
+        text = (
+            "[ok](/agents/fit/RESULT.md#claims) [web](https://example.org) [top](#top) [[RESULT]] `[code](x.md)` "
+            f"[relative](../fit/RESULT.md) [abs]({absolute}) [outside](/usr) [gone](/agents/fit/GONE.md)\n"
+        )
+        found = links.unconventional(text, self.root)
+        self.assertEqual(
+            [(target, why.split(":")[0]) for target, why in found],
+            [
+                ("../fit/RESULT.md", "relative"),
+                (str(absolute), "an absolute path"),
+                ("/agents/fit/GONE.md", "leads nowhere"),
+            ],
+        )
+
+    def test_the_check_reads_a_leading_slash_from_the_project_root(self):
+        page = self.root / "library" / "page.md"
+        page.write_text("[fit](/agents/fit/RESULT.md) [gone](/agents/fit/GONE.md)\n")
+        report = links.check([page], self.root, lambda name: [])
+        self.assertTrue(report.covers(self.root / "agents/fit/RESULT.md"))
+        self.assertEqual(report.broken, [(page, "/agents/fit/GONE.md")])
 
 
 if __name__ == "__main__":
