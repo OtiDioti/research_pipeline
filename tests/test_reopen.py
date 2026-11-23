@@ -137,6 +137,10 @@ class ReopenTest(unittest.IsolatedAsyncioTestCase):
             activity.add("primary", "message", "Because the integral of x^2 is x^3/3.")
             dashboard = self.page(harness)
             self.assertTrue(self.view(dashboard)["assistant"]["ideas"])
+            switch = self.view(dashboard)["assistant"]["switch"]
+            self.assertEqual((switch["on"], switch["locked"]), (True, False))
+            self.assertIn("this phase's primary and Reviewer since its end (2 messages so far)", switch["note"])
+            self.assertIn("What the talks settled", self.view(dashboard)["steps"][1]["prompt"])
             questions = [
                 {
                     "question": "Extend to which power?",
@@ -166,6 +170,9 @@ class ReopenTest(unittest.IsolatedAsyncioTestCase):
                 self.assertIn(tool, session.launch.mcp["setup"].env["AGENT_TOOLKIT_TOOLS"])
             self.assertNotIn("write_feedback", session.launch.mcp["setup"].env["AGENT_TOOLKIT_TOOLS"])
             self.assertIn("Phase 1 ended: COMPLETE", session.sent[0])
+            # The first message fixed the switch on, and handed over the talks with it.
+            self.assertEqual((view["assistant"]["switch"]["on"], view["assistant"]["switch"]["locked"]), (True, True))
+            self.assertIn("The human gives you their talks", "\n".join(session.sent))
             talks = (self.root / ".research" / "setup" / "1" / "TALKS.md").read_text()
             self.assertIn("phase 1 — The human to primary\n\nWhy 1/3?", talks)
             self.assertIn("Because the integral", talks)
