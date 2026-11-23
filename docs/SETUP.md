@@ -112,9 +112,13 @@ material is placed in them.
   `prompts/phase.md` (a new phase: it also reads the earlier phases, and the talks
   with them since they ended, written for it to `.research/setup/<N>/TALKS.md`) or
   `prompts/reopen.md` ([FINISHING.md](FINISHING.md)).
+- Before each request its CLI is asked whether it can run (installed, logged in,
+  and confinable by bwrap on this machine: [CONFINEMENT.md](CONFINEMENT.md)); while
+  it cannot, the request is refused with the reason, before any session is tried.
 - Its usage quota is read before each request; at a short or weekly limit the
   request is refused, naming the limit (choose another CLI, or work by hand).
-- If its session fails, the page says so and everything stays doable by hand.
+- If its session fails, the page says so, with the CLI's reason, and everything
+  stays doable by hand.
 - What the page shows of it (the conversation, open questions, its CLI choice) is
   kept in `.research/setup/<N>/` (per phase), so a restarted program continues there.
   When the phase starts that folder is removed; only its CLI logs stay, in

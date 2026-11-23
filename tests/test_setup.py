@@ -88,6 +88,16 @@ def scripted(loop: asyncio.AbstractEventLoop, answers: dict, results: list):
     return script
 
 
+class Unrunnable(FakeSession):
+    """The fake codex, as a CLI that cannot run says (agent_toolkit's CLI status: not set up, or not confinable)."""
+
+    reason = ""
+
+    @classmethod
+    def status(cls) -> str:
+        return cls.reason
+
+
 class PreparationTest(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.root = empty_folder()
@@ -310,6 +320,28 @@ class PreparationTest(unittest.IsolatedAsyncioTestCase):
         entry = {"path": "paper.pdf", "folder": "starting_evidence", "description": "The paper."}
         await self.dashboard.prepare("place", {"entries": [entry]})
         self.assertTrue((self.root / "starting_evidence" / "paper.pdf").exists())
+
+    async def test_a_cli_that_cannot_run_refuses_the_request_with_its_reason_before_any_session(self):
+        unconfined = "bubblewrap cannot confine sessions on this machine (bwrap: setting up uid map: Permission denied)"
+        (self.root / "paper.pdf").write_text("%PDF")
+        drivers = FAKE_DRIVERS | {"codex": Unrunnable}
+        dashboard = ResearchDashboard(
+            self.root, launch_options(setup="codex:gpt-test:high"), drivers=drivers, read_quota=self.quota
+        )
+        try:
+            Unrunnable.reason = unconfined
+            with self.assertRaisesRegex(ValueError, r"the assistant cannot run now: bubblewrap cannot confine"):
+                await dashboard.prepare("organise", {})
+            self.assertEqual(FakeSession.instances, [])  # refused before a session was tried
+            Unrunnable.reason = ""  # fixed meanwhile: the next request goes ahead
+            FakeSession.script = lambda session, text: turn(0.1, text="Done.")
+            await dashboard.prepare("organise", {})
+            assert dashboard.preparing is not None
+            await dashboard.preparing.assistant.wait()
+            self.assertEqual(len(FakeSession.instances), 1)
+        finally:
+            if dashboard.preparing is not None:
+                await dashboard.preparing.close()
 
     async def test_a_started_project_has_no_preparation_and_a_restart_keeps_the_conversation(self):
         (self.root / "paper.pdf").write_text("%PDF")

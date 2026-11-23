@@ -14,8 +14,10 @@ nothing itself except that note: it places material, writes OBJECTIVES.md and
 asks its multiple-choice questions through its tools (:data:`SETUP_TOOLS`),
 answered here by the deterministic code of :mod:`research_pipeline.material`.
 
-The usage quota of its CLI is read before every request; a request is refused
-while it is at a limit. What the page shows of it (the conversation, its open
+Before every request its CLI is asked whether it can run (installed, logged in,
+and confinable by bwrap on this machine) and its usage quota is read; a request is
+refused while the CLI cannot run or is at a limit, so the reason is shown before a
+session is tried. What the page shows of it (the conversation, its open
 questions) is kept in ``.research/setup/<phase>/`` with the note, so a restarted
 program continues where it was; the folder is removed when the phase starts,
 leaving only the CLI logs in ``.research/logs/``.
@@ -124,11 +126,11 @@ class Assistant:
     async def request(self, message: str, shown: str) -> str:
         """Send ``message`` to the agent as one request; ``shown`` is what the conversation shows of it.
 
-        Refused (ValueError) while it works on another request or its CLI is at a usage limit.
+        Refused (ValueError) while it works on another request, or its CLI cannot run or is at a usage limit.
         """
         if self.busy:
             raise ValueError("the assistant is still working on your last request")
-        await self._check_quota()
+        await self._check_cli()
         self.questions = None  # a new request settles any open questions
         self.say("human", shown)
         self.busy, self.problem = True, ""
@@ -150,8 +152,12 @@ class Assistant:
         if finished:
             shutil.rmtree(self.folder, ignore_errors=True)
 
-    async def _check_quota(self) -> None:
+    async def _check_cli(self) -> None:
+        """Refuse a request its CLI cannot serve now: one that cannot run, or one at a usage limit."""
         backend = Spec.parse(self.spec, "the assistant", self.drivers).backend
+        reason = await asyncio.to_thread(self.drivers[backend].status)
+        if reason:
+            raise ValueError(f"the assistant cannot run now: {reason}; place and write by hand meanwhile")
         try:
             windows = await asyncio.to_thread(self.read_quota, backend)
         except OSError:

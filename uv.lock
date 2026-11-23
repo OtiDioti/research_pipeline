@@ -10,8 +10,8 @@ resolution-markers = [
 
 [[package]]
 name = "agent-toolkit"
-version = "0.17.0"
-source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.17.0#91e10afbbe4f6621183b47fba06cf7da034db111" }
+version = "0.18.0"
+source = { git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.18.0#6347e0838292d4d57b09d922efaf065b916fab20" }
 dependencies = [
     { name = "mcp" },
 ]
@@ -628,7 +628,7 @@ wheels = [
 
 [[package]]
 name = "research-pipeline"
-version = "0.23.0"
+version = "0.24.0"
 source = { editable = "." }
 dependencies = [
     { name = "agent-toolkit", extra = ["console", "web"] },
@@ -641,7 +641,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.17.0" }]
+requires-dist = [{ name = "agent-toolkit", extras = ["console", "web"], git = "ssh://git@github.com/OtiDioti/agent_toolkit.git?tag=v0.18.0" }]
 
 [package.metadata.requires-dev]
 dev = [
