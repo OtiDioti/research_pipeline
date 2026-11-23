@@ -1,4 +1,4 @@
-"""Links in the Librarian's pages: which files they reach, and which lead nowhere."""
+"""Links in Markdown texts: which files the Librarian's pages reach, and links kept right when a text moves."""
 
 import unittest
 
@@ -58,6 +58,71 @@ class LinksTest(unittest.TestCase):
         self.assertTrue(report.covers(self.root / "agents/b/Theory.md"))
         self.assertTrue(report.covers(self.root / "agents/fit/notes.md"))
         self.assertEqual([target for _, target in report.broken], ["Missing"])
+
+
+class RebaseTest(unittest.TestCase):
+    """A brief written in agents/fit/briefs/ and read as agents/child/TASK.md."""
+
+    def setUp(self):
+        self.root = temp_project()
+        for path in (
+            "agents/fit/NOTATION.md",
+            "agents/fit/code/run.py",
+            "agents/fit/my notes.md",
+            "agents/fit/briefs/brief.md",
+            "agents/fit/briefs/plan.md",
+            "agents/child/plan.md",
+            "library/LIBRARY.md",
+        ):
+            (self.root / path).parent.mkdir(parents=True, exist_ok=True)
+            (self.root / path).write_text("x\n")
+        self.source = self.root / "agents/fit/briefs"
+        self.target = self.root / "agents/child"
+
+    def tearDown(self):
+        remove(self.root)
+
+    def moved(self, text: str) -> links.Rebased:
+        return links.rebase(text, self.source, self.target)
+
+    def test_links_that_work_only_where_written_are_rewritten(self):
+        moved = self.moved(
+            "See [notation](../NOTATION.md#units), ![code](../code/) "
+            "and the [library](../../../library/LIBRARY.md).\n"
+            '[ref]: ../code/run.py "The run"\n'
+            "[spaced](<../my notes.md>) [encoded](../my%20notes.md)\n"
+        )
+        self.assertEqual(
+            moved.text,
+            "See [notation](../fit/NOTATION.md#units), ![code](../fit/code/) "
+            "and the [library](../../library/LIBRARY.md).\n"
+            '[ref]: ../fit/code/run.py "The run"\n'
+            "[spaced](<../fit/my notes.md>) [encoded](../fit/my%20notes.md)\n",
+        )
+        self.assertEqual((moved.nowhere, moved.ambiguous), ([], []))
+
+    def test_links_written_for_the_new_folder_are_kept(self):
+        text = "[notation](../fit/NOTATION.md) [library](../../library/LIBRARY.md)\n"
+        moved = self.moved(text)
+        self.assertEqual(moved.text, text)
+        self.assertEqual((moved.nowhere, moved.ambiguous), ([], []))
+
+    def test_links_that_cannot_be_settled_are_kept_and_listed(self):
+        text = "[gone](gone.md) [plan](plan.md#step-2) [figures](figures/)\n"
+        moved = self.moved(text)
+        self.assertEqual(moved.text, text)
+        self.assertEqual(moved.nowhere, ["gone.md", "figures/"])
+        self.assertEqual(moved.ambiguous, ["plan.md#step-2"])
+
+    def test_urls_anchors_absolute_paths_wikilinks_and_code_are_untouched(self):
+        absolute = self.root / "agents/fit/NOTATION.md"
+        text = (
+            f"[web](https://example.org/a.md) [top](#top) [abs]({absolute}) [[NOTATION]]\n"
+            "`[code](../NOTATION.md)`\n```\n[fenced](../NOTATION.md)\n```\n"
+        )
+        moved = self.moved(text)
+        self.assertEqual(moved.text, text)
+        self.assertEqual((moved.nowhere, moved.ambiguous), ([], []))
 
 
 if __name__ == "__main__":

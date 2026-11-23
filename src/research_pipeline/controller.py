@@ -73,7 +73,7 @@ from agent_toolkit.records import Busy, atomic_write, exclusive
 from agent_toolkit.tools import ToolBridge
 
 from research_pipeline import jobs as joblib
-from research_pipeline import phases, prompts
+from research_pipeline import links, phases, prompts
 from research_pipeline.librarian import LIBRARIAN, Librarian
 from research_pipeline.phases import NOT_STARTED, Home
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
@@ -1190,19 +1190,22 @@ class Controller:
         child = Agent(self._new_id(name), "subagent", caller.id, backend, model.strip(), effort.strip())
         folder = self.project.agent_dir(child.id)
         folder.mkdir(parents=True)
-        atomic_write(folder / "TASK.md", brief.read_text(encoding="utf-8", errors="replace"), root=self.project.root)
+        # TASK.md is read from the child's folder, not the brief's: its relative links must lead there too
+        moved = links.rebase(brief.read_text(encoding="utf-8", errors="replace"), brief.parent, folder)
+        atomic_write(folder / "TASK.md", moved.text, root=self.project.root)
+        kept = prompts.kept_links(moved, "the brief", f"{self.project.relative(folder)}/TASK.md")
         self.state.agents[child.id] = child
         await self._start_session(child)
         if child.status != "running":
             return (
                 f"Created subagent {child.id}, but its session could not start; the controller retries it or "
-                "asks the human."
+                "asks the human." + kept
             )
         return (
             f"Started subagent {child.id} ({child.spec}); its folder is "
             f"{self.project.relative(self.project.agent_dir(child.id))}/. "
             "You will be told when it submits its result; meanwhile, continue any work that does not "
-            "depend on it."
+            "depend on it." + kept
         )
 
     def _continued(self, caller: Agent) -> None:
@@ -1277,16 +1280,18 @@ class Controller:
         if self.state.status != "running":
             raise ToolError(f"the investigation is {self.state.status}; try again after it resumes")
         child.rejections += 1
-        record = self.project.agent_dir(child.id) / "PARENT_FEEDBACK.md"
+        folder = self.project.agent_dir(child.id)
+        # written in the parent's folder, read in the child's: its relative links must lead there too
+        moved = links.rebase(feedback.strip(), self.project.agent_dir(caller.id), folder)
+        kept = prompts.kept_links(moved, "the feedback", f"{self.project.relative(folder)}/")
+        record = folder / "PARENT_FEEDBACK.md"
         previous = record.read_text(encoding="utf-8") if record.exists() else "# Feedback from my parent\n"
-        atomic_write(
-            record, f"{previous}\n## Rejection {child.rejections}\n\n{feedback.strip()}\n", root=self.project.root
-        )
+        atomic_write(record, f"{previous}\n## Rejection {child.rejections}\n\n{moved.text}\n", root=self.project.root)
         self._index_entry(child, "PARENT_FEEDBACK.md", "Feedback from my parent on rejected results.")
         self._queue(
             child,
             f"[controller] {caller.id} rejected your result (rejection {child.rejections}): "
-            f"{feedback.strip()}\nContinue the task and submit again.",
+            f"{moved.text}\nContinue the task and submit again.",
             "parent",
             caller.id,
         )
@@ -1298,9 +1303,9 @@ class Controller:
             return (
                 f"Rejected the result of {agent}. It will continue with your feedback automatically as soon as "
                 f"it can run ({why}; this is temporary). Meanwhile, continue any work that does not depend on "
-                "it."
+                "it." + kept
             )
-        return f"Rejected the result of {agent}; it continues with your feedback."
+        return f"Rejected the result of {agent}; it continues with your feedback." + kept
 
     async def _tool_cancel(self, caller: Agent, agent: str) -> str:
         child = self._child(caller, agent)

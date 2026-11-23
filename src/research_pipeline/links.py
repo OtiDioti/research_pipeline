@@ -1,4 +1,4 @@
-"""Links in Markdown pages: which files they reach, and which lead nowhere (PROJECT.md §2, "The library").
+"""Links in Markdown texts: which files they reach, which lead nowhere, and keeping them right when a text moves.
 
 The Librarian's pages lead to the agents' work with relative links. The
 controller checks them: every shelved file must be reachable from a page (a link
@@ -7,6 +7,11 @@ inline links and images (``[text](path)``, ``![alt](path)``), reference
 definitions (``[label]: path``) and Obsidian wikilinks (``[[note]]``, resolved
 next to the page, from the project root, or by file name as Obsidian does).
 Links inside code are not links; external URLs and in-page anchors are ignored.
+
+A text written in one folder and read from another (a brief copied to the
+subagent's TASK.md, a parent's feedback, the objectives in the primary's first
+message) keeps its relative links right with :func:`rebase` (PROJECT.md §3,
+"Spawning").
 """
 
 from __future__ import annotations
@@ -16,7 +21,7 @@ import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 
 _FENCE = re.compile(r"^ {0,3}(```|~~~).*?^ {0,3}\1[^\n]*$", re.M | re.S)
 _CODE = re.compile(r"`[^`\n]*`")
@@ -38,9 +43,76 @@ class Report:
         return path in self.reached or any(parent in self.reached for parent in path.parents)
 
 
+@dataclass
+class Rebased:
+    """A text moved to another folder, and the links in it kept as written although they may not work there."""
+
+    text: str
+    nowhere: list[str] = field(default_factory=list)  # reach nothing from either folder
+    ambiguous: list[str] = field(default_factory=list)  # reach a different existing file from each folder
+
+
+def rebase(text: str, source: Path, target: Path) -> Rebased:
+    """``text``, written in the folder ``source``, made to be read from the folder ``target``.
+
+    A relative link is rewritten only if it reaches an existing file or folder from
+    ``source`` and none from ``target``: such a link is broken where the text is
+    read, and its author meant the file it reaches. Every other link is kept as
+    written, so a link that works from ``target`` (its author may have written it
+    for the new folder) never changes. Kept links that reach nothing from either
+    folder, or a different file from each, are listed for the author. Anchors and
+    queries stay; wikilinks, absolute paths, URLs and links inside code are untouched.
+    Both folders must be absolute.
+    """
+    masked = _mask(text)
+    spans = {match.span(1) for pattern in (_INLINE, _REFERENCE) for match in pattern.finditer(masked)}
+    moved = Rebased("")
+    pieces = []
+    last = 0
+    for start, end in sorted(spans):
+        pieces += [text[last:start], _moved(text[start:end], source, target, moved)]
+        last = end
+    moved.text = "".join(pieces) + text[last:]
+    return moved
+
+
+def _moved(link: str, source: Path, target: Path, moved: Rebased) -> str:
+    """One link target of a text moved from ``source`` to ``target``, rewritten if broken there (see :func:`rebase`)."""
+    bracketed = link.startswith("<") and link.endswith(">")
+    inner = link[1:-1].strip() if bracketed else link
+    if not inner or inner.startswith(("#", "/")) or _SCHEME.match(inner):
+        return link
+    cut = min((i for i in (inner.find("#"), inner.find("?")) if i >= 0), default=len(inner))
+    path, suffix = inner[:cut], inner[cut:]
+    if not path:
+        return link
+    was, now = _normal(source / unquote(path)), _normal(target / unquote(path))
+    if was == now:
+        return link
+    if not was.exists():
+        if not now.exists():
+            moved.nowhere.append(inner)
+        return link
+    if now.exists():
+        moved.ambiguous.append(inner)
+        return link
+    written = os.path.relpath(was, target) + ("/" if path.endswith("/") else "")
+    written = quote(written, safe="/") if "%" in path else written  # keep the author's encoding
+    return f"<{written}{suffix}>" if bracketed or re.search(r"[\s()<>]", written) else written + suffix
+
+
+def _mask(text: str) -> str:
+    """``text`` with code blocks and spans blanked (line breaks kept): its positions are those of ``text``."""
+
+    def blank(match: re.Match[str]) -> str:
+        return re.sub(r"[^\n]", " ", match.group(0))
+
+    return _CODE.sub(blank, _FENCE.sub(blank, text))
+
+
 def targets(text: str) -> list[tuple[str, bool]]:
     """The link targets of a Markdown text, each with whether it is a wikilink (code spans and blocks skipped)."""
-    text = _CODE.sub("", _FENCE.sub("", text))
+    text = _mask(text)
     found = [(match.group(1), False) for match in _INLINE.finditer(text)]
     found += [(match.group(1), False) for match in _REFERENCE.finditer(text)]
     found += [(match.group(1), True) for match in _WIKI.finditer(text)]
