@@ -1,6 +1,6 @@
 """Whether the CLIs a phase needs can run now: its primary's, Reviewer's and Librarian's.
 
-Asked of agent_toolkit's CLI status (installed, logged in; no model call, about a
+Asked of agent_toolkit's CLI status (installed, logged in, confinable by bwrap; no model call, about a
 second), for a project shown without a controller: its *Resume phase N* and *Open for
 talks* wait while one of them cannot run, with the reason on hover. The web page
 asks again (:meth:`Readiness.refresh`) at most every :data:`FRESH` seconds while it

@@ -37,6 +37,10 @@ operational decision:
 ## Requirements
 
 - Linux with [bubblewrap](https://github.com/containers/bubblewrap) (`bwrap`), git and Python 3.11+.
+  bwrap must also be **allowed to create user namespaces**, which Ubuntu 23.10 and later forbid
+  through AppArmor until bwrap has a profile: see [docs/CONFINEMENT.md](docs/CONFINEMENT.md), "What
+  the machine must allow". A CLI greyed with "bubblewrap cannot confine sessions on this machine"
+  needs that fix.
 - [uv](https://docs.astral.sh/uv/).
 - At least one agent CLI, installed and logged in: [Codex](https://github.com/openai/codex) (`codex`)
   and/or [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`).

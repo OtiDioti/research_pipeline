@@ -511,8 +511,8 @@ a second `run` while the page's server runs opens that page. One project works a
 time: the others can be browsed, set up and talked with, and their Start, Resume or
 Reopen waits. A project that does not run is shown as it was left, read-only, until
 resumed; one whose phase ended opens for talks when selected; one another process runs
-is read-only. CLIs that are not installed or not logged in are greyed in every CLI choice, with the
-reason; a primary, Reviewer or Librarian on one keeps Start waiting. For each project: a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
+is read-only. CLIs that are not installed, not logged in, or not confinable because bwrap may not
+create user namespaces on this machine are greyed in every CLI choice, with the reason; a primary, Reviewer or Librarian on one keeps Start waiting. For each project: a setup page that first makes the folder ready (§2, **Ready to start**), then offers every launch option; every agent that ever worked as a live graph
 (status, context use, CLI) with its messages by sender, tool calls, documents,
 jobs and the websites it used; messages to any agent (its parent copied); pausing,
 resuming, forcing a handoff of and cancelling single agents; and the handoff
@@ -669,7 +669,9 @@ lead to physics-specific code in the platform.
   its behaviour under each condition. Git holds the history; the repository keeps no
   evidence archives or receipt collections.
 - **Verified on 2026-11-14** with Codex 0.167 and Claude Code 2.1.325, on Ubuntu
-  with unprivileged user namespaces restricted:
+  22.04 with unprivileged user namespaces restricted (bwrap could still create its
+  own; on Ubuntu 23.10 and later it needs an AppArmor profile first, see
+  docs/CONFINEMENT.md):
   - **Live delivery.** A message sent while an agent was running a 30-second command
     was taken into the same turn by both CLIs: Codex `turn/steer`, and a Claude
     stream-json user message. It is delivered at the agent's next model step.

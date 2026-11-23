@@ -152,7 +152,7 @@ def status(
     Without a controller the project is shown as it was left (``elsewhere``: another
     process runs it, so nothing can be done here); ``waiting`` says why work cannot
     start now (another project works), on the controls that would start it, and
-    ``unready`` why the phase's CLIs cannot run (not installed, not logged in), on those
+    ``unready`` why the phase's CLIs cannot run (not installed, not logged in, not confinable), on those
     that would start a controller.
     """
     name = f"Phase {number}"

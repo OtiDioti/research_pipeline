@@ -46,7 +46,7 @@ the folder, whose own name never changes.
   (no work resumes; the Librarian finishes placing what was left). A project that does
   not run (paused, shut down, interrupted) is shown as it was left, read-only, with
   *Resume phase N* in the top bar. Both use the CLIs the phase last ran with: while
-  its primary's, Reviewer's or Librarian's CLI is not installed or not logged in, the
+  its primary's, Reviewer's or Librarian's CLI is not installed, not logged in or not confinable, the
   ended project is not opened (*Open for talks* waits) and *Resume phase N* waits,
   each with the reason on hover. The page checks again every 30 seconds while it shows
   the project, and once more at the press, so logging in elsewhere frees them. A project another research_pipeline process runs
@@ -139,8 +139,10 @@ and under *Advanced* the reference folders and durable state. Start checks them
 like the command line does and shows what is wrong next to each setting.
 
 A CLI that is not installed or not logged in (asked of the CLI itself, `claude auth
-status` and `codex login status`, without any model call) is greyed in every CLI
-choice, with the reason on hover (e.g. "codex is not logged in: run `codex login`").
+status` and `codex login status`, without any model call), or that bwrap cannot
+confine on this machine (every CLI alike: [CONFINEMENT.md](CONFINEMENT.md), "What
+the machine must allow"), is greyed in every CLI choice, with the reason on hover
+(e.g. "codex is not logged in: run `codex login`").
 The page asks when it opens and again with *Check again* (after logging in in a
 terminal). A primary, Reviewer or Librarian on such a CLI keeps Start waiting; a
 recommended model or a CLI for subagents on one only warns (agents choose another).
