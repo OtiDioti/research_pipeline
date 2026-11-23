@@ -37,8 +37,14 @@ so that agents can read the index whole and search the rest:
   linking to its page; then the agents at work, each linking to its folder and
   its `FOLDER_CONTENT.md`;
 - `library/catalog/phase-<N>/<id>.md`, one page per shelved agent: its folder,
-  the commit at shelving, and every catalogued file with its index line. Each
+  the commit at shelving, and every catalogued file with its index line. An index
+  line's own relative links, written in its file's folder, become links from the
+  project's root there, and a link to the file itself at the start of a line
+  without the ` — ` is dropped, as the entry links the file already. Each
   folder of `catalog/` has a `FOLDER_CONTENT.md`, written by the controller too.
+
+Every link of the catalogue is written from the project's root (`/phases/…`), but
+its folders' own indexes.
 
 Agents read `library/LIBRARY.md` and `CATALOG.md`, and search `library/catalog/`,
 before solving something or spawning. Pages are rewritten only when they change.
@@ -69,15 +75,18 @@ A Librarian's page elsewhere in `library/` is never touched.
   Accepted: the request is removed and the controller commits
   `librarian: shelved <folder>`.
 - **Its turns.** At the end of each turn, the pages it changed are committed
-  (`librarian: library pages updated`), and new links that lead nowhere are sent
-  to it once.
+  (`librarian: library pages updated`), and new links that lead nowhere, or that
+  are not written from the project's root (relative links and absolute paths; its
+  indexes aside), are sent to it once. Only the first refuse `shelved`.
 - **Idle and stalled.** It is idle only while a request is pending: then it is
   nudged once, and if it ends its turn idle again without using a tool, the human
   is alerted (ALERT) and its requests wait. Otherwise ending its turn means it rests.
 
 ## Links
 
-Recognised in pages: inline links and images, reference definitions, and Obsidian
+Pages link from the project's root (PROJECT.md §2, "Links"): a leading `/` is the
+project's folder (an absolute path that exists still resolves as one). Recognised in
+pages: inline links and images, reference definitions, and Obsidian
 wikilinks (`[[note]]`, resolved next to the page, from the project root, or by file
 name, shortest path first). Links in code are ignored, and so are URLs and in-page
 anchors; `#anchors` and URL encoding are stripped. A link to a folder covers every

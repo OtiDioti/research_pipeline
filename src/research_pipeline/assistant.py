@@ -240,6 +240,7 @@ class Assistant:
                 # hidden as from every agent: the talks reach the assistant only through TALKS.md, if the human
                 # gives them. Its own folder of .research/setup/ stays visible.
                 hidden=tuple(path for path in self.project.research.iterdir() if path.is_dir() and path.name != NAME),
+                environment=self.project.environment,
                 log=self.project.logs / f"{NAME}-{self.sessions}.jsonl",
             )
 

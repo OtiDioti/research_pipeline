@@ -139,7 +139,7 @@ class Harness:
 async def shelve_all(harness: Harness) -> None:
     """Act as the Librarian: one page linking every pending agent's folder, then shelved for each."""
     pending = list(harness.controller.home.shelving)
-    page = "# Work\n\n" + "".join(f"- [{folder}](../{folder}/)\n" for folder in pending)
+    page = "# Work\n\n" + "".join(f"- [{folder}](/{folder}/)\n" for folder in pending)
     assert "Wrote" in await harness.call("librarian", "write_page", path="work.md", text=page)
     index = (harness.root / "library" / "FOLDER_CONTENT.md").read_text()
     if "work.md" not in index:

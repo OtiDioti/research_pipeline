@@ -64,9 +64,12 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 """
+#: The top index's line for the human's AGENTS.md, there only while the file is (see :meth:`Project.prepare`).
+AGENTS_LINE = "- [AGENTS.md](AGENTS.md) — Instructions from the human to every agent.\n"
+#: The obsolete form of that line, listed whether or not the file existed.
+OPTIONAL_AGENTS_LINE = "- [AGENTS.md](AGENTS.md) — Instructions from the human to every agent (optional).\n"
 ROOT_INDEX = """# Folder contents
 
-- [AGENTS.md](AGENTS.md) — Instructions from the human to every agent (optional).
 - [starting_evidence](starting_evidence) — The human's evidence and tools, shared by every phase; read-only for agents.
 - [library](library) — The Librarian's pages leading to the finished work of every phase, starting at LIBRARY.md.
 - [librarian](librarian) — The Librarian's own folder.
@@ -146,6 +149,12 @@ class Project:
     def relative(self, path: Path) -> str:
         return str(Path(path).resolve().relative_to(self.root))
 
+    @property
+    def environment(self) -> dict[str, str]:
+        """What every session and job of the project gets: PROJECT, its folder, from which links are written
+        (``/phases/…`` is ``$PROJECT/phases/…`` in a command)."""
+        return {"PROJECT": str(self.root)}
+
     def inside(self, path: Path) -> bool:
         try:
             Path(path).resolve().relative_to(self.root)
@@ -178,6 +187,7 @@ class Project:
         ):
             if not path.exists():
                 self.write(path, text)
+        self._list_agents_md()
         ignore = self.root / ".gitignore"
         if not ignore.exists():
             self.write(ignore, GITIGNORE)
@@ -292,10 +302,28 @@ class Project:
         """Replace a file of the project atomically; never through a symlink, never outside the project."""
         atomic_write(path, text, root=self.root)
 
+    def _list_agents_md(self) -> None:
+        """List the human's AGENTS.md in the top index while it exists, and only then: no link may lead nowhere."""
+        index = self.root / INDEX
+        text = index.read_text(encoding="utf-8") if index.is_file() else ""
+        listed = "[AGENTS.md](AGENTS.md)" in text
+        exists = (self.root / "AGENTS.md").is_file()
+        if exists and not listed:
+            head, _, rest = text.partition("\n\n")
+            self.write(index, f"{head}\n\n{AGENTS_LINE}{rest}")
+        elif not exists and listed:
+            self.write(
+                index, "".join(line for line in text.splitlines(keepends=True) if "[AGENTS.md](AGENTS.md)" not in line)
+            )
+        elif exists and OPTIONAL_AGENTS_LINE in text:
+            self.write(index, text.replace(OPTIONAL_AGENTS_LINE, AGENTS_LINE))
+
     def write_agents_index(self, agents: list[Agent]) -> None:
-        """Maintain the phase's agents/FOLDER_CONTENT.md: one line per agent, from its task's first line."""
+        """Maintain the phase's agents/FOLDER_CONTENT.md: one line per agent whose folder exists (the Reviewer's
+        is made at its first session), from its task's first line."""
         lines = [EMPTY_INDEX.rstrip("\n"), ""]
-        for agent in sorted((a for a in agents if a.id != LIBRARIAN), key=lambda a: a.id):
+        present = (a for a in agents if a.id != LIBRARIAN and self.agent_dir(a.id).is_dir())
+        for agent in sorted(present, key=lambda a: a.id):
             task = self.agent_dir(agent.id) / "TASK.md"
             summary = {
                 "primary": "Primary researcher.",
@@ -430,9 +458,10 @@ class Project:
         output = self.git("status", "--porcelain", "--untracked-files=all", "--", *(paths or ["."]), check=False)
         return [line[3:].strip().strip('"') for line in output.splitlines() if line.strip()]
 
-    def files(self) -> list[str]:
-        """Every file git tracks or would add (tracked, or untracked and not ignored), relative to the root."""
-        output = self.git("ls-files", "-z", "--cached", "--others", "--exclude-standard", check=False)
+    def files(self, *paths: str) -> list[str]:
+        """Every file git tracks or would add (tracked, or untracked and not ignored), relative to the root;
+        only under ``paths`` (relative to the root) if given."""
+        output = self.git("ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", *paths, check=False)
         return [path for path in output.split("\0") if path]
 
     def commit(self, message: str) -> str | None:

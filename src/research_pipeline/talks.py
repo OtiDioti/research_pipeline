@@ -166,6 +166,7 @@ class Talks:
                 tools=CAPABILITIES,
                 mcp=tools,
                 hidden=(project.research,),
+                environment=project.environment,
                 log=project.session_log(agent.id, number, "talk"),
             )
 

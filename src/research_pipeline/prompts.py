@@ -93,11 +93,13 @@ def talk_instructions(agent: Agent, project: Project, situation: str) -> str:
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
 
-def _section(title: str, path: Path, level: str = "##", read_from: Path | None = None) -> str | None:
+def _section(
+    title: str, path: Path, level: str = "##", read_from: Path | None = None, root: Path | None = None
+) -> str | None:
     """A file's content as a titled section, or None if it is missing or empty.
 
     ``read_from``: the folder of the agent that reads it, when that is not the file's own folder; its
-    relative links are then rewritten to work from there (:func:`links.rebase`).
+    relative links then become links from the project's root (:func:`links.rebase`).
     """
     try:
         text = path.read_text(encoding="utf-8", errors="replace").strip()
@@ -105,8 +107,8 @@ def _section(title: str, path: Path, level: str = "##", read_from: Path | None =
         return None
     if not text:
         return None
-    if read_from is not None:
-        text = links.rebase(text, path.parent, read_from).text
+    if read_from is not None and root is not None:
+        text = links.rebase(text, path.parent, read_from, root).text
     if len(text) > _EXCERPT:
         text = text[:_EXCERPT] + f"\n\n[… shortened; read {path} for the rest]"
     return f"{level} {title} ({path.name})\n\n{text}"
@@ -120,7 +122,9 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
     folder = project.agent_dir(agent.id)
     parts = [f"[controller] This is session {agent.sessions} of {agent.id}."]
     if agent.role == "primary":
-        objectives = _section(f"Objectives of phase {project.phase}", project.objectives, read_from=folder)
+        objectives = _section(
+            f"Objectives of phase {project.phase}", project.objectives, read_from=folder, root=project.root
+        )
         parts += filter(None, [objectives, phases])
         parts.append("## Starting evidence\n\n" + project.inventory())
         if options.references:
@@ -268,9 +272,12 @@ def later_phases(listing: str) -> str:
 
 
 def broken_links(found: list[str]) -> str:
-    """For the Librarian after a turn that left links leading nowhere."""
+    """For the Librarian after a turn that left links leading nowhere, or not written from the project's root."""
     listing = "\n".join(f"- {link}" for link in found[:30])
-    return f"[controller] These links in library/ lead nowhere; fix them with write_page:\n{listing}"
+    return (
+        "[controller] These links in library/ lead nowhere, or are not written from the project root (with a "
+        f"leading /); fix them with write_page:\n{listing}"
+    )
 
 
 def kept_links(moved: links.Rebased, what: str, where: str) -> str:
@@ -304,11 +311,39 @@ def agent_message(sender: str, text: str) -> str:
     return f"[from {sender}] {text.strip()}"
 
 
-def result_submitted(child: str, path: str) -> str:
-    return (
+def result_submitted(child: str, path: str, found: Sequence[str] = (), total: int = 0) -> str:
+    """For the parent of a subagent that submitted; ``found``: links of its files that break the convention."""
+    text = (
         f"[controller] Subagent {child} submitted its result: {path}. Read it critically, then accept it, "
         "or reject it with feedback (it then continues), or cancel it."
     )
+    if found:
+        text += f"\nIts files have {total} links that do not follow the project's link convention:\n" + _listing(
+            found, total
+        )
+    return text
+
+
+def links_submitted(found: Sequence[str], total: int, parent: str) -> str:
+    """Added to submit_result's reply when its files have links breaking the convention ('' if none)."""
+    if not found:
+        return ""
+    return f" {parent} is told of {total} links in your files that do not follow the link convention:\n" + _listing(
+        found, total
+    )
+
+
+def links_to_fix(found: Sequence[str], total: int) -> str:
+    """For an agent at the end of a turn whose changed files have links breaking the convention (each told once)."""
+    return (
+        "[controller] These links in your files do not follow the project's link convention (from the project "
+        "root, with a leading /, as your instructions say). Fix them, then continue:\n" + _listing(found, total)
+    )
+
+
+def _listing(found: Sequence[str], total: int) -> str:
+    more = [f"- … and {total - len(found)} more"] if total > len(found) else []
+    return "\n".join([f"- {line}" for line in found] + more)
 
 
 def job_ended(description: str) -> str:

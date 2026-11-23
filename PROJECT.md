@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4).
 
 ## 1. Purpose
 
@@ -139,6 +139,22 @@ library and the Librarian are shared by every phase. One phase runs at a time:
   phase's own state in `.research/phases/<N>/state.json`, and the list in
   `phases/FOLDER_CONTENT.md`. Without the web page, `run` runs the latest phase.
 
+**Links.** Every link in the project's Markdown names its file from the project's
+root, with a leading slash: `[the fit](/phases/2/agents/fit/RESULT.md)`. Such a link
+leads to the same file wherever the text is read (a brief copied to `TASK.md`, a
+message, the catalogue), so text can move without its links breaking. The one
+exception is a folder's `FOLDER_CONTENT.md`, whose entries name their own files
+(`[fit.py](fit.py)`). Every session and job has `PROJECT`, the project's folder, in
+its environment: in the shell, that link reads `"$PROJECT/phases/2/agents/fit/RESULT.md"`.
+Agents and the Librarian are asked to link this way by their prompts, and told,
+never refused, when they do not: at the end of each turn an agent hears of the
+links breaking the convention in the Markdown it changed (once each), and with a
+submitted result its parent hears of all of them. Text the controller moves (a
+brief, a rejection's feedback, the objectives in the primary's opening, an index
+line in the catalogue) has its relative links turned into links from the root; one
+that reaches nothing, or a different file from each folder, is kept as written and
+named to its author. Text written before this convention keeps its relative links.
+
 **The library.** The agents' finished work stays in the folders where it was made.
 `library/` holds the Librarian's (§3) Markdown pages, which lead a human to it:
 what was established or built in each phase and for each objective, how, and with
@@ -155,7 +171,7 @@ job or a note uses stays valid.
   - it asks the Librarian to place the work, giving it the agent's task, result,
     index lines and the commit.
 - **Placing.** The Librarian writes its pages with `write_page`. Links are
-  relative, and a link to a folder covers everything in it. Once every catalogued
+  written from the project's root (§2, "Links"), and a link to a folder covers everything in it. Once every catalogued
   file of the agent is reachable from a page, it calls `shelved(folder)`, naming the
   agent's folder (agent ids repeat across phases). The
   controller refuses that while any of those files is reachable from no page, or
@@ -164,7 +180,7 @@ job or a note uses stays valid.
   each change of structure and its reason, dated, in `library/LIBRARY.md`. Only
   pages change, so nothing that agents and jobs use ever moves. At the end of each
   of its turns, the controller commits the pages it changed and tells it of any
-  link that leads nowhere.
+  link that leads nowhere or is not written from the project's root.
 - **Catalogue.** The controller keeps a catalogue of every shelved file (its path,
   the agent's folder, which agent it is, the commit at shelving and its index line) and renders
   it, refreshed at every commit, as a short index, `library/CATALOG.md` (the shelved
@@ -252,15 +268,13 @@ ones included (6 by default, at least 2). A spawn over the cap is refused with a
 scheduling.
 
 **Links in moved texts.** The parent writes the brief in its own folder, often in a
-subfolder, and the subagent reads it as `TASK.md` in its folder. Copying the brief
-there, the controller rewrites each relative link that reaches an existing file or
-folder from the brief's folder and none from the subagent's, so that it leads to the
-same file; every other link is kept as written (a link the parent already wrote for
-`TASK.md` never changes), and the `spawn` reply lists the kept links that reach
-nothing from either folder, or a different file from each. The same holds for a
-rejection's feedback (written from the parent's folder, read in the subagent's) and
-for the objectives in the primary's opening message (written in the phase's folder,
-read from the primary's).
+subfolder, and the subagent reads it as `TASK.md` in its folder. Copying it there,
+the controller turns each relative link into a link from the project's root (§2,
+"Links"), to the file it reaches from the brief's folder or, if the parent wrote it
+for `TASK.md`, from the subagent's; the `spawn` reply names the links kept as
+written, which reach nothing from either folder or a different file from each. The
+same holds for a rejection's feedback and for the objectives in the primary's
+opening message.
 
 **Results.** When a subagent submits, the controller notifies its parent at once. The
 parent may **accept** the result, or **reject** it with feedback. The feedback reaches
@@ -617,7 +631,7 @@ is no prescribed scheme: the human may add preferences in `AGENTS.md`.
 ## 9. V0 acceptance
 
 1. **Automated tests** cover the controller's decisions against a fake CLI driver:
-   spawn and cap refusal, explicit model and effort, links of a brief, feedback and objectives read from another folder, accept/reject/cancel, messages
+   spawn and cap refusal, explicit model and effort, links of a brief, feedback and objectives read from another folder, the link convention's notices, a whole run's links leading nowhere (none), accept/reject/cancel, messages
    between parent and subagent, handoff triggering and repetition, waiting, idle and
    stalled agents, sessions kept while waiting and closed at the idle limit, quota
    pause and resume per CLI, the COMPLETE/STOP exchanges with the primary waiting in

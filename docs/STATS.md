@@ -39,7 +39,8 @@ Each tool call becomes the files it **read**, **ran**, **wrote**, **listed** or
 
 - shell commands (Codex's, Claude Code's Bash, and `run_job` commands) are split at
   `&&`, `||`, `;`, `|` and new lines, heredoc bodies dropped; `cd` moves the working
-  folder for what follows; each simple command is classified by its verb: readers
+  folder for what follows; a leading `$PROJECT` (or `${PROJECT}`) is the project's
+  folder, as in the agents' sessions and jobs; each simple command is classified by its verb: readers
   (`cat`, `sed`, `head`, `rg`, `pdftotext`, `pdflatex`, …: their file arguments, a
   pattern or program argument aside), listers (`ls`, `find`, …), interpreters
   (`python x.py`, `julia`, `bash x.sh`, `pytest`, `uv run …`: what they run),
@@ -76,6 +77,7 @@ attributed by its last recognisable part.
   reads or runs whose files (a matrix, own files aside), and per agent: level,
   children, most children at once, children spawned together (within 10 minutes),
   single-child chains, **brief links opened** (each link of TASK.md into the project,
+  from the project's root or, in older runs, from the child's folder,
   and whether the child ever read or ran it), **its parent's files it read without a
   link** (information the parent had and did not hand over), messages to its parent.
 - **Checking:** each result from its submission to its parent's decision (accept,

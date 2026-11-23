@@ -24,7 +24,7 @@ from agent_toolkit.records import atomic_write
 from research_pipeline import links, prompts
 from research_pipeline.library import CATALOG, Catalogue, render
 from research_pipeline.phases import Home
-from research_pipeline.project import CATALOG_PAGES, LIBRARIAN, Project
+from research_pipeline.project import CATALOG_PAGES, INDEX, LIBRARIAN, Project
 from research_pipeline.state import ENDED, FINISHED, Agent, State
 from research_pipeline.tools import ToolError
 
@@ -172,11 +172,12 @@ class Librarian:
     # Its turns ------------------------------------------------------------------------------------
 
     def turn_ended(self) -> str | None:
-        """After each of the Librarian's turns: commit the pages it changed; a notice of new broken links, if any."""
+        """After each of the Librarian's turns: commit the pages it changed; a notice of new broken links, or of links
+        not written from the project's root (the convention, never a reason to refuse), if any."""
         controller = (f"library/{CATALOG}", f"library/{CATALOG_PAGES}/")
         if [path for path in self.project.uncommitted("library") if not path.startswith(controller)]:
             self.commit("librarian: library pages updated")
-        broken = self._listed(self.check())
+        broken = self._listed(self.check()) + self._unconventional()
         if not broken:
             self._reported = set()
             return None
@@ -187,8 +188,12 @@ class Librarian:
 
     def check(self) -> links.Report:
         """The links of the Librarian's pages (the catalogue's aside: it reaches every file by itself)."""
+        return links.check(self._pages(), self.project.root, self._by_name())
+
+    def _pages(self) -> list[Path]:
+        """The Librarian's pages: library/'s Markdown but the catalogue's and hidden files."""
         library = self.project.library
-        pages = [
+        return [
             path
             for path in sorted(library.rglob("*.md"))
             if path != library / CATALOG
@@ -196,7 +201,19 @@ class Librarian:
             and path.is_file()
             and not any(part.startswith(".") for part in path.relative_to(library).parts)
         ]
-        return links.check(pages, self.project.root, self._by_name())
+
+    def _unconventional(self) -> list[str]:
+        """'page: link (why)' for its pages' links written relatively or as absolute paths (their indexes aside)."""
+        root, found = self.project.root, []
+        for page in self._pages():
+            if page.name != INDEX:
+                text = page.read_text(encoding="utf-8", errors="replace")
+                found += [
+                    f"{self.project.relative(page)}: {target} ({why})"
+                    for target, why in links.unconventional(text, root)
+                    if why != "leads nowhere"  # listed by the check already
+                ]
+        return found[:LISTED]
 
     def _broken(self, pages: list[Path]) -> list[str]:
         return self._listed(links.check(pages, self.project.root, self._by_name()))

@@ -18,7 +18,9 @@ On `run`, the controller:
     (`.research/phases/<N>/activity/`, every agent's messages and tool calls for the web
     app, appears with the first session);
   - the phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md, the root FOLDER_CONTENT.md,
-    `phases/FOLDER_CONTENT.md` and `library/LIBRARY.md`;
+    `phases/FOLDER_CONTENT.md` and `library/LIBRARY.md`; the root index lists AGENTS.md
+    while it exists, and only then (no link may lead nowhere), and `agents/FOLDER_CONTENT.md`
+    lists the agents whose folders exist (the Reviewer's appears at its first session);
   - the folder indexes;
   - a `.gitignore` covering `.research/`, virtual environments and caches (or `.research/`
     added to an existing one);

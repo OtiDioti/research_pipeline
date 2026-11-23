@@ -35,6 +35,7 @@ PROTOCOL_FILES = frozenset({"RESULT.md", "TASK.md", "FOLDER_CONTENT.md", "HANDOF
 ENDED = frozenset({"accepted", "cancelled", "finished", "failed", "resting"})
 READS = frozenset({"read", "list", "search"})
 _AGENT = re.compile(r"(?:^|/)phases/(\d+)/agents/([^/]+)")
+_PROJECT = re.compile(r"^\$(\{PROJECT\}|PROJECT)(?=/|$)")
 _OLD_AGENT = re.compile(r"^agents/([^/]+)")
 #: The places a path can be recognised by, wherever they appear in it.
 _ANCHORS = re.compile(r"(?:^|/)(?:phases/(\d+)/)?(agents/[^/]+|library|starting_evidence)(?=/|$)")
@@ -194,6 +195,10 @@ class _Resolver:
         self.prefix = str(root) + "/"
         self._exists: dict[str, bool] = {}
 
+    def expand(self, path: str) -> str:
+        """``path`` with a leading ``$PROJECT`` (the variable every session and job has) as the project's folder."""
+        return _PROJECT.sub(lambda _: self.prefix[:-1], path)
+
     def exists(self, path: str) -> bool:
         if path not in self._exists:
             self._exists[path] = (self.root / path).exists()
@@ -221,13 +226,14 @@ class _Resolver:
         return place + rest
 
     def _relative(self, access: Access, folder: str) -> str | None:
-        given = access.path.strip()
+        given = self.expand(access.path.strip())
         if not given or given.startswith(("~", "$")) or "://" in given or given == "-":
             return None
-        if access.cwd == ROOT:
+        cwd = self.expand(access.cwd) if access.cwd and access.cwd != ROOT else access.cwd
+        if cwd == ROOT:
             base = ""
-        elif access.cwd:
-            base = access.cwd if access.cwd.startswith("/") else posixpath.join(folder, access.cwd)
+        elif cwd:
+            base = cwd if cwd.startswith("/") else posixpath.join(folder, cwd)
         else:
             base = folder
         joined = given if given.startswith("/") else posixpath.join(base, given)
@@ -397,6 +403,8 @@ def _brief(record: Record, records: dict[str, Record], resolver: _Resolver) -> N
         if wiki or not target or target.startswith("#") or _SCHEME.match(target):
             continue
         target = unquote(target.split("#", 1)[0].split("?", 1)[0])
+        if target.startswith("/") and resolver.exists(target.lstrip("/")):
+            target = resolver.prefix + target.lstrip("/")  # a link from the project's root, the convention
         path = resolver.path(Access("read", target, record.folder), "", record.agent.phase) if target else None
         if path is None or path == record.folder or path.startswith(record.folder + "/"):
             continue  # outside the project, or its own folder (e.g. its TASK.md)

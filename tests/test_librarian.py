@@ -90,12 +90,14 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(shelf["files"][f"phases/1/agents/{child}/RESULT.md"], "described.")
             self.assertEqual(shelf["about"], "subagent, accepted, phase 1")
             index = (self.root / "library" / "CATALOG.md").read_text()
-            self.assertIn(f"- [phases/1/agents/{child}](catalog/phase-1/{child}.md) — Check {child} (subagent,", index)
-            self.assertIn("- [phases/1/agents/primary](../phases/1/agents/primary/) (primary, running)", index)
+            self.assertIn(
+                f"- [phases/1/agents/{child}](/library/catalog/phase-1/{child}.md) — Check {child} (subagent,", index
+            )
+            self.assertIn("- [phases/1/agents/primary](/phases/1/agents/primary/) (primary, running)", index)
             self.assertNotIn("RESULT.md", index)  # the files are on the agent's page
             page = self.root / "library" / "catalog" / "phase-1" / f"{child}.md"
             self.assertIn(
-                f"- [phases/1/agents/{child}/RESULT.md](../../../phases/1/agents/{child}/RESULT.md) — described.",
+                f"- [phases/1/agents/{child}/RESULT.md](/phases/1/agents/{child}/RESULT.md) — described.",
                 page.read_text(),
             )
             report = links.check([page], self.root, lambda name: [])
@@ -137,19 +139,42 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Removed", await harness.call("librarian", "write_page", path="topic/a.md", text=""))
             self.assertFalse((self.root / "library" / "topic").exists())
 
+    async def test_catalogue_pages_link_from_the_root_with_their_descriptions_links_kept_working(self):
+        async with running(self.root) as harness:
+            child = await spawn(harness, "fit")
+            folder = f"phases/1/agents/{child}"
+            harness.write(f"{folder}/RESULT.md", "# Result\n\nFound it.\n")
+            harness.write(f"{folder}/PLAN.md", "# Plan\n")
+            harness.handoff(child)
+            harness.write(  # an index line without the dash, linking a file of its folder: as agents write them
+                f"{folder}/FOLDER_CONTENT.md",
+                "# Folder contents\n\n- [RESULT.md](RESULT.md) answers the brief, from [the plan](PLAN.md).\n"
+                "- [PLAN.md](PLAN.md) — The plan.\n- [TASK.md](TASK.md) — The task.\n"
+                "- [HANDOFF.md](HANDOFF.md) — The handoff.\n",
+            )
+            assert "submitted" in await harness.call(child, "submit_result")
+            assert "Accepted" in await harness.call("primary", "accept", agent=child)
+            page = self.root / "library" / "catalog" / "phase-1" / f"{child}.md"
+            self.assertIn(
+                f"- [{folder}/RESULT.md](/{folder}/RESULT.md) — answers the brief, from [the plan](/{folder}/PLAN.md).",
+                page.read_text(),
+            )
+            catalogue = [self.root / "library" / "CATALOG.md", page]
+            self.assertEqual(links.check(catalogue, self.root, lambda name: []).broken, [])
+
     async def test_shelved_is_refused_until_every_file_is_reachable(self):
         async with running(self.root) as harness:
             child = await accept(harness, "fit")
             reply = await harness.call("librarian", "shelved", folder=f"phases/1/agents/{child}")
             self.assertIn(f"reachable from no page: phases/1/agents/{child}/RESULT.md", reply)  # not by CATALOG.md
-            link = f"[result](../phases/1/agents/{child}/RESULT.md) [x](gone.md)\n"
+            link = f"[result](/phases/1/agents/{child}/RESULT.md) [x](/gone.md)\n"
             await harness.call("librarian", "write_page", path="fits.md", text=link)
             reply = await harness.call("librarian", "shelved", folder=f"phases/1/agents/{child}")
             self.assertNotIn(f"no page: phases/1/agents/{child}/RESULT.md", reply)
             self.assertIn(f"no page: phases/1/agents/{child}/data/table.csv", reply)
-            self.assertIn("leads nowhere: library/fits.md: gone.md", reply)
+            self.assertIn("leads nowhere: library/fits.md: /gone.md", reply)
             self.assertIn("does not describe: fits.md", reply)
-            await harness.call("librarian", "write_page", path="fits.md", text=f"[fit](../phases/1/agents/{child}/)\n")
+            await harness.call("librarian", "write_page", path="fits.md", text=f"[fit](/phases/1/agents/{child}/)\n")
             index = (self.root / "library" / "FOLDER_CONTENT.md").read_text() + "- [fits.md](fits.md) — Fits.\n"
             await harness.call("librarian", "write_page", path="FOLDER_CONTENT.md", text=index)
             self.assertIn(
@@ -172,9 +197,9 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
             await harness.call("librarian", "write_page", path="draft.md", text="[x](missing.md)\n")
             await harness.emit("librarian", "turn_ended", text="")
             self.assertIn("librarian: library pages updated", harness.controller.project.git("log", "--oneline"))
-            self.assertEqual(sent(harness, "librarian").count("lead nowhere; fix them"), 1)
+            self.assertEqual(sent(harness, "librarian").count("fix them with write_page"), 1)
             await harness.emit("librarian", "turn_ended", text="")
-            self.assertEqual(sent(harness, "librarian").count("lead nowhere; fix them"), 1)
+            self.assertEqual(sent(harness, "librarian").count("fix them with write_page"), 1)
 
     async def test_an_idle_librarian_with_pending_work_is_nudged_then_alerts_the_human(self):
         async with running(self.root) as harness:

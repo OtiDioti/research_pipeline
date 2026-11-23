@@ -1,5 +1,22 @@
 # Status
 
+**2026-11-23.** 0.27.0, on agent_toolkit 0.21.0: **links are written from the project's root**
+([PROJECT.md](PROJECT.md) §2, "Links"; docs/AGENT_ROLES.md, LIBRARY.md, JOBS.md, STATS.md). Every link in the
+project's Markdown names its file with a leading slash (`[the fit](/phases/2/agents/fit/RESULT.md)`), so it leads to
+the same file wherever the text is read; a folder's FOLDER_CONTENT.md alone names its own files. Every session and job
+gets `PROJECT`, the project's folder (`cat "$PROJECT/phases/…"`). The prompts ask for it (common.md, librarian.md,
+talk.md and the setup assistants', deliberate agent-facing wording); nothing is refused: at the end of each turn an
+agent is told, once each, of the links breaking the convention in the Markdown it changed (`linkcheck.py`), with a
+submitted result its parent is told of all of them, and the Librarian hears of its pages' relative links with the
+broken ones. Text the controller moves (briefs, feedback, the primary's objectives, the catalogue's index lines) has its
+relative links turned into links from the root; the catalogue links from the root too and drops an index line's link
+to its own file, which broke 227 of lh_cavity's catalogue links. Older text keeps its relative links. The page's viewer
+opens links to project files in place (agent_toolkit 0.21.0), and the statistics read `$PROJECT` and links from the
+root. A new end-to-end test (`tests/test_link_audit.py`) reads every Markdown file and message of a whole run for links
+that lead nowhere; it found two in the controller's own indexes (AGENTS.md listed when absent, the Reviewer's folder
+before it exists), now listed only once they exist. Asked for after lh_cavity showed that every broken link came from
+text the controller moved.
+
 **2026-11-23.** 0.26.0, on agent_toolkit 0.20.0: **a *Talks* switch decides whether the assistant gets your
 talks** ([docs/SETUP.md](docs/SETUP.md), "The talks"; PROJECT.md §3 and §4 amended). On a new phase's or a
 reopening's setup page, above the conversation, like the activity's Tools switch: on by default, its note on hover

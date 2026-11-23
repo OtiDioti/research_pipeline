@@ -39,11 +39,19 @@ def folder(base: Path, job: Job) -> Path:
     return Path(base) / "agents" / job.owner / "jobs" / job.id
 
 
-def start(base: Path, job: Job, *, read_only: Iterable[Path] = (), hidden: Iterable[Path] = ()) -> subprocess.Popen:
+def start(
+    base: Path,
+    job: Job,
+    *,
+    read_only: Iterable[Path] = (),
+    hidden: Iterable[Path] = (),
+    environment: dict[str, str] | None = None,
+) -> subprocess.Popen:
     """Launch ``job`` in its confinement; record its process identity on it and return the process.
 
     The recorded process is the confinement's own (bwrap), the leader of the job's
     process session: it lives exactly as long as the job and exits with its status.
+    ``environment`` adds variables to the program's own (e.g. PROJECT, the project's folder).
     """
     where = folder(base, job)
     # The job's folder is in its owner's folder, which the owner can write: the controller's own files there
@@ -60,7 +68,13 @@ def start(base: Path, job: Job, *, read_only: Iterable[Path] = (), hidden: Itera
         create(where / "stderr.log", root=base) as stderr,
     ):
         process = subprocess.Popen(
-            argv, cwd=job.cwd, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr, start_new_session=True
+            argv,
+            cwd=job.cwd,
+            env=os.environ | (environment or {}),
+            stdin=subprocess.DEVNULL,
+            stdout=stdout,
+            stderr=stderr,
+            start_new_session=True,
         )
     job.pid, job.ticks = process.pid, _ticks(process.pid)
     return process

@@ -89,7 +89,8 @@ class StatisticsTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Started subagent fit", reply)
             await tool("primary", "spawn", "research", task="brief-fit.md", name="fit")
             await tool("fit", "Read", file_path=str(self.root / primary / "notes" / "plan.md"))  # a link it was given
-            await tool("fit", "shell", command="cat ../primary/notes/scratch.md")  # a file it was not given
+            # A file it was not given, read as the prompts say: "$PROJECT/<the link from the root>".
+            await tool("fit", "shell", command=f'cat "$PROJECT/{primary}/notes/scratch.md"')
             await tool("fit", "message", "research", agent="primary", text="Which data?")
             harness.write("phases/1/agents/fit/fit.py", "print(1)\n")
             harness.write("phases/1/agents/fit/data.csv", "x\n1\n")
