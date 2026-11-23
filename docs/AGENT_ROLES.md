@@ -9,7 +9,7 @@ across any number of sessions.
 |---|---|---|---|---|
 | Started by | The controller, at launch | `spawn`, by any agent | A COMPLETE or STOP proposal | Its first shelving request |
 | CLI, model, effort | `--primary` | The `spawn` arguments | `--reviewer` | `--librarian` |
-| Opening message | Its phase's objectives, the other phases (and the one it builds on), an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
+| Opening message | Its phase's objectives (their links rewritten to work from its folder), the other phases (and the one it builds on), an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
 | Writes, besides its folder | Its phase's STATUS.md, REPORT.md, FOLDER_CONTENT.md | — | Its phase's `reviews/` | `library/` pages, through `write_page` |
 | Finishes with | `complete` or `stop` | `submit_result` | `verdict` | `shelved`, for each request |
 
@@ -52,6 +52,13 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
   `task` (a non-empty Markdown file) is copied to the phase's `agents/<id>/TASK.md`. The id
   comes from `name`: lower case, dashes, at most 40 characters, with `-2` or `-3`
   added if taken.
+- TASK.md is read from the subagent's folder, not from the brief's, so the copy's
+  relative links are rewritten to lead to the same files (`links.rebase`). A link
+  is rewritten only if it reaches an existing file or folder from the brief's folder
+  and none from the subagent's; every other link is kept as written, so a link the
+  parent already wrote for TASK.md never changes. The `spawn` reply lists the kept
+  links that reach nothing from either folder, or a different file from each.
+  URLs, anchors, absolute paths, wikilinks and links in code are untouched.
 - Spawning does not stop the parent: it keeps doing whatever does not depend on the
   subagent, and news reaches it even during its turn. It ends its turn only when
   nothing useful remains until a subagent or job reports.
@@ -61,7 +68,8 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
 - The parent decides what happens next:
   - **accept:** the subagent ends, its session closes, and its folder is shelved
     ([LIBRARY.md](LIBRARY.md));
-  - **reject(feedback):** the feedback is appended to PARENT_FEEDBACK.md and
+  - **reject(feedback):** the feedback, its relative links rewritten from the
+    parent's folder as for TASK.md, is appended to PARENT_FEEDBACK.md and
     reaches the subagent in the same session (in a fresh one from HANDOFF.md if
     its session closed at the idle limit). If its CLI is held, or it needs a new
     session and every slot is taken, it waits; the rejection still stands;

@@ -1,5 +1,17 @@
 # Status
 
+**2026-11-23.** 0.25.0, on agent_toolkit 0.18.0: **links keep working in texts read from another folder**
+([docs/AGENT_ROLES.md](docs/AGENT_ROLES.md), "Spawning"; PROJECT.md §3 amended). A brief is written in the parent's
+folder, often in `briefs/`, and read as the subagent's `TASK.md`; it was copied unchanged, so its relative links led
+to the wrong places. Now each relative link that reaches an existing file from the brief's folder and none from
+`TASK.md` is rewritten to lead to the same file; every other link is kept as written, so links a parent already
+wrote for `TASK.md` never change, and the `spawn` reply lists the kept links that reach nothing from either folder,
+or a different file from each. The same applies to a rejection's feedback (read in the subagent's folder) and to the
+objectives in the primary's opening message (read from its folder). The `spawn` tool description says so, in one
+sentence (agent-facing wording). Found in the lh_cavity run: all 50 links of its 8 briefs were broken (the
+primary and a subagent sent corrections by message), and so were 221 of the 372 in transport; on lh_cavity's briefs
+the rule rewrites 47 and reports 3. Not yet tried in a live run.
+
 **2026-11-23.** 0.24.0, on agent_toolkit 0.18.0: **a machine where bwrap cannot confine sessions says so.** Being
 installed is not enough: bwrap must be allowed to create unprivileged user namespaces, which Ubuntu 23.10 and later
 forbid through AppArmor until bwrap has a profile ([docs/CONFINEMENT.md](docs/CONFINEMENT.md), "What the machine must
