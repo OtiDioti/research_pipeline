@@ -176,6 +176,39 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("# Check Convergence Check", launch.message)
             self.assertTrue((self.root / "phases" / "1" / "agents" / child / "TASK.md").is_file())
 
+    async def test_links_lead_to_the_same_files_from_where_texts_are_read(self):
+        """A brief in a subfolder, a parent's feedback and the objectives are read from another folder."""
+        (self.root / "phases/1/OBJECTIVES.md").write_text(
+            "Use [the evidence](../../starting_evidence/FOLDER_CONTENT.md).\n"
+        )
+        async with running(self.root) as harness:
+            opening = harness.session("primary").launch.message
+            self.assertIn("[the evidence](../../../../starting_evidence/FOLDER_CONTENT.md)", opening)
+            harness.write("phases/1/agents/primary/NOTATION.md", "# Notation\n")
+            harness.write(
+                "phases/1/agents/primary/briefs/fit.md",
+                "# Fit\n\nUse [the notation](../NOTATION.md), [the shared one](../primary/NOTATION.md), "
+                "[the library](../../../../../library/LIBRARY.md) and [a plan](plan.md).\n",
+            )
+            reply = await harness.call(
+                "primary", "spawn", task="briefs/fit.md", name="fit", backend="codex", model="gpt-test", effort="high"
+            )
+            self.assertIn("lead nowhere from phases/1/agents/fit/TASK.md: plan.md", reply)
+            task = (self.root / "phases/1/agents/fit/TASK.md").read_text()
+            self.assertIn("[the notation](../primary/NOTATION.md)", task)
+            self.assertIn("[the shared one](../primary/NOTATION.md)", task)  # written for TASK.md already: kept
+            self.assertIn("[the library](../../../../library/LIBRARY.md)", task)
+            self.assertIn("[a plan](plan.md)", task)
+            self.assertIn("[the notation](../primary/NOTATION.md)", harness.session("fit").launch.message)
+            self.prepare_result(harness, "fit")
+            await harness.call("fit", "submit_result")
+            await harness.emit("fit", "turn_ended", text="done")
+            reply = await harness.call("primary", "reject", agent="fit", feedback="Follow [the notation](NOTATION.md).")
+            self.assertNotIn("Kept as written", reply)
+            feedback = "Follow [the notation](../primary/NOTATION.md)."
+            self.assertIn(feedback, (self.root / "phases/1/agents/fit/PARENT_FEEDBACK.md").read_text())
+            self.assertIn(feedback, sent(harness, "fit"))
+
     async def test_result_requires_settled_children_and_layout(self):
         async with running(self.root) as harness:
             child = await self.spawn(harness)

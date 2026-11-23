@@ -15,6 +15,7 @@ from pathlib import Path
 from agent_toolkit import Spec
 from agent_toolkit.protocol import Prompts
 
+from research_pipeline import links
 from research_pipeline.library import page
 from research_pipeline.phases import Summary
 from research_pipeline.project import CATALOG_PAGES, Project
@@ -92,14 +93,20 @@ def talk_instructions(agent: Agent, project: Project, situation: str) -> str:
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
 
-def _section(title: str, path: Path, level: str = "##") -> str | None:
-    """A file's content as a titled section, or None if it is missing or empty."""
+def _section(title: str, path: Path, level: str = "##", read_from: Path | None = None) -> str | None:
+    """A file's content as a titled section, or None if it is missing or empty.
+
+    ``read_from``: the folder of the agent that reads it, when that is not the file's own folder; its
+    relative links are then rewritten to work from there (:func:`links.rebase`).
+    """
     try:
         text = path.read_text(encoding="utf-8", errors="replace").strip()
     except OSError:
         return None
     if not text:
         return None
+    if read_from is not None:
+        text = links.rebase(text, path.parent, read_from).text
     if len(text) > _EXCERPT:
         text = text[:_EXCERPT] + f"\n\n[… shortened; read {path} for the rest]"
     return f"{level} {title} ({path.name})\n\n{text}"
@@ -113,7 +120,7 @@ def opening(agent: Agent, project: Project, options: Options, notices: list[str]
     folder = project.agent_dir(agent.id)
     parts = [f"[controller] This is session {agent.sessions} of {agent.id}."]
     if agent.role == "primary":
-        objectives = _section(f"Objectives of phase {project.phase}", project.objectives)
+        objectives = _section(f"Objectives of phase {project.phase}", project.objectives, read_from=folder)
         parts += filter(None, [objectives, phases])
         parts.append("## Starting evidence\n\n" + project.inventory())
         if options.references:
@@ -260,10 +267,28 @@ def later_phases(listing: str) -> str:
     )
 
 
-def broken_links(links: list[str]) -> str:
+def broken_links(found: list[str]) -> str:
     """For the Librarian after a turn that left links leading nowhere."""
-    listing = "\n".join(f"- {link}" for link in links[:30])
+    listing = "\n".join(f"- {link}" for link in found[:30])
     return f"[controller] These links in library/ lead nowhere; fix them with write_page:\n{listing}"
+
+
+def kept_links(moved: links.Rebased, what: str, where: str) -> str:
+    """For the author of a text copied to ``where``: links kept as written that may not work there ('' if none).
+
+    ``what`` names the text ("the brief", "the feedback"); its other relative links were rewritten to work there.
+    """
+    notes = []
+    if moved.nowhere:
+        notes.append(f"these links of {what} lead nowhere from {where}: " + ", ".join(moved.nowhere))
+    if moved.ambiguous:
+        notes.append(
+            f"these links of {what} reach a different file from {where} than from where you wrote them: "
+            + ", ".join(moved.ambiguous)
+        )
+    if not notes:
+        return ""
+    return " Kept as written, " + "; ".join(notes) + ". Fix them by message if they matter."
 
 
 def stalled(child: str, last: str) -> str:

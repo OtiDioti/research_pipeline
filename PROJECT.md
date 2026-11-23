@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3).
 
 ## 1. Purpose
 
@@ -245,6 +245,17 @@ model they can on an available backend, unless the human's `AGENTS.md` says othe
 ones included (6 by default, at least 2). A spawn over the cap is refused with a message such as
 "6/6 agent sessions are already open"; the agent decides what to do. Agents know nothing else about
 scheduling.
+
+**Links in moved texts.** The parent writes the brief in its own folder, often in a
+subfolder, and the subagent reads it as `TASK.md` in its folder. Copying the brief
+there, the controller rewrites each relative link that reaches an existing file or
+folder from the brief's folder and none from the subagent's, so that it leads to the
+same file; every other link is kept as written (a link the parent already wrote for
+`TASK.md` never changes), and the `spawn` reply lists the kept links that reach
+nothing from either folder, or a different file from each. The same holds for a
+rejection's feedback (written from the parent's folder, read in the subagent's) and
+for the objectives in the primary's opening message (written in the phase's folder,
+read from the primary's).
 
 **Results.** When a subagent submits, the controller notifies its parent at once. The
 parent may **accept** the result, or **reject** it with feedback. The feedback reaches
@@ -600,7 +611,7 @@ is no prescribed scheme: the human may add preferences in `AGENTS.md`.
 ## 9. V0 acceptance
 
 1. **Automated tests** cover the controller's decisions against a fake CLI driver:
-   spawn and cap refusal, explicit model and effort, accept/reject/cancel, messages
+   spawn and cap refusal, explicit model and effort, links of a brief, feedback and objectives read from another folder, accept/reject/cancel, messages
    between parent and subagent, handoff triggering and repetition, waiting, idle and
    stalled agents, sessions kept while waiting and closed at the idle limit, quota
    pause and resume per CLI, the COMPLETE/STOP exchanges with the primary waiting in
