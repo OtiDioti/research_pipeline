@@ -128,6 +128,10 @@ Before the first start, the page first shows the preparation steps of the first
 phase, always, even for a folder that is ready already: *Material* and *Objectives*
 (`phases/1/OBJECTIVES.md`), with the setup assistant ([SETUP.md](SETUP.md)); the launch options are the last step, where the
 checks Start waits for are listed. Afterwards it shows the launch options alone.
+A new phase's and a reopening's preparation also shows a *Talks* switch above the
+conversation with the assistant: whether it reads your talks with the earlier phases
+(on by default; its note on hover says how many messages), fixed and greyed once you
+first write to the assistant ([SETUP.md](SETUP.md), "The talks").
 
 Every launch option, prefilled from the command line and the stored options (the
 last used): the primary, the Reviewer and the Librarian (CLI, model from the CLI's own list or

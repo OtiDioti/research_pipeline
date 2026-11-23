@@ -130,7 +130,8 @@ the top bar offers *Prepare reopening*, which opens the setup page again
 
 **The reopening assistant** (`assistant.py`, `prompts/reopen.md`) is the setup
 assistant with its own prompt and requests, on the same CLI choice, and is optional:
-- it reads the project and the phase's talks since its end, written for it to
+- it reads the project, and the phase's talks since its end if the *Talks* switch
+  is on when the human first writes to it ([SETUP.md](SETUP.md)), written for it to
   `.research/setup/<N>/TALKS.md` (each request says when that changed);
 - it can grill the human (rounds of one to four multiple-choice questions) and writes
   through tools: `write_objectives` (the phase's OBJECTIVES.md, kept short: what is

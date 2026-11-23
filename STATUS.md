@@ -1,5 +1,18 @@
 # Status
 
+**2026-11-23.** 0.26.0, on agent_toolkit 0.20.0: **a *Talks* switch decides whether the assistant gets your
+talks** ([docs/SETUP.md](docs/SETUP.md), "The talks"; PROJECT.md §3 and §4 amended). On a new phase's or a
+reopening's setup page, above the conversation, like the activity's Tools switch: on by default, its note on hover
+says what it gives and how many messages there are. Your first conversation message (ideas, answers, draft now or a
+free message; not *organise*) fixes it, greyed from then on and kept across restarts; a first message the assistant
+refuses fixes nothing. On, that message hands the assistant TALKS.md, written only from then on; off, it never gets
+the talks. The assistant now no longer sees the program's records in `.research/` (but its own folder), as no agent
+does: it could read the earlier phases' activity logs, talks included. Prompt wording (agent-facing, deliberate):
+phase.md and reopen.md say only what the switch allows (that the talks may come, where they are, or nothing), and a
+notice hands them over with the first message; a reopening's requests and its first-ideas placeholder mention the
+talks only as "if you have them". A preparation saved before the switch existed keeps the talks, fixed once the
+human had written. Asked for after preparing lh_cavity's phase 2 while talking with phase 1's primary.
+
 **2026-11-23.** 0.25.1, on agent_toolkit 0.19.0: **unfolding an agent's files shows only its own
 relations** ([docs/WEB.md](docs/WEB.md), "The graph"). A website or library page several agents used was one node
 with edges to all of them, so unfolding one agent drew lines to every other agent that used it (in lh_cavity,
