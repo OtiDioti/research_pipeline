@@ -1,5 +1,18 @@
 # Status
 
+**2026-11-24.** 0.34.0: **a primary can change its files from a talk** ([PROJECT.md](PROJECT.md) §4 amended;
+docs/FINISHING.md, WEB.md, AGENT_ROLES.md and README updated). Talks were read-only, so a finished phase's primary
+asked for, say, a new plot could not save it anywhere the human could see. The chat with a primary that does not run
+now has an *Allow edits* switch (agent_toolkit v0.22.0, the 'edit' agent action): while it is on, its talk sessions
+are launched with the write scope it has at work (`Project.scope`, moved from the controller: its folder, the phase's
+RESULT.md, STATUS.md and FOLDER_CONTENT.md), still with no subagents or jobs, and the controller commits the phase's
+changes after each answer ("primary of phase N: changes made in a talk"). The phase keeps its outcome; the Librarian
+is not told. Flipping the switch takes effect at the next message: the live talk session saves its note and a fresh one
+starts with the new access (refused while it is answering). Prompt change, deliberate: talk.md's read-only line moved
+to the `read-only` section of talk-messages.md unchanged, with a new `edits` section in its place when the switch is
+on. The Reviewer gets no switch. Tests: a talk with edits on writes a plot in the primary's folder, it is committed,
+and switching back starts a read-only session. The README shows a screenshot of the web app below its diagram.
+
 **2026-11-24.** 0.33.0: **the quota limits apply to the Writer and its checker** ([PROJECT.md](PROJECT.md) §4 and §6
 amended; docs/WRITER.md, QUOTA.md). The Writer's CLI was read only if an agent of the investigation used it, and a
 hold stopped nothing it was doing. Now its CLI is always among those read, and a report's request looks before each

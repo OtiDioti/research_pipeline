@@ -19,7 +19,8 @@ receives agents' messages (the human can write to it from the web app).
 
 After the end, the primary and the Reviewer answer the human in **talk sessions**:
 talk-only, read-only, from their handoff and key files, with `prompts/talk.md` and the
-one tool `write_talk_note` ([FINISHING.md](FINISHING.md)).
+one tool `write_talk_note`; the human may allow the primary to change its files
+([FINISHING.md](FINISHING.md)).
 
 The **Writer** writes the reports for the human from the agents' work, with a fresh
 **checker** for each report it submits: not part of the investigation, hosted by the
