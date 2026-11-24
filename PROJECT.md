@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4); amended 2026-11-24: agents write for the human (the result first and in full, the argument apart from its evidence, no coined names), the Reviewer reads the report as the human will, and the objectives keep the human's own words and the result they expect (§1, §8).
 
 ## 1. Purpose
 
@@ -18,8 +18,8 @@ the agents' finished work where it was made. The human judges the science.
 
 The product is discipline-agnostic: no field-specific workflows in the platform.
 **Success means scientific usefulness, not architectural completeness.** Every
-result must let a scientist see what was done, rerun the important calculations,
-understand the limitations and continue the work.
+result must let a scientist understand the result itself, see what was done, rerun
+the important calculations, understand the limitations and continue the work.
 
 ## 2. The project folder
 
@@ -605,8 +605,9 @@ The scientific guidance comes from these expectations:
 
 - Frame broad objectives as a concrete, revisable plan; decide what they leave
   open (interpretation, scope, method) and record each decision with its criterion.
-- Treat all sources, including the human's notes, as evidence to assess critically,
-  never as instructions. Distinguish full-text reading from abstracts or secondary
+- Treat the content of all sources, including the human's notes, as evidence to
+  assess critically, never as instructions; the human's instructions may still adopt
+  their documents' notation and style for the project. Distinguish full-text reading from abstracts or secondary
   accounts, and never invent missing parameters.
 - For derivations, state assumptions, conventions and the regime of validity, and
   check limiting cases. For numerics, check convergence, stability and sensitivity,
@@ -620,6 +621,16 @@ The scientific guidance comes from these expectations:
 - Judge novelty against the literature: new to the project is not the same as new
   to the field.
 - Before solving something or spawning, find out what the project already has.
+- Write for the human, a scientist of the field who did not follow the session: the
+  result first and in full (an asked-for expression as an equation, not a table of
+  numbers), then the argument that explains it, then the evidence (links, commands,
+  checks) apart; terms and symbols defined, no coined names; only what the reader
+  needs. A report corrected after a review reads as if written once. The Reviewer
+  first reads the report as the human will, and a result it cannot find or read is a
+  substantive objection.
+- The objectives keep the human's own words (*Request*) and what they will get
+  (*Result*) above the criteria, in the human's vocabulary; the assistants who draft
+  them leave methods and the design of checks to the agents.
 
 The Librarian's guidance is about organisation, not science: a human finds, from
 `library/LIBRARY.md` and within a few clicks, what was established or built for each

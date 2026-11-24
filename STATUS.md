@@ -1,5 +1,20 @@
 # Status
 
+**2026-11-24.** 0.28.0: **agents write for the human** ([PROJECT.md](PROJECT.md) §1 and §8 amended;
+docs/SETUP.md). Prompt wording, changed deliberately (agent-facing): common.md replaces the summary recipe (request,
+what was done, verdict, each claim with its link and command) with a section "Writing for the human". The result comes
+first and in full (an expression asked for is a displayed equation with its symbols defined, never only a table of
+numbers), then the argument that explains it, then the evidence (links, commands, checks) in a closing section. Terms
+are defined where they first appear, coined names are not allowed, and only what the reader needs goes in. The human's
+instructions may adopt their documents' notation, which common.md no longer contradicts. primary.md: REPORT.md opens
+with the phase's main results on one page, and a report corrected after a review reads as if written once. reviewer.md:
+the Reviewer first reads the objectives and REPORT.md as the human will, restates the main results, and objects when it
+cannot or when the writing standards lapse, asking for fixes in place, never for more material. objectives-template.md
+gains *Request* (the human's words, unchanged) and *Result* (what they will get); the setup, phase and reopening
+assistants keep the human's intent on top, in their vocabulary, and leave methods and the design of checks to the
+agents. Asked for after lh_cavity's reports grew less readable phase by phase: phase 3 gave its Hamiltonian only as
+tables of numbers. Its reopening under these prompts produced a report with the Hamiltonian on its first page.
+
 **2026-11-23.** 0.27.1: **a flaky test fixed**; no behaviour changed. The pause test
 (`test_pause_keeps_sessions_stops_jobs_and_resume_reports_changes_in_them`) failed in the full suite ("pausing" !=
 "paused") and passed alone: the pause completes only once the stopped job's process is reaped in a worker thread,
