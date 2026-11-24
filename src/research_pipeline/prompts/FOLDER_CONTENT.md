@@ -14,3 +14,7 @@
 - [objectives-template.md](objectives-template.md) — The light template of OBJECTIVES.md, for the setup page and the assistant.
 - [talk.md](talk.md) — The instructions of a talk session with the primary or the Reviewer of a phase that does not run.
 - [talk-messages.md](talk-messages.md) — The messages of a talk session, one section each.
+- [writer.md](writer.md) — The Writer's role: the report for the human, faithful to the work, in the human's notation, following WRITING.md.
+- [checker.md](checker.md) — The role of the Writer's checker: an independent check of a report against the work.
+- [writer-requests.md](writer-requests.md) — The messages the Writer and its checker receive, one section each.
+- [writing-starter.md](writing-starter.md) — The starter WRITING.md a project gets: the built-in writing rules, for the human to change.
