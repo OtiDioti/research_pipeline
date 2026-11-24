@@ -44,8 +44,8 @@ lists the reports; the top index lists `reports/` and `WRITING.md` once they exi
 | A message to the Writer's node | answers you; if you ask for a change, makes it and submits again |
 
 A request is refused while the Writer works on the same report, while the phase runs,
-while its CLI cannot run or its quota is held, and on a machine without `latexmk` (the
-controls are greyed then, saying why).
+while its CLI cannot run, and on a machine without `latexmk` (the controls are greyed
+then, saying why). While its CLI's quota is held, a request is accepted but waits (below).
 
 ## The check
 
@@ -68,6 +68,13 @@ A checker that ends without a verdict is asked once more, then counts as left fo
   (`.research/writer/<report>/HANDOFF.md`) at the context threshold and at shutdown,
   which waits for its current request. A request a restart interrupted is not resumed:
   ask again. Each checker starts afresh.
+- **Quota.** The Writer's CLI is read with the others, even when no agent uses it
+  ([QUOTA.md](QUOTA.md)). A request looks before each step (the Writer's next turn, or a
+  check): while the CLI is held, the Writer's session saves its note and ends, the node
+  shows *held*, and the request waits; it continues once the hold ends (a short one by
+  itself, a weekly or unreadable one through *Resume held*, offered after the phase's
+  end too while a report waits). A turn already running finishes first. Closing the
+  controller stops a waiting request (ask again).
 - The Writer writes only its report's folder (and its note); the checker only `checks/`.
   Both read everything but `.research/` (but their own notes). Agents' jobs see
   `reports/` and `WRITING.md` read-only.

@@ -1,5 +1,17 @@
 # Status
 
+**2026-11-24.** 0.33.0: **the quota limits apply to the Writer and its checker** ([PROJECT.md](PROJECT.md) §4 and §6
+amended; docs/WRITER.md, QUOTA.md). The Writer's CLI was read only if an agent of the investigation used it, and a
+hold stopped nothing it was doing. Now its CLI is always among those read, and a report's request looks before each
+step (the Writer's next turn, or a check): while the CLI is held, the Writer's session saves its note and ends, the
+node shows *held*, and the request waits, continuing once the hold ends (it no longer refuses a request for a held
+CLI: it accepts and waits). The controller tells waiting requests whenever holds change. *Resume held* is offered
+after a phase's end too while a report waits for a weekly or unreadable hold (`releasable`, `_release`; while the
+phase runs nothing changed). Closing the controller stops a waiting request instead of waiting for the quota. The
+controller's Writers moved to `reports.py` with the WRITING.md setup (writer.py was over 500 lines). The Writer and
+its checker still get no AGENTS.md, by the human's choice. Tests: a weekly hold during the Writer's turn (the check
+waits, the note is saved, *Resume held* after the end continues it), and a shutdown while held.
+
 **2026-11-24.** 0.32.0: **the Writer writes the reports for the human** ([PROJECT.md](PROJECT.md) §2, §3, §4 "Reports"
 and §7 amended; [docs/WRITER.md](docs/WRITER.md), new; AGENT_ROLES, CONFINEMENT, PROJECT_FOLDER, STATS, WEB and
 README updated). The research agents write their results for each other; the Writer (`writer.py`, hosted by the
