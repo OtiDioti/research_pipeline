@@ -33,7 +33,7 @@ def phase_fields(earlier: list[int]) -> list[Field]:
             "builds_on",
             "Builds on",
             "select",
-            "An earlier phase whose report and status the primary starts from; every phase's finished work is "
+            "An earlier phase whose result and status the primary starts from; every phase's finished work is "
             "in the library anyway.",
             options=["none", *(str(number) for number in earlier)],
         ),

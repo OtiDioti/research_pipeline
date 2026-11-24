@@ -17,7 +17,7 @@ On `run`, the controller:
   - `library/`, `librarian/`, the phase's `agents/` and `reviews/`, and `.research/logs/`
     (`.research/phases/<N>/activity/`, every agent's messages and tool calls for the web
     app, appears with the first session);
-  - the phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md, the root FOLDER_CONTENT.md,
+  - the phase's STATUS.md, RESULT.md and FOLDER_CONTENT.md, the root FOLDER_CONTENT.md,
     `phases/FOLDER_CONTENT.md` and `library/LIBRARY.md`; the root index lists AGENTS.md
     while it exists, and only then (no link may lead nowhere), and `agents/FOLDER_CONTENT.md`
     lists the agents whose folders exist (the Reviewer's appears at its first session);
@@ -32,7 +32,7 @@ On `run`, the controller:
 |---|---|
 | The human | `AGENTS.md`, `starting_evidence/` (read-only for agents and jobs), each phase's `OBJECTIVES.md` |
 | Every agent | Its own `phases/<N>/agents/<id>/` (the Librarian: `librarian/`), until it is shelved ([LIBRARY.md](LIBRARY.md)) |
-| The primary | Also its phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md |
+| The primary | Also its phase's STATUS.md, RESULT.md and FOLDER_CONTENT.md |
 | The Reviewer | Also its phase's `reviews/` |
 | The Librarian | Also the Markdown pages of `library/`, only through `write_page` |
 | The controller | `.research/` (hidden from agents and jobs), `phases/FOLDER_CONTENT.md`, each phase's `agents/FOLDER_CONTENT.md` and `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md and PARENT_FEEDBACK.md, `library/CATALOG.md` and `library/catalog/`, the Librarian's pages (as it asks), and the outcome line of STATUS.md |

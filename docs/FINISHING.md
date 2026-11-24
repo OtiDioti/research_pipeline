@@ -10,7 +10,8 @@ primary's decision, after the Reviewer's challenge).
 - its layout check passes;
 - no earlier proposal is still with the Reviewer.
 
-`complete` also needs a non-empty report, the phase's REPORT.md by default.
+`complete` also needs a non-empty result, the phase's RESULT.md by default (a phase that ended
+with only a REPORT.md, before results were renamed, keeps that as its result).
 
 On a proposal:
 1. The round number increases, and the proposal is committed; the proposal records that commit.
@@ -82,7 +83,7 @@ while another phase runs: select it in the sidebar ([WEB.md](WEB.md)).
   effort. Its instructions are `prompts/talk.md` (its phase has ended, or is paused;
   answer from the work, citing the files; say what was not done or is uncertain) and
   the human's AGENTS.md; its first message gives where its phase stands, its last
-  HANDOFF.md and its key files (the phase's REPORT.md and STATUS.md, or the latest
+  HANDOFF.md and its key files (the phase's RESULT.md and STATUS.md, or the latest
   review), then the human's message.
 - It has every native capability, but nothing in the project is writable (only its
   private /tmp), `.research/` is hidden, and its one controller tool is

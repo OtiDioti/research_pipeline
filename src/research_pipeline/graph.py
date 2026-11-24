@@ -239,7 +239,7 @@ def status(
 
 
 def documents(paths: Project, state: State) -> dict[str, list[str]]:
-    """Each agent's documents (its folder's files, the primary's objectives, status and report, the reviews)."""
+    """Each agent's documents (its folder's files, the primary's objectives, status and result, the reviews)."""
     listing = {}
     agents = [*state.agents.values()]
     if LIBRARIAN not in state.agents:
@@ -248,7 +248,7 @@ def documents(paths: Project, state: State) -> dict[str, list[str]]:
         folder = paths.agent_dir(agent.id)
         found = [path for path in folder.glob("*") if path.is_file() and path.name != INDEX] if folder.is_dir() else []
         if agent.role == "primary":
-            found += [path for path in (paths.objectives, paths.status_file, paths.report) if path.is_file()]
+            found += [path for path in (paths.objectives, paths.status_file, paths.result) if path.is_file()]
         if agent.role == "reviewer":
             found += [path for path in paths.reviews.glob("*.md") if path.name != INDEX]
         if agent.role == "librarian":

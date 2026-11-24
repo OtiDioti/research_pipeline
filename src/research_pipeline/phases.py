@@ -2,7 +2,7 @@
 
 An investigation is split into numbered phases, each in its own folder
 ``phases/<N>/`` with its own objectives, primary, Reviewer, subagents, status and
-report. One phase runs at a time; any phase can be continued later, and a new
+result. One phase runs at a time; any phase can be continued later, and a new
 phase starts a fresh primary with access to the knowledge base the earlier ones
 built. Shared by every phase are the human's AGENTS.md and starting_evidence/,
 the library and the Librarian.
@@ -91,6 +91,7 @@ class Summary:
     builds_on: int | None
     status: str  # NOT_STARTED, or the phase state's status (running, pausing, paused, complete, stopped)
     outcome: str | None  # how it last ended, if it did
+    result: str  # its result, from the project's root (e.g. 'phases/2/RESULT.md')
 
     @property
     def folder(self) -> str:
@@ -123,14 +124,15 @@ def summaries(project: Project, home: Home, live: State | None = None) -> list[S
                 phase.builds_on,
                 state.status if state else NOT_STARTED,
                 state.outcome if state else None,
+                project.relative(project.at(phase.number).result),
             )
         )
     return found
 
 
 def listing(items: list[Summary]) -> str:
-    """Phases as a Markdown list for an agent: each with its folder, title, state and report."""
-    return "\n".join(f"- {item.line()}; its report: {item.folder}/REPORT.md" for item in items) or "(none)"
+    """Phases as a Markdown list for an agent: each with its folder, title, state and result."""
+    return "\n".join(f"- {item.line()}; its result: {item.result}" for item in items) or "(none)"
 
 
 def write_index(project: Project, home: Home, live: State | None = None) -> None:

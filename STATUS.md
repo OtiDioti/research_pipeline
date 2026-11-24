@@ -1,19 +1,41 @@
 # Status
 
-**2026-11-24.** 0.28.0: **agents write for the human** ([PROJECT.md](PROJECT.md) §1 and §8 amended;
-docs/SETUP.md). Prompt wording, changed deliberately (agent-facing): common.md replaces the summary recipe (request,
-what was done, verdict, each claim with its link and command) with a section "Writing for the human". The result comes
-first and in full (an expression asked for is a displayed equation with its symbols defined, never only a table of
-numbers), then the argument that explains it, then the evidence (links, commands, checks) in a closing section. Terms
-are defined where they first appear, coined names are not allowed, and only what the reader needs goes in. The human's
-instructions may adopt their documents' notation, which common.md no longer contradicts. primary.md: REPORT.md opens
-with the phase's main results on one page, and a report corrected after a review reads as if written once. reviewer.md:
-the Reviewer first reads the objectives and REPORT.md as the human will, restates the main results, and objects when it
-cannot or when the writing standards lapse, asking for fixes in place, never for more material. objectives-template.md
-gains *Request* (the human's words, unchanged) and *Result* (what they will get); the setup, phase and reopening
-assistants keep the human's intent on top, in their vocabulary, and leave methods and the design of checks to the
-agents. Asked for after lh_cavity's reports grew less readable phase by phase: phase 3 gave its Hamiltonian only as
-tables of numbers. Its reopening under these prompts produced a report with the Hamiltonian on its first page.
+**2026-11-24.** 0.29.0: **results are written for agents, in one format; the phase's result is its RESULT.md**
+([PROJECT.md](PROJECT.md) §2–§4 and §8 amended; docs/AGENT_ROLES.md, "Results, checks and notation"). The human-facing
+account is left to a later step (a Writer, which will write the phase's REPORT.md), so results now serve only the
+agents that accept, review and build on them. This replaces 0.28.0's writing for the human in common.md, primary.md
+and reviewer.md (its text, in commit c1d5f2c, is a starting point for the Writer); 0.28.0's objectives template
+(Request, Result) and its setup, new-phase and reopening prompts stay. Prompt wording (agent-facing, deliberate):
+common.md replaces the rule that every summary restates its request with one format for every result (a coverage table
+with one row per criterion of the request; numbered claims with permanent IDs, each with its status, what it rests on,
+evidence, the author's check and a rerun command; decisions; negative results; what is open; a glossary of coined
+labels; the current state only, no narrative or history); a brief has the sections Purpose, Request (numbered
+criteria), Prior work, Inputs and Check; whoever checks another agent's claim records it in its CHECKS.md, so the
+Reviewer checks the consequential claims no CHECKS.md covers; the human's documents fix the notation and terminology
+(no longer "never instructions" for those), and the primary keeps the phase's NOTATION.md built from them in every
+phase, not from the previous phase's. primary.md: the phase's result covers every criterion of every objective, its
+claims rest on the subagents' cited claims, and review answers go to agents/primary/RESPONSES.md. reviewer.md: it
+checks the coverage against the objectives, records its checks, counts format and notation lapses as objections,
+numbers objections R<round>.<n> and opens later reviews with their state. subagent.md: the result's coverage follows
+the brief. The `complete` tool takes `result` (default: the phase's result) and its description says so. A phase that
+ended with only a REPORT.md (lh_cavity's and transport's) keeps it as its result: the controller names it wherever it
+names the phase's result. Asked for after lh_cavity's later phases drifted from the human's notation (`\hat\Pi` for
+the notes' `\hat\pi`), coined labels ("E20", "G box") reached the reports, and reports carried their review history.
+Not yet tried in a live run. **2026-11-24.** 0.28.0: **agents write for the human** ([PROJECT.md](PROJECT.md) §1 and
+§8 amended; docs/SETUP.md). Prompt wording, changed deliberately (agent-facing): common.md replaces the summary recipe
+(request, what was done, verdict, each claim with its link and command) with a section "Writing for the human". The
+result comes first and in full (an expression asked for is a displayed equation with its symbols defined, never only a
+table of numbers), then the argument that explains it, then the evidence (links, commands, checks) in a closing
+section. Terms are defined where they first appear, coined names are not allowed, and only what the reader needs goes
+in. The human's instructions may adopt their documents' notation, which common.md no longer contradicts. primary.md:
+REPORT.md opens with the phase's main results on one page, and a report corrected after a review reads as if written
+once. reviewer.md: the Reviewer first reads the objectives and REPORT.md as the human will, restates the main results,
+and objects when it cannot or when the writing standards lapse, asking for fixes in place, never for more material.
+objectives-template.md gains *Request* (the human's words, unchanged) and *Result* (what they will get); the setup,
+phase and reopening assistants keep the human's intent on top, in their vocabulary, and leave methods and the design
+of checks to the agents. Asked for after lh_cavity's reports grew less readable phase by phase: phase 3 gave its
+Hamiltonian only as tables of numbers. Its reopening under these prompts produced a report with the Hamiltonian on its
+first page.
 
 **2026-11-23.** 0.27.1: **a flaky test fixed**; no behaviour changed. The pause test
 (`test_pause_keeps_sessions_stops_jobs_and_resume_reports_changes_in_them`) failed in the full suite ("pausing" !=

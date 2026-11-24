@@ -76,7 +76,7 @@ unless written to `/etc/sysctl.d/`.
 | Role | Writable |
 |---|---|
 | Every agent | Its folder `phases/<N>/agents/<id>/` (the Librarian's `librarian/`) and its CLI's state folder |
-| Primary | Also its phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md |
+| Primary | Also its phase's STATUS.md, RESULT.md and FOLDER_CONTENT.md |
 | Reviewer | Also its phase's `reviews/` |
 | Librarian | Nothing else: its pages in `library/` are written by the controller (`write_page`) |
 
@@ -104,7 +104,7 @@ Jobs get the same copies.
 
 ## Consequences worth knowing
 
-- **Single-file binds.** The phase's STATUS.md, REPORT.md and FOLDER_CONTENT.md are
+- **Single-file binds.** The phase's STATUS.md, RESULT.md and FOLDER_CONTENT.md are
   writable as single files inside a read-only folder. Editing them in place works.
   Tools that write a temporary file and rename it over the original fail, and so
   does deleting them: `sed -i`, many editors, atomic writers, `rm`.

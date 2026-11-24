@@ -219,9 +219,9 @@ class Talks:
         """What a fresh talk session starts from: where its phase stands, its last handoff and its key files."""
         handoff = project.agent_dir(agent.id) / "HANDOFF.md"
         text = handoff.read_text(encoding="utf-8", errors="replace").strip() if handoff.is_file() else "(none)"
-        report, status = project.relative(project.report), project.relative(project.status_file)
+        result, status = project.relative(project.result), project.relative(project.status_file)
         if agent.id == "primary":
-            files = message("primary-files", report=report, status=status)
+            files = message("primary-files", result=result, status=status)
         else:
             reviews = sorted(path.name for path in project.reviews.glob("*.md") if path.name != "FOLDER_CONTENT.md")
             folder = project.relative(project.reviews)
@@ -229,7 +229,7 @@ class Talks:
                 "reviewer-files",
                 reviews=folder,
                 review=f"{folder}/{reviews[-1]}" if reviews else "none",
-                report=report,
+                result=result,
             )
         return message("opening", phase=project.phase, situation=where, handoff=text, files=files)
 

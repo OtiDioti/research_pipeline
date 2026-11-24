@@ -603,7 +603,7 @@ class Controller:
         """What the agent's confinement leaves writable (PROJECT.md §2)."""
         scope = [self.project.agent_dir(agent.id)]
         if agent.role == "primary":
-            scope += [self.project.phase_dir / INDEX, self.project.status_file, self.project.report]
+            scope += [self.project.phase_dir / INDEX, self.project.status_file, self.project.result]
         elif agent.role == "reviewer":
             scope.append(self.project.reviews)
         return tuple(scope)
@@ -1442,10 +1442,11 @@ class Controller:
             "Until then you may only talk: spawn and run_job are refused."
         )
 
-    async def _tool_complete(self, caller: Agent, report: str = "REPORT.md") -> str:
-        path = self._path(caller, report, self.project.phase_dir, self.project.root, self.project.agent_dir(caller.id))
+    async def _tool_complete(self, caller: Agent, result: str = "") -> str:
+        given = result or self.project.relative(self.project.result)
+        path = self._path(caller, given, self.project.phase_dir, self.project.root, self.project.agent_dir(caller.id))
         if not path.read_text(encoding="utf-8", errors="replace").strip():
-            raise ToolError(f"{report} must be a non-empty report")
+            raise ToolError(f"{given} must be a non-empty result")
         return await self._propose(caller, "complete", self.project.relative(path))
 
     async def _tool_stop(self, caller: Agent, reason: str, final: bool = False) -> str:
@@ -1469,6 +1470,7 @@ class Controller:
             "round_": proposal["round"],
             "detail": proposal["detail"],
             "phase": self.project.folder,
+            "result": self.project.relative(self.project.result),
             "commit": proposal.get("commit"),
         }
 
@@ -1615,7 +1617,8 @@ class Controller:
         items = phases.summaries(self.project, self.home, self.state)
         current = next((item for item in items if item.number == self.project.phase), None)
         others = [item for item in items if item.number != self.project.phase and item.status != NOT_STARTED]
-        return prompts.phases_section(current, phases.listing(others) if others else "")
+        base = next((item for item in items if current and item.number == current.builds_on), None)
+        return prompts.phases_section(current, phases.listing(others) if others else "", base)
 
     # Pause, resume and shutdown ------------------------------------------------------------------
 

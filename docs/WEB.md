@@ -181,7 +181,7 @@ agent's next session, and the CLIs for subagents, from the next spawn. The refer
   Esc clears the selection.
 - The ring's *files* button unfolds what the agent owns: its documents (the files
   in its folder except FOLDER_CONTENT.md; the primary's OBJECTIVES.md, STATUS.md
-  and REPORT.md; the Reviewer's reviews; the Librarian's top pages), its jobs, and
+  and RESULT.md; the Reviewer's reviews; the Librarian's top pages), its jobs, and
   the websites and library pages it used (from its tool calls). Several agents'
   can be open at once; a click on empty space folds them all. A website or
   library page several agents used is drawn once per agent, beside it and linked
