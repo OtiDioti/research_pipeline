@@ -1,5 +1,14 @@
 # Status
 
+**2026-11-24.** 0.31.1: **the shared prompt speaks to the agent reading it**; no behaviour changed. Prompt wording
+(agent-facing, deliberate, same meaning): common.md's impersonal descriptions of the system become instructions in the
+second person ("Write your results for other agents", "Open every summary you write by restating the request", "When
+one of your subagents submits, read its RESULT.md and spot-check it", "You work in phase N"), and its headings follow
+("How to do the science", "Your results", "How you work in this project"). What only the primary does moves to
+primary.md: keeping the phase's notation file (start from the human's documents and the earlier phases' files, extend
+it, add the symbols subagents list); common.md keeps what every agent does (use the notation file, list the symbols it
+adds, link the file from its briefs). Asked for by the human, reading common.md.
+
 **2026-11-24.** 0.31.0: **results are free in form again; the controller keeps every message**
 ([PROJECT.md](PROJECT.md) §2, §3 and §8 amended; docs/AGENT_ROLES.md, "Results and notation" and "Messages"). The
 human chose not to constrain the agents' output format: the layouts 0.29.0 and 0.30.0 prescribed (coverage table,
