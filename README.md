@@ -24,6 +24,8 @@ flowchart LR
     C -->|commits| F
 ```
 
+![The web app during a run: the phases in the sidebar, the agent graph with the primary's card and action ring, and its activity](docs/images/sample.png)
+
 Agents run on agent CLIs (Codex and Claude Code today), each in a persistent
 session inside its own `bwrap` confinement. A deterministic controller makes every
 operational decision:

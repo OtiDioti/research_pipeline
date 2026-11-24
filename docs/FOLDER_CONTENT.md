@@ -19,3 +19,4 @@ Reference documentation: what each part does, and what it does under each condit
 - [WRITER.md](WRITER.md) — The Writer: the reports for the human, when they are written, the checker's rounds, the page.
 - [STATS.md](STATS.md) — Statistics of a run: what is read, how tool calls become file accesses, the Stats view and `stats`.
 - [WEB.md](WEB.md) — The web app: setup page, the agent graph, messages and tool calls, single-agent controls.
+- [images](images) — Images shown in the README.
