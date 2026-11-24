@@ -85,7 +85,7 @@ controller creates the rest of the layout (PROJECT.md §2) and a git
 repository on the first run. A project made before the library (with `sources/`
 or `tools/` at its top level) is refused: start a new one. Agents can read everything except the controller's
 `.research/` folder, and write only their own folder (`phases/<N>/agents/<id>/`). Only a
-phase's primary writes its `STATUS.md` and `REPORT.md`; only its Reviewer writes its `reviews/`;
+phase's primary writes its `STATUS.md` and `RESULT.md`; only its Reviewer writes its `reviews/`;
 only the Librarian writes the pages of `library/`, through the controller.
 
 The investigation runs in **phases**, one folder each under `phases/`, each with its
@@ -244,7 +244,7 @@ what changed meanwhile (by you, or by jobs that kept running).
   `phases/<N>/agents/<id>/jobs/`. The owner is told
   when it ends.
 - **Finishing.**
-  - COMPLETE: the primary writes its phase's `REPORT.md` and its `HANDOFF.md` and calls `complete`.
+  - COMPLETE: the primary writes its phase's `RESULT.md` and its `HANDOFF.md` and calls `complete`.
     It then waits in its session, talk-only, while the Reviewer examines the work as
     committed at the proposal and writes a review to its phase's `reviews/`. COMPLETE stands
     only if the Reviewer agrees; otherwise the review reaches the primary in the

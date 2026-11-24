@@ -10,7 +10,7 @@ across any number of sessions.
 | Started by | The controller, at launch | `spawn`, by any agent | A COMPLETE or STOP proposal | Its first shelving request |
 | CLI, model, effort | `--primary` | The `spawn` arguments | `--reviewer` | `--librarian` |
 | Opening message | Its phase's objectives (their links rewritten to work from its folder), the other phases (and the one it builds on), an inventory of the starting evidence, the reference paths | TASK.md, and PARENT_FEEDBACK.md after a rejection | The review request | Its pending shelving requests |
-| Writes, besides its folder | Its phase's STATUS.md, REPORT.md, FOLDER_CONTENT.md | — | Its phase's `reviews/` | `library/` pages, through `write_page` |
+| Writes, besides its folder | Its phase's STATUS.md, RESULT.md, FOLDER_CONTENT.md | — | Its phase's `reviews/` | `library/` pages, through `write_page` |
 | Finishes with | `complete` or `stop` | `submit_result` | `verdict` | `shelved`, for each request |
 
 The Librarian does no research: it organises the library ([LIBRARY.md](LIBRARY.md)).
@@ -37,6 +37,40 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
   - HANDOFF.md if there is one (otherwise: "write a short plan and a first HANDOFF.md");
   - any queued notices.
 - Nothing else: the CLIs load none of the human's own setup ([DRIVERS.md](DRIVERS.md)).
+
+## Results, checks and notation
+
+Results are written for agents, not for the human: a subagent's RESULT.md serves its
+parent, the Reviewer and the agents that build on it, and the phase's RESULT.md, which
+the primary writes, serves the Reviewer and the later phases. An account for the human
+is a separate, later step (it will be the phase's REPORT.md). `prompts/common.md` gives
+the one format of every result:
+
+- **Coverage:** one row per criterion of the request (each part of an objective's
+  statement and "Met when", each numbered criterion of a brief), quoted, with its status
+  (met, partial, infeasible, open) and the claims that support it.
+- **Claims** C1, C2, …: IDs are permanent; each claim gives its status (checked,
+  preliminary, disputed, superseded by another, withdrawn), what it rests on (other
+  claims, cited as `[fit C3](/phases/2/agents/fit/RESULT.md)`, and inputs), its evidence,
+  the author's check and a rerun command.
+- **Decisions**, **Negative results**, **Open** and a **Glossary** of labels coined in
+  the work.
+
+A result states the current state of the work, without narrative or history; the
+primary answers a review in `agents/primary/RESPONSES.md`, under each objection's ID.
+Whoever checks another agent's claim (a parent accepting a result, the Reviewer) records
+it in `CHECKS.md` in its own folder: the claim, what was done, the outcome, the command.
+The Reviewer checks the consequential claims no CHECKS.md covers, numbers its objections
+`R<round>.<n>`, and from the second round opens each review with the state of the earlier
+ones.
+
+A brief has the sections Purpose, Request (numbered criteria), Prior work, Inputs (claims,
+files, the notation file) and Check. The human's documents fix the notation and
+terminology; the primary keeps the phase's `agents/primary/NOTATION.md`, built from them
+in every phase rather than from an earlier phase's file.
+
+A phase that ended before results were renamed (0.28.0) keeps its REPORT.md as its result:
+the controller names it wherever it would name the phase's RESULT.md.
 
 ## Subagents
 
