@@ -161,7 +161,10 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
             "It builds on phase 1: start from that phase's result (phases/1/RESULT.md) and STATUS.md.", opening
         )
         self.assertIn("phase 1, Phase 1 (phases/1/): COMPLETE on", opening)
-        self.assertIn("this is phase 2, in phases/2/", second.sessions["primary"].launch.instructions)  # type: ignore[attr-defined]
+        self.assertIn(
+            "You work in phase 2 of an investigation split into phases, each with its own folder under phases/; yours is phases/2/.",
+            second.sessions["primary"].launch.instructions,
+        )  # type: ignore[attr-defined]
         self.assertIn(self.root / "phases" / "2" / "STATUS.md", second.sessions["primary"].launch.writable)  # type: ignore[attr-defined]
         self.assertIn(
             "A new phase of the investigation has started: phase 2, Fit the data",
