@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4); amended 2026-11-24: results are written for agents, in one format, and a phase's result is its RESULT.md, leaving REPORT.md to a later account for the human; checks are recorded in CHECKS.md; the human's documents fix the notation (§2–§4, §8).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4); amended 2026-11-24: agents write for the human (the result first and in full, the argument apart from its evidence, no coined names), the Reviewer reads the report as the human will, and the objectives keep the human's own words and the result they expect (§1, §8); amended again 2026-11-24 (0.29.0): results are written for agents, in one format, replacing that writing for the human in agents' results (an account for the human is left to a later Writer, which will write the phase's REPORT.md); a phase's result is its RESULT.md; checks are recorded in CHECKS.md; the human's documents fix the notation (§2–§4, §8).
 
 ## 1. Purpose
 
@@ -18,8 +18,8 @@ the agents' finished work where it was made. The human judges the science.
 
 The product is discipline-agnostic: no field-specific workflows in the platform.
 **Success means scientific usefulness, not architectural completeness.** Every
-result must let a scientist see what was done, rerun the important calculations,
-understand the limitations and continue the work.
+result must let a scientist understand the result itself, see what was done, rerun
+the important calculations, understand the limitations and continue the work.
 
 ## 2. The project folder
 
@@ -76,7 +76,7 @@ Rules:
   the job-ended notice. The human's tools therefore take an output path and never
   write next to themselves; shelved code that does is copied first (see **The
   library**).
-- **Markdown.** Agent-written notes and reports are Markdown with LaTeX mathematics.
+- **Markdown.** Agent-written notes and results are Markdown with LaTeX mathematics.
   Code, data, figures and papers keep their own formats.
 - **Indexes.** Every agent-managed folder has a `FOLDER_CONTENT.md` describing its
   files and subfolders in one line each. Exempt: `starting_evidence/` (the root
@@ -121,13 +121,13 @@ reported to the primary and never block anyone.
 
 **Phases.** The investigation runs in numbered phases, one folder each
 (`phases/<N>/`), each with its own objectives, primary, Reviewer, subagents,
-status, report and reviews. The human's `AGENTS.md` and `starting_evidence/`, the
+status, result and reviews. The human's `AGENTS.md` and `starting_evidence/`, the
 library and the Librarian are shared by every phase. One phase runs at a time:
 
 - **A new phase** (from the web page) starts a fresh primary and Reviewer on its own
   objectives, with a title, and optionally an earlier phase it builds on, whose
-  report and status its primary starts from. Every primary is told of the other
-  phases (their folders, outcomes and reports); their folders are read-only for it,
+  result and status its primary starts from. Every primary is told of the other
+  phases (their folders, outcomes and results); their folders are read-only for it,
   and their finished work is in the library.
 - **An earlier phase can be continued**: a paused one resumes from its handoffs; one
   that ended (COMPLETE or STOP) reopens only on a change of its own `OBJECTIVES.md`
@@ -588,7 +588,7 @@ printed by `research-pipeline stats PROJECT`. No verdicts: numbers only.
 | `submit_result(result)` | subagent | Deliver RESULT.md to the parent; then waits for its decision |
 | `run_job(command, timeout_seconds, cwd)` | any | Start a computation; returns a job id |
 | `job_status(job)`, `job_cancel(job)` | owner | Inspect (status, output tail) or stop a job |
-| `complete(report)`, `stop(reason, final)` | primary | Propose finishing (§4) |
+| `complete(result)`, `stop(reason, final)` | primary | Propose finishing (§4) |
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
 | `write_page(path, text)` | Librarian | Write a Markdown page in `library/`, or remove it with empty text; never `CATALOG.md` or `catalog/` |
 | `shelved(folder)` | Librarian | Report a shelving request done: every catalogued file of the agent's folder is reachable from a page (§2) |
@@ -625,6 +625,9 @@ The scientific guidance comes from these expectations:
 - Judge novelty against the literature: new to the project is not the same as new
   to the field.
 - Before solving something or spawning, find out what the project already has.
+- The objectives keep the human's own words (*Request*) and what they will get
+  (*Result*) above the criteria, in the human's vocabulary; the assistants who draft
+  them leave methods and the design of checks to the agents.
 
 **Results are written for agents.** A result (a subagent's `RESULT.md`, and the
 phase's, which the primary writes) serves the parent that accepts it, the Reviewer

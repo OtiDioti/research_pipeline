@@ -49,7 +49,7 @@ PHASE_LEVEL = frozenset(
 )
 #: The phase's result, which the primary submits with COMPLETE: written for the agents (PROJECT.md §8).
 RESULT = "RESULT.md"
-#: The name a phase's result had before 0.28.0; such a phase keeps it, so that links to it still lead there.
+#: The name a phase's result had before 0.29.0; such a phase keeps it, so that links to it still lead there.
 OLD_RESULT = "REPORT.md"
 #: The human's files shared by every phase (with each phase's OBJECTIVES.md): agents never write them, and the
 #: primary is told when they change.

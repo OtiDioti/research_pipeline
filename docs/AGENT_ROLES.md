@@ -47,7 +47,7 @@ is a separate, later step (it will be the phase's REPORT.md). `prompts/common.md
 the one format of every result:
 
 - **Coverage:** one row per criterion of the request (each part of an objective's
-  statement and "Met when", each numbered criterion of a brief), quoted, with its status
+  statement, "Result" and "Met when", each numbered criterion of a brief), quoted, with its status
   (met, partial, infeasible, open) and the claims that support it.
 - **Claims** C1, C2, …: IDs are permanent; each claim gives its status (checked,
   preliminary, disputed, superseded by another, withdrawn), what it rests on (other
@@ -69,7 +69,7 @@ files, the notation file) and Check. The human's documents fix the notation and
 terminology; the primary keeps the phase's `agents/primary/NOTATION.md`, built from them
 in every phase rather than from an earlier phase's file.
 
-A phase that ended before results were renamed (0.28.0) keeps its REPORT.md as its result:
+A phase that ended before results were renamed (0.29.0) keeps its REPORT.md as its result:
 the controller names it wherever it would name the phase's RESULT.md.
 
 ## Subagents
