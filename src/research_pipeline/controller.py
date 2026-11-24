@@ -82,6 +82,7 @@ from research_pipeline.reports import Writers
 from research_pipeline.reports import prepare as prepare_writing
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
 from research_pipeline.talks import Talks
+from research_pipeline.talks import actions as talk_actions
 from research_pipeline.tools import ROLE_TOOLS, ToolError
 from research_pipeline.writer import NODES
 
@@ -265,12 +266,15 @@ class Controller:
         """True if the phase's OBJECTIVES.md changed since its end: what reopens it (PROJECT.md §4)."""
         return self.project.relative(self.project.objectives) in self.human_changes()
 
-    async def talk(self, phase: int, agent_id: str, text: str) -> str:
-        """The human's ``text`` to the primary or the Reviewer of another phase: a talk (research_pipeline.talks)."""
+    async def talk(self, phase: int, agent_id: str, text: str, edits: bool = False) -> str:
+        """The human's ``text`` to the primary or the Reviewer of another phase: a talk (research_pipeline.talks).
+
+        ``edits``: the primary may change its files.
+        """
         if self.lock is None:
             raise ValueError("the investigation is still starting")
         async with self.lock:
-            return await self.talks.message_phase(phase, agent_id, text)
+            return await self.talks.message_phase(phase, agent_id, text, edits)
 
     async def report(self, phase: int | None, fresh: bool = False) -> str:
         """The human asks the Writer for the report of ``phase`` (None: the project's); ``fresh``: written anew."""
@@ -306,7 +310,7 @@ class Controller:
     def actions(self, agent: Agent) -> list[str]:
         """What the human may do to ``agent`` now (see :meth:`act`)."""
         if self.state.status in FINISHED:
-            return ["message"] if self.talks.open(agent) else []  # talk-only after the end
+            return talk_actions(agent.id) if self.talks.open(agent) else []  # talk-only after the end
         if agent.status in ENDED:
             return []
         allowed = [] if agent.status == "submitted" else ["message"]
@@ -324,8 +328,10 @@ class Controller:
             allowed.append("cancel")
         return allowed
 
-    async def act(self, action: str, agent_id: str, text: str = "") -> str:
+    async def act(self, action: str, agent_id: str, text: str = "", edits: bool = False) -> str:
         """The human's ``action`` on one agent: 'message' (``text``), 'pause', 'resume', 'handoff' or 'cancel'.
+
+        ``edits`` qualifies a message in a talk: the primary may change its files ('edit' among its actions).
 
         Return a confirmation; raise ValueError if it cannot be done now.
         """
@@ -335,9 +341,12 @@ class Controller:
             agent = self.state.agents.get(agent_id)
             if agent is None:
                 raise ValueError(f"there is no agent {agent_id}")
-            if action not in self.actions(agent):
+            if action not in self.actions(agent) or action == "edit":  # 'edit' only qualifies a message
                 raise ValueError(f"{action} is not possible for {agent_id} now ({agent.status})")
-            reply = await getattr(self, f"_human_{action}")(agent, text)
+            if action == "message":
+                reply = await self._human_message(agent, text, edits)
+            else:
+                reply = await getattr(self, f"_human_{action}")(agent, text)
             await self._after_change()
             self._save()
             return reply
@@ -402,13 +411,13 @@ class Controller:
             await self._resume_agents({"slots"})
             self._save()
 
-    async def _human_message(self, agent: Agent, text: str) -> str:
+    async def _human_message(self, agent: Agent, text: str, edits: bool = False) -> str:
         """The human writes to any agent; its parent gets a copy, so their plans stay consistent."""
         if not text.strip():
             raise ValueError("the message is empty")
         self.show("human", agent.id, text)
         if self.talks.open(agent):  # after the end: a talk, which the investigation never sees
-            return await self.talks.message(agent, text)
+            return await self.talks.message(agent, text, edits)
         if self.state.status in FINISHED:
             raise ValueError("the investigation has ended: only the primary and the Reviewer can be talked to")
         self._log_message(agent, "the human", agent.id, text)
@@ -626,15 +635,6 @@ class Controller:
         """True if ``agent`` may work now: the investigation runs, or it ended and the Librarian places the rest."""
         return self.state.status == "running" or (self.closing and agent.role == "librarian")
 
-    def _scope(self, agent: Agent) -> tuple[Path, ...]:
-        """What the agent's confinement leaves writable (PROJECT.md §2)."""
-        scope = [self.project.agent_dir(agent.id)]
-        if agent.role == "primary":
-            scope += [self.project.phase_dir / INDEX, self.project.status_file, self.project.result]
-        elif agent.role == "reviewer":
-            scope.append(self.project.reviews)
-        return tuple(scope)
-
     async def _start_session(self, agent: Agent) -> None:
         """Start a fresh session for ``agent``, opening with its task, handoff and pending notices."""
         await self._close(agent.id)
@@ -664,7 +664,7 @@ class Controller:
             effort=agent.effort,
             tools=CAPABILITIES,
             mcp=tools,
-            writable=self._scope(agent),
+            writable=self.project.scope(agent),
             hidden=(self.project.research,),
             environment=self.project.environment,
             log=self.project.session_log(agent.id, agent.sessions),
@@ -856,7 +856,7 @@ class Controller:
             if notice:
                 self._queue(agent, notice)
         elif agent.status == "running" and not agent.handoff_reason and self._works(agent):
-            notice = self.linkcheck.turn_ended(agent.id, self._scope(agent))  # links breaking the convention
+            notice = self.linkcheck.turn_ended(agent.id, self.project.scope(agent))  # links breaking the convention
             if notice:
                 self._queue(agent, notice)
         if agent.handoff_reason:
@@ -1446,7 +1446,7 @@ class Controller:
         caller.status = "submitted"
         assert caller.parent is not None  # submit_result is a subagent's tool
         parent = self.state.agents[caller.parent]
-        found = self.linkcheck.found(self._scope(caller))  # links breaking the convention: the parent decides
+        found = self.linkcheck.found(self.project.scope(caller))  # links breaking the convention: the parent decides
         submitted = prompts.result_submitted(caller.id, self.project.relative(path), found[:LISTED], len(found))
         await self._notify(parent, submitted, "child", caller.id)
         return (

@@ -269,7 +269,7 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
             ["Prepare reopening", "Write report", "Project report", "Shut down"],
         )
         nodes = {node["id"]: node for node in snapshot["graph"]["nodes"] if node["kind"] == "agent"}
-        self.assertEqual((nodes["primary"]["actions"], nodes["librarian"]["actions"]), (["message"], []))
+        self.assertEqual((nodes["primary"]["actions"], nodes["librarian"]["actions"]), (["message", "edit"], []))
         answer = talker(asyncio.get_running_loop(), [])  # only talk sessions answer: the others are driven here
         FakeSession.script = lambda session, text: answer(session, text) if "-talk-" in str(session.launch.log) else []
         self.assertIn("talk only", await dashboard.act("message", "primary", {"text": "Why 1/3?"}) or "")
@@ -283,6 +283,13 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn("phases/1/RESULT.md", talk.sent[0])
         history = dashboard.history("primary", 50, None)
         self.assertIn("[human] Why 1/3?", [entry["text"] for entry in history])
+        # With edits allowed, phase 1's primary writes its own files while phase 2 runs; they are committed.
+        await dashboard.act("message", "primary", {"text": "Plot the gap", "edits": True})
+        await asyncio.gather(*second.talks.tasks.values())
+        edited = talks("primary")[-1]
+        self.assertEqual(edited.launch.writable, second.project.at(1).scope(second.talks.agents["1/primary"]))
+        self.assertTrue((self.root / "phases" / "1" / "agents" / "primary" / "plot.png").is_file())
+        self.assertEqual(second.project.uncommitted("phases/1"), [])
         with self.assertRaisesRegex(ValueError, "does not run"):
             await dashboard.act("pause", None, {})
         await self.save(dashboard, "phases/1/OBJECTIVES.md", "Also the error bars.\n")
