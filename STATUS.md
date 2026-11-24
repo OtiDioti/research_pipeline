@@ -1,5 +1,18 @@
 # Status
 
+**2026-11-24.** 0.30.0: **derivations are written as checkable steps** ([PROJECT.md](PROJECT.md) §8 amended;
+docs/AGENT_ROLES.md, "Results, checks and notation"). Prompt wording (agent-facing, deliberate): common.md gains a
+section "Derivations": a derivation is the evidence of an analytic claim, in a note in the agent's folder with one
+section per claim (headed by its ID, linked from the claim's Evidence); it opens with its starting point (cited claims,
+the human's equations by number, the notation file), numbers its steps, each naming its operation (equations
+substituted, identity, approximation with its regime) and keeping the starting quantities visible without chains of
+shorthand definitions, ends with the claim's statement exactly, and closes with its checks; a symbolic script
+reproducing it is the claim's Rerun command where feasible, otherwise the Rerun line names the steps to redo. An
+intermediate result that another claim, agent or phase uses becomes a claim of its own. reviewer.md: a derivation that
+cannot be followed step by step from its stated starting point is a substantive objection. These are the explicit
+derivation rules of the human's AGENTS.md, now for every project, justified by checkability: the parent's spot-check
+rederives the decisive claim. Not yet tried in a live run.
+
 **2026-11-24.** 0.29.0: **results are written for agents, in one format; the phase's result is its RESULT.md**
 ([PROJECT.md](PROJECT.md) §2–§4 and §8 amended; docs/AGENT_ROLES.md, "Results, checks and notation"). The human-facing
 account is left to a later step (a Writer, which will write the phase's REPORT.md), so results now serve only the
