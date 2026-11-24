@@ -24,6 +24,8 @@ flowchart LR
     C -->|commits| F
 ```
 
+![The web app during a run: the phases in the sidebar, the agent graph with the primary's card and action ring, and its activity](docs/images/sample.png)
+
 Agents run on agent CLIs (Codex and Claude Code today), each in a persistent
 session inside its own `bwrap` confinement. A deterministic controller makes every
 operational decision:
@@ -156,7 +158,9 @@ The models the agents' prompt recommends for subagents (coding: `claude:claude-o
 On the page, a paused, shut down or interrupted project is shown as it was left, with
 *Resume phase N* (with `--no-web`, running the same command again resumes its latest
 phase). After a phase's COMPLETE or STOP its project stays open: you can still talk
-with its primary and Reviewer about their work, talk-only, until you close it. To reopen it, press *Prepare reopening* on the
+with its primary and Reviewer about their work, talk-only, until you close it. Turn on
+*Allow edits* in the chat with a primary to let it change its own files, e.g. to make a new
+plot in its folder; what it changes is committed after each answer. To reopen it, press *Prepare reopening* on the
 web page: change its objectives there (by hand, or with the reopening assistant,
 which can grill you and revise them), then press Reopen, without leaving the page.
 Only a change of the phase's OBJECTIVES.md reopens it. With `--no-web`, a later `run`

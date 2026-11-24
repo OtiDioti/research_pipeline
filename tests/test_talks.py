@@ -22,7 +22,10 @@ NOTE_REQUESTS = ("Save your talk note", "talk note was not saved")
 
 
 def talker(loop: asyncio.AbstractEventLoop, fills: list[float]):
-    """A fake talk session: it answers every message, saves its talk note when asked, and reports ``fills``."""
+    """A fake talk session: it answers every message, saves its talk note when asked, and reports ``fills``.
+
+    Asked to plot, it writes plot.png in its folder (fake sessions are not confined: tests check the launch).
+    """
 
     def script(session: FakeSession, text: str):
         server = session.launch.mcp["research"]
@@ -31,6 +34,8 @@ def talker(loop: asyncio.AbstractEventLoop, fills: list[float]):
             if any(request in message for message in [text, *session.delivered] for request in NOTE_REQUESTS):
                 note = f"Talked about: {text.splitlines()[-1]}"
                 asyncio.run_coroutine_threadsafe(call_tool(server, "write_talk_note", note=note), loop).result(5)
+            if "Plot" in text.splitlines()[-1]:
+                (session.launch.cwd / "plot.png").write_bytes(b"a plot")
 
         answer = f"Answer to {text.splitlines()[-1]}"
         return [("text", {"text": answer}), *turn(fills.pop(0) if fills else 0.1, text=answer, action=act)]
@@ -63,7 +68,9 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
         async with running(self.root) as harness:
             await self.end(harness)
             controller, agents = harness.controller, harness.state.agents
-            self.assertEqual([controller.actions(agents[name]) for name in agents], [["message"], ["message"], []])
+            self.assertEqual(
+                [controller.actions(agents[name]) for name in agents], [["message", "edit"], ["message"], []]
+            )
             FakeSession.script = talker(asyncio.get_running_loop(), [])
             self.assertIn("talk only", await controller.act("message", "primary", "Why 1/3?"))
             await self.answered(harness, "primary")
@@ -100,6 +107,50 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(controller.project.uncommitted(), [])  # nothing was written in the project
             await quit_after_the_end(harness)  # each talk saves its note first
         self.assertIn("Talked about", (self.root / ".research" / "phases" / "1" / "talks" / "primary.md").read_text())
+
+    async def test_with_edits_allowed_the_primary_writes_its_files_and_they_are_committed(self):
+        async with running(self.root) as harness:
+            await self.end(harness)
+            controller, project = harness.controller, harness.controller.project
+            primary = harness.state.agents["primary"]
+            FakeSession.script = talker(asyncio.get_running_loop(), [])
+            await controller.act("message", "primary", "What did you find?")
+            await self.answered(harness, "primary")
+            [first] = talks("primary")
+            self.assertEqual(first.launch.writable, ())  # read-only unless the human allows edits
+            # The switch on: the session saves its note and a fresh one can write the primary's usual files.
+            dashboard = ResearchDashboard(self.root, launch_options(), drivers=FAKE_DRIVERS)  # the web page
+            dashboard.controller = controller
+            await dashboard.act("message", "primary", {"text": "Plot the gap", "edits": True})
+            await self.answered(harness, "primary")
+            first, second = talks("primary")
+            self.assertIn("the human changed whether you may change files", first.sent[-1])
+            self.assertEqual(second.launch.writable, project.scope(primary))
+            self.assertIn(project.agent_dir("primary"), second.launch.writable)
+            self.assertIn("the human allows you to change your files", second.launch.instructions)
+            self.assertIn("/phases/1/RESULT.md", second.launch.instructions)
+            self.assertIn("Your talk note from your previous talk session", second.sent[0])
+            self.assertTrue((project.agent_dir("primary") / "plot.png").is_file())
+            self.assertEqual(project.uncommitted(), [])  # committed after the answer
+            self.assertEqual(
+                project.git("log", "-1", "--format=%s").strip(), "primary of phase 1: changes made in a talk"
+            )
+            self.assertTrue([line for line in harness.lines if "may now change its files" in line[2]])
+            # Still on: the same session; off again: a fresh read-only one.
+            await controller.act("message", "primary", "Plot it larger", edits=True)
+            await self.answered(harness, "primary")
+            self.assertEqual(len(talks("primary")), 2)
+            await controller.act("message", "primary", "Thanks")
+            await self.answered(harness, "primary")
+            third = talks("primary")[-1]
+            self.assertEqual((len(talks("primary")), third.launch.writable), (3, ()))
+            self.assertIn("everything is read-only for you", third.launch.instructions)
+            with self.assertRaisesRegex(ValueError, "only the primary"):
+                await controller.act("message", "reviewer", "Fix your review", edits=True)
+            with self.assertRaisesRegex(ValueError, "not possible"):
+                await controller.act("edit", "primary")
+            self.assertEqual((harness.state.status, primary.status), ("complete", "finished"))
+            await quit_after_the_end(harness)
 
     async def test_a_talk_continues_from_its_note_and_reopening_needs_a_change_of_the_objectives(self):
         async with running(self.root) as harness:

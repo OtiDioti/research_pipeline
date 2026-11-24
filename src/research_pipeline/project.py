@@ -157,6 +157,15 @@ class Project:
     def agent_dir(self, agent_id: str) -> Path:
         return self.librarian if agent_id == LIBRARIAN else self.agents / agent_id
 
+    def scope(self, agent: Agent) -> tuple[Path, ...]:
+        """What ``agent``'s confinement leaves writable (PROJECT.md §2): its folder, and its role's files."""
+        scope = [self.agent_dir(agent.id)]
+        if agent.role == "primary":
+            scope += [self.phase_dir / INDEX, self.status_file, self.result]
+        elif agent.role == "reviewer":
+            scope.append(self.reviews)
+        return tuple(scope)
+
     def session_log(self, agent_id: str, number: int, kind: str = "") -> Path:
         """The CLI log of an agent's session ``number`` (``kind`` e.g. 'talk'); the Librarian's are the project's."""
         name = "-".join(filter(None, [agent_id if agent_id == LIBRARIAN else f"phase{self.phase}-{agent_id}", kind]))

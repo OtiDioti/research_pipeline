@@ -88,6 +88,16 @@ while another phase runs: select it in the sidebar ([WEB.md](WEB.md)).
 - It has every native capability, but nothing in the project is writable (only its
   private /tmp), `.research/` is hidden, and its one controller tool is
   `write_talk_note`. It starts no subagents or jobs.
+- **Edits.** In the web page's chat with a primary, the *Allow edits* switch lets it
+  change its files: while it is on, its talk sessions can write what it writes at
+  work (`Project.scope`: its folder, the phase's RESULT.md, STATUS.md and
+  FOLDER_CONTENT.md), and their instructions say so (the `edits` section of
+  `prompts/talk-messages.md` instead of `read-only`). Still no subagents or jobs, and
+  the phase keeps its outcome. After each answer of such a session the controller
+  commits the phase's changes ("primary of phase N: changes made in a talk"). Flipping
+  the switch takes effect at the next message: the live session saves its talk note
+  and a fresh session starts with the new access (refused while it is answering). The
+  switch starts off and is not remembered after a reload. The Reviewer has no switch.
 - Further messages go to the same session: into a running answer, or as the next
   request.
 - At the context threshold (also in the middle of an answer, which then continues in
@@ -95,7 +105,7 @@ while another phase runs: select it in the sidebar ([WEB.md](WEB.md)).
   the session saves a talk note in `.research/phases/<N>/talks/<agent>.md`; the next
   talk session starts from the handoff plus that note. HANDOFF.md never changes.
 - Talks are kept in the phase's activity log only (transcript, web page); nothing is
-  committed.
+  committed, except the files a primary changed with edits allowed.
 - While the agent's CLI is held by its usage quota, a message is refused, naming the hold.
 - Changes to the human's files while the program stays open do not reopen anything.
   With the web page they wait for its Reopen (below); without it, once the phase's

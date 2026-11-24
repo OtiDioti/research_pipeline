@@ -7,7 +7,11 @@ can also talk, at any time, with the primary and the Reviewer of any other phase
 that has started (ended or paused), while this one runs. The agent answers from
 its work, starting from its last handoff note and its key files, with every
 native capability but nothing writable in the project, and no controller tool but
-``write_talk_note``. The work stays as it was.
+``write_talk_note``. The work stays as it was, unless the human allows the primary
+to change its files (the chat's *Allow edits* switch): its talk sessions can then
+write what it writes at work (:meth:`Project.scope`), and the controller commits
+what changed after each answer. A switch takes effect at the next message: the
+live session saves its talk note and a fresh one starts with the new access.
 
 Each agent's talk runs as an :class:`agent_toolkit.Relay`: at the context
 threshold, the idle limit or a shutdown the session saves a *talk note* in
@@ -43,6 +47,15 @@ if TYPE_CHECKING:
 TALKERS = ("primary", "reviewer")
 #: The MCP server of a talk session (the same name as the investigation's tools).
 SERVER = "research"
+#: Why a talk session hands off when the human flips the switch (filled into the 'handoff' message).
+SWITCHED = "the human changed whether you may change files"
+
+
+def actions(agent_id: str) -> list[str]:
+    """What the human may do in a talk with ``agent_id``: message it, and let the primary change its files."""
+    if agent_id not in TALKERS:
+        return []
+    return ["message", "edit"] if agent_id == "primary" else ["message"]
 
 
 def message(name: str, **facts) -> str:
@@ -66,6 +79,8 @@ class Talks:
         self.tasks: dict[str, asyncio.Task] = {}  # its running answer or handoff
         self.sessions: dict[str, int] = {}  # talk sessions started (for their logs)
         self.agents: dict[str, Agent] = {}  # the talkers of other phases, from their stored states
+        self.edits: dict[str, bool] = {}  # whether the human allows each talker to change its files
+        self.launched: dict[str, bool] = {}  # whether each live talk session can write (as it started)
 
     def open(self, agent: Agent) -> bool:
         """True if the human can talk with ``agent`` of this phase now: it has ended, and it is a talker."""
@@ -75,13 +90,13 @@ class Talks:
         task = self.tasks.get(key)
         return task is not None and not task.done()
 
-    async def message(self, agent: Agent, text: str) -> str:
-        """The human's ``text`` to ``agent`` of this phase, which has ended."""
+    async def message(self, agent: Agent, text: str, edits: bool = False) -> str:
+        """The human's ``text`` to ``agent`` of this phase, which has ended; ``edits``: it may change its files."""
         controller = self.controller
-        return await self._message(controller.project, agent, controller.state, text)
+        return await self._message(controller.project, agent, controller.state, text, edits)
 
-    async def message_phase(self, phase: int, agent_id: str, text: str) -> str:
-        """The human's ``text`` to the primary or the Reviewer of another phase."""
+    async def message_phase(self, phase: int, agent_id: str, text: str, edits: bool = False) -> str:
+        """The human's ``text`` to the primary or the Reviewer of another phase; ``edits`` as for :meth:`message`."""
         project = self.controller.project
         if phase == project.phase:
             raise ValueError(f"phase {phase} is this controller's own")
@@ -91,7 +106,7 @@ class Talks:
         if agent_id not in TALKERS or agent_id not in state.agents:
             raise ValueError(f"only the primary and the Reviewer of phase {phase} can be talked to")
         agent = self.agents.setdefault(f"{phase}/{agent_id}", state.agents[agent_id])
-        return await self._message(project.at(phase), agent, state, text)
+        return await self._message(project.at(phase), agent, state, text, edits)
 
     async def ask(self, phase: int, question: str) -> str:
         """The Writer's ``question`` (a filled message) to the primary of ``phase``, which does not run: its answer.
@@ -131,6 +146,8 @@ class Talks:
             reply = await task
         except (ContextExhausted, SetupError, SessionError, OSError) as error:
             raise ValueError(f"the primary of phase {phase} could not answer: {error}") from None
+        finally:
+            self._commit(key, project)
         return reply.text.strip()
 
     async def check_idle(self) -> None:
@@ -149,6 +166,8 @@ class Talks:
         """At this phase's reopening: end its talks and remove their notes; it continues without them."""
         mine = f"{self.controller.project.phase}/"
         await self._close([key for key in self.relays if key.startswith(mine)], notes=False)
+        for key in [key for key in self.edits if key.startswith(mine)]:
+            del self.edits[key]
         shutil.rmtree(self.controller.project.talks, ignore_errors=True)
 
     async def _close(self, keys: list[str], notes: bool) -> None:
@@ -159,18 +178,27 @@ class Talks:
                 ask = not self.controller._blocked(self._agent(key).backend)
                 await self._hand_off(key, relay, "the human is shutting the controller down", ask)
             await asyncio.to_thread(relay.close)
+            self.launched.pop(key, None)
             self.controller.bridge.withdraw(_offer(key))
 
     # Sessions ---------------------------------------------------------------------------------------
 
-    async def _message(self, project: Project, agent: Agent, state: State, text: str) -> str:
-        """The human's ``text`` to ``agent`` of ``project``'s phase: into its running answer, else a new request."""
+    async def _message(self, project: Project, agent: Agent, state: State, text: str, edits: bool) -> str:
+        """The human's ``text`` to ``agent`` of ``project``'s phase: into its running answer, else a new request.
+
+        ``edits``: the agent may change its files from this message on (the primary only).
+        """
         controller, key = self.controller, f"{project.phase}/{agent.id}"
+        if edits and "edit" not in actions(agent.id):
+            raise ValueError(f"only the primary can change its files in a talk, not {agent.id}")
         if controller._blocked(agent.backend):
             hold = controller.state.holds[agent.backend]
             raise ValueError(
                 f"the usage quota of {agent.backend} is held ({hold['detail']}): write again once it resets"
             )
+        if self.busy(key) and edits != self.edits.get(key, False):
+            raise ValueError(f"{agent.id} is answering: switch edits once it has answered")
+        self.edits[key] = edits
         notice = prompts.human_message(text)
         self.log(project.phase).add(agent.id, "message", notice, sender="human")
         relay = self._relay(project, agent, situation(state))
@@ -195,16 +223,18 @@ class Talks:
 
         tools = controller.bridge.offer(_offer(key), [WRITE_TALK_NOTE], save, name=SERVER)
 
-        def launch() -> Launch:
+        def launch() -> Launch:  # at every fresh session: it can write if the human allows it now
             number = self.sessions[key] = self.sessions.get(key, 0) + 1
+            edits = self.launched[key] = self.edits.get(key, False)
             return Launch(
                 agent=agent.id,
                 cwd=project.agent_dir(agent.id),
-                instructions=prompts.talk_instructions(agent, project, where),
+                instructions=prompts.talk_instructions(agent, project, where, edits),
                 model=agent.model,
                 effort=agent.effort,
                 tools=CAPABILITIES,
                 mcp=tools,
+                writable=project.scope(agent) if edits else (),
                 hidden=(project.research,),
                 environment=project.environment,
                 log=project.session_log(agent.id, number, "talk"),
@@ -234,7 +264,12 @@ class Talks:
         return relay
 
     async def _ask(self, project: Project, agent: Agent, relay: Relay, notice: str, where: str) -> None:
-        label = self._label(project.phase, agent.id)
+        key, label = f"{project.phase}/{agent.id}", self._label(project.phase, agent.id)
+        edits = self.edits.get(key, False)
+        switch = relay.session_id is not None and self.launched.get(key) != edits
+        if switch:
+            change = "may now change its files" if edits else "may no longer change its files"
+            self.controller.show("controller", label, f"{label} {change}: its talk session restarts from its note.")
 
         def compose(fresh: bool, note: str | None) -> str:
             parts = [self._opening(project, agent, where)] if fresh else []
@@ -242,12 +277,28 @@ class Talks:
                 parts.append(message("note", note=note))
             return "\n\n".join([*parts, notice])
 
+        def answer() -> None:
+            if switch:  # the next session starts with the access the human chose
+                relay.hand_off(SWITCHED)
+            relay.ask(compose)
+
         try:
-            await asyncio.to_thread(relay.ask, compose)
+            await asyncio.to_thread(answer)
         except ContextExhausted:
             self.controller.show("alert", label, f"{label}'s talk filled its context: ask a shorter question.")
         except (SetupError, SessionError, OSError) as error:
             self.controller.show("alert", label, f"{label}'s talk session failed: {error}")
+        finally:
+            self._commit(key, project)
+
+    def _commit(self, key: str, project: Project) -> None:
+        """After an answer from a talk session that could write: commit the phase's changes, if any.
+
+        Not under the controller's lock: closing the talks (under it) waits for this answer.
+        """
+        if self.launched.get(key) and project.uncommitted(project.folder):
+            phase, agent_id = key.split("/", 1)
+            self.controller._commit(f"{agent_id} of phase {phase}: changes made in a talk")
 
     async def _hand_off(self, key: str, relay: Relay, reason: str, ask: bool) -> None:
         try:

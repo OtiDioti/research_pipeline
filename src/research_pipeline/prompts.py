@@ -11,14 +11,15 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from string import Template
 
 from agent_toolkit import Spec
-from agent_toolkit.protocol import Prompts
+from agent_toolkit.protocol import Prompts, sections
 
 from research_pipeline import links
 from research_pipeline.library import page
 from research_pipeline.phases import Summary
-from research_pipeline.project import CATALOG_PAGES, Project
+from research_pipeline.project import CATALOG_PAGES, INDEX, Project
 from research_pipeline.state import Agent, Options
 
 TITLES = {
@@ -76,12 +77,18 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
     return f"{text}\n\n{human}\n" if human else text + "\n"
 
 
-def talk_instructions(agent: Agent, project: Project, situation: str) -> str:
+def talk_instructions(agent: Agent, project: Project, situation: str, edits: bool = False) -> str:
     """The instructions of a talk session (research_pipeline.talks), then the human's AGENTS.md.
 
-    ``situation`` says what the agent's phase is: ended (and how), or paused.
+    ``situation`` says what the agent's phase is: ended (and how), or paused; ``edits``: the
+    human allows it to change its files (the primary's).
     """
     human = _section("Instructions from the human", project.root / "AGENTS.md", level="#")
+    access = Template(sections(PROMPTS.text("talk-messages"))["edits" if edits else "read-only"]).substitute(
+        result="/" + project.relative(project.result),
+        status="/" + project.relative(project.status_file),
+        index="/" + project.relative(project.phase_dir / INDEX),
+    )
     text = PROMPTS.fill(
         "talk",
         id=agent.id,
@@ -90,6 +97,7 @@ def talk_instructions(agent: Agent, project: Project, situation: str) -> str:
         folder=project.agent_dir(agent.id),
         number=project.phase,
         situation=situation,
+        access=access,
     )
     return f"{text}\n\n{human}\n" if human else text + "\n"
 

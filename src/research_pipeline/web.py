@@ -47,6 +47,7 @@ from research_pipeline.project import LIBRARIAN, Project
 from research_pipeline.readiness import Readiness
 from research_pipeline.state import FINISHED, Options, State
 from research_pipeline.stats import Statistics
+from research_pipeline.talks import actions as talk_actions
 from research_pipeline.usage import Usage
 from research_pipeline.writer import NODES, PROJECT_CHECKER, PROJECT_WRITER
 
@@ -400,7 +401,7 @@ class ResearchDashboard(Dashboard):
 
     def _talk_actions(self, agent) -> list[str]:
         """What the human may do to an agent of a phase that does not run: talk with its primary or Reviewer."""
-        return ["message"] if agent.id in ("primary", "reviewer") else []
+        return talk_actions(agent.id)
 
     def _documents(self, number: int, state: State) -> dict[str, list[str]]:
         """Each agent's documents in phase ``number``, reused briefly."""
@@ -457,8 +458,8 @@ class ResearchDashboard(Dashboard):
         if shown is None:  # another phase: talks with its primary and Reviewer only
             if action != "message":
                 raise ValueError(f"phase {self.selected} does not run: you can only talk with its primary and Reviewer")
-            return await controller.talk(self.selected, target, str(args.get("text", "")))
-        return await controller.act(action, target, str(args.get("text", "")))
+            return await controller.talk(self.selected, target, str(args.get("text", "")), bool(args.get("edits")))
+        return await controller.act(action, target, str(args.get("text", "")), bool(args.get("edits")))
 
     def history(self, agent: str | None, limit: int, before: float | None) -> list[dict]:
         phase = ActivityLog(self.paths.at(self.selected).activity)
