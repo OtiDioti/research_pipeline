@@ -64,6 +64,15 @@ The Reviewer checks the consequential claims no CHECKS.md covers, numbers its ob
 `R<round>.<n>`, and from the second round opens each review with the state of the earlier
 ones.
 
+A derivation is the evidence of an analytic claim: a note in the agent's folder, one section per
+claim, that a checker can follow step by step. It opens with its starting point (cited claims, the
+human's equations, the notation file); its numbered steps each name the operation (the equations
+substituted, the identity, the approximation and its regime) and keep the starting quantities
+visible, without chains of shorthand definitions; its last step is the claim's statement; it closes
+with its checks. A symbolic script reproducing it is the claim's rerun command where feasible. An
+intermediate result that others use is a claim of its own. The Reviewer objects to a derivation it
+cannot follow from its stated starting point.
+
 A brief has the sections Purpose, Request (numbered criteria), Prior work, Inputs (claims,
 files, the notation file) and Check. The human's documents fix the notation and
 terminology; the primary keeps the phase's `agents/primary/NOTATION.md`, built from them
