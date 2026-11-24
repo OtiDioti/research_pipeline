@@ -12,6 +12,7 @@
 - [library.py](library.py) — The library's catalogue of shelved files (`.research/library.json`), rendered as the index `library/CATALOG.md` and a page per shelved agent in `library/catalog/`.
 - [linkcheck.py](linkcheck.py) — What an agent is told about the links in its own Markdown that break the convention (links from the project root), at the end of its turns and with its result.
 - [links.py](links.py) — Links in Markdown texts: the convention (from the project root), the files they reach, the links that lead nowhere or break the convention, and what a moved text's relative links become.
+- [messages.py](messages.py) — The message log: every message an agent sends or receives (from its parent, a subagent or the human), kept in MESSAGES.md in its folder.
 - [stats](stats) — Statistics of a run, deterministic and read-only: the Stats view and `research-pipeline stats`.
 - [tools.py](tools.py) — The agent-facing MCP tools of each role, offered through agent_toolkit's tool bridge, and their refusal.
 - [jobs.py](jobs.py) — Long computations that outlive agent sessions.

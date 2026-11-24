@@ -73,7 +73,7 @@ from agent_toolkit.records import Busy, atomic_write, exclusive
 from agent_toolkit.tools import ToolBridge
 
 from research_pipeline import jobs as joblib
-from research_pipeline import links, phases, prompts
+from research_pipeline import links, messages, phases, prompts
 from research_pipeline.librarian import LIBRARIAN, Librarian
 from research_pipeline.linkcheck import LISTED, LinkCheck
 from research_pipeline.phases import NOT_STARTED, Home
@@ -386,9 +386,11 @@ class Controller:
             return await self.talks.message(agent, text)
         if self.state.status in FINISHED:
             raise ValueError("the investigation has ended: only the primary and the Reviewer can be talked to")
+        self._log_message(agent, "the human", agent.id, text)
         delivered = await self._talk(agent, prompts.human_message(text))
         parent = self.state.agents.get(agent.parent or "")
         if parent and parent.status not in ENDED:
+            self._log_message(parent, "the human", agent.id, text)
             await self._notify(parent, prompts.human_to_child(agent.id, text), sender="human")
         return f"Delivered to {agent.id}." if delivered else f"{agent.id} receives your message when it next works."
 
@@ -1230,6 +1232,15 @@ class Controller:
         if name not in text:
             atomic_write(index, f"{text.rstrip()}\n- [{name}]({name}) — {description}\n", root=self.project.root)
 
+    def _log_message(self, agent: Agent, sender: str, recipient: str, text: str) -> None:
+        """Keep a message ``agent`` sent or received in its MESSAGES.md (not once its folder is frozen)."""
+        if agent.status in ENDED:
+            return
+        folder = self.project.agent_dir(agent.id)
+        folder.mkdir(parents=True, exist_ok=True)
+        messages.record(folder, self.project.root, sender, recipient, text)
+        self._index_entry(agent, messages.MESSAGES, messages.DESCRIPTION)
+
     def _new_id(self, name: str) -> str:
         base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "agent"
         base = "agent" if base in ROLES else base
@@ -1264,6 +1275,8 @@ class Controller:
         if target.status == "submitted":
             raise ToolError(f"{agent} has submitted its result: accept it, reject it with feedback, or cancel it")
         notice = prompts.agent_message(caller.id, text)
+        for party in (caller, target):
+            self._log_message(party, caller.id, target.id, text)
         await self._notify(target, notice, "parent" if target.parent == caller.id else "child", caller.id)
         self.show("notice", agent, f"from {caller.id}: {text.strip()}")
         if notice in target.notices:  # no running session to take it now

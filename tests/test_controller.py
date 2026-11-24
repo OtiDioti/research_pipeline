@@ -311,6 +311,21 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn(
                 "has submitted its result", await harness.call("primary", "message", agent=other, text="Wait.")
             )
+            # Each message is kept in the folders of both its sender and its recipient, refused ones in neither.
+            await harness.controller.act("message", child, "Check the sign convention.")
+            primary_log = (self.root / "phases/1/agents/primary/MESSAGES.md").read_text()
+            child_log = (self.root / f"phases/1/agents/{child}/MESSAGES.md").read_text()
+            self.assertRegex(primary_log, rf"## [-0-9 :]+, from primary to {child}\n\nUse the 2024 data.")
+            self.assertIn(f"from {child} to primary\n\nWhich norm?", primary_log)
+            self.assertIn("from primary to ", child_log)
+            self.assertIn(f"from {grandchild} to {child}\n\nDone soon.", child_log)
+            self.assertIn(f"from the human to {child}\n\nCheck the sign convention.", child_log)
+            self.assertIn(f"from the human to {child}\n\nCheck the sign convention.", primary_log)  # its copy
+            self.assertNotIn("Hi.", child_log)
+            self.assertNotIn("Wait.", primary_log)
+            self.assertIn(
+                "[MESSAGES.md](MESSAGES.md)", (self.root / f"phases/1/agents/{child}/FOLDER_CONTENT.md").read_text()
+            )
 
     # Waiting, idle and stalled agents -------------------------------------------------------------
 
