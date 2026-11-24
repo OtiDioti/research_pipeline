@@ -79,6 +79,7 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn(self.root / ".research", talk.launch.hidden)
             self.assertIn("has ended (COMPLETE)", talk.launch.instructions)
             self.assertIn("Answer from the work", talk.launch.instructions)
+            self.assertIn("it then appears in their chat with you", talk.launch.instructions)
             self.assertIn("write_talk_note", talk.launch.mcp["research"].env["AGENT_TOOLKIT_TOOLS"])
             self.assertNotIn("spawn", talk.launch.mcp["research"].env["AGENT_TOOLKIT_TOOLS"])
             for part in ("Your last handoff", "Next: continue.", "RESULT.md", "[human] Why 1/3?"):

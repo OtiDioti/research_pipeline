@@ -125,6 +125,7 @@ class WriterTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(checkers[0].launch.writable[0].samefile(report / "checks"))
             self.assertTrue(writers[0].launch.writable[0].samefile(report))
             self.assertIn("/WRITING.md", writers[0].launch.instructions)
+            self.assertIn("it then appears in their chat with you", writers[0].launch.instructions)
             self.assertIn("/phases/1/RESULT.md", writers[0].launch.instructions)
             # Committed, listed, and kept in the phase's activity for the page.
             self.assertIn("writer: the report of phase 1", harness.controller.project.git("log", "-1", "--format=%s"))
