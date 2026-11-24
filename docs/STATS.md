@@ -27,7 +27,10 @@ written, no lock is taken, so a running project can be read, and so can any othe
 - the activity logs, `.research/phases/<N>/activity/<agent>.jsonl` and the
   Librarian's `.research/activity/librarian.jsonl`: every tool call (with its whole
   input, since agent_toolkit 0.15.0), message and context reading;
-- each subagent's `TASK.md`.
+- each subagent's `TASK.md`;
+- the Writer's state of each phase's report (`.research/writer/phase-<N>/state.json`): its
+  Writer and checker count as agents `writer` and `checker` of the phase, with their
+  activity in the phase's log ([WRITER.md](WRITER.md)); the project's report is not counted.
 
 A project made before phases (`.research/state.json`, `agents/` at the top) reads as
 phase 1.

@@ -93,6 +93,46 @@ class Talks:
         agent = self.agents.setdefault(f"{phase}/{agent_id}", state.agents[agent_id])
         return await self._message(project.at(phase), agent, state, text)
 
+    async def ask(self, phase: int, question: str) -> str:
+        """The Writer's ``question`` (a filled message) to the primary of ``phase``, which does not run: its answer.
+
+        Raise ValueError if that primary cannot answer now: its phase is at work, or has none, or its CLI is held.
+        """
+        controller, key = self.controller, f"{phase}/primary"
+        project = controller.project.at(phase)
+        if phase == controller.project.phase:
+            state: State | None = controller.state
+            if state.status not in FINISHED:
+                raise ValueError(f"phase {phase} is at work: ask its primary once it ends")
+            agent = state.agents.get("primary")
+        else:
+            state = load_state(project)
+            stored = state.agents.get("primary") if state is not None else None
+            agent = self.agents.setdefault(key, stored) if stored is not None else None
+        if state is None or agent is None:
+            raise ValueError(f"phase {phase} has no primary to ask")
+        if controller._blocked(agent.backend):
+            raise ValueError(f"the usage quota of {agent.backend} is held: the primary of phase {phase} cannot answer")
+        if self.busy(key):
+            raise ValueError(f"the primary of phase {phase} is answering the human: ask again once it has answered")
+        self.log(phase).add(agent.id, "message", question, sender="writer")
+        relay = self._relay(project, agent, situation(state))
+        where = situation(state, full=True)
+
+        def compose(fresh: bool, note: str | None) -> str:
+            parts = [self._opening(project, agent, where)] if fresh else []
+            if note:
+                parts.append(message("note", note=note))
+            return "\n\n".join([*parts, question])
+
+        task = asyncio.create_task(asyncio.to_thread(relay.ask, compose))
+        self.tasks[key] = task
+        try:
+            reply = await task
+        except (ContextExhausted, SetupError, SessionError, OSError) as error:
+            raise ValueError(f"the primary of phase {phase} could not answer: {error}") from None
+        return reply.text.strip()
+
     async def check_idle(self) -> None:
         """Close talk sessions idle past the idle limit, each after saving its talk note (unless its CLI is held)."""
         limit = self.controller.state.options.idle_limit * 60
@@ -132,7 +172,7 @@ class Talks:
                 f"the usage quota of {agent.backend} is held ({hold['detail']}): write again once it resets"
             )
         notice = prompts.human_message(text)
-        self._log(project.phase).add(agent.id, "message", notice, sender="human")
+        self.log(project.phase).add(agent.id, "message", notice, sender="human")
         relay = self._relay(project, agent, situation(state))
         if self.busy(key):
             relay.post(notice)
@@ -238,7 +278,7 @@ class Talks:
         controller = self.controller
         phase, agent_id = key.split("/", 1)
         agent = self._agent(key)
-        self._log(int(phase)).event(agent_id, kind, data)
+        self.log(int(phase)).event(agent_id, kind, data)
         label = self._label(int(phase), agent_id)
         if kind == "text" and data["text"].strip():
             agent.activity = data["text"].strip().splitlines()[0][:200]
@@ -256,7 +296,8 @@ class Talks:
             return self.controller.state.agents[agent_id]
         return self.agents[key]
 
-    def _log(self, phase: int) -> ActivityLog:
+    def log(self, phase: int) -> ActivityLog:
+        """Phase ``phase``'s activity log (its talks, and the Writer's report of it, are kept there)."""
         controller = self.controller
         if phase not in controller.logs:
             project = controller.project.at(phase)

@@ -15,6 +15,7 @@
 - [live_smoke.py](live_smoke.py) — Live smoke run through the real CLIs (manual; uses model quota).
 - [test_setup.py](test_setup.py) — The web setup before the first start: readiness, material placed by hand, the objectives' versions, the setup assistant on fake sessions, quota and failures.
 - [test_talks.py](test_talks.py) — Talks after a phase's end: talk-only sessions, talk notes, staying talk-only until its objectives change, quota.
+- [test_writer.py](test_writer.py) — The Writer: reports at the end and on request, the checker's rounds and what is left for the human, questions to a primary, the page's controls and its talk with the Writer.
 - [test_reopen.py](test_reopen.py) — Reopening a phase from the web page after its end: the preparation offered again, changes and reverts, the reopening assistant, Reopen on changed objectives, and later runs.
 - [test_phases.py](test_phases.py) — Phases: a new phase from the web page, talks with another phase while one runs, switching phases through a pause, later phases' notice, the library across phases.
 - [test_stats.py](test_stats.py) — Statistics: tool calls to file accesses (whole calls and older summaries), a run attributed per agent, the Stats view, comparison, the dashboard and `stats`.

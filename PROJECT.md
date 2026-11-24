@@ -1,6 +1,6 @@
 # Research Pipeline — V0
 
-**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4); amended 2026-11-24: agents write for the human (the result first and in full, the argument apart from its evidence, no coined names), the Reviewer reads the report as the human will, and the objectives keep the human's own words and the result they expect (§1, §8); amended again 2026-11-24 (0.29.0): results are written for agents, in one format, replacing that writing for the human in agents' results (an account for the human is left to a later Writer, which will write the phase's REPORT.md); a phase's result is its RESULT.md; checks are recorded in CHECKS.md; the human's documents fix the notation (§2–§4, §8); derivations are written as checkable steps, the evidence of analytic claims (§8); amended 2026-11-24 (0.31.0): results are free in form again, keeping what they must contain, with no prescribed layout for results, briefs, checks or reviews; notation files inherit the earlier phases' and extend them; the controller keeps every message an agent sends or receives in its folder (§2, §3, §8).
+**Status:** approved 2026-11-16; amended 2026-11-18: the Librarian, a library of pages over frozen agent folders (§1–§10), quota holds limited to the held CLI's agents (§6), the web setup of a folder before the first start, with its setup assistant (§2, §3, §6), and talks with the primary and the Reviewer after the end (§4); amended 2026-11-19: reopening from the web page, with the reopening assistant (§4); amended 2026-11-20: phases, each with its own objectives, primary and Reviewer, sharing the library, and FEEDBACK.md removed (§1–§4, §6); amended 2026-11-22: `run` opens a workbench of every project of the machine, one project working at a time (§6); amended 2026-11-23: texts read from another folder than the one they were written in keep their relative links working (§3); links in the project's Markdown are written from the project's root, `PROJECT` names it in every session and job, and agents are told of links breaking the convention (§2, §3); the setup assistant of a new or reopened phase gets the human's talks only if they leave its *Talks* switch on (§3, §4); amended 2026-11-24: agents write for the human (the result first and in full, the argument apart from its evidence, no coined names), the Reviewer reads the report as the human will, and the objectives keep the human's own words and the result they expect (§1, §8); amended again 2026-11-24 (0.29.0): results are written for agents, in one format, replacing that writing for the human in agents' results (an account for the human is left to a later Writer, which will write the phase's REPORT.md); a phase's result is its RESULT.md; checks are recorded in CHECKS.md; the human's documents fix the notation (§2–§4, §8); derivations are written as checkable steps, the evidence of analytic claims (§8); amended 2026-11-24 (0.31.0): results are free in form again, keeping what they must contain, with no prescribed layout for results, briefs, checks or reviews; notation files inherit the earlier phases' and extend them; the controller keeps every message an agent sends or receives in its folder (§2, §3, §8); amended 2026-11-24 (0.32.0): the Writer writes the reports for the human, checked against the work by a fresh checker (§2, §3, §4, §7).
 
 ## 1. Purpose
 
@@ -49,6 +49,8 @@ organise freely.
 │       │   ├── MESSAGES.md         controller: every message it sent or received
 │       │   └── ...                 notes, code, data, as the agent sees fit; frozen once shelved
 │       └── reviews/            Reviewer: one file per review round
+├── WRITING.md              human: the rules the Writer follows (created from the built-in ones at the first start)
+├── reports/                Writer: the reports for the human, phase-<N>/ and project/ (report.tex and report.pdf)
 └── .research/              controller: state, logs, removed setup material; hidden from agents and jobs
 ```
 
@@ -199,7 +201,7 @@ job or a note uses stays valid.
 
 ## 3. Agents
 
-There are four roles, all running the same way, and a setup assistant on the web page:
+There are four roles, all running the same way, a setup assistant on the web page, and the Writer of the reports:
 
 - **Primary:** responsible for its phase of the investigation. It is started with
   its phase's `OBJECTIVES.md`, the other phases (and the one it builds on), an
@@ -227,6 +229,11 @@ There are four roles, all running the same way, and a setup assistant on the web
   with that phase since its end); the human's first message to it fixes the
   choice. Like every agent it does not see the program's records in `.research/`
   (but its own folder there), so with the switch off it never gets the talks.
+- **Writer:** writes the reports for the human from the agents' work (§4, **Reports**),
+  with a fresh *checker* for each submitted report. Its CLI, model and effort (the
+  checker's too): `--writer` or the page (default `claude:claude-opus-5-5:high`). It
+  is not part of the investigation: hosted by the controller, like the talks, and not
+  counted against the cap on agent sessions.
 
 Every agent:
 
@@ -375,6 +382,32 @@ saves a talk note in `.research/phases/<N>/talks/<agent>.md` (never its HANDOFF.
 from which the next talk session continues. Talks are kept only in the phase's
 activity log; a CLI held by its quota refuses them until it resets. A later `run` on
 a finished phase opens talk-only again, unless its objectives changed since the end.
+
+**Reports.** The research agents write their results for each other; the Writer
+writes the reports the human reads: a LaTeX document and its PDF in
+`reports/phase-<N>/` for a phase, and in `reports/project/` for the whole project
+(built from the phase reports, going back to the results where they disagree or are
+missing). It follows the human's `WRITING.md`, which the first start creates from the
+built-in rules (the answer first, then the argument for each main result, then
+limitations, negative results, key decisions and the evidence with a reproduction
+appendix); it uses the notation of the human's documents, defining and listing what
+they lack, never the agents' shorthand. It writes only what the work establishes, at
+the status the work gives it: it may re-plot saved data, evaluate or rewrite the
+agents' expressions (checked symbolically) and convert units, never compute new
+results; it may ask a phase's primary (`ask_primary`, answered by a talk session).
+It runs once a phase ends (after the Librarian placed its final work, if the
+*Report when a phase ends* option is on, and unless the report is newer than the
+end), and whenever the human asks from the web page: *Write report* (or *Update
+report*, which revises it), *Rewrite report* (anew), *Project report*, for any phase
+that does not run. When it submits a compiled report (`submit_report`), a fresh
+checker session compares it with the work (fidelity, notation, the writing rules, the
+build) and ends with `report_clean` or `report_findings`; findings go back to the
+Writer, which fixes them or says why not, until a check is clean or three rounds are
+spent: what is left is then shown to the human. The human talks with the Writer from
+its node in the phase's graph. Its session continues across requests from its
+handoff note; the controller commits after each request. The research agents can
+read `reports/` (read-only for their jobs, like `WRITING.md`) but are not pointed to
+it: the results stay the source. A machine without LaTeX (`latexmk`) gets no reports.
 
 **Reopening.** After COMPLETE or STOP, the human reopens a phase by changing its
 `OBJECTIVES.md` (a new or extended objective, a sharper criterion, or a constraint
@@ -594,6 +627,8 @@ printed by `research-pipeline stats PROJECT`. No verdicts: numbers only.
 | `verdict(review, agree)` | Reviewer | Deliver a review round |
 | `write_page(path, text)` | Librarian | Write a Markdown page in `library/`, or remove it with empty text; never `CATALOG.md` or `catalog/` |
 | `shelved(folder)` | Librarian | Report a shelving request done: every catalogued file of the agent's folder is reachable from a page (§2) |
+| `submit_report()`, `ask_primary(phase, question)` | Writer | Submit the compiled report to the checker; ask a phase's primary (§4, **Reports**) |
+| `report_clean()`, `report_findings(file)` | checker | End a check of a report: nothing to change, or the findings in a file of `checks/` |
 
 Every tool reply also carries any pending notices. While its proposal is under
 review, the primary's `spawn` and `run_job` are refused (§4). The Librarian has

@@ -16,6 +16,7 @@ from agent_toolkit.web import edge, node
 
 from research_pipeline.project import INDEX, LIBRARIAN, Project
 from research_pipeline.state import ENDED, FINISHED, Agent, State
+from research_pipeline.writer import unavailable
 
 if TYPE_CHECKING:
     from research_pipeline.controller import Controller
@@ -49,8 +50,12 @@ def build(
     actions: Callable[[Agent], list[str]],
     librarian: Agent | None,
     paths: Project,
+    writers: list[dict] | None = None,
 ) -> dict:
-    """The graph of phase ``number``: its agents (and ``librarian``, if not among them), jobs, files and sites."""
+    """The graph of phase ``number``: its agents (and ``librarian``, if not among them), jobs, files and sites.
+
+    ``writers``: the nodes of the Writers of its report and of the project's, with their checkers.
+    """
     agents = list(state.agents.values())
     if librarian is not None and LIBRARIAN not in state.agents:
         agents.append(librarian)
@@ -78,6 +83,10 @@ def build(
             nodes.append(node(f"site:{url}", "site", url.split("/")[2], owners=[agent.id], url=url))
         for path in sorted(mine.get("pages", ())):
             nodes.append(node(f"file:{path}", "file", Path(path).name, owners=[agent.id], path=path))
+    for item in writers or []:
+        nodes.append(item)
+        if item["parent"]:
+            edges.append(edge(item["parent"], item["id"], "child"))
     if state.verdict and "reviewer" in state.agents:
         edges.append(edge("reviewer", "primary", "result", state.verdict))
     for job in state.jobs.values():
@@ -207,6 +216,8 @@ def status(
             if not started
             else []
         )
+    if controller is not None and not elsewhere:
+        controls += _reports(dashboard, controller, number, started, ended)
     if controller is not None:
         finished = controller.state.status in FINISHED
         controls.append(
@@ -258,3 +269,27 @@ def documents(paths: Project, state: State) -> dict[str, list[str]]:
             str(path) for path in sorted(found, key=lambda path: (order.get(path.name, 99), path.name))
         ]
     return listing
+
+
+def _reports(dashboard: ResearchDashboard, controller: Controller, number: int, started: bool, ended: bool) -> list:
+    """The controls asking the Writer for the reports: the phase's (once it does not run), and the project's."""
+    waiting = unavailable()
+    controls = []
+    if started and (ended or number != controller.project.phase):
+        written = (dashboard.paths.reports / f"phase-{number}" / "report.tex").is_file()
+        controls.append(
+            {"action": "report", "label": "Update report" if written else "Write report", "waiting": waiting}
+            | {"confirm": None}
+        )
+        if written:
+            controls.append(
+                {
+                    "action": "report_fresh",
+                    "label": "Rewrite report",
+                    "confirm": "The Writer writes the report anew from the work, replacing the current one "
+                    "(the old one stays in git). Rewrite it?",
+                    "waiting": waiting,
+                }
+            )
+    controls.append({"action": "report_project", "label": "Project report", "confirm": None, "waiting": waiting})
+    return controls

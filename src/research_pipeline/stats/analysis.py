@@ -155,7 +155,7 @@ def analyse(source: Source, scope: str) -> Analysis:
     many = scope == "all"
     records: dict[str, Record] = {}
     for phase in phases:
-        for agent in phase.agents.values():
+        for agent in [*phase.agents.values(), *phase.writers.values()]:
             key = f"{phase.number}/{agent.id}" if many else agent.id
             parent = (f"{phase.number}/{agent.parent}" if many else agent.parent) if agent.parent else None
             records[key] = Record(key, agent, source.agent_folder(phase.number, agent.id), parent)

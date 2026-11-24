@@ -29,8 +29,8 @@ AGENTS = Tool("agents", "List your subagents with their status and context use."
 MESSAGE = Tool(
     "message",
     "Message your parent or one of your own subagents; it receives the text during its turn.\n\n"
-    "Messages are not stored: the recipient notes what matters. A subagent that has submitted\n"
-    "its result receives none; accept, reject or cancel it instead.",
+    "The controller keeps it in both agents' MESSAGES.md; what it decides still belongs in your notes. A\n"
+    "subagent that has submitted its result receives none; accept, reject or cancel it instead.",
     {"agent": TEXT, "text": TEXT},
     ("agent", "text"),
 )
@@ -175,6 +175,34 @@ WRITE_TALK_NOTE = Tool(
     {"note": TEXT},
     ("note",),
 )
+
+# The Writer's and its checker's tools (research_pipeline.writer).
+SUBMIT_REPORT = Tool(
+    "submit_report",
+    "The report is written and compiled (report.tex and report.pdf in your folder): an independent checker\n"
+    "now compares it with the work. End your turn afterwards: its findings, if any, come as your next request.",
+)
+ASK_PRIMARY = Tool(
+    "ask_primary",
+    "Ask the primary researcher of a phase a question about its work (it answers from its work, talk-only).\n"
+    "End your turn afterwards: the answer comes as your next request. phase: the phase's number.",
+    {"phase": {"type": "integer"}, "question": TEXT},
+    ("phase", "question"),
+)
+REPORT_CLEAN = Tool(
+    "report_clean",
+    "The report has no discrepancy left: it is faithful to the work, in the human's notation, follows the\n"
+    "writing rules and builds. Your check ends.",
+)
+REPORT_FINDINGS = Tool(
+    "report_findings",
+    "The report has discrepancies, listed in your findings file (Markdown, in your checks folder): each with\n"
+    "where it is in the report, what the work says, with its link, and what to change. Your check ends.",
+    {"file": TEXT},
+    ("file",),
+)
+WRITER_TOOLS = [SUBMIT_REPORT, ASK_PRIMARY]
+CHECKER_TOOLS = [REPORT_CLEAN, REPORT_FINDINGS]
 
 _COMMON = [SPAWN, AGENTS, MESSAGE, ACCEPT, REJECT, CANCEL, RUN_JOB, JOB_STATUS, JOB_CANCEL]
 #: Tools offered to each role.

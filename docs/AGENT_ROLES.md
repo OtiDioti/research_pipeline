@@ -21,6 +21,11 @@ After the end, the primary and the Reviewer answer the human in **talk sessions*
 talk-only, read-only, from their handoff and key files, with `prompts/talk.md` and the
 one tool `write_talk_note` ([FINISHING.md](FINISHING.md)).
 
+The **Writer** writes the reports for the human from the agents' work, with a fresh
+**checker** for each report it submits: not part of the investigation, hosted by the
+controller like the talks, with `prompts/writer.md` and `prompts/checker.md` and the tools
+`submit_report`, `ask_primary`, `report_clean` and `report_findings` ([WRITER.md](WRITER.md)).
+
 Before the first start, the web setup page may also run a **setup assistant**: not part of the
 investigation, it places material and drafts `OBJECTIVES.md` on request, through its tools `place`,
 `write_objectives` and `ask`, with `prompts/setup.md` as its instructions ([SETUP.md](SETUP.md)).

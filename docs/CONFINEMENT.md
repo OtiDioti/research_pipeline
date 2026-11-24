@@ -79,6 +79,7 @@ unless written to `/etc/sysctl.d/`.
 | Primary | Also its phase's STATUS.md, RESULT.md and FOLDER_CONTENT.md |
 | Reviewer | Also its phase's `reviews/` |
 | Librarian | Nothing else: its pages in `library/` are written by the controller (`write_page`) |
+| Writer | Its report's folder (`reports/phase-<N>/` or `reports/project/`) and its handoff note; its checker only the folder's `checks/` ([WRITER.md](WRITER.md)) |
 
 The CLI state folders are those of Codex (`$CODEX_HOME` or `~/.codex`) and Claude
 Code (`$CLAUDE_CONFIG_DIR`, or `~/.claude`, `~/.claude.json` and `~/.cache/claude`).
@@ -98,8 +99,8 @@ Jobs get the same copies.
 ## Jobs
 
 - Everything is as the controller sees it, including devices (e.g. GPUs) and the shared `/tmp`.
-- Except: `starting_evidence/`, `library/` and the folders of shelved agents are read-only, and
-  `.research/` appears empty.
+- Except: `starting_evidence/`, `library/`, the folders of shelved agents, and `reports/` and
+  `WRITING.md` once they exist, are read-only, and `.research/` appears empty.
 - Each job has its own process namespace, and outlives the controller.
 
 ## Consequences worth knowing

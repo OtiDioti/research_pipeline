@@ -213,6 +213,8 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
                 "primary",
                 "reviewer",
                 "librarian",
+                "writer",
+                "report_at_end",
                 "backends",
                 "coding",
                 "analysis",
@@ -269,7 +271,9 @@ class DashboardTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn((child, "site:https://arxiv.org/abs/1234.5678", "owns"), kinds)
             self.assertTrue(any(entry["agent"] == child and entry["kind"] == "tool" for entry in pushed))
             status = dashboard.snapshot()["status"]
-            self.assertEqual([control["action"] for control in status["controls"]], ["pause", "shutdown"])
+            self.assertEqual(
+                [control["action"] for control in status["controls"]], ["pause", "report_project", "shutdown"]
+            )
             self.assertRegex(status["summary"], r"^\d+/\d+ sessions$")
             self.assertIn("Delivered", await dashboard.act("message", child, {"text": "Hello."}) or "")
             await dashboard.act("pause", None, {})

@@ -47,6 +47,7 @@ FOR_PROJECT = (
     "reviewer",
     "librarian",
     "setup",
+    "writer",
     "backends",
     "max_agents",
     "reference",
@@ -87,6 +88,11 @@ def _parser() -> argparse.ArgumentParser:
         "--setup",
         help="CLI, model and effort of the setup assistant, which helps make the folder ready on the setup page: "
         "BACKEND:MODEL:EFFORT (default codex:gpt-6.1-sol:high; also chosen on the page)",
+    )
+    run.add_argument(
+        "--writer",
+        help="CLI, model and effort of the Writer, who writes the reports for you and checks them: "
+        "BACKEND:MODEL:EFFORT (default claude:claude-opus-5-5:high; also chosen on the page)",
     )
     run.add_argument(
         "--backends",
@@ -154,7 +160,7 @@ def options_from(args: argparse.Namespace, stored: Options | None) -> Options:
     context threshold outside (0, 0.8].
     """
     options = Options(**vars(stored)) if stored else Options()
-    for name in ("primary", "reviewer", "librarian", "setup"):
+    for name in ("primary", "reviewer", "librarian", "setup", "writer"):
         value = getattr(args, name)
         if value:
             Spec.parse(value, f"--{name}")

@@ -27,7 +27,8 @@ TEST_ROOT = Path.home() / ".cache" / "research-pipeline-tests"
 
 
 def launch_options(**changes) -> Options:
-    """Launch options for tests: explicit CLI choices for the primary and Reviewer, both fake CLIs allowed."""
+    """Launch options for tests: explicit CLI choices for the primary and Reviewer, both fake CLIs allowed, and no
+    report at the end (a fake Writer session would wait for a script)."""
     return Options(
         **(
             {
@@ -35,6 +36,7 @@ def launch_options(**changes) -> Options:
                 "reviewer": "codex:gpt-test:high",
                 "librarian": "codex:gpt-test:high",
                 "backends": ["codex", "claude"],
+                "report_at_end": False,  # the Writer's tests turn it on
             }
             | changes
         )
