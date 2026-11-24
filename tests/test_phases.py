@@ -269,7 +269,8 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
             ["Prepare reopening", "Write report", "Project report", "Shut down"],
         )
         nodes = {node["id"]: node for node in snapshot["graph"]["nodes"] if node["kind"] == "agent"}
-        self.assertEqual((nodes["primary"]["actions"], nodes["librarian"]["actions"]), (["message", "edit"], []))
+        self.assertEqual((nodes["primary"]["actions"], nodes["librarian"]["actions"]), (["message"], []))
+        self.assertEqual([item["key"] for item in nodes["primary"]["switches"]], ["edits"])  # Allow edits
         answer = talker(asyncio.get_running_loop(), [])  # only talk sessions answer: the others are driven here
         FakeSession.script = lambda session, text: answer(session, text) if "-talk-" in str(session.launch.log) else []
         self.assertIn("talk only", await dashboard.act("message", "primary", {"text": "Why 1/3?"}) or "")

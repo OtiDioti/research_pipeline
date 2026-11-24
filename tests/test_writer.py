@@ -10,16 +10,17 @@ from agent_toolkit.testing import turn
 from research_pipeline.stats.analysis import analyse
 from research_pipeline.stats.sources import Source
 from research_pipeline.web import ResearchDashboard
-from research_pipeline.writer import MAX_ROUNDS
+from research_pipeline.writer import CHECK, MAX_ROUNDS, Writer
 from tests.helpers import FAKE_DRIVERS, FakeSession, call_tool, complete, launch_options, remove, running, temp_project
 
 
-def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list[str], on_submit=None):
+def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list[str], on_submit=None, replies=None):
     """Fake Writers, checkers and talking primaries; every other session is left to the test.
 
     The Writer asks a primary each of ``questions`` first, then writes, compiles and submits its report; each
     checker gives the next of ``verdicts`` ('clean', or the text of its findings). ``on_submit()`` runs before
-    the Writer submits; asked for its handoff note, it saves one.
+    the Writer submits; asked for its handoff note, it saves one. ``replies`` (a list) receives what
+    ``submit_report`` answered.
     """
 
     def play(session: FakeSession, text: str):
@@ -51,7 +52,9 @@ def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list
                 (out / "report.pdf").write_text("%PDF-1.5\n")
                 if on_submit is not None:
                     on_submit()
-                call("submit_report")
+                reply = call("submit_report")
+                if replies is not None:
+                    replies.append(str(reply))
 
             said = "Here is where the report stands."
             return [("text", {"text": said}), *turn(0.1, text=said, action=write)]
@@ -177,6 +180,51 @@ class WriterTest(unittest.IsolatedAsyncioTestCase):
             self.assertTrue((self.root / "reports" / "project" / "report.pdf").is_file())
             history = dashboard.history("project-writer", 50, None)
             self.assertTrue(history and all(entry["agent"] == "project-writer" for entry in history))
+
+    async def test_once_checked_clean_the_changes_the_human_asks_for_are_checked_only_with_check_changes_on(self):
+        loop = asyncio.get_running_loop()
+        replies: list[str] = []
+        FakeSession.script = script(loop, ["Still wrong."] * MAX_ROUNDS, [], replies=replies)
+        async with running(self.root) as harness:
+            await complete(harness)
+            dashboard = ResearchDashboard(self.root, launch_options(), drivers=FAKE_DRIVERS)
+            dashboard.controller = controller = harness.controller
+            writer_node = lambda: next(n for n in dashboard.snapshot()["graph"]["nodes"] if n["id"] == "writer")  # noqa: E731
+            await dashboard.act("report", None, {})
+            await self.written(controller)
+            self.assertEqual(len(self.sessions("checker")), MAX_ROUNDS)  # never clean: no switch yet
+            self.assertEqual(writer_node()["switches"], [])
+            # Not yet checked clean: a change is checked whatever the switch says.
+            await dashboard.act("message", "writer", {"text": "Fix it", "check": False})
+            await self.written(controller)
+            self.assertEqual(len(self.sessions("checker")), MAX_ROUNDS + 1)
+            writer = controller.writers.writers[1]
+            self.assertEqual(writer.detail, "the report of phase 1 is written and checked")
+            self.assertEqual(
+                writer_node()["switches"],
+                [{"key": "check", "label": "Check changes", "hint": CHECK["hint"], "on": False}],
+            )
+            # Checked clean once: with the switch off, the change stands unchecked, and the node says so.
+            await dashboard.act("message", "writer", {"text": "Shorten the title", "check": False})
+            await self.written(controller)
+            self.assertEqual(len(self.sessions("checker")), MAX_ROUNDS + 1)
+            self.assertEqual(
+                writer.detail, "the report of phase 1 changed since its last check (Check changes was off)"
+            )
+            self.assertIn("no checker reads it", replies[-1])
+            self.assertIn("an independent checker compares it", replies[-2])
+            self.assertIn("writer: the report of phase 1", controller.project.git("log", "-1", "--format=%s"))
+            # With the switch on, the change is checked.
+            await dashboard.act("message", "writer", {"text": "Add the error bars", "check": True})
+            await self.written(controller)
+            self.assertEqual(len(self.sessions("checker")), MAX_ROUNDS + 2)
+            self.assertEqual(writer.detail, "the report of phase 1 is written and checked")
+            self.assertTrue(Writer(controller, 1).validated)  # kept for the next run
+            # A fresh report is checked again before its changes can skip the checker.
+            await dashboard.act("report_fresh", None, {})
+            self.assertEqual(writer_node()["switches"], [])
+            await self.written(controller)
+            self.assertEqual(len(self.sessions("checker")), MAX_ROUNDS + 3)
 
     async def test_discrepancies_left_after_the_last_round_go_to_the_human(self):
         loop = asyncio.get_running_loop()

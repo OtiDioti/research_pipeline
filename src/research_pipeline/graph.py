@@ -16,6 +16,7 @@ from agent_toolkit.web import edge, node
 
 from research_pipeline.project import INDEX, LIBRARIAN, Project
 from research_pipeline.state import ENDED, FINISHED, Agent, State
+from research_pipeline.talks import EDITS
 from research_pipeline.writer import unavailable
 
 if TYPE_CHECKING:
@@ -139,7 +140,8 @@ def _agent(agent: Agent, documents: list[str], session: Session | None, actions:
         activity=agent.activity,
         sessions=agent.sessions,
         ended=agent.status in ENDED,
-        actions=actions,
+        actions=[action for action in actions if action != "edit"],
+        switches=[EDITS] if "edit" in actions else [],
         documents=documents,
     )
 

@@ -439,7 +439,7 @@ class ResearchDashboard(Dashboard):
         if target in NODES:  # the Writer of this phase's report, or of the project's
             if action != "message":
                 raise ValueError("you can only write to the Writer")
-            return await controller.to_writer(target, self.selected, str(args.get("text", "")))
+            return await controller.to_writer(target, self.selected, str(args.get("text", "")), bool(args.get("check")))
         if target is None:
             if action in ("pause", "release") and shown is None:
                 raise ValueError(f"phase {self.selected} does not run")

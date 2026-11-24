@@ -19,6 +19,13 @@ reading) compares the report with the work and ends with ``report_clean`` or
 :data:`MAX_ROUNDS` rounds are spent, when what is left is shown to the human. A turn
 that does neither answered the human (or asked them something): the cycle ends.
 
+Once a check of the report came back clean, the Writer's chat offers a *Check
+changes* switch (off unless the human turns it on): a cycle the human's message
+starts checks what the Writer submits only while it is on; otherwise the submitted
+report stands, and the node says it changed since its last check. The report's first
+version and a fresh one (*Rewrite report*) are always checked, as are the page's
+*Write report* and *Update report*.
+
 A request waits, between its steps, while the quota of its CLI is held (the Writer's
 session saves its note and ends first), and continues once it is released.
 
@@ -45,7 +52,7 @@ from agent_toolkit.activity import ActivityLog
 from agent_toolkit.protocol import sections
 from agent_toolkit.records import atomic_write
 from agent_toolkit.tools import ToolRefused
-from agent_toolkit.web import node
+from agent_toolkit.web import node, switch
 
 from research_pipeline.phases import load_state
 from research_pipeline.prompts import PROMPTS
@@ -60,6 +67,8 @@ MAX_ROUNDS = 3
 WRITER, CHECKER = "writer", "checker"
 PROJECT_WRITER, PROJECT_CHECKER = "project-writer", "project-checker"
 NODES = (WRITER, CHECKER, PROJECT_WRITER, PROJECT_CHECKER)
+#: The Writer's chat switch once its report was checked clean: whether the changes the human asks for are checked.
+CHECK = switch("check", "Check changes", "When on, the checker checks the report again after the changes you ask for")
 #: The MCP server their tools are offered under (the investigation's name).
 SERVER = "research"
 
@@ -94,6 +103,8 @@ class Writer:
         self.detail = stored.get("detail", "")
         self.sessions = int(stored.get("sessions", 0))
         self.checked = int(stored.get("checked", 0))  # checks so far: the findings files' numbers
+        self.validated = bool(stored.get("validated"))  # a check of this report came back clean
+        self.check = True  # whether the running cycle checks what the Writer submits
         self.started = float(stored.get("started") or time.time())
         self.relay: Relay | None = None
         self.task: asyncio.Task | None = None
@@ -135,6 +146,7 @@ class Writer:
             activity=self.detail,
             sessions=self.sessions,
             actions=["message"],
+            switches=[CHECK] if self.validated else [],
             documents=[self.controller.project.relative(report)] if report.is_file() else [],
             **common,
         )
@@ -162,12 +174,18 @@ class Writer:
             raise ValueError(f"the Writer is still working on {self.target}")
         await self._check_cli()
         name = "fresh" if fresh and self.written else "revise" if self.written else "write"
+        if name == "fresh":
+            self.validated = False  # a new report: checked again before changes may skip the checker
         self.log.add(self.ids[0], "message", text(name), sender="controller")
         self.task = asyncio.create_task(self.run(text(name)))
         return f"The Writer {'rewrites' if fresh else 'writes'} {self.target}."
 
-    async def message(self, words: str) -> str:
-        """The human's message: into its running work, else a new request (a question, or a change to make)."""
+    async def message(self, words: str, check: bool = False) -> str:
+        """The human's message: into its running work, else a new request (a question, or a change to make).
+
+        ``check``: the *Check changes* switch; a new request checks what the Writer submits only if it is on,
+        or if no check of the report came back clean yet.
+        """
         if not words.strip():
             raise ValueError("the message is empty")
         notice = f"[human] {words.strip()}"
@@ -179,7 +197,7 @@ class Writer:
             return "The Writer receives your message during its work."
         await self._check_cli()
         self.log.add(self.ids[0], "message", notice, sender="human")
-        self.task = asyncio.create_task(self.run(notice))
+        self.task = asyncio.create_task(self.run(notice, check=check or not self.validated))
         return "Sent to the Writer."
 
     async def close(self) -> None:
@@ -207,9 +225,10 @@ class Writer:
 
     # The cycle ----------------------------------------------------------------------------------------
 
-    async def run(self, request: str) -> None:
-        """Run ``request``, then check each report the Writer submits, as the module says."""
+    async def run(self, request: str, check: bool = True) -> None:
+        """Run ``request``, then check each report the Writer submits (unless not ``check``), as the module says."""
         rounds, message, previous = 0, request, ""
+        self.check = check
         try:
             while message:
                 self.submitted = False
@@ -224,6 +243,9 @@ class Writer:
                     continue
                 if not self.submitted:
                     break  # it answered the human, or asked them something
+                if not self.check:
+                    self._status("idle", f"{self.target} changed since its last check (Check changes was off)")
+                    break
                 if rounds:
                     previous = previous and text("previous", file=previous, reply=reply.strip() or "(none)")
                 rounds += 1
@@ -232,6 +254,7 @@ class Writer:
                 self._status("checking", f"the checker compares the report with the work (round {rounds})")
                 verdict = await self._check(rounds, previous)
                 if verdict[0] == "clean":
+                    self.validated = True
                     self._status("idle", f"{self.target} is written and checked")
                     break
                 if rounds >= MAX_ROUNDS or verdict[0] == "none":
@@ -390,6 +413,8 @@ class Writer:
             if not tex.is_file() or not pdf.is_file() or pdf.stat().st_mtime < tex.stat().st_mtime:
                 raise ToolRefused("compile the report first: report.pdf is missing or older than report.tex")
             self.submitted = True
+            if not self.check:
+                return text("submitted-unchecked")
             return "Submitted: an independent checker compares it with the work. End your turn now."
         phase, question = args.get("phase"), str(args.get("question") or "").strip()
         if not isinstance(phase, int) or not question:
@@ -476,6 +501,7 @@ class Writer:
             "detail": self.detail,
             "sessions": self.sessions,
             "checked": self.checked,
+            "validated": self.validated,
             "spec": self.controller.state.options.writer,  # for the stats
             "started": self.started,
         }

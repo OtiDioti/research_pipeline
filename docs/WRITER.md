@@ -41,7 +41,7 @@ lists the reports; the top index lists `reports/` and `WRITING.md` once they exi
 | *Write report* / *Update report* (top bar, a phase that does not run) | writes it, or revises the existing one with what changed |
 | *Rewrite report* (asks first) | writes it anew from the work; the old one stays in git |
 | *Project report* (top bar) | writes or revises the project's report |
-| A message to the Writer's node | answers you; if you ask for a change, makes it and submits again |
+| A message to the Writer's node | answers you; if you ask for a change, makes it and submits again (checked only with *Check changes* on, once a check was clean) |
 
 A request is refused while the Writer works on the same report, while the phase runs,
 while its CLI cannot run, and on a machine without `latexmk` (the controls are greyed
@@ -58,6 +58,17 @@ them or says why not, compiles and submits again. The next checker is told the p
 findings and the Writer's reply. After a clean check the report is done; after three
 checks with findings, what is left is shown to you (an alert, and the Writer's node).
 A checker that ends without a verdict is asked once more, then counts as left for you.
+
+**Check changes.** Once a check of the report came back clean (`validated` in the
+Writer's `state.json`), the Writer's chat offers a *Check changes* switch, off unless
+you turn it on. A request your message starts checks what the Writer submits only while
+it is on; otherwise `submit_report` tells the Writer no checker reads it
+(`submitted-unchecked` in `prompts/writer-requests.md`), the report stands, the
+controller commits, and the node says "changed since its last check (Check changes was
+off)". A message sent while the Writer is still working joins that request as it is.
+The report's first checks (until one is clean), *Rewrite report* (which clears
+`validated` until its own check is clean), *Write report* and *Update report* are always
+checked.
 
 ## Sessions, the page and the records
 
