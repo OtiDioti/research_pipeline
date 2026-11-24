@@ -1,5 +1,14 @@
 # Status
 
+**2026-11-24.** 0.36.0: **agents can show the human figures in the chat** (docs/WEB.md, README updated;
+agent_toolkit v0.24.0). The page could show no image. Now an agent's reply that includes a figure as a Markdown
+image, `![caption](/path)` from the project root, shows it in the human's chat with that agent: an image (PNG, JPEG,
+GIF, WebP, SVG) or a PDF in the browser's viewer. Only image syntax shows one (a plain path stays text), and only in
+the agent's own text: the human's messages and the Activity window keep it as text. The viewer now shows image and
+PDF files, and the figures a Markdown file includes. Prompt addition, deliberate: one line in common.md, talk.md and
+writer.md tells agents how to show a figure (the Librarian's prompt has none: it makes no figures). Tests: the line
+reaches the primary's, a talk's and the Writer's instructions.
+
 **2026-11-24.** 0.35.0: **changes the human asks the Writer for skip the checker unless *Check changes* is on**
 ([PROJECT.md](PROJECT.md) §4 amended; docs/WRITER.md, WEB.md and README updated). Every report the Writer submitted
 went to a fresh checker, for up to three rounds, even a small change the human asked for. Now, once a check of the
