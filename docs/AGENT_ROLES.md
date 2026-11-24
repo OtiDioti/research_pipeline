@@ -38,45 +38,30 @@ investigation, it places material and drafts `OBJECTIVES.md` on request, through
   - any queued notices.
 - Nothing else: the CLIs load none of the human's own setup ([DRIVERS.md](DRIVERS.md)).
 
-## Results, checks and notation
+## Results and notation
 
 Results are written for agents, not for the human: a subagent's RESULT.md serves its
 parent, the Reviewer and the agents that build on it, and the phase's RESULT.md, which
 the primary writes, serves the Reviewer and the later phases. An account for the human
-is a separate, later step (it will be the phase's REPORT.md). `prompts/common.md` gives
-the one format of every result:
+is a separate, later step (it will be the phase's REPORT.md).
 
-- **Coverage:** one row per criterion of the request (each part of an objective's
-  statement, "Result" and "Met when", each numbered criterion of a brief), quoted, with its status
-  (met, partial, infeasible, open) and the claims that support it.
-- **Claims** C1, C2, …: IDs are permanent; each claim gives its status (checked,
-  preliminary, disputed, superseded by another, withdrawn), what it rests on (other
-  claims, cited as `[fit C3](/phases/2/agents/fit/RESULT.md)`, and inputs), its evidence,
-  the author's check and a rerun command.
-- **Decisions**, **Negative results**, **Open** and a **Glossary** of labels coined in
-  the work.
+Their form is free: no layout is prescribed or checked for results, briefs, checks or
+reviews. `prompts/common.md` fixes only what a result contains: the request it answers,
+restated; what was done, on what earlier work; each part of the request marked met,
+partial, infeasible or open, with why; decisions; confidence and limitations; negative
+results; and the key claims with their evidence, how each was checked and the command
+that reproduces it. A result gives the current state of the work: the primary makes a
+review's corrections in the work and answers each objection in
+`agents/primary/RESPONSES.md`. A parent records its spot-checks in its notes. A
+derivation must let another agent check it (its starting point stated, each step
+justified).
 
-A result states the current state of the work, without narrative or history; the
-primary answers a review in `agents/primary/RESPONSES.md`, under each objection's ID.
-Whoever checks another agent's claim (a parent accepting a result, the Reviewer) records
-it in `CHECKS.md` in its own folder: the claim, what was done, the outcome, the command.
-The Reviewer checks the consequential claims no CHECKS.md covers, numbers its objections
-`R<round>.<n>`, and from the second round opens each review with the state of the earlier
-ones.
-
-A derivation is the evidence of an analytic claim: a note in the agent's folder, one section per
-claim, that a checker can follow step by step. It opens with its starting point (cited claims, the
-human's equations, the notation file); its numbered steps each name the operation (the equations
-substituted, the identity, the approximation and its regime) and keep the starting quantities
-visible, without chains of shorthand definitions; its last step is the claim's statement; it closes
-with its checks. A symbolic script reproducing it is the claim's rerun command where feasible. An
-intermediate result that others use is a claim of its own. The Reviewer objects to a derivation it
-cannot follow from its stated starting point.
-
-A brief has the sections Purpose, Request (numbered criteria), Prior work, Inputs (claims,
-files, the notation file) and Check. The human's documents fix the notation and
-terminology; the primary keeps the phase's `agents/primary/NOTATION.md`, built from them
-in every phase rather than from an earlier phase's file.
+The human's documents fix the notation and terminology: their symbols are never renamed
+or given another meaning. Agents may add symbols of their own, defined in the human's
+quantities, but no chains of shorthand definitions. The primary keeps the phase's
+`agents/primary/NOTATION.md`, which starts from the human's documents and the earlier
+phases' notation files and extends them; the human's documents win any conflict. The
+Reviewer objects to notation that departs from the human's documents.
 
 A phase that ended before results were renamed (0.29.0) keeps its REPORT.md as its result:
 the controller names it wherever it would name the phase's RESULT.md.
@@ -106,7 +91,7 @@ the controller names it wherever it would name the phase's RESULT.md.
   slash; `PROJECT` in its sessions and jobs is the project's folder. At the end of
   each turn of the primary, a subagent or the Reviewer, the controller reads the
   Markdown it changed in what it may write (`linkcheck.py`; its FOLDER_CONTENT.md
-  files and the controller's TASK.md and PARENT_FEEDBACK.md aside) and tells it,
+  files and the controller's TASK.md, PARENT_FEEDBACK.md and MESSAGES.md aside) and tells it,
   once each, of the links that are relative, absolute paths into the project, or
   lead nowhere. Nothing is refused.
 - Spawning does not stop the parent: it keeps doing whatever does not depend on the
@@ -134,8 +119,11 @@ the controller names it wherever it would name the phase's RESULT.md.
 - `message(agent, text)` works between a parent and its direct subagents, in both directions.
 - It is delivered during the recipient's turn, or wakes it if it waits idle; a paused recipient receives it
   when it continues, and one without a session at its next session.
-- Messages are not stored in files for the agents: the recipient notes what matters. (The controller keeps
-  them, for the web app, in `.research/activity/`, which agents cannot see.)
+- The controller appends every message an agent sends or receives (from its parent, a subagent or the
+  human, and the parent's copy of the human's message to a subagent) to `MESSAGES.md` in that agent's folder,
+  with when, from whom and to whom, and lists it in the folder's index (`messages.py`). A message refused,
+  or sent to an agent whose folder is frozen, is not kept there. What a message decides still belongs in
+  the agent's notes or result.
 - The human can also write to any agent from the web app (`[human] ...`); its parent receives a copy
   (`[human → <id>] ...`).
 - Refused when the agents aren't parent and subagent, the text is empty, the

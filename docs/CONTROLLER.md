@@ -23,7 +23,7 @@ continued after others ran tells its primary of the later ones.
   requests) in `.research/project.json`; both are rewritten atomically after every
   change and forced to disk (`--no-durable-state` skips that, for slow network filesystems).
 - The files the controller writes in the project (the starter files and
-  `.gitignore`, indexes, TASK.md, PARENT_FEEDBACK.md, the outcome in STATUS.md, a
+  `.gitignore`, indexes, TASK.md, PARENT_FEEDBACK.md, MESSAGES.md, the outcome in STATUS.md, a
   job's `command.txt`) are replaced atomically, and a job's logs are created fresh;
   none is written through a symlink or outside the project (`agent_toolkit.records`),
   since agents and jobs can write the same folders.

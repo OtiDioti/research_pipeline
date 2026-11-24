@@ -1,5 +1,26 @@
 # Status
 
+**2026-11-24.** 0.31.0: **results are free in form again; the controller keeps every message**
+([PROJECT.md](PROJECT.md) §2, §3 and §8 amended; docs/AGENT_ROLES.md, "Results and notation" and "Messages"). The
+human chose not to constrain the agents' output format: the layouts 0.29.0 and 0.30.0 prescribed (coverage table,
+numbered claims with fixed fields, decisions and glossary headings, the brief's five sections, CHECKS.md entries, the
+derivation notes' shape, numbered objections with their state) are gone, and nothing checks a format. Prompt wording
+(agent-facing, deliberate): common.md keeps results written for agents, not for the human, and what a summary contains
+(the request restated; what was done, on what earlier work; each part marked met, partial, infeasible or open, with
+why; decisions; confidence and limitations; negative results; the key claims with evidence, check and rerun command),
+and the current state only; parents record their spot-checks in their notes again; a derivation must let another agent
+check it (starting point stated, each step justified); the human's documents fix notation and terminology, their
+symbols never renamed or given another meaning, agents may add their own but no chains of shorthand definitions, and
+the phase's NOTATION.md starts from the human's documents and the earlier phases' notation files and extends them (the
+human's documents win any conflict); messages are no longer "not kept". It keeps the human's edit of the checking
+rules (c237ad0). primary.md: corrections go into the work, answers to each objection into agents/primary/RESPONSES.md.
+reviewer.md: back to the earlier checks, with an objection for a derivation another agent cannot check and for
+notation that departs from the human's documents, and it reads RESPONSES.md. New: the controller appends every message
+an agent sends or receives (from its parent, a subagent or the human, and the parent's copy of the human's message to
+a subagent) to MESSAGES.md in that agent's folder and lists it in the folder's index (messages.py); a refused message,
+or one to an agent whose folder is frozen, is not kept. Asked for so that nothing said between agents is lost. Not yet
+tried in a live run.
+
 **2026-11-24.** 0.30.0: **derivations are written as checkable steps** ([PROJECT.md](PROJECT.md) §8 amended;
 docs/AGENT_ROLES.md, "Results, checks and notation"). Prompt wording (agent-facing, deliberate): common.md gains a
 section "Derivations": a derivation is the evidence of an analytic claim, in a note in the agent's folder with one

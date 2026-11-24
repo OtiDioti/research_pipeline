@@ -7,7 +7,7 @@ of each turn of the primary, a subagent or the Reviewer, the Markdown it may wri
 last check is read, and the links that break the convention (a relative link, an
 absolute path into the project, a link from the root that leads nowhere) are listed
 for it once, as a notice. Left out: FOLDER_CONTENT.md files (whose entries name
-their own files), the controller's TASK.md and PARENT_FEEDBACK.md, hidden folders
+their own files), the controller's TASK.md, PARENT_FEEDBACK.md and MESSAGES.md, hidden folders
 and what git ignores (environments, caches). At submit_result every such file is
 read, and the list goes with the result to the parent, who decides whether it
 matters.
@@ -23,7 +23,7 @@ from research_pipeline import links, prompts
 from research_pipeline.project import INDEX, Project
 
 #: The controller's own files at the top of an agent's folder: their links are not the agent's.
-CONTROLLER_FILES = ("TASK.md", "PARENT_FEEDBACK.md")
+CONTROLLER_FILES = ("TASK.md", "PARENT_FEEDBACK.md", "MESSAGES.md")
 #: At most this many links in one notice.
 LISTED = 30
 
