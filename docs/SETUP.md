@@ -90,8 +90,9 @@ material is placed in them.
    at any time; a save names the version it started from and is refused if the file
    changed meanwhile (e.g. the assistant rewrote it). Writing the objectives also
    adds their line to `starting_evidence/FOLDER_CONTENT.md`. The light template
-   (`prompts/objectives-template.md`: per objective its kind, statement, what counts
-   as met, constraints) is shown in the empty editor and given to the assistant;
+   (`prompts/objectives-template.md`: per objective its kind, the human's request in
+   their own words, statement, the result they will get, what counts as met,
+   constraints) is shown in the empty editor and given to the assistant;
    nothing enforces it.
 3. **Settings.** The launch options ([WEB.md](WEB.md)), with the checks above;
    Start waits until they all hold.
