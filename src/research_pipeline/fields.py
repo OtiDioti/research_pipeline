@@ -12,6 +12,8 @@ NAMES = (
     "primary",
     "reviewer",
     "librarian",
+    "writer",
+    "report_at_end",
     "backends",
     "coding",
     "analysis",
@@ -65,6 +67,22 @@ def fields(backends: list[str]) -> list[Field]:
             "spec",
             "Keeps the library's pages. Changed while it runs: from its next session.",
             options=backends,
+            live=True,
+        ),
+        Field(
+            "writer",
+            "Writer",
+            "spec",
+            "Writes the reports for you (a PDF per phase, and the project's on request) and checks them against "
+            "the results. Changed while it runs: from its next session.",
+            options=backends,
+            live=True,
+        ),
+        Field(
+            "report_at_end",
+            "Report when a phase ends",
+            "bool",
+            "The Writer writes the phase's report once it ends (you can always ask for one from the page).",
             live=True,
         ),
         Field(

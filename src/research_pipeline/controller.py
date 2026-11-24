@@ -81,6 +81,8 @@ from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
 from research_pipeline.talks import Talks
 from research_pipeline.tools import ROLE_TOOLS, ToolError
+from research_pipeline.writer import NODES, Writers
+from research_pipeline.writer import prepare as prepare_writing
 
 #: Seconds between usage-quota reads.
 QUOTA_INTERVAL = 120
@@ -156,6 +158,7 @@ class Controller:
         self.linkcheck = LinkCheck(self.project)
         self.closing = False  # the investigation ended; the Librarian places the final work
         self.talks = Talks(self)  # talk-only sessions with the primary and the Reviewer after the end
+        self.writers = Writers(self)  # the reports for the human (research_pipeline.writer)
         self._reopen_told = False  # the human was told that their changes after the end reopen at the next run
         self.reopen = reopen
         # Every agent tool, by name: the controller's _tool_* methods and the Librarian's (each role sees its own).
@@ -177,6 +180,7 @@ class Controller:
             except Busy as busy:
                 raise ProjectError(str(busy)) from None
             self.project.prepare()
+            prepare_writing(self.project)
             self.home = Home.load(self.project.home_file)
             self.state = self._load()
             await self.bridge.start()
@@ -246,6 +250,7 @@ class Controller:
 
     async def _hand_over(self) -> None:
         await self.talks.close()
+        await self.writers.close()
         assert self.done is not None  # set by run(), within which this runs
         self.done.set()
 
@@ -265,6 +270,20 @@ class Controller:
             raise ValueError("the investigation is still starting")
         async with self.lock:
             return await self.talks.message_phase(phase, agent_id, text)
+
+    async def report(self, phase: int | None, fresh: bool = False) -> str:
+        """The human asks the Writer for the report of ``phase`` (None: the project's); ``fresh``: written anew."""
+        if self.lock is None:
+            raise ValueError("the investigation is still starting")
+        async with self.lock:
+            return await self.writers.get(phase).start(fresh)
+
+    async def to_writer(self, node: str, phase: int, text: str) -> str:
+        """The human's ``text`` to the Writer whose node is ``node`` in phase ``phase``'s graph."""
+        writer = self.writers.owner(node, phase)
+        if writer is None:
+            raise ValueError(f"{node} has written no report yet: ask for one first")
+        return await writer.message(text)
 
     def log(self, agent_id: str) -> ActivityLog:
         """The activity log ``agent_id`` of this phase writes to (the Librarian's is the project's)."""
@@ -329,14 +348,17 @@ class Controller:
         (minutes, 0: none) apply at once;
         'primary', 'reviewer' and 'librarian' (BACKEND:MODEL:EFFORT) from that agent's next
         session, 'coding' and 'analysis' (the models the prompt recommends for subagents) from
-        each agent's next session, and 'backends' (the CLIs for subagents) from the next spawn.
+        each agent's next session, 'writer' from the Writer's next session, 'report_at_end' at the
+        next end, and 'backends' (the CLIs for subagents) from the next spawn.
         Raise ValueError for an invalid value (nothing is changed then).
         """
         if self.lock is None:
             raise ValueError("the investigation is still starting")
         specs = {role: Spec.parse(values[role], role, self.drivers) for role in ROLES if role in values}
         recommended = {
-            task: Spec.parse(values[task], task, self.drivers) for task in ("coding", "analysis") if task in values
+            task: Spec.parse(values[task], task, self.drivers)
+            for task in ("coding", "analysis", "writer")
+            if task in values
         }
         if "backends" in values and (not values["backends"] or set(values["backends"]) - set(self.drivers)):
             raise ValueError(f"backends must be some of {', '.join(self.drivers)}")
@@ -371,6 +393,8 @@ class Controller:
                 setattr(options, task, str(spec))
             if "backends" in values:
                 options.backends = list(values["backends"])
+            if "report_at_end" in values:
+                options.report_at_end = bool(values["report_at_end"])
             self.show(
                 "controller", "primary", "Settings changed: " + ", ".join(f"{k} = {v}" for k, v in values.items())
             )
@@ -1243,7 +1267,7 @@ class Controller:
 
     def _new_id(self, name: str) -> str:
         base = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")[:40] or "agent"
-        base = "agent" if base in ROLES else base
+        base = "agent" if base in ROLES or base in NODES else base  # the page shows the Writer's nodes too
         candidate, number = base, 1
         while candidate in self.state.agents or self.project.agent_dir(candidate).exists():
             number += 1
@@ -1370,6 +1394,8 @@ class Controller:
             read_only = [self.project.evidence, self.project.library, *self.librarian.frozen()] + [
                 folder for folder in others if folder != self.project.phase_dir and folder.is_dir()
             ]
+            # The Writer's reports and the human's rules for them, once they exist.
+            read_only += [path for path in (self.project.reports, self.project.root / "WRITING.md") if path.exists()]
             self.processes[job.id] = joblib.start(
                 self.project.phase_dir,
                 job,
@@ -1611,6 +1637,7 @@ class Controller:
         )
         self._announce_talks()
         self._save()
+        await self.writers.at_end()
 
     def _announce_talks(self) -> None:
         reopen = (
@@ -1738,10 +1765,12 @@ class Controller:
         """Let every session save its handoff, then end the controller; jobs keep running."""
         if self.state.status in FINISHED:
             await self.talks.close()  # each talk session saves its talk note
+            await self.writers.close()  # the Writer finishes its request and saves its note
             assert self.done is not None  # set by run(), within which this runs
             self.done.set()
         else:  # also while paused: the sessions kept meanwhile save their notes before they end
             await self.talks.close()  # talks with other phases save their notes
+            await self.writers.close()
             await self._pause("shutdown")
 
     # Usage quota ---------------------------------------------------------------------------------

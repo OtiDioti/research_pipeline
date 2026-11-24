@@ -28,3 +28,4 @@
 - [preparation.py](preparation.py) — The web page's preparation of a phase: the first one, a new one (material, objectives, AGENTS.md, the checks Start waits for, the Talks switch), or the reopening of one that ended (also the changes since its end and their reverts, the checks Reopen waits for).
 - [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/; a phase's objectives; reverting the human's files to a phase's end.
 - [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts a phase's OBJECTIVES.md on request, for the first phase, a new one or a reopening (then also AGENTS.md, on request).
+- [writer.py](writer.py) — The Writer: reports for the human (a PDF per phase, and the project's) written from the agents' work and checked against it by a fresh checker, on request and at a phase's end.

@@ -1,4 +1,4 @@
-"""What the stats read from a project, read-only and incrementally: phases, agents, jobs and activity.
+"""What the stats read from a project, read-only and incrementally: phases, agents (and Writers), jobs, activity.
 
 The phases' ``state.json`` and the project's ``project.json`` are small and read again
 when they change; each activity log (``.research/phases/<N>/activity/<agent>.jsonl``,
@@ -117,6 +117,7 @@ class Phase:
     agents: dict[str, Agent] = field(default_factory=dict)
     jobs: list[Job] = field(default_factory=list)
     logs: dict[str, Log] = field(default_factory=dict)
+    writers: dict[str, Agent] = field(default_factory=dict)  # its report's Writer and checker, once asked for
 
     @property
     def start(self) -> float | None:
@@ -168,6 +169,10 @@ class Source:
             if state is not None:
                 self._load(phase, state)
                 changed = True
+            writer = None if self.single else self._json(self.research / "writer" / f"phase-{number}" / "state.json")
+            if writer is not None:
+                phase.writers = self._writers(number, writer)
+                changed = True
             for path in sorted((folder / "activity").glob("*.jsonl")):
                 if self.single and path.stem == LIBRARIAN:
                     continue
@@ -191,6 +196,22 @@ class Source:
             return None  # being replaced: read at the next refresh
         self._seen[path] = stamp
         return data if isinstance(data, dict) else None
+
+    @staticmethod
+    def _writers(number: int, state: dict) -> dict[str, Agent]:
+        """The Writer of phase ``number``'s report and its checker, from its state (research_pipeline.writer)."""
+        backend, _, rest = str(state.get("spec") or "").partition(":")
+        model = rest.rsplit(":", 1)[0]
+        started = float(state.get("started") or 0.0)
+        status = str(state.get("status") or "")
+        return {
+            "writer": Agent(
+                "writer", number, "writer", None, backend, model, status, started, int(state.get("sessions") or 0), 0
+            ),
+            "checker": Agent(
+                "checker", number, "checker", "writer", backend, model, "", started, int(state.get("checked") or 0), 0
+            ),
+        }
 
     @staticmethod
     def _load(phase: Phase, state: dict) -> None:

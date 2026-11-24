@@ -36,6 +36,8 @@ class Options:
     reviewer: str = ""  # BACKEND:MODEL:EFFORT of the final Reviewer
     librarian: str = ""  # BACKEND:MODEL:EFFORT of the Librarian
     setup: str = ""  # BACKEND:MODEL:EFFORT of the setup assistant (web setup, before the first start)
+    writer: str = "claude:claude-opus-5-5:high"  # BACKEND:MODEL:EFFORT of the Writer and its checker (reports)
+    report_at_end: bool = True  # the Writer writes the phase's report once it ends
     # The models the prompt recommends for subagents' coding and analytical tasks (BACKEND:MODEL:EFFORT)
     coding: str = "claude:claude-opus-5-5:xhigh"
     analysis: str = "codex:gpt-6.1-sol:xhigh"

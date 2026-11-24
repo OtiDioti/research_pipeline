@@ -36,6 +36,8 @@ TOP_LEVEL = frozenset(
         "library",
         "librarian",
         "phases",
+        "reports",
+        "WRITING.md",
         ".research",
         "FOLDER_CONTENT.md",
         ".git",
@@ -124,6 +126,7 @@ class Project:
         self.library = self.root / "library"  # the Librarian's pages; read-only for every session and job
         self.librarian = self.root / LIBRARIAN
         self.phases = self.root / "phases"
+        self.reports = self.root / "reports"  # the Writer's reports for the human (research_pipeline.writer)
         self.research = self.root / ".research"  # the controller's: hidden from agents and their jobs
         self.logs = self.research / "logs"
         self.removed = self.research / "removed"  # material the human removed on the setup page
@@ -330,6 +333,13 @@ class Project:
             )
         elif exists and OPTIONAL_AGENTS_LINE in text:
             self.write(index, text.replace(OPTIONAL_AGENTS_LINE, AGENTS_LINE))
+
+    def list_at_top(self, name: str, description: str) -> None:
+        """Describe the top-level entry ``name``, once it exists, in the top index (no link may lead nowhere)."""
+        index = self.root / INDEX
+        text = index.read_text(encoding="utf-8") if index.is_file() else EMPTY_INDEX
+        if (self.root / name).exists() and f"[{name}]({name})" not in text:
+            self.write(index, f"{text.rstrip()}\n- [{name}]({name}) — {description}\n")
 
     def write_agents_index(self, agents: list[Agent]) -> None:
         """Maintain the phase's agents/FOLDER_CONTENT.md: one line per agent whose folder exists (the Reviewer's

@@ -48,6 +48,7 @@ from research_pipeline.readiness import Readiness
 from research_pipeline.state import FINISHED, Options, State
 from research_pipeline.stats import Statistics
 from research_pipeline.usage import Usage
+from research_pipeline.writer import NODES, PROJECT_CHECKER, PROJECT_WRITER
 
 #: Transcript entries worth a notification.
 NOTEWORTHY = re.compile(
@@ -380,6 +381,7 @@ class ResearchDashboard(Dashboard):
             actions=shown.actions if shown else self._talk_actions,
             librarian=None if shown else home.librarian,
             paths=self.paths.at(number),
+            writers=controller.writers.nodes(number) if controller is not None and controller.lock else [],
         )
         status = graph.status(
             self,
@@ -430,6 +432,13 @@ class ResearchDashboard(Dashboard):
         if self.controller is None:
             raise ValueError("another process runs this project" if self.elsewhere else "resume the project first")
         controller = self.controller
+        if target is None and action in ("report", "report_fresh", "report_project"):  # the Writer's reports
+            phase = None if action == "report_project" else self.selected
+            return await controller.report(phase, fresh=action == "report_fresh")
+        if target in NODES:  # the Writer of this phase's report, or of the project's
+            if action != "message":
+                raise ValueError("you can only write to the Writer")
+            return await controller.to_writer(target, self.selected, str(args.get("text", "")))
         if target is None:
             if action in ("pause", "release") and shown is None:
                 raise ValueError(f"phase {self.selected} does not run")
@@ -454,7 +463,7 @@ class ResearchDashboard(Dashboard):
     def history(self, agent: str | None, limit: int, before: float | None) -> list[dict]:
         phase = ActivityLog(self.paths.at(self.selected).activity)
         library = ActivityLog(self.paths.library_activity)
-        if agent == LIBRARIAN:
+        if agent in (LIBRARIAN, PROJECT_WRITER, PROJECT_CHECKER):  # kept in the project's log
             return library.read(agent, limit, before)
         if agent is not None:
             return phase.read(agent, limit, before)
