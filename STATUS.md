@@ -1,5 +1,13 @@
 # Status
 
+**2026-11-24.** 0.31.2: **each role is told who reads its results**; no behaviour changed. Prompt wording
+(agent-facing, deliberate, same meaning): the Reviewer reads common.md too, where "Write your results for other
+agents: your parent, the Reviewer, …" and "The Reviewer later checks …" did not fit it. Both move to the role files:
+subagent.md says its result is for its parent, the Reviewer and the agents and later phases that build on it,
+primary.md that the phase's result is for the Reviewer and the later phases, each with the note that the Reviewer
+independently checks what only its author checked. common.md's section on summaries, which covers reviews too, is now
+headed "Your summaries".
+
 **2026-11-24.** 0.31.1: **the shared prompt speaks to the agent reading it**; no behaviour changed. Prompt wording
 (agent-facing, deliberate, same meaning): common.md's impersonal descriptions of the system become instructions in the
 second person ("Write your results for other agents", "Open every summary you write by restating the request", "When
