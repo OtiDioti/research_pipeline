@@ -32,6 +32,7 @@ from agent_toolkit import CAPABILITIES, ContextExhausted, Launch, Relay, Session
 from agent_toolkit.activity import ActivityLog
 from agent_toolkit.protocol import sections
 from agent_toolkit.records import atomic_write
+from agent_toolkit.web import switch
 
 from research_pipeline import prompts
 from research_pipeline.phases import load_state
@@ -49,10 +50,17 @@ TALKERS = ("primary", "reviewer")
 SERVER = "research"
 #: Why a talk session hands off when the human flips the switch (filled into the 'handoff' message).
 SWITCHED = "the human changed whether you may change files"
+#: The chat switch of a primary that may change its files in a talk (its 'edit' action).
+EDITS = switch(
+    "edits", "Allow edits", "When on, the primary may change its own files: its folder, RESULT.md, STATUS.md"
+)
 
 
 def actions(agent_id: str) -> list[str]:
-    """What the human may do in a talk with ``agent_id``: message it, and let the primary change its files."""
+    """What the human may do in a talk with ``agent_id``: message it, and let the primary change its files.
+
+    'edit' is not an action of its own: the page shows it as the chat's :data:`EDITS` switch.
+    """
     if agent_id not in TALKERS:
         return []
     return ["message", "edit"] if agent_id == "primary" else ["message"]

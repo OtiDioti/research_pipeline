@@ -283,12 +283,13 @@ class Controller:
         async with self.lock:
             return await self.writers.get(phase).start(fresh)
 
-    async def to_writer(self, node: str, phase: int, text: str) -> str:
-        """The human's ``text`` to the Writer whose node is ``node`` in phase ``phase``'s graph."""
+    async def to_writer(self, node: str, phase: int, text: str, check: bool = False) -> str:
+        """The human's ``text`` to the Writer whose node is ``node`` in phase ``phase``'s graph (``check``: its
+        *Check changes* switch)."""
         writer = self.writers.owner(node, phase)
         if writer is None:
             raise ValueError(f"{node} has written no report yet: ask for one first")
-        return await writer.message(text)
+        return await writer.message(text, check)
 
     def log(self, agent_id: str) -> ActivityLog:
         """The activity log ``agent_id`` of this phase writes to (the Librarian's is the project's)."""

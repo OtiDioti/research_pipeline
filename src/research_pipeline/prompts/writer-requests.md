@@ -65,3 +65,7 @@ The previous round's findings are in $file. The Writer's reply to them:
 
 $reply
 <!-- /section:previous -->
+
+<!-- section:submitted-unchecked -->
+Submitted. The human asked for this change without a new check: no checker reads it. End your turn now.
+<!-- /section:submitted-unchecked -->
