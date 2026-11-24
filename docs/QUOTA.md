@@ -9,7 +9,8 @@ decides what a hold pauses.
 ## Reading
 
 - Every 120 s, and at every start, resume and release, each CLI in use is read:
-  those of the primary, the Reviewer, the Librarian, `--backends`, and of every agent not yet ended.
+  those of the primary, the Reviewer, the Librarian, `--backends`, of every agent not yet ended,
+  and the Writer's (`--writer`), which writes and checks the reports ([WRITER.md](WRITER.md)).
 - A window is **short** (e.g. 5 hours) or **weekly** (7 days or longer).
 
 ## Holds
@@ -40,6 +41,10 @@ are kept in the phase's `.research/phases/<N>/state.json` (kind, reported reset 
   without another turn (its note is saved), and it starts a fresh session from
   HANDOFF.md once a slot is free. An agent whose context was at the threshold
   continues in a fresh session too. Parents are told that their subagent resumed.
+- A report's request on that CLI stops before its next step: the Writer saves its note,
+  its session ends, and the request waits until the hold ends ([WRITER.md](WRITER.md)).
+  After a phase's end, *Resume held* (Ctrl+R) releases a weekly or unreadable hold such a
+  request waits for.
 - The terminal app shows the hold in its status line, e.g. `RUNNING (HELD: CLAUDE SHORT)`.
 
 ## If the limit is hit anyway

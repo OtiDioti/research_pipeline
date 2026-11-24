@@ -4,7 +4,7 @@ The agents write their results for each other; the Writer turns a phase's work (
 every phase's, for the project's report) into a report the human reads: a LaTeX
 document compiled to a PDF, in ``reports/phase-<N>/`` or ``reports/project/``,
 following the human's writing rules in WRITING.md (created from a starter at the
-first start, see :func:`prepare`). It runs on the human's request from the web
+first start, see :func:`research_pipeline.reports.prepare`). It runs on the human's request from the web
 page, and once a phase ends if the ``report_at_end`` option is on; a report that
 exists is revised, unless the human asks for a fresh one.
 
@@ -19,8 +19,12 @@ reading) compares the report with the work and ends with ``report_clean`` or
 :data:`MAX_ROUNDS` rounds are spent, when what is left is shown to the human. A turn
 that does neither answered the human (or asked them something): the cycle ends.
 
-Both are hosted by the controller, like the talks, and appear on the page as nodes
-of the phase's graph (the project's in every phase's), which the human writes to;
+A request waits, between its steps, while the quota of its CLI is held (the Writer's
+session saves its note and ends first), and continues once it is released.
+
+Both are hosted by the controller (:class:`research_pipeline.reports.Writers`), like the
+talks, and appear on the page as nodes of the phase's graph (the project's in every
+phase's), which the human writes to;
 what they do is kept in the phase's activity log (the project's in the library's).
 The controller commits after each cycle.
 """
@@ -45,7 +49,6 @@ from agent_toolkit.web import node
 
 from research_pipeline.phases import load_state
 from research_pipeline.prompts import PROMPTS
-from research_pipeline.state import FINISHED
 from research_pipeline.tools import CHECKER_TOOLS, WRITER_TOOLS
 
 if TYPE_CHECKING:
@@ -53,8 +56,6 @@ if TYPE_CHECKING:
 
 #: Checks of one request before what is left goes to the human.
 MAX_ROUNDS = 3
-#: The human's writing rules, at the project's top level.
-WRITING = "WRITING.md"
 #: The page's nodes of a phase's Writer and checker, and of the project's.
 WRITER, CHECKER = "writer", "checker"
 PROJECT_WRITER, PROJECT_CHECKER = "project-writer", "project-checker"
@@ -66,14 +67,6 @@ SERVER = "research"
 def text(name: str, **facts) -> str:
     """One of the messages in prompts/writer-requests.md, filled."""
     return Template(sections(PROMPTS.text("writer-requests"))[name]).substitute(facts)
-
-
-def prepare(project) -> None:
-    """Give the project the human's WRITING.md, from the built-in rules, if it has none; list it at the top."""
-    path = project.root / WRITING
-    if not path.exists():
-        project.write(path, PROMPTS.text("writing-starter"))
-    project.list_at_top(WRITING, "The human's writing rules for the reports in reports/, which the Writer follows.")
 
 
 def unavailable() -> str:
@@ -107,6 +100,8 @@ class Writer:
         self.submitted = False
         self.verdict: tuple[str, str] | None = None  # the checker's: ('clean', '') or ('findings', its file)
         self.pending: list[tuple[int, asyncio.Task]] = []  # the questions it asked primaries, with their phase
+        self.quota = asyncio.Event()  # set when the controller's quota holds change
+        self.closing = False  # the controller closes: a request waiting for its quota stops
 
     # What the page shows -------------------------------------------------------------------------------
 
@@ -125,7 +120,7 @@ class Writer:
             chosen = {"backend": spec.backend, "model": spec.model, "effort": spec.effort}
         except ValueError:  # none chosen
             chosen = {"backend": "", "model": "", "effort": ""}
-        colour = {"writing": "working", "waiting": "waiting", "checking": "idle", "failed": "failed"}
+        colour = {"writing": "working", "waiting": "waiting", "checking": "idle", "held": "held", "failed": "failed"}
         checking = self.status == "checking"
         report = self.out / "report.pdf"
         common = chosen | {"ended": False, "tag": None}
@@ -188,7 +183,10 @@ class Writer:
         return "Sent to the Writer."
 
     async def close(self) -> None:
-        """Wait for its running cycle, then end its session, which saves its handoff note first."""
+        """Wait for its running cycle (one waiting for its quota stops), then end its session, which saves its
+        handoff note first."""
+        self.closing = True
+        self.quota.set()
         if self.task is not None:
             await asyncio.gather(self.task, return_exceptions=True)
         if self.relay is not None:
@@ -215,6 +213,8 @@ class Writer:
         try:
             while message:
                 self.submitted = False
+                if not await self._unheld():
+                    break
                 self._status("writing", "working on the report")
                 reply = await self._ask(self._writer(), message, self.ids[0])
                 message = ""
@@ -227,6 +227,8 @@ class Writer:
                 if rounds:
                     previous = previous and text("previous", file=previous, reply=reply.strip() or "(none)")
                 rounds += 1
+                if not await self._unheld():
+                    break
                 self._status("checking", f"the checker compares the report with the work (round {rounds})")
                 verdict = await self._check(rounds, previous)
                 if verdict[0] == "clean":
@@ -352,14 +354,31 @@ class Writer:
         if kind == "text" and data["text"].strip():
             self.controller.show("agent", agent_id, data["text"])
 
+    async def _unheld(self) -> bool:
+        """Before each step of a request: while its CLI's quota is held, its session saves its note and ends, and
+        the request waits; False if the controller closes meanwhile (the request then stops)."""
+        backend = self._backend()
+        if not self.controller._blocked(backend):
+            return True
+        self.controller.show("controller", self.ids[0], f"The Writer waits: the usage quota of {backend} is held.")
+        if self.relay is not None and self.relay.session_id:
+            with contextlib.suppress(SessionError, OSError):  # else its next session starts from the last saved note
+                await asyncio.to_thread(self.relay.hand_off, f"the usage quota of {backend} is held")
+        self._status("held", f"waiting for the usage quota of {backend}")
+        while self.controller._blocked(backend) and not self.closing:
+            self.quota.clear()
+            await self.quota.wait()
+        if self.closing:
+            self._status("idle", "stopped while waiting for the usage quota: ask again")
+            return False
+        return True
+
+    def _backend(self) -> str:
+        return Spec.parse(self.controller.state.options.writer, "the Writer", self.controller.drivers).backend
+
     async def _check_cli(self) -> None:
-        reason = unavailable()
-        if not reason:
-            backend = Spec.parse(self.controller.state.options.writer, "the Writer", self.controller.drivers).backend
-            if self.controller._blocked(backend):
-                reason = f"the usage quota of {backend} is held"
-            else:
-                reason = await asyncio.to_thread(self.controller.drivers[backend].status)
+        """Refuse a request its CLI cannot serve (one whose quota is held waits instead, see :meth:`_unheld`)."""
+        reason = unavailable() or await asyncio.to_thread(self.controller.drivers[self._backend()].status)
         if reason:
             raise ValueError(f"the Writer cannot run now: {reason}")
 
@@ -461,50 +480,3 @@ class Writer:
             "started": self.started,
         }
         atomic_write(self.folder / "state.json", json.dumps(state, indent=1), root=self.controller.project.root)
-
-
-class Writers:
-    """The Writers of one controller: one per report asked for, each with its checker."""
-
-    def __init__(self, controller: Controller):
-        self.controller = controller
-        self.writers: dict[int | None, Writer] = {}
-
-    def get(self, phase: int | None) -> Writer:
-        if phase is not None and load_state(self.controller.project.at(phase)) is None:
-            raise ValueError(f"phase {phase} has not started: there is nothing to report yet")
-        if phase == self.controller.project.phase and self.controller.state.status not in FINISHED:
-            raise ValueError(f"phase {phase} is at work: its report is written once it ends")
-        if phase not in self.writers:
-            self.writers[phase] = Writer(self.controller, phase)
-        return self.writers[phase]
-
-    def nodes(self, phase: int) -> list[dict]:
-        """The nodes of phase ``phase``'s graph: its Writer's and the project's, once each has been asked for."""
-        research = self.controller.project.research / "writer"
-        for key, folder in ((phase, f"phase-{phase}"), (None, "project")):
-            if key not in self.writers and (research / folder).is_dir():
-                self.writers[key] = Writer(self.controller, key)
-        return [item for key in (phase, None) if key in self.writers for item in self.writers[key].nodes()]
-
-    def owner(self, node: str, phase: int) -> Writer | None:
-        """The Writer a node of phase ``phase``'s graph belongs to (None: not a Writer's)."""
-        key = None if node in (PROJECT_WRITER, PROJECT_CHECKER) else phase if node in (WRITER, CHECKER) else -1
-        return self.writers.get(key) if key != -1 else None  # type: ignore[arg-type]
-
-    async def at_end(self) -> None:
-        """Once the phase has ended and its work is shelved: its report, if the option is on and it is not current."""
-        controller = self.controller
-        if not controller.state.options.report_at_end:
-            return
-        writer = self.get(controller.project.phase)
-        report = writer.out / "report.pdf"
-        if writer.busy or report.is_file() and report.stat().st_mtime >= (controller.state.ended or 0):
-            return
-        try:
-            await writer.start()
-        except ValueError as error:
-            controller.show("alert", WRITER, f"No report of phase {controller.project.phase}: {error}.")
-
-    async def close(self) -> None:
-        await asyncio.gather(*(writer.close() for writer in self.writers.values()))

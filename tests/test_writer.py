@@ -14,11 +14,12 @@ from research_pipeline.writer import MAX_ROUNDS
 from tests.helpers import FAKE_DRIVERS, FakeSession, call_tool, complete, launch_options, remove, running, temp_project
 
 
-def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list[str]):
+def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list[str], on_submit=None):
     """Fake Writers, checkers and talking primaries; every other session is left to the test.
 
     The Writer asks a primary each of ``questions`` first, then writes, compiles and submits its report; each
-    checker gives the next of ``verdicts`` ('clean', or the text of its findings).
+    checker gives the next of ``verdicts`` ('clean', or the text of its findings). ``on_submit()`` runs before
+    the Writer submits; asked for its handoff note, it saves one.
     """
 
     def play(session: FakeSession, text: str):
@@ -30,6 +31,14 @@ def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list
 
         if agent == "primary" and "-talk-" in str(session.launch.log):
             return turn(0.1, text="It is 1/3: the quadrature in my notes agrees to 1e-12.")
+        if agent in ("writer", "project-writer") and "Save your handoff note" in text:
+            command = session.launch.mcp["handoff"].command
+            note = Path(command[command.index("--note") + 1])
+
+            def save() -> None:
+                note.write_text("# Handoff\n\nThe report is written.\n")
+
+            return turn(0.1, text="Saved.", action=save)
         if agent in ("writer", "project-writer"):
 
             def write():
@@ -40,6 +49,8 @@ def script(loop: asyncio.AbstractEventLoop, verdicts: list[str], questions: list
                     return  # a question for the human, answered without a new report
                 (out / "report.tex").write_text(f"\\section{{The integral}} It is $1/3$. % request {len(text)}\n")
                 (out / "report.pdf").write_text("%PDF-1.5\n")
+                if on_submit is not None:
+                    on_submit()
                 call("submit_report")
 
             said = "Here is where the report stands."
@@ -192,6 +203,53 @@ class WriterTest(unittest.IsolatedAsyncioTestCase):
                 with self.assertRaisesRegex(ValueError, "LaTeX is not installed"):
                     await dashboard.act("report", None, {})
             self.assertFalse((self.root / "reports").exists())
+
+    async def test_a_held_cli_stops_a_request_between_its_steps_until_released_even_after_the_end(self):
+        loop = asyncio.get_running_loop()
+        options = launch_options(backends=["codex"], writer="claude:claude-opus-5-5:high")
+        async with running(self.root, options) as harness:
+            controller = harness.controller
+            self.assertIn("claude", controller._backends_in_use())  # the Writer's CLI, used by no other agent
+
+            def weekly_runs_out() -> None:  # during the Writer's turn: its CLI's weekly window runs out
+                harness.quota.remaining["claude"] = (80.0, 5.0)
+                asyncio.run_coroutine_threadsafe(controller._check_quota(), loop).result(5)
+
+            FakeSession.script = script(loop, ["clean"], [], on_submit=weekly_runs_out)
+            await complete(harness)
+            await controller.report(1)
+            writer = controller.writers.writers[1]
+            for _ in range(200):  # the turn ends; the check waits
+                await asyncio.sleep(0.02)
+                if writer.status == "held":
+                    break
+            self.assertEqual((writer.status, writer.detail), ("held", "waiting for the usage quota of claude"))
+            self.assertEqual(self.sessions("checker"), [])  # no further step on the held CLI
+            note = self.root / ".research" / "writer" / "phase-1" / "HANDOFF.md"
+            self.assertIn("The report is written.", note.read_text())  # its session saved its note and ended
+            self.assertTrue(self.sessions("writer")[0].closed)
+            nodes = {node["id"]: node for node in writer.nodes()}
+            self.assertEqual(nodes["writer"]["status"], "held")
+            self.assertTrue(controller.releasable)  # after the end too: the report waits for the human
+            harness.quota.remaining["claude"] = (80.0, 80.0)
+            controller.release()
+            await self.written(controller)
+            self.assertEqual(writer.detail, "the report of phase 1 is written and checked")
+            self.assertEqual(len(self.sessions("checker")), 1)
+            self.assertFalse(controller.releasable)
+
+    async def test_closing_stops_a_request_waiting_for_its_quota(self):
+        async with running(self.root) as harness:
+            await complete(harness)
+            harness.quota.remaining["claude"] = (5.0, 80.0)  # the Writer's CLI is held from the start
+            await harness.controller._check_quota()
+            self.assertIn("writes the report", await harness.controller.report(1))  # accepted: it waits
+            writer = harness.controller.writers.writers[1]
+            await harness.settle()
+            self.assertEqual(writer.status, "held")
+            await asyncio.wait_for(harness.controller.writers.close(), 5)  # as at a shutdown: no wait for the quota
+            self.assertEqual(writer.detail, "stopped while waiting for the usage quota: ask again")
+            self.assertEqual(self.sessions("writer"), [])
 
     async def test_a_running_phase_has_no_report_yet_and_its_ids_stay_the_writers(self):
         async with running(self.root) as harness:
