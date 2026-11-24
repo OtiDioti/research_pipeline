@@ -22,6 +22,8 @@ On `run`, the controller:
     while it exists, and only then (no link may lead nowhere), and `agents/FOLDER_CONTENT.md`
     lists the agents whose folders exist (the Reviewer's appears at its first session);
   - the folder indexes;
+  - the human's `WRITING.md`, from the built-in writing rules, if there is none (listed in the root
+    index); `reports/` appears with the Writer's first report ([WRITER.md](WRITER.md));
   - a `.gitignore` covering `.research/`, virtual environments and caches (or `.research/`
     added to an existing one);
 - creates the git repository on the first run, and commits the prepared layout.
@@ -30,11 +32,12 @@ On `run`, the controller:
 
 | Who | Writes |
 |---|---|
-| The human | `AGENTS.md`, `starting_evidence/` (read-only for agents and jobs), each phase's `OBJECTIVES.md` |
+| The human | `AGENTS.md`, `starting_evidence/` (read-only for agents and jobs), each phase's `OBJECTIVES.md`, `WRITING.md` (read only by the Writer and its checker) |
 | Every agent | Its own `phases/<N>/agents/<id>/` (the Librarian: `librarian/`), until it is shelved ([LIBRARY.md](LIBRARY.md)) |
 | The primary | Also its phase's STATUS.md, RESULT.md and FOLDER_CONTENT.md |
 | The Reviewer | Also its phase's `reviews/` |
 | The Librarian | Also the Markdown pages of `library/`, only through `write_page` |
+| The Writer | Its report's folder in `reports/` (its checker: the folder's `checks/`) |
 | The controller | `.research/` (hidden from agents and jobs), `phases/FOLDER_CONTENT.md`, each phase's `agents/FOLDER_CONTENT.md` and `agents/<id>/jobs/FOLDER_CONTENT.md`, an agent's TASK.md, PARENT_FEEDBACK.md and MESSAGES.md, `library/CATALOG.md` and `library/catalog/`, the Librarian's pages (as it asks), and the outcome line of STATUS.md |
 
 Other phases' folders are read-only for a phase's agents and jobs.

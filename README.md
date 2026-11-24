@@ -44,6 +44,7 @@ operational decision:
 - [uv](https://docs.astral.sh/uv/).
 - At least one agent CLI, installed and logged in: [Codex](https://github.com/openai/codex) (`codex`)
   and/or [Claude Code](https://docs.claude.com/en/docs/claude-code) (`claude`).
+- For the reports: a LaTeX installation with `latexmk` (without it, no report is written).
 - SSH access to the private repository `OtiDioti/agent_toolkit`, which `uv sync` installs as a dependency, at the
   release tag pinned in `pyproject.toml`.
 
@@ -137,6 +138,7 @@ and `--web-no-open`); on the page each project's are set on its setup page.
 |---|---|
 | `--primary`, `--reviewer`, `--librarian` | CLI, model and effort as `BACKEND:MODEL:EFFORT` (chosen on the setup page; all three required on the first run with `--no-web`) |
 | `--setup` | the setup assistant's `BACKEND:MODEL:EFFORT` (`codex:gpt-6.1-sol:high`; also on the page) |
+| `--writer` | the Writer's `BACKEND:MODEL:EFFORT`, which writes the reports for you and checks them (`claude:claude-opus-5-5:high`; also on the page) |
 | `--backends` | CLIs agents may choose for subagents (those of the primary and Reviewer) |
 | `--max-agents` | agent sessions open at the same time, idle ones included, the Librarian's aside (6, at least 2); a spawn beyond it is refused |
 | `--reference PATH` | another project, as unverified evidence; the primary is told about it (repeatable) |
@@ -254,6 +256,13 @@ what changed meanwhile (by you, or by jobs that kept running).
   - At the end, the Librarian places the primary's and the Reviewer's work (unless
     it cannot run: then at the next `run`), and the program stays open for talks
     with the primary and the Reviewer until you quit.
+- **Reports.** The agents write their results for each other; the Writer writes the
+  reports you read: a PDF per phase in `reports/phase-<N>/` (once a phase ends, and on
+  request from the web page) and the project's in `reports/project/`, following your
+  `WRITING.md` (created from the built-in rules) and your documents' notation. A fresh
+  checker compares each report with the work; the Writer corrects it, for up to three
+  checks, and what is left is shown to you. You talk with the Writer from its node in
+  the graph. See [docs/WRITER.md](docs/WRITER.md).
 - **Quota.**
   - A CLI's short window at 15% or less left: its agents update their handoffs and
     wait in their sessions until the reset.

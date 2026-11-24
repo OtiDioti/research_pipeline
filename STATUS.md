@@ -1,5 +1,28 @@
 # Status
 
+**2026-11-24.** 0.32.0: **the Writer writes the reports for the human** ([PROJECT.md](PROJECT.md) §2, §3, §4 "Reports"
+and §7 amended; [docs/WRITER.md](docs/WRITER.md), new; AGENT_ROLES, CONFINEMENT, PROJECT_FOLDER, STATS, WEB and
+README updated). The research agents write their results for each other; the Writer (`writer.py`, hosted by the
+controller like the talks, not counted against the session cap) writes a LaTeX report and its PDF in
+`reports/phase-<N>/`, or the project's in `reports/project/` from the phase reports, following the human's
+`WRITING.md` (created at the first start from the built-in rules, prompts/writing-starter.md: the answer first, a
+section per main result, limitations, negative results, key decisions, the evidence with a reproduction appendix) and
+the notation of the human's documents. It runs once a phase ends (new option *Report when a phase ends*, on; after the
+Librarian placed the final work; unless the report is newer than the end) and on the page's *Write report* / *Update
+report* (revise), *Rewrite report* (anew) and *Project report*, for phases that do not run; the human talks with it
+from its node in the graph. It may ask a phase's primary (`ask_primary`, a talk session; Talks.ask, new). Each
+submitted report (`submit_report`, refused until the PDF is newer than its source) goes to a fresh checker session
+(`report_clean` / `report_findings`): fidelity, notation, WRITING.md, the build; findings go back to the Writer, up to
+three checks, and what is left is shown to the human. One CLI choice for both (`--writer`, new field *Writer*, default
+claude:claude-opus-5-5:high). The controller commits after each request; jobs see `reports/` and `WRITING.md`
+read-only; agent ids `writer`, `checker`, `project-writer`, `project-checker` are reserved for the page's nodes; the
+stats count a phase's Writer and checker. Prompt wording (deliberate, new): writer.md, checker.md, writer-requests.md,
+writing-starter.md; the `message` tool's description no longer says messages are not stored (they are, since 0.31.0,
+in MESSAGES.md). Tests: test_writer.py (the end, two check rounds and a question to the primary; the page's controls,
+talking with the Writer, a fresh rewrite and the project's report; what is left after three rounds; refusals). Asked
+for as the second step of separating the agents' results from the human's reports. Not yet tried with real CLIs or a
+real LaTeX build.
+
 **2026-11-24.** 0.31.2: **each role is told who reads its results**; no behaviour changed. Prompt wording
 (agent-facing, deliberate, same meaning): the Reviewer reads common.md too, where "Write your results for other
 agents: your parent, the Reviewer, …" and "The Reviewer later checks …" did not fit it. Both move to the role files:
