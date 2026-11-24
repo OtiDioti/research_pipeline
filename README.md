@@ -266,7 +266,8 @@ what changed meanwhile (by you, or by jobs that kept running).
   `WRITING.md` (created from the built-in rules) and your documents' notation. A fresh
   checker compares each report with the work; the Writer corrects it, for up to three
   checks, and what is left is shown to you. You talk with the Writer from its node in
-  the graph. See [docs/WRITER.md](docs/WRITER.md).
+  the graph; once its report was checked clean, the changes you ask for skip the checker
+  unless you turn on *Check changes* in its chat. See [docs/WRITER.md](docs/WRITER.md).
 - **Quota.**
   - A CLI's short window at 15% or less left: its agents update their handoffs and
     wait in their sessions until the reset.

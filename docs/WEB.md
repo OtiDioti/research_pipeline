@@ -76,7 +76,9 @@ primary and its Reviewer (below), and the top bar's controls are *Prepare reopen
 and Close ([FINISHING.md](FINISHING.md)). The chat with a primary that does not run
 (its phase ended or paused) has an *Allow edits* switch: while it is on, the primary
 may change its own files (its folder, RESULT.md, STATUS.md), and the controller
-commits them after each answer; it starts off and is not remembered after a reload. *Prepare reopening* opens the setup page
+commits them after each answer; it starts off and is not remembered after a reload.
+The Writer's chat gets a *Check changes* switch once its report was checked clean: off,
+the changes you ask for skip the checker ([WRITER.md](WRITER.md), "Check changes"). *Prepare reopening* opens the setup page
 again, to reopen the phase (below); *Back* returns to the graph. *Close* and *Shut
 down* end the project's controller (its talks save their notes, its agents their
 handoffs); the project then stays shown as it was left, and the program goes on.

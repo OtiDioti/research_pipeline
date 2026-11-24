@@ -1,5 +1,18 @@
 # Status
 
+**2026-11-24.** 0.35.0: **changes the human asks the Writer for skip the checker unless *Check changes* is on**
+([PROJECT.md](PROJECT.md) §4 amended; docs/WRITER.md, WEB.md and README updated). Every report the Writer submitted
+went to a fresh checker, for up to three rounds, even a small change the human asked for. Now, once a check of the
+report came back clean (`validated`, kept in the Writer's state.json), its chat offers a *Check changes* switch, off
+by default: a request started by the human's message checks what the Writer submits only while it is on; otherwise
+`submit_report` tells the Writer no checker reads it (new section `submitted-unchecked` in writer-requests.md: a
+deliberate prompt addition), the report stands, the controller commits, and the node says it changed since its last
+check. The first checks until one is clean, *Rewrite report* (it clears `validated`), *Write report* and *Update
+report* are always checked. Chat switches are now named by the program (agent_toolkit v0.23.0: the node's
+`switches`, replacing the 'edit' action), so the primary's *Allow edits* moved to that too (`talks.EDITS`, shown for
+the internal 'edit' action). Tests: a change after a clean check skips the checker with the switch off and is
+checked with it on; before a clean check, and after a rewrite, it is always checked.
+
 **2026-11-24.** 0.34.0: **a primary can change its files from a talk** ([PROJECT.md](PROJECT.md) §4 amended;
 docs/FINISHING.md, WEB.md, AGENT_ROLES.md and README updated). Talks were read-only, so a finished phase's primary
 asked for, say, a new plot could not save it anywhere the human could see. The chat with a primary that does not run
