@@ -97,6 +97,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(launch.hidden, (self.root / ".research",))
             self.assertEqual((launch.model, launch.effort), ("gpt-test", "high"))
             self.assertIn("primary researcher", launch.instructions)
+            self.assertIn("it then appears in their chat with you", launch.instructions)
 
     async def test_launch_needs_explicit_cli_choices(self):
         controller = Controller(

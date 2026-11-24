@@ -202,7 +202,7 @@ then shows every option as a setup form (Start begins the investigation), then t
 selected phase's agent tree as a graph (live for the phase that runs): every agent that ever worked,
 coloured by status, with its context use, its messages (coloured by sender) and
 tool calls, its documents, jobs and the websites it used. Single agents can be
-messaged, paused and resumed, sent to a fresh session, or cancelled; the handoff
+messaged (in a chat that shows the figures an agent includes in its reply to you), paused and resumed, sent to a fresh session, or cancelled; the handoff
 threshold, usage limits, number of sessions, idle limit, the CLI choices and the recommended models can be changed while it runs. See
 [docs/WEB.md](docs/WEB.md).
 

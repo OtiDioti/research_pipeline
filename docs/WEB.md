@@ -227,7 +227,7 @@ its tooltip saying why):
 
 | Action | Effect |
 |---|---|
-| Chat | Opens the chat window over the page: your messages and the agent's own text, from its activity log (so earlier talks are there whenever it opens), with Markdown and LaTeX. A message is delivered during the agent's turn, into its waiting session (talk-only while paused), or at its next session; its parent receives a copy |
+| Chat | Opens the chat window over the page: your messages and the agent's own text, from its activity log (so earlier talks are there whenever it opens), with Markdown and LaTeX, and the figures the agent shows you (`![caption](/path)` in its reply: images and PDFs in place; a plain path stays text). A message is delivered during the agent's turn, into its waiting session (talk-only while paused), or at its next session; its parent receives a copy |
 | Pause | The agent finishes its current step, ends its turn and waits in its session (pause reason `held`), talk-only; its subagents and jobs keep working, and their messages and results wait for it; its parent is told. Pausing and resuming the whole investigation does not resume it |
 | Resume | The agent continues in the same session (from its handoff if the session closed at the idle limit, or failed) as soon as it can run; its parent is told |
 | Hand off | The agent updates HANDOFF.md and continues in a fresh session (unlike a context handoff, not called off by the CLI's compaction) |
