@@ -51,7 +51,7 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
         return f"{text}\n\n{human}\n" if human else text + "\n"
     phase = project.folder
     extra = {
-        "primary": f", and in {phase}/STATUS.md, {phase}/REPORT.md and {phase}/FOLDER_CONTENT.md",
+        "primary": f", and in {phase}/STATUS.md, {project.relative(project.result)} and {phase}/FOLDER_CONTENT.md",
         "reviewer": f", and in {phase}/reviews/",
     }.get(agent.role, "")
     recommended = {}  # the human's choice of models for subagents' tasks (see Options)
@@ -70,6 +70,7 @@ def instructions(agent: Agent, project: Project, options: Options) -> str:
         extra=extra,
         backends=", ".join(options.backends),
         parent=agent.parent or "",
+        result=project.relative(project.result),
         **recommended,
     )
     return f"{text}\n\n{human}\n" if human else text + "\n"
@@ -245,15 +246,18 @@ def new_phase(line: str) -> str:
     )
 
 
-def phases_section(current: Summary | None, others: str) -> str:
-    """The primary's view of the project's phases, for its opening message (``others``: the other phases' listing)."""
+def phases_section(current: Summary | None, others: str, base: Summary | None = None) -> str:
+    """The primary's view of the project's phases, for its opening message.
+
+    ``others``: the other phases' listing; ``base``: the phase this one builds on.
+    """
     if current is None or not others and not current.builds_on:
         return ""
     lines = [f"## Phases\n\nThis is phase {current.number} of the project, {current.title} ({current.folder}/)."]
     if current.builds_on:
         lines.append(
-            f"It builds on phase {current.builds_on}: start from that phase's REPORT.md and STATUS.md "
-            f"(phases/{current.builds_on}/)."
+            f"It builds on phase {current.builds_on}: start from that phase's result "
+            f"({base.result if base else f'phases/{current.builds_on}/RESULT.md'}) and STATUS.md."
         )
     if others:
         lines.append(
@@ -266,7 +270,7 @@ def later_phases(listing: str) -> str:
     """For the primary of a phase that continues after other phases ran: what came after it."""
     return (
         "[controller] Since this phase last ran, the investigation went on in later phases:\n"
-        f"{listing}\nRead their reports and the library (library/LIBRARY.md) for what they established; reuse it "
+        f"{listing}\nRead their results and the library (library/LIBRARY.md) for what they established; reuse it "
         "rather than redo it, and do not contradict it without saying why."
     )
 
@@ -436,10 +440,10 @@ def human_cancelled(child: str) -> str:
     )
 
 
-def review_request(kind: str, round_: int, detail: str, phase: str, commit: str | None = None) -> str:
-    """For the Reviewer: a proposal to judge (``phase``: the phase's folder, e.g. 'phases/2')."""
+def review_request(kind: str, round_: int, detail: str, phase: str, result: str, commit: str | None = None) -> str:
+    """For the Reviewer: a proposal to judge (``phase``: the phase's folder, e.g. 'phases/2'; ``result``: its file)."""
     what = (
-        f"proposes COMPLETE. Its report is {phase}/REPORT.md; its status is {phase}/STATUS.md"
+        f"proposes COMPLETE. Its result is {result}; its status is {phase}/STATUS.md"
         if kind == "complete"
         else f"proposes to STOP, giving this reason: {detail}"
     )

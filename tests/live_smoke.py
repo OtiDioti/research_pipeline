@@ -52,7 +52,7 @@ Follow this procedure:
    effort {sub_effort}, asking it to run its computation with run_job.
 3. Reject the subagent's first result once, asking it to state the absolute error against your exact value;
    accept its second result if it is sound.
-4. Write REPORT.md and propose complete.
+4. Write the phase's RESULT.md and propose complete.
 """
 
 

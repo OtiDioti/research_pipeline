@@ -9,11 +9,11 @@ $files
 <!-- /section:opening -->
 
 <!-- section:primary-files -->
-Your report is $report and your status $status; the library's entry page is library/LIBRARY.md.
+Your result is $result and your status $status; the library's entry page is library/LIBRARY.md.
 <!-- /section:primary-files -->
 
 <!-- section:reviewer-files -->
-Your reviews are in $reviews/ (the last one: $review); the primary's report is $report.
+Your reviews are in $reviews/ (the last one: $review); the primary's result is $result.
 <!-- /section:reviewer-files -->
 
 <!-- section:note -->

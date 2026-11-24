@@ -268,12 +268,13 @@ class Assistant:
         return request_text(name, self.kind, **(self._facts() | facts))
 
     def _facts(self) -> dict[str, str]:
-        """What its prompt and requests name: the phase, its folder and objectives, and the kind's own facts."""
+        """What its prompt and requests name: the phase, its folder, objectives and result, and the kind's own facts."""
         project = self.project
         own = {
             "number": str(project.phase),
             "phase": project.folder,
             "objectives": project.relative(project.objectives),
+            "result": project.relative(project.result),
         }
         return own | self.facts()
 

@@ -69,7 +69,7 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
         remove(self.root)
 
     async def propose_and_agree(self, harness):
-        harness.write("phases/1/REPORT.md", "# Report\n\nThe integral is 1/3.\n")
+        harness.write("phases/1/RESULT.md", "# Result\n\nThe integral is 1/3.\n")
         harness.handoff("primary")
         harness.index("phases/1/agents/primary", "HANDOFF.md")
         await harness.call("primary", "complete")
@@ -223,7 +223,7 @@ class LibrarianTest(unittest.IsolatedAsyncioTestCase):
     async def test_library_pages_changed_during_a_review_are_not_listed_to_the_primary(self):
         async with running(self.root) as harness:
             await accept(harness, "fit")
-            harness.write("phases/1/REPORT.md", "# Report\n")
+            harness.write("phases/1/RESULT.md", "# Result\n")
             harness.handoff("primary")
             harness.index("phases/1/agents/primary", "HANDOFF.md", "brief-fit.md")
             self.assertIn("with the Reviewer", await harness.call("primary", "complete"))

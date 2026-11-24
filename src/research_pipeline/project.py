@@ -3,7 +3,7 @@
 A project is an ordinary folder kept in git (PROJECT.md §2). Shared by every phase
 are the human's AGENTS.md and starting_evidence/, the library and the Librarian's
 folder; each phase has its own folder, ``phases/<N>/``, with the human's
-OBJECTIVES.md and the phase's agents, status, report and reviews. A
+OBJECTIVES.md and the phase's agents, status, result and reviews. A
 :class:`Project` is bound to one phase. The controller creates the layout,
 commits on every significant event, notices when the human changes their own
 files, and checks agents' work against the layout rules before accepting a
@@ -43,7 +43,14 @@ TOP_LEVEL = frozenset(
     }
 )
 #: The entries of a phase's folder (``phases/<N>/``).
-PHASE_LEVEL = frozenset({"OBJECTIVES.md", "STATUS.md", "REPORT.md", "agents", "reviews", "FOLDER_CONTENT.md"})
+#: (REPORT.md is the result of a phase that ended before results were renamed: see :func:`phase_result`.)
+PHASE_LEVEL = frozenset(
+    {"OBJECTIVES.md", "STATUS.md", "RESULT.md", "REPORT.md", "agents", "reviews", "FOLDER_CONTENT.md"}
+)
+#: The phase's result, which the primary submits with COMPLETE: written for the agents (PROJECT.md §8).
+RESULT = "RESULT.md"
+#: The name a phase's result had before 0.28.0; such a phase keeps it, so that links to it still lead there.
+OLD_RESULT = "REPORT.md"
 #: The human's files shared by every phase (with each phase's OBJECTIVES.md): agents never write them, and the
 #: primary is told when they change.
 HUMAN = ("AGENTS.md", "starting_evidence")
@@ -73,13 +80,13 @@ ROOT_INDEX = """# Folder contents
 - [starting_evidence](starting_evidence) — The human's evidence and tools, shared by every phase; read-only for agents.
 - [library](library) — The Librarian's pages leading to the finished work of every phase, starting at LIBRARY.md.
 - [librarian](librarian) — The Librarian's own folder.
-- [phases](phases) — One folder per phase of the investigation: its objectives, agents, status, report and reviews.
+- [phases](phases) — One folder per phase of the investigation: its objectives, agents, status, result and reviews.
 """
 PHASE_INDEX = """# Folder contents
 
 - [OBJECTIVES.md](OBJECTIVES.md) — The human's objectives for this phase: the questions to answer, the tasks to perform.
 - [STATUS.md](STATUS.md) — Current state of this phase, maintained by its primary researcher.
-- [REPORT.md](REPORT.md) — The synthesis submitted with COMPLETE.
+- [RESULT.md](RESULT.md) — The phase's result, submitted with COMPLETE: its claims, their evidence and checks.
 - [agents](agents) — One folder per agent: its task, handoff, result and work (frozen once shelved).
 - [reviews](reviews) — The Reviewer's reviews.
 """
@@ -96,6 +103,12 @@ LEGACY = ("sources", "tools")
 # Commits are made by the controller under this identity; the agent and event go in the message.
 IDENTITY = ("research-pipeline", "research-pipeline@localhost")
 _EXCLUDE_MARK = "# research-pipeline: large files"
+
+
+def phase_result(phase_dir: Path) -> Path:
+    """The result of the phase in ``phase_dir``: its RESULT.md, or the REPORT.md of a phase that has only that."""
+    old = phase_dir / OLD_RESULT
+    return old if old.is_file() and not (phase_dir / RESULT).exists() else phase_dir / RESULT
 
 
 class ProjectError(RuntimeError):
@@ -122,7 +135,7 @@ class Project:
         self.phase_dir = self.phases / str(phase)
         self.objectives = self.phase_dir / "OBJECTIVES.md"  # the human's
         self.status_file = self.phase_dir / "STATUS.md"
-        self.report = self.phase_dir / "REPORT.md"
+        self.result = phase_result(self.phase_dir)
         self.agents = self.phase_dir / "agents"
         self.reviews = self.phase_dir / "reviews"
         self.state_file = self.research / "phases" / str(phase) / "state.json"
@@ -178,7 +191,7 @@ class Project:
             folder.mkdir(parents=True, exist_ok=True)
         for path, text in (
             (self.status_file, f"# Status\n\nPhase {self.phase} has not started yet.\n"),
-            (self.report, ""),
+            (self.result, ""),
             (self.root / INDEX, ROOT_INDEX),
             (self.library / "LIBRARY.md", LIBRARY_START),
             (self.library / INDEX, LIBRARY_INDEX),

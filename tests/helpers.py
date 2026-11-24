@@ -154,7 +154,7 @@ async def shelve_all(harness: Harness) -> None:
 async def complete(harness: Harness, shelve: bool = True) -> None:
     """COMPLETE, agreed by the Reviewer; the Librarian shelves the final work (unless not ``shelve``)."""
     phase = harness.phase
-    harness.write(f"{phase}/REPORT.md", "# Report\n\nThe integral is 1/3.\n")
+    harness.write(f"{phase}/RESULT.md", "# Result\n\nThe integral is 1/3.\n")
     harness.handoff("primary")
     harness.index(f"{phase}/agents/primary", "HANDOFF.md")
     await harness.call("primary", "complete")

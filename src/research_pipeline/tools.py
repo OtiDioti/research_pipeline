@@ -59,9 +59,9 @@ SUBMIT_RESULT = Tool(
 )
 COMPLETE = Tool(
     "complete",
-    "Propose COMPLETE: every current objective is met (or shown infeasible) in REPORT.md.\n\n"
+    "Propose COMPLETE: the phase's result shows every current objective met (or shown infeasible).\n\n"
     "An independent Reviewer then examines the work; COMPLETE needs its agreement.",
-    {"report": {"type": "string", "default": "REPORT.md"}},
+    {"result": {"type": "string", "description": "The phase's result file; by default the one you were told."}},
 )
 STOP = Tool(
     "stop",

@@ -52,7 +52,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
         harness.index(f"phases/1/agents/{agent_id}", "TASK.md", "RESULT.md", "HANDOFF.md", "brief-x.md")
 
     def ready_report(self, harness):
-        harness.write("phases/1/REPORT.md", "# Report\n\nThe integral is 1/3.\n")
+        harness.write("phases/1/RESULT.md", "# Result\n\nThe integral is 1/3.\n")
         harness.handoff("primary")
         harness.index("phases/1/agents/primary", "HANDOFF.md")
 
@@ -79,7 +79,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
             opening = harness.session("primary").launch.message
             self.assertIn("What is the integral of x^2", opening)
             self.assertIn("session 1 of primary", opening)
-            for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "agents", "reviews"):
+            for name in ("STATUS.md", "RESULT.md", "FOLDER_CONTENT.md", "agents", "reviews"):
                 self.assertTrue((self.root / "phases" / "1" / name).exists(), name)
             for name in ("FOLDER_CONTENT.md", "library/LIBRARY.md", "phases/FOLDER_CONTENT.md"):
                 self.assertTrue((self.root / name).exists(), name)
@@ -663,7 +663,7 @@ class ControllerTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_proposal_needs_a_settled_layout(self):
         async with running(self.root) as harness:
-            harness.write("phases/1/REPORT.md", "# Report\n")
+            harness.write("phases/1/RESULT.md", "# Result\n")
             harness.write("phases/1/agents/primary/notes.md", "# Notes\n")
             self.assertIn("FOLDER_CONTENT.md", await harness.call("primary", "complete"))
             self.assertIsNone(harness.state.proposal)

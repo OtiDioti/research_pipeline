@@ -75,7 +75,7 @@ class ProjectTest(unittest.TestCase):
     def test_prepare_creates_layout_and_refuses_bad_locations(self):
         for name in ("FOLDER_CONTENT.md", ".gitignore", ".git", "library/LIBRARY.md", "librarian/FOLDER_CONTENT.md"):
             self.assertTrue((self.root / name).exists(), name)
-        for name in ("STATUS.md", "REPORT.md", "FOLDER_CONTENT.md", "agents", "reviews/FOLDER_CONTENT.md"):
+        for name in ("STATUS.md", "RESULT.md", "FOLDER_CONTENT.md", "agents", "reviews/FOLDER_CONTENT.md"):
             self.assertTrue((self.root / "phases" / "1" / name).exists(), name)
         self.assertFalse((self.root / "FEEDBACK.md").exists())
         self.assertEqual(self.project.check_layout(Agent("primary", "primary", None, "codex", "gpt-test", "high")), [])

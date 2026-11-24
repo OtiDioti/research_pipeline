@@ -9,6 +9,7 @@ from agent_toolkit.web import SettingsError
 from research_pipeline import controller as controller_module
 from research_pipeline.controller import Controller
 from research_pipeline.phases import Home
+from research_pipeline.project import Project
 from research_pipeline.web import ResearchDashboard
 from tests.helpers import (
     FAKE_DRIVERS,
@@ -104,6 +105,28 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
         self.tasks.append(await started(controller))
         return controller
 
+    async def test_a_phase_that_ended_with_a_report_keeps_it_as_its_result(self):
+        async with running(self.root, reopen=False) as harness:
+            await complete(harness)
+            # Before 0.28.0 a phase's result was its REPORT.md: such a phase keeps it, and links to it.
+            (self.root / "phases" / "1" / "RESULT.md").rename(self.root / "phases" / "1" / "REPORT.md")
+            self.assertEqual(Project(self.root, 1).result, self.root / "phases" / "1" / "REPORT.md")
+            dashboard = self.page(harness)
+            await dashboard.add("phases")
+            await self.save(dashboard, "phases/2/OBJECTIVES.md", "Fit the measured gaps.\n")
+            await dashboard.start(dashboard.values() | {"title": "Fit the data", "builds_on": "1"})
+            assert harness.task is not None
+            await asyncio.wait_for(harness.task, 5)
+        second = await self.next_controller(dashboard)
+        opening = second.sessions["primary"].launch.message  # type: ignore[attr-defined]
+        self.assertIn(
+            "It builds on phase 1: start from that phase's result (phases/1/REPORT.md) and STATUS.md.", opening
+        )
+        self.assertIn("its result: phases/1/REPORT.md", opening)
+        self.assertIn("phases/2/RESULT.md", second.sessions["primary"].launch.instructions)  # type: ignore[attr-defined]
+        self.assertTrue((self.root / "phases" / "2" / "RESULT.md").is_file())
+        self.assertFalse((self.root / "phases" / "1" / "RESULT.md").exists())
+
     async def test_a_new_phase_starts_a_fresh_primary_that_builds_on_an_earlier_one(self):
         async with running(self.root, reopen=False) as harness:
             await complete(harness)
@@ -134,7 +157,9 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
         self.assertIn("## Objectives of phase 2", opening)
         self.assertIn("Fit the measured gaps.", opening)
         self.assertIn("This is phase 2 of the project, Fit the data (phases/2/).", opening)
-        self.assertIn("It builds on phase 1: start from that phase's REPORT.md and STATUS.md (phases/1/).", opening)
+        self.assertIn(
+            "It builds on phase 1: start from that phase's result (phases/1/RESULT.md) and STATUS.md.", opening
+        )
         self.assertIn("phase 1, Phase 1 (phases/1/): COMPLETE on", opening)
         self.assertIn("this is phase 2, in phases/2/", second.sessions["primary"].launch.instructions)  # type: ignore[attr-defined]
         self.assertIn(self.root / "phases" / "2" / "STATUS.md", second.sessions["primary"].launch.writable)  # type: ignore[attr-defined]
@@ -248,7 +273,7 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
             "phase 1 of an autonomous scientific investigation; that phase has ended (COMPLETE)",
             talk.launch.instructions,
         )
-        self.assertIn("phases/1/REPORT.md", talk.sent[0])
+        self.assertIn("phases/1/RESULT.md", talk.sent[0])
         history = dashboard.history("primary", 50, None)
         self.assertIn("[human] Why 1/3?", [entry["text"] for entry in history])
         with self.assertRaisesRegex(ValueError, "does not run"):
@@ -272,7 +297,7 @@ class PhasesTest(unittest.IsolatedAsyncioTestCase):
         message = first.sessions["primary"].launch.message  # type: ignore[attr-defined]
         self.assertIn("reopened after it ended (COMPLETE)", message)
         self.assertIn("Since this phase last ran, the investigation went on in later phases:", message)
-        self.assertIn("phase 2, Phase 2 (phases/2/): paused; its report: phases/2/REPORT.md", message)
+        self.assertIn("phase 2, Phase 2 (phases/2/): paused; its result: phases/2/RESULT.md", message)
         # Phase 2 is resumed from its handoffs once phase 1 is paused.
         await dashboard.select("phases", "2")
         with self.assertRaisesRegex(ValueError, "phase 1 is running: pause it first"):

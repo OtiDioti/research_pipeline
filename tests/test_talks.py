@@ -74,7 +74,7 @@ class TalksTest(unittest.IsolatedAsyncioTestCase):
             self.assertIn("Answer from the work", talk.launch.instructions)
             self.assertIn("write_talk_note", talk.launch.mcp["research"].env["AGENT_TOOLKIT_TOOLS"])
             self.assertNotIn("spawn", talk.launch.mcp["research"].env["AGENT_TOOLKIT_TOOLS"])
-            for part in ("Your last handoff", "Next: continue.", "REPORT.md", "[human] Why 1/3?"):
+            for part in ("Your last handoff", "Next: continue.", "RESULT.md", "[human] Why 1/3?"):
                 self.assertIn(part, talk.sent[0])
             self.assertIn(("agent", "primary", "Answer to [human] Why 1/3?"), harness.lines)
             controller.say("And the error?")  # the terminal's chat box talks with the primary
