@@ -29,3 +29,4 @@
 - [material.py](material.py) — Material coming into a folder (uploads, copies, by hand) and its place in starting_evidence/; a phase's objectives; reverting the human's files to a phase's end.
 - [assistant.py](assistant.py) — The setup assistant: an optional agent that places material and drafts a phase's OBJECTIVES.md on request, for the first phase, a new one or a reopening (then also AGENTS.md, on request).
 - [writer.py](writer.py) — The Writer: reports for the human (a PDF per phase, and the project's) written from the agents' work and checked against it by a fresh checker, on request and at a phase's end.
+- [reports.py](reports.py) — The reports of a project: the human's WRITING.md (from the built-in rules), and a controller's Writers, one per report (run at a phase's end, told of quota changes, closed with it).

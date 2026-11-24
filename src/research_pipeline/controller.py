@@ -78,11 +78,12 @@ from research_pipeline.librarian import LIBRARIAN, Librarian
 from research_pipeline.linkcheck import LISTED, LinkCheck
 from research_pipeline.phases import NOT_STARTED, Home
 from research_pipeline.project import EMPTY_INDEX, INDEX, Project, ProjectError
+from research_pipeline.reports import Writers
+from research_pipeline.reports import prepare as prepare_writing
 from research_pipeline.state import ACTIVE, ENDED, FINISHED, Agent, Job, Options, State
 from research_pipeline.talks import Talks
 from research_pipeline.tools import ROLE_TOOLS, ToolError
-from research_pipeline.writer import NODES, Writers
-from research_pipeline.writer import prepare as prepare_writing
+from research_pipeline.writer import NODES
 
 #: Seconds between usage-quota reads.
 QUOTA_INTERVAL = 120
@@ -291,13 +292,13 @@ class Controller:
 
     @property
     def releasable(self) -> bool:
-        """True if something waits for the human's :meth:`release`."""
-        return self.state.status == "running" and (
-            any(hold["kind"] != "short" for hold in self.state.holds.values())
-            or any(
-                a.status == "paused" and a.pause_reason == "failure" and a.retry_at is None
-                for a in self.state.agents.values()
-            )
+        """True if something waits for the human's :meth:`release` (after the end: a report waiting for its CLI)."""
+        held = any(hold["kind"] != "short" for hold in self.state.holds.values())
+        if self.state.status != "running":
+            return held and self.state.status in FINISHED and self.writers.held
+        return held or any(
+            a.status == "paused" and a.pause_reason == "failure" and a.retry_at is None
+            for a in self.state.agents.values()
         )
 
     # The human's actions on one agent, and live settings (from the web app) ----------------------
@@ -1742,12 +1743,13 @@ class Controller:
         self._save()
 
     async def _release(self) -> None:
-        """Lift weekly/unreadable quota holds and retry agents whose automatic retries are exhausted."""
+        """Lift weekly/unreadable quota holds and retry agents whose automatic retries are exhausted (after the end:
+        only the holds a report waits for)."""
         state = self.state
-        if state.status != "running":
+        if state.status != "running" and not self.releasable:
             return
         self.guard.release()
-        for agent in state.agents.values():
+        for agent in state.agents.values() if state.status == "running" else ():
             if agent.status == "paused" and agent.pause_reason == "failure" and agent.retry_at is None:
                 agent.failures, agent.pause_reason = 0, "retry"
         self.show("controller", "primary", "Released held CLIs and failed agents; re-reading the usage quota.")
@@ -1781,10 +1783,12 @@ class Controller:
 
     def _backends_in_use(self) -> set[str]:
         agents = [a for a in self.state.agents.values() if a.status not in ENDED]
+        writer = self.state.options.writer  # the Writer's and its checker's (research_pipeline.writer)
         return (
             {a.backend for a in agents}
             | set(self.state.options.backends)
             | {self.state.agents[role].backend for role in ROLES}
+            | ({writer.split(":", 1)[0]} if writer else set())
         )
 
     async def _quota_loop(self) -> None:
@@ -1811,6 +1815,7 @@ class Controller:
                 await self._hold(backend)
             else:
                 self.show("controller", "primary", f"Usage quota: {backend} available again.")
+        self.writers.quota_changed()  # a report waiting for its CLI looks again
         await self._resume_agents({"quota", "slots"})
         self._save()
 
