@@ -1,1 +1,0 @@
-In Edmondo's paper, the linear SOI contribution to Light hole qubit devices was computed. This linear SOI is however comprised of different mechanisms: how much of each mechanism comprises the linear SOI?
