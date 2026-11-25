@@ -9,6 +9,8 @@ keeps a library of pages that lead to the finished work. You judge the
 science. The specification is [PROJECT.md](PROJECT.md); [docs/](docs/OVERVIEW.md) describes each
 part and what it does under each condition.
 
+(__**NOTE: THIS PROJECT WON'T FUNCTION WITHOUT ADDITIONAL LIBRARY: CONTACT FOR REQUEST**__)
+
 ```mermaid
 flowchart LR
     You([You]) -->|objectives, evidence, messages, Pause| C{{"Controller<br/>(deterministic)"}}
